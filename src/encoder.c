@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.104 2004-04-03 10:41:42 syskin Exp $
+ * $Id: encoder.c,v 1.105 2004-04-04 11:47:21 syskin Exp $
  *
  ****************************************************************************/
 
@@ -1856,7 +1856,8 @@ FrameCodeP(Encoder * pEnc,
 	DPRINTF(XVID_DEBUG_DEBUG, "kmu %i %i %i\n", current->sStat.kblks, current->sStat.mblks, current->sStat.ublks);
 #endif
 	if (current->sStat.kblks + current->sStat.mblks <=
-		(pParam->frame_drop_ratio * mb_width * mb_height) / 100)
+		(pParam->frame_drop_ratio * mb_width * mb_height) / 100 &&
+		( (pEnc->bframenum_head >= pEnc->bframenum_tail) || !(pEnc->mbParam.global_flags & XVID_GLOBAL_CLOSED_GOP)) )
 	{
 		current->sStat.kblks = current->sStat.mblks = 0;
 		current->sStat.ublks = mb_width * mb_height;
