@@ -37,7 +37,7 @@
  *  - 22.12.2001  API change: added xvid_init() - Isibaar
  *  - 16.12.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: xvid.c,v 1.41 2003-02-15 15:22:17 edgomez Exp $
+ *  $Id: xvid.c,v 1.42 2003-02-16 05:11:39 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -664,7 +664,7 @@ int diff16(const int16_t * blockA, const int16_t * blockB, int size)
 #define TEST_FDCT  (TEST_FORWARD)
 #define TEST_IDCT  (0)
 
-int test_transform(void * funcA, void * funcB, const char * nameB,
+static int test_transform(void * funcA, void * funcB, const char * nameB,
 				   int test, int flags)
 {
 	int i;
@@ -744,7 +744,7 @@ int test_transform(void * funcA, void * funcB, const char * nameB,
 #define TEST_DEQUANT_INTRA	(TEST_INTRA)
 #define TEST_DEQUANT_INTER	(0)
 
-int test_quant(void * funcA, void * funcB, const char * nameB,
+static int test_quant(void * funcA, void * funcB, const char * nameB,
 			   int test, int flags)
 {
 	int q,i;
@@ -831,7 +831,7 @@ int xvid_init_test(int flags)
 
 	printf("xvid_init_test\n");
 
-#if defined(ARCH_X86)		
+#if defined(ARCH_IS_IA32)		
 	cpu_flags = detect_cpu_flags();
 	idct_int32_init();
 	emms_mmx();

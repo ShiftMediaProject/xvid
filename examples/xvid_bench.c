@@ -35,9 +35,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>  // for gettimeofday
 #include <string.h>    // for memset
 #include <assert.h>
+
+#ifndef WIN32
+#include <sys/time.h>	// for gettimeofday
+#else
+#include <time.h>
+#endif
+
 
 #include "xvid.h"
 
@@ -56,6 +62,11 @@
 #include "bitstream/cbp.h"
 
 #include <math.h>
+
+#ifndef M_PI
+#define M_PI		3.14159265358979323846
+#endif
+
 const int speed_ref = 100;  // on slow machines, decrease this value
 
 /*********************************************************************
@@ -65,9 +76,15 @@ const int speed_ref = 100;  // on slow machines, decrease this value
  /* returns time in micro-s*/
 double gettime_usec()
 {    
+#ifndef WIN32
   struct timeval  tv;
   gettimeofday(&tv, 0);
   return tv.tv_sec*1.0e6 + tv.tv_usec;
+#else
+	clock_t clk;
+	clk = clock();
+	return clk * 1000000 / CLOCKS_PER_SEC;
+#endif
 }
 
  /* returns squared deviates (mean(v*v)-mean(v)^2) of a 8x8 block */
