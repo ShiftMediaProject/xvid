@@ -1,168 +1,213 @@
-.text
+//   ------------------------------------------------------------------------------
+//   *
+//   * Optimized Assembler Versions of sad8 and sad16
+//   *
+//   ------------------------------------------------------------------------------
+//   *
+//   * Hannes Jütting and Christopher Özbek 
+//   * {s_juetti,s_oezbek}@ira.uka.de
+//   *
+//   * Programmed for the IA64 laboratory held at University Karlsruhe 2002
+//   * http://www.info.uni-karlsruhe.de/~rubino/ia64p/
+//   *
+//   ------------------------------------------------------------------------------
+//   *
+//   * These are the optimized assembler versions of sad8 and sad16, which calculate 
+//   * the sum of absolute differences between two 8x8/16x16 block matrices. 
+//   *
+//   * Our approach uses:
+//   *   - The Itanium command psad1, which solves the problem in hardware. 
+//   *   - Modulo-Scheduled Loops as the best way to loop unrolling on the IA64 
+//   *     EPIC architecture
+//   *   - Alignment resolving to avoid memory faults
+//   *
+//   ------------------------------------------------------------------------------
+
+	.text
+
+//   ------------------------------------------------------------------------------
+//   * SAD16_IA64
+//   *
+//   *  In:
+//   *    r32 = cur	(aligned)
+//   *    r33 = ref	(not aligned)
+//   *    r34 = stride
+//   *    r35 = bestsad
+//   *  Out:
+//   *    r8 = sum of absolute differences
+//   *
+//   ------------------------------------------------------------------------------
+		
 	.align 16
 	.global sad16_ia64#
 	.proc sad16_ia64#
 sad16_ia64:
 
-_LL=3
-_SL=1
-_OL=1
-_PL=1
-_AL=1
 	
-	alloc r9=ar.pfs,4,44,0,48
+	// Define Latencies
+	LL16=3 // load  latency
+	SL16=1 // shift latency
+	OL16=1 // or    latency
+	PL16=1 // psad  latency
+	AL16=1 // add   latency
 
-	mov r8 = r0
+	// Allocate Registern in RSE
+	alloc r9=ar.pfs,4,36,0,40
 
-	mov r20 = ar.lc
-	mov r21 = pr
+	// lfetch [r32]			// might help
+		
+	mov r8 = r0			// clear the return reg
 
-	dep.z r22		= r32, 3, 3 // erste 3 Bit mit 8 multiplizieren
-	dep.z r23		= r33, 3, 3 // in r22 und r23 -> Schiebeflags
+	// Save LC and predicates
+	mov r20 = ar.lc			
+	mov r21 = pr			
 
-	and r14		= -8, r32 // Parameter in untere Register kopieren
-	and r15		= -8, r33 // Ref Cur mit 11111...1000 and-en
-	mov r16		= r34
-	mov r17		= r35
+	dep.z r23	= r33, 3, 3	// get the # of bits ref is misaligned
+	and r15		= -8, r33	// align the ref pointer by deleting the last 3 bit
+
+	mov r14		= r32		// save the cur pointer
+	mov r16		= r34		// save stride
+	mov r17		= r35		// save bestsad
+	
 	;;
-	add r18		= 8, r14  // Adressenvorausberechnen
-	add r19		= 8, r15
-	
-	sub r24		= 64, r22 // Schiftanzahl ausrechnen
-	sub r25		= 64, r23
-	
-	add r26		= 16, r14 // Adressenvorausberechnen
-	add r27		= 16, r15
+	add r18		= 8, r14	// precalc second cur pointer
+	add r19		= 8, r15	// precalc second ref pointer
+	add r27		= 16, r15	// precalc third  ref pointer
+	sub r25		= 64, r23	// # of right shifts
 
-	// Loop-counter initialisieren		
-	mov ar.lc = 15			// Loop 16 mal durchlaufen
-	mov ar.ec = _LL + _SL + _OL + _PL + _AL + _AL			// Die Loop am Schluss noch neun mal durchlaufen
-
-	// Rotating Predicate Register zuruecksetzen und P16 auf 1
-	mov pr.rot = 1 << 16	
+	// Initialize Loop-counters 
+	mov ar.lc = 15			// loop 16 times
+	mov ar.ec = LL16 + SL16 + OL16 + PL16 + AL16 + AL16	
+	mov pr.rot = 1 << 16		// reseting rotating predicate regs and set p16 to 1
 	;;
 	
-	// Array-Konstrukte initialisieren
-	.rotr _ald1[_LL+1], _ald2[_LL+1], _ald3[_LL+1], _ald4[_LL+1], _ald5[_LL+1], _ald6[_LL+1], _shru1[_SL+1], _shl1[_SL+1], _shru2[_SL], _shl2[_SL], _shru3[_SL], _shl3[_SL], _shru4[_SL], _shl4[_SL+1], _or1[_OL], _or2[_OL], _or3[_OL], _or4[_OL+1], _psadr1[_PL+1], _psadr2[_PL+1], _addr1[_AL+1]
-	.rotp _aldp[_LL], _shp[_SL], _orp[_OL], _psadrp[_PL], _addrp1[_AL], _addrp2[_AL]
+	// Intialize Arrays for Register Rotation
+	.rotr r_cur_ld1[LL16+SL16+OL16+1], r_cur_ld2[LL16+SL16+OL16+1], r_ref_16_ld1[LL16+1], r_ref_16_ld2[LL16+1], r_ref_16_ld3[LL16+1], r_ref_16_shru1[SL16], r_ref_16_shl1[SL16], r_ref_16_shru2[SL16], r_ref_16_shl2[SL16+1], r_ref_16_or1[OL16], r_ref_16_or2[OL16+1], r_psad1[PL16+1], r_psad2[PL16+1], r_add_16[AL16+1]
+	.rotp p_ld_16[LL16], p_sh_16[SL16], p_or_16[OL16], p_psad_16[PL16], p_add1_16[AL16], p_add2_16[AL16]
 	
-.L_loop_16:
+.L_loop16:
 	{.mmi
-		(_aldp[0]) ld8 _ald1[0] = [r14], r16	// Cur Erste 8 Byte
-		(_aldp[0]) ld8 _ald2[0] = [r18], r16    // Cur Zweite 8 Byte
-		(_psadrp[0]) psad1 _psadr1[0] = _or2[0], _or4[0] // Psadden
+		(p_ld_16[0]) ld8 r_cur_ld1[0] = [r14], r16				// Cur load first 8 Byte
+		(p_ld_16[0]) ld8 r_cur_ld2[0] = [r18], r16				// Cur load next 8 Byte
+		(p_psad_16[0]) psad1 r_psad1[0] = r_cur_ld1[LL16+SL16+OL16], r_ref_16_or2[0]	// psad of cur and ref
 	}
 	{.mmi
-		(_aldp[0]) ld8 _ald3[0] = [r26], r16    // Cur Dritte 8 Byte
-		(_aldp[0]) ld8 _ald4[0] = [r15], r16	// Ref Erste 8 Byte
-		(_psadrp[0]) psad1 _psadr2[0] = _or3[0], _or4[_OL]  // _or2 +1 
-	}
-	{.mmi
-		(_aldp[0]) ld8 _ald5[0] = [r19], r16    // Ref Zweite 8 Byte
-		(_aldp[0]) ld8 _ald6[0] = [r27], r16    // Ref Dritte 8 Byte
-		(_shp[0]) shr.u _shru1[0] = _ald1[_LL], r22
+		(p_ld_16[0]) ld8 r_ref_16_ld1[0] = [r15], r16				// Ref load first 8 Byte (unaligned)
+		(p_ld_16[0]) ld8 r_ref_16_ld2[0] = [r19], r16				// Ref load next 8 Byte (unaligned)
+		(p_psad_16[0]) psad1 r_psad2[0] = r_cur_ld2[LL16+SL16+OL16], r_ref_16_or2[OL16]	// psad of cur_2 and ref_2
 	}
 	{.mii
-		(_orp[0]) or _or1[0]     = _shl2[0], _shru3[0] // _shru2 + 1 und _shl2 + 1
-		(_shp[0]) shl _shl1[0]   = _ald2[_LL], r24
-		(_shp[0]) shr.u _shru2[0] = _ald2[_LL], r22
+		(p_ld_16[0]) ld8 r_ref_16_ld3[0] = [r27], r16				// Ref load third 8 Byte (unaligned)	
+		(p_or_16[0]) or r_ref_16_or1[0]  = r_ref_16_shl1[0], r_ref_16_shru2[0]  // Ref or r_ref_16_shl1 + 1 and r_ref_16_shl1 + 1
+		(p_sh_16[0]) shr.u r_ref_16_shru1[0] = r_ref_16_ld1[LL16], r23		// Ref shift
 	}
 	{.mii
-		(_orp[0]) or _or2[0]  = _shl3[0], _shru4[0]  // _shru3 + 1 und _shl3 + 1
-		(_shp[0]) shl _shl2[0] = _ald3[_LL], r24
-		(_shp[0]) shr.u _shru3[0] = _ald4[_LL], r23
+		(p_or_16[0]) or r_ref_16_or2[0]  = r_ref_16_shl2[0], r_ref_16_shl2[SL16]	// Ref or r_ref_shru2 + 1 and r_ref_shl2 + 1
+		(p_sh_16[0]) shl r_ref_16_shl1[0] = r_ref_16_ld2[LL16], r25		// Ref shift
+		(p_sh_16[0]) shr.u r_ref_16_shru2[0] = r_ref_16_ld2[LL16], r23		// Ref shift
 	}
-	{.mii
-		(_orp[0]) or _or3[0]  = _shl4[0], _shl4[_SL] //_shru4 + 1 und _shl4 + 1
-		(_shp[0]) shl _shl3[0] = _ald5[_LL], r25
-		(_shp[0]) shr.u _shru4[0] = _ald5[_LL], r23
-	}
-	{.mmi
-		(_orp[0]) or _or4[0]  = _shru1[_SL], _shl1[_SL]
-		(_shp[0]) shl _shl4[0]= _ald6[_LL], r25
+	{.mib
+	    	(p_add2_16[0]) cmp.ge.unc p6, p7 = r8, r17
+		(p_sh_16[0]) shl r_ref_16_shl2[0]= r_ref_16_ld3[LL16], r25		// Ref shift
+	    	(p6) br.spnt.few .L_loop_exit16
 	}
 	{.mmb
-		(_addrp1[0]) add _addr1[0] = _psadr1[_PL], _psadr2[_PL] // Aufsummieren
-		(_addrp2[0]) add r8 = r8, _addr1[_AL]
-		br.ctop.sptk.few .L_loop_16
+		(p_add1_16[0]) add r_add_16[0] = r_psad1[PL16], r_psad2[PL16]		// add the psad results
+		(p_add2_16[0]) add r8 = r8, r_add_16[AL16]				// add the results to the sum
+		br.ctop.sptk.few .L_loop16
 		;;
 	}
-	// Register zurueckschreiben
-	mov ar.lc = r20
-	mov pr = r21,-1
+.L_loop_exit16:
+
+	// Restore LC and predicates
+	mov ar.lc = r20			
+	mov pr = r21,-1			
+ 	
+ 	// Return 
  	br.ret.sptk.many rp
 	.endp sad16_ia64#
 
-		
+//   ------------------------------------------------------------------------------
+//   * SAD8_IA64
+//   *
+//   *  In:
+//   *    r32 = cur	(aligned)
+//   *    r33 = ref	(not aligned)
+//   *    r34 = stride
+//   *  Out:
+//   *    r8 = sum of absolute differences
+//   *
+//   ------------------------------------------------------------------------------
+	
   	.align 16
 	.global sad8_ia64#
 	.proc sad8_ia64#
 
 sad8_ia64:
 
-LL=3
-SL=1
-OL=1
-PL=1
-AL=1
+	
+	// Define Latencies
+	LL8=3 // load  latency
+	SL8=1 // shift latency
+	OL8=1 // or    latency
+	PL8=1 // psad  latency
+	AL8=1 // add   latency
+	
+	// Allocate Registers in RSE
+	alloc r9	= ar.pfs,3,21,0,24
+	
+	// lfetch [r32]				// Maybe this helps?
+	
+	mov r8		= r0			// Initialize result	
+		
+	mov r14		= r32			// Save Cur
+	and r15		= -8, r33		// Align the Ref pointer by deleting the last 3 bit
+	mov r16		= r34			// Save Stride	
+	
+	// Save LC and predicates
+	mov r20		= ar.lc
+	mov r21		= pr
 
-	alloc r9=ar.pfs,3,29,0,32
-	mov r20 = ar.lc
-	mov r21 = pr
+	dep.z r23	= r33, 3, 3		// get the # of bits ref is misaligned
 	
-	dep.z r22		= r32, 3, 3 // erste 3 Bit mit 8 multiplizieren
-	dep.z r23		= r33, 3, 3 // in r22 und r23 -> Schiebeflags
-	
-	mov r8 = r0		     //   .   .   .   .
-	and r14		= -8, r32 // 0xFFFFFFFFFFFFFFF8, r32
-	and r15		= -8, r33 // 0xFFFFFFFFFFFFFFF8, r33
-	mov r16		= r34
-//	mov r17		= r35
-	;; 
-
-	add r18		= 8, r14
-	add r19		= 8, r15
-	
-	sub r24		= 64, r22
-	sub r25		= 64, r23
-	
-	// Loop-counter initialisieren		
-	mov ar.lc = 7			// Loop 7 mal durchlaufen
-	mov ar.ec = LL + SL + OL + PL + AL			// Die Loop am Schluss noch zehn mal durchlaufen
-
-	// Rotating Predicate Register zuruecksetzen und P16 auf 1
-	mov pr.rot = 1 << 16	
 	;;
-	.rotr ald1[LL+1], ald2[LL+1], ald3[LL+1], ald4[LL+1], shru1[SL+1], shl1[SL+1], shru2[SL+1], shl2[SL+1], or1[OL+1], or2[OL+1], psadr[PL+1], addr[AL+1]
-	.rotp aldp[LL], shp[SL], orp[OL], psadrp[PL], addrp[AL]
-.L_loop_8:
-	{.mmi
-		(aldp[0]) ld8 ald1[0] = [r14], r16	// Cur laden
-		(aldp[0]) ld8 ald2[0] = [r18], r16
-		(shp[0]) shr.u shru1[0] = ald1[LL], r22	// mergen
-	}
-	{.mii
-		(orp[0]) or or1[0] = shru1[SL], shl1[SL]
-		(shp[0]) shl shl1[0] = ald2[LL], r24
-		(shp[0]) shr.u shru2[0] = ald3[LL], r23	// mergen	
-	}
-	{.mmi
-		(aldp[0]) ld8 ald3[0] = [r15], r16	// Ref laden
-		(aldp[0]) ld8 ald4[0] = [r19], r16
-		(shp[0]) shl shl2[0]  = ald4[LL], r25
-	}
-	{.mmi
-		(orp[0]) or or2[0] = shru2[SL], shl2[SL]
-		(addrp[0]) add r8 = r8, psadr[PL]
-		(psadrp[0]) psad1 psadr[0] = or1[OL], or2[OL]
-	}
-	{.mbb 
-		br.ctop.sptk.few .L_loop_8
-		;; 
-	} 
+	
+	add r19		= 8, r15		// Precalculate second load-offset
+	sub r25		= 64, r23		// Precalculate # of shifts
 
+	// Initialize Loop-Counters 
+	mov ar.lc = 7				// Loop 7 times
+	mov ar.ec = LL8 + SL8 + OL8 + PL8 + AL8	// Epiloque 
+	mov pr.rot = 1 << 16			// Reset Predicate Registers and initialize with P16
+
+	// Initalize Arrays for Register Rotation
+	.rotr r_cur_ld[LL8+SL8+OL8+1], r_ref_ld1[LL8+1], r_ref_ld2[LL8+1], r_shru[SL8+1], r_shl[SL8+1], r_or[OL8+1], r_psad[PL8+1]
+	.rotp p_ld[LL8], p_sh[SL8], p_or[OL8], p_psad[PL8], p_add[AL8]
+	
+	;;
+.L_loop8:
+//	{.mmi
+		(p_ld[0]) ld8 r_ref_ld1[0]	= [r15], r16			// Load 1st 8Byte from Ref
+		(p_ld[0]) ld8 r_cur_ld[0] 	= [r14], r16			// Load Cur 
+		(p_psad[0]) psad1 r_psad[0]	= r_cur_ld[LL8+SL8+OL8], r_or[OL8]	// Do the Calculation
+//	}
+//	{.mii
+		(p_ld[0]) ld8 r_ref_ld2[0]	= [r19], r16			// Load 2nd 8Byte from Ref 
+		(p_sh[0]) shr.u r_shru[0]	= r_ref_ld1[LL8], r23		// Shift unaligned Ref parts
+		(p_sh[0]) shl	r_shl[0] 	= r_ref_ld2[LL8], r25		// Shift unaligned Ref parts
+//	}
+//	{.mib
+		(p_or[0]) or r_or[0] 		= r_shru[SL8], r_shl[SL8]	// Combine unaligned Ref parts
+		(p_add[0]) add r8 		= r8, r_psad[PL8]		// Sum psad result
+		br.ctop.sptk.few .L_loop8
+		;; 
+//	} 
+
+	// Restore Loop counters
 	mov ar.lc = r20
 	mov pr = r21,-1
+	
+	// Return 
 	br.ret.sptk.many b0
 	.endp sad8_ia64#
 	
