@@ -42,10 +42,10 @@
   *                                                                            *
   *  Revision history:                                                         *
   *                                                                            *
-  *  29.03.2002 interlacing speedup - used transfer strides instead of
-  *             manual field-to-frame conversion
-  *  26.03.2002 interlacing support - moved transfers outside loops
-  *  22.12.2001 get_dc_scaler() moved to common.h
+  *  29.03.2002 interlacing speedup - used transfer strides instead of		   *
+  *             manual field-to-frame conversion							   *
+  *  26.03.2002 interlacing support - moved transfers outside loops			   *
+  *  22.12.2001 get_dc_scaler() moved to common.h							   *
   *  19.11.2001 introduced coefficient thresholding (Isibaar)                  *
   *  17.11.2001 initial version                                                *
   *                                                                            *
@@ -68,7 +68,7 @@
 #define MIN(X, Y) ((X)<(Y)?(X):(Y))
 #define MAX(X, Y) ((X)>(Y)?(X):(Y))
 
-#define TOOSMALL_LIMIT 1		/* skip blocks having a coefficient sum below this value */
+#define TOOSMALL_LIMIT 3		/* skip blocks having a coefficient sum below this value */
 
 /* this isnt pretty, but its better than 20 ifdefs */
 
@@ -207,7 +207,8 @@ MBTransQuantInter(const MBParam * pParam,
 			stop_quant_timer();
 		}
 
-		if (sum >= TOOSMALL_LIMIT) {	// skip block ?
+		if ((sum >= TOOSMALL_LIMIT) || (qcoeff[i*64] != 0) ||
+			(qcoeff[i*64+1] != 0) || (qcoeff[i*64+8] != 0)) {
 
 			if (pParam->m_quant_type == H263_QUANT) {
 				start_timer();
