@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_rd_based.c,v 1.11 2004-12-18 06:51:14 syskin Exp $
+ * $Id: estimation_rd_based.c,v 1.12 2004-12-18 12:06:43 syskin Exp $
  *
  ****************************************************************************/
 
@@ -148,8 +148,8 @@ Block_CalcBitsIntra(MACROBLOCK * pMB,
 	/* dc prediction */
 	qcoeff[0] = qcoeff[0] - predictors[0];
 
-	if (block < 4) bits[1] = bits[0] = dcy_tab[qcoeff[0] + 255].len;
-	else bits[1] = bits[0] = dcc_tab[qcoeff[0] + 255].len;
+	if (block < 4) bits[1] = bits[0] = dcy_tab[qcoeff[0] + 255].len - 3; /* 3 bits added before (4 times) */
+	else bits[1] = bits[0] = dcc_tab[qcoeff[0] + 255].len - 2; /* 2 bits added before (2 times)*/
 
 	/* calc cost before ac prediction */
 	bits[0] += coded = CodeCoeffIntra_CalcBits(qcoeff, scan_tables[0]);
@@ -529,8 +529,8 @@ findRD_intra(SearchData * const Data, MACROBLOCK * pMB,
 			 const int x, const int y, const int mb_width)
 {
 	unsigned int cbp[2] = {0, 0}, bits[2], i;
-	/* minimum number of bits that WILL be coded in intra - MODE 5, CBP 2 and AC/DC pred - 1 */
-	int bits1 = BITS_MULT*(5+2+1), bits2 = BITS_MULT*(5+2+1); 
+	/* minimum number of bits that WILL be coded in intra - mcbpc 5, cby 2 acdc flag - 1 and DC coeffs - 4*3+2*2 */
+	int bits1 = BITS_MULT*(5+2+1+4*3+2*2), bits2 = BITS_MULT*(5+2+1+4*3+2*2);
 	unsigned int distortion = 0;
 
 	int16_t *in = Data->dctSpace, * coeff = Data->dctSpace + 64, * dqcoeff = Data->dctSpace + 128;
@@ -683,12 +683,15 @@ xvid_me_ModeDecision_RD(SearchData * const Data,
 			cbp = *Data->cbp;
 		}
 	}
-
-	intra_rd = findRD_intra(Data, pMB, x, y, pParam->mb_width);
-	if (intra_rd < min_rd) {
-		*Data->iMinSAD = min_rd = intra_rd;
-		mode = MODE_INTRA;
-		cbp = *Data->cbp;
+	
+	/* there is no way for INTRA to take less than 24 bits - go to findRD_intra() for calculations */
+	if (min_rd > 24*BITS_MULT) { 
+		intra_rd = findRD_intra(Data, pMB, x, y, pParam->mb_width);
+		if (intra_rd < min_rd) {
+			*Data->iMinSAD = min_rd = intra_rd;
+			mode = MODE_INTRA;
+			cbp = *Data->cbp;
+		}
 	}
 
 	pMB->sad16 = pMB->sad8[0] = pMB->sad8[1] = pMB->sad8[2] = pMB->sad8[3] = 0;
