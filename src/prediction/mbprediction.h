@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the xvid_free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: mbprediction.h,v 1.6 2002-05-03 00:45:10 chenm001 Exp $
+ *  $Id: mbprediction.h,v 1.7 2002-05-07 19:40:36 chl Exp $
  *
  *************************************************************************/
 
@@ -214,7 +214,7 @@ static __inline int get_pmvdata(const MACROBLOCK * const pMBs,
 		if ((x == 0) && (block == 0))		// first column, first block
 		{ 
 			pmv[0] = pmv[1] = pmv[2] = pmv[3] = zeroMV;
-			psad[0] = psad[1] = psad[2] = psad[3] = MV_MAX_ERROR;
+			psad[0] = psad[1] = psad[2] = psad[3] = 0;
 			return 0;
 		}
 		if (block == 1)		// second block; has only a left neighbour
@@ -222,7 +222,7 @@ static __inline int get_pmvdata(const MACROBLOCK * const pMBs,
 			pmv[0] = pmv[1] = pMBs[index].mvs[0];
 			pmv[2] = pmv[3] = zeroMV;
 			psad[0] = psad[1] = pMBs[index].sad8[0];
-			psad[2] = psad[3] = MV_MAX_ERROR;
+			psad[2] = psad[3] = 0;
 			return 0;
 		}
 		else /* block==0, but x!=0, so again, there is a left neighbour*/
@@ -230,7 +230,7 @@ static __inline int get_pmvdata(const MACROBLOCK * const pMBs,
 			pmv[0] = pmv[1] = pMBs[index-1].mvs[1];
 			pmv[2] = pmv[3] = zeroMV;
 			psad[0] = psad[1] = pMBs[index-1].sad8[1];
-			psad[2] = psad[3] = MV_MAX_ERROR;
+			psad[2] = psad[3] = 0;
 			return 0;
 		}
 	}
@@ -274,7 +274,7 @@ static __inline int get_pmvdata(const MACROBLOCK * const pMBs,
 
 	if (xin1 < 0 || /* yin1 < 0  || */ xin1 >= (int32_t)x_dim)
 	{
-	    pmv[1] = zeroMV;
+		pmv[1] = zeroMV;
 		psad[1] = MV_MAX_ERROR;
 	}
 	else
@@ -306,9 +306,10 @@ static __inline int get_pmvdata(const MACROBLOCK * const pMBs,
 	}
 
 	if ( (MVequal(pmv[1],pmv[2])) && (MVequal(pmv[1],pmv[3])) )
-	{	pmv[0]=pmv[1];
-	psad[0]=psad[1];
-	return 1;
+	{	
+		pmv[0]=pmv[1];
+		psad[0]=MIN(MIN(psad[1],psad[2]),psad[3]);
+		return 1;
 	}
 
 	/* median,minimum */
