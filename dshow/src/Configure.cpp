@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: Configure.cpp,v 1.3 2004-07-18 02:00:05 suxen_drol Exp $
+ * $Id: Configure.cpp,v 1.4 2004-07-28 11:26:16 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -60,6 +60,7 @@ int adv_dialog(HWND hwndOwner)
 }
 
 
+extern "C" void CALLBACK Configure(HWND hWndParent, HINSTANCE hInstParent, LPSTR lpCmdLine, int nCmdShow );
 
 void CALLBACK Configure(HWND hWndParent, HINSTANCE hInstParent, LPSTR lpCmdLine, int nCmdShow ) 
 {
@@ -72,6 +73,8 @@ void CALLBACK Configure(HWND hWndParent, HINSTANCE hInstParent, LPSTR lpCmdLine,
 /* strmbase.lib\dllentry.obj:DllEntryPoint@12 */
 extern "C" BOOL WINAPI DllEntryPoint(HINSTANCE, ULONG, LPVOID);
 
+
+extern "C" BOOL WINAPI DllMain(HINSTANCE hInst, DWORD fdwReason, LPVOID lpvReserved);
 
 BOOL WINAPI DllMain(HINSTANCE hInst, DWORD fdwReason, LPVOID lpvReserved)
 {
