@@ -28,7 +28,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.37 2002-09-21 03:07:56 suxen_drol Exp $
+ * $Id: xvid.c,v 1.38 2002-10-09 14:35:57 ia64p Exp $
  *
  ****************************************************************************/
 
@@ -374,7 +374,7 @@ xvid_init(void *handle,
 	if ((cpu_flags & XVID_CPU_IA64) > 0) { //use assembler routines?
 	  idct_ia64_init();
 	  fdct = fdct_ia64;
-	  idct = idct_ia64;   //not yet working, crashes
+	  idct = idct_ia64;
 	  interpolate8x8_halfpel_h = interpolate8x8_halfpel_h_ia64;
 	  interpolate8x8_halfpel_v = interpolate8x8_halfpel_v_ia64;
 	  interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_ia64;
@@ -393,7 +393,7 @@ xvid_init(void *handle,
 	  transfer_8to16sub2 = transfer_8to16sub2_ia64;
 	  transfer_16to8add = transfer_16to8add_ia64;
 	  transfer8x8_copy = transfer8x8_copy_ia64;
-	  DEBUG("Using IA-64 assembler routines.\n");
+//	  DEBUG("Using IA-64 assembler routines.\n");
 	}
 #endif 
 
