@@ -28,7 +28,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.c,v 1.33 2002-09-22 17:01:36 edgomez Exp $
+ * $Id: bitstream.c,v 1.34 2002-09-23 10:59:10 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -44,7 +44,7 @@ static uint32_t __inline
 log2bin(uint32_t value)
 {
 /* Changed by Chenm001 */
-#ifndef WIN32
+#if !defined(_MSC_VER)
 	int n = 0;
 
 	while (value) {
