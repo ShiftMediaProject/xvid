@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: emms.c,v 1.9 2004-03-22 22:36:24 edgomez Exp $
+ * $Id: emms.c,v 1.10 2005-02-01 11:46:32 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -37,7 +37,7 @@ emmsFuncPtr emms;
  * emms functions
  *
  * emms functions are used to restored the fpu context after mmx operations
- * because mmx and fpu share their registers/context (??? need to be confirmed)
+ * because mmx and fpu share their registers/context
  *
  ****************************************************************************/
 
