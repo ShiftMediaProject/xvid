@@ -50,7 +50,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: decoder.c,v 1.23 2002-06-30 10:46:29 suxen_drol Exp $
+ *  $Id: decoder.c,v 1.24 2002-07-03 12:32:50 suxen_drol Exp $
  *
  *************************************************************************/
 
@@ -501,25 +501,18 @@ get_motion_vector(DECODER * dec,
 	int low = ((-32) * scale_fac);
 	int range = (64 * scale_fac);
 
-	VECTOR pmv[4];
-	int32_t psad[4];
-
+	VECTOR pmv;
 	int mv_x, mv_y;
-	int pmv_x, pmv_y;
 
-
-	get_pmvdata2(dec->mbs, x, y, dec->mb_width, k, pmv, psad, bound);
-
-	pmv_x = pmv[0].x;
-	pmv_y = pmv[0].y;
+	pmv = get_pmv2(dec->mbs, dec->mb_width, bound, x, y, k);
 
 	mv_x = get_mv(bs, fcode);
 	mv_y = get_mv(bs, fcode);
 
-	DPRINTF(DPRINTF_MV,"mv_diff (%i,%i) pred (%i,%i)", mv_x, mv_y, pmv_x, pmv_y);
+	DPRINTF(DPRINTF_MV,"mv_diff (%i,%i) pred (%i,%i)", mv_x, mv_y, pmv.x, pmv.y);
 
-	mv_x += pmv_x;
-	mv_y += pmv_y;
+	mv_x += pmv.x;
+	mv_y += pmv.y;
 
 	if (mv_x < low) {
 		mv_x += range;

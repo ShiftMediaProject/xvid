@@ -528,9 +528,10 @@ int32_t ZeroSearch16(
 	const int32_t iEdgedWidth = pParam->edged_width; 
 	const uint8_t * cur = pCur->y + x*16 + y*16*iEdgedWidth;
 	int32_t iSAD;
-	int32_t pred_x,pred_y;
+	VECTOR pred;
+	
 
-	get_pmv(pMBs, x, y, pParam->mb_width, 0, &pred_x, &pred_y);    
+	pred = get_pmv2(pMBs, pParam->mb_width, 0, x, y, 0);    
 
 	iSAD = sad16( cur, 
 		get_ref(pRef, pRefH, pRefV, pRefHV, x, y, 16, 0,0, iEdgedWidth),
@@ -540,8 +541,8 @@ int32_t ZeroSearch16(
 
 	currMV->x = 0;
 	currMV->y = 0;
-	currPMV->x = -pred_x;
-	currPMV->y = -pred_y;
+	currPMV->x = -pred.x;
+	currPMV->y = -pred.y;
 
 	return iSAD;
 
@@ -1281,6 +1282,7 @@ PMVfastSearch16(const uint8_t * const pRef,
 
 	/* because we might use something like IF (dx>max_dx) THEN dx=max_dx; */
 	bPredEq = get_pmvdata(pMBs, x, y, iWcount, 0, pmv, psad);
+	// bPredEq = get_pmvdata2(pMBs, iWcount, 0, x, y, 0, pmv, psad);
 
 	if ((x == 0) && (y == 0)) {
 		threshA = 512;
@@ -1698,8 +1700,8 @@ PMVfastSearch8(const uint8_t * const pRef,
 	}
 
 	/* because we might use IF (dx>max_dx) THEN dx=max_dx; */
-	bPredEq =
-		get_pmvdata(pMBs, (x >> 1), (y >> 1), iWcount, iSubBlock, pmv, psad);
+	bPredEq = get_pmvdata(pMBs, (x >> 1), (y >> 1), iWcount, iSubBlock, pmv, psad);
+	// bPredEq = get_pmvdata2(pMBs, iWcount, 0, (x >> 1), (y >> 1), iSubBlock, pmv, psad);
 
 	if ((x == 0) && (y == 0)) {
 		threshA = 512 / 4;
@@ -2010,6 +2012,7 @@ EPZSSearch16(const uint8_t * const pRef,
 	}
 	/* because we might use something like IF (dx>max_dx) THEN dx=max_dx; */
 	bPredEq = get_pmvdata(pMBs, x, y, iWcount, 0, pmv, psad);
+	// bPredEq = get_pmvdata2(pMBs, iWcount, 0, x, y, 0, pmv, psad);
 
 /* Step 4: Calculate SAD around the Median prediction. 
         MinSAD=SAD 
@@ -2288,6 +2291,7 @@ EPZSSearch8(const uint8_t * const pRef,
 	}
 	/* because we might use something like IF (dx>max_dx) THEN dx=max_dx; */
 	bPredEq = get_pmvdata(pMBs, x >> 1, y >> 1, iWcount, iSubBlock, pmv, psad);
+	// bPredEq = get_pmvdata2(pMBs, iWcount, 0, x >> 1, y >> 1, iSubBlock, pmv, psad);
 
 
 /* Step 4: Calculate SAD around the Median prediction. 

@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the xvid_free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: mbprediction.h,v 1.11 2002-06-30 10:46:29 suxen_drol Exp $
+ *  $Id: mbprediction.h,v 1.12 2002-07-03 12:32:50 suxen_drol Exp $
  *
  *************************************************************************/
 
@@ -207,18 +207,6 @@ get_pmv(const MACROBLOCK * const pMBs,
 }
 
 
-
-int
-get_pmvdata2(const MACROBLOCK * const pMBs,
-			const uint32_t x,
-			const uint32_t y,
-			const uint32_t x_dim,
-			const uint32_t block,
-			VECTOR * const pmv,
-			int32_t * const psad,
-			const int bound);
-
-
 /* This is somehow a copy of get_pmv, but returning all MVs and Minimum SAD 
    instead of only Median MV */
 
@@ -359,7 +347,7 @@ get_pmvdata(const MACROBLOCK * const pMBs,
 		psad[3] = MV_MAX_ERROR;
 	} else {
 		pmv[3] = pMBs[xin3 + yin3 * x_dim].mvs[vec3];
-		psad[3] = pMBs[xin2 + yin2 * x_dim].sad8[vec3];
+		psad[3] = pMBs[xin3 + yin3 * x_dim].sad8[vec3];
 	}
 
 	if ((MVequal(pmv[1], pmv[2])) && (MVequal(pmv[1], pmv[3]))) {
@@ -381,6 +369,234 @@ get_pmvdata(const MACROBLOCK * const pMBs,
 	return 0;
 }
 
+
+	/*
+	 * MODE_INTER, vm18 page 48
+	 * MODE_INTER4V vm18 page 51
+	 *
+	 *   (x,y-1)      (x+1,y-1)
+	 *   [   |   ]    [   |   ]
+	 *   [ 2 | 3 ]    [ 2 |   ]
+	 *
+	 *   (x-1,y)       (x,y)        (x+1,y)
+	 *   [   | 1 ]    [ 0 | 1 ]    [ 0 |   ]
+	 *   [   | 3 ]    [ 2 | 3 ]    [   |   ]
+	 */
+
+static __inline VECTOR
+get_pmv2(const MACROBLOCK * const mbs,
+         const int mb_width,
+         const int bound,
+         const int x,
+         const int y,
+         const int block)
+{
+	static const VECTOR zeroMV = { 0, 0 };
+    
+    int lx, ly, lz;         /* left */
+    int tx, ty, tz;         /* top */
+    int rx, ry, rz;         /* top-right */
+    int lpos, tpos, rpos;
+    int num_cand, last_cand;
+
+	VECTOR pmv[4];	/* left neighbour, top neighbour, top-right neighbour */
+
+	switch (block) {
+	case 0:
+		lx = x - 1;	ly = y;		lz = 1;
+		tx = x;		ty = y - 1;	tz = 2;
+		rx = x + 1;	ry = y - 1;	rz = 2;
+		break;
+	case 1:
+		lx = x;		ly = y;		lz = 0;
+		tx = x;		ty = y - 1;	tz = 3;
+		rx = x + 1;	ry = y - 1;	rz = 2;
+		break;
+	case 2:
+		lx = x - 1;	ly = y;		lz = 3;
+		tx = x;		ty = y;		tz = 0;
+		rx = x;		ry = y;		rz = 1;
+		break;
+	default:
+		lx = x;		ly = y;		lz = 2;
+		tx = x;		ty = y;		tz = 0;
+		rx = x;		ry = y;		rz = 1;
+	}
+
+    lpos = lx + ly * mb_width;
+    rpos = rx + ry * mb_width;
+    tpos = tx + ty * mb_width;
+    num_cand = 0;
+
+    if (lpos >= bound && lx >= 0) {
+        num_cand++;
+        last_cand = 1;
+        pmv[1] = mbs[lpos].mvs[lz];
+    } else {
+        pmv[1] = zeroMV;
+    }
+
+    if (tpos >= bound) {
+        num_cand++;
+        last_cand = 2;
+        pmv[2] = mbs[tpos].mvs[tz];
+    } else {
+        pmv[2] = zeroMV;
+    }
+    
+    if (rpos >= bound && rx < mb_width) {
+        num_cand++;
+        last_cand = 3;
+        pmv[3] = mbs[rpos].mvs[rz];
+    } else {
+        pmv[3] = zeroMV;
+    }
+
+    /* if only one valid candidate preictor, the invalid candiates are set to the canidate */
+	if (num_cand != 1) {
+		/* set median */
+   
+   		pmv[0].x =
+			MIN(MAX(pmv[1].x, pmv[2].x),
+				MIN(MAX(pmv[2].x, pmv[3].x), MAX(pmv[1].x, pmv[3].x)));
+		pmv[0].y =
+			MIN(MAX(pmv[1].y, pmv[2].y),
+				MIN(MAX(pmv[2].y, pmv[3].y), MAX(pmv[1].y, pmv[3].y)));
+		return pmv[0];
+	 }
+
+	 return pmv[last_cand];  /* no point calculating median mv */
+}
+
+
+
+	/*
+	 * pmv are filled with: 
+	 *  [0]: Median (or whatever is correct in a special case)
+	 *  [1]: left neighbour
+	 *  [2]: top neighbour
+	 *  [3]: topright neighbour
+	 * psad are filled with:
+	 *  [0]: minimum of [1] to [3]
+	 *  [1]: left neighbour's SAD (NB:[1] to [3] are actually not needed)  
+	 *  [2]: top neighbour's SAD
+	 *  [3]: topright neighbour's SAD
+	 */
+static __inline int
+get_pmvdata2(const MACROBLOCK * const mbs,
+         const int mb_width,
+         const int bound,
+         const int x,
+         const int y,
+         const int block,
+		 VECTOR * const pmv,
+		 int32_t * const psad)
+{
+	static const VECTOR zeroMV = { 0, 0 };
+    
+    int lx, ly, lz;         /* left */
+    int tx, ty, tz;         /* top */
+    int rx, ry, rz;         /* top-right */
+    int lpos, tpos, rpos;
+    int num_cand, last_cand;
+
+	switch (block) {
+	case 0:
+		lx = x - 1;	ly = y;		lz = 1;
+		tx = x;		ty = y - 1;	tz = 2;
+		rx = x + 1;	ry = y - 1;	rz = 2;
+		break;
+	case 1:
+		lx = x;		ly = y;		lz = 0;
+		tx = x;		ty = y - 1;	tz = 3;
+		rx = x + 1;	ry = y - 1;	rz = 2;
+		break;
+	case 2:
+		lx = x - 1;	ly = y;		lz = 3;
+		tx = x;		ty = y;		tz = 0;
+		rx = x;		ry = y;		rz = 1;
+		break;
+	default:
+		lx = x;		ly = y;		lz = 2;
+		tx = x;		ty = y;		tz = 0;
+		rx = x;		ry = y;		rz = 1;
+	}
+
+    lpos = lx + ly * mb_width;
+    rpos = rx + ry * mb_width;
+    tpos = tx + ty * mb_width;
+    num_cand = 0;
+
+    if (lpos >= bound && lx >= 0) {
+        num_cand++;
+        last_cand = 1;
+        pmv[1] = mbs[lpos].mvs[lz];
+		psad[1] = mbs[lpos].sad8[lz];
+    } else {
+        pmv[1] = zeroMV;
+		psad[1] = MV_MAX_ERROR;
+    }
+
+    if (tpos >= bound) {
+        num_cand++;
+        last_cand = 2;
+        pmv[2]= mbs[tpos].mvs[tz];
+        psad[2] = mbs[tpos].sad8[tz];
+    } else {
+        pmv[2] = zeroMV;
+		psad[2] = MV_MAX_ERROR;
+    }
+    
+    if (rpos >= bound && rx < mb_width) {
+        num_cand++;
+        last_cand = 3;
+        pmv[3] = mbs[rpos].mvs[rz];
+        psad[3] = mbs[rpos].sad8[rz];
+    } else {
+        pmv[3] = zeroMV;
+		psad[3] = MV_MAX_ERROR;
+    }
+
+	/* original pmvdata() compatibility hack */
+	if (x == 0 && y == 0 && block == 0)
+	{
+		pmv[0] = pmv[1] = pmv[2] = pmv[3] = zeroMV;
+		psad[0] = 0;
+		psad[1] = psad[2] = psad[3] = MV_MAX_ERROR;
+		return 0;
+	}
+
+    /* if only one valid candidate preictor, the invalid candiates are set to the canidate */
+	if (num_cand == 1) {
+		pmv[0] = pmv[last_cand];
+		psad[0] = psad[last_cand];
+        // return MVequal(pmv[0], zeroMV); /* no point calculating median mv and minimum sad */
+		
+		/* original pmvdata() compatibility hack */
+		return y==0 && block <= 1 ? 0 : MVequal(pmv[0], zeroMV);
+	}
+
+	if ((MVequal(pmv[1], pmv[2])) && (MVequal(pmv[1], pmv[3]))) {
+		pmv[0] = pmv[1];
+		psad[0] = MIN(MIN(psad[1], psad[2]), psad[3]);
+		return 1;
+		/* compatibility patch */
+		//return y==0 && block <= 1 ? 0 : 1;
+	}
+
+	/* set median, minimum */
+
+	pmv[0].x =
+		MIN(MAX(pmv[1].x, pmv[2].x),
+			MIN(MAX(pmv[2].x, pmv[3].x), MAX(pmv[1].x, pmv[3].x)));
+	pmv[0].y =
+		MIN(MAX(pmv[1].y, pmv[2].y),
+			MIN(MAX(pmv[2].y, pmv[3].y), MAX(pmv[1].y, pmv[3].y)));
+
+	psad[0] = MIN(MIN(psad[1], psad[2]), psad[3]);
+
+   	return 0;
+}
 
 
 #endif							/* _MBPREDICTION_H_ */
