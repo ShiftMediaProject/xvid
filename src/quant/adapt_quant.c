@@ -28,7 +28,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: adapt_quant.c,v 1.8 2002-09-20 19:58:36 edgomez Exp $
+ *  $Id: adapt_quant.c,v 1.9 2002-09-20 20:17:22 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -125,8 +125,10 @@ adaptive_quantization(unsigned char *buf,
 	if (!(quant = (float *) malloc(mb_width * mb_height * sizeof(float))))
 		return(-1);
 
-	if(!(val = (float *) malloc(mb_width * mb_height * sizeof(float))))
+	if(!(val = (float *) malloc(mb_width * mb_height * sizeof(float)))) {
+		free(quant);
 		return(-1);
+	}
 
 	for (k = 0; k < mb_height; k++) {
 		for (l = 0; l < mb_width; l++)	// do this for all macroblocks individually 
