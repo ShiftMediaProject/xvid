@@ -557,6 +557,10 @@ InputName=sad_mmx
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\..\src\motion\motion.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\src\motion\sad.h
 # End Source File
 # End Group

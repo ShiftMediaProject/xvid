@@ -1,3 +1,53 @@
+ /******************************************************************************
+  *                                                                            *
+  *  This file is part of XviD, a free MPEG-4 video encoder/decoder            *
+  *                                                                            *
+  *  XviD is an implementation of a part of one or more MPEG-4 Video tools     *
+  *  as specified in ISO/IEC 14496-2 standard.  Those intending to use this    *
+  *  software module in hardware or software products are advised that its     *
+  *  use may infringe existing patents or copyrights, and any such use         *
+  *  would be at such party's own risk.  The original developer of this        *
+  *  software module and his/her company, and subsequent editors and their     *
+  *  companies, will have no liability for use of this software or             *
+  *  modifications or derivatives thereof.                                     *
+  *                                                                            *
+  *  XviD is free software; you can redistribute it and/or modify it           *
+  *  under the terms of the GNU General Public License as published by         *
+  *  the Free Software Foundation; either version 2 of the License, or         *
+  *  (at your option) any later version.                                       *
+  *                                                                            *
+  *  XviD is distributed in the hope that it will be useful, but               *
+  *  WITHOUT ANY WARRANTY; without even the implied warranty of                *
+  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+  *  GNU General Public License for more details.                              *
+  *                                                                            *
+  *  You should have received a copy of the GNU General Public License         *
+  *  along with this program; if not, write to the Free Software               *
+  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA  *
+  *                                                                            *
+  ******************************************************************************/
+
+ /******************************************************************************
+  *                                                                            *
+  *  bitstream.c                                                               *
+  *                                                                            *
+  *  Copyright (C) 2001 - Peter Ross <pross@cs.rmit.edu.au>                    *
+  *                                                                            *
+  *  For more information visit the XviD homepage: http://www.xvid.org         *
+  *                                                                            *
+  ******************************************************************************/
+
+ /******************************************************************************
+  *																			   *	
+  *  Revision history:                                                         *
+  *                                                                            *
+  *  14.04.2002 bframe encoding
+  *  08.03.2002 initial version; isibaar					                   *
+  *																			   *
+  ******************************************************************************/
+
+
+
 #include <stdlib.h>
 #include "../portab.h"
 #include "bitstream.h"
@@ -390,6 +440,144 @@ void MBCoding(const MBParam * pParam,
 		CodeBlockInter(pParam, pMB, qcoeff, bs, pStat);
 
 }
+
+/***************************************************************
+ * bframe encoding start
+ ***************************************************************/
+
+/*
+	mbtype
+	0	1b		direct(h263)		mvdb
+	1	01b		interpolate mc+q	dbquant, mvdf, mvdb
+	2	001b	backward mc+q		dbquant, mvdb
+	3	0001b	forward mc+q		dbquant, mvdf
+*/
+
+void put_bvop_mbtype(Bitstream * bs, int value)
+{
+	switch(value)
+	{
+	case 0 :	BitstreamPutBit(bs, 1);
+				return;
+
+	case 1 :	BitstreamPutBit(bs, 0);
+				BitstreamPutBit(bs, 1);
+				return;
+	
+	case 2 :	BitstreamPutBit(bs, 0);
+				BitstreamPutBit(bs, 0);
+				BitstreamPutBit(bs, 1);
+				return;
+	
+	case 3 :	BitstreamPutBit(bs, 0);
+				BitstreamPutBit(bs, 0);
+				BitstreamPutBit(bs, 0);
+				BitstreamPutBit(bs, 1);
+				return;
+
+	default :	; // invalid!
+
+	}
+	
+}
+
+/*
+	dbquant
+	-2	10b
+	0	0b
+	+2	11b
+*/
+
+void put_bvop_dbquant(Bitstream *bs, int value)
+{
+	switch (value)
+	{
+	case 0 :	BitstreamPutBit(bs, 0);
+				return;
+
+	case -2 :	BitstreamPutBit(bs, 1);
+				BitstreamPutBit(bs, 0);
+				return;
+	
+	case 2 :	BitstreamPutBit(bs, 1);
+				BitstreamPutBit(bs, 1);
+				return;
+
+	default : 	; // invalid
+	}
+}
+
+
+
+void MBCodingBVOP(const MACROBLOCK * mb, 
+				  const int16_t qcoeff[6*64],
+				  const int16_t fcode,
+				  const int16_t bcode,
+				  Bitstream * bs, 
+				  Statistics * pStat)
+{
+	int i;
+
+/*	------------------------------------------------------------------
+		when a block is skipped it is decoded DIRECT(0,)
+		hence are interpolated from forward & backward frames
+	------------------------------------------------------------------ */
+
+	if (mb->mode == 5)
+	{
+		BitstreamPutBit(bs, 1);		// skipped
+		return;
+	}
+
+	BitstreamPutBit(bs, 0);		// not skipped
+
+	if (mb->cbp == 0)
+	{
+		BitstreamPutBit(bs, 1);		// cbp == 0
+	}
+	else
+	{
+		BitstreamPutBit(bs, 0);		// cbp == xxx
+	}
+
+	put_bvop_mbtype(bs, mb->mode);
+
+	if (mb->cbp)
+	{
+		BitstreamPutBits(bs, mb->cbp, 6);
+	}
+
+	if (mb->mode != MODE_DIRECT && mb->cbp != 0)
+	{
+		put_bvop_dbquant(bs, 0); // todo: mb->dquant = 0
+	}
+
+	if (mb->mode == MODE_INTERPOLATE || mb->mode == MODE_FORWARD)
+	{
+	    CodeVector(bs, mb->pmvs[0].x, fcode, pStat);
+	    CodeVector(bs, mb->pmvs[0].y, fcode, pStat);
+	}
+
+	if (mb->mode == MODE_INTERPOLATE || mb->mode == MODE_BACKWARD)
+	{
+	    CodeVector(bs, mb->b_pmvs[0].x, bcode, pStat);
+	    CodeVector(bs, mb->b_pmvs[0].y, bcode, pStat);
+	}
+
+	if (mb->mode == MODE_DIRECT)
+	{
+		// TODO: direct
+	}
+	
+    for (i = 0; i < 6; i++)
+    {
+		if (mb->cbp & (1 << (5 - i)))
+		{
+			CodeCoeff(bs, &qcoeff[i*64], inter_table, scan_tables[0], 0);
+		}
+    }
+}
+
 
 
 /***************************************************************
