@@ -372,10 +372,8 @@ static int FrameCodeI(Encoder * pEnc, Bitstream * bs, uint32_t *pBits)
 	pEnc->mbParam.rounding_type = 1;
 	pEnc->mbParam.coding_type = I_VOP;
 
-	BitstreamWriteVolHeader(bs, pEnc->mbParam.width, pEnc->mbParam.height, pEnc->mbParam.quant_type);
-	BitstreamWriteVopHeader(bs, I_VOP, pEnc->mbParam.rounding_type,
-				pEnc->mbParam.quant,
-				pEnc->mbParam.fixed_code); 
+	BitstreamWriteVolHeader(bs, &pEnc->mbParam);
+	BitstreamWriteVopHeader(bs, &pEnc->mbParam);
 
 	*pBits = BitstreamPos(bs);
 
@@ -390,7 +388,7 @@ static int FrameCodeI(Encoder * pEnc, Bitstream * bs, uint32_t *pBits)
 
 			CodeIntraMB(pEnc, pMB);
 
-			MBTransQuantIntra(&pEnc->mbParam, x, y, dct_codes, qcoeff, &pEnc->sCurrent);
+			MBTransQuantIntra(&pEnc->mbParam, pMB, x, y, dct_codes, qcoeff, &pEnc->sCurrent);
 
 			start_timer();
 			MBPrediction(&pEnc->mbParam, x, y, pEnc->mbParam.mb_width, qcoeff, pEnc->pMBs);
@@ -430,7 +428,9 @@ static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool forc
 	IMAGE *pCurrent = &pEnc->sCurrent;
 	IMAGE *pRef = &pEnc->sReference;
 
-	image_setedges(pRef,pEnc->mbParam.edged_width, pEnc->mbParam.edged_height, pEnc->mbParam.width, pEnc->mbParam.height);
+	start_timer();
+	image_setedges(pRef,pEnc->mbParam.edged_width, pEnc->mbParam.edged_height, pEnc->mbParam.width, pEnc->mbParam.height, pEnc->mbParam.global_flags & XVID_INTERLACING);
+	stop_edges_timer();
 
 	pEnc->mbParam.rounding_type = 1 - pEnc->mbParam.rounding_type;
 
@@ -459,11 +459,9 @@ static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool forc
 	pEnc->mbParam.coding_type = P_VOP;
 
 	if(vol_header)
-		BitstreamWriteVolHeader(bs, pEnc->mbParam.width, pEnc->mbParam.height, pEnc->mbParam.quant_type);
+		BitstreamWriteVolHeader(bs, &pEnc->mbParam);
 
-	BitstreamWriteVopHeader(bs, P_VOP, pEnc->mbParam.rounding_type,
-				pEnc->mbParam.quant,
-				pEnc->mbParam.fixed_code); 
+	BitstreamWriteVopHeader(bs, &pEnc->mbParam);
 
 	*pBits = BitstreamPos(bs);
 
@@ -502,12 +500,14 @@ static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool forc
 				}
 				pMB->quant = pEnc->mbParam.quant;
 
-				pMB->cbp = MBTransQuantInter(&pEnc->mbParam, x, y, dct_codes, qcoeff, pCurrent);
+				pMB->field_pred = 0;
+
+				pMB->cbp = MBTransQuantInter(&pEnc->mbParam, pMB, x, y, dct_codes, qcoeff, pCurrent);
 			}
 			else 
 			{
 				CodeIntraMB(pEnc, pMB);
-				MBTransQuantIntra(&pEnc->mbParam, x, y, dct_codes, qcoeff, pCurrent);
+				MBTransQuantIntra(&pEnc->mbParam, pMB, x, y, dct_codes, qcoeff, pCurrent);
 			}
 
 			start_timer();

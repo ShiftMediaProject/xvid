@@ -21,7 +21,7 @@ void image_destroy(IMAGE * image, uint32_t edged_width, uint32_t edged_height);
 
 void image_swap(IMAGE * image1, IMAGE * image2);
 void image_copy(IMAGE *image1, IMAGE * image2, uint32_t edged_width, uint32_t height);
-void image_setedges(IMAGE * image, uint32_t edged_width, uint32_t edged_height, uint32_t width, uint32_t height);
+void image_setedges(IMAGE * image, uint32_t edged_width, uint32_t edged_height, uint32_t width, uint32_t height, uint32_t interlacing);
 void image_interpolate(const IMAGE * refn, 
 					   IMAGE * refh, IMAGE * refv,	IMAGE * refhv, 
 					   uint32_t edged_width, uint32_t edged_height, uint32_t rounding);
