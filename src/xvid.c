@@ -17,7 +17,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.46 2003-06-09 17:07:10 Isibaar Exp $
+ * $Id: xvid.c,v 1.47 2003-06-11 14:10:55 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -320,7 +320,7 @@ int xvid_init_init(XVID_INIT_PARAM * init_param)
 
 		/* Forward and Inverse Discrete Cosine Transformation functions */
 		fdct = fdct_mmx;
-		idct = simple_idct_mmx; /* use simple idct by default */
+		idct = idct_mmx;
 
 		/* Quantization related functions */
 		quant_intra   = quant_intra_mmx;
@@ -406,7 +406,7 @@ int xvid_init_init(XVID_INIT_PARAM * init_param)
 	if ((cpu_flags & XVID_CPU_MMXEXT)) {
 
 		/* Inverse DCT */
-		/* idct = idct_xmm; Don't use Walken idct anymore! */
+		idct = idct_xmm;
 
 		/* Interpolation */
 		interpolate8x8_halfpel_h  = interpolate8x8_halfpel_h_xmm;
@@ -452,7 +452,7 @@ int xvid_init_init(XVID_INIT_PARAM * init_param)
 	if ((cpu_flags & XVID_CPU_3DNOWEXT)) {
 
 		/* Inverse DCT */
-		/* idct =  idct_3dne; Don't use Walken idct anymore */
+		idct =  idct_3dne;
 
 		/* Buffer transfer */
 		transfer_8to16copy =  transfer_8to16copy_3dne;
@@ -488,6 +488,9 @@ int xvid_init_init(XVID_INIT_PARAM * init_param)
 
 	if ((cpu_flags & XVID_CPU_SSE2)) {
 
+#if defined(EXPERIMENTAL_SSE2_CODE) /* many people reported crashes with SSE2 */
+									/* better deactivate it completely and fix everything */
+									/* in dev-api-4 */
 		calc_cbp = calc_cbp_sse2;
 
 		/* Quantization */
@@ -496,7 +499,6 @@ int xvid_init_init(XVID_INIT_PARAM * init_param)
 		quant_inter   = quant_inter_sse2;
 		dequant_inter = dequant_inter_sse2;
 
-#if defined(EXPERIMENTAL_SSE2_CODE)
 		/* ME; slower than xmm */
 		sad16    = sad16_sse2;
 		dev16    = dev16_sse2;
