@@ -4,6 +4,141 @@
 # relevant.
 
 
+2004-07-24 11:33:57 GMT	                                	patch-50
+
+    Summary:
+      BVOP direct/interpolated ref block rounding fix.
+    Revision:
+      xvidcore--stable--1.0--patch-50
+
+    From ed.gomez:
+     * BVOP direct/interpolated ref block rounding fix.
+       It's been using rounding=1 for averaging stage since ever.
+       The standard says it's rounding=0.
+    
+       See standard clause 7.6.9.4 for explicit code and Section 6.3.5
+       that says "rounding=0" in bframes as they don't set the
+       vop_rounding_type in VOP header. Both sections match, xvid was
+       wrong
+
+    modified files:
+     src/decoder.c
+
+
+2004-07-23 20:37:09 GMT	                                	patch-49
+
+    Summary:
+      Removed data qualifer in .rodata
+    Revision:
+      xvidcore--stable--1.0--patch-49
+
+    From ed.gomez:
+     * long standing warning by yasm... data isn't a keyword for
+       .(ro)data sections.
+
+    modified files:
+     src/bitstream/x86_asm/cbp_mmx.asm
+     src/bitstream/x86_asm/cbp_sse2.asm
+     src/dct/x86_asm/fdct_mmx_ffmpeg.asm
+     src/dct/x86_asm/fdct_mmx_skal.asm
+     src/dct/x86_asm/fdct_sse2_skal.asm
+     src/dct/x86_asm/idct_3dne.asm src/dct/x86_asm/idct_mmx.asm
+     src/dct/x86_asm/idct_sse2_dmitry.asm
+     src/dct/x86_asm/simple_idct_mmx.asm
+     src/image/x86_asm/colorspace_rgb_mmx.asm
+     src/image/x86_asm/colorspace_yuyv_mmx.asm
+     src/image/x86_asm/interpolate8x8_3dn.asm
+     src/image/x86_asm/interpolate8x8_3dne.asm
+     src/image/x86_asm/interpolate8x8_mmx.asm
+     src/image/x86_asm/interpolate8x8_xmm.asm
+     src/image/x86_asm/qpel_mmx.asm
+     src/image/x86_asm/reduced_mmx.asm
+     src/motion/x86_asm/sad_3dn.asm src/motion/x86_asm/sad_3dne.asm
+     src/motion/x86_asm/sad_mmx.asm src/motion/x86_asm/sad_sse2.asm
+     src/motion/x86_asm/sad_xmm.asm
+     src/quant/x86_asm/quantize_h263_3dne.asm
+     src/quant/x86_asm/quantize_h263_mmx.asm
+     src/quant/x86_asm/quantize_mpeg_mmx.asm
+     src/quant/x86_asm/quantize_mpeg_xmm.asm
+     src/utils/x86_asm/cpuid.asm
+     src/utils/x86_asm/interlacing_mmx.asm
+     src/utils/x86_asm/mem_transfer_3dne.asm
+     src/utils/x86_asm/mem_transfer_mmx.asm
+
+
+2004-07-19 18:45:14 GMT	                                	patch-48
+
+    Summary:
+      Complete previous xvid_decraw patch
+    Revision:
+      xvidcore--stable--1.0--patch-48
+
+    Complete previous xvid_decraw patch
+    
+
+    modified files:
+     examples/xvid_decraw.c
+
+
+2004-07-18 11:58:48 GMT	                                	patch-47
+
+    Summary:
+      ISO C99'ism fix
+    Revision:
+      xvidcore--stable--1.0--patch-47
+
+    ISO C99'ism fix
+    
+
+    modified files:
+     src/encoder.c
+
+
+2004-07-17 11:32:42 GMT	                                	patch-46
+
+    Summary:
+      Make sure time incr is never larger than 16bit.
+    Revision:
+      xvidcore--stable--1.0--patch-46
+
+    From ed.gomez:
+     * Keep both fbase and fincr under 16bit limit.
+
+    modified files:
+     src/encoder.c
+
+
+2004-07-17 10:00:42 GMT	                                	patch-45
+
+    Summary:
+      Future version interoperability
+    Revision:
+      xvidcore--stable--1.0--patch-45
+
+    From ed.gomez:
+     * Zeroing the structures is the best way not to pass
+       wrong data when dealing with slightly new XviD (like
+       head). If we don't zero here, then brightness is not
+       initialized in HEAD leading to crash.
+
+    modified files:
+     examples/xvid_decraw.c
+
+
+2004-07-10 17:30:40 GMT	                                	patch-44
+
+    Summary:
+      ChangeLog update
+    Revision:
+      xvidcore--stable--1.0--patch-44
+
+    ChangeLog update
+    
+
+    modified files:
+     ChangeLog
+
+
 2004-07-10 17:27:06 GMT	                                	patch-43
 
     Summary:
@@ -2114,7 +2249,7 @@
        the bvop lag frame (black with error message).
     
     Fixing previous patch a bit:
-     * added $Id: ChangeLog-1.0,v 1.2 2004-07-10 17:40:42 edgomez Exp $ fields
+     * added $Id: ChangeLog-1.0,v 1.3 2004-07-26 20:29:27 edgomez Exp $ fields
      * Fixed copyright
 
     modified files:
