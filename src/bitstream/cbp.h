@@ -11,6 +11,7 @@ extern cbpFuncPtr calc_cbp;
 
 extern cbpFunc calc_cbp_c;
 extern cbpFunc calc_cbp_mmx;
+extern cbpFunc calc_cbp_sse2;
 extern cbpFunc calc_cbp_ppc;
 extern cbpFunc calc_cbp_altivec;
 

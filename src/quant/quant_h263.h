@@ -31,6 +31,7 @@ extern quanth263_interFuncPtr quant_inter;
 
 quanth263_interFunc quant_inter_c;
 quanth263_interFunc quant_inter_mmx;
+quanth263_interFunc quant_inter_sse2;
 
 //inter_dequant
 typedef void (dequanth263_interFunc)(int16_t *coeff,
@@ -43,5 +44,6 @@ extern dequanth263_interFuncPtr dequant_inter;
 
 dequanth263_interFunc dequant_inter_c;
 dequanth263_interFunc dequant_inter_mmx;
+dequanth263_interFunc dequant_inter_sse2;
 
 #endif /* _QUANT_H263_H_ */

@@ -20,6 +20,7 @@ extern sad16FuncPtr sad16;
 sad16Func sad16_c;
 sad16Func sad16_mmx;
 sad16Func sad16_xmm;
+sad16Func sad16_sse2;
 sad16Func sad16_altivec;
 
 

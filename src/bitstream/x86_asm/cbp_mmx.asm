@@ -32,8 +32,9 @@
 ; *
 ; *	History:
 ; *
-; *     22.03.2002      0.01          ; Min Chen <chenm001@163.com>
-; *                                   ; use 386 cpu's 'BTS' to replace 'cbp |= 1 << (edx-1)'
+; * 17.04.2002  sse2 stuff
+; * 22.03.2002      0.01          ; Min Chen <chenm001@163.com>
+; *                               ; use 386 cpu's 'BTS' to replace 'cbp |= 1 << (edx-1)'
 ; *	24.11.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
 ; *
 ; *************************************************************************/
@@ -52,7 +53,9 @@ global %1
 %endif
 %endmacro
 
-ignore_dc	dw		0, -1, -1, -1
+align 16
+
+ignore_dc	dw		0, -1, -1, -1, -1, -1, -1, -1
 
 
 section .text
@@ -133,4 +136,171 @@ calc_cbp_mmx
 				pop	ecx
 				pop	ebx
 				
+				ret
+
+
+
+;===========================================================================
+;
+; uint32_t calc_cbp_sse2(const int16_t coeff[6][64]);
+;
+; not enabled - slower than mmx?
+;
+;===========================================================================
+
+align 16
+cglobal calc_cbp_sse2
+calc_cbp_sse2
+				push	esi
+
+				mov     esi, [esp + 4 + 4]		; coeff
+				movdqa	xmm7, [ignore_dc]		; mask to ignore dc value
+
+				xor		eax, eax				; cbp = 0
+				pxor	xmm6, xmm6				; zeroes to help psadbw
+
+.first			movdqa	xmm0, [esi]
+				pand	xmm0, xmm7
+				movdqa	xmm1, [esi+16]
+
+				por		xmm0, [esi+32]
+				por		xmm1, [esi+48]
+				por		xmm0, [esi+64]
+				por		xmm1, [esi+80]
+				por		xmm0, [esi+96]
+				por		xmm1, [esi+112]
+
+				por		xmm0, xmm1				; xmm0 = xmm1 = 128 bits worth of info
+				psadbw	xmm0, xmm6				; contains 2 dwords with sums
+				movhlps	xmm1, xmm0				; move high dword from xmm0 to low xmm1
+				por		xmm0, xmm1				; combine
+				movd	ecx, xmm0				; if ecx set, values were found
+
+				add		esi, 128
+
+				or		ecx, ecx
+				jz		.second
+
+				bts		eax, 5
+
+.second			movdqa	xmm0, [esi]
+				pand	xmm0, xmm7
+				movdqa	xmm1, [esi+16]
+
+				por		xmm0, [esi+32]
+				por		xmm1, [esi+48]
+				por		xmm0, [esi+64]
+				por		xmm1, [esi+80]
+				por		xmm0, [esi+96]
+				por		xmm1, [esi+112]
+
+				por		xmm0, xmm1
+				psadbw	xmm0, xmm6
+				movhlps	xmm1, xmm0
+				por		xmm0, xmm1
+				movd	ecx, xmm0
+
+				add		esi, 128
+
+				or		ecx, ecx
+				jz		.third
+
+				bts		eax, 4
+
+.third			movdqa	xmm0, [esi]
+				pand	xmm0, xmm7
+				movdqa	xmm1, [esi+16]
+
+				por		xmm0, [esi+32]
+				por		xmm1, [esi+48]
+				por		xmm0, [esi+64]
+				por		xmm1, [esi+80]
+				por		xmm0, [esi+96]
+				por		xmm1, [esi+112]
+
+				por		xmm0, xmm1
+				psadbw	xmm0, xmm6
+				movhlps	xmm1, xmm0
+				por		xmm0, xmm1
+				movd	ecx, xmm0
+
+				add		esi, 128
+
+				or		ecx, ecx
+				jz		.fourth
+
+				bts		eax, 3
+
+.fourth			movdqa	xmm0, [esi]
+				pand	xmm0, xmm7
+				movdqa	xmm1, [esi+16]
+
+				por		xmm0, [esi+32]
+				por		xmm1, [esi+48]
+				por		xmm0, [esi+64]
+				por		xmm1, [esi+80]
+				por		xmm0, [esi+96]
+				por		xmm1, [esi+112]
+
+				por		xmm0, xmm1
+				psadbw	xmm0, xmm6
+				movhlps	xmm1, xmm0
+				por		xmm0, xmm1
+				movd	ecx, xmm0
+
+				add		esi, 128
+
+				or		ecx, ecx
+				jz		.fifth
+
+				bts		eax, 2
+
+.fifth			movdqa	xmm0, [esi]
+				pand	xmm0, xmm7
+				movdqa	xmm1, [esi+16]
+
+				por		xmm0, [esi+32]
+				por		xmm1, [esi+48]
+				por		xmm0, [esi+64]
+				por		xmm1, [esi+80]
+				por		xmm0, [esi+96]
+				por		xmm1, [esi+112]
+
+				por		xmm0, xmm1
+				psadbw	xmm0, xmm6
+				movhlps	xmm1, xmm0
+				por		xmm0, xmm1
+				movd	ecx, xmm0
+
+				add		esi, 128
+
+				or		ecx, ecx
+				jz		.sixth
+
+				bts		eax, 1
+
+.sixth			movdqa	xmm0, [esi]
+				pand	xmm0, xmm7
+				movdqa	xmm1, [esi+16]
+
+				por		xmm0, [esi+32]
+				por		xmm1, [esi+48]
+				por		xmm0, [esi+64]
+				por		xmm1, [esi+80]
+				por		xmm0, [esi+96]
+				por		xmm1, [esi+112]
+
+				por		xmm0, xmm1
+				psadbw	xmm0, xmm6
+				movhlps	xmm1, xmm0
+				por		xmm0, xmm1
+				movd	ecx, xmm0
+
+				or		ecx, ecx
+				jz		.end
+
+				bts		eax, 0
+
+.end			pop	esi
+
 				ret
