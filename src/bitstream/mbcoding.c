@@ -56,7 +56,8 @@ void create_vlc_tables(void)
 			char *max_run_ptr = max_run[last + (intra << 1)];
 	
 			for(l = 0; l < 64; l++) { // run
-				int32_t level = k, run = l;
+				int32_t level = k;
+				uint32_t run = l;
 	
 				if(abs(level) <= max_level_ptr[run] && run <= max_run_ptr[abs(level)]) {
 
@@ -100,9 +101,8 @@ void create_vlc_tables(void)
 							level += max_level_ptr[run];
 						else
 							level -= max_level_ptr[run];
-						DEBUG1("1) run:", run);
+
 						run -= max_run_ptr[abs(level)] + 1;
-						DEBUG1("2) run:", run);
 						
 						if(abs(level) <= max_level_ptr[run] &&
 							run <= max_run_ptr[abs(level)]) {
@@ -126,8 +126,6 @@ void create_vlc_tables(void)
 								run += max_run_ptr[abs(level)] + 1;
 							else
 								run++;
-
-							DEBUG1("3) run:", run);
 
 							vlc[intra]->code = (uint32_t) ((0x1e + last) << 20) |
 										(l << 14) | (1 << 13) | ((k & 0xfff) << 1) | 1;
