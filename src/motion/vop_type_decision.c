@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: vop_type_decision.c,v 1.2 2004-03-22 22:36:24 edgomez Exp $
+ * $Id: vop_type_decision.c,v 1.3 2004-04-20 06:10:40 syskin Exp $
  *
  ****************************************************************************/
 
@@ -129,7 +129,7 @@ MEanalyzeMB (	const uint8_t * const pRef,
 		} else simplicity++;
 
 		if (*Data->iMinSAD > 500) /* refinement from 2-pixel to 1-pixel */
-			xvid_me_SubpelRefine(Data, CheckCandidate32I);
+			xvid_me_SubpelRefine(Data, CheckCandidate32I, 0);
 		else simplicity++;
 	} else simplicity++;
 
