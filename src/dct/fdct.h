@@ -8,5 +8,6 @@ extern fdctFuncPtr fdct;
 
 fdctFunc fdct_int32;
 fdctFunc fdct_mmx;
+fdctFunc fdct_altivec;
 
 #endif /* _FDCT_H_ */
