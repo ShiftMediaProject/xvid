@@ -4,7 +4,7 @@
 # 
 # Edit this file to enable/disable optimizations
 #
-# $Id: Makefile.linuxx86,v 1.4 2002-11-16 11:16:09 chl Exp $
+# $Id: Makefile.linuxx86,v 1.5 2002-12-14 09:28:56 suxen_drol Exp $
 # 
 #############################################################################
 
@@ -40,9 +40,6 @@ CFLAGS += -DLINUX
 #   (Use only if you know what you're doing !)
     # PSNR during encoding
 # CFLAGS += -D_DEBUG_PSNR
-
-# Enable BFrame decoding (still beta)
-# CFLAGS += -DBFRAMES_DEC
 
 LIBDIR = /usr/local/lib
 
