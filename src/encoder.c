@@ -52,7 +52,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: encoder.c,v 1.89 2002-11-28 07:27:37 suxen_drol Exp $
+ * $Id: encoder.c,v 1.90 2003-02-04 22:00:44 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -636,9 +636,8 @@ HintedMESet(Encoder * pEnc,
 		return;
 	}
 
-	pEnc->current->fcode =
-		(hint->rawhints) ? hint->mvhint.fcode : BitstreamGetBits(&bs,
-																 FCODEBITS);
+	pEnc->current->fcode = (hint->rawhints != 0) ?
+		(uint32_t)hint->mvhint.fcode : BitstreamGetBits(&bs, FCODEBITS);
 
 	length = pEnc->current->fcode + 5;
 	high = 1 << (length - 1);
@@ -653,20 +652,17 @@ HintedMESet(Encoder * pEnc,
 			VECTOR tmp;
 			int vec;
 
-			pMB->mode =
-				(hint->rawhints) ? bhint->mode : BitstreamGetBits(&bs,
-																  MODEBITS);
+			pMB->mode = (hint->rawhints != 0) ?
+				(uint32_t)bhint->mode : BitstreamGetBits(&bs, MODEBITS);
 
 			pMB->mode = (pMB->mode == MODE_INTER_Q) ? MODE_INTER : pMB->mode;
 			pMB->mode = (pMB->mode == MODE_INTRA_Q) ? MODE_INTRA : pMB->mode;
 
 			if (pMB->mode == MODE_INTER) {
-				tmp.x =
-					(hint->rawhints) ? bhint->mvs[0].x : BitstreamGetBits(&bs,
-																		  length);
-				tmp.y =
-					(hint->rawhints) ? bhint->mvs[0].y : BitstreamGetBits(&bs,
-																		  length);
+				tmp.x = (hint->rawhints) ?
+					bhint->mvs[0].x : (int)BitstreamGetBits(&bs, length);
+				tmp.y =	(hint->rawhints) ?
+					bhint->mvs[0].y : (int)BitstreamGetBits(&bs, length);
 				tmp.x -= (tmp.x >= high) ? high * 2 : 0;
 				tmp.y -= (tmp.y >= high) ? high * 2 : 0;
 
@@ -680,12 +676,10 @@ HintedMESet(Encoder * pEnc,
 				}
 			} else if (pMB->mode == MODE_INTER4V) {
 				for (vec = 0; vec < 4; ++vec) {
-					tmp.x =
-						(hint->rawhints) ? bhint->mvs[vec].
-						x : BitstreamGetBits(&bs, length);
-					tmp.y =
-						(hint->rawhints) ? bhint->mvs[vec].
-						y : BitstreamGetBits(&bs, length);
+					tmp.x = (hint->rawhints) ?
+						bhint->mvs[vec].x : (int)BitstreamGetBits(&bs, length);
+					tmp.y = (hint->rawhints) ?
+						bhint->mvs[vec].y : (int)BitstreamGetBits(&bs, length);
 					tmp.x -= (tmp.x >= high) ? high * 2 : 0;
 					tmp.y -= (tmp.y >= high) ? high * 2 : 0;
 
