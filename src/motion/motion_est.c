@@ -105,7 +105,8 @@ d_mv_bits(int x, int y, const VECTOR pred, const uint32_t iFcode, const int qpel
 	return bits;
 }
 
-static int32_t ChromaSAD2(int fx, int fy, int bx, int by, const SearchData * const data)
+static int32_t ChromaSAD2(const int fx, const int fy, const int bx, const int by,
+							const SearchData * const data)
 {
 	int sad;
 	const uint32_t stride = data->iEdgedWidth/2;
@@ -113,50 +114,44 @@ static int32_t ChromaSAD2(int fx, int fy, int bx, int by, const SearchData * con
 		* f_refv = data->RefQ + 8,
 		* b_refu = data->RefQ + 16,
 		* b_refv = data->RefQ + 24;
+	int offset = (fx>>1) + (fy>>1)*stride;
 
 	switch (((fx & 1) << 1) | (fy & 1))	{
 		case 0:
-			fx = fx / 2; fy = fy / 2;
-			f_refu = (uint8_t*)data->RefCU + fy * stride + fx, stride;
-			f_refv = (uint8_t*)data->RefCV + fy * stride + fx, stride;
+			f_refu = (uint8_t*)data->RefP[4] + offset;
+			f_refv = (uint8_t*)data->RefP[5] + offset;
 			break;
 		case 1:
-			fx = fx / 2; fy = (fy - 1) / 2;
-			interpolate8x8_halfpel_v(f_refu, data->RefCU + fy * stride + fx, stride, data->rounding);
-			interpolate8x8_halfpel_v(f_refv, data->RefCV + fy * stride + fx, stride, data->rounding);
+			interpolate8x8_halfpel_v(f_refu, data->RefP[4] + offset, stride, data->rounding);
+			interpolate8x8_halfpel_v(f_refv, data->RefP[5] + offset, stride, data->rounding);
 			break;
 		case 2:
-			fx = (fx - 1) / 2; fy = fy / 2;
-			interpolate8x8_halfpel_h(f_refu, data->RefCU + fy * stride + fx, stride, data->rounding);
-			interpolate8x8_halfpel_h(f_refv, data->RefCV + fy * stride + fx, stride, data->rounding);
+			interpolate8x8_halfpel_h(f_refu, data->RefP[4] + offset, stride, data->rounding);
+			interpolate8x8_halfpel_h(f_refv, data->RefP[5] + offset, stride, data->rounding);
 			break;
 		default:
-			fx = (fx - 1) / 2; fy = (fy - 1) / 2;
-			interpolate8x8_halfpel_hv(f_refu, data->RefCU + fy * stride + fx, stride, data->rounding);
-			interpolate8x8_halfpel_hv(f_refv, data->RefCV + fy * stride + fx, stride, data->rounding);
+			interpolate8x8_halfpel_hv(f_refu, data->RefP[4] + offset, stride, data->rounding);
+			interpolate8x8_halfpel_hv(f_refv, data->RefP[5] + offset, stride, data->rounding);
 			break;
 	}
 
+	offset = (bx>>1) + (by>>1)*stride;
 	switch (((bx & 1) << 1) | (by & 1))	{
 		case 0:
-			bx = bx / 2; by = by / 2;
-			b_refu = (uint8_t*)data->b_RefCU + by * stride + bx, stride;
-			b_refv = (uint8_t*)data->b_RefCV + by * stride + bx, stride;
+			b_refu = (uint8_t*)data->b_RefP[4] + offset;
+			b_refv = (uint8_t*)data->b_RefP[5] + offset;
 			break;
 		case 1:
-			bx = bx / 2; by = (by - 1) / 2;
-			interpolate8x8_halfpel_v(b_refu, data->b_RefCU + by * stride + bx, stride, data->rounding);
-			interpolate8x8_halfpel_v(b_refv, data->b_RefCV + by * stride + bx, stride, data->rounding);
+			interpolate8x8_halfpel_v(b_refu, data->b_RefP[4] + offset, stride, data->rounding);
+			interpolate8x8_halfpel_v(b_refv, data->b_RefP[5] + offset, stride, data->rounding);
 			break;
 		case 2:
-			bx = (bx - 1) / 2; by = by / 2;
-			interpolate8x8_halfpel_h(b_refu, data->b_RefCU + by * stride + bx, stride, data->rounding);
-			interpolate8x8_halfpel_h(b_refv, data->b_RefCV + by * stride + bx, stride, data->rounding);
+			interpolate8x8_halfpel_h(b_refu, data->b_RefP[4] + offset, stride, data->rounding);
+			interpolate8x8_halfpel_h(b_refv, data->b_RefP[5] + offset, stride, data->rounding);
 			break;
 		default:
-			bx = (bx - 1) / 2; by = (by - 1) / 2;
-			interpolate8x8_halfpel_hv(b_refu, data->b_RefCU + by * stride + bx, stride, data->rounding);
-			interpolate8x8_halfpel_hv(b_refv, data->b_RefCV + by * stride + bx, stride, data->rounding);
+			interpolate8x8_halfpel_hv(b_refu, data->b_RefP[4] + offset, stride, data->rounding);
+			interpolate8x8_halfpel_hv(b_refv, data->b_RefP[5] + offset, stride, data->rounding);
 			break;
 	}
 
@@ -166,38 +161,34 @@ static int32_t ChromaSAD2(int fx, int fy, int bx, int by, const SearchData * con
 	return sad;
 }
 
-
 static int32_t
-ChromaSAD(int dx, int dy, const SearchData * const data)
+ChromaSAD(const int dx, const int dy, const SearchData * const data)
 {
 	int sad;
 	const uint32_t stride = data->iEdgedWidth/2;
+	int offset = (dx>>1) + (dy>>1)*stride;
 
 	if (dx == data->temp[5] && dy == data->temp[6]) return data->temp[7]; //it has been checked recently
 	data->temp[5] = dx; data->temp[6] = dy; // backup
 
 	switch (((dx & 1) << 1) | (dy & 1))	{
 		case 0:
-			dx = dx / 2; dy = dy / 2;
-			sad = sad8(data->CurU, data->RefCU + dy * stride + dx, stride);
-			sad += sad8(data->CurV, data->RefCV + dy * stride + dx, stride);
+			sad = sad8(data->CurU, data->RefP[4] + offset, stride);
+			sad += sad8(data->CurV, data->RefP[5] + offset, stride);
 			break;
 		case 1:
-			dx = dx / 2; dy = (dy - 1) / 2;
-			sad = sad8bi(data->CurU, data->RefCU + dy * stride + dx, data->RefCU + (dy+1) * stride + dx, stride);
-			sad += sad8bi(data->CurV, data->RefCV + dy * stride + dx, data->RefCV + (dy+1) * stride + dx, stride);
+			sad = sad8bi(data->CurU, data->RefP[4] + offset, data->RefP[4] + offset + stride, stride);
+			sad += sad8bi(data->CurV, data->RefP[5] + offset, data->RefP[5] + offset + stride, stride);
 			break;
 		case 2:
-			dx = (dx - 1) / 2; dy = dy / 2;
-			sad = sad8bi(data->CurU, data->RefCU + dy * stride + dx, data->RefCU + dy * stride + dx+1, stride);
-			sad += sad8bi(data->CurV, data->RefCV + dy * stride + dx, data->RefCV + dy * stride + dx+1, stride);
+			sad = sad8bi(data->CurU, data->RefP[4] + offset, data->RefP[4] + offset + 1, stride);
+			sad += sad8bi(data->CurV, data->RefP[5] + offset, data->RefP[5] + offset + 1, stride);
 			break;
 		default:
-			dx = (dx - 1) / 2; dy = (dy - 1) / 2;
-			interpolate8x8_halfpel_hv(data->RefQ, data->RefCU + dy * stride + dx, stride, data->rounding);
+			interpolate8x8_halfpel_hv(data->RefQ, data->RefP[4] + offset, stride, data->rounding);
 			sad = sad8(data->CurU, data->RefQ, stride);
 
-			interpolate8x8_halfpel_hv(data->RefQ, data->RefCV + dy * stride + dx, stride, data->rounding);
+			interpolate8x8_halfpel_hv(data->RefQ, data->RefP[5] + offset, stride, data->rounding);
 			sad += sad8(data->CurV, data->RefQ, stride);
 			break;
 	}
@@ -209,28 +200,19 @@ static __inline const uint8_t *
 GetReferenceB(const int x, const int y, const uint32_t dir, const SearchData * const data)
 {
 //	dir : 0 = forward, 1 = backward
-	switch ( (dir << 2) | ((x&1)<<1) | (y&1) ) {
-		case 0 : return data->Ref + x/2 + (y/2)*(data->iEdgedWidth);
-		case 1 : return data->RefV + x/2 + ((y-1)/2)*(data->iEdgedWidth);
-		case 2 : return data->RefH + (x-1)/2 + (y/2)*(data->iEdgedWidth);
-		case 3 : return data->RefHV + (x-1)/2 + ((y-1)/2)*(data->iEdgedWidth);
-		case 4 : return data->bRef + x/2 + (y/2)*(data->iEdgedWidth);
-		case 5 : return data->bRefV + x/2 + ((y-1)/2)*(data->iEdgedWidth);
-		case 6 : return data->bRefH + (x-1)/2 + (y/2)*(data->iEdgedWidth);
-		default : return data->bRefHV + (x-1)/2 + ((y-1)/2)*(data->iEdgedWidth);
-	}
+	const uint8_t* const *direction = ( dir == 0 ? data->RefP : data->b_RefP );
+	const int picture = ((x&1)<<1) | (y&1);
+	const int offset = (x>>1) + (y>>1)*data->iEdgedWidth;
+	return direction[picture] + offset;
 }
 
 // this is a simpler copy of GetReferenceB, but as it's __inline anyway, we can keep the two separate
 static __inline const uint8_t *
 GetReference(const int x, const int y, const SearchData * const data)
 {
-	switch ( ((x&1)<<1) | (y&1) ) {
-		case 0 : return data->Ref + x/2 + (y/2)*(data->iEdgedWidth);
-		case 3 : return data->RefHV + (x-1)/2 + ((y-1)/2)*(data->iEdgedWidth);
-		case 1 : return data->RefV + x/2 + ((y-1)/2)*(data->iEdgedWidth);
-		default : return data->RefH + (x-1)/2 + (y/2)*(data->iEdgedWidth);	//case 2
-	}
+	const int picture = ((x&1)<<1) | (y&1);
+	const int offset = (x>>1) + (y>>1)*data->iEdgedWidth;
+	return data->RefP[picture] + offset;
 }
 
 static uint8_t *
@@ -272,7 +254,7 @@ Interpolate8x8qpel(const int x, const int y, const uint32_t block, const uint32_
 
 	default: // pure halfpel position
 		return (uint8_t *) ref1;
-	
+
 	}
 	return Reference;
 }
@@ -291,7 +273,7 @@ Interpolate16x16qpel(const int x, const int y, const uint32_t dir, const SearchD
 	ref1 = GetReferenceB(halfpel_x, halfpel_y, dir, data);
 	switch( ((x&1)<<1) + (y&1) ) {
 	case 3: // x and y in qpel resolution - the "corners" (top left/right and
-			 // bottom left/right) during qpel refinement
+			// bottom left/right) during qpel refinement
 		ref2 = GetReferenceB(halfpel_x, y - halfpel_y, dir, data);
 		ref3 = GetReferenceB(x - halfpel_x, halfpel_y, dir, data);
 		ref4 = GetReferenceB(x - halfpel_x, y - halfpel_y, dir, data);
@@ -352,8 +334,8 @@ CheckCandidate16(const int x, const int y, const int Direction, int * const dir,
 	sad += (data->lambda16 * t * sad)>>10;
 	data->temp[1] += (data->lambda8 * t * (data->temp[1] + NEIGH_8X8_BIAS))>>10;
 
-	if (data->chroma) sad += ChromaSAD((xc >> 1) + roundtab_79[xc & 0x3],
-									   (yc >> 1) + roundtab_79[yc & 0x3], data);
+	if (data->chroma) sad += ChromaSAD(	(xc >> 1) + roundtab_79[xc & 0x3],
+										(yc >> 1) + roundtab_79[yc & 0x3], data);
 
 	if (sad < data->iMinSAD[0]) {
 		data->iMinSAD[0] = sad;
@@ -483,7 +465,7 @@ CheckCandidate32I(const int x, const int y, const int Direction, int * const dir
 	if ( (x > data->max_dx) || (x < data->min_dx)
 		|| (y > data->max_dy) || (y < data->min_dy) ) return;
 
-	sad = sad32v_c(data->Cur, data->Ref + x/2 + (y/2)*(data->iEdgedWidth),
+	sad = sad32v_c(data->Cur, data->RefP[0] + x/2 + (y/2)*(data->iEdgedWidth),
 							data->iEdgedWidth, data->temp+1);
 
 	if (sad < *(data->iMinSAD)) {
@@ -531,7 +513,7 @@ CheckCandidateInt(const int xf, const int yf, const int Direction, int * const d
 	}
 
 	t = d_mv_bits(xf, yf, data->predMV, data->iFcode, data->qpel^data->qpel_precision, 0)
-		 + d_mv_bits(xb, yb, data->bpredMV, data->iFcode, data->qpel^data->qpel_precision, 0);
+			+ d_mv_bits(xb, yb, data->bpredMV, data->iFcode, data->qpel^data->qpel_precision, 0);
 
 	sad = sad16bi(data->Cur, ReferenceF, ReferenceB, data->iEdgedWidth);
 	sad += (data->lambda16 * t * sad)>>10;
@@ -703,7 +685,7 @@ CheckCandidateBits16(const int x, const int y, const int Direction, int * const 
 		yc = (yc >> 1) + roundtab_79[yc & 0x3];
 
 		//chroma U
-		ptr = interpolate8x8_switch2(data->RefQ + 64, data->RefCU, 0, 0, xc, yc,  data->iEdgedWidth/2, data->rounding);
+		ptr = interpolate8x8_switch2(data->RefQ + 64, data->RefP[4], 0, 0, xc, yc,  data->iEdgedWidth/2, data->rounding);
 		transfer_8to16subro(in, ptr, data->CurU, data->iEdgedWidth/2);
 		fdct(in);
 		if (data->lambda8 == 0) sum = quant_inter(coeff, in, data->lambda16);
@@ -715,7 +697,7 @@ CheckCandidateBits16(const int x, const int y, const int Direction, int * const 
 
 		if (bits < data->iMinSAD[0]) {
 			//chroma V
-			ptr = interpolate8x8_switch2(data->RefQ + 64, data->RefCV, 0, 0, xc, yc,  data->iEdgedWidth/2, data->rounding);
+			ptr = interpolate8x8_switch2(data->RefQ + 64, data->RefP[5], 0, 0, xc, yc,  data->iEdgedWidth/2, data->rounding);
 			transfer_8to16subro(in, ptr, data->CurV, data->iEdgedWidth/2);
 			fdct(in);
 			if (data->lambda8 == 0) sum = quant_inter(coeff, in, data->lambda16);
@@ -988,12 +970,12 @@ SkipMacroblockP(MACROBLOCK *pMB, const int32_t sad)
 
 bool
 MotionEstimation(MBParam * const pParam,
-				 FRAMEINFO * const current,
-				 FRAMEINFO * const reference,
-				 const IMAGE * const pRefH,
-				 const IMAGE * const pRefV,
-				 const IMAGE * const pRefHV,
-				 const uint32_t iLimit)
+				FRAMEINFO * const current,
+				FRAMEINFO * const reference,
+				const IMAGE * const pRefH,
+				const IMAGE * const pRefV,
+				const IMAGE * const pRefHV,
+				const uint32_t iLimit)
 {
 	MACROBLOCK *const pMBs = current->mbs;
 	const IMAGE *const pCurrent = &current->image;
@@ -1007,8 +989,8 @@ MotionEstimation(MBParam * const pParam,
 	uint32_t x, y;
 	uint32_t iIntra = 0;
 	int32_t quant = current->quant, sad00;
-	int skip_thresh = INITIAL_SKIP_THRESH * 
-		(current->global_flags & XVID_REDUCED ? 4:1) * 
+	int skip_thresh = INITIAL_SKIP_THRESH *
+		(current->global_flags & XVID_REDUCED ? 4:1) *
 		(current->global_flags & XVID_MODEDECISION_BITS ? 2:1);
 
 	// some pre-initialized thingies for SearchP
@@ -1283,12 +1265,12 @@ SearchP(const IMAGE * const pRef,
 	Data->CurV = pCur->v + (x + y * (Data->iEdgedWidth/2)) * 8*i;
 	Data->CurU = pCur->u + (x + y * (Data->iEdgedWidth/2)) * 8*i;
 
-	Data->Ref = pRef->y + (x + Data->iEdgedWidth*y) * 16*i;
-	Data->RefH = pRefH + (x + Data->iEdgedWidth*y) * 16*i;
-	Data->RefV = pRefV + (x + Data->iEdgedWidth*y) * 16*i;
-	Data->RefHV = pRefHV + (x + Data->iEdgedWidth*y) * 16*i;
-	Data->RefCV = pRef->v + (x + y * (Data->iEdgedWidth/2)) * 8*i;
-	Data->RefCU = pRef->u + (x + y * (Data->iEdgedWidth/2)) * 8*i;
+	Data->RefP[0] = pRef->y + (x + Data->iEdgedWidth*y) * 16*i;
+	Data->RefP[2] = pRefH + (x + Data->iEdgedWidth*y) * 16*i;
+	Data->RefP[1] = pRefV + (x + Data->iEdgedWidth*y) * 16*i;
+	Data->RefP[3] = pRefHV + (x + Data->iEdgedWidth*y) * 16*i;
+	Data->RefP[4] = pRef->u + (x + y * (Data->iEdgedWidth/2)) * 8*i;
+	Data->RefP[5] = pRef->v + (x + y * (Data->iEdgedWidth/2)) * 8*i;
 
 	Data->lambda16 = lambda_vec16[iQuant];
 	Data->lambda8 = lambda_vec8[iQuant];
@@ -1389,7 +1371,7 @@ SearchP(const IMAGE * const pRef,
 	}
 
 	if (MotionFlags & PMV_QUARTERPELREFINE16) {
-		
+
 		get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, x, y, 16,
 				pParam->width, pParam->height, Data->iFcode, 1, 0);
 
@@ -1490,14 +1472,15 @@ Search8(const SearchData * const OldData,
 	*(Data->iMinSAD) += (Data->lambda8 * i * (*Data->iMinSAD + NEIGH_8X8_BIAS))>>10;
 
 	if (MotionFlags & (PMV_EXTSEARCH8|PMV_HALFPELREFINE8|PMV_QUARTERPELREFINE8)) {
-		if (Data->rrv) i = 2; else i = 1;
 
-		Data->Ref = OldData->Ref + i * 8 * ((block&1) + Data->iEdgedWidth*(block>>1));
-		Data->RefH = OldData->RefH + i * 8 * ((block&1) + Data->iEdgedWidth*(block>>1));
-		Data->RefV = OldData->RefV + i * 8 * ((block&1) + Data->iEdgedWidth*(block>>1));
-		Data->RefHV = OldData->RefHV + i * 8 * ((block&1) + Data->iEdgedWidth*(block>>1));
+		if (Data->rrv) i = 16; else i = 8;
 
-		Data->Cur = OldData->Cur + i * 8 * ((block&1) + Data->iEdgedWidth*(block>>1));
+		Data->RefP[0] = OldData->RefP[0] + i * ((block&1) + Data->iEdgedWidth*(block>>1));
+		Data->RefP[1] = OldData->RefP[1] + i * ((block&1) + Data->iEdgedWidth*(block>>1));
+		Data->RefP[2] = OldData->RefP[2] + i * ((block&1) + Data->iEdgedWidth*(block>>1));
+		Data->RefP[3] = OldData->RefP[3] + i * ((block&1) + Data->iEdgedWidth*(block>>1));
+
+		Data->Cur = OldData->Cur + i * ((block&1) + Data->iEdgedWidth*(block>>1));
 		Data->qpel_precision = 0;
 
 		get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, x, y, 8,
@@ -1631,12 +1614,12 @@ SearchBF(	const IMAGE * const pRef,
 	Data->qpel_precision = 0;
 	Data->temp[5] = Data->temp[6] = Data->temp[7] = 256*4096; // reset chroma-sad cache
 
-	Data->Ref = pRef->y + (x + y * Data->iEdgedWidth) * 16;
-	Data->RefH = pRefH + (x + y * Data->iEdgedWidth) * 16;
-	Data->RefV = pRefV + (x + y * Data->iEdgedWidth) * 16;
-	Data->RefHV = pRefHV + (x + y * Data->iEdgedWidth) * 16;
-	Data->RefCU = pRef->u + (x + y * Data->iEdgedWidth/2) * 8;
-	Data->RefCV = pRef->v + (x + y * Data->iEdgedWidth/2) * 8;
+	Data->RefP[0] = pRef->y + (x + Data->iEdgedWidth*y) * 16;
+	Data->RefP[2] = pRefH + (x + Data->iEdgedWidth*y) * 16;
+	Data->RefP[1] = pRefV + (x + Data->iEdgedWidth*y) * 16;
+	Data->RefP[3] = pRefHV + (x + Data->iEdgedWidth*y) * 16;
+	Data->RefP[4] = pRef->u + (x + y * (Data->iEdgedWidth/2)) * 8;
+	Data->RefP[5] = pRef->v + (x + y * (Data->iEdgedWidth/2)) * 8;
 
 	Data->predMV = *predMV;
 
@@ -1742,7 +1725,7 @@ SkipDecisionB(const IMAGE * const pCur,
 
 	if (sum < 2 * MAX_CHROMA_SAD_FOR_SKIP * pMB->quant) {
 		pMB->mode = MODE_DIRECT_NONE_MV; //skipped
-		for (k = 0; k < 4; k++) { 
+		for (k = 0; k < 4; k++) {
 			pMB->qmvs[k] = pMB->mvs[k];
 			pMB->b_qmvs[k] = pMB->b_mvs[k];
 		}
@@ -1774,18 +1757,18 @@ SearchDirect(const IMAGE * const f_Ref,
 	MainSearchFunc *MainSearchPtr;
 
 	*Data->iMinSAD = 256*4096;
-	Data->Ref = f_Ref->y + k;
-	Data->RefH = f_RefH + k;
-	Data->RefV = f_RefV + k;
-	Data->RefHV = f_RefHV + k;
-	Data->bRef = b_Ref->y + k;
-	Data->bRefH = b_RefH + k;
-	Data->bRefV = b_RefV + k;
-	Data->bRefHV = b_RefHV + k;
-	Data->RefCU = f_Ref->u + (x + (Data->iEdgedWidth/2) * y) * 8;
-	Data->RefCV = f_Ref->v + (x + (Data->iEdgedWidth/2) * y) * 8;
-	Data->b_RefCU = b_Ref->u + (x + (Data->iEdgedWidth/2) * y) * 8;
-	Data->b_RefCV = b_Ref->v + (x + (Data->iEdgedWidth/2) * y) * 8;
+	Data->RefP[0] = f_Ref->y + k;
+	Data->RefP[2] = f_RefH + k;
+	Data->RefP[1] = f_RefV + k;
+	Data->RefP[3] = f_RefHV + k;
+	Data->b_RefP[0] = b_Ref->y + k;
+	Data->b_RefP[2] = b_RefH + k;
+	Data->b_RefP[1] = b_RefV + k;
+	Data->b_RefP[3] = b_RefHV + k;
+	Data->RefP[4] = f_Ref->u + (x + (Data->iEdgedWidth/2) * y) * 8;
+	Data->RefP[5] = f_Ref->v + (x + (Data->iEdgedWidth/2) * y) * 8;
+	Data->b_RefP[4] = b_Ref->u + (x + (Data->iEdgedWidth/2) * y) * 8;
+	Data->b_RefP[5] = b_Ref->v + (x + (Data->iEdgedWidth/2) * y) * 8;
 
 	k = Data->qpel ? 4 : 2;
 	Data->max_dx = k * (pParam->width - x * 16);
@@ -1916,19 +1899,19 @@ SearchInterpolate(const IMAGE * const f_Ref,
 	fData->iFcode = bData.bFcode = fcode; fData->bFcode = bData.iFcode = bcode;
 
 	i = (x + y * fData->iEdgedWidth) * 16;
-	bData.bRef = fData->Ref = f_Ref->y + i;
-	bData.bRefH = fData->RefH = f_RefH + i;
-	bData.bRefV = fData->RefV = f_RefV + i;
-	bData.bRefHV = fData->RefHV = f_RefHV + i;
-	bData.Ref = fData->bRef = b_Ref->y + i;
-	bData.RefH = fData->bRefH = b_RefH + i;
-	bData.RefV = fData->bRefV = b_RefV + i;
-	bData.RefHV = fData->bRefHV = b_RefHV + i;
-	bData.b_RefCU = fData->RefCU = f_Ref->u + (x + (fData->iEdgedWidth/2) * y) * 8;
-	bData.b_RefCV = fData->RefCV = f_Ref->v + (x + (fData->iEdgedWidth/2) * y) * 8;
-	bData.RefCU = fData->b_RefCU = b_Ref->u + (x + (fData->iEdgedWidth/2) * y) * 8;
-	bData.RefCV = fData->b_RefCV = b_Ref->v + (x + (fData->iEdgedWidth/2) * y) * 8;
 
+	bData.b_RefP[0] = fData->RefP[0] = f_Ref->y + i;
+	bData.b_RefP[2] = fData->RefP[2] = f_RefH + i;
+	bData.b_RefP[1] = fData->RefP[1] = f_RefV + i;
+	bData.b_RefP[3] = fData->RefP[3] = f_RefHV + i;
+	bData.RefP[0] = fData->b_RefP[0] = b_Ref->y + i;
+	bData.RefP[2] = fData->b_RefP[2] = b_RefH + i;
+	bData.RefP[1] = fData->b_RefP[1] = b_RefV + i;
+	bData.RefP[3] = fData->b_RefP[3] = b_RefHV + i;
+	bData.b_RefP[4] = fData->RefP[4] = f_Ref->u + (x + (fData->iEdgedWidth/2) * y) * 8;
+	bData.b_RefP[5] = fData->RefP[5] = f_Ref->v + (x + (fData->iEdgedWidth/2) * y) * 8;
+	bData.RefP[4] = fData->b_RefP[4] = b_Ref->u + (x + (fData->iEdgedWidth/2) * y) * 8;
+	bData.RefP[5] = fData->b_RefP[5] = b_Ref->v + (x + (fData->iEdgedWidth/2) * y) * 8;
 
 	bData.bpredMV = fData->predMV = *f_predMV;
 	fData->bpredMV = bData.predMV = *b_predMV;
@@ -2012,21 +1995,21 @@ SearchInterpolate(const IMAGE * const f_Ref,
 
 void
 MotionEstimationBVOP(MBParam * const pParam,
-					 FRAMEINFO * const frame,
-					 const int32_t time_bp,
-					 const int32_t time_pp,
-					 // forward (past) reference
-					 const MACROBLOCK * const f_mbs,
-					 const IMAGE * const f_ref,
-					 const IMAGE * const f_refH,
-					 const IMAGE * const f_refV,
-					 const IMAGE * const f_refHV,
-					 // backward (future) reference
-					 const FRAMEINFO * const b_reference,
-					 const IMAGE * const b_ref,
-					 const IMAGE * const b_refH,
-					 const IMAGE * const b_refV,
-					 const IMAGE * const b_refHV)
+					FRAMEINFO * const frame,
+					const int32_t time_bp,
+					const int32_t time_pp,
+					// forward (past) reference
+					const MACROBLOCK * const f_mbs,
+					const IMAGE * const f_ref,
+					const IMAGE * const f_refH,
+					const IMAGE * const f_refV,
+					const IMAGE * const f_refHV,
+					// backward (future) reference
+					const FRAMEINFO * const b_reference,
+					const IMAGE * const b_ref,
+					const IMAGE * const b_refH,
+					const IMAGE * const b_refV,
+					const IMAGE * const b_refHV)
 {
 	uint32_t i, j;
 	int32_t best_sad;
@@ -2179,7 +2162,7 @@ MEanalyzeMB (	const uint8_t * const pRef,
 				pParam->width, pParam->height, Data->iFcode - pParam->m_quarterpel, 0, 0);
 
 	Data->Cur = pCur + (x + y * pParam->edged_width) * 16;
-	Data->Ref = pRef + (x + y * pParam->edged_width) * 16;
+	Data->RefP[0] = pRef + (x + y * pParam->edged_width) * 16;
 
 	pmv[1].x = EVEN(pMB->mvs[0].x);
 	pmv[1].y = EVEN(pMB->mvs[0].y);
@@ -2188,10 +2171,6 @@ MEanalyzeMB (	const uint8_t * const pRef,
 	pmv[0].x = pmv[0].y = 0;
 
 	CheckCandidate32I(0, 0, 255, &i, Data);
-	Data->iMinSAD[1] -= 50;
-	Data->iMinSAD[2] -= 50;
-	Data->iMinSAD[3] -= 50;
-	Data->iMinSAD[4] -= 50;
 
 	if (*Data->iMinSAD > 4 * MAX_SAD00_FOR_SKIP) {
 
@@ -2213,7 +2192,7 @@ MEanalyzeMB (	const uint8_t * const pRef,
 }
 
 #define INTRA_THRESH	2400
-#define INTER_THRESH	1100
+#define INTER_THRESH	1300
 
 int
 MEanalysis(	const IMAGE * const pRef,
@@ -2259,9 +2238,9 @@ MEanalysis(	const IMAGE * const pRef,
 
 			if (bCount == 0) pMBs[x + y * pParam->mb_width].mvs[0] = zeroMV;
 			else { //extrapolation of the vector found for last frame
-				pMBs[x + y * pParam->mb_width].mvs[0].x = 
+				pMBs[x + y * pParam->mb_width].mvs[0].x =
 					(pMBs[x + y * pParam->mb_width].mvs[0].x * (bCount+1) ) / bCount;
-				pMBs[x + y * pParam->mb_width].mvs[0].y = 
+				pMBs[x + y * pParam->mb_width].mvs[0].y =
 					(pMBs[x + y * pParam->mb_width].mvs[0].y * (bCount+1) ) / bCount;
 			}
 
@@ -2288,7 +2267,7 @@ MEanalysis(	const IMAGE * const pRef,
 	sSAD /= blocks;
 	s = (10*s) / blocks;
 
-	if (s > 5) sSAD += (s - 4) * (180 - 2*b_thresh); //static block - looks bad when in bframe...
+	if (s > 4) sSAD += (s - 3) * (300 - 2*b_thresh); //static block - looks bad when in bframe...
 
 	if (sSAD > InterThresh ) return P_VOP;
 	emms();
@@ -2324,9 +2303,9 @@ GlobalMotionEst(const MACROBLOCK * const pMBs,
 	double meanx,meany;
 	int num,oldnum;
 
-	if (!MBmask) { fprintf(stderr,"Mem error\n"); 
-			       gmc.duv[0].x= gmc.duv[0].y = 
-				   		gmc.duv[1].x= gmc.duv[1].y = 			
+	if (!MBmask) {	fprintf(stderr,"Mem error\n");
+					gmc.duv[0].x= gmc.duv[0].y =
+						gmc.duv[1].x= gmc.duv[1].y =
 						gmc.duv[2].x= gmc.duv[2].y = 0;
 					return gmc; }
 
@@ -2394,13 +2373,13 @@ GlobalMotionEst(const MACROBLOCK * const pMBs,
 
 	denom = a*a+b*b-c*n;
 
-/* Solve the system:     sol = (D'*E*D)^{-1} D'*E*F   */
+/* Solve the system:	sol = (D'*E*D)^{-1} D'*E*F   */
 /* D'*E*F has been calculated in the same loop as matrix */
 
 	sol[0] = -c*DtimesF[0] + a*DtimesF[1] + b*DtimesF[2];
-	sol[1] =  a*DtimesF[0] - n*DtimesF[1]                + b*DtimesF[3];
-	sol[2] =  b*DtimesF[0]                - n*DtimesF[2] - a*DtimesF[3];
-	sol[3] =                 b*DtimesF[1] - a*DtimesF[2] - c*DtimesF[3];
+	sol[1] =  a*DtimesF[0] - n*DtimesF[1]				+ b*DtimesF[3];
+	sol[2] =  b*DtimesF[0]				- n*DtimesF[2] - a*DtimesF[3];
+	sol[3] =				 b*DtimesF[1] - a*DtimesF[2] - c*DtimesF[3];
 
 	sol[0] /= denom;
 	sol[1] /= denom;
@@ -2449,7 +2428,7 @@ GlobalMotionEst(const MACROBLOCK * const pMBs,
 				continue;
 
 			if  ( ( ABS(( sol[0] + (16*mx+8)*sol[1] + (16*my+8)*sol[2] ) - mv.x ) > meanx )
-			   || ( ABS(( sol[3] - (16*mx+8)*sol[2] + (16*my+8)*sol[1] ) - mv.y ) > meany ) )
+				|| ( ABS(( sol[3] - (16*mx+8)*sol[2] + (16*my+8)*sol[1] ) - mv.y ) > meany ) )
 				MBmask[mbnum]=0;
 			else
 				num++;
@@ -2570,10 +2549,10 @@ CountMBBitsInter4v(const SearchData * const Data,
 		Data8->currentMV = Data->currentMV + i + 1;
 		Data8->currentQMV = Data->currentQMV + i + 1;
 		Data8->Cur = Data->Cur + 8*((i&1) + (i>>1)*Data->iEdgedWidth);
-		Data8->Ref = Data->Ref + 8*((i&1) + (i>>1)*Data->iEdgedWidth);
-		Data8->RefH = Data->RefH + 8*((i&1) + (i>>1)*Data->iEdgedWidth);
-		Data8->RefV = Data->RefV + 8*((i&1) + (i>>1)*Data->iEdgedWidth);
-		Data8->RefHV = Data->RefHV + 8*((i&1) + (i>>1)*Data->iEdgedWidth);
+		Data8->RefP[0] = Data->RefP[0] + 8*((i&1) + (i>>1)*Data->iEdgedWidth);
+		Data8->RefP[2] = Data->RefP[2] + 8*((i&1) + (i>>1)*Data->iEdgedWidth);
+		Data8->RefP[1] = Data->RefP[1] + 8*((i&1) + (i>>1)*Data->iEdgedWidth);
+		Data8->RefP[3] = Data->RefP[3] + 8*((i&1) + (i>>1)*Data->iEdgedWidth);
 
 		if(Data->qpel) {
 			Data8->predMV = get_qpmv2(pMBs, pParam->mb_width, 0, x, y, i);
@@ -2666,7 +2645,7 @@ CountMBBitsInter4v(const SearchData * const Data,
 		sumy = (sumy >> 3) + roundtab_76[sumy & 0xf];
 
 		//chroma U
-		ptr = interpolate8x8_switch2(Data->RefQ + 64, Data->RefCU, 0, 0, sumx, sumy, Data->iEdgedWidth/2, Data->rounding);
+		ptr = interpolate8x8_switch2(Data->RefQ + 64, Data->RefP[4], 0, 0, sumx, sumy, Data->iEdgedWidth/2, Data->rounding);
 		transfer_8to16subro(in, Data->CurU, ptr, Data->iEdgedWidth/2);
 		fdct(in);
 		if (Data->lambda8 == 0) i = quant_inter(coeff, in, Data->lambda16);
@@ -2678,7 +2657,7 @@ CountMBBitsInter4v(const SearchData * const Data,
 
 		if (bits < *Data->iMinSAD) { // still possible
 			//chroma V
-			ptr = interpolate8x8_switch2(Data->RefQ + 64, Data->RefCV, 0, 0, sumx, sumy, Data->iEdgedWidth/2, Data->rounding);
+			ptr = interpolate8x8_switch2(Data->RefQ + 64, Data->RefP[5], 0, 0, sumx, sumy, Data->iEdgedWidth/2, Data->rounding);
 			transfer_8to16subro(in, Data->CurV, ptr, Data->iEdgedWidth/2);
 			fdct(in);
 			if (Data->lambda8 == 0) i = quant_inter(coeff, in, Data->lambda16);
@@ -2700,25 +2679,20 @@ static int
 CountMBBitsIntra(const SearchData * const Data)
 {
 	int bits = 1; //this one is ac/dc prediction flag. always 1.
-	int cbp = 0, i, t, dc = 0, b_dc = 1024;
+	int cbp = 0, i, t, dc = 1024, b_dc;
 	const uint32_t iQuant = Data->lambda16;
 	int16_t *in = Data->dctSpace, * coeff = Data->dctSpace + 64;
+	uint32_t iDcScaler = get_dc_scaler(iQuant, 1);;
 
 	for(i = 0; i < 4; i++) {
-		uint32_t iDcScaler = get_dc_scaler(iQuant, 1);
-
 		int s = 8*((i&1) + (i>>1)*Data->iEdgedWidth);
 		transfer_8to16copy(in, Data->Cur + s, Data->iEdgedWidth);
 		fdct(in);
-		b_dc = dc;
-		dc = in[0];
-		in[0] -= b_dc;
-		if (Data->lambda8 == 0) quant_intra_c(coeff, in, iQuant, iDcScaler);
-		else quant4_intra_c(coeff, in, iQuant, iDcScaler);
-
-		b_dc = dc;
-		dc = coeff[0];
-		if (i != 0) coeff[0] -= b_dc;
+		b_dc = in[0];
+		in[0] -= dc;
+		dc = b_dc;
+		if (Data->lambda8 == 0) quant_intra(coeff, in, iQuant, iDcScaler);
+		else quant4_intra(coeff, in, iQuant, iDcScaler);
 
 		bits += t = CodeCoeffIntra_CalcBits(coeff, scan_tables[0]) + dcy_tab[coeff[0] + 255].len;;
 		Data->temp[i] = t;
@@ -2727,7 +2701,7 @@ CountMBBitsIntra(const SearchData * const Data)
 	}
 
 	if (bits < Data->iMinSAD[0]) { // INTRA still looks good, let's add chroma
-		uint32_t iDcScaler = get_dc_scaler(iQuant, 0);
+		iDcScaler = get_dc_scaler(iQuant, 0);
 		//chroma U
 		transfer_8to16copy(in, Data->CurU, Data->iEdgedWidth/2);
 		fdct(in);
@@ -2739,7 +2713,6 @@ CountMBBitsIntra(const SearchData * const Data)
 		if (t != 0) cbp |= 1 << (5 - 4);
 
 		if (bits < Data->iMinSAD[0]) {
-			iDcScaler = get_dc_scaler(iQuant, 1);
 			//chroma V
 			transfer_8to16copy(in, Data->CurV, Data->iEdgedWidth/2);
 			fdct(in);

@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: motion_est.h,v 1.5 2003-04-05 15:54:58 syskin Exp $
+ *  $Id: motion_est.h,v 1.6 2003-04-08 11:12:07 syskin Exp $
  *
  ***************************************************************************/
 
@@ -114,12 +114,7 @@ typedef struct
 	VECTOR * currentMV;
 	VECTOR * currentQMV;
 	int32_t * iMinSAD;
-	const uint8_t * Ref;
-	const uint8_t * RefH;
-	const uint8_t * RefV;
-	const uint8_t * RefHV;
-	const uint8_t * RefCU;
-	const uint8_t * RefCV;
+	const uint8_t * RefP[6]; // N, V, H, HV, cU, cV
 	const uint8_t * CurU;
 	const uint8_t * CurV;
 	uint8_t * RefQ;
@@ -133,13 +128,7 @@ typedef struct
 	int chroma;
 	int rrv;
 //fields for interpolate and direct modes
-	const uint8_t * bRef;
-	const uint8_t * bRefH;
-	const uint8_t * bRefV;
-	const uint8_t * bRefHV;
-	const uint8_t * b_RefCU;
-	const uint8_t * b_RefCV;
-
+	const uint8_t * b_RefP[6]; // N, V, H, HV, cU, cV
 	VECTOR bpredMV;
 	uint32_t bFcode;
 // fields for direct mode
