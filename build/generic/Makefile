@@ -98,11 +98,13 @@ install: all
 	@echo
 	@echo "+---------- Installing XviD libraries in $(libdir) ----------+"
 	@echo
+	$(INSTALL) -d $(libdir)
 	$(INSTALL) -m 755 $(SHARED_LIB) $(libdir)/$(SHARED_LIB)
 	$(INSTALL) -m 755 $(STATIC_LIB) $(libdir)/$(STATIC_LIB)
 	@echo
 	@echo "+---------- Installing XviD header in $(includedir) ----------+"
 	@echo
+	$(INSTALL) -d $(includedir)
 	$(INSTALL) -m 644 $(SRCDIR)/xvid.h $(includedir)/xvid.h
 	@echo
 
