@@ -74,7 +74,8 @@ static __inline int64_t read_counter() {
 #endif
 
 #define CACHE_LINE  16
-#define CACHE_ALIGN
+#define CACHE_ALIGN __attribute__ ((__aligned__(CACHE_LINE)))
+
 
 #if defined(LINUX)
 
