@@ -80,11 +80,17 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 		pParam->fincr = (int)(pParam->fincr / div);
 	}
 
-	if (pParam->bitrate <= 0)
-		pParam->bitrate = 900000;
+	if (pParam->rc_bitrate <= 0)
+		pParam->rc_bitrate = 900000;
 
-	if (pParam->rc_buffersize <= 0)
-		pParam->rc_buffersize = 16;
+	if (pParam->rc_reaction_delay_factor <= 0)
+		pParam->rc_reaction_delay_factor = 16;
+
+	if (pParam->rc_averaging_period <= 0)
+		pParam->rc_averaging_period = 100;
+
+	if (pParam->rc_buffer <= 0)
+		pParam->rc_buffer = 100;
 
 	if ((pParam->min_quantizer <= 0) || (pParam->min_quantizer > 31))
 		pParam->min_quantizer = 1;
@@ -118,7 +124,7 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 
 	pEnc->mbParam.quant = 4;
 
-	pEnc->bitrate = pParam->bitrate;
+	pEnc->bitrate = pParam->rc_bitrate;
 
 	pEnc->iFrameNum = 0;
 	pEnc->iMaxKeyInterval = pParam->max_key_interval;
@@ -172,10 +178,11 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 
 	pParam->handle = (void *)pEnc;
 
-	if (pParam->bitrate)
+	if (pParam->rc_bitrate)
 	{
-		RateControlInit(pParam->bitrate, pParam->rc_buffersize, pParam->fbase * 1000 / pParam->fincr,
-				pParam->max_quantizer, pParam->min_quantizer);
+		RateControlInit(pParam->rc_bitrate, pParam->rc_reaction_delay_factor,
+			pParam->rc_averaging_period, pParam->rc_buffer, pParam->fbase * 1000 / pParam->fincr,
+			pParam->max_quantizer, pParam->min_quantizer);
 	}
 
 	init_timer();
