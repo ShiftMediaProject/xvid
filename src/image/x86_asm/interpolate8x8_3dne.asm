@@ -40,9 +40,9 @@ BITS 32
 ;=============================================================================
 
 %ifdef FORMAT_COFF
-SECTION .rodata data
+SECTION .rodata
 %else
-SECTION .rodata data align=16
+SECTION .rodata align=16
 %endif
 
 ALIGN 16
