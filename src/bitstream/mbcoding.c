@@ -561,8 +561,8 @@ MBCodingBVOP(const MACROBLOCK * mb,
 	}
 
 	if (mb->mode == MODE_DIRECT) {
-		CodeVector(bs, mb->mvs[0].x, 1, pStat);		/* fcode is always 1 for delta vector */
-		CodeVector(bs, mb->mvs[0].y, 1, pStat);		/* prediction is always (0,0) */
+		CodeVector(bs, mb->deltamv.x, 1, pStat);		/* fcode is always 1 for delta vector */
+		CodeVector(bs, mb->deltamv.y, 1, pStat);		/* prediction is always (0,0) */
 	}
 
 	for (i = 0; i < 6; i++) {

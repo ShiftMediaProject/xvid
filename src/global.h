@@ -71,6 +71,11 @@ typedef struct
 	VECTOR b_mvs[4];
 	VECTOR b_pmvs[4];
 
+	// bframe direct mode
+
+	VECTOR directmv[4];
+	VECTOR deltamv;
+
 	int mb_type;
 	int dbquant;
 
