@@ -55,7 +55,6 @@ bits 32
 section .text
 
 cglobal transfer_8to16copy_mmx
-cglobal transfer_8to16copy_mmx
 cglobal transfer_16to8copy_mmx
 cglobal transfer_8to16sub_mmx
 cglobal transfer_8to16sub2_mmx
