@@ -37,7 +37,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.52 2002-07-06 17:04:57 chl Exp $
+ *  $Id: encoder.c,v 1.53 2002-07-10 19:16:32 chl Exp $
  *
  ****************************************************************************/
 
@@ -1315,9 +1315,8 @@ HintedMESet(Encoder * pEnc,
 				&pEnc->current->mbs[x + y * pEnc->mbParam.mb_width];
 			MVBLOCKHINT *bhint =
 				&hint->mvhint.block[x + y * pEnc->mbParam.mb_width];
-			VECTOR pred[4];
+			VECTOR pred;
 			VECTOR tmp;
-			int32_t dummy[4];
 			int vec;
 
 			pMB->mode =
@@ -1337,14 +1336,13 @@ HintedMESet(Encoder * pEnc,
 				tmp.x -= (tmp.x >= high) ? high * 2 : 0;
 				tmp.y -= (tmp.y >= high) ? high * 2 : 0;
 
-				get_pmvdata(pEnc->current->mbs, x, y, pEnc->mbParam.mb_width,
-							0, pred, dummy);
+				pred = get_pmv2(pEnc->current->mbs,pEnc->mbParam.mb_width,0,x,y,0);
 
 				for (vec = 0; vec < 4; ++vec) {
 					pMB->mvs[vec].x = tmp.x;
 					pMB->mvs[vec].y = tmp.y;
-					pMB->pmvs[vec].x = pMB->mvs[0].x - pred[0].x;
-					pMB->pmvs[vec].y = pMB->mvs[0].y - pred[0].y;
+					pMB->pmvs[vec].x = pMB->mvs[0].x - pred.x;
+					pMB->pmvs[vec].y = pMB->mvs[0].y - pred.y;
 				}
 			} else if (pMB->mode == MODE_INTER4V) {
 				for (vec = 0; vec < 4; ++vec) {
@@ -1357,13 +1355,12 @@ HintedMESet(Encoder * pEnc,
 					tmp.x -= (tmp.x >= high) ? high * 2 : 0;
 					tmp.y -= (tmp.y >= high) ? high * 2 : 0;
 
-					get_pmvdata(pEnc->current->mbs, x, y,
-								pEnc->mbParam.mb_width, vec, pred, dummy);
+					pred = get_pmv2(pEnc->current->mbs,pEnc->mbParam.mb_width,0,x,y,vec);
 
 					pMB->mvs[vec].x = tmp.x;
 					pMB->mvs[vec].y = tmp.y;
-					pMB->pmvs[vec].x = pMB->mvs[vec].x - pred[0].x;
-					pMB->pmvs[vec].y = pMB->mvs[vec].y - pred[0].y;
+					pMB->pmvs[vec].x = pMB->mvs[vec].x - pred.x;
+					pMB->pmvs[vec].y = pMB->mvs[vec].y - pred.y;
 				}
 			} else				// intra / stuffing / not_coded
 			{
