@@ -3,6 +3,8 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - emms wrapper API header -
  *
+ *  Copyright(C) 2002 Michael Militzer
+ *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
  *  to use this software module in hardware or software products are
@@ -26,14 +28,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- ****************************************************************************/
-/*****************************************************************************
- *
- *  History
- *
- *  - Mon Jun 17 00:16:13 2002 Added legal header
- *
- *  $Id: emms.h,v 1.7 2002-07-18 13:45:14 suxen_drol Exp $
+ * $Id: emms.h,v 1.8 2002-09-05 21:36:35 edgomez Exp $
  *
  ****************************************************************************/
 
