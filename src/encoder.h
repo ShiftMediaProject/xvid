@@ -36,7 +36,7 @@
  *               support for EXTENDED API
  *  - 22.08.2001 fixed bug in iDQtab
  *
- *  $Id: encoder.h,v 1.14 2002-07-12 12:26:23 suxen_drol Exp $
+ *  $Id: encoder.h,v 1.15 2002-07-19 14:56:00 chl Exp $
  *
  ****************************************************************************/
 
@@ -201,7 +201,9 @@ typedef struct
 	IMAGE f_refv;
 	IMAGE f_refhv;
 	int bframenum_dx50bvop;
-	
+
+	int last_pframe; 	
+	int time_pp;
 	int m_framenum; /* debug frame num counter; unlike iFrameNum, does not reset at ivop */
 #endif
 
