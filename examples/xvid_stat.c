@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_stat.c,v 1.13 2002-09-27 20:58:02 edgomez Exp $
+ * $Id: xvid_stat.c,v 1.14 2002-09-28 14:27:15 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -277,10 +277,7 @@ int main(int argc, char *argv[])
  ****************************************************************************/
 
 	if (XDIM <= 0 || XDIM >= 2048 || YDIM <=0 || YDIM >= 2048 ) {
-		fprintf(stderr,
-				"Trying to retreive width and height from PGM header\n",
-				XDIM,
-				YDIM);
+		fprintf(stderr, "Trying to retreive width and height from PGM header\n");
 		ARG_INPUTTYPE = 1; /* pgm */
 	}
   
@@ -295,7 +292,7 @@ int main(int argc, char *argv[])
 	}
 
 	if ( ARG_FRAMERATE <= 0) {
-		fprintf(stderr,"Wrong Fraterate %s \n",argv[5]);
+		fprintf(stderr,"Wrong Framerate %s \n",argv[5]);
 		return -1;
 	}
 

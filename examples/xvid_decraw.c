@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.3 2002-09-27 20:58:30 edgomez Exp $
+ * $Id: xvid_decraw.c,v 1.4 2002-09-28 14:27:16 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -229,6 +229,13 @@ int main(int argc, char *argv[])
  *	                         Main loop
  ****************************************************************************/
 
+	totalsize = LONG_PACK('M','P','4','U');
+	mp4_ptr = (unsigned char *)&totalsize;
+	if(*mp4_ptr == 'M')
+		bigendian = 1;
+	else
+		bigendian = 0;
+
 	if(ARG_STREAMTYPE) {
 
 		unsigned char header[4];
@@ -238,21 +245,17 @@ int main(int argc, char *argv[])
 			goto release_all;
 		fread(header, 4, 1, in_file);
 		
-		if(header[0] != '2' || header[1] != 'M' ||
-		   header[2] != 'O' || header[3] != 'G') {
+		if(header[0] != 'M' || header[1] != 'P' ||
+		   header[2] != '4' || header[3] != 'U') {
 			fprintf(stderr, "Error, this not a mp4u container file\n");
 			goto release_all;
 		}
 
 	}
+	else {
+		fread(mp4_buffer, BUFFER_SIZE, 1, in_file);
+	}
 
-	totalsize = LONG_PACK('M','P','4','U');
-	mp4_ptr = (unsigned char *)&totalsize;
-	if(*mp4_ptr == 'M')
-		bigendian = 1;
-	else
-		bigendian = 0;
-	
 	totaldectime = 0;
 	totalsize = 0;
 	filenr = 0;
@@ -274,7 +277,8 @@ int main(int argc, char *argv[])
 				break;
 			fread(&mp4_size, sizeof(long), 1, in_file);
 
-			if(bigendian)
+			/* Mp4U container is big endian */
+			if(!bigendian)
 				mp4_size = SWAP(mp4_size);
 
 			/* Read mp4_size_bytes */
@@ -309,6 +313,7 @@ int main(int argc, char *argv[])
 				if(feof(in_file))
 					break;
 				fread(mp4_buffer + rest, BUFFER_SIZE - rest, 1, in_file);
+
 			}
 
 		}
@@ -377,11 +382,11 @@ int main(int argc, char *argv[])
 	totaldectime /= filenr;
 	
 	printf("Avg: dectime %5.2f ms, %5.2f fps, mp4 stream size =%d\n",
-		totaldectime, 1000/totaldectime, totalsize);
+		totaldectime, 1000/totaldectime, (int)totalsize);
 		
 /*****************************************************************************
  *      XviD PART  Stop
-/****************************************************************************/
+ ****************************************************************************/
 
  release_all:
   	if (dec_handle) {
@@ -436,7 +441,6 @@ msecond()
 	return clk * 1000 / CLOCKS_PER_SEC;
 #endif
 }
-
 
 /*****************************************************************************
  *              output functions
