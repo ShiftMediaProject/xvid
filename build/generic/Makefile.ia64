@@ -1,0 +1,79 @@
+#/**************************************************************************
+# *
+# * linux makefile
+# *
+# * nasm args:
+# * -f fmt		elf (linux), coff (djgpp)
+# * -DPREFIX	add '_' prefix to symbol names
+# *
+# * libso:
+# * (-lm not neccessary if using -ffast-math)
+# *
+# *************************************************************************/
+
+
+include Makefile.inc
+
+CC = gcc
+#CC=ecc
+#CC = /opt/experimental/bin/gcc 	# that's where SuSE installs gcc3
+
+CFLAGS = -DARCH_IA64 -DLINUX
+CFLAGSWP =
+LIBDIR = /usr/local/lib
+
+ifeq ($(CC),ecc)
+    CFLAGS+= -O3 -ip
+    CFLAGS+= -I/opt/intel/compiler50/ia32/include -I/opt/intel/compiler50/ia32/substitute_headers/
+
+else
+    CFLAGS += -Wall -O3 -funroll-loops -ffast-math
+    CFLAGS += -fstrict-aliasing -fpic -fomit-frame-pointer
+endif
+
+AS = $(CC)
+AFLAGS = -c
+
+%.o: %.s
+	$(AS) $(AFLAGS) $< -o $@
+
+RM = rm -rf
+
+
+all: $(LIB) $(LIBSO)
+
+
+$(LIB): $(SRC:.c=.o) $(SRC_IA64:.s=.o)
+	ar rcs $@ $^
+
+
+$(LIBSO): $(SRC:.c=.o) $(SRC_IA64:.s=.o)
+	$(CC) $(CFLAGS) $^ -shared -lc -lm -o $@
+
+
+clean:	
+	$(RM) `find $(SRCDIR) -name "*.o"`
+
+remove-all:
+	$(RM) $(DIRS)
+	$(RM) $(DIRS_IA64)
+	$(RM) $(LIB)
+	$(RM) $(LIBSO)
+	$(RM) xvid_stat
+
+test:
+	make all
+	$(CC) $(CFLAGS) -I../../src ../../examples/xvid_stat.c libcore.a -o xvid_stat -lm
+
+test-clean:
+	make remove-all
+	make all
+	make test
+
+install: libxvidcore.so
+	cp libxvidcore.so $(LIBDIR)			# you have to bee root for this
+	/sbin/ldconfig 
+
+install-test: libxvidcore.so				# if you don't want to overwrite previous compile
+	cp libxvidcore.so $(LIBDIR)/libtestcore.so
+	/sbin/ldconfig
