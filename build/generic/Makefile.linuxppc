@@ -1,10 +1,10 @@
 #/**************************************************************************
 # *
-# * linux makefile
+# * Linux PPC makefile
 # *
-# * nasm args:
-# * -f fmt		elf (linux), coff (djgpp)
-# * -DPREFIX	add '_' prefix to symbol names
+# * Adapted from linux x86 Makefile by Guillaume Morin <guillaume@morinfr.org>
+# * 
+# * Still incomplete but WIP 
 # *
 # * libso:
 # * (-lm not neccessary if using -ffast-math)
@@ -12,46 +12,31 @@
 # *************************************************************************/
 
 
-#
-# Adapted from linux x86 Makefile by Guillaume Morin <guillaume@morinfr.org>
-#
-# This needs lots of work but that is a good beginning :-)
-
 include Makefile.inc
 
 CC = gcc
-#CC=icc
-#CC = /opt/experimental/bin/gcc 	# that's where SuSE installs gcc3
 
 CFLAGS = -DLINUX -DARCH_PPC -DARCH_IS_BIG_ENDIAN
 LIBDIR = /usr/local/lib
 
-# CFLAGS += -funroll-loops -ffast-math -fstrict-aliasing -fomit-frame-pointer
-# CFLAGS += -fPIC
-# CFLAGS += -m486
-# CFLAGS += -march=pentium -mcpu=pentium
-# CFLAGS += -march=pentiumpro -mcpu=pentiumpro
-
-    CFLAGS += -Wall -O3 -funroll-loops -ffast-math  
-    CFLAGS += -fstrict-aliasing -fomit-frame-pointer 
+CFLAGS += -Wall -O3 -funroll-loops -ffast-math  
+CFLAGS += -fstrict-aliasing -fomit-frame-pointer 
 
 AS = as
-AFLAGS = -f elf
 
-%.o: %.asm
-	$(AS) $(AFLAGS) $< -o $@
+%.o: %.s
+	$(AS) $< -o $@
 
 RM = rm -rf
-
 
 all: $(LIB) $(LIBSO)
 
 
-$(LIB): $(SRC:.c=.o) #$(SRC_INTEL:.asm=.o)
+$(LIB): $(SRC:.c=.o) $(SRC_PPC:.s=.o)
 	ar rcs $@ $^
 
 
-$(LIBSO): $(SRC:.c=.o) #$(SRC_INTEL:.asm=.o)
+$(LIBSO): $(SRC:.c=.o) $(SRC_PPC:.s=.o)
 	$(CC) $(CFLAGS) $^ -shared -lc -lm -o $@
 
 
@@ -60,13 +45,13 @@ clean:
 
 remove-all:
 	$(RM) $(DIRS)
-	$(RM) $(DIRS_INTEL)
+	$(RM) $(DIRS_PPC)
 	$(RM) $(LIB)
 	$(RM) $(LIBSO)
 
 
 install: libxvidcore.so
-	cp libxvidcore.so $(LIBDIR)			# you have to bee root for this
+	cp libxvidcore.so $(LIBDIR)			# you have to be root for this
 	/sbin/ldconfig 
 
 install-test: libxvidcore.so				# if you don't want to overwrite previous compile

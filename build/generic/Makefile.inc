@@ -70,3 +70,8 @@ DIRS_INTEL = \
 	$(SRCDIR)/quant/x86_asm/*.o \
 	$(SRCDIR)/utils/x86_asm/*.o
 
+SRC_PPC = \
+	$(SRCDIR)/bitstream/ppc_asm/cbp_ppc.s
+
+DIRS_PPC = \
+	$(SRCDIR)/bitstream/ppc_asm/*.o

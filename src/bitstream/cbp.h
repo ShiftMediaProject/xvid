@@ -11,5 +11,6 @@ extern cbpFuncPtr calc_cbp;
 
 extern cbpFunc calc_cbp_c;
 extern cbpFunc calc_cbp_mmx;
+extern cbpFunc calc_cbp_ppc;
 
 #endif /* _ENCODER_CBP_H_ */
