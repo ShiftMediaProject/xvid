@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_common.c,v 1.10 2004-12-08 12:43:48 syskin Exp $
+ * $Id: estimation_common.c,v 1.11 2005-03-14 00:47:08 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -55,22 +55,22 @@ const uint32_t roundtab_79[4] =
 { 0, 1, 0, 0 };
 
 const int xvid_me_lambda_vec16[32] =
-	{     0    ,(int)(1.00235 * NEIGH_TEND_16X16 + 0.5),
-	(int)(1.15582*NEIGH_TEND_16X16 + 0.5), (int)(1.31976*NEIGH_TEND_16X16 + 0.5),
-	(int)(1.49591*NEIGH_TEND_16X16 + 0.5), (int)(1.68601*NEIGH_TEND_16X16 + 0.5),
-	(int)(1.89187*NEIGH_TEND_16X16 + 0.5), (int)(2.11542*NEIGH_TEND_16X16 + 0.5),
-	(int)(2.35878*NEIGH_TEND_16X16 + 0.5), (int)(2.62429*NEIGH_TEND_16X16 + 0.5),
-	(int)(2.91455*NEIGH_TEND_16X16 + 0.5), (int)(3.23253*NEIGH_TEND_16X16 + 0.5),
-	(int)(3.58158*NEIGH_TEND_16X16 + 0.5), (int)(3.96555*NEIGH_TEND_16X16 + 0.5),
-	(int)(4.38887*NEIGH_TEND_16X16 + 0.5), (int)(4.85673*NEIGH_TEND_16X16 + 0.5),
-	(int)(5.37519*NEIGH_TEND_16X16 + 0.5), (int)(5.95144*NEIGH_TEND_16X16 + 0.5),
-	(int)(6.59408*NEIGH_TEND_16X16 + 0.5), (int)(7.31349*NEIGH_TEND_16X16 + 0.5),
-	(int)(8.12242*NEIGH_TEND_16X16 + 0.5), (int)(9.03669*NEIGH_TEND_16X16 + 0.5),
-	(int)(10.0763*NEIGH_TEND_16X16 + 0.5), (int)(11.2669*NEIGH_TEND_16X16 + 0.5),
-	(int)(12.6426*NEIGH_TEND_16X16 + 0.5), (int)(14.2493*NEIGH_TEND_16X16 + 0.5),
-	(int)(16.1512*NEIGH_TEND_16X16 + 0.5), (int)(18.442*NEIGH_TEND_16X16 + 0.5),
-	(int)(21.2656*NEIGH_TEND_16X16 + 0.5), (int)(24.8580*NEIGH_TEND_16X16 + 0.5),
-	(int)(29.6436*NEIGH_TEND_16X16 + 0.5), (int)(36.4949*NEIGH_TEND_16X16 + 0.5)
+	{     0    ,(int)(0.5 * NEIGH_TEND_16X16 + 0.5),
+	(int)(1.0*NEIGH_TEND_16X16 + 0.5), (int)(1.5*NEIGH_TEND_16X16 + 0.5),
+	(int)(2.0*NEIGH_TEND_16X16 + 0.5), (int)(2.5*NEIGH_TEND_16X16 + 0.5),
+	(int)(5.0*NEIGH_TEND_16X16 + 0.5), (int)(7.0*NEIGH_TEND_16X16 + 0.5),
+	(int)(8.0*NEIGH_TEND_16X16 + 0.5), (int)(9.0*NEIGH_TEND_16X16 + 0.5),
+	(int)(10.0*NEIGH_TEND_16X16 + 0.5), (int)(11.0*NEIGH_TEND_16X16 + 0.5),
+	(int)(12.0*NEIGH_TEND_16X16 + 0.5), (int)(13.0*NEIGH_TEND_16X16 + 0.5),
+	(int)(14.0*NEIGH_TEND_16X16 + 0.5), (int)(15.0*NEIGH_TEND_16X16 + 0.5),
+	(int)(16.0*NEIGH_TEND_16X16 + 0.5), (int)(17.0*NEIGH_TEND_16X16 + 0.5),
+	(int)(18.0*NEIGH_TEND_16X16 + 0.5), (int)(19.0*NEIGH_TEND_16X16 + 0.5),
+	(int)(20.0*NEIGH_TEND_16X16 + 0.5), (int)(21.0*NEIGH_TEND_16X16 + 0.5),
+	(int)(22.0*NEIGH_TEND_16X16 + 0.5), (int)(23.0*NEIGH_TEND_16X16 + 0.5),
+	(int)(24.0*NEIGH_TEND_16X16 + 0.5), (int)(25.0*NEIGH_TEND_16X16 + 0.5),
+	(int)(26.0*NEIGH_TEND_16X16 + 0.5), (int)(27.0*NEIGH_TEND_16X16 + 0.5),
+	(int)(28.0*NEIGH_TEND_16X16 + 0.5), (int)(29.0*NEIGH_TEND_16X16 + 0.5),
+	(int)(30.0*NEIGH_TEND_16X16 + 0.5), (int)(31.0*NEIGH_TEND_16X16 + 0.5)
 };
 
 /*****************************************************************************
