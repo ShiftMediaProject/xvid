@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: motion.h,v 1.19 2003-02-15 15:22:18 edgomez Exp $
+ *  $Id: motion.h,v 1.20 2003-02-19 20:12:43 edgomez Exp $
  *
  ***************************************************************************/
 
@@ -42,20 +42,19 @@
 #define MVzero(A) ( ((A).x)==(0) && ((A).y)==(0) )
 #define MVequal(A,B) ( ((A).x)==((B).x) && ((A).y)==((B).y) )
 
-static const uint32_t roundtab[16] =
-		{ 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2 };
+/*****************************************************************************
+ * Modified rounding tables -- defined in motion_est.c
+ * Original tables see ISO spec tables 7-6 -> 7-9
+ ****************************************************************************/
 
-/*
- * modified rounding tables
- * original tables see ISO spec tables 7-6 -> 7-9
- */
+extern const uint32_t roundtab[16];
 
 /* K = 4 */
-static const uint32_t roundtab_76[16] = { 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1 };
+extern const uint32_t roundtab_76[16];
 /* K = 2 */
-static const uint32_t roundtab_78[8] = { 0, 0, 1, 1, 0, 0, 0, 1  };
+extern const uint32_t roundtab_78[8];
 /* K = 1 */
-static const uint32_t roundtab_79[4] = { 0, 1, 0, 0 };
+extern const uint32_t roundtab_79[4];
 
 
 /*

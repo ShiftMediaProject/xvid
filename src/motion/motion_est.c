@@ -46,6 +46,26 @@
 #include "../utils/emms.h"
 #include "../dct/fdct.h"
 
+/*****************************************************************************
+ * Modified rounding tables -- declared in motion.h
+ * Original tables see ISO spec tables 7-6 -> 7-9
+ ****************************************************************************/
+
+const uint32_t roundtab[16] =
+{0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2 };
+
+/* K = 4 */
+const uint32_t roundtab_76[16] =
+{ 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1 };
+
+/* K = 2 */
+const uint32_t roundtab_78[8] =
+{ 0, 0, 1, 1, 0, 0, 0, 1  };
+
+/* K = 1 */
+const uint32_t roundtab_79[4] =
+{ 0, 1, 0, 0 };
+
 #define INITIAL_SKIP_THRESH	(10)
 #define FINAL_SKIP_THRESH	(50)
 #define MAX_SAD00_FOR_SKIP	(20)
@@ -53,6 +73,10 @@
 
 #define CHECK_CANDIDATE(X,Y,D) { \
 CheckCandidate((X),(Y), (D), &iDirection, data ); }
+
+/*****************************************************************************
+ * Code
+ ****************************************************************************/
 
 static __inline uint32_t
 d_mv_bits(int x, int y, const VECTOR pred, const uint32_t iFcode, const int qpel, const int rrv)
