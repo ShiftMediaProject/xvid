@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_pvop.c,v 1.13 2005-03-02 20:22:10 Isibaar Exp $
+ * $Id: estimation_pvop.c,v 1.14 2005-03-03 01:27:07 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -880,7 +880,7 @@ MotionEstimation(MBParam * const pParam,
 			if ((current->vop_flags & XVID_VOP_CARTOON) &&
 				((sad00 < pMB->quant * 4 * skip_thresh) || (sad00 < stat_thresh))) {
 				ZeroMacroblockP(pMB, sad00);
-				pMB->cbp = 0x2f;
+				pMB->cbp = 0x3f;
 				continue;
 			}
 
