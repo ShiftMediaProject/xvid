@@ -28,7 +28,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.80 2002-09-05 19:34:35 edgomez Exp $
+ * $Id: encoder.c,v 1.81 2002-09-05 21:02:19 chl Exp $
  *
  ****************************************************************************/
 
@@ -1000,11 +1000,11 @@ FrameCodeP(Encoder * pEnc,
 				CodeIntraMB(pEnc, pMB);
 				MBTransQuantIntra(&pEnc->mbParam, pEnc->current, pMB, x, y,
 								  dct_codes, qcoeff);
-			}
 
-			start_timer();
-			MBPrediction(pEnc->current, x, y, pEnc->mbParam.mb_width, qcoeff);
-			stop_prediction_timer();
+				start_timer();
+				MBPrediction(pEnc->current, x, y, pEnc->mbParam.mb_width, qcoeff);
+				stop_prediction_timer();
+			}
 
 			if (pMB->mode == MODE_INTRA || pMB->mode == MODE_INTRA_Q) {
 				pEnc->sStat.kblks++;
