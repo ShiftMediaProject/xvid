@@ -34,7 +34,7 @@
  *
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.30 2002-04-28 23:31:00 edgomez Exp $
+ *  $Id: encoder.c,v 1.31 2002-04-29 06:45:55 chenm001 Exp $
  *
  ***************************************************************************/
 
@@ -323,7 +323,7 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	stop_conv_timer();
 
 #ifdef _DEBUG
-	image_copy(&pEnc->sOriginal, &pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.height);
+        image_copy(&pEnc->sOriginal, &pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.height);
 #endif
 
 	EMMS();
