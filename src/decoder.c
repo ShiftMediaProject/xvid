@@ -147,9 +147,13 @@ void decoder_mbintra(DECODER * dec,
 					 const uint32_t quant,
 					 const uint32_t intra_dc_threshold)
 {
+#ifdef LINUX
+	DECLARE_ALIGNED_MATRIX(block,6,64,int16_t,16);
+	DECLARE_ALIGNED_MATRIX(data,6,64,int16_t,16);
+#else
 	CACHE_ALIGN int16_t block[6][64];
 	CACHE_ALIGN int16_t data[6][64];
-
+#endif
 	const uint32_t stride = dec->edged_width;
 	uint32_t i;
 	uint32_t iQuant = pMB->quant;
@@ -159,7 +163,11 @@ void decoder_mbintra(DECODER * dec,
     pU_Cur = dec->cur.u + (y_pos << 3) * (stride >> 1) + (x_pos << 3);
     pV_Cur = dec->cur.v + (y_pos << 3) * (stride >> 1) + (x_pos << 3);
 
+#ifdef LINUX
+    	memset(block,0,sizeof(int16_t)*6*64);
+#else
 	memset(block, 0, sizeof(block));		// clear
+#endif
 
 	for (i = 0; i < 6; i++)
 	{
@@ -262,8 +270,13 @@ void decoder_mbinter(DECODER * dec,
 					 const uint32_t quant,
 					 const uint32_t rounding)
 {
+#ifdef LINUX
+	DECLARE_ALIGNED_MATRIX(block,6,64,int16_t,16);
+	DECLARE_ALIGNED_MATRIX(data,6,64,int16_t,16);
+#else
 	CACHE_ALIGN int16_t block[6][64];
 	CACHE_ALIGN int16_t data[6][64];
+#endif
 
 	const uint32_t stride = dec->edged_width;
 	const uint32_t stride2 = dec->edged_width / 2;

@@ -364,8 +364,13 @@ static __inline void CodeIntraMB(Encoder *pEnc, MACROBLOCK *pMB) {
 
 static int FrameCodeI(Encoder * pEnc, Bitstream * bs, uint32_t *pBits)
 {
+#ifdef LINUX
+	DECLARE_ALIGNED_MATRIX(dct_codes,6,64,int16_t,16);
+	DECLARE_ALIGNED_MATRIX(qcoeff,6,64,int16_t,16);
+#else
 	CACHE_ALIGN int16_t dct_codes[6][64];
 	CACHE_ALIGN int16_t qcoeff[6][64];
+#endif
 	uint16_t x, y;
 
 	pEnc->iFrameNum = 0;
@@ -416,9 +421,13 @@ static int FrameCodeI(Encoder * pEnc, Bitstream * bs, uint32_t *pBits)
 static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool force_inter, bool vol_header)
 {
 	float fSigma;
-
+#ifdef LINUX
+	DECLARE_ALIGNED_MATRIX(dct_codes,6,64,int16_t,16);
+	DECLARE_ALIGNED_MATRIX(qcoeff,6,64,int16_t,16);
+#else
 	CACHE_ALIGN int16_t dct_codes[6][64];
 	CACHE_ALIGN int16_t qcoeff[6][64];
+#endif
 
 	int iLimit;
 	uint32_t x, y;
