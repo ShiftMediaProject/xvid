@@ -32,6 +32,7 @@
  *
  *	History:
  *
+ *	17.03.2002	Added interpolate8x8_halfpel_hv_xmm
  *  22.12.2001  API change: added xvid_init() - Isibaar
  *	16.12.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
@@ -173,6 +174,7 @@ int xvid_init(void *handle, int opt, void *param1, void *param2)
 		idct = idct_xmm;
 		interpolate8x8_halfpel_h = interpolate8x8_halfpel_h_xmm;
 		interpolate8x8_halfpel_v = interpolate8x8_halfpel_v_xmm;
+		interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_xmm;
 		yuv_to_yv12 = yuv_to_yv12_xmm;
 
 		sad16 = sad16_xmm;
