@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.cpp,v 1.4 2004-04-14 02:44:20 syskin Exp $
+ * $Id: CXvidDecoder.cpp,v 1.5 2004-04-14 03:25:41 syskin Exp $
  *
  ****************************************************************************/
 
@@ -287,25 +287,26 @@ CXvidDecoder::CXvidDecoder(LPUNKNOWN punk, HRESULT *phr) :
 	}
 }
 
+void CXvidDecoder::CloseLib()
+{
+	DPRINTF("Destructor");
 
+	if (m_create.handle != NULL) {
+		xvid_decore_func(m_create.handle, XVID_DEC_DESTROY, 0, 0);
+		m_create.handle = NULL;
+	}
+
+	if (m_hdll != NULL) {
+		FreeLibrary(m_hdll);
+		m_hdll = NULL;
+	}
+}
 
 /* destructor */
 
 CXvidDecoder::~CXvidDecoder()
 {
-	DPRINTF("Destructor");
-
-	if (m_create.handle != NULL)
-	{
-		xvid_decore_func(m_create.handle, XVID_DEC_DESTROY, 0, 0);
-		m_create.handle = NULL;
-	}
-
-	if (m_hdll != NULL)
-	{
-		FreeLibrary(m_hdll);
-		m_hdll = NULL;
-	}
+	CloseLib();
 }
 
 
@@ -320,6 +321,7 @@ HRESULT CXvidDecoder::CheckInputType(const CMediaType * mtIn)
 	if (*mtIn->Type() != MEDIATYPE_Video)
 	{
 		DPRINTF("Error: Unknown Type");
+		CloseLib();
 		return VFW_E_TYPE_NOT_ACCEPTED;
 	}
 
@@ -345,6 +347,7 @@ HRESULT CXvidDecoder::CheckInputType(const CMediaType * mtIn)
 	else
 	{
 		DPRINTF("Error: Unknown FormatType");
+		CloseLib();
 		return VFW_E_TYPE_NOT_ACCEPTED;
 	}
 
@@ -360,13 +363,22 @@ HRESULT CXvidDecoder::CheckInputType(const CMediaType * mtIn)
 	{
 
 	case FOURCC_MP4V:
-		if (!(g_config.supported_4cc & SUPPORT_MP4V)) return VFW_E_TYPE_NOT_ACCEPTED;
+		if (!(g_config.supported_4cc & SUPPORT_MP4V)) {
+			CloseLib();
+			return VFW_E_TYPE_NOT_ACCEPTED;
+		}
 		break;	
 	case FOURCC_DIVX :
-		if (!(g_config.supported_4cc & SUPPORT_DIVX)) return VFW_E_TYPE_NOT_ACCEPTED;
+		if (!(g_config.supported_4cc & SUPPORT_DIVX)) {
+			CloseLib();
+			return VFW_E_TYPE_NOT_ACCEPTED;
+		}
 		break;
 	case FOURCC_DX50 :
-		if (!(g_config.supported_4cc & SUPPORT_DX50)) return VFW_E_TYPE_NOT_ACCEPTED;
+		if (!(g_config.supported_4cc & SUPPORT_DX50)) {
+			CloseLib();
+			return VFW_E_TYPE_NOT_ACCEPTED;
+		}
 	case FOURCC_XVID :
 		break;
 		
@@ -378,6 +390,7 @@ HRESULT CXvidDecoder::CheckInputType(const CMediaType * mtIn)
 			(hdr->biCompression>>8)&0xff,
 			(hdr->biCompression>>16)&0xff,
 			(hdr->biCompression>>24)&0xff);
+		CloseLib();
 		return VFW_E_TYPE_NOT_ACCEPTED;
 	}
 	return S_OK;
