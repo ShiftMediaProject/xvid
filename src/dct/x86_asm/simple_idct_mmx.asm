@@ -913,10 +913,12 @@ section .text
 %endmacro
 
 
-; void simple_idct_mmx(int16_t * const block);
+; void simple_idct_mmx_P(int16_t * const block);
+; expects input data to be permutated
+;
 align 16
-cglobal simple_idct_mmx
-simple_idct_mmx
+cglobal simple_idct_mmx_P
+simple_idct_mmx_P
 	sub esp, 128
 	mov edx, [esp+128+4]
 
@@ -992,6 +994,206 @@ align 16
 	; IDCT7		esp+24,	esp+88,	esp+56,	esp+120,edx+12,	nop,	0,			20
 
 .ret
+	add esp, 128
+	ret
+
+
+;------------------ again with permuted parms --------
+;
+; simple_idct_mmx is the same function as simple_idct_mmx_P above except that on entry it will
+; do a fast in-line and in-place permutation on the iDCT parm list.  This means that same parm list
+; will also not have to be copied on the way out. - trbarry 6/2003
+
+%macro XLODA 2 
+	mov	bx, [srcP+2*%2]  	; get src contents
+	mov	ax, [srcP+2*%1]  	; get dest contents
+	mov	[srcP+2*%1], bx     ; store new dest val
+%endmacro
+
+%macro XCHGA 2 
+	mov	ax, [srcP+2*%1]  	; get dest contents
+	mov	[srcP+2*%1], bx     ; store new dest val
+%endmacro
+
+%macro XCHGB 2 
+	mov	bx, [srcP+2*%1]	    ; get dest contents
+	mov	[srcP+2*%1], ax     ; store new dest val
+%endmacro
+
+%macro XSTRA 2 
+	mov	[srcP+2*%1], bx     ; store dest val
+%endmacro
+
+%macro XSTRB 2 
+	mov	[srcP+2*%1], ax     ; store dest val
+%endmacro
+
+%macro PERMUTEP 1 
+%define	srcP		%1
+	push ebx
+
+;    XCHGA  0x00, 0x00      ; nothing to do
+	 
+	 XLODA  0x08, 0x01 
+	 XCHGB  0x10, 0x08
+	 XCHGA  0x20, 0x10 
+	 XCHGB  0x02, 0x20
+	 XCHGA  0x04, 0x02 
+	 XSTRB  0x01, 0x04
+
+	 XLODA  0x09, 0x03
+	 XCHGB  0x18, 0x09 
+	 XCHGA  0x12, 0x18 
+	 XCHGB  0x24, 0x12 
+	 XSTRA  0x03, 0x24 
+
+	 XLODA  0x0C, 0x05
+	 XCHGB  0x11, 0x0C 
+	 XCHGA  0x28, 0x11 
+	 XCHGB  0x30, 0x28
+	 XCHGA  0x22, 0x30 
+	 XCHGB  0x06, 0x22 
+	 XSTRA  0x05, 0x06
+
+	 XLODA  0x0D, 0x07 
+	 XCHGB  0x1C, 0x0D 
+	 XCHGA  0x13, 0x1C 
+	 XCHGB  0x29, 0x13 
+	 XCHGA  0x38, 0x29
+	 XCHGB  0x32, 0x38
+	 XCHGA  0x26, 0x32
+	 XSTRB  0x07, 0x26 
+
+	 XLODA  0x14, 0x0A 
+	 XCHGB  0x21, 0x14 
+	 XSTRA  0x0A, 0x21 
+
+	 XLODA  0x19, 0x0B 
+	 XCHGB  0x1A, 0x19 
+	 XCHGA  0x16, 0x1A
+	 XCHGB  0x25, 0x16 
+	 XCHGA  0x0E, 0x25 
+	 XCHGB  0x15, 0x0E 
+	 XCHGA  0x2C, 0x15 
+	 XCHGB  0x31, 0x2C
+	 XCHGA  0x2A, 0x31
+	 XCHGB  0x34, 0x2A
+	 XCHGA  0x23, 0x34 
+	 XSTRB  0x0B, 0x23 
+
+	 XLODA  0x1D, 0x0F 
+	 XCHGB  0x1E, 0x1D 
+	 XCHGA  0x17, 0x1E
+	 XCHGB  0x2D, 0x17 
+	 XCHGA  0x3C, 0x2D
+	 XCHGB  0x33, 0x3C
+	 XCHGA  0x2B, 0x33 
+	 XCHGB  0x39, 0x2B
+	 XCHGA  0x3A, 0x39
+	 XCHGB  0x36, 0x3A
+	 XCHGA  0x27, 0x36 
+	 XSTRB  0x0F, 0x27 
+
+;	 XCHGA  0x1B, 0x1B 
+
+;	 XCHGA  0x1F, 0x1F 
+
+	 XLODA  0x35, 0x2E
+	 XSTRB  0x2E, 0x35 
+
+	 XLODA  0x3D, 0x2F 
+	 XCHGB  0x3E, 0x3D
+	 XCHGA  0x37, 0x3E
+	 XSTRB  0x2F, 0x37 
+
+;	 XCHGA  0x3B, 0x3B
+
+;	 XCHGA  0x3F, 0x3F
+     pop  ebx
+%undef	srcP
+%endmacro
+
+; void simple_idct_mmx(int16_t * const block);
+align 16
+cglobal simple_idct_mmx
+
+simple_idct_mmx
+	sub esp, 128
+	mov edx, [esp+128+4]
+	PERMUTEP edx			; permute parm list in place
+
+;				src0,	src4,	src1,	src5,	dst,	rndop,	rndarg,		shift,	bt
+
+	DC_COND_IDCT edx+0,	edx+8,	edx+16,	edx+24,	esp,	paddd,	[coeffs+8],	11
+	Z_COND_IDCT	edx+32,	edx+40,	edx+48,	edx+56,	esp+32,	paddd,	[coeffs],	11,		.fourP
+	Z_COND_IDCT	edx+64,	edx+72,	edx+80,	edx+88,	esp+64,	paddd,	[coeffs],	11,		.twoP
+	Z_COND_IDCT	edx+96,	edx+104,edx+112,edx+120,esp+96,	paddd,	[coeffs],	11,		.oneP
+	IDCT0		esp,	esp+64,	esp+32,	esp+96,	edx,	nop,	0,			20
+	IDCT0		esp+8,	esp+72,	esp+40,	esp+104,edx+4,	nop,	0,			20
+	IDCT0		esp+16,	esp+80,	esp+48,	esp+112,edx+8,	nop,	0,			20
+	IDCT0		esp+24,	esp+88,	esp+56,	esp+120,edx+12,	nop,	0,			20
+	jmp	.retP
+
+align 16
+.fourP
+	Z_COND_IDCT	edx+64,	edx+72,	edx+80,	edx+88,	esp+64,	paddd,	[coeffs],	11,		.sixP
+	Z_COND_IDCT	edx+96,	edx+104,edx+112,edx+120,esp+96,	paddd,	[coeffs],	11,		.fiveP
+	IDCT4		esp,	esp+64,	esp+32,	esp+96,	edx,	nop,	0,			20
+	IDCT4		esp+8,	esp+72,	esp+40,	esp+104,edx+4,	nop,	0,			20
+	IDCT4		esp+16,	esp+80,	esp+48,	esp+112,edx+8,	nop,	0,			20
+	IDCT4		esp+24,	esp+88,	esp+56,	esp+120,edx+12,	nop,	0,			20
+	jmp	.retP
+
+align 16
+.sixP
+	Z_COND_IDCT	edx+96,	edx+104,edx+112,edx+120,esp+96,	paddd,	[coeffs],	11,		.sevenP
+	IDCT6		esp,	esp+64,	esp+32,	esp+96,	edx,	nop,	0,			20
+	IDCT6		esp+8,	esp+72,	esp+40,	esp+104,edx+4,	nop,	0,			20
+	IDCT6		esp+16,	esp+80,	esp+48,	esp+112,edx+8,	nop,	0,			20
+	IDCT6		esp+24,	esp+88,	esp+56,	esp+120,edx+12,	nop,	0,			20
+	jmp	.retP
+
+align 16
+.twoP
+	Z_COND_IDCT	edx+96,	edx+104,edx+112,edx+120,esp+96,	paddd,	[coeffs],	11,		.threeP
+	IDCT2		esp,	esp+64,	esp+32,	esp+96,	edx,	nop,	0,			20
+	IDCT2		esp+8,	esp+72,	esp+40,	esp+104,edx+4,	nop,	0,			20
+	IDCT2		esp+16,	esp+80,	esp+48,	esp+112,edx+8,	nop,	0,			20
+	IDCT2		esp+24,	esp+88,	esp+56,	esp+120,edx+12,	nop,	0,			20
+	jmp	.retP
+
+align 16
+.threeP
+	IDCT3		esp,	esp+64,	esp+32,	esp+96,	edx,	nop,	0,			20
+	IDCT3		esp+8,	esp+72,	esp+40,	esp+104,edx+4,	nop,	0,			20
+	IDCT3		esp+16,	esp+80,	esp+48,	esp+112,edx+8,	nop,	0,			20
+	IDCT3		esp+24,	esp+88,	esp+56,	esp+120,edx+12,	nop,	0,			20
+	jmp	.retP
+
+align 16
+.fiveP
+	IDCT5		esp,	esp+64,	esp+32,	esp+96,	edx,	nop,	0,			20
+	; IDCT5		esp+8,	esp+72,	esp+40,	esp+104,edx+4,	nop,	0,			20
+	IDCT5		esp+16,	esp+80,	esp+48,	esp+112,edx+8,	nop,	0,			20
+	; IDCT5		esp+24,	esp+88,	esp+56,	esp+120,edx+12,	nop,	0,			20
+	jmp	.retP
+
+align 16
+.oneP
+	IDCT1		esp,	esp+64,	esp+32,	esp+96,	edx,	nop,	0,			20
+	IDCT1		esp+8,	esp+72,	esp+40,	esp+104,edx+4,	nop,	0,			20
+	IDCT1		esp+16,	esp+80,	esp+48,	esp+112,edx+8,	nop,	0,			20
+	IDCT1		esp+24,	esp+88,	esp+56,	esp+120,edx+12,	nop,	0,			20
+	jmp	.retP
+
+align 16
+.sevenP
+	IDCT7		esp,	esp+64,	esp+32,	esp+96,	edx,	nop,	0,			20
+	; IDCT7		esp+8,	esp+72,	esp+40,	esp+104,edx+4,	nop,	0,			20
+	IDCT7		esp+16,	esp+80,	esp+48,	esp+112,edx+8,	nop,	0,			20
+	; IDCT7		esp+24,	esp+88,	esp+56,	esp+120,edx+12,	nop,	0,			20
+
+.retP
 	add esp, 128
 	ret
 
