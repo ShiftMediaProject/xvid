@@ -1,5 +1,102 @@
 *****************************************************************************
 *
+* Release is ready, we just need to have feedback on possible stupid errors.
+*
+*****************************************************************************
+
+First change:      2002/09/23 20:36:01 (GMT)
+Last change:       2002/09/28 16:01:15 (GMT)
+
+===[ todo.txt ]===
+  1.9 (edgomez) Updated
+
+===[ build/generic/Makefile.cygwin ]===
+  1.7 (suxen_drol) cygwin mingw-runtime notice
+  1.6 (edgomez) Fix typo mistake
+
+===[ build/generic/Makefile.irix64 ]===
+  1.3 (edgomez) Fix typo mistake
+
+===[ build/generic/Makefile.linuxppc ]===
+  1.8 (edgomez) Fix typo mistake
+
+===[ build/generic/Makefile.linuxppc_altivec ]===
+  1.7 (edgomez) Fix typo mistake
+
+===[ build/generic/Makefile.linuxx86 ]===
+  1.2 (edgomez) Fix typo mistake
+
+===[ build/generic/Makefile.sparc ]===
+  1.3 (edgomez) Fix typo mistake
+
+===[ build/generic/libxvidcore.def ]===
+  1.2 (suxen_drol) added decore and encore exports
+
+===[ build/win32/xvid_decraw.dsp ]===
+  1.1 (edgomez) Updated - unix2dos applied
+
+===[ build/win32/xvid_encraw.dsp ]===
+  1.1 (edgomez) Added to project
+
+===[ build/win32/xvid_stat.dsp ]===
+  1.2 (edgomez) Updated - unix2dos applied
+
+===[ examples/Makefile ]===
+  1.1 (edgomez) Added to project
+
+===[ examples/README ]===
+  1.2 (edgomez) - Updated
+               - Added all examples here
+
+===[ examples/xvid_decraw.c ]===
+  1.4 (edgomez) Fixes
+  1.3 (edgomez) - Fixed a typo error in unix mseconds
+  1.2 (edgomez) - Added command line
+               - Added simple mp4 video stream container support (header + :size,data: + ... + :size,data:)
+               - Fixed PGM saving
+               - Win32/MSVC compatibility
+
+===[ examples/xvid_enc_dec.c ]===
+  1.4 (edgomez) Outdated, and not needed anymore
+
+===[ examples/xvid_encraw.c ]===
+  1.4 (edgomez) - Added string.h so gcc does not complain about an undeclared strcmp function.
+  1.3 (edgomez) Last small fixes
+  1.2 (edgomez) Updated - MSVC compatibility - MP4U support - Single m4v file support
+
+===[ examples/xvid_stat.c ]===
+  1.15 (edgomez) Last small fixes
+  1.14 (edgomez) Fixes
+  1.13 (edgomez) - Oops the unix mseconds had a typo mistake
+  1.12 (edgomez) Some trivial fixes
+
+===[ examples/xvid_stat.examples ]===
+  1.2 (edgomez) All the txt went to README
+
+===[ src/decoder.c ]===
+  1.41 (h) removed incomplete field-mv support
+  1.40 (edgomez) Removed DEBUG and DEBUG1/2 calls
+
+===[ src/encoder.c ]===
+  1.84 (h) removed incomplete field-mv support
+
+===[ src/encoder.h ]===
+  1.22 (h) removed incomplete field-mv support
+
+===[ src/image/image.c ]===
+  1.23 (h) removed incomplete field-mv support
+
+===[ src/image/image.h ]===
+  1.9 (h) removed incomplete field-mv support
+
+===[ src/utils/mbtransquant.c ]===
+  1.14 (h) field-dct decision bias (thanks to Michael Niedermayer for the idea!)
+
+===[ src/utils/ratecontrol.c ]===
+  1.17 (h) amended copyright
+
+*****************************************************************************
+*
 * Probably last series of small cleanings, updates before first release :-)
 *
 *****************************************************************************
@@ -234,13 +331,13 @@ Number of changes: ??
   1.82 (edgomez) - Compiler warning fixed.
   1.81 (chl) Call MBPrediction only of INTRA/INTRA_Q blocks
   1.80 (edgomez) Thanks to christoph i removed this nasty horrible bug ! Kidding of course :-)
-  1.79 (edgomez) Added $Id: changelog.txt,v 1.5 2002-09-22 20:40:47 edgomez Exp $ keyword again
+  1.79 (edgomez) Added $Id: changelog.txt,v 1.6 2002-09-28 16:12:19 edgomez Exp $ keyword again
   1.78 (edgomez) Removed BFRAMES parts of the code.
   1.77 (edgomez) - Removed history header
                - File Copyright to Michael until we find who wrote this file
 
 ===[ src/encoder.h ]===
-  1.21 (edgomez) Added $Id: changelog.txt,v 1.5 2002-09-22 20:40:47 edgomez Exp $ keyword again.
+  1.21 (edgomez) Added $Id: changelog.txt,v 1.6 2002-09-28 16:12:19 edgomez Exp $ keyword again.
   1.20 (edgomez) Removed BFRAMES part of the code
   1.19 (edgomez) - Removed History Header
                - Added Michael Militzer Copyright (well Michael seems to be the first contributor)
@@ -254,7 +351,7 @@ Number of changes: ??
                - Temporary copyright
 
 ===[ src/xvid.c ]===
-  1.36 (edgomez) Added $Id: changelog.txt,v 1.5 2002-09-22 20:40:47 edgomez Exp $ keyword again
+  1.36 (edgomez) Added $Id: changelog.txt,v 1.6 2002-09-28 16:12:19 edgomez Exp $ keyword again
   1.35 (edgomez) Removed BFRAME code
   1.34 (edgomez) Removed History, moved copyright.
 
