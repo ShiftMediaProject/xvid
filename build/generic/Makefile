@@ -31,9 +31,10 @@ else
 # CFLAGS += -fPIC
 # CFLAGS += -m486
 # CFLAGS += -march=pentium -mcpu=pentium
-# CFLAGS += -march=pentiumpro -mcpu=pentiumpro
+ CFLAGS += -march=pentiumpro -mcpu=pentiumpro
+# CFLAGS += -march=k6 -mcpu=k6
 
-    CFLAGS += -Wall -O3 -funroll-loops -ffast-math -march=pentiumpro -mcpu=pentiumpro 
+    CFLAGS += -Wall -O3 -funroll-loops -ffast-math
     CFLAGS += -fstrict-aliasing -fomit-frame-pointer 
 endif
 
