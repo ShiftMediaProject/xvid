@@ -200,7 +200,7 @@ static __inline const uint8_t *
 GetReferenceB(const int x, const int y, const uint32_t dir, const SearchData * const data)
 {
 //	dir : 0 = forward, 1 = backward
-	const uint8_t* const *direction = ( dir == 0 ? data->RefP : data->b_RefP );
+	const uint8_t *const *const direction = ( dir == 0 ? data->RefP : data->b_RefP );
 	const int picture = ((x&1)<<1) | (y&1);
 	const int offset = (x>>1) + (y>>1)*data->iEdgedWidth;
 	return direction[picture] + offset;
@@ -351,7 +351,6 @@ CheckCandidate16(const int x, const int y, const int Direction, int * const dir,
 		data->iMinSAD[3] = data->temp[3]; current[3].x = x; current[3].y = y; }
 	if (data->temp[4] < data->iMinSAD[4]) {
 		data->iMinSAD[4] = data->temp[4]; current[4].x = x; current[4].y = y; }
-
 }
 
 static void
@@ -383,7 +382,6 @@ CheckCandidate8(const int x, const int y, const int Direction, int * const dir, 
 		*dir = Direction;
 	}
 }
-
 
 static void
 CheckCandidate32(const int x, const int y, const int Direction, int * const dir, const SearchData * const data)
@@ -465,8 +463,8 @@ CheckCandidate32I(const int x, const int y, const int Direction, int * const dir
 	if ( (x > data->max_dx) || (x < data->min_dx)
 		|| (y > data->max_dy) || (y < data->min_dy) ) return;
 
-	sad = sad32v_c(data->Cur, data->RefP[0] + x/2 + (y/2)*(data->iEdgedWidth),
-							data->iEdgedWidth, data->temp+1);
+	sad = sad32v_c(data->Cur, data->RefP[0] + (x>>1) + (y>>1)*(data->iEdgedWidth),
+					data->iEdgedWidth, data->temp+1);
 
 	if (sad < *(data->iMinSAD)) {
 		*(data->iMinSAD) = sad;
@@ -1223,7 +1221,6 @@ ModeDecision(const uint32_t iQuant, SearchData * const Data,
 			if (bits_inter4v < bits) { Data->iMinSAD[0] = bits = bits_inter4v; mode = MODE_INTER4V; }
 		}
 
-
 		intra = CountMBBitsIntra(Data);
 
 		if (intra < bits) { *Data->iMinSAD = bits = intra; return MODE_INTRA; }
@@ -1362,8 +1359,7 @@ SearchP(const IMAGE * const pRef,
 	}
 
 	if (MotionFlags & PMV_HALFPELREFINE16)
-		if ((!(MotionFlags & HALFPELREFINE16_BITS)) || Data->iMinSAD[0] < 200*(int)iQuant)
-			SubpelRefine(Data);
+		SubpelRefine(Data);
 
 	for(i = 0; i < 5; i++) {
 		Data->currentQMV[i].x = 2 * Data->currentMV[i].x; // initialize qpel vectors
@@ -1374,20 +1370,13 @@ SearchP(const IMAGE * const pRef,
 
 		get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, x, y, 16,
 				pParam->width, pParam->height, Data->iFcode, 1, 0);
-
-		if ((!(MotionFlags & QUARTERPELREFINE16_BITS)) || (Data->iMinSAD[0] < 200*(int)iQuant)) {
-			Data->qpel_precision = 1;
-			SubpelRefine(Data);
-		}
+		Data->qpel_precision = 1;
+		SubpelRefine(Data);
 	}
 
 	if ((!(GlobalFlags & XVID_MODEDECISION_BITS)) && (Data->iMinSAD[0] < (int32_t)iQuant * 30)) inter4v = 0;
 
-	if (inter4v && (!(GlobalFlags & XVID_MODEDECISION_BITS) ||
-			(!(MotionFlags & QUARTERPELREFINE8_BITS)) || (!(MotionFlags & HALFPELREFINE8_BITS)) ||
-			((!(MotionFlags & EXTSEARCH_BITS)) && (!(MotionFlags&PMV_EXTSEARCH8)) ))) {
-		// if decision is BITS-based and all refinement steps will be done in BITS domain, there is no reason to call this loop
-
+	if (inter4v) {
 		SearchData Data8;
 		memcpy(&Data8, Data, sizeof(SearchData)); //quick copy of common data
 
@@ -1399,7 +1388,7 @@ SearchP(const IMAGE * const pRef,
 		if ((Data->chroma) && (!(GlobalFlags & XVID_MODEDECISION_BITS))) {
 			// chroma is only used for comparsion to INTER. if the comparsion will be done in BITS domain, there is no reason to compute it
 			int sumx = 0, sumy = 0;
-			const int div = 1 + Data->qpel;
+			const int div = Data->qpel ? 2 : 0;
 			const VECTOR * const mv = Data->qpel ? pMB->qmvs : pMB->mvs;
 
 			for (i = 0; i < 4; i++) {
@@ -2191,8 +2180,8 @@ MEanalyzeMB (	const uint8_t * const pRef,
 	}
 }
 
-#define INTRA_THRESH	2400
-#define INTER_THRESH	1300
+#define INTRA_THRESH	2050
+#define INTER_THRESH	1200
 
 int
 MEanalysis(	const IMAGE * const pRef,
@@ -2267,7 +2256,7 @@ MEanalysis(	const IMAGE * const pRef,
 	sSAD /= blocks;
 	s = (10*s) / blocks;
 
-	if (s > 4) sSAD += (s - 3) * (300 - 2*b_thresh); //static block - looks bad when in bframe...
+	if (s > 4) sSAD += (s - 2) * (160 - 2*b_thresh); //static block - looks bad when in bframe...
 
 	if (sSAD > InterThresh ) return P_VOP;
 	emms();
@@ -2321,10 +2310,10 @@ GlobalMotionEst(const MACROBLOCK * const pMBs,
 		if (pMB->mode == MODE_INTRA || pMB->mode == MODE_NOT_CODED)
 			continue;
 
-		if ( ( (ABS(mv.x -   (pMB-1)->mvs[0].x) < deltax) && (ABS(mv.y -   (pMB-1)->mvs[0].y) < deltay) )
-		&&   ( (ABS(mv.x -   (pMB+1)->mvs[0].x) < deltax) && (ABS(mv.y -   (pMB+1)->mvs[0].y) < deltay) )
-		&&   ( (ABS(mv.x - (pMB-MBw)->mvs[0].x) < deltax) && (ABS(mv.y - (pMB-MBw)->mvs[0].y) < deltay) )
-		&&   ( (ABS(mv.x - (pMB+MBw)->mvs[0].x) < deltax) && (ABS(mv.y - (pMB+MBw)->mvs[0].y) < deltay) ) )
+		if ( ( (abs(mv.x -   (pMB-1)->mvs[0].x) < deltax) && (abs(mv.y -   (pMB-1)->mvs[0].y) < deltay) )
+		&&   ( (abs(mv.x -   (pMB+1)->mvs[0].x) < deltax) && (abs(mv.y -   (pMB+1)->mvs[0].y) < deltay) )
+		&&   ( (abs(mv.x - (pMB-MBw)->mvs[0].x) < deltax) && (abs(mv.y - (pMB-MBw)->mvs[0].y) < deltay) )
+		&&   ( (abs(mv.x - (pMB+MBw)->mvs[0].x) < deltax) && (abs(mv.y - (pMB+MBw)->mvs[0].y) < deltay) ) )
 			MBmask[mbnum]=1;
 	}
 
@@ -2399,8 +2388,8 @@ GlobalMotionEst(const MACROBLOCK * const pMBs,
 				continue;
 
 			oldnum++;
-			meanx += ABS(( sol[0] + (16*mx+8)*sol[1] + (16*my+8)*sol[2] ) - mv.x );
-			meany += ABS(( sol[3] - (16*mx+8)*sol[2] + (16*my+8)*sol[1] ) - mv.y );
+			meanx += fabs(( sol[0] + (16*mx+8)*sol[1] + (16*my+8)*sol[2] ) - mv.x );
+			meany += fabs(( sol[3] - (16*mx+8)*sol[2] + (16*my+8)*sol[1] ) - mv.y );
 		}
 
 	if (4*meanx > oldnum)	/* better fit than 0.25 is useless */
@@ -2427,8 +2416,8 @@ GlobalMotionEst(const MACROBLOCK * const pMBs,
 			if (!MBmask[mbnum])
 				continue;
 
-			if  ( ( ABS(( sol[0] + (16*mx+8)*sol[1] + (16*my+8)*sol[2] ) - mv.x ) > meanx )
-				|| ( ABS(( sol[3] - (16*mx+8)*sol[2] + (16*my+8)*sol[1] ) - mv.y ) > meany ) )
+			if  ( ( fabs(( sol[0] + (16*mx+8)*sol[1] + (16*my+8)*sol[2] ) - mv.x ) > meanx )
+				|| ( fabs(( sol[3] - (16*mx+8)*sol[2] + (16*my+8)*sol[1] ) - mv.y ) > meany ) )
 				MBmask[mbnum]=0;
 			else
 				num++;
@@ -2501,7 +2490,7 @@ CountMBBitsInter(SearchData * const Data,
 	}
 
 	if (MotionFlags&EXTSEARCH_BITS) SquareSearch(Data->currentMV->x, Data->currentMV->y, Data, iDirection);
-
+	
 	if (MotionFlags&HALFPELREFINE16_BITS) SubpelRefine(Data);
 
 	if (Data->qpel) {
@@ -2571,11 +2560,9 @@ CountMBBitsInter4v(const SearchData * const Data,
 
 		Data8->qpel_precision = Data8->qpel;
 		// checking the vector which has been found by SAD-based 8x8 search (if it's different than the one found so far)
-		if (Data8->qpel) {
-			if (!(Data8->currentQMV->x == backup[i+1].x && Data8->currentQMV->y == backup[i+1].y))
-				CheckCandidateBits8(backup[i+1].x, backup[i+1].y, 255, &iDirection, Data8);
-		} else {
-			if (!(Data8->currentMV->x == backup[i+1].x && Data8->currentMV->y == backup[i+1].y))
+		{
+			VECTOR *v = Data8->qpel ? Data8->currentQMV : Data8->currentMV;
+			if (!( (v->x == backup[i+1].x) && (v->y == backup[i+1].y) ))
 				CheckCandidateBits8(backup[i+1].x, backup[i+1].y, 255, &iDirection, Data8);
 		}
 
