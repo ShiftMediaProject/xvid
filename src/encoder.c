@@ -39,7 +39,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.69 2002-08-01 12:53:45 chl Exp $
+ *  $Id: encoder.c,v 1.70 2002-08-04 21:32:56 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -623,7 +623,6 @@ encoder_destroy(Encoder * pEnc)
 #ifdef BFRAMES
 void inc_frame_num(Encoder * pEnc)
 {
-	pEnc->iFrameNum++;
 	pEnc->mbParam.m_ticks += pEnc->mbParam.fincr;
 
 	pEnc->mbParam.m_seconds = pEnc->mbParam.m_ticks / pEnc->mbParam.fbase;
@@ -1044,6 +1043,8 @@ bvop_loop:
 		goto bvop_loop;
 	}
 
+	pEnc->iFrameNum++;
+
 	BitstreamPad(&bs);
 	pFrame->length = BitstreamLength(&bs);
 
@@ -1251,12 +1252,8 @@ encoder_encode(Encoder * pEnc,
 	DEBUG(temp);
 #endif
 
-#ifdef BFRAMES
 	inc_frame_num(pEnc);
-#else
 	pEnc->iFrameNum++;
-#endif
-
 
 	stop_global_timer();
 	write_timer();
