@@ -251,7 +251,8 @@ int decore(unsigned long key, unsigned long opt,
 	
 	case DEC_OPT_FRAME:
 		{
-			int csp_tmp;
+			int csp_tmp = 0;
+
 			DEC_FRAME * dframe = (DEC_FRAME *)param1;
 			DINST * dcur = dinst_find(key);
 			if (dcur == NULL)
