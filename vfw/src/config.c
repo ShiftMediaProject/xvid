@@ -935,7 +935,7 @@ static void adv_mode(HWND hDlg, int idd, CONFIG * config)
 			/* step 2: calculate audio_size (kbytes)*/
 			if (audio_type!=NO_AUDIO) {
 				if (audio_mode==0) {
-					audio_size = (duration * audio_rate) / 8;
+					audio_size = (1000 * duration * audio_rate) / (8*1024);
 				}
 			}else{
 				audio_size = 0;
