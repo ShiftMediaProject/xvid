@@ -187,6 +187,7 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 	}
 
 	create_vlc_tables();
+	init_timer();
 
 	return XVID_ERR_OK;
 }
