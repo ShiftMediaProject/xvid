@@ -13,8 +13,8 @@ typedef struct
 
 
 /******************************************************************
-/* common tables between encoder/decoder                          *
-/******************************************************************/
+ * common tables between encoder/decoder                          *
+ ******************************************************************/
 
 /* constants taken from momusys/vm_common/inlcude/max_level.h */
 static char max_level[4][64] = {
@@ -207,8 +207,8 @@ static char max_run[4][256] = {
 
 
 /******************************************************************
-/* encoder tables                                                 *
-/******************************************************************/
+ * encoder tables                                                 *
+ ******************************************************************/
 
 /* DCT coefficients. Four tables, two for last = 0, two for last = 1.
    the sign bit must be added afterwards. */
@@ -938,8 +938,8 @@ static const VLC mb_motion_table[65] = {
 
 
 /******************************************************************
-/* decoder tables							                      *
-/******************************************************************/
+ * decoder tables                                                 *
+ ******************************************************************/
 
 static const VLC mcbpc_intra_table[64] = {
 	{-1,0},
