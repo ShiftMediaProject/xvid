@@ -78,15 +78,19 @@ static __inline int64_t read_counter() {
 #endif
 
 #define CACHE_LINE  16
-#define CACHE_ALIGN __attribute__ ((__aligned__(CACHE_LINE)))
-
 
 #if defined(LINUX)
 
 #include <stdint.h>
 
+#define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
+	type name##_storage[(sizex)*(sizey)+(alignment)-1]; \
+	typedef type  name##_sub[sizey]; \
+	name##_sub * name = (void *) (((int32_t) name##_storage+(alignment)) & ~((int32_t)(alignment)-1))
+
 #else
 
+#define CACHE_ALIGN __attribute__ ((__aligned__(CACHE_LINE)))
 #define int8_t char
 #define uint8_t unsigned char
 #define int16_t short

@@ -30,16 +30,10 @@ RM = rm -rf
 all: $(LIB) $(LIBSO)
 
 $(LIB): $(SRC:.c=.o) $(SRC_ALTIVEC:.s=.o)
-	@echo 
-	@echo WARNING: Because of memory alignment problems, Altivec does not work yet
-	@echo -
 	ar rcs $@ $^
 
 
 $(LIBSO): $(SRC:.c=.o) $(SRC_ALTIVEC:.s=.o)
-	@echo
-	@echo WARNING: Because of memory alignment problems, Altivec does not work yet
-	@echo
 	$(CC) $(CFLAGS) $^ -shared -lc -lm -o $@
 
 clean:	
