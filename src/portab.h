@@ -28,7 +28,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: portab.h,v 1.31 2002-09-22 18:17:32 h Exp $
+ * $Id: portab.h,v 1.32 2002-09-22 19:13:33 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -109,10 +109,10 @@
  *  Some things that are only architecture dependant
  ****************************************************************************/
 
-#if defined(ARCH_X86) || defined(ARCH_PPC) || defined(ARCH_MIPS)
+#if defined(ARCH_X86) || defined(ARCH_PPC) || defined(ARCH_MIPS)  || defined(ARCH_SPARC)
 #    define CACHE_LINE  16
 #    define ptr_t uint32_t
-#elif defined(ARCH_IA64) || defined(ARCH_SPARC)
+#elif defined(ARCH_IA64)
 #    define CACHE_LINE  32
 #    define ptr_t uint64_t
 #else
