@@ -65,7 +65,7 @@ remove-all:
 
 test:
 	make all
-	$(CC) $(CFLAGS) -I../../src ../../examples/xvid_stat.c libcore.a -o xvid_stat -lm
+	$(CC) $(CFLAGS) -I../../src ../../examples/xvid_stat.c $(LIB) -o xvid_stat -lm
 
 test-clean:
 	make remove-all
