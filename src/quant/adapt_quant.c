@@ -28,7 +28,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: adapt_quant.c,v 1.7 2002-09-07 12:51:38 edgomez Exp $
+ *  $Id: adapt_quant.c,v 1.8 2002-09-20 19:58:36 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -168,8 +168,14 @@ adaptive_quantization(unsigned char *buf,
 			}
 		}
 	}
+
+	i = normalize_quantizer_field(quant, intquant,
+								  mb_width * mb_height,
+								  min_quant, max_quant);
+
 	free(val);
 	free(quant);
-	return normalize_quantizer_field(quant, intquant, mb_width * mb_height,
-									 min_quant, max_quant);
+
+	return(i);
+
 }
