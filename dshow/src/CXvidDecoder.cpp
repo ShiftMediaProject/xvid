@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.cpp,v 1.11 2004-07-25 11:13:16 suxen_drol Exp $
+ * $Id: CXvidDecoder.cpp,v 1.12 2004-08-01 08:45:15 syskin Exp $
  *
  ****************************************************************************/
 
@@ -848,8 +848,8 @@ repeat :
 				par_x = stats.data.vol.par_width;
 				par_y = stats.data.vol.par_height;
 			} else {
-				par_x = PARS[stats.data.vol.par][0];
-				par_y = PARS[stats.data.vol.par][1];
+				par_x = PARS[stats.data.vol.par-1][0];
+				par_y = PARS[stats.data.vol.par-1][1];
 			}
 
 			ar_x = par_x * stats.data.vol.width;
