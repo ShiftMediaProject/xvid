@@ -81,30 +81,28 @@ CheckCandidate((X),(Y), (D), &iDirection, data ); }
 static __inline uint32_t
 d_mv_bits(int x, int y, const VECTOR pred, const uint32_t iFcode, const int qpel, const int rrv)
 {
-	int xb, yb;
-	x = qpel ? x<<1 : x;
-	y = qpel ? y<<1 : y;
+	int bits;
+	const int q = (1 << (iFcode - 1)) - 1;
+
+	x <<= qpel;
+	y <<= qpel;
 	if (rrv) { x = RRV_MV_SCALEDOWN(x); y = RRV_MV_SCALEDOWN(y); }
 
 	x -= pred.x;
+	bits = (x != 0 ? iFcode:0);
+	x = abs(x);
+	x += q;
+	x >>= (iFcode - 1);
+	bits += mvtab[x];
+
 	y -= pred.y;
+	bits += (y != 0 ? iFcode:0);
+	y = abs(y);
+	y += q;
+	y >>= (iFcode - 1);
+	bits += mvtab[y];
 
-	if (x) {
-		x = ABS(x);
-		x += (1 << (iFcode - 1)) - 1;
-		x >>= (iFcode - 1);
-		if (x > 32) x = 32;
-		xb = mvtab[x] + iFcode;
-	} else xb = 1;
-
-	if (y) {
-		y = ABS(y);
-		y += (1 << (iFcode - 1)) - 1;
-		y >>= (iFcode - 1);
-		if (y > 32) y = 32;
-		yb = mvtab[y] + iFcode;
-	} else yb = 1;
-	return xb + yb;
+	return bits;
 }
 
 static int32_t ChromaSAD2(int fx, int fy, int bx, int by, const SearchData * const data)
@@ -379,12 +377,18 @@ CheckCandidate8(const int x, const int y, const int Direction, int * const dir, 
 {
 	int32_t sad; uint32_t t;
 	const uint8_t * Reference;
+	VECTOR * current;
 
 	if ( (x > data->max_dx) || (x < data->min_dx)
 		|| (y > data->max_dy) || (y < data->min_dy) ) return;
 
-	if (!data->qpel_precision) Reference = GetReference(x, y, data);
-	else Reference = Interpolate8x8qpel(x, y, 0, 0, data);
+	if (!data->qpel_precision) {
+		Reference = GetReference(x, y, data);
+		current = data->currentMV;
+	} else { // x and y are in 1/4 precision
+		Reference = Interpolate8x8qpel(x, y, 0, 0, data);
+		current = data->currentQMV;
+	}
 
 	sad = sad8(data->Cur, Reference, data->iEdgedWidth);
 	t = d_mv_bits(x, y, data->predMV, data->iFcode, data->qpel^data->qpel_precision, 0);
@@ -393,7 +397,7 @@ CheckCandidate8(const int x, const int y, const int Direction, int * const dir, 
 
 	if (sad < *(data->iMinSAD)) {
 		*(data->iMinSAD) = sad;
-		data->currentMV->x = x; data->currentMV->y = y;
+		current->x = x; current->y = y;
 		*dir = Direction;
 	}
 }

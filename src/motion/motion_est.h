@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: motion_est.h,v 1.4 2003-03-29 10:21:23 edgomez Exp $
+ *  $Id: motion_est.h,v 1.5 2003-04-05 15:54:58 syskin Exp $
  *
  ***************************************************************************/
 
@@ -90,12 +90,14 @@ static const int lambda_vec8[32] =
 	(int)(29.6436*NEIGH_TEND_8X8 + 0.5), (int)(36.4949*NEIGH_TEND_8X8 + 0.5)	};
 
 // mv.length table
-static const uint32_t mvtab[33] = {
-	1, 2, 3, 4, 6, 7, 7, 7,
-	9, 9, 9, 10, 10, 10, 10, 10,
-	10, 10, 10, 10, 10, 10, 10, 10,
-	10, 11, 11, 11, 11, 11, 11, 12, 12
-};
+static const int mvtab[64] = {
+		1, 2, 3, 4, 6, 7, 7, 7,
+		9, 9, 9, 10, 10, 10, 10, 10,
+		10, 10, 10, 10, 10, 10, 10, 10,
+		10, 11, 11, 11, 11, 11, 11, 12,
+		12, 12, 12, 12, 12, 12, 12, 12,
+		12, 12, 12, 12, 12, 12, 12, 12,
+		12, 12, 12, 12, 12, 12, 12, 12, 12 };
 
 static const int DQtab[4] = {
 	-1, -2, 1, 2
