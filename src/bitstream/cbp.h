@@ -3,7 +3,7 @@
 
 #include "../portab.h"
 
-typedef uint32_t (cbpFunc)(const int16_t codes[6][64]);
+typedef uint32_t (cbpFunc)(const int16_t *codes);
 
 typedef cbpFunc* cbpFuncPtr;	
 

@@ -138,36 +138,29 @@ static const int32_t dquant_table[4] =
 // decode an intra macroblock
 
 void decoder_mbintra(DECODER * dec,
-					 MACROBLOCK * pMB,
-					 const uint32_t x_pos,
-					 const uint32_t y_pos,
-					 const uint32_t acpred_flag,
-					 const uint32_t cbp,
-					 Bitstream * bs,
-					 const uint32_t quant,
-					 const uint32_t intra_dc_threshold)
+		     MACROBLOCK * pMB,
+		     const uint32_t x_pos,
+		     const uint32_t y_pos,
+		     const uint32_t acpred_flag,
+		     const uint32_t cbp,
+		     Bitstream * bs,
+		     const uint32_t quant,
+		     const uint32_t intra_dc_threshold)
 {
-#ifdef LINUX
-	DECLARE_ALIGNED_MATRIX(block,6,64,int16_t,16);
-	DECLARE_ALIGNED_MATRIX(data,6,64,int16_t,16);
-#else
-	CACHE_ALIGN int16_t block[6][64];
-	CACHE_ALIGN int16_t data[6][64];
-#endif
+
+	DECLARE_ALIGNED_MATRIX(block, 6, 64, int16_t, CACHE_LINE);
+	DECLARE_ALIGNED_MATRIX(data,  6, 64, int16_t, CACHE_LINE);
+
 	const uint32_t stride = dec->edged_width;
 	uint32_t i;
 	uint32_t iQuant = pMB->quant;
 	uint8_t *pY_Cur, *pU_Cur, *pV_Cur;
 
-    pY_Cur = dec->cur.y + (y_pos << 4) * stride + (x_pos << 4);
-    pU_Cur = dec->cur.u + (y_pos << 3) * (stride >> 1) + (x_pos << 3);
-    pV_Cur = dec->cur.v + (y_pos << 3) * (stride >> 1) + (x_pos << 3);
+	pY_Cur = dec->cur.y + (y_pos << 4) * stride + (x_pos << 4);
+	pU_Cur = dec->cur.u + (y_pos << 3) * (stride >> 1) + (x_pos << 3);
+	pV_Cur = dec->cur.v + (y_pos << 3) * (stride >> 1) + (x_pos << 3);
 
-#ifdef LINUX
-    	memset(block,0,sizeof(int16_t)*6*64);
-#else
-	memset(block, 0, sizeof(block));		// clear
-#endif
+	memset(block, 0, 6*64*sizeof(int16_t));		// clear
 
 	for (i = 0; i < 6; i++)
 	{
@@ -176,7 +169,7 @@ void decoder_mbintra(DECODER * dec,
 		int start_coeff;
 
 		start_timer();
-		predict_acdc(dec->mbs, x_pos, y_pos, dec->mb_width, i, block[i], iQuant, iDcScaler, predictors);
+		predict_acdc(dec->mbs, x_pos, y_pos, dec->mb_width, i, &block[i*64], iQuant, iDcScaler, predictors);
 		if (!acpred_flag)
 		{
 			pMB->acpred_directions[i] = 0;
@@ -196,7 +189,7 @@ void decoder_mbintra(DECODER * dec,
 				BitstreamSkip(bs, 1);		// marker
 			}
 		
-			block[i][0] = dc_dif;
+			block[i*64 + 0] = dc_dif;
 			start_coeff = 1;
 		}
 		else
@@ -207,27 +200,27 @@ void decoder_mbintra(DECODER * dec,
 		start_timer();
 		if (cbp & (1 << (5-i)))			// coded
 		{
-			get_intra_block(bs, block[i], pMB->acpred_directions[i], start_coeff);
+			get_intra_block(bs, &block[i*64], pMB->acpred_directions[i], start_coeff);
 		}
 		stop_coding_timer();
 
 		start_timer();
-		add_acdc(pMB, i, block[i], iDcScaler, predictors);
+		add_acdc(pMB, i, &block[i*64], iDcScaler, predictors);
 		stop_prediction_timer();
 
 		start_timer();
 		if (dec->quant_type == 0)
 		{
-			dequant_intra(data[i], block[i], iQuant, iDcScaler);
+			dequant_intra(&data[i*64], &block[i*64], iQuant, iDcScaler);
 		}
 		else
 		{
-			dequant4_intra(data[i], block[i], iQuant, iDcScaler);
+			dequant4_intra(&data[i*64], &block[i*64], iQuant, iDcScaler);
 		}
 		stop_iquant_timer();
 
 		start_timer();
-		idct(data[i]);
+		idct(&data[i*64]);
 		stop_idct_timer();
 	}
 
@@ -239,12 +232,12 @@ void decoder_mbintra(DECODER * dec,
 	stop_interlacing_timer();
 
 	start_timer();
-	transfer_16to8copy(pY_Cur, data[0], stride);
-	transfer_16to8copy(pY_Cur + 8, data[1], stride);
-	transfer_16to8copy(pY_Cur + 8 * stride, data[2], stride);
-	transfer_16to8copy(pY_Cur + 8 + 8 * stride, data[3], stride);
-	transfer_16to8copy(pU_Cur, data[4], stride / 2);
-	transfer_16to8copy(pV_Cur, data[5], stride / 2);
+	transfer_16to8copy(pY_Cur,                  &data[0*64], stride);
+	transfer_16to8copy(pY_Cur + 8,              &data[1*64], stride);
+	transfer_16to8copy(pY_Cur + 8 * stride,     &data[2*64], stride);
+	transfer_16to8copy(pY_Cur + 8 + 8 * stride, &data[3*64], stride);
+	transfer_16to8copy(pU_Cur,                  &data[4*64], stride / 2);
+	transfer_16to8copy(pV_Cur,                  &data[5*64], stride / 2);
 	stop_transfer_timer();
 }
 
@@ -255,39 +248,35 @@ void decoder_mbintra(DECODER * dec,
 #define SIGN(X) (((X)>0)?1:-1)
 #define ABS(X) (((X)>0)?(X):-(X))
 static const uint32_t roundtab[16] =
-		{ 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2 };
+{ 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2 };
 
 
 // decode an inter macroblock
 
 void decoder_mbinter(DECODER * dec,
-					 const MACROBLOCK * pMB,
-					 const uint32_t x_pos,
-					 const uint32_t y_pos,
-					 const uint32_t acpred_flag,
-					 const uint32_t cbp,
-					 Bitstream * bs,
-					 const uint32_t quant,
-					 const uint32_t rounding)
+		     const MACROBLOCK * pMB,
+		     const uint32_t x_pos,
+		     const uint32_t y_pos,
+		     const uint32_t acpred_flag,
+		     const uint32_t cbp,
+		     Bitstream * bs,
+		     const uint32_t quant,
+		     const uint32_t rounding)
 {
-#ifdef LINUX
-	DECLARE_ALIGNED_MATRIX(block,6,64,int16_t,16);
-	DECLARE_ALIGNED_MATRIX(data,6,64,int16_t,16);
-#else
-	CACHE_ALIGN int16_t block[6][64];
-	CACHE_ALIGN int16_t data[6][64];
-#endif
+
+	DECLARE_ALIGNED_MATRIX(block,6, 64, int16_t, CACHE_LINE);
+	DECLARE_ALIGNED_MATRIX(data, 6, 64, int16_t, CACHE_LINE);
 
 	const uint32_t stride = dec->edged_width;
 	const uint32_t stride2 = dec->edged_width / 2;
-    uint32_t i;
-    uint32_t iQuant = pMB->quant;
+	uint32_t i;
+	uint32_t iQuant = pMB->quant;
 	uint8_t *pY_Cur, *pU_Cur, *pV_Cur;
 	int uv_dx, uv_dy;
 
-    pY_Cur = dec->cur.y + (y_pos << 4) * stride + (x_pos << 4);
-    pU_Cur = dec->cur.u + (y_pos << 3) * (stride >> 1) + (x_pos << 3);
-    pV_Cur = dec->cur.v + (y_pos << 3) * (stride >> 1) + (x_pos << 3);
+	pY_Cur = dec->cur.y + (y_pos << 4) * stride + (x_pos << 4);
+	pU_Cur = dec->cur.u + (y_pos << 3) * (stride >> 1) + (x_pos << 3);
+	pV_Cur = dec->cur.v + (y_pos << 3) * (stride >> 1) + (x_pos << 3);
 
 	if (pMB->mode == MODE_INTER || pMB->mode == MODE_INTER_Q)
 	{
@@ -320,25 +309,25 @@ void decoder_mbinter(DECODER * dec,
 	{
 		if (cbp & (1 << (5-i)))			// coded
 		{
-			memset(block[i], 0, 64 * sizeof(int16_t));		// clear
+			memset(&block[i*64], 0, 64 * sizeof(int16_t));		// clear
 
 			start_timer();
-			get_inter_block(bs, block[i]);
+			get_inter_block(bs, &block[i*64]);
 			stop_coding_timer();
 
 			start_timer();
 			if (dec->quant_type == 0)
 			{
-				dequant_inter(data[i], block[i], iQuant);
+				dequant_inter(&data[i*64], &block[i*64], iQuant);
 			}
 			else
 			{
-				dequant4_inter(data[i], block[i], iQuant);
+				dequant4_inter(&data[i*64], &block[i*64], iQuant);
 			}
 			stop_iquant_timer();
 
 			start_timer();
-			idct(data[i]);
+			idct(&data[i*64]);
 			stop_idct_timer();
 		}
 	}
@@ -352,23 +341,24 @@ void decoder_mbinter(DECODER * dec,
 
 	start_timer();
 	if (cbp & 32)
-		transfer_16to8add(pY_Cur, data[0], stride);
+		transfer_16to8add(pY_Cur,                  &data[0*64], stride);
 	if (cbp & 16)
-		transfer_16to8add(pY_Cur + 8, data[1], stride);
+		transfer_16to8add(pY_Cur + 8,              &data[1*64], stride);
 	if (cbp & 8)
-		transfer_16to8add(pY_Cur + 8 * stride, data[2], stride);
+		transfer_16to8add(pY_Cur + 8 * stride,     &data[2*64], stride);
 	if (cbp & 4)
-		transfer_16to8add(pY_Cur + 8 + 8 * stride, data[3], stride);
+		transfer_16to8add(pY_Cur + 8 + 8 * stride, &data[3*64], stride);
 	if (cbp & 2)
-		transfer_16to8add(pU_Cur, data[4], stride / 2);
+		transfer_16to8add(pU_Cur,                  &data[4*64], stride / 2);
 	if (cbp & 1)
-		transfer_16to8add(pV_Cur, data[5], stride / 2);
+		transfer_16to8add(pV_Cur,                  &data[5*64], stride / 2);
 	stop_transfer_timer();
 }
 
 
 void decoder_iframe(DECODER * dec, Bitstream * bs, int quant, int intra_dc_threshold)
 {
+
 	uint32_t x, y;
 
 	for (y = 0; y < dec->mb_height; y++)
@@ -421,11 +411,13 @@ void decoder_iframe(DECODER * dec, Bitstream * bs, int quant, int intra_dc_thres
 			decoder_mbintra(dec, mb, x, y, acpred_flag, cbp, bs, quant, intra_dc_threshold);
 		}
 	}
+
 }
 
 
 void get_motion_vector(DECODER *dec, Bitstream *bs, int x, int y, int k, VECTOR * mv, int fcode)
 {
+
 	int scale_fac = 1 << (fcode - 1);
 	int high = (32 * scale_fac) - 1;
 	int low = ((-32) * scale_fac);
@@ -475,6 +467,7 @@ void get_motion_vector(DECODER *dec, Bitstream *bs, int x, int y, int k, VECTOR 
 
 void decoder_pframe(DECODER * dec, Bitstream * bs, int rounding, int quant, int fcode, int intra_dc_threshold)
 {
+
 	uint32_t x, y;
 
 	image_swap(&dec->cur, &dec->refn);
@@ -596,28 +589,28 @@ void decoder_pframe(DECODER * dec, Bitstream * bs, int rounding, int quant, int 
 				start_timer();
 
 				transfer8x8_copy(dec->cur.y + (16*y)*dec->edged_width + (16*x), 
-								dec->refn.y + (16*y)*dec->edged_width + (16*x), 
-								dec->edged_width);
+						 dec->refn.y + (16*y)*dec->edged_width + (16*x), 
+						 dec->edged_width);
 
 				transfer8x8_copy(dec->cur.y + (16*y)*dec->edged_width + (16*x+8), 
-								dec->refn.y + (16*y)*dec->edged_width + (16*x+8), 
-								dec->edged_width);
+						 dec->refn.y + (16*y)*dec->edged_width + (16*x+8), 
+						 dec->edged_width);
 
 				transfer8x8_copy(dec->cur.y + (16*y+8)*dec->edged_width + (16*x), 
-								dec->refn.y + (16*y+8)*dec->edged_width + (16*x), 
-								dec->edged_width);
+						 dec->refn.y + (16*y+8)*dec->edged_width + (16*x), 
+						 dec->edged_width);
 					
 				transfer8x8_copy(dec->cur.y + (16*y+8)*dec->edged_width + (16*x+8), 
-								dec->refn.y + (16*y+8)*dec->edged_width + (16*x+8), 
-								dec->edged_width);
+						 dec->refn.y + (16*y+8)*dec->edged_width + (16*x+8), 
+						 dec->edged_width);
 
 				transfer8x8_copy(dec->cur.u + (8*y)*dec->edged_width/2 + (8*x), 
-								dec->refn.u + (8*y)*dec->edged_width/2 + (8*x), 
-								dec->edged_width/2);
+						 dec->refn.u + (8*y)*dec->edged_width/2 + (8*x), 
+						 dec->edged_width/2);
 
 				transfer8x8_copy(dec->cur.v + (8*y)*dec->edged_width/2 + (8*x), 
-								dec->refn.v + (8*y)*dec->edged_width/2 + (8*x), 
-								dec->edged_width/2);
+						 dec->refn.v + (8*y)*dec->edged_width/2 + (8*x), 
+						 dec->edged_width/2);
 
 				stop_transfer_timer();
 			}
@@ -627,6 +620,7 @@ void decoder_pframe(DECODER * dec, Bitstream * bs, int rounding, int quant, int 
 
 int decoder_decode(DECODER * dec, XVID_DEC_FRAME * frame)
 {
+
 	Bitstream bs;
 	uint32_t rounding;
 	uint32_t quant;
@@ -662,7 +656,7 @@ int decoder_decode(DECODER * dec, XVID_DEC_FRAME * frame)
 
 	start_timer();
 	image_output(&dec->cur, dec->width, dec->height, dec->edged_width,
-				frame->image, frame->stride, frame->colorspace);
+		     frame->image, frame->stride, frame->colorspace);
 	stop_conv_timer();
 	
 	emms();
@@ -670,4 +664,5 @@ int decoder_decode(DECODER * dec, XVID_DEC_FRAME * frame)
 	stop_global_timer();
 
 	return XVID_ERR_OK;
+
 }
