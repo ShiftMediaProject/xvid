@@ -26,20 +26,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- ****************************************************************************/
-
-/*****************************************************************************
- * 
- *  History
- *
- *  10.07.2002  added BFRAMES_DEC_DEBUG support
- *              MinChen <chenm001@163.com>
- *  20.06.2002 bframe patch
- *  08.05.2002 fix some problem in DEBUG mode;
- *             MinChen <chenm001@163.com>
- *  14.04.2002 added FrameCodeB()
- *
- *  $Id: encoder.c,v 1.92 2003-02-15 18:48:15 edgomez Exp $
+ *  $Id: encoder.c,v 1.93 2003-02-17 23:45:21 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -605,7 +592,7 @@ encoder_destroy(Encoder * pEnc)
 
 static __inline void inc_frame_num(Encoder * pEnc)
 {
-	pEnc->current->stamp = pEnc->mbParam.m_stamp;	// first frame is zero
+	pEnc->current->stamp = pEnc->mbParam.m_stamp;	/* first frame is zero */
 	pEnc->mbParam.m_stamp += pEnc->mbParam.fincr;
 }
 
@@ -647,7 +634,7 @@ set_timecodes(FRAMEINFO* pCur,FRAMEINFO *pRef, int32_t time_base)
 		pCur->ticks = (int32_t)pCur->stamp % time_base;
 		pCur->seconds =  ((int32_t)pCur->stamp / time_base)	- ((int32_t)pRef->stamp / time_base) ;
 		
-		//HEAVY DEBUG OUTPUT	remove when timecodes prove to be stable 
+		/* HEAVY DEBUG OUTPUT remove when timecodes prove to be stable */
 
 /*		fprintf(stderr,"WriteVop:   %d - %d \n",
 			((int32_t)pCur->stamp / time_base), ((int32_t)pRef->stamp / time_base));
@@ -860,7 +847,7 @@ bvop_loop:
 				pEnc->mbParam.width, pEnc->mbParam.height, pEnc->mbParam.edged_width);
 		}
 
-		// queue input frame, and dequue next image
+		/* queue input frame, and dequue next image */
 		if (pEnc->queue_size > 0)
 		{
 			image_swap(&pEnc->current->image, &pEnc->queue[pEnc->queue_tail]);
@@ -891,7 +878,10 @@ bvop_loop:
 				pEnc->bframenum_head, pEnc->bframenum_tail,
 				pEnc->queue_head, pEnc->queue_tail, pEnc->queue_size);
 
-		//	BitstreamPutBits(&bs, 0x7f, 8);
+			/* That disabled line of code was supposed to inform VirtualDub
+			 * that the frame was a dummy delay frame - now disabled (thx god :-)
+			 */
+			/* BitstreamPutBits(&bs, 0x7f, 8); */
 			pFrame->intra = 5;
 
 			if (pResult) {
@@ -937,7 +927,7 @@ bvop_loop:
 
 	emms();
 
-	// only inc frame num, adapt quant, etc. if we havent seen it before
+	/* only inc frame num, adapt quant, etc. if we havent seen it before */
 	if (pEnc->bframenum_dx50bvop < 0 )
 	{
 		mode = intra2coding_type(pFrame->intra);
@@ -1053,7 +1043,7 @@ bvop_loop:
 			image_printf(&pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.height, 5, 200, "IVOP");
 		}
 
-		// when we reach an iframe in DX50BVOP mode, encode the last bframe as a pframe
+		/* when we reach an iframe in DX50BVOP mode, encode the last bframe as a pframe */
 
 		if ((pEnc->mbParam.global & XVID_GLOBAL_DX50BVOP) && pEnc->bframenum_tail > 0) {
 
@@ -1145,7 +1135,7 @@ bvop_loop:
 
 		pEnc->bframenum_tail++;
 
-// bframe report by koepi 
+		/* bframe report by koepi */
 		pFrame->intra = 2;
 		pFrame->length = 0;
 
@@ -1349,8 +1339,11 @@ encoder_encode(Encoder * pEnc,
 
 	}
 
-//	BitstreamPutBits(&bs, 0xFFFF, 16);
-//	BitstreamPutBits(&bs, 0xFFFF, 16);
+	/* Relic from OpenDivX - now disabled
+	BitstreamPutBits(&bs, 0xFFFF, 16);
+	BitstreamPutBits(&bs, 0xFFFF, 16);
+	*/
+
 	BitstreamPadAlways(&bs);
 	pFrame->length = BitstreamLength(&bs);
 
@@ -1501,7 +1494,7 @@ HintedMESet(Encoder * pEnc,
 					pMB->pmvs[vec].x = pMB->mvs[vec].x - pred.x;
 					pMB->pmvs[vec].y = pMB->mvs[vec].y - pred.y;
 				}
-			} else				// intra / stuffing / not_coded
+			} else				/* intra / stuffing / not_coded */
 			{
 				for (vec = 0; vec < 4; ++vec) {
 					pMB->mvs[vec].x = pMB->mvs[vec].y = 0;
@@ -1698,7 +1691,7 @@ FrameCodeI(Encoder * pEnc,
 		HintedMEGet(pEnc, 1);
 	}
 
-	return 1;					// intra
+	return 1;					/* intra */
 }
 
 
@@ -2036,14 +2029,14 @@ FrameCodeP(Encoder * pEnc,
 	iSearchRange = 1 << (3 + pEnc->mbParam.m_fcode);
 
 	if ((fSigma > iSearchRange / 3)
-		&& (pEnc->mbParam.m_fcode <= (3 + pEnc->mbParam.m_quarterpel)))	// maximum search range 128
+		&& (pEnc->mbParam.m_fcode <= (3 + pEnc->mbParam.m_quarterpel)))	/* maximum search range 128 */
 	{
 		pEnc->mbParam.m_fcode++;
 		iSearchRange *= 2;
 	} else if ((fSigma < iSearchRange / 6)
 			   && (pEnc->fMvPrevSigma >= 0)
 			   && (pEnc->fMvPrevSigma < iSearchRange / 6)
-			&& (pEnc->mbParam.m_fcode >= (2 + pEnc->mbParam.m_quarterpel)))	// minimum search range 16
+			   && (pEnc->mbParam.m_fcode >= (2 + pEnc->mbParam.m_quarterpel)))	/* minimum search range 16 */
 	{
 		pEnc->mbParam.m_fcode--;
 		iSearchRange /= 2;
@@ -2064,7 +2057,7 @@ FrameCodeP(Encoder * pEnc,
 		set_timecodes(pEnc->current,pEnc->reference,pEnc->mbParam.fbase);
 		BitstreamWriteVopHeader(bs, &pEnc->mbParam, pEnc->current, 0);
 
-		// copy reference frame details into the current frame
+		/* copy reference frame details into the current frame */
 		pEnc->current->quant = pEnc->reference->quant;
 		pEnc->current->motion_flags = pEnc->reference->motion_flags;
 		pEnc->current->rounding_type = pEnc->reference->rounding_type;
@@ -2093,7 +2086,7 @@ FrameCodeP(Encoder * pEnc,
 
 	*pBits = BitstreamPos(bs) - *pBits;
 
-	return 0;					// inter
+	return 0;					/* inter */
 }
 
 
@@ -2126,7 +2119,7 @@ FrameCodeB(Encoder * pEnc,
 
   	frame->quarterpel =  pEnc->mbParam.m_quarterpel;
 	
-	// forward 
+	/* forward  */
 	image_setedges(f_ref, pEnc->mbParam.edged_width,
 				   pEnc->mbParam.edged_height, pEnc->mbParam.width,
 				   pEnc->mbParam.height);
@@ -2136,7 +2129,7 @@ FrameCodeB(Encoder * pEnc,
 					  pEnc->mbParam.m_quarterpel, 0);
 	stop_inter_timer();
 
-	// backward
+	/* backward */
 	image_setedges(b_ref, pEnc->mbParam.edged_width,
 				   pEnc->mbParam.edged_height, pEnc->mbParam.width,
 				   pEnc->mbParam.height);
@@ -2149,9 +2142,9 @@ FrameCodeB(Encoder * pEnc,
 	start_timer();
 
 	MotionEstimationBVOP(&pEnc->mbParam, frame, 
-		((int32_t)(pEnc->current->stamp - frame->stamp)),				// time_bp 
-		((int32_t)(pEnc->current->stamp - pEnc->reference->stamp)), 	// time_pp
-			pEnc->reference->mbs, f_ref,
+						 ((int32_t)(pEnc->current->stamp - frame->stamp)),				/* time_bp */
+						 ((int32_t)(pEnc->current->stamp - pEnc->reference->stamp)), 	/* time_pp */
+						 pEnc->reference->mbs, f_ref,
 						 &pEnc->f_refh, &pEnc->f_refv, &pEnc->f_refhv,
 						 pEnc->current, b_ref, &pEnc->vInterH,
 						 &pEnc->vInterV, &pEnc->vInterHV);
@@ -2159,10 +2152,11 @@ FrameCodeB(Encoder * pEnc,
 
 	stop_motion_timer();
 
-	/*if (test_quant_type(&pEnc->mbParam, pEnc->current))
-	   {
-	   BitstreamWriteVolHeader(bs, pEnc->mbParam.width, pEnc->mbParam.height, pEnc->mbParam.quant_type);
-	   } */
+	/*
+	if (test_quant_type(&pEnc->mbParam, pEnc->current)) {
+		BitstreamWriteVolHeader(bs, pEnc->mbParam.width, pEnc->mbParam.height, pEnc->mbParam.quant_type);
+	}
+	*/
 
 	frame->coding_type = B_VOP;
 
@@ -2182,9 +2176,9 @@ FrameCodeB(Encoder * pEnc,
 			MACROBLOCK * const mb = &frame->mbs[x + y * pEnc->mbParam.mb_width];
 			int direction = pEnc->mbParam.global & XVID_ALTERNATESCAN ? 2 : 0;
 
-			// decoder ignores mb when refence block is INTER(0,0), CBP=0 
+			/* decoder ignores mb when refence block is INTER(0,0), CBP=0 */
 			if (mb->mode == MODE_NOT_CODED) {
-				//mb->mvs[0].x = mb->mvs[0].y = mb->cbp = 0;
+				/* mb->mvs[0].x = mb->mvs[0].y = mb->cbp = 0; */
 				continue;
 			}
 
@@ -2203,7 +2197,7 @@ FrameCodeB(Encoder * pEnc,
 
 				if ( (mb->mode == MODE_DIRECT) && (mb->cbp == 0)
 					&& (mb->pmvs[3].x == 0) && (mb->pmvs[3].y == 0) ) {
-					mb->mode = MODE_DIRECT_NONE_MV;	// skipped
+					mb->mode = MODE_DIRECT_NONE_MV;	/* skipped */
 				}
 			}
 
@@ -2219,7 +2213,7 @@ FrameCodeB(Encoder * pEnc,
 
 	emms();
 
-	// TODO: dynamic fcode/bcode ???
+	/* TODO: dynamic fcode/bcode ??? */
 
 	*pBits = BitstreamPos(bs) - *pBits;
 
