@@ -51,14 +51,14 @@ Already completed items:
 
 
 
-Some ideas for beyond 1.0
+ideas for v1.1 and beyond
 -------------------------
 libxvidcore
 * video buffer verifier
 
 vfw
 * integrated Packed<->ISO converter
-
+* vfw-ext api to get/set configuration parameters
 
 directshow
 * manual aspect ratio setting (1:1, 4:3, 16:9, Custom)
@@ -67,4 +67,4 @@ directshow
 
 
 
-Last edited: $Date: 2004-06-12 13:02:12 $
+Last edited: $Date: 2004-07-13 12:23:29 $
