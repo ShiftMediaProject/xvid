@@ -74,7 +74,10 @@ read_counter()
 	uint32_t ts1, ts2;
 
 	__asm {
-	rdtsc mov ts1, eax mov ts2, edx}
+		rdtsc 
+		mov ts1, eax 
+		mov ts2, edx
+	}
 
 	ts = ((uint64_t) ts2 << 32) | ((uint64_t) ts1);
 

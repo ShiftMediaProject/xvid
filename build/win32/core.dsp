@@ -89,6 +89,10 @@ SOURCE=..\..\authors.txt
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\CodingStyle
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\gpl.txt
 # End Source File
 # Begin Source File
