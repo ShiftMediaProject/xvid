@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.61 2004-07-10 17:49:31 edgomez Exp $
+ * $Id: decoder.c,v 1.62 2004-07-14 23:26:06 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -48,6 +48,7 @@
 #include "image/interpolate8x8.h"
 #include "image/reduced.h"
 #include "image/font.h"
+#include "image/qpel.h"
 
 #include "bitstream/mbcoding.h"
 #include "prediction/mbprediction.h"
@@ -60,6 +61,11 @@
 #include "image/colorspace.h"
 #include "image/postprocessing.h"
 #include "utils/mem_align.h"
+
+#ifdef ARCH_IS_IA32
+#define interpolate16x16_quarterpel new_interpolate16x16_quarterpel
+#define interpolate8x8_quarterpel new_interpolate8x8_quarterpel
+#endif 
 
 static int
 decoder_resize(DECODER * dec)
@@ -1038,7 +1044,6 @@ decoder_bf_interpolate_mbinter(DECODER * dec,
 	if (!direct) {
 		uv_dx = pMB->mvs[0].x;
 		uv_dy = pMB->mvs[0].y;
-
 		b_uv_dx = pMB->b_mvs[0].x;
 		b_uv_dy = pMB->b_mvs[0].y;
 
@@ -1051,21 +1056,20 @@ decoder_bf_interpolate_mbinter(DECODER * dec,
 
 		uv_dx = (uv_dx >> 1) + roundtab_79[uv_dx & 0x3];
 		uv_dy = (uv_dy >> 1) + roundtab_79[uv_dy & 0x3];
-
 		b_uv_dx = (b_uv_dx >> 1) + roundtab_79[b_uv_dx & 0x3];
 		b_uv_dy = (b_uv_dy >> 1) + roundtab_79[b_uv_dy & 0x3];
 
 	} else {
-		if(dec->quarterpel) {
-			uv_dx = (pMB->mvs[0].x / 2) + (pMB->mvs[1].x / 2) + (pMB->mvs[2].x / 2) + (pMB->mvs[3].x / 2);
-			uv_dy = (pMB->mvs[0].y / 2) + (pMB->mvs[1].y / 2) + (pMB->mvs[2].y / 2) + (pMB->mvs[3].y / 2);
-			b_uv_dx = (pMB->b_mvs[0].x / 2) + (pMB->b_mvs[1].x / 2) + (pMB->b_mvs[2].x / 2) + (pMB->b_mvs[3].x / 2);
-			b_uv_dy = (pMB->b_mvs[0].y / 2) + (pMB->b_mvs[1].y / 2) + (pMB->b_mvs[2].y / 2) + (pMB->b_mvs[3].y / 2);
-		} else {
-			uv_dx = pMB->mvs[0].x + pMB->mvs[1].x + pMB->mvs[2].x + pMB->mvs[3].x;
-			uv_dy = pMB->mvs[0].y + pMB->mvs[1].y + pMB->mvs[2].y + pMB->mvs[3].y;
-			b_uv_dx = pMB->b_mvs[0].x + pMB->b_mvs[1].x + pMB->b_mvs[2].x + pMB->b_mvs[3].x;
-			b_uv_dy = pMB->b_mvs[0].y + pMB->b_mvs[1].y + pMB->b_mvs[2].y + pMB->b_mvs[3].y;
+		uv_dx = pMB->mvs[0].x + pMB->mvs[1].x + pMB->mvs[2].x + pMB->mvs[3].x;
+		uv_dy = pMB->mvs[0].y + pMB->mvs[1].y + pMB->mvs[2].y + pMB->mvs[3].y;
+		b_uv_dx = pMB->b_mvs[0].x + pMB->b_mvs[1].x + pMB->b_mvs[2].x + pMB->b_mvs[3].x;
+		b_uv_dy = pMB->b_mvs[0].y + pMB->b_mvs[1].y + pMB->b_mvs[2].y + pMB->b_mvs[3].y;
+
+		if (dec->quarterpel) {
+			uv_dx /= 2;
+			uv_dy /= 2;
+			b_uv_dx /= 2;
+			b_uv_dy /= 2;
 		}
 
 		uv_dx = (uv_dx >> 3) + roundtab_76[uv_dx & 0xf];
