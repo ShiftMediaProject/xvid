@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: motion_est.h,v 1.6 2003-04-08 11:12:07 syskin Exp $
+ *  $Id: motion_est.h,v 1.7 2003-05-13 12:48:20 syskin Exp $
  *
  ***************************************************************************/
 
@@ -137,6 +137,8 @@ typedef struct
 	const VECTOR * referencemv;
 // _BITS stuff
 	int16_t * dctSpace;
+	uint32_t iQuant;
+	uint32_t quant_type;
 
 } SearchData;
 
@@ -218,12 +220,10 @@ SearchP(const IMAGE * const pRef,
 		const int y,
 		const uint32_t MotionFlags,
 		const uint32_t GlobalFlags,
-		const uint32_t iQuant,
 		SearchData * const Data,
 		const MBParam * const pParam,
 		const MACROBLOCK * const pMBs,
 		const MACROBLOCK * const prevMBs,
-		int inter4v,
 		MACROBLOCK * const pMB);
 
 
@@ -281,6 +281,7 @@ MakeGoodMotionFlags(const uint32_t MotionFlags, const uint32_t GlobalFlags)
 #include "../quant/quant_mpeg4.h"
 #include "../quant/quant_h263.h"
 #include "../bitstream/vlc_codes.h"
+#include "../dct/fdct.h"
 
 static int
 CountMBBitsInter(SearchData * const Data,
@@ -300,5 +301,69 @@ CountMBBitsIntra(const SearchData * const Data);
 
 int CodeCoeffIntra_CalcBits(const int16_t qcoeff[64], const uint16_t * zigzag);
 int CodeCoeffInter_CalcBits(const int16_t qcoeff[64], const uint16_t * zigzag);
+/*
+static int
+CountDistortionSkip(const SearchData * const Data);
+*/
+static __inline unsigned int
+Block_CalcBits(uint16_t * const coeff, 
+					uint16_t * const data,
+					const uint32_t quant, const int quant_type,
+					uint32_t * cbp,
+					const int block,
+					const int RD)
+{
+	int sum;
+
+	fdct(data);
+
+	if (quant_type == 0) sum = quant_inter(coeff, data, quant);
+	else sum = quant4_inter(coeff, data, quant);
+
+	if (sum > 0) {
+		*cbp |= 1 << (5 - block);
+		return CodeCoeffInter_CalcBits(coeff, scan_tables[0]);
+	} else return 0;
+}
+
+/* RD experiment. ignore.
+static __inline unsigned int
+Block_CalcBits(	int16_t * const coeff, 
+				int16_t * const data,
+				const uint32_t quant, const int quant_type,
+				uint32_t * cbp,
+				const int block,
+				const int RD)
+{
+	int sum;
+	int bits;
+	const int lambda = quant*quant/2;
+	int distortion = 0;
+
+	fdct(data);
+
+	if (quant_type == 0) sum = quant_inter(coeff, data, quant);
+	else sum = quant4_inter(coeff, data, quant);
+
+	if (sum > 0) {
+		*cbp |= 1 << (5 - block);
+		bits = CodeCoeffInter_CalcBits(coeff, scan_tables[0]);
+	} else bits = 0;
+
+	if (RD) {
+		int i;
+		if (quant_type == 0) dequant_inter_c(coeff, coeff, quant);
+		else dequant4_inter_c(coeff, coeff, quant);
+
+		for (i = 0; i < 64; i++) {
+			distortion += (data[i] - coeff[i])*(data[i] - coeff[i]);
+		}
+	}
+
+	bits += distortion/lambda;
+
+	return bits;
+}
+*/
 
 #endif							/* _MOTION_EST_H_ */
