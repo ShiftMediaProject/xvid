@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: interpolate8x8_altivec.c,v 1.1 2004-04-05 20:36:36 edgomez Exp $
+ * $Id: interpolate8x8_altivec.c,v 1.2 2004-10-17 10:20:15 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -387,85 +387,339 @@ interpolate8x8_avg4_altivec_c(uint8_t *dst,
     INTERPOLATE8X8_AVG4();
 }
 
-
-
-/*************************************************************
- * QPEL STUFF STARTS HERE                                    *
- *************************************************************/
-
-
-#define INTERPOLATE8X8_6TAP_LOWPASS_H() \
-vec_dstt(src, prefetch_constant, 0);  \
-data = vec_perm(vec_ld(-2, src), vec_ld(14, src), vec_lvsl(-2, src));   \
-s1 = (vector signed short)vec_mergeh(zerovec, data);                    \
-t = vec_perm(data, data, vec_lvsl(5, (unsigned char*)0));               \
-s2 = (vector signed short)vec_mergeh(zerovec, t);                       \
-d = vec_add(s1, s2);                                                    \
-\
-t = vec_perm(data, data, vec_lvsl(2, (unsigned char*)0));   \
-s1 = (vector signed short)vec_mergeh(zerovec, t);           \
-t = vec_perm(data, data, vec_lvsl(3, (unsigned char*)0));   \
-s2 = (vector signed short)vec_mergeh(zerovec, t);           \
-s1 = vec_add(s1,s2);                                        \
-z = vec_sl(s1, vec_splat_u16(2));                           \
-t = vec_perm(data, data, vec_lvsl(1, (unsigned char*)0));   \
-s1 = (vector signed short)vec_mergeh(zerovec, t);           \
-t = vec_perm(data, data, vec_lvsl(4, (unsigned char*)0));   \
-s2 = (vector signed short)vec_mergeh(zerovec, t);           \
-s1 = vec_add(s1, s2);                                       \
-z = vec_sub(z, s1);                                         \
-z = vec_add(vec_sl(z, vec_splat_u16(2)), z);                \
-d = vec_add(d, z);                                          \
-\
-d = vec_add(d, round_add);          \
-d = vec_sra(d, vec_splat_u16(5));   \
-\
-t = vec_packsu(d, (vector signed short)zerovec);                \
-mask = vec_perm(mask_stencil, mask_stencil, vec_lvsl(0, dst));  \
-t = vec_perm(t, t, vec_lvsl(0, dst));                           \
-t = vec_sel(t, vec_ld(0, dst), mask);                           \
-vec_st(t, 0, dst);                                              \
-\
-dst += stride;  \
-src += stride
-
-/* This function assumes:
+/*
+ * This function assumes:
  *  dst is 8 byte aligned
  *  src is unaligned
- *  stride is a muliple of 8
+ *  stirde is a multiple of 8
+ *  rounding is ignored
+ */
+void
+interpolate8x8_halfpel_add_altivec_c(uint8_t *dst, const uint8_t *src, const uint32_t stride, const uint32_t rouding)
+{
+	interpolate8x8_avg2_altivec_c(dst, dst, src, stride, 0, 8);
+}
+
+#define INTERPOLATE8X8_HALFPEL_H_ADD_ROUND() \
+	mask_dst = vec_lvsl(0,dst);										\
+	s1 = vec_perm(vec_ld(0,src),vec_ld(16,src),vec_lvsl(0,src));	\
+	d = vec_perm(vec_ld(0,dst),vec_ld(16,dst),mask_dst);		\
+	\
+	s2 = vec_perm(s1,s1,rot1);	\
+	tmp = vec_avg(s1,s2);								\
+	s1 = vec_sub(tmp,vec_and(vec_xor(s1,s2),one)); \
+	\
+	d = vec_avg(s1,d);\
+	\
+	mask = vec_perm(mask_stencil, mask_stencil, mask_dst); \
+	d = vec_perm(d,d,mask_dst);	\
+	d = vec_sel(d,vec_ld(0,dst),mask);	\
+	vec_st(d,0,dst);					\
+	\
+	dst += stride; \
+	src += stride
+
+#define INTERPOLATE8X8_HALFPEL_H_ADD_NOROUND() \
+	mask_dst = vec_lvsl(0,dst);										\
+	s1 = vec_perm(vec_ld(0,src),vec_ld(16,src),vec_lvsl(0,src));	\
+	d = vec_perm(vec_ld(0,dst),vec_ld(16,dst),mask_dst);		\
+	\
+	s1 = vec_avg(s1, vec_perm(s1,s1,rot1));\
+	d = vec_avg(s1,d);\
+	\
+	mask = vec_perm(mask_stencil,mask_stencil,mask_dst);\
+	d = vec_perm(d,d,mask_dst);\
+	d = vec_sel(d,vec_ld(0,dst),mask);\
+	vec_st(d,0,dst);\
+	\
+	dst += stride;\
+	src += stride
+
+/*
+ * This function assumes:
+ *	dst is 8 byte aligned
+ *	src is unaligned
+ *	stride is a multiple of 8
+ */
+void
+interpolate8x8_halfpel_h_add_altivec_c(uint8_t *dst, uint8_t *src, const uint32_t stride, const uint32_t rounding)
+{
+	register vector unsigned char s1,s2;
+	register vector unsigned char d;
+	register vector unsigned char tmp;
+	
+	register vector unsigned char mask_dst;
+	register vector unsigned char one;
+	register vector unsigned char rot1;
+	
+	register vector unsigned char mask_stencil;
+	register vector unsigned char mask;
+	
+#ifdef DEBUG
+	if(((unsigned)dst) & 0x7);
+		fprintf(stderr, "interpolate8x8_halfpel_h_add_altivec_c:incorrect align, dst: %x\n", dst);
+	if(stride & 0x7)
+		fprintf(stderr, "interpolate8x8_halfpel_h_add_altivec_c:incorrect stride, stride: %u\n", stride);
+#endif
+	
+	/* initialization */
+	mask_stencil = vec_pack(vec_splat_u16(0), vec_splat_u16(-1));
+	one = vec_splat_u8(1);
+	rot1 = vec_lvsl(1,(unsigned char*)0);
+	
+	if(rounding) {
+		INTERPOLATE8X8_HALFPEL_H_ADD_ROUND();
+		INTERPOLATE8X8_HALFPEL_H_ADD_ROUND();
+		INTERPOLATE8X8_HALFPEL_H_ADD_ROUND();
+		INTERPOLATE8X8_HALFPEL_H_ADD_ROUND();
+		
+		INTERPOLATE8X8_HALFPEL_H_ADD_ROUND();
+		INTERPOLATE8X8_HALFPEL_H_ADD_ROUND();
+		INTERPOLATE8X8_HALFPEL_H_ADD_ROUND();
+		INTERPOLATE8X8_HALFPEL_H_ADD_ROUND();
+	}
+	else {
+		
+		INTERPOLATE8X8_HALFPEL_H_ADD_NOROUND();
+		INTERPOLATE8X8_HALFPEL_H_ADD_NOROUND();
+		INTERPOLATE8X8_HALFPEL_H_ADD_NOROUND();
+		INTERPOLATE8X8_HALFPEL_H_ADD_NOROUND();
+		
+		INTERPOLATE8X8_HALFPEL_H_ADD_NOROUND();
+		INTERPOLATE8X8_HALFPEL_H_ADD_NOROUND();
+		INTERPOLATE8X8_HALFPEL_H_ADD_NOROUND();
+		INTERPOLATE8X8_HALFPEL_H_ADD_NOROUND();
+	}
+}
+
+
+
+
+#define INTERPOLATE8X8_HALFPEL_V_ADD_ROUND()\
+	src += stride;\
+	mask_dst = vec_lvsl(0,dst);\
+	s2 = vec_perm(vec_ld(0,src),vec_ld(16,src),vec_lvsl(0,src));\
+	d = vec_perm(vec_ld(0,dst),vec_ld(16,dst),mask_dst);\
+	\
+	tmp = vec_avg(s1,s2);\
+	s1 = vec_sub(tmp,vec_and(vec_xor(s1,s2),vec_splat_u8(1)));\
+	d = vec_avg(s1,d);\
+	\
+	mask = vec_perm(mask_stencil,mask_stencil,mask_dst);\
+	d = vec_perm(d,d,mask_dst);\
+	d = vec_sel(d,vec_ld(0,dst),mask);\
+	vec_st(d,0,dst);\
+	\
+	s1 = s2;\
+	\
+	dst += stride
+
+#define INTERPOLATE8X8_HALFPEL_V_ADD_NOROUND()\
+	src += stride;\
+	mask_dst = vec_lvsl(0,dst);\
+	s2 = vec_perm(vec_ld(0,src),vec_ld(16,src),vec_lvsl(0,src));\
+	d = vec_perm(vec_ld(0,dst),vec_ld(16,dst),mask_dst);\
+	\
+	s1 = vec_avg(s1,s2);\
+	d = vec_avg(s1,d);\
+	\
+	mask = vec_perm(mask_stencil,mask_stencil,mask_dst);\
+	d = vec_perm(d,d,mask_dst);\
+	d = vec_sel(d,vec_ld(0,dst),mask);\
+	vec_st(d,0,dst);\
+	\
+	s1 = s2;\
+	dst += stride
+
+/*
+ * This function assumes:
+ *	dst: 8 byte aligned
+ *	src: unaligned
+ *	stride is a multiple of 8
+ */
+ 
+void
+interpolate8x8_halfpel_v_add_altivec_c(uint8_t *dst, uint8_t *src, const uint32_t stride, const uint32_t rounding)
+{
+	register vector unsigned char s1,s2;
+	register vector unsigned char tmp;
+	register vector unsigned char d;
+	
+	register vector unsigned char mask;
+	register vector unsigned char mask_dst;
+	register vector unsigned char mask_stencil;
+	
+#ifdef DEBUG
+	if(((unsigned)dst) & 0x7)
+		fprintf(stderr, "interpolate8x8_halfpel_v_add_altivec_c:incorrect align, dst: %x\n", dst);
+	if(stride & 0x7)
+		fprintf(stderr, "interpolate8x8_halfpel_v_add_altivec_c:incorrect align, dst: %u\n", stride);
+#endif
+
+	/* initialization */
+	mask_stencil = vec_pack(vec_splat_u16(0), vec_splat_u16(-1));
+	
+	if(rounding) {
+		
+		/* Interpolate vertical with rounding */
+		s1 = vec_perm(vec_ld(0,src),vec_ld(16,src),vec_lvsl(0,src));
+		
+		INTERPOLATE8X8_HALFPEL_V_ADD_ROUND();
+		INTERPOLATE8X8_HALFPEL_V_ADD_ROUND();
+		INTERPOLATE8X8_HALFPEL_V_ADD_ROUND();
+		INTERPOLATE8X8_HALFPEL_V_ADD_ROUND();
+			
+		INTERPOLATE8X8_HALFPEL_V_ADD_ROUND();
+		INTERPOLATE8X8_HALFPEL_V_ADD_ROUND();
+		INTERPOLATE8X8_HALFPEL_V_ADD_ROUND();
+		INTERPOLATE8X8_HALFPEL_V_ADD_ROUND();
+	}
+	else {
+		/* Interpolate vertical without rounding */
+		s1 = vec_perm(vec_ld(0,src),vec_ld(16,src),vec_lvsl(0,src));
+		
+		INTERPOLATE8X8_HALFPEL_V_ADD_NOROUND();
+		INTERPOLATE8X8_HALFPEL_V_ADD_NOROUND();
+		INTERPOLATE8X8_HALFPEL_V_ADD_NOROUND();
+		INTERPOLATE8X8_HALFPEL_V_ADD_NOROUND();
+		
+		INTERPOLATE8X8_HALFPEL_V_ADD_NOROUND();
+		INTERPOLATE8X8_HALFPEL_V_ADD_NOROUND();
+		INTERPOLATE8X8_HALFPEL_V_ADD_NOROUND();
+		INTERPOLATE8X8_HALFPEL_V_ADD_NOROUND();
+	}
+}
+
+
+
+#define INTERPOLATE8X8_HALFPEL_HV_ADD_ROUND()\
+	src += stride;\
+	mask_dst = vec_lvsl(0,dst);\
+	c10 = vec_perm(vec_ld(0,src),vec_ld(16,src),vec_lvsl(0,src));\
+	d = vec_perm(vec_ld(0,dst),vec_ld(16,dst),mask_dst);\
+	c11 = vec_perm(c10,c10,rot1);\
+	\
+	s00 = (vector unsigned short)vec_mergeh(zero,c00);\
+	s01 = (vector unsigned short)vec_mergeh(zero,c01);\
+	s10 = (vector unsigned short)vec_mergeh(zero,c10);\
+	s11 = (vector unsigned short)vec_mergeh(zero,c11);\
+	\
+	s00 = vec_add(s00,s10);\
+	s01 = vec_add(s01,s11);\
+	s00 = vec_add(s00,s01);\
+	s00 = vec_add(s00,one);\
+	\
+	s00 = vec_sr(s00,two);\
+	s00 = vec_add(s00, (vector unsigned short)vec_mergeh(zero,d));\
+	s00 = vec_sr(s00,one);\
+	\
+	d = vec_pack(s00,s00);\
+	mask = vec_perm(mask_stencil,mask_stencil,mask_dst);\
+	d = vec_sel(d,vec_ld(0,dst),mask);\
+	vec_st(d,0,dst);\
+	\
+	c00 = c10;\
+	c01 = c11;\
+	dst += stride
+	
+
+#define INTERPOLATE8X8_HALFPEL_HV_ADD_NOROUND()\
+	src += stride;\
+	mask_dst = vec_lvsl(0,dst);\
+	c10 = vec_perm(vec_ld(0,src),vec_ld(16,src),vec_lvsl(0,src));\
+	d = vec_perm(vec_ld(0,dst),vec_ld(16,dst),mask_dst);\
+	c11 = vec_perm(c10,c10,rot1);\
+	\
+	s00 = (vector unsigned short)vec_mergeh(zero,c00);\
+	s01 = (vector unsigned short)vec_mergeh(zero,c01);\
+	s10 = (vector unsigned short)vec_mergeh(zero,c10);\
+	s11 = (vector unsigned short)vec_mergeh(zero,c11);\
+	\
+	s00 = vec_add(s00,s10);\
+	s01 = vec_add(s01,s11);\
+	s00 = vec_add(s00,s01);\
+	s00 = vec_add(s00,two);\
+	s00 = vec_sr(s00,two);\
+	\
+	c00 = vec_pack(s00,s00);\
+	d = vec_avg(d,c00);\
+	\
+	mask = vec_perm(mask_stencil,mask_stencil,mask_dst);\
+	d = vec_perm(d,d,mask_dst);\
+	d = vec_sel(d,vec_ld(0,dst),mask);\
+	vec_st(d,0,dst);\
+	\
+	c00 = c10;\
+	c01 = c11;\
+	dst += stride
+
+
+/*
+ * This function assumes:
+ *	dst: 8 byte aligned
+ *	src: unaligned
+ *	stride: multiple of 8
  */
 
 void
-interpolate8x8_6tap_lowpass_h_altivec_c(uint8_t *dst, uint8_t *src, int32_t stride, int32_t rounding)
+interpolate8x8_halfpel_hv_add_altivec_c(uint8_t *dst, uint8_t *src, const uint32_t stride, const uint32_t rounding)
 {
-    vector signed short s1, s2;
-    vector signed short z;
-    vector signed short d;
-    vector signed short round_add;
-    vector unsigned char t;
-    vector unsigned char data;
-    vector unsigned char mask;
-    vector unsigned char mask_stencil;
-    vector unsigned char zerovec;
-    
-    unsigned prefetch_constant;
-    
-    zerovec = vec_splat_u8(0);
-    *((short*)&round_add) = (short)(16 - rounding);
-    round_add = vec_splat(round_add, 0);
-    mask_stencil = vec_pack(vec_splat_u16(0), vec_splat_u16(-1));
-    
-    prefetch_constant = build_prefetch(1, 4, (short)stride);
-    
-    INTERPOLATE8X8_6TAP_LOWPASS_H();
-    INTERPOLATE8X8_6TAP_LOWPASS_H();
-    INTERPOLATE8X8_6TAP_LOWPASS_H();
-    INTERPOLATE8X8_6TAP_LOWPASS_H();
-    
-    INTERPOLATE8X8_6TAP_LOWPASS_H();
-    INTERPOLATE8X8_6TAP_LOWPASS_H();
-    INTERPOLATE8X8_6TAP_LOWPASS_H();
-    INTERPOLATE8X8_6TAP_LOWPASS_H();
-    
-    vec_dss(0);
+	register vector unsigned char  c00,c10,c01,c11;
+	register vector unsigned short s00,s10,s01,s11;
+	register vector unsigned char  d;
+	
+	register vector unsigned char mask;
+	register vector unsigned char mask_stencil;
+	
+	register vector unsigned char rot1;
+	register vector unsigned char mask_dst;
+	register vector unsigned char zero;
+	register vector unsigned short one,two;
+	
+#ifdef DEBUG
+	if(((unsigned)dst) & 0x7)
+		fprintf(stderr, "interpolate8x8_halfpel_hv_add_altivec_c:incorrect align, dst: %x\n",dst);
+	if(stride & 0x7)
+		fprintf(stderr, "interpolate8x8_halfpel_hv_add_altivec_c:incorrect stride, stride: %u\n", stride);
+#endif
+	
+	/* initialization */
+	mask_stencil = vec_pack(vec_splat_u16(0), vec_splat_u16(-1));
+	rot1 = vec_lvsl(1,(unsigned char*)0);
+	zero = vec_splat_u8(0);
+	one = vec_splat_u16(1);
+	two = vec_splat_u16(2);
+	
+	if(rounding) {
+		
+		/* Load the first row 'manually' */
+		c00 = vec_perm(vec_ld(0,src),vec_ld(16,src),vec_lvsl(0,src));
+		c01 = vec_perm(c00,c00,rot1);
+		
+		INTERPOLATE8X8_HALFPEL_HV_ADD_ROUND();
+		INTERPOLATE8X8_HALFPEL_HV_ADD_ROUND();
+		INTERPOLATE8X8_HALFPEL_HV_ADD_ROUND();
+		INTERPOLATE8X8_HALFPEL_HV_ADD_ROUND();
+		
+		INTERPOLATE8X8_HALFPEL_HV_ADD_ROUND();
+		INTERPOLATE8X8_HALFPEL_HV_ADD_ROUND();
+		INTERPOLATE8X8_HALFPEL_HV_ADD_ROUND();
+		INTERPOLATE8X8_HALFPEL_HV_ADD_ROUND();
+	}
+	else {
+		
+		/* Load the first row 'manually' */
+		c00 = vec_perm(vec_ld(0,src),vec_ld(16,src),vec_lvsl(0,src));
+		c01 = vec_perm(c00,c00,rot1);
+		
+		INTERPOLATE8X8_HALFPEL_HV_ADD_NOROUND();
+		INTERPOLATE8X8_HALFPEL_HV_ADD_NOROUND();
+		INTERPOLATE8X8_HALFPEL_HV_ADD_NOROUND();
+		INTERPOLATE8X8_HALFPEL_HV_ADD_NOROUND();
+		
+		INTERPOLATE8X8_HALFPEL_HV_ADD_NOROUND();
+		INTERPOLATE8X8_HALFPEL_HV_ADD_NOROUND();
+		INTERPOLATE8X8_HALFPEL_HV_ADD_NOROUND();
+		INTERPOLATE8X8_HALFPEL_HV_ADD_NOROUND();
+	}
 }

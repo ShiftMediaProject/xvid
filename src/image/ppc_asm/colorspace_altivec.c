@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: colorspace_altivec.c,v 1.1 2004-04-05 20:36:36 edgomez Exp $
+ * $Id: colorspace_altivec.c,v 1.2 2004-10-17 10:20:15 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -248,10 +248,7 @@ NAME(uint8_t *x_ptr, int x_stride,  \
 
 static inline unsigned
 build_prefetch(unsigned char block_size, unsigned char block_count, short stride)
-{
-    if(block_size > 31)
-        block_size = 0;
-    
+{    
     return ((block_size << 24) | (block_count << 16) | stride);
 }
 

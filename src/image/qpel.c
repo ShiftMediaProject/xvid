@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: qpel.c,v 1.3 2004-08-10 21:58:55 edgomez Exp $
+ * $Id: qpel.c,v 1.4 2004-10-17 10:20:15 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -286,6 +286,59 @@ XVID_QP_FUNCS xvid_QP_Add_Funcs_mmx = {
 	xvid_V_Pass_8_Add_mmx, xvid_V_Pass_Avrg_8_Add_mmx, xvid_V_Pass_Avrg_Up_8_Add_mmx,
 };
 #endif /* ARCH_IS_IA32 */
+
+
+/* altivec impl. declaration (see qpel_altivec.c)
+ ****************************************************************************/
+
+#ifdef ARCH_IS_PPC
+
+extern XVID_QP_PASS_SIGNATURE(H_Pass_16_Altivec_C);
+extern XVID_QP_PASS_SIGNATURE(H_Pass_Avrg_16_Altivec_C);
+extern XVID_QP_PASS_SIGNATURE(H_Pass_Avrg_Up_16_Altivec_C);
+extern XVID_QP_PASS_SIGNATURE(V_Pass_16_Altivec_C);
+extern XVID_QP_PASS_SIGNATURE(V_Pass_Avrg_16_Altivec_C);
+extern XVID_QP_PASS_SIGNATURE(V_Pass_Avrg_Up_16_Altivec_C);
+
+extern XVID_QP_PASS_SIGNATURE(H_Pass_8_Altivec_C);
+extern XVID_QP_PASS_SIGNATURE(H_Pass_Avrg_8_Altivec_C);
+extern XVID_QP_PASS_SIGNATURE(H_Pass_Avrg_Up_8_Altivec_C);
+extern XVID_QP_PASS_SIGNATURE(V_Pass_8_Altivec_C);
+extern XVID_QP_PASS_SIGNATURE(V_Pass_Avrg_8_Altivec_C);
+extern XVID_QP_PASS_SIGNATURE(V_Pass_Avrg_Up_8_Altivec_C);
+
+
+extern XVID_QP_PASS_SIGNATURE(H_Pass_16_Add_Altivec_C);
+extern XVID_QP_PASS_SIGNATURE(H_Pass_Avrg_16_Add_Altivec_C);
+extern XVID_QP_PASS_SIGNATURE(H_Pass_Avrg_Up_16_Add_Altivec_C);
+extern XVID_QP_PASS_SIGNATURE(V_Pass_16_Add_Altivec_C);
+extern XVID_QP_PASS_SIGNATURE(V_Pass_Avrg_16_Add_Altivec_C);
+extern XVID_QP_PASS_SIGNATURE(V_Pass_Avrg_Up_16_Add_Altivec_C);
+
+extern XVID_QP_PASS_SIGNATURE(H_Pass_8_Add_Altivec_C);
+extern XVID_QP_PASS_SIGNATURE(H_Pass_Avrg_8_Add_Altivec_C);
+extern XVID_QP_PASS_SIGNATURE(H_Pass_Avrg_Up_8_Add_Altivec_C);
+extern XVID_QP_PASS_SIGNATURE(V_Pass_8_Add_Altivec_C);
+extern XVID_QP_PASS_SIGNATURE(V_Pass_Avrg_8_Add_Altivec_C);
+extern XVID_QP_PASS_SIGNATURE(V_Pass_Avrg_Up_8_Add_Altivec_C);
+
+XVID_QP_FUNCS xvid_QP_Funcs_Altivec_C = {
+	H_Pass_16_Altivec_C, H_Pass_Avrg_16_Altivec_C, H_Pass_Avrg_Up_16_Altivec_C,
+	V_Pass_16_Altivec_C, V_Pass_Avrg_16_Altivec_C, V_Pass_Avrg_Up_16_Altivec_C,
+
+	H_Pass_8_Altivec_C, H_Pass_Avrg_8_Altivec_C, H_Pass_Avrg_Up_8_Altivec_C,
+	V_Pass_8_Altivec_C, V_Pass_Avrg_8_Altivec_C, V_Pass_Avrg_Up_8_Altivec_C
+};
+
+XVID_QP_FUNCS xvid_QP_Add_Funcs_Altivec_C = {
+	H_Pass_16_Add_Altivec_C, H_Pass_Avrg_16_Add_Altivec_C, H_Pass_Avrg_Up_16_Add_Altivec_C,
+	V_Pass_16_Add_Altivec_C, V_Pass_Avrg_16_Add_Altivec_C, V_Pass_Avrg_Up_16_Add_Altivec_C,
+
+	H_Pass_8_Add_Altivec_C, H_Pass_Avrg_8_Add_Altivec_C, H_Pass_Avrg_Up_8_Add_Altivec_C,
+	V_Pass_8_Add_Altivec_C, V_Pass_Avrg_8_Add_Altivec_C, V_Pass_Avrg_Up_8_Add_Altivec_C
+};
+
+#endif /* ARCH_IS_PPC */
 
 /* tables for ASM
  ****************************************************************************/

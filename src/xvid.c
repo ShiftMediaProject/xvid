@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.55 2004-08-10 21:58:55 edgomez Exp $
+ * $Id: xvid.c,v 1.56 2004-10-17 10:20:15 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -570,10 +570,10 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 #if defined(ARCH_IS_PPC)
 	if ((cpu_flags & XVID_CPU_ALTIVEC)) {
           /* sad operators */
-	  sad16 = sad16_altivec_c;
-	  sad16bi = sad16bi_altivec_c;
-	  sad8 = sad8_altivec_c;
-	  dev16 = dev16_altivec_c;
+		  sad16 = sad16_altivec_c;
+		  sad16bi = sad16bi_altivec_c;
+		  sad8 = sad8_altivec_c;
+		  dev16 = dev16_altivec_c;
           
           sse8_16bit = sse8_16bit_altivec_c;
           
@@ -596,8 +596,11 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
           
           interpolate8x8_avg2 = interpolate8x8_avg2_altivec_c;
           interpolate8x8_avg4 = interpolate8x8_avg4_altivec_c;
-          
-          interpolate8x8_6tap_lowpass_h = interpolate8x8_6tap_lowpass_h_altivec_c;
+		  
+		  interpolate8x8_halfpel_add = interpolate8x8_halfpel_add_altivec_c;
+		  interpolate8x8_halfpel_h_add = interpolate8x8_halfpel_h_add_altivec_c;
+		  interpolate8x8_halfpel_v_add = interpolate8x8_halfpel_v_add_altivec_c;
+		  interpolate8x8_halfpel_hv_add = interpolate8x8_halfpel_hv_add_altivec_c;
           
           /* Colorspace conversion */
           bgra_to_yv12 = bgra_to_yv12_altivec_c;
@@ -616,6 +619,10 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
           quant_h263_inter = quant_h263_inter_altivec_c;
           dequant_h263_intra = dequant_h263_intra_altivec_c;
           dequant_h263_inter = dequant_h263_inter_altivec_c;
+		  
+		  /* Qpel stuff */
+		  xvid_QP_Funcs = &xvid_QP_Funcs_Altivec_C;
+		  xvid_QP_Add_Funcs = &xvid_QP_Add_Funcs_Altivec_C;
         }
 #endif
 

@@ -100,4 +100,5 @@ SRC_PPC_ALTIVEC = \
 	dct/ppc_asm/idct_altivec.c \
 	image/ppc_asm/interpolate8x8_altivec.c \
 	image/ppc_asm/colorspace_altivec.c \
+	image/ppc_asm/qpel_altivec.c \
 	quant/ppc_asm/quant_h263_altivec.c
