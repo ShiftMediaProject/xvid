@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.16 2004-10-12 21:08:41 edgomez Exp $
+ * $Id: estimation_bvop.c,v 1.17 2004-12-05 04:53:01 syskin Exp $
  *
  ****************************************************************************/
 
@@ -137,8 +137,8 @@ CheckCandidateInt(const int x, const int y, SearchData * const data, const unsig
 		xcb = xb/2; ycb = yb/2;
 	}
 
-	t = d_mv_bits(xf, yf, data->predMV, data->iFcode, data->qpel^data->qpel_precision, 0)
-		 + d_mv_bits(xb, yb, data->bpredMV, data->iFcode, data->qpel^data->qpel_precision, 0);
+	t = d_mv_bits(xf, yf, data->predMV, data->iFcode, data->qpel^data->qpel_precision)
+		 + d_mv_bits(xb, yb, data->bpredMV, data->iFcode, data->qpel^data->qpel_precision);
 
 	sad = sad16bi(data->Cur, ReferenceF, ReferenceB, data->iEdgedWidth);
 	sad += (data->lambda16 * t * sad)>>10;
@@ -207,7 +207,7 @@ done:
 		if (sad > *(data->iMinSAD)) return;
 	}
 
-	sad += (data->lambda16 * d_mv_bits(x, y, zeroMV, 1, 0, 0) * sad)>>10;
+	sad += (data->lambda16 * d_mv_bits(x, y, zeroMV, 1, 0) * sad)>>10;
 
 	if (data->chroma && sad < *data->iMinSAD)
 		sad += ChromaSAD2((xcf >> 3) + roundtab_76[xcf & 0xf],
@@ -265,7 +265,7 @@ CheckCandidateDirectno4v(const int x, const int y, SearchData * const data, cons
 
 done:
 	sad = sad16bi(data->Cur, ReferenceF, ReferenceB, data->iEdgedWidth);
-	sad += (data->lambda16 * d_mv_bits(x, y, zeroMV, 1, 0, 0) * sad)>>10;
+	sad += (data->lambda16 * d_mv_bits(x, y, zeroMV, 1, 0) * sad)>>10;
 
 	if (data->chroma && sad < *data->iMinSAD)
 		sad += ChromaSAD2((xcf >> 3) + roundtab_76[xcf & 0xf],
@@ -291,8 +291,6 @@ CheckCandidate16no4v(const int x, const int y, SearchData * const data, const un
 	if ( (x > data->max_dx) || ( x < data->min_dx)
 		|| (y > data->max_dy) || (y < data->min_dy) ) return;
 
-	if (data->rrv && (!(x&1) && x !=0) | (!(y&1) && y !=0) ) return; /* non-zero even value */
-
 	if (data->qpel_precision) { /* x and y are in 1/4 precision */
 		Reference = xvid_me_interpolate16x16qpel(x, y, 0, data);
 		current = data->currentQMV;
@@ -303,7 +301,7 @@ CheckCandidate16no4v(const int x, const int y, SearchData * const data, const un
 		xc = x; yc = y;
 	}
 	t = d_mv_bits(x, y, data->predMV, data->iFcode,
-					data->qpel^data->qpel_precision, data->rrv);
+					data->qpel^data->qpel_precision);
 
 	sad = sad16(data->Cur, Reference, data->iEdgedWidth, 256*4096);
 	sad += (data->lambda16 * t * sad)>>10;
@@ -445,7 +443,7 @@ SearchBF_initial(const int x, const int y,
 	Data->predMV = *predMV;
 
 	get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, x, y, 4,
-				pParam->width, pParam->height, iFcode - Data->qpel, 1, 0);
+				pParam->width, pParam->height, iFcode - Data->qpel, 1);
 
 	pmv[0] = Data->predMV;
 	if (Data->qpel) { 
@@ -492,7 +490,7 @@ SearchBF_final(const int x, const int y,
 		if(MotionFlags & XVID_ME_FASTREFINE16) {
 			/* fast */
 			get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, x, y, 4,
-						pParam->width, pParam->height, Data->iFcode, 2, 0);				
+						pParam->width, pParam->height, Data->iFcode, 2);
 			FullRefine_Fast(Data, CheckCandidate16no4v, 0);
 
 		} else {
@@ -507,7 +505,7 @@ SearchBF_final(const int x, const int y,
 					Data->currentQMV->y = 2*Data->currentMV->y;
 				}
 				get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, x, y, 4,
-							pParam->width, pParam->height, Data->iFcode, 2, 0);
+							pParam->width, pParam->height, Data->iFcode, 2);
 				Data->qpel_precision = 1;
 				xvid_me_SubpelRefine(Data->currentQMV[0], Data, CheckCandidate16no4v, 0); /* qpel part */
 			}
@@ -713,8 +711,8 @@ SearchInterpolate_initial(
 	Data->currentMV[0] = startF;
 	Data->currentMV[1] = startB;
 
-	get_range(f_range, f_range+1, f_range+2, f_range+3, x, y, 4, pParam->width, pParam->height, Data->iFcode - Data->qpel, 1, 0);
-	get_range(b_range, b_range+1, b_range+2, b_range+3, x, y, 4, pParam->width, pParam->height, Data->bFcode - Data->qpel, 1, 0);
+	get_range(f_range, f_range+1, f_range+2, f_range+3, x, y, 4, pParam->width, pParam->height, Data->iFcode - Data->qpel, 1);
+	get_range(b_range, b_range+1, b_range+2, b_range+3, x, y, 4, pParam->width, pParam->height, Data->bFcode - Data->qpel, 1);
 
 	if (Data->currentMV[0].x > f_range[1]) Data->currentMV[0].x = f_range[1];
 	if (Data->currentMV[0].x < f_range[0]) Data->currentMV[0].x = f_range[0];
@@ -743,8 +741,8 @@ SearchInterpolate_final(const int x, const int y,
 	int i, j;
 	int b_range[4], f_range[4];
 
-	get_range(f_range, f_range+1, f_range+2, f_range+3, x, y, 4, pParam->width, pParam->height, Data->iFcode - Data->qpel, 1, 0);
-	get_range(b_range, b_range+1, b_range+2, b_range+3, x, y, 4, pParam->width, pParam->height, Data->bFcode - Data->qpel, 1, 0);
+	get_range(f_range, f_range+1, f_range+2, f_range+3, x, y, 4, pParam->width, pParam->height, Data->iFcode - Data->qpel, 1);
+	get_range(b_range, b_range+1, b_range+2, b_range+3, x, y, 4, pParam->width, pParam->height, Data->bFcode - Data->qpel, 1);
 
 	/* diamond */
 	do {
@@ -774,7 +772,7 @@ SearchInterpolate_final(const int x, const int y,
 	if (Data->qpel) {
 		Data->qpel_precision = 1;
 		get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, 
-			x, y, 4, pParam->width, pParam->height, Data->iFcode, 2, 0);
+			x, y, 4, pParam->width, pParam->height, Data->iFcode, 2);
 		
 		Data->currentQMV[0].x = 2 * Data->currentMV[0].x;
 		Data->currentQMV[0].y = 2 * Data->currentMV[0].y;
@@ -785,7 +783,7 @@ SearchInterpolate_final(const int x, const int y,
 			xvid_me_SubpelRefine(Data->currentQMV[0], Data, CheckCandidateInt, 1);
 
 			get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, 
-				x, y, 4, pParam->width, pParam->height, Data->bFcode, 2, 0);
+				x, y, 4, pParam->width, pParam->height, Data->bFcode, 2);
 
 			xvid_me_SubpelRefine(Data->currentQMV[1], Data, CheckCandidateInt, 2);
 		}

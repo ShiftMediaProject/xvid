@@ -160,7 +160,7 @@ CheckCandidateRDBF(const int x, const int y, SearchData * const data, const unsi
 		xc = x/2; yc = y/2;
 	}
 
-	rd += BITS_MULT*d_mv_bits(x, y, data->predMV, data->iFcode, data->qpel^data->qpel_precision, 0);
+	rd += BITS_MULT*d_mv_bits(x, y, data->predMV, data->iFcode, data->qpel^data->qpel_precision);
 
 	for(i = 0; i < 4; i++) {
 		int s = 8*((i&1) + (i>>1)*data->iEdgedWidth);
@@ -267,7 +267,7 @@ CheckCandidateRDDirect(const int x, const int y, SearchData * const data, const 
 	if (cbp) 
 		rd += BITS_MULT * 6;
 	if (cbp || x != 0 || y != 0)
-		rd += BITS_MULT * d_mv_bits(x, y, zeroMV, 1, 0, 0);
+		rd += BITS_MULT * d_mv_bits(x, y, zeroMV, 1, 0);
 
 	if (rd < *(data->iMinSAD)) {
 		*data->iMinSAD = rd;
@@ -322,8 +322,8 @@ CheckCandidateRDInt(const int x, const int y, SearchData * const data, const uns
 		xcb = xb/2; ycb = yb/2;
 	}
 
-	rd += BITS_MULT * (d_mv_bits(xf, yf, data->predMV, data->iFcode, data->qpel^data->qpel_precision, 0)
-					+ d_mv_bits(xb, yb, data->bpredMV, data->iFcode, data->qpel^data->qpel_precision, 0));
+	rd += BITS_MULT * (d_mv_bits(xf, yf, data->predMV, data->iFcode, data->qpel^data->qpel_precision)
+					+ d_mv_bits(xb, yb, data->bpredMV, data->iFcode, data->qpel^data->qpel_precision));
 
 	
 	for(i = 0; i < 4; i++) {
@@ -375,7 +375,7 @@ SearchInterpolate_RD(const int x, const int y,
 	Data->iMinSAD[0] = *best_sad;
 
 	get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy,
-		x, y, 4, pParam->width, pParam->height, Data->iFcode, 1 + Data->qpel, 0);
+		x, y, 4, pParam->width, pParam->height, Data->iFcode, 1 + Data->qpel);
 	
 	Data->qpel_precision = Data->qpel;
 
@@ -418,7 +418,7 @@ SearchBF_RD(const int x, const int y,
 	Data->iMinSAD[0] = *best_sad;
 
 	get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy,
-		x, y, 4, pParam->width, pParam->height, Data->iFcode, 1 + Data->qpel, 0);
+		x, y, 4, pParam->width, pParam->height, Data->iFcode, 1 + Data->qpel);
 	
 	Data->qpel_precision = Data->qpel;
 

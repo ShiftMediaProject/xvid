@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: motion_inlines.h,v 1.2 2004-03-22 22:36:24 edgomez Exp $
+ * $Id: motion_inlines.h,v 1.3 2004-12-05 04:53:01 syskin Exp $
  *
  ****************************************************************************/
 
@@ -45,19 +45,12 @@ get_range(int32_t * const min_dx,
 		  const uint32_t width,
 		  const uint32_t height,
 		  const uint32_t fcode,
-		  const int precision, /* 2 for qpel, 1 for halfpel */
-		  const int rrv)
+		  const int precision) /* 2 for qpel, 1 for halfpel */
 {
 	int k;
 	const int search_range = 16 << fcode;
 	int high = search_range - 1;
 	int low = -search_range;
-
-	if (rrv) {
-		high = RRV_MV_SCALEUP(high);
-		low = RRV_MV_SCALEUP(low);
-		block_sz++;
-	}
 
 	k = (int)(width - (x<<block_sz))<<precision;
 	*max_dx = MIN(high, k);
@@ -83,13 +76,12 @@ static const int r_mvtab[64] = {
 };
 
 static __inline uint32_t
-d_mv_bits(int x, int y, const VECTOR pred, const uint32_t iFcode, const int qpel, const int rrv)
+d_mv_bits(int x, int y, const VECTOR pred, const uint32_t iFcode, const int qpel)
 {
 	unsigned int bits;
 
 	x <<= qpel;
 	y <<= qpel;
-	if (rrv) { x = RRV_MV_SCALEDOWN(x); y = RRV_MV_SCALEDOWN(y); }
 
 	x -= pred.x;
 	bits = (x != 0 ? iFcode:0);
