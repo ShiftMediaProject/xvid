@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.11 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: xvid_bench.c,v 1.12 2004-04-02 21:29:21 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -657,6 +657,37 @@ for(s=CRC32_INITIAL,qm=1; qm<=255; ++qm) {              \
 }                                           \
 t = (gettime_usec()-t-overhead)/nb_tests/qm
 
+#define TEST_INTRA(REFFUNC, NEWFUNC, RANGE)              \
+{ int i,q,s;\
+	DECLARE_ALIGNED_MATRIX(Src, 8, 8, int16_t, 16); \
+  DECLARE_ALIGNED_MATRIX(Dst, 8, 8, int16_t, 16); \
+  DECLARE_ALIGNED_MATRIX(Dst2,8, 8, int16_t, 16); \
+  for(q=1;q<=max_Q;q++)          \
+    for(s=-RANGE;s<RANGE;s++) { \
+      for(i=0;i<64;i++) Src[i]=s; \
+      (REFFUNC)((Dst),(Src),q,q,mpeg_quant_matrices);   \
+      (NEWFUNC)((Dst2),(Src),q,q,mpeg_quant_matrices);  \
+      for(i=0;i<64;i++)     \
+        if(Dst[i]!=Dst2[i]) printf("ERROR : " #NEWFUNC " i%d quant:%d input:%d C_result:%d ASM_result:%d\n",i,q,s,Dst[i],Dst2[i]);  \
+    }      \
+}
+
+#define TEST_INTER(REFFUNC, NEWFUNC, RANGE)              \
+{ int i,q,s;  \
+	DECLARE_ALIGNED_MATRIX(Src, 8, 8, int16_t, 16); \
+  DECLARE_ALIGNED_MATRIX(Dst, 8, 8, int16_t, 16); \
+  DECLARE_ALIGNED_MATRIX(Dst2,8, 8, int16_t, 16); \
+  for(q=1;q<=max_Q;q++)  \
+    for(s=-RANGE;s<RANGE;s++) {   \
+      for(i=0;i<64;i++) Src[i]=s; \
+      (REFFUNC)((Dst),(Src),q,mpeg_quant_matrices);  \
+      (NEWFUNC)((Dst2),(Src),q,mpeg_quant_matrices); \
+      emms();           \
+      for(i=0;i<64;i++) \
+        if(Dst[i]!=Dst2[i]) printf("ERROR : " #NEWFUNC " i%d quant:%d input:%d C_result:%d ASM_result:%d\n",i,q,s,Dst[i],Dst2[i]); \
+    } \
+}
+
 void test_quant()
 {
 	const int nb_tests = 1*speed_ref;
@@ -667,6 +698,7 @@ void test_quant()
 	CPU *cpu;
 	DECLARE_ALIGNED_MATRIX(Src, 8, 8, int16_t, 16);
 	DECLARE_ALIGNED_MATRIX(Dst, 8, 8, int16_t, 16);
+	DECLARE_ALIGNED_MATRIX(Dst2,8, 8, int16_t, 16);
 	uint8_t Quant[8*8];
 
 	printf( "\n =====  test quant =====\n" );
@@ -685,7 +717,13 @@ void test_quant()
 		uint32_t s;
 
 		if (!init_cpu(cpu))
-		continue;
+			continue;
+
+		// exhaustive tests to compare against the (ref) C-version
+		TEST_INTRA(quant_h263_intra_c,   quant_h263_intra,    2048);
+		TEST_INTRA(dequant_h263_intra_c, dequant_h263_intra , 512 );
+		TEST_INTER(quant_h263_inter_c,   quant_h263_inter ,   2048);
+		TEST_INTER(dequant_h263_inter_c, dequant_h263_inter , 512 );
 
 		overhead = -gettime_usec();
 		for(s=0,qm=1; qm<=255; ++qm) {
@@ -744,7 +782,7 @@ void test_quant()
  * test non-zero AC counting
  *********************************************************************/
 
-#define TEST_CBP(FUNC, SRC)                   \
+#define TEST_CBP(FUNC, SRC)               \
 t = gettime_usec();                       \
 emms();                                   \
 for(tst=0; tst<nb_tests; ++tst) {         \
