@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.22 2004-12-17 11:57:59 syskin Exp $
+ * $Id: estimation_bvop.c,v 1.23 2005-03-14 00:47:07 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -141,7 +141,7 @@ CheckCandidateInt(const int x, const int y, SearchData * const data, const unsig
 		 + d_mv_bits(xb, yb, data->bpredMV, data->iFcode, data->qpel^data->qpel_precision);
 
 	sad = sad16bi(data->Cur, ReferenceF, ReferenceB, data->iEdgedWidth);
-	sad += (data->lambda16 * t * sad)>>10;
+	sad += (data->lambda16 * t);
 
 	if (data->chroma && sad < *data->iMinSAD)
 		sad += ChromaSAD2((xcf >> 1) + roundtab_79[xcf & 0x3],
@@ -207,7 +207,7 @@ done:
 		if (sad > *(data->iMinSAD)) return;
 	}
 
-	sad += (data->lambda16 * d_mv_bits(x, y, zeroMV, 1, 0) * sad)>>10;
+	sad += (data->lambda16 * d_mv_bits(x, y, zeroMV, 1, 0));
 
 	if (data->chroma && sad < *data->iMinSAD)
 		sad += ChromaSAD2((xcf >> 3) + roundtab_76[xcf & 0xf],
@@ -265,7 +265,7 @@ CheckCandidateDirectno4v(const int x, const int y, SearchData * const data, cons
 
 done:
 	sad = sad16bi(data->Cur, ReferenceF, ReferenceB, data->iEdgedWidth);
-	sad += (data->lambda16 * d_mv_bits(x, y, zeroMV, 1, 0) * sad)>>10;
+	sad += (data->lambda16 * d_mv_bits(x, y, zeroMV, 1, 0));
 
 	if (data->chroma && sad < *data->iMinSAD)
 		sad += ChromaSAD2((xcf >> 3) + roundtab_76[xcf & 0xf],
@@ -304,7 +304,7 @@ CheckCandidate16no4v(const int x, const int y, SearchData * const data, const un
 					data->qpel^data->qpel_precision);
 
 	sad = sad16(data->Cur, Reference, data->iEdgedWidth, 256*4096);
-	sad += (data->lambda16 * t * sad)>>10;
+	sad += (data->lambda16 * t);
 
 	if (data->chroma && sad < *data->iMinSAD)
 		sad += xvid_me_ChromaSAD((xc >> 1) + roundtab_79[xc & 0x3],
