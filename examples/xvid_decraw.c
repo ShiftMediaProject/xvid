@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.8 2003-02-22 21:37:50 chl Exp $
+ * $Id: xvid_decraw.c,v 1.9 2003-03-03 11:18:53 chl Exp $
  *
  ****************************************************************************/
 
@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
 			if(feof(in_file))
 				break;
 
-			still_left_in_buffer = fread(mp4_buffer + rest,
+			still_left_in_buffer = rest + fread(mp4_buffer + rest,
 										 1,
 										 BUFFER_SIZE - rest,
 										 in_file);
