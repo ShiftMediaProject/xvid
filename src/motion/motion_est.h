@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: motion_est.h,v 1.2 2003-02-15 15:22:18 edgomez Exp $
+ *  $Id: motion_est.h,v 1.3 2003-02-21 14:40:11 syskin Exp $
  *
  ***************************************************************************/
 
@@ -102,8 +102,6 @@ static const int DQtab[4] = {
 };
 
 #define RRV_MV_SCALEDOWN(a)	( (a)>=0 ? (a+1)/2 : (a-1)/2 )
-
-static const VECTOR zeroMV = {0,0};
 
 typedef struct
 {
@@ -210,12 +208,12 @@ static void Search8(const SearchData * const OldData,
 
 bool
 MotionEstimation(MBParam * const pParam,
-				 FRAMEINFO * const current,
-				 FRAMEINFO * const reference,
-				 const IMAGE * const pRefH,
-				 const IMAGE * const pRefV,
-				 const IMAGE * const pRefHV,
-				 const uint32_t iLimit);
+				FRAMEINFO * const current,
+				FRAMEINFO * const reference,
+				const IMAGE * const pRefH,
+				const IMAGE * const pRefV,
+				const IMAGE * const pRefHV,
+				const uint32_t iLimit);
 
 static void
 SearchP(const IMAGE * const pRef,
