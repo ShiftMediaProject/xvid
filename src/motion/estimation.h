@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation.h,v 1.6 2004-07-18 11:48:08 syskin Exp $
+ * $Id: estimation.h,v 1.7 2004-12-05 04:53:01 syskin Exp $
  *
  ****************************************************************************/
 
@@ -60,8 +60,6 @@ extern const int xvid_me_lambda_vec16[32];
 #define CHECK_CANDIDATE(X,Y,D) { \
 	CheckCandidate((X),(Y), data, (D) ); }
 
-#define RRV_MV_SCALEDOWN(a)	( (a)>=0 ? (a+1)/2 : (a-1)/2 )
-
 /* fast ((A)/2)*2 */
 #define EVEN(A)		(((A)<0?(A)+1:(A)) & ~1)
 
@@ -96,17 +94,16 @@ typedef struct
 	int qpel;					/* if we're coding in qpel mode */
 	int qpel_precision;			/* if X and Y are in qpel precision (refinement probably) */
 	int chroma;					/* should we include chroma SAD? */
-	int rrv;					/* are we using reduced resolution? */
 
 	/* fields for interpolate and direct modes */
 	const uint8_t * b_RefP[6];	/* backward reference pictures - N, V, H, HV, cU, cV */
-	VECTOR bpredMV;				/* backward prediction - used interpolate mode only */
-	uint32_t bFcode;			/* backward fcode - used as above */
+	VECTOR bpredMV;				/* backward prediction - used in Interpolate-mode search only */
+	uint32_t bFcode;			/* backward fcode - used in Interpolate-mode search only */
 	int b_chromaX, b_chromaY;
 
 	/* fields for direct mode */
 	VECTOR directmvF[4];		/* scaled reference vectors */
-	VECTOR directmvB[4];		/* as above */
+	VECTOR directmvB[4];
 	const VECTOR * referencemv; /* pointer to not-scaled reference vectors */
 
 	/* BITS/R-D stuff */
@@ -140,7 +137,7 @@ xvid_me_ChromaSAD(const int dx, const int dy, SearchData * const data);
 int
 xvid_me_SkipDecisionP(const IMAGE * current, const IMAGE * reference,
 					const int x, const int y,
-					const uint32_t stride, const uint32_t iQuant, int rrv);
+					const uint32_t stride, const uint32_t iQuant);
 
 #define iDiamondSize 2
 typedef void
