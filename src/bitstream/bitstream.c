@@ -547,16 +547,19 @@ BitstreamReadHeaders(Bitstream * bs,
 			if (coding_type != B_VOP) {
 				dec->last_time_base = dec->time_base;
 				dec->time_base += time_incr;
-				dec->time =
-					dec->time_base * time_increment_resolution +
+				dec->time = time_increment;
+
+/*					dec->time_base * time_increment_resolution +
 					time_increment;
-				dec->time_pp = (uint32_t) 
+*/				dec->time_pp = (uint32_t) 
 					(time_increment_resolution + dec->time - dec->last_non_b_time)%time_increment_resolution;
 				dec->last_non_b_time = dec->time;
 			} else {
-				dec->time =
+				dec->time = time_increment; 
+/*
 					(dec->last_time_base +
-					 time_incr) * time_increment_resolution + time_increment;
+					 time_incr) * time_increment_resolution + time_increment; 
+*/
 				dec->time_bp = (uint32_t) 
 					(time_increment_resolution + dec->last_non_b_time - dec->time)%time_increment_resolution;
 			}
