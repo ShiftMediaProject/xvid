@@ -41,7 +41,10 @@
   *                                                                            *
   *  Revision history:                                                         *
   *                                                                            *
-  *	 22.05.2002 bs_put_matrix fix
+  *  11.07.2002 add VOP width & height return to dec when dec->width           *
+  *             or dec->height is 0  (for use in examples/ex1.c)               *
+  *             MinChen <chenm001@163.com>                                     *
+  *  22.05.2002 bs_put_matrix fix                                              *
   *  20.05.2002 added BitstreamWriteUserData                                   *
   *  19.06.2002  Fix a little bug in use custom quant matrix                   *
   *              MinChen <chenm001@163.com>                                    *
@@ -358,6 +361,12 @@ BitstreamReadHeaders(Bitstream * bs,
 
 					DPRINTF(DPRINTF_HEADER, "width %i", width);
 					DPRINTF(DPRINTF_HEADER, "height %i", height);
+
+					// for auto set width & height
+					if (dec->width == 0)
+						dec->width = width;
+					if (dec->height == 0)
+						dec->height = height;
 
 					if (width != dec->width || height != dec->height) {
 						DPRINTF(DPRINTF_ERROR, "XVID_DEC_PARAM width/height does not match bitstream");
