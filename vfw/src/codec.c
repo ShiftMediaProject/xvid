@@ -502,6 +502,12 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 		pass2.kfthreshold = codec->config.kfthreshold;
 		pass2.container_frame_overhead = 24;	/* AVI */
 
+		/* VBV */
+		pass2.vbv_size = profiles[codec->config.profile].max_vbv_size;
+		pass2.vbv_initial = (profiles[codec->config.profile].max_vbv_size*3)/4;
+		pass2.vbv_maxrate = 1000*profiles[codec->config.profile].max_bitrate;
+		pass2.vbv_peakrate = 10000000; /* 10mbps -- fixme */
+
 		plugins[create.num_plugins].func = codec->xvid_plugin_2pass2_func;
 		plugins[create.num_plugins].param = &pass2;
 		create.num_plugins++;

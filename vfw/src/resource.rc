@@ -15,7 +15,6 @@
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
-
 /////////////////////////////////////////////////////////////////////////////
 // Neutral resources
 
@@ -538,7 +537,8 @@ BEGIN
     CONTROL         "Global Motion Compensation",IDC_GMC,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,16,92,103,8
     CONTROL         "Reduced Resolution",IDC_REDUCED,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,16,106,100,8
+                    BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,16,106,100,
+                    8
     CONTROL         "B-VOPs",IDC_BVOP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     16,120,40,8
     LTEXT           "Max consecutive BVOPs:",IDC_MAXBFRAMES_S,16,136,96,8
@@ -593,26 +593,27 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     COMBOBOX        IDC_LEVEL_PROFILE,84,8,116,76,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
-    EDITTEXT        IDC_LEVEL_WIDTH,88,39,28,12,ES_AUTOHSCROLL | ES_READONLY
-    EDITTEXT        IDC_LEVEL_HEIGHT,128,39,28,12,ES_AUTOHSCROLL | 
+    EDITTEXT        IDC_LEVEL_WIDTH,88,43,28,12,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_LEVEL_HEIGHT,128,43,28,12,ES_AUTOHSCROLL | 
                     ES_READONLY
-    EDITTEXT        IDC_LEVEL_FPS,168,39,28,12,ES_AUTOHSCROLL | ES_READONLY
-    EDITTEXT        IDC_LEVEL_VMV,156,57,40,12,ES_AUTOHSCROLL | ES_READONLY
-    EDITTEXT        IDC_LEVEL_VCV,156,73,40,12,ES_AUTOHSCROLL | ES_READONLY
-    EDITTEXT        IDC_LEVEL_VBV,156,89,40,12,ES_AUTOHSCROLL | ES_READONLY
-    EDITTEXT        IDC_LEVEL_BITRATE,156,105,40,12,ES_AUTOHSCROLL | 
+    EDITTEXT        IDC_LEVEL_FPS,168,43,28,12,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_LEVEL_VMV,156,60,40,12,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_LEVEL_VCV,156,77,40,12,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_LEVEL_VBV,156,115,40,12,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_LEVEL_BITRATE,156,131,40,12,ES_AUTOHSCROLL | 
                     ES_READONLY
     LTEXT           "Profile @ Level:",IDC_STATIC,8,10,52,8
-    GROUPBOX        "Level",IDC_STATIC,8,28,196,96
-    LTEXT           "Suggested:",IDC_STATIC,16,41,48,8
-    LTEXT           "x",IDC_STATIC,120,41,8,8
-    LTEXT           "Max bitrate (kbps)",IDC_STATIC,16,105,108,8
-    LTEXT           "Max buffer size (bits):",IDC_STATIC,16,89,108,8
-    LTEXT           "Max processing rate (mbs/sec)",IDC_STATIC,16,73,108,8
-    LTEXT           "Max frame size (mbs):",IDC_STATIC,16,57,108,8
-    LTEXT           "x",IDC_STATIC,160,41,8,8
-    CTEXT           "\n\nThis is informative only.\n\nXviD's ratecontrol will not respect these values.",
-                    IDC_STATIC,8,128,196,80
+    GROUPBOX        "Level - XviD will not force you to respect these",
+                    IDC_STATIC,8,28,196,66
+    LTEXT           "Suggested:",IDC_STATIC,16,45,48,8
+    LTEXT           "x",IDC_STATIC,120,45,8,8
+    LTEXT           "Max bitrate (kbps)",IDC_STATIC,16,133,108,8
+    LTEXT           "Max buffer size (bits):",IDC_STATIC,16,117,108,8
+    LTEXT           "Max processing rate (mbs/sec)",IDC_STATIC,16,79,108,8
+    LTEXT           "Max frame size (macroblocks):",IDC_STATIC,16,63,108,8
+    LTEXT           "x",IDC_STATIC,160,45,8,8
+    GROUPBOX        "Video Buffer Verifier - used in Two-Pass mode",
+                    IDC_STATIC,8,100,196,49
 END
 
 IDD_DEC DIALOG DISCARDABLE  0, 0, 212, 212
@@ -879,13 +880,41 @@ IDB_LOGO                BITMAP  DISCARDABLE     "XviD_logo.bmp"
 // remains consistent on all systems.
 IDI_ICON                ICON    DISCARDABLE     "xvid.ico"
 
-
 /////////////////////////////////////////////////////////////////////////////
 //
 // TEXT
 //
 
 IDR_GPL                 TEXT    DISCARDABLE     "../../LICENSE"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "#ifndef IDC_STATIC\r\n"
+    "#define IDC_STATIC (-1)\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1030,38 +1059,9 @@ BEGIN
     IDC_ZONE_FORCEIVOP      "Force a keyframe at the beginnig of the zone"
 END
 
-
-
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-1 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "resource.h\0"
-END
-
-2 TEXTINCLUDE DISCARDABLE
-BEGIN
-    "#include <windows.h>\r\n"
-    "#ifndef IDC_STATIC\r\n"
-    "#define IDC_STATIC (-1)\r\n"
-    "#endif\r\n"
-    "\0"
-END
-
-3 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
 #endif    // Neutral resources
 /////////////////////////////////////////////////////////////////////////////
+
 
 
 #ifndef APSTUDIO_INVOKED
