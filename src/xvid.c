@@ -17,7 +17,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.43 2003-02-19 21:13:00 edgomez Exp $
+ * $Id: xvid.c,v 1.44 2003-02-20 22:46:18 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -811,26 +811,35 @@ static int test_quant(void * funcA, void * funcB, const char * nameB,
 
 int xvid_init_test(int flags)
 {
-	int cpu_flags;
+	int cpu_flags = 0;
 
 	srand(time(0));
 
-	printf("xvid_init_test\n");
+	printf("XviD tests\n\n");
 
-#if defined(ARCH_IS_IA32)		
+#if defined(ARCH_IS_IA32)
 	cpu_flags = detect_cpu_flags();
-	idct_int32_init();
-	emms_mmx();
+#endif
 
+	idct_int32_init();
+	emms();
+
+	/* fDCT test */
 	printf("--- fdct ---\n");
 		test_transform(fdct_int32, fdct_int32, "c", TEST_FDCT, flags);
+
+#if defined(ARCH_IS_IA32)
 	if (cpu_flags & XVID_CPU_MMX)
 		test_transform(fdct_int32, fdct_mmx, "mmx", TEST_FDCT, flags);
 	if (cpu_flags & XVID_CPU_SSE2)
 		test_transform(fdct_int32, fdct_sse2, "sse2", TEST_FDCT, flags);
+#endif
 
+	/* iDCT test */
 	printf("\n--- idct ---\n");
 		test_transform(idct_int32, idct_int32, "c", TEST_IDCT, flags);
+
+#if defined(ARCH_IS_IA32)
 	if (cpu_flags & XVID_CPU_MMX)
 		test_transform(idct_int32, idct_mmx, "mmx", TEST_IDCT, flags);
 	if (cpu_flags & XVID_CPU_MMXEXT)
@@ -839,27 +848,39 @@ int xvid_init_test(int flags)
 		test_transform(idct_int32, idct_3dne, "3dne", TEST_IDCT, flags);
 	if (cpu_flags & XVID_CPU_SSE2)
 		test_transform(idct_int32, idct_sse2, "sse2", TEST_IDCT, flags);
+#endif
 
+	/* Intra quantization test */
 	printf("\n--- quant intra ---\n");
 		test_quant(quant_intra_c, quant_intra_c, "c", TEST_QUANT_INTRA, flags);
+
+#if defined(ARCH_IS_IA32)
 	if (cpu_flags & XVID_CPU_MMX)
 		test_quant(quant_intra_c, quant_intra_mmx, "mmx", TEST_QUANT_INTRA, flags);
 	if (cpu_flags & XVID_CPU_3DNOWEXT)
 		test_quant(quant_intra_c, quant_intra_3dne, "3dne", TEST_QUANT_INTRA, flags);
 	if (cpu_flags & XVID_CPU_SSE2)
 		test_quant(quant_intra_c, quant_intra_sse2, "sse2", TEST_QUANT_INTRA, flags);
+#endif
 
+	/* Inter quantization test */
 	printf("\n--- quant inter ---\n");
 		test_quant(quant_inter_c, quant_inter_c, "c", TEST_QUANT_INTER, flags);
+
+#if defined(ARCH_IS_IA32)
 	if (cpu_flags & XVID_CPU_MMX)
 		test_quant(quant_inter_c, quant_inter_mmx, "mmx", TEST_QUANT_INTER, flags);
 	if (cpu_flags & XVID_CPU_3DNOWEXT)
 		test_quant(quant_inter_c, quant_inter_3dne, "3dne", TEST_QUANT_INTER, flags);
 	if (cpu_flags & XVID_CPU_SSE2)
 		test_quant(quant_inter_c, quant_inter_sse2, "sse2", TEST_QUANT_INTER, flags);
+#endif
 
+	/* Intra dequantization test */
 	printf("\n--- dequant intra ---\n");
 		test_quant(dequant_intra_c, dequant_intra_c, "c", TEST_DEQUANT_INTRA, flags);
+
+#if defined(ARCH_IS_IA32)
 	if (cpu_flags & XVID_CPU_MMX)
 		test_quant(dequant_intra_c, dequant_intra_mmx, "mmx", TEST_DEQUANT_INTRA, flags);
 	if (cpu_flags & XVID_CPU_MMXEXT)
@@ -868,9 +889,13 @@ int xvid_init_test(int flags)
 		test_quant(dequant_intra_c, dequant_intra_3dne, "3dne", TEST_DEQUANT_INTRA, flags);
 	if (cpu_flags & XVID_CPU_SSE2)
 		test_quant(dequant_intra_c, dequant_intra_sse2, "sse2", TEST_DEQUANT_INTRA, flags);
+#endif
 
+	/* Inter dequantization test */
 	printf("\n--- dequant inter ---\n");
 		test_quant(dequant_inter_c, dequant_inter_c, "c", TEST_DEQUANT_INTER, flags);
+
+#if defined(ARCH_IS_IA32)
 	if (cpu_flags & XVID_CPU_MMX)
 		test_quant(dequant_inter_c, dequant_inter_mmx, "mmx", TEST_DEQUANT_INTER, flags);
 	if (cpu_flags & XVID_CPU_MMXEXT)
@@ -879,38 +904,53 @@ int xvid_init_test(int flags)
 		test_quant(dequant_inter_c, dequant_inter_3dne, "3dne", TEST_DEQUANT_INTER, flags);
 	if (cpu_flags & XVID_CPU_SSE2)
 		test_quant(dequant_inter_c, dequant_inter_sse2, "sse2", TEST_DEQUANT_INTER, flags);
+#endif
 
-	printf("\n--- quant4_intra ---\n");
+	/* Intra quantization test */
+	printf("\n--- quant4 intra ---\n");
 		test_quant(quant4_intra_c, quant4_intra_c, "c", TEST_QUANT_INTRA, flags);
+
+#if defined(ARCH_IS_IA32)
 	if (cpu_flags & XVID_CPU_MMX)
 		test_quant(quant4_intra_c, quant4_intra_mmx, "mmx", TEST_QUANT_INTRA, flags);
 	if (cpu_flags & XVID_CPU_MMXEXT)
 		test_quant(quant4_intra_c, quant4_intra_xmm, "xmm", TEST_QUANT_INTRA, flags);
+#endif
 
-	printf("\n--- quant4_inter ---\n");
+	/* Inter quantization test */
+	printf("\n--- quant4 inter ---\n");
 		test_quant(quant4_inter_c, quant4_inter_c, "c", TEST_QUANT_INTER, flags);
+
+#if defined(ARCH_IS_IA32)
 	if (cpu_flags & XVID_CPU_MMX)
 		test_quant(quant4_inter_c, quant4_inter_mmx, "mmx", TEST_QUANT_INTER, flags);
 	if (cpu_flags & XVID_CPU_MMXEXT)
 		test_quant(quant4_inter_c, quant4_inter_xmm, "xmm", TEST_QUANT_INTER, flags);
+#endif
 
-	printf("\n--- dequant4_intra ---\n");
+	/* Intra dequantization test */
+	printf("\n--- dequant4 intra ---\n");
 		test_quant(dequant4_intra_c, dequant4_intra_c, "c", TEST_DEQUANT_INTRA, flags);
+
+#if defined(ARCH_IS_IA32)
 	if (cpu_flags & XVID_CPU_MMX)
 		test_quant(dequant4_intra_c, dequant4_intra_mmx, "mmx", TEST_DEQUANT_INTRA, flags);
 	if (cpu_flags & XVID_CPU_3DNOWEXT)
 		test_quant(dequant4_intra_c, dequant4_intra_3dne, "3dne", TEST_DEQUANT_INTRA, flags);
+#endif
 
-	printf("\n--- dequant4_inter ---\n");
+	/* Inter dequantization test */
+	printf("\n--- dequant4 inter ---\n");
 		test_quant(dequant4_inter_c, dequant4_inter_c, "c", TEST_DEQUANT_INTER, flags);
+
+#if defined(ARCH_IS_IA32)
 	if (cpu_flags & XVID_CPU_MMX)
 		test_quant(dequant4_inter_c, dequant4_inter_mmx, "mmx", TEST_DEQUANT_INTER, flags);
 	if (cpu_flags & XVID_CPU_3DNOWEXT)
 		test_quant(dequant4_inter_c, dequant4_inter_3dne, "3dne", TEST_DEQUANT_INTER, flags);
-
-	emms_mmx();
-
 #endif
+
+	emms();
 
 	return XVID_ERR_OK;
 }
@@ -931,8 +971,10 @@ xvid_init(void *handle,
 			return xvid_init_convert((XVID_INIT_CONVERTINFO*)param1);
 
 		case XVID_INIT_TEST :
-			return xvid_init_test((int)param1);
-
+		{
+			ptr_t flags = (ptr_t)param1;
+			return xvid_init_test((int)flags);
+		}
 		default :
 			return XVID_ERR_FAIL;
 	}
@@ -990,11 +1032,13 @@ xvid_encore(void *handle,
 	case XVID_ENC_ENCODE:
 
 		if (((Encoder *) handle)->mbParam.max_bframes >= 0)
-		return encoder_encode_bframes((Encoder *) handle, (XVID_ENC_FRAME *) param1,
-							  (XVID_ENC_STATS *) param2);
+			return encoder_encode_bframes((Encoder *) handle,
+										  (XVID_ENC_FRAME *) param1,
+										  (XVID_ENC_STATS *) param2);
 		else 
-		return encoder_encode((Encoder *) handle, (XVID_ENC_FRAME *) param1,
-							  (XVID_ENC_STATS *) param2);
+			return encoder_encode((Encoder *) handle,
+								  (XVID_ENC_FRAME *) param1,
+								  (XVID_ENC_STATS *) param2);
 
 	case XVID_ENC_CREATE:
 		return encoder_create((XVID_ENC_PARAM *) param1);
