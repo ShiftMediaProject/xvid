@@ -1,19 +1,17 @@
 ;/*****************************************************************************
 ; *
 ; *  XVID MPEG-4 VIDEO CODEC
-; *  mmx version - fast dicrete cosine transformation 
+; *  mmx version - fast discrete cosine transformation 
 ; *
-; *  Initial, but incomplete version provided by Intel at AppNote AP-922       
-; *  http://developer.intel.com/vtune/cbts/strmsimd/922down.htm                
+; *  Initial version provided by Intel at AppNote AP-922       
 ; *  Copyright (C) 1999 Intel Corporation,                                     
-; *                                                                            
-; *  completed and corrected in fdctmm32.c/fdctmm32.doc,                       
-; *  http://members.tripod.com/~liaor                                          
+; * 
+; *  completed and corrected                        
 ; *  Copyright (C) 2000 - Royce Shih-Wea Liao <liaor@iname.com>,               
-; *                                                                            
+; * 
 ; *  ported to NASM and some minor changes                                      
 ; *  Copyright (C) 2001 - Michael Militzer <isibaar@xvid.org>                  
-; *                                                                            
+; *
 ; *  This program is an implementation of a part of one or more MPEG-4
 ; *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
 ; *  to use this software module in hardware or software products are
@@ -37,7 +35,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; ****************************************************************************/
+; *************************************************************************/
 
 BITS 32
 
