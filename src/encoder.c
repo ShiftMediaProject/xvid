@@ -36,17 +36,17 @@ static int iDQtab[5] =
 
 int encoder_create(XVID_ENC_PARAM * pParam)
 {
-    Encoder *pEnc;
+	Encoder *pEnc;
 	uint32_t i;
 
-    pParam->handle = NULL;
+	pParam->handle = NULL;
 
-    ENC_CHECK(pParam);
+	ENC_CHECK(pParam);
 
-    ENC_CHECK(pParam->width > 0 && pParam->width <= 1920);
-    ENC_CHECK(pParam->height > 0 && pParam->height <= 1280);
-    ENC_CHECK(!(pParam->width % 2));
-    ENC_CHECK(!(pParam->height % 2));
+	ENC_CHECK(pParam->width > 0 && pParam->width <= 1920);
+	ENC_CHECK(pParam->height > 0 && pParam->height <= 1280);
+	ENC_CHECK(!(pParam->width % 2));
+	ENC_CHECK(!(pParam->height % 2));
 
 	if (pParam->fincr <= 0 || pParam->fbase <= 0)
 	{
@@ -80,28 +80,28 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 	if (pParam->bitrate <= 0)
 		pParam->bitrate = 900000;
 
-    if (pParam->rc_buffersize <= 0)
+	if (pParam->rc_buffersize <= 0)
 		pParam->rc_buffersize = pParam->bitrate * pParam->fbase;
 
-    if ((pParam->min_quantizer <= 0) || (pParam->min_quantizer > 31))
+	if ((pParam->min_quantizer <= 0) || (pParam->min_quantizer > 31))
 		pParam->min_quantizer = 1;
 
-    if ((pParam->max_quantizer <= 0) || (pParam->max_quantizer > 31))
+	if ((pParam->max_quantizer <= 0) || (pParam->max_quantizer > 31))
 		pParam->max_quantizer = 31;
 
-    if (pParam->max_key_interval == 0)		/* 1 keyframe each 10 seconds */ 
+	if (pParam->max_key_interval == 0)		/* 1 keyframe each 10 seconds */ 
 		pParam->max_key_interval = 10 * pParam->fincr / pParam->fbase;
 					
-    if (pParam->max_quantizer < pParam->min_quantizer)
+	if (pParam->max_quantizer < pParam->min_quantizer)
 		pParam->max_quantizer = pParam->min_quantizer;
 
-    if ((pEnc = (Encoder *) malloc(sizeof(Encoder))) == NULL)
+	if ((pEnc = (Encoder *) malloc(sizeof(Encoder))) == NULL)
 		return XVID_ERR_MEMORY;
 
 	/* Fill members of Encoder structure */
 
-    pEnc->mbParam.width = pParam->width;
-    pEnc->mbParam.height = pParam->height;
+	pEnc->mbParam.width = pParam->width;
+	pEnc->mbParam.height = pParam->height;
 
 	pEnc->mbParam.mb_width = (pEnc->mbParam.width + 15) / 16;
 	pEnc->mbParam.mb_height = (pEnc->mbParam.height + 15) / 16;
@@ -109,56 +109,56 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 	pEnc->mbParam.edged_width = 16 * pEnc->mbParam.mb_width + 2 * EDGE_SIZE;
 	pEnc->mbParam.edged_height = 16 * pEnc->mbParam.mb_height + 2 * EDGE_SIZE;
 
-    pEnc->sStat.fMvPrevSigma = -1;
+	pEnc->sStat.fMvPrevSigma = -1;
 
 	/* Fill rate control parameters */
 
-    pEnc->mbParam.quant = 4;
+	pEnc->mbParam.quant = 4;
 
 	pEnc->bitrate = pParam->bitrate;
 
-    pEnc->iFrameNum = 0;
-    pEnc->iMaxKeyInterval = pParam->max_key_interval;
+	pEnc->iFrameNum = 0;
+	pEnc->iMaxKeyInterval = pParam->max_key_interval;
 
-    if (image_create(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
-    {
+	if (image_create(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
+	{
 		free(pEnc);
 		return XVID_ERR_MEMORY;
-    }
+	}
 
 	if (image_create(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
-    {
+	{
 		image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		free(pEnc);
 		return XVID_ERR_MEMORY;
-    }
+	}
 
-    if (image_create(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
-    {
+	if (image_create(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
+	{
 		image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		free(pEnc);
 		return XVID_ERR_MEMORY;
-    }
+	}
 
-    if (image_create(&pEnc->vInterV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
-    {
+	if (image_create(&pEnc->vInterV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
+	{
 		image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		free(pEnc);
 		return XVID_ERR_MEMORY;
-    }
+	}
 
-    if (image_create(&pEnc->vInterHV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
-    {
+	if (image_create(&pEnc->vInterHV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
+	{
 		image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->vInterV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		free(pEnc);
 		return XVID_ERR_MEMORY;
-    }
+	}
 
 	pEnc->pMBs = malloc(sizeof(MACROBLOCK) * pEnc->mbParam.mb_width * pEnc->mbParam.mb_height);
 	if (pEnc->pMBs == NULL)
@@ -178,12 +178,12 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 		pEnc->pMBs[i].dquant = NO_CHANGE;
 	}
 
-    pParam->handle = (void *)pEnc;
+	pParam->handle = (void *)pEnc;
 
 	if (pParam->bitrate)
 	{
 		RateControlInit(pParam->bitrate, pParam->rc_buffersize, pParam->fbase, pParam->width,
-						pParam->height, pParam->max_quantizer, pParam->min_quantizer);
+				pParam->height, pParam->max_quantizer, pParam->min_quantizer);
 	}
 
 	create_vlc_tables();
@@ -194,52 +194,50 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 
 int encoder_destroy(Encoder * pEnc)
 {
-    ENC_CHECK(pEnc);
-    ENC_CHECK(pEnc->sCurrent.y);
-    ENC_CHECK(pEnc->sReference.y);
+	ENC_CHECK(pEnc);
+	ENC_CHECK(pEnc->sCurrent.y);
+	ENC_CHECK(pEnc->sReference.y);
 
 	free(pEnc->pMBs);
-    image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-    image_destroy(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-    image_destroy(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-    image_destroy(&pEnc->vInterV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-    image_destroy(&pEnc->vInterHV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-    free(pEnc);
+	image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->vInterV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->vInterHV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+	free(pEnc);
 
 	destroy_vlc_tables();
 
-    return XVID_ERR_OK;
+	return XVID_ERR_OK;
 }
 
 int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pResult)
 {
-    uint16_t x, y;
-    Bitstream bs;
-    uint32_t bits;
+	uint16_t x, y;
+	Bitstream bs;
+	uint32_t bits;
 	uint16_t quant_type = 0;
 	uint16_t write_vol_header = 0;
 
-    IMAGE *pCurrent = &(pEnc->sCurrent);
-
 	start_global_timer();
 
-    ENC_CHECK(pEnc);
-    ENC_CHECK(pFrame);
-    ENC_CHECK(pFrame->bitstream);
-    ENC_CHECK(pFrame->image);
+	ENC_CHECK(pEnc);
+	ENC_CHECK(pFrame);
+	ENC_CHECK(pFrame->bitstream);
+	ENC_CHECK(pFrame->image);
 
 	pEnc->mbParam.global_flags = pFrame->general;
 	pEnc->mbParam.motion_flags = pFrame->motion;
 
 	start_timer();
 	if (image_input(&pEnc->sCurrent, pEnc->mbParam.width, pEnc->mbParam.height, pEnc->mbParam.edged_width,
-					pFrame->image, pFrame->colorspace))
+			pFrame->image, pFrame->colorspace))
 	{
 		return XVID_ERR_FORMAT;
 	}
 	stop_conv_timer();
 
-    BitstreamInit(&bs, pFrame->bitstream, 0);
+	BitstreamInit(&bs, pFrame->bitstream, 0);
 
 	if (pFrame->quant == 0)
 	{
@@ -255,8 +253,8 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 		int * temp_dquants = (int *) malloc(pEnc->mbParam.mb_width * pEnc->mbParam.mb_height * sizeof(int));
 		
 		pEnc->mbParam.quant = adaptive_quantization(pEnc->sCurrent.y, pEnc->mbParam.width,
-			temp_dquants, pFrame->quant, pFrame->quant,
-			2*pFrame->quant, pEnc->mbParam.mb_width, pEnc->mbParam.mb_height);
+							    temp_dquants, pFrame->quant, pFrame->quant,
+							    2*pFrame->quant, pEnc->mbParam.mb_width, pEnc->mbParam.mb_height);
 			
 		for (y = 0; y < pEnc->mbParam.mb_height; y++)
 			for (x = 0; x < pEnc->mbParam.mb_width; x++)
@@ -289,43 +287,43 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	}
 
 	if (pFrame->intra < 0)
-    {
+	{
 		if ((pEnc->iFrameNum == 0) || ((pEnc->iMaxKeyInterval > 0) 
-			&& (pEnc->iFrameNum >= pEnc->iMaxKeyInterval)))
+					       && (pEnc->iFrameNum >= pEnc->iMaxKeyInterval)))
 
 			pFrame->intra = FrameCodeI(pEnc, &bs, &bits);
 		else
 			pFrame->intra = FrameCodeP(pEnc, &bs, &bits, 0, write_vol_header);
-    }
-    else
-    {
+	}
+	else
+	{
 		if (pFrame->intra == 1)
-		    pFrame->intra = FrameCodeI(pEnc, &bs, &bits);
+			pFrame->intra = FrameCodeI(pEnc, &bs, &bits);
 		else
 			pFrame->intra = FrameCodeP(pEnc, &bs, &bits, 1, write_vol_header);
-    }
+	}
 
 	BitstreamPutBits(&bs, 0xFFFF, 16);
-    BitstreamPutBits(&bs, 0xFFFF, 16);
-    BitstreamPad(&bs);
-    pFrame->length = BitstreamLength(&bs);
+	BitstreamPutBits(&bs, 0xFFFF, 16);
+	BitstreamPad(&bs);
+	pFrame->length = BitstreamLength(&bs);
 		
 	if (pResult)
-    {
+	{
 		pResult->quant = pEnc->mbParam.quant;
 		pResult->hlength = pFrame->length - (pEnc->sStat.iTextBits / 8);
 		pResult->kblks = pEnc->sStat.kblks;
 		pResult->mblks = pEnc->sStat.mblks;
 		pResult->ublks = pEnc->sStat.ublks;
-    }
+	}
    
-    if (pEnc->bitrate)
+	if (pEnc->bitrate)
 	{
 		RateControlUpdate(pEnc->mbParam.quant, pFrame->length, pFrame->intra);
 	}
 
 	pEnc->iFrameNum++;
-    image_swap(&pEnc->sCurrent, &pEnc->sReference);
+	image_swap(&pEnc->sCurrent, &pEnc->sReference);
 	
 	stop_global_timer();
 	write_timer();
@@ -355,34 +353,33 @@ static __inline void CodeIntraMB(Encoder *pEnc, MACROBLOCK *pMB) {
 
 static int FrameCodeI(Encoder * pEnc, Bitstream * bs, uint32_t *pBits)
 {
-    int16_t dct_codes[6][64];
-    int16_t qcoeff[6][64];
-    uint16_t x, y;
-    IMAGE *pCurrent = &pEnc->sCurrent;
+	int16_t dct_codes[6][64];
+	int16_t qcoeff[6][64];
+	uint16_t x, y;
 
-    pEnc->iFrameNum = 0;
-    pEnc->mbParam.rounding_type = 1;
-    pEnc->mbParam.coding_type = I_VOP;
+	pEnc->iFrameNum = 0;
+	pEnc->mbParam.rounding_type = 1;
+	pEnc->mbParam.coding_type = I_VOP;
 
 	BitstreamWriteVolHeader(bs, pEnc->mbParam.width, pEnc->mbParam.height, pEnc->mbParam.quant_type);
 	BitstreamWriteVopHeader(bs, I_VOP, pEnc->mbParam.rounding_type,
-			pEnc->mbParam.quant,
-			pEnc->mbParam.fixed_code); 
+				pEnc->mbParam.quant,
+				pEnc->mbParam.fixed_code); 
 
-    *pBits = BitstreamPos(bs);
+	*pBits = BitstreamPos(bs);
 
 	pEnc->sStat.iTextBits = 0;
 	pEnc->sStat.kblks = pEnc->mbParam.mb_width * pEnc->mbParam.mb_height;
 	pEnc->sStat.mblks = pEnc->sStat.ublks = 0;
 
-    for (y = 0; y < pEnc->mbParam.mb_height; y++)
+	for (y = 0; y < pEnc->mbParam.mb_height; y++)
 		for (x = 0; x < pEnc->mbParam.mb_width; x++)
 		{
-		    MACROBLOCK *pMB = &pEnc->pMBs[x + y * pEnc->mbParam.mb_width];
+			MACROBLOCK *pMB = &pEnc->pMBs[x + y * pEnc->mbParam.mb_width];
 
 			CodeIntraMB(pEnc, pMB);
 
-			MBTransQuantIntra(&pEnc->mbParam, x, y, dct_codes, qcoeff, pCurrent);
+			MBTransQuantIntra(&pEnc->mbParam, x, y, dct_codes, qcoeff, &pEnc->sCurrent);
 
 			start_timer();
 			MBPrediction(&pEnc->mbParam, x, y, pEnc->mbParam.mb_width, qcoeff, pEnc->pMBs);
@@ -395,13 +392,13 @@ static int FrameCodeI(Encoder * pEnc, Bitstream * bs, uint32_t *pBits)
 
 	emms();
 
-    *pBits = BitstreamPos(bs) - *pBits;
-    pEnc->sStat.fMvPrevSigma = -1;
-    pEnc->sStat.iMvSum = 0;
-    pEnc->sStat.iMvCount = 0;
-    pEnc->mbParam.fixed_code = 2;
+	*pBits = BitstreamPos(bs) - *pBits;
+	pEnc->sStat.fMvPrevSigma = -1;
+	pEnc->sStat.iMvSum = 0;
+	pEnc->sStat.iMvCount = 0;
+	pEnc->mbParam.fixed_code = 2;
 
-    return 1;					 // intra
+	return 1;					 // intra
 }
 
 
@@ -409,77 +406,77 @@ static int FrameCodeI(Encoder * pEnc, Bitstream * bs, uint32_t *pBits)
 
 static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool force_inter, bool vol_header)
 {
-    float fSigma;
-    int16_t dct_codes[6][64];
-    int16_t qcoeff[6][64];
+	float fSigma;
+	int16_t dct_codes[6][64];
+	int16_t qcoeff[6][64];
 	int iLimit;
-    uint32_t x, y;
-    int iSearchRange;
+	uint32_t x, y;
+	int iSearchRange;
 	bool bIntra;
 
-    IMAGE *pCurrent = &pEnc->sCurrent;
-    IMAGE *pRef = &pEnc->sReference;
+	IMAGE *pCurrent = &pEnc->sCurrent;
+	IMAGE *pRef = &pEnc->sReference;
 
 	image_setedges(pRef,pEnc->mbParam.edged_width, pEnc->mbParam.edged_height, pEnc->mbParam.width, pEnc->mbParam.height);
 
-    pEnc->mbParam.rounding_type = 1 - pEnc->mbParam.rounding_type;
+	pEnc->mbParam.rounding_type = 1 - pEnc->mbParam.rounding_type;
 
 	if (!force_inter)
 		iLimit = (int)(pEnc->mbParam.mb_width * pEnc->mbParam.mb_height * INTRA_THRESHOLD);
-    else
+	else
 		iLimit = pEnc->mbParam.mb_width * pEnc->mbParam.mb_height + 1;
 
 	if ((pEnc->mbParam.global_flags & XVID_HALFPEL) > 0) {
 		start_timer();
 		image_interpolate(pRef, &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV,
-			pEnc->mbParam.edged_width, pEnc->mbParam.edged_height,
-			pEnc->mbParam.rounding_type);
+				  pEnc->mbParam.edged_width, pEnc->mbParam.edged_height,
+				  pEnc->mbParam.rounding_type);
 		stop_inter_timer();
 	}
 
 	start_timer();
 	bIntra = MotionEstimation(pEnc->pMBs, &pEnc->mbParam, &pEnc->sReference,
-				&pEnc->vInterH, &pEnc->vInterV,
-				&pEnc->vInterHV, &pEnc->sCurrent, iLimit);
+				  &pEnc->vInterH, &pEnc->vInterV,
+				  &pEnc->vInterHV, &pEnc->sCurrent, iLimit);
 	stop_motion_timer();
 
 	if (bIntra == 1)
 		return FrameCodeI(pEnc, bs, pBits);
 
-    pEnc->mbParam.coding_type = P_VOP;
+	pEnc->mbParam.coding_type = P_VOP;
 
 	if(vol_header)
 		BitstreamWriteVolHeader(bs, pEnc->mbParam.width, pEnc->mbParam.height, pEnc->mbParam.quant_type);
 
-    BitstreamWriteVopHeader(bs, P_VOP, pEnc->mbParam.rounding_type,
-			 pEnc->mbParam.quant,
-			 pEnc->mbParam.fixed_code); 
+	BitstreamWriteVopHeader(bs, P_VOP, pEnc->mbParam.rounding_type,
+				pEnc->mbParam.quant,
+				pEnc->mbParam.fixed_code); 
 
-    *pBits = BitstreamPos(bs);
+	*pBits = BitstreamPos(bs);
 
-    pEnc->sStat.iTextBits = 0;
-    pEnc->sStat.iMvSum = 0;
-    pEnc->sStat.iMvCount = 0;
+	pEnc->sStat.iTextBits = 0;
+	pEnc->sStat.iMvSum = 0;
+	pEnc->sStat.iMvCount = 0;
 	pEnc->sStat.kblks = pEnc->sStat.mblks = pEnc->sStat.ublks = 0;
 
-    for(y = 0; y < pEnc->mbParam.mb_height; y++)
+	for(y = 0; y < pEnc->mbParam.mb_height; y++)
 	{
 		for(x = 0; x < pEnc->mbParam.mb_width; x++)
 		{
 			MACROBLOCK * pMB = &pEnc->pMBs[x + y * pEnc->mbParam.mb_width];
 
-		    bIntra = (pMB->mode == MODE_INTRA) || (pMB->mode == MODE_INTRA_Q);
+			bIntra = (pMB->mode == MODE_INTRA) || (pMB->mode == MODE_INTRA_Q);
 
 			if (!bIntra)
-		    {
+			{
 				start_timer();
 				MBMotionCompensation(pMB, x, y, &pEnc->sReference,
-					&pEnc->vInterH, &pEnc->vInterV,
-					&pEnc->vInterHV, &pEnc->sCurrent, dct_codes,
-					pEnc->mbParam.width,
-					pEnc->mbParam.height,
-					pEnc->mbParam.edged_width,
-					pEnc->mbParam.rounding_type);
+						     &pEnc->vInterH, &pEnc->vInterV,
+						     &pEnc->vInterHV, &pEnc->sCurrent, dct_codes,
+						     pEnc->mbParam.width,
+						     pEnc->mbParam.height,
+						     pEnc->mbParam.edged_width,
+						     pEnc->mbParam.rounding_type);
 				stop_comp_timer();
 
 				if ((pEnc->mbParam.global_flags & XVID_LUMIMASKING) > 0) {
@@ -493,14 +490,14 @@ static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool forc
 				pMB->quant = pEnc->mbParam.quant;
 
 				pMB->cbp = MBTransQuantInter(&pEnc->mbParam, x, y, dct_codes, qcoeff, pCurrent);
-		    }
+			}
 			else 
 			{
 				CodeIntraMB(pEnc, pMB);
 				MBTransQuantIntra(&pEnc->mbParam, x, y, dct_codes, qcoeff, pCurrent);
 			}
 
-		    start_timer();
+			start_timer();
 			MBPrediction(&pEnc->mbParam, x, y, pEnc->mbParam.mb_width, qcoeff, pEnc->pMBs);
 			stop_prediction_timer();
 
@@ -509,10 +506,10 @@ static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool forc
 				pEnc->sStat.kblks++;
 			}
 			else if (pMB->cbp || 
-					pMB->mvs[0].x || pMB->mvs[0].y ||
-					pMB->mvs[1].x || pMB->mvs[1].y ||
-					pMB->mvs[2].x || pMB->mvs[2].y ||
-					pMB->mvs[3].x || pMB->mvs[3].y)
+				 pMB->mvs[0].x || pMB->mvs[0].y ||
+				 pMB->mvs[1].x || pMB->mvs[1].y ||
+				 pMB->mvs[2].x || pMB->mvs[2].y ||
+				 pMB->mvs[3].x || pMB->mvs[3].y)
 			{
 				pEnc->sStat.mblks++;
 			}
@@ -532,28 +529,28 @@ static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool forc
 	if (pEnc->sStat.iMvCount == 0)
 		pEnc->sStat.iMvCount = 1;
 
-    fSigma = (float)sqrt((float) pEnc->sStat.iMvSum / pEnc->sStat.iMvCount);
+	fSigma = (float)sqrt((float) pEnc->sStat.iMvSum / pEnc->sStat.iMvCount);
 
-    iSearchRange = 1 << (3 + pEnc->mbParam.fixed_code);
+	iSearchRange = 1 << (3 + pEnc->mbParam.fixed_code);
 
-    if ((fSigma > iSearchRange / 3) 
-		&& (pEnc->mbParam.fixed_code <= 3))	// maximum search range 128
-    {
+	if ((fSigma > iSearchRange / 3) 
+	    && (pEnc->mbParam.fixed_code <= 3))	// maximum search range 128
+	{
 		pEnc->mbParam.fixed_code++;
 		iSearchRange *= 2;
-    }
-    else if ((fSigma < iSearchRange / 6)
-	    && (pEnc->sStat.fMvPrevSigma >= 0)
-	    && (pEnc->sStat.fMvPrevSigma < iSearchRange / 6)
-	    && (pEnc->mbParam.fixed_code >= 2))	// minimum search range 16
-    {
+	}
+	else if ((fSigma < iSearchRange / 6)
+		 && (pEnc->sStat.fMvPrevSigma >= 0)
+		 && (pEnc->sStat.fMvPrevSigma < iSearchRange / 6)
+		 && (pEnc->mbParam.fixed_code >= 2))	// minimum search range 16
+	{
 		pEnc->mbParam.fixed_code--;
 		iSearchRange /= 2;
-    }
+	}
 
-    pEnc->sStat.fMvPrevSigma = fSigma;
+	pEnc->sStat.fMvPrevSigma = fSigma;
     
 	*pBits = BitstreamPos(bs) - *pBits;
 
-    return 0;					 // inter
+	return 0;					 // inter
 }
