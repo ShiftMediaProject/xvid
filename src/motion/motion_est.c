@@ -1257,7 +1257,7 @@ int32_t PMVfastSearch8(
 	int32_t psad[4];
 	VECTOR newMV;
 	VECTOR backupMV;
-	VECTOR startMV = { start_x, start_y };
+	VECTOR startMV;
 	
 	const MACROBLOCK * const pMB = pMBs + (x>>1) + (y>>1) * iWcount;
 	const MACROBLOCK * const prevMB = prevMBs + (x>>1) + (y>>1) * iWcount;
@@ -1268,7 +1268,11 @@ int32_t PMVfastSearch8(
 
 	int32_t iSubBlock = (y&1)+(y&1) + (x&1);
 
-/* Get maximum range */
+	/* Init variables */
+	startMV.x = start_x;
+	startMV.y = start_y;
+
+	/* Get maximum range */
 	get_range(&min_dx, &max_dx, &min_dy, &max_dy,
 		  x, y, 8, iWidth, iHeight, iFcode);
 
