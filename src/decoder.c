@@ -55,7 +55,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@xvid.org>
  *
- *  $Id: decoder.c,v 1.39 2002-09-22 17:01:36 edgomez Exp $
+ *  $Id: decoder.c,v 1.40 2002-09-24 21:56:27 edgomez Exp $
  *
  *************************************************************************/
 
@@ -1337,24 +1337,24 @@ decoder_decode(DECODER * dec,
 		decoder_pframe(dec, &bs, rounding, quant, fcode_forward,
 					   intra_dc_threshold);
 #ifdef BFRAMES_DEC
-		DEBUG1("P_VOP  Time=", dec->time);
+		DPRINTF(DPRINTF_DEBUG, "P_VOP  Time=%d", dec->time);
 #endif
 		break;
 
 	case I_VOP:
 		decoder_iframe(dec, &bs, quant, intra_dc_threshold);
 #ifdef BFRAMES_DEC
-		DEBUG1("I_VOP  Time=", dec->time);
+		DPRINTF(DPRINTF_DEBUG, "I_VOP  Time=%d", dec->time);
 #endif
 		break;
 
 	case B_VOP:
 #ifdef BFRAMES_DEC
 		if (dec->time_pp > dec->time_bp) {
-			DEBUG1("B_VOP  Time=", dec->time);
+			DPRINTF(DPRINTF_DEBUG, "B_VOP  Time=%d", dec->time);
 			decoder_bframe(dec, &bs, quant, fcode_forward, fcode_backward);
 		} else {
-			DEBUG("broken B-frame!");
+			DPRINTF(DPRINTF_DEBUG, "Broken B_VOP");
 		}
 #else
 		image_copy(&dec->cur, &dec->refn[0], dec->edged_width, dec->height);
@@ -1372,7 +1372,7 @@ decoder_decode(DECODER * dec,
 
 #ifdef BFRAMES_DEC_DEBUG
 	if (frame->length != BitstreamPos(&bs) / 8){
-		DEBUG2("InLen/UseLen",frame->length, BitstreamPos(&bs) / 8);
+		DPRINTF(DPRINTF_DEBUG, "InLen: %d / UseLen: %d", frame->length, BitstreamPos(&bs) / 8);
 	}
 #endif
 	frame->length = BitstreamPos(&bs) / 8;
