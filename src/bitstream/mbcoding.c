@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: mbcoding.c,v 1.35 2002-12-19 22:58:58 edgomez Exp $
+ * $Id: mbcoding.c,v 1.36 2003-01-04 04:28:48 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -769,7 +769,7 @@ get_intra_block(Bitstream * bs,
 		DPRINTF(DPRINTF_COEFF,"block[%i] %i", scan[coeff], level);
 		/*DPRINTF(DPRINTF_COEFF,"block[%i] %i %08x", scan[coeff], level, BitstreamShowBits(bs, 32)); */
 
-		if (level < -127 || level > 127) {
+		if (level < -2047 || level > 2047) {
 			DPRINTF(DPRINTF_DEBUG, "warning: intra_overflow: %d", level);
 		}
 		coeff++;
@@ -801,7 +801,7 @@ get_inter_block(Bitstream * bs,
 
 		DPRINTF(DPRINTF_COEFF,"block[%i] %i", scan[p], level);
 
-		if (level < -127 || level > 127) {
+		if (level < -2047 || level > 2047) {
 			DPRINTF(DPRINTF_DEBUG, "warning: inter_overflow: %d", level);
 		}
 		p++;
