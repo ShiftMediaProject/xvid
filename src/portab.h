@@ -215,13 +215,19 @@ read_counter()
 #define EMMS()
 
 // needed for bitstream.h
-#define BSWAP(a) \
-	 ((a) = ( ((a)&0xff)<<24) | (((a)&0xff00)<<8) | (((a)>>8)&0xff00) | (((a)>>24)&0xff))
+#define BSWAP(a)  __asm__ __volatile__ ("mux1 %1 = %0, @rev" \
+			";;" \
+			"shr.u %1 = %1, 32" : "=r" (a) : "r" (a));
 
-// rdtsc command most likely not supported,
-// so just dummy code here
+// rdtsc replacement for ia64
 static __inline int64_t read_counter() {
-	return 0;
+	unsigned long result;
+
+//	__asm__ __volatile__("mov %0=ar.itc" : "=r"(result) :: "memory");
+//	while (__builtin_expect ((int) result == -1, 0))
+		__asm__ __volatile__("mov %0=ar.itc" : "=r"(result) :: "memory");
+	return result;
+
 }
 
 #else
