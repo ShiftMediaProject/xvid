@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: config.c,v 1.4 2004-04-18 07:55:11 syskin Exp $
+ * $Id: config.c,v 1.5 2004-07-11 10:22:47 syskin Exp $
  *
  ****************************************************************************/
 
@@ -53,6 +53,7 @@ void LoadRegistryInfo()
 	REG_GET_N("FlipVideo",  g_config.nFlipVideo, 0)
 	REG_GET_N("Supported_4CC",  g_config.supported_4cc, 0)
 	REG_GET_N("Videoinfo_Compat",  g_config.videoinfo_compat, 0)
+	REG_GET_N("Aspect_Ratio",  g_config.aspect_ratio, 0)
 
 	RegCloseKey(hKey);
 }
@@ -87,6 +88,7 @@ void SaveRegistryInfo()
 	REG_SET_N("FlipVideo", g_config.nFlipVideo);
 	REG_SET_N("Supported_4CC",  g_config.supported_4cc);
 	REG_SET_N("Videoinfo_Compat",  g_config.videoinfo_compat);
+	REG_SET_N("Aspect_Ratio", g_config.aspect_ratio);
 
 	RegCloseKey(hKey);
 }
@@ -102,12 +104,21 @@ BOOL CALLBACK adv_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_DESTROY:
 		{
 			int nForceColorspace;
+			int aspect_ratio;
+
 			nForceColorspace = SendMessage(GetDlgItem(hwnd, IDC_COLORSPACE), CB_GETCURSEL, 0, 0); 
 			if ( g_config.nForceColorspace != nForceColorspace )
 			{
-				MessageBox(0, "You have changed the output colorspace.\r\nClose the movie and open it for the new colorspace to take effect.", "XviD DShow", 0);
+				MessageBox(0, "You have changed the output colorspace.\r\nClose the movie and open it for the new colorspace to take effect.", "XviD DShow", MB_TOPMOST);
 			}
 			g_config.nForceColorspace = nForceColorspace;
+
+			aspect_ratio = SendMessage(GetDlgItem(hwnd, IDC_USE_AR), CB_GETCURSEL, 0, 0);
+			if ( g_config.aspect_ratio != aspect_ratio )
+			{
+				MessageBox(0, "You have changed the default aspect ratio.\r\nClose the movie and open it for the new aspect ratio to take effect.", "XviD DShow", MB_TOPMOST);
+			}
+			g_config.aspect_ratio = aspect_ratio;
 			SaveRegistryInfo();
 		}
 		break;
@@ -129,6 +140,16 @@ BOOL CALLBACK adv_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SendMessage(hBrightness, TBM_SETTICFREQ, (WPARAM)16, (LPARAM)0);
 		SendMessage(hBrightness, TBM_SETPOS, (WPARAM)TRUE, (LPARAM) g_config.nBrightness);
 
+		// Load Aspect Ratio Box
+		SendMessage(GetDlgItem(hwnd, IDC_USE_AR), CB_ADDSTRING, 0, (LPARAM)"Auto"); 
+		SendMessage(GetDlgItem(hwnd, IDC_USE_AR), CB_ADDSTRING, 0, (LPARAM)"4:3"); 
+		SendMessage(GetDlgItem(hwnd, IDC_USE_AR), CB_ADDSTRING, 0, (LPARAM)"16:9"); 
+		SendMessage(GetDlgItem(hwnd, IDC_USE_AR), CB_ADDSTRING, 0, (LPARAM)"2.35:1"); 
+
+		// Select Aspect Ratio
+		SendMessage(GetDlgItem(hwnd, IDC_USE_AR), CB_SETCURSEL, g_config.aspect_ratio, 0);
+
+		
 		// Load Buttons
 		SendMessage(GetDlgItem(hwnd, IDC_DEBLOCK_Y), BM_SETCHECK, g_config.nDeblock_Y, 0);
 		SendMessage(GetDlgItem(hwnd, IDC_DEBLOCK_UV), BM_SETCHECK, g_config.nDeblock_UV, 0);
@@ -145,6 +166,7 @@ BOOL CALLBACK adv_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		EnableWindow(GetDlgItem(hwnd,IDC_DERINGY),g_config.nDeblock_Y);
 		EnableWindow(GetDlgItem(hwnd,IDC_DERINGUV),g_config.nDeblock_UV);
+
 
 		// Set Date & Time of Compilation
 		DPRINTF("(%s %s)", __DATE__, __TIME__);
@@ -166,7 +188,8 @@ BOOL CALLBACK adv_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			SendMessage(GetDlgItem(hwnd, IDC_FLIPVIDEO), BM_SETCHECK, g_config.nFlipVideo, 0);
 			g_config.nForceColorspace = 0;
 			SendMessage(GetDlgItem(hwnd, IDC_COLORSPACE), CB_SETCURSEL, g_config.nForceColorspace, 0); 
-
+			g_config.aspect_ratio = 0;
+			SendMessage(GetDlgItem(hwnd, IDC_USE_AR), CB_SETCURSEL, g_config.aspect_ratio, 0);
 			break;
 		case IDC_DEBLOCK_Y:
 			g_config.nDeblock_Y = !g_config.nDeblock_Y;

@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// German (Germany) resources
+// Deutsch (Deutschland) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DEU)
 #ifdef _WIN32
@@ -27,12 +27,12 @@ LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 //
 
 IDB_LOGO                BITMAP  DISCARDABLE     "XviD_logo.bmp"
-#endif    // German (Germany) resources
+#endif    // Deutsch (Deutschland) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// English (Australia) resources
+// Englisch (Australien) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENA)
 #ifdef _WIN32
@@ -79,7 +79,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 209
         TOPMARGIN, 7
-        BOTTOMMARGIN, 236
+        BOTTOMMARGIN, 264
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -90,11 +90,11 @@ END
 // Dialog
 //
 
-IDD_ABOUT DIALOG DISCARDABLE  0, 0, 216, 239
+IDD_ABOUT DIALOG DISCARDABLE  0, 0, 216, 267
 STYLE WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         103,IDC_STATIC,"Static",SS_BITMAP,36,7,142,27
+    CONTROL         103,IDC_STATIC,"Static",SS_BITMAP,36,7,142,29
     CTEXT           "XVID MPEG-4 VIDEO CODEC",IDC_STATIC,36,34,142,15,
                     SS_CENTERIMAGE | SS_SUNKEN
     GROUPBOX        "Brightness",IDC_STATIC,7,54,202,39
@@ -123,10 +123,15 @@ BEGIN
     GROUPBOX        "FourCC support",IDC_STATIC,7,187,202,29
     CONTROL         "mp4v",IDC_MP4V,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     160,198,38,13
-    PUSHBUTTON      "Reset",IDC_RESET,79,220,50,12
+    PUSHBUTTON      "Reset",IDC_RESET,79,252,50,12
     LTEXT           "Output Colourspace",IDC_STATIC,136,151,67,9
     CONTROL         "Dering (UV)",IDC_DERINGUV,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,98,123,53,10
+    GROUPBOX        "Aspect Ratio",IDC_STATIC,7,221,202,25
+    LTEXT           "After restarting player, use this AR:",IDC_STATIC,14,
+                    233,109,8
+    COMBOBOX        IDC_USE_AR,135,230,68,95,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
 END
 
 
@@ -140,7 +145,7 @@ BEGIN
     IDS_ABOUT               "About"
 END
 
-#endif    // English (Australia) resources
+#endif    // Englisch (Australien) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

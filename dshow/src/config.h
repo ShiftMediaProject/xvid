@@ -39,6 +39,7 @@ typedef struct
 	int nForceColorspace;
 	unsigned int supported_4cc;
 	int videoinfo_compat;
+	int aspect_ratio;
 } CONFIG;
 
 
