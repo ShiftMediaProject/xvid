@@ -32,6 +32,7 @@
 ; *************************************************************************/
 
 bits 32
+
 %macro cglobal 1 
 	%ifdef PREFIX
 		global _%1 
@@ -58,8 +59,9 @@ cglobal  dev16_xmm
 ;
 ; uint32_t sad16_xmm(const uint8_t * const cur,
 ;					const uint8_t * const ref,
+;					const uint32_t stride,
 ;					const uint32_t best_sad);
-cglobal  sad8_xmm
+;
 ;===========================================================================
 
 %macro SAD_16x16_SSE 0
@@ -110,6 +112,60 @@ sad16_xmm:
 ;
 ; uint32_t sad8_xmm(const uint8_t * const cur,
 ;					const uint8_t * const ref,
+;					const uint32_t stride);
+;
+;===========================================================================
+
+%macro SAD_8x8_SSE 0
+    movq mm0, [eax]
+    movq mm1, [eax+ecx]
+
+    psadbw mm0, [edx]
+    psadbw mm1, [edx+ecx]
+    add eax, ebx
+    add edx, ebx
+
+    paddusw mm5,mm0
+    paddusw mm6,mm1
+%endmacro
+
+align 16
+sad8_xmm:
+
+    mov eax, [esp+ 4] ; Src1
+    mov edx, [esp+ 8] ; Src2
+    mov ecx, [esp+12] ; Stride
+    push ebx
+    lea ebx, [ecx+ecx]
+    
+    pxor mm5, mm5 ; accum1
+    pxor mm6, mm6 ; accum2
+
+    SAD_8x8_SSE
+    SAD_8x8_SSE
+    SAD_8x8_SSE
+
+    movq mm0, [eax]
+    movq mm1, [eax+ecx]
+    psadbw mm0, [edx]
+    psadbw mm1, [edx+ecx]
+
+    pop ebx
+
+    paddusw mm5,mm0
+    paddusw mm6,mm1
+
+    paddusw mm6,mm5
+    movd eax, mm6
+
+    ret
+
+
+;===========================================================================
+;
+; uint32_t sad16bi_xmm(const uint8_t * const cur,
+;					const uint8_t * const ref1,
+;					const uint8_t * const ref2,
 ;					const uint32_t stride);
 ;
 ;===========================================================================
@@ -179,57 +235,58 @@ sad16bi_xmm:
 ; 
 ;=========================================================================== 
 
+%macro SADBI_8x8_XMM 0 
+   movq mm0, [eax] 
+   movq mm1, [eax+ecx] 
+
+   movq mm2, [edx] 
+   movq mm3, [edx+ecx] 
+
+   pavgb mm2, [ebx] 
+   lea edx, [edx+2*ecx] 
+
+   pavgb mm3, [ebx+ecx] 
+   lea ebx, [ebx+2*ecx] 
+
+   psadbw mm0, mm2 
+   lea eax, [eax+2*ecx] 
+
+   psadbw mm1, mm3 
+   paddusw mm5,mm0 
+
+   paddusw mm6,mm1 
+%endmacro 
+
+align 16 
+sad8bi_xmm: 
+   push ebx 
+   mov eax, [esp+4+ 4] ; Src 
+   mov edx, [esp+4+ 8] ; Ref1 
+   mov ebx, [esp+4+12] ; Ref2 
+   mov ecx, [esp+4+16] ; Stride 
+
+   pxor mm5, mm5 ; accum1 
+   pxor mm6, mm6 ; accum2 
+.Loop 
+   SADBI_8x8_XMM 
+   SADBI_8x8_XMM 
+   SADBI_8x8_XMM 
+   SADBI_8x8_XMM 
+
+   paddusw mm6,mm5 
+   movd eax, mm6 
+   pop ebx 
+   ret 
+
+
 ;===========================================================================
 ;
-; uint32_t sad8_xmm(const uint8_t * const cur,
-;					const uint8_t * const ref,
+; uint32_t dev16_xmm(const uint8_t * const cur,
 ;					const uint32_t stride);
 ;
 ;===========================================================================
 
-%macro SAD_8x8_SSE 0
-    movq mm0, [eax]
-    movq mm1, [eax+ecx]
 %macro MEAN_16x16_SSE 0
-    psadbw mm0, [edx]
-    psadbw mm1, [edx+ecx]
-    add eax, ebx
-    add edx, ebx
-
-    paddusw mm5,mm0
-    paddusw mm6,mm1
-%endmacro
-
-align 16
-sad8_xmm:
-
-    mov eax, [esp+ 4] ; Src1
-    mov edx, [esp+ 8] ; Src2
-    mov ecx, [esp+12] ; Stride
-    push ebx
-    lea ebx, [ecx+ecx]
-    
-    pxor mm5, mm5 ; accum1
-    pxor mm6, mm6 ; accum2
-
-    SAD_8x8_SSE
-    SAD_8x8_SSE
-    SAD_8x8_SSE
-
-    movq mm0, [eax]
-    movq mm1, [eax+ecx]
-    psadbw mm0, [edx]
-    psadbw mm1, [edx+ecx]
-
-    pop ebx
-
-    paddusw mm5,mm0
-    paddusw mm6,mm1
-
-    paddusw mm6,mm5
-    movd eax, mm6
-
-    ret
     movq mm0, [eax]
     movq mm1, [eax+8]
     psadbw mm0, mm7

@@ -808,6 +808,50 @@ SOURCE=..\..\src\image\interpolate8x8.c
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\..\src\motion\x86_asm\sad_3dn.asm
+
+!IF  "$(CFG)" == "core - Win32 Release"
+
+# PROP Ignore_Default_Tool 1
+# Begin Custom Build - Assembling $(InputPath)
+IntDir=.\Release
+InputPath=..\..\src\motion\x86_asm\sad_3dn.asm
+InputName=sad_3dn
+
+"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasm -f win32 -DPREFIX -o $(IntDir)\$(InputName).obj $(InputPath)
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "core - Win32 Debug"
+
+# Begin Custom Build - Assembling $(InputPath)
+IntDir=.\Debug
+InputPath=..\..\src\motion\x86_asm\sad_3dn.asm
+InputName=sad_3dn
+
+"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasm -f win32 -DPREFIX -o $(IntDir)\$(InputName).obj $(InputPath)
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "core - Win32 Release _SMP"
+
+# Begin Custom Build - Assembling $(InputPath)
+IntDir=.\Release_SMP
+InputPath=..\..\src\motion\x86_asm\sad_3dn.asm
+InputName=sad_3dn
+
+"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasm -f win32 -DPREFIX -o $(IntDir)\$(InputName).obj $(InputPath)
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\src\motion\x86_asm\sad_mmx.asm
 
 !IF  "$(CFG)" == "core - Win32 Release"
