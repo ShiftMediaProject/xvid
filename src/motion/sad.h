@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: sad.h,v 1.21 2004-04-12 15:49:56 edgomez Exp $
+ * $Id: sad.h,v 1.22 2005-01-05 23:02:15 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -57,6 +57,10 @@ sad16Func sad16_ia64;
 sad16Func sad16_altivec_c;
 #endif
 
+#ifdef ARCH_IS_X86_64
+sad16Func sad16_x86_64;
+#endif
+
 sad16Func mrsad16_c;
 
 typedef uint32_t(sad8Func) (const uint8_t * const cur,
@@ -78,6 +82,10 @@ sad8Func sad8_ia64;
 
 #ifdef ARCH_IS_PPC
 sad8Func sad8_altivec_c;
+#endif
+
+#ifdef ARCH_IS_X86_64
+sad8Func sad8_x86_64;
 #endif
 
 typedef uint32_t(sad16biFunc) (const uint8_t * const cur,
@@ -103,6 +111,10 @@ sad16biFunc sad16bi_ia64;
 sad16biFunc sad16bi_altivec_c;
 #endif
 
+#ifdef ARCH_IS_X86_64
+sad16biFunc sad16bi_x86_64;
+#endif
+
 typedef uint32_t(sad8biFunc) (const uint8_t * const cur,
 							   const uint8_t * const ref1,
 							   const uint8_t * const ref2,
@@ -118,6 +130,9 @@ sad8biFunc sad8bi_3dne;
 sad8biFunc sad8bi_3dn;
 #endif
 
+#ifdef ARCH_IS_X86_64
+sad8biFunc sad8bi_x86_64;
+#endif
 
 typedef uint32_t(dev16Func) (const uint8_t * const cur,
 							 const uint32_t stride);
@@ -151,6 +166,11 @@ dev16Func dev16_ia64;
 dev16Func dev16_altivec_c;
 #endif
 
+#ifdef ARCH_IS_X86_64
+dev16Func dev16_x86_64;
+sad16vFunc sad16v_x86_64;
+#endif
+
 /* This function assumes blocks use 16bit signed elements */
 typedef uint32_t (sse8Func_16bit)(const int16_t * cur,
 								  const int16_t * ref,
@@ -167,6 +187,10 @@ sse8Func_16bit sse8_16bit_mmx;
 sse8Func_16bit sse8_16bit_altivec_c;
 #endif
 
+#ifdef ARCH_IS_X86_64
+sse8Func_16bit sse8_16bit_x86_64;
+#endif
+
 /* This function assumes blocks use 8bit *un*signed elements */
 typedef uint32_t (sse8Func_8bit)(const uint8_t * cur,
 								 const uint8_t * ref,
@@ -175,8 +199,13 @@ typedef sse8Func_8bit *sse8Func_8bitPtr;
 extern sse8Func_8bitPtr sse8_8bit;
 
 sse8Func_8bit sse8_8bit_c;
+
 #ifdef ARCH_IS_IA32
 sse8Func_8bit sse8_8bit_mmx;
+#endif
+
+#ifdef ARCH_IS_X86_64
+sse8Func_8bit sse8_8bit_x86_64;
 #endif
 
 #endif							/* _ENCODER_SAD_H_ */

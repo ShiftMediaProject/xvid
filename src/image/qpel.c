@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: qpel.c,v 1.4 2004-10-17 10:20:15 edgomez Exp $
+ * $Id: qpel.c,v 1.5 2005-01-05 23:02:15 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -340,11 +340,64 @@ XVID_QP_FUNCS xvid_QP_Add_Funcs_Altivec_C = {
 
 #endif /* ARCH_IS_PPC */
 
+/* mmx impl. (for 64bit bus) declaration (see. qpel_mmx.asm
+ ****************************************************************************/
+
+#ifdef ARCH_IS_X86_64
+extern XVID_QP_PASS_SIGNATURE(xvid_H_Pass_16_x86_64);
+extern XVID_QP_PASS_SIGNATURE(xvid_H_Pass_Avrg_16_x86_64);
+extern XVID_QP_PASS_SIGNATURE(xvid_H_Pass_Avrg_Up_16_x86_64);
+extern XVID_QP_PASS_SIGNATURE(xvid_V_Pass_16_x86_64);
+extern XVID_QP_PASS_SIGNATURE(xvid_V_Pass_Avrg_16_x86_64);
+extern XVID_QP_PASS_SIGNATURE(xvid_V_Pass_Avrg_Up_16_x86_64);
+
+extern XVID_QP_PASS_SIGNATURE(xvid_H_Pass_8_x86_64);
+extern XVID_QP_PASS_SIGNATURE(xvid_H_Pass_Avrg_8_x86_64);
+extern XVID_QP_PASS_SIGNATURE(xvid_H_Pass_Avrg_Up_8_x86_64);
+extern XVID_QP_PASS_SIGNATURE(xvid_V_Pass_8_x86_64);
+extern XVID_QP_PASS_SIGNATURE(xvid_V_Pass_Avrg_8_x86_64);
+extern XVID_QP_PASS_SIGNATURE(xvid_V_Pass_Avrg_Up_8_x86_64);
+
+extern XVID_QP_PASS_SIGNATURE(xvid_H_Pass_Add_16_x86_64);
+extern XVID_QP_PASS_SIGNATURE(xvid_H_Pass_Avrg_Add_16_x86_64);
+extern XVID_QP_PASS_SIGNATURE(xvid_H_Pass_Avrg_Up_Add_16_x86_64);
+extern XVID_QP_PASS_SIGNATURE(xvid_V_Pass_Add_16_x86_64);
+extern XVID_QP_PASS_SIGNATURE(xvid_V_Pass_Avrg_Add_16_x86_64);
+extern XVID_QP_PASS_SIGNATURE(xvid_V_Pass_Avrg_Up_Add_16_x86_64);
+
+extern XVID_QP_PASS_SIGNATURE(xvid_H_Pass_8_Add_x86_64);
+extern XVID_QP_PASS_SIGNATURE(xvid_H_Pass_Avrg_8_Add_x86_64);
+extern XVID_QP_PASS_SIGNATURE(xvid_H_Pass_Avrg_Up_8_Add_x86_64);
+extern XVID_QP_PASS_SIGNATURE(xvid_V_Pass_8_Add_x86_64);
+extern XVID_QP_PASS_SIGNATURE(xvid_V_Pass_Avrg_8_Add_x86_64);
+extern XVID_QP_PASS_SIGNATURE(xvid_V_Pass_Avrg_Up_8_Add_x86_64);
+
+XVID_QP_FUNCS xvid_QP_Funcs_x86_64 = {
+	xvid_H_Pass_16_x86_64, xvid_H_Pass_Avrg_16_x86_64, xvid_H_Pass_Avrg_Up_16_x86_64,
+	xvid_V_Pass_16_x86_64, xvid_V_Pass_Avrg_16_x86_64, xvid_V_Pass_Avrg_Up_16_x86_64,
+
+	xvid_H_Pass_8_x86_64, xvid_H_Pass_Avrg_8_x86_64, xvid_H_Pass_Avrg_Up_8_x86_64,
+	xvid_V_Pass_8_x86_64, xvid_V_Pass_Avrg_8_x86_64, xvid_V_Pass_Avrg_Up_8_x86_64
+};
+
+XVID_QP_FUNCS xvid_QP_Add_Funcs_x86_64 = {
+	xvid_H_Pass_Add_16_x86_64, xvid_H_Pass_Avrg_Add_16_x86_64, xvid_H_Pass_Avrg_Up_Add_16_x86_64,
+	xvid_V_Pass_Add_16_x86_64, xvid_V_Pass_Avrg_Add_16_x86_64, xvid_V_Pass_Avrg_Up_Add_16_x86_64,
+
+	xvid_H_Pass_8_Add_x86_64, xvid_H_Pass_Avrg_8_Add_x86_64, xvid_H_Pass_Avrg_Up_8_Add_x86_64,
+	xvid_V_Pass_8_Add_x86_64, xvid_V_Pass_Avrg_8_Add_x86_64, xvid_V_Pass_Avrg_Up_8_Add_x86_64,
+};
+#endif /* ARCH_IS_X86_64 */
+
 /* tables for ASM
  ****************************************************************************/
 
 #ifdef ARCH_IS_IA32
 uint16_t xvid_Expand_mmx[256][4]; /* 8b -> 64b expansion table */
+#endif
+
+#ifdef ARCH_IS_X86_64
+extern uint16_t xvid_Expand_mmx[][]; /* 8b -> 64b expansion table */
 #endif
 
 /* Alternate way of filtering (cf. USE_TABLES flag in qpel_mmx.asm)
@@ -354,7 +407,25 @@ uint16_t xvid_Expand_mmx[256][4]; /* 8b -> 64b expansion table */
  * (for instance: (23,19,-6,3)=(20,20,-6,3)+(3,-1,0,0)
  * Using Symmetries (and bswap) could reduce further
  * the memory to 7 tables (->14K). */
-
+#ifdef ARCH_IS_X86_64
+extern int16_t xvid_FIR_1_0_0_0[][];
+extern int16_t xvid_FIR_3_1_0_0[][];
+extern int16_t xvid_FIR_6_3_1_0[][];
+extern int16_t xvid_FIR_14_3_2_1[][];
+extern int16_t xvid_FIR_20_6_3_1[][];
+extern int16_t xvid_FIR_20_20_6_3[][];
+extern int16_t xvid_FIR_23_19_6_3[][];
+extern int16_t xvid_FIR_7_20_20_6[][];
+extern int16_t xvid_FIR_6_20_20_6[][];
+extern int16_t xvid_FIR_6_20_20_7[][];
+extern int16_t xvid_FIR_3_6_20_20[][];
+extern int16_t xvid_FIR_3_6_19_23[][];
+extern int16_t xvid_FIR_1_3_6_20[][];
+extern int16_t xvid_FIR_1_2_3_14[][];
+extern int16_t xvid_FIR_0_1_3_6[][];
+extern int16_t xvid_FIR_0_0_1_3[][];
+extern int16_t xvid_FIR_0_0_0_1[][];
+#else
 int16_t xvid_FIR_1_0_0_0[256][4];
 int16_t xvid_FIR_3_1_0_0[256][4];
 int16_t xvid_FIR_6_3_1_0[256][4];
@@ -372,6 +443,7 @@ int16_t xvid_FIR_1_2_3_14[256][4];
 int16_t xvid_FIR_0_1_3_6[256][4];
 int16_t xvid_FIR_0_0_1_3[256][4];
 int16_t xvid_FIR_0_0_0_1[256][4];
+#endif
 
 static void Init_FIR_Table(int16_t Tab[][4],
                            int A, int B, int C, int D)

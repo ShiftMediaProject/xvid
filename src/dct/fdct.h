@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: fdct.h,v 1.9 2004-04-05 20:36:36 edgomez Exp $
+ * $Id: fdct.h,v 1.10 2005-01-05 23:02:15 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -43,6 +43,10 @@ fdctFunc fdct_sse2_skal;
 
 #ifdef ARCH_IS_IA64
 fdctFunc fdct_ia64;
+#endif
+
+#ifdef ARCH_IS_X86_64
+fdctFunc fdct_skal_x86_64;
 #endif
 
 #endif							/* _FDCT_H_ */

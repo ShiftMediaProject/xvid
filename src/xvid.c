@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.59 2004-12-19 13:16:50 syskin Exp $
+ * $Id: xvid.c,v 1.60 2005-01-05 23:02:15 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -51,9 +51,9 @@
 unsigned int xvid_debug = 0; /* xvid debug mask */
 #endif
 
-#if defined(ARCH_IS_IA32) && defined(_MSC_VER)
+#if (defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)) && defined(_MSC_VER)
 #	include <windows.h>
-#elif defined(ARCH_IS_IA32) || defined(ARCH_IS_PPC)
+#elif defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64) || defined(ARCH_IS_PPC)
 #	include <signal.h>
 #	include <setjmp.h>
 
@@ -76,7 +76,7 @@ unsigned int xvid_debug = 0; /* xvid debug mask */
  *   0 : SIGILL was *not* signalled
  *   1 : SIGILL was signalled
  */
-#if defined(ARCH_IS_IA32) && defined(_MSC_VER)
+#if (defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)) && defined(_MSC_VER)
 static int
 sigill_check(void (*func)())
 {
@@ -89,7 +89,7 @@ sigill_check(void (*func)())
 	}
 	return(0);
 }
-#elif defined(ARCH_IS_IA32) || defined(ARCH_IS_PPC)
+#elif defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64) || defined(ARCH_IS_PPC)
 static int
 sigill_check(void (*func)())
 {
@@ -131,7 +131,7 @@ detect_cpu_flags()
 	/* enable native assembly optimizations by default */
 	unsigned int cpu_flags = XVID_CPU_ASM;
 
-#if defined(ARCH_IS_IA32)
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 	cpu_flags |= check_cpu_features();
 	if ((cpu_flags & XVID_CPU_SSE) && sigill_check(sse_os_trigger))
 		cpu_flags &= ~XVID_CPU_SSE;
@@ -601,6 +601,74 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 		  xvid_QP_Funcs = &xvid_QP_Funcs_Altivec_C;
 		  xvid_QP_Add_Funcs = &xvid_QP_Add_Funcs_Altivec_C;
         }
+#endif
+
+#if defined(ARCH_IS_X86_64)
+	/* For now, only XVID_CPU_ASM is looked for, so user can still
+	 * disable asm usage the usual way. When Intel EMT64 cpus will
+	 * be out, maybe we'll have to check more precisely what cpu
+	 * features there really are. */
+	if (cpu_flags & XVID_CPU_ASM) {
+		/* SIMD state flusher */
+		emms = emms_3dn;
+
+		/* DCT operators */
+		fdct = fdct_skal_x86_64;
+		idct = idct_x86_64;
+
+		/* SAD operators */
+		sad16      = sad16_x86_64;
+		sad8       = sad8_x86_64;
+		sad16bi    = sad16bi_x86_64;
+		sad8bi     = sad8bi_x86_64;
+		dev16      = dev16_x86_64;
+		sad16v	   = sad16v_x86_64;
+		sse8_16bit = sse8_16bit_x86_64;
+		sse8_8bit  = sse8_8bit_x86_64;
+
+		/* Interpolation operators */
+		interpolate8x8_halfpel_h  = interpolate8x8_halfpel_h_x86_64;
+		interpolate8x8_halfpel_v  = interpolate8x8_halfpel_v_x86_64;
+		interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_x86_64;
+
+		interpolate8x8_halfpel_add = interpolate8x8_halfpel_add_x86_64;
+		interpolate8x8_halfpel_h_add = interpolate8x8_halfpel_h_add_x86_64;
+		interpolate8x8_halfpel_v_add = interpolate8x8_halfpel_v_add_x86_64;
+		interpolate8x8_halfpel_hv_add = interpolate8x8_halfpel_hv_add_x86_64;
+
+		interpolate8x8_6tap_lowpass_h = interpolate8x8_6tap_lowpass_h_x86_64;
+		interpolate8x8_6tap_lowpass_v = interpolate8x8_6tap_lowpass_v_x86_64;
+
+		interpolate8x8_avg2 = interpolate8x8_avg2_x86_64;
+		interpolate8x8_avg4 = interpolate8x8_avg4_x86_64;
+
+		/* Quantization related functions */
+		quant_h263_intra   = quant_h263_intra_x86_64;
+		quant_h263_inter   = quant_h263_inter_x86_64;
+		dequant_h263_intra = dequant_h263_intra_x86_64;
+		dequant_h263_inter = dequant_h263_inter_x86_64;
+		quant_mpeg_intra   = quant_mpeg_intra_x86_64;
+		quant_mpeg_inter   = quant_mpeg_inter_x86_64;
+		dequant_mpeg_intra   = dequant_mpeg_intra_x86_64;
+		dequant_mpeg_inter   = dequant_mpeg_inter_x86_64;
+
+		/* Block related functions */
+		transfer_8to16copy  = transfer_8to16copy_x86_64;
+		transfer_16to8copy  = transfer_16to8copy_x86_64;
+		transfer_8to16sub   = transfer_8to16sub_x86_64;
+		transfer_8to16subro = transfer_8to16subro_x86_64;
+		transfer_8to16sub2  = transfer_8to16sub2_x86_64;
+		transfer_8to16sub2ro= transfer_8to16sub2ro_x86_64;
+		transfer_16to8add   = transfer_16to8add_x86_64;
+		transfer8x8_copy    = transfer8x8_copy_x86_64;
+
+		/* Qpel stuff */
+		xvid_QP_Funcs = &xvid_QP_Funcs_x86_64;
+		xvid_QP_Add_Funcs = &xvid_QP_Add_Funcs_x86_64;
+
+		/* Interlacing Functions */
+		MBFieldTest = MBFieldTest_x86_64;
+	}
 #endif
 
 #if defined(_DEBUG)

@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.14 2004-04-12 15:49:56 edgomez Exp $
+ * $Id: xvid_bench.c,v 1.15 2005-01-05 23:02:15 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -121,6 +121,9 @@ CPU cpu_list[] =
 #endif
 #ifdef ARCH_IS_PPC
   , { "ALTIVEC", XVID_CPU_ALTIVEC }
+#endif
+#ifdef ARCH_IS_X86_64
+  , { "X86_64", XVID_CPU_ASM}
 #endif
 //, { "IA64  ", XVID_CPU_IA64 }  
 //, { "TSC   ", XVID_CPU_TSC }
