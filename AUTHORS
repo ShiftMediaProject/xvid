@@ -16,25 +16,29 @@ Michael Militzer <isibaar@xvid.org>
 Peter Ross <pross@xvid.org>
 
 
+Former 1.x maintainers:
+-----------------------
+
+Edouard Gomez <ed.gomez@free.fr> (lot of "lot of things")
+Radoslaw Czyz <xvid@syskin.cjb.net> (lot of ME work)
+
+
 Regular contributors:
 ---------------------
-
-Edouard Gomez <ed.gomez@free.fr>
-Pascal Massimino <skal@planet-d.net>
-Radoslaw Czyz <xvid@syskin.cjb.net>
+Pascal Massimino <skal@planet-d.net> (quite a lot of x86 assembly)
 
 
 Spontaneous contributors:
 -------------------------
 
-Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Daniel Smith <danielsmith@astroboymail.com>
-Dirk Knop <dknop@stud.uni-goettingen.de>
-Guillaume Morin <guillaume@morinfr.org>
-MinChen <chenm001@163.com>
+Benjamin Herrenschmidt <benh@kernel.crashing.org> (first ppc port attempt)
+Daniel Smith <danielsmith@astroboymail.com> (rc code)
+Dirk Knop <dknop@stud.uni-goettingen.de> (vfw)
+Guillaume Morin <guillaume@morinfr.org> (first ppc port attempt)
+MinChen <chenm001@163.com> (lot of work on early CVS versions)
 
 Architecture ports:
 -------------------
 Christoph Nägeli <chn@kbw.ch> (new PPC port)
 
-Last edited: $Date: 2004-10-12 21:08:41 $
+Last edited: $Date: 2005-04-04 23:49:37 $

@@ -8,7 +8,7 @@
 # Requires GNU Make because of shell expansion performed at a bad time with
 # other make programs (even using := variable assignments)
 #
-# $Id: Makefile,v 1.4 2004-07-25 11:13:16 suxen_drol Exp $
+# $Id: Makefile,v 1.5 2005-04-04 23:49:37 edgomez Exp $
 ##############################################################################
 
 include sources.inc
@@ -115,7 +115,6 @@ $(LIBSO): $(BUILD_DIR) $(OBJECTS)
 			-L$(DXTREE)/Lib -lstrmiids \
 			$(DXBASECLASSES)/strmbase.lib \
 			-luuid -lwinmm -lole32 -loleaut32 -lcomctl32 -lstdc++
-			
 
 clean:
 	@echo "  Cl: Object files and target lib"

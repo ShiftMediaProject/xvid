@@ -4,6 +4,117 @@
 # relevant.
 
 
+#########################################################################
+# 1.1.0-beta2 (Bitstream Version 39)
+#########################################################################
+	
+2005-04-03 20:15:00 GMT	                                	patch-7
+
+    Summary:
+      Makefile credits and whitespace cleaning
+    Revision:
+      xvidcore--head--0.0--patch-7
+
+    Makefile credits and whitespace cleaning
+    
+
+    modified files:
+     dshow/Makefile vfw/bin/Makefile
+
+
+2005-04-03 19:52:35 GMT	                                	patch-6
+
+    Summary:
+      Various small things to vbv conformance and divx5 compatibility.
+    Revision:
+      xvidcore--head--0.0--patch-6
+
+    From pete:
+    xvidcore
+    ========
+    * added XVID_GLOBAL_DIVX5_USERDATA global flag
+    * removed the bvop delay warning text ("warning: nothing to output),
+      as this often confuses joe user.
+    * minor changed to closed gop image_printf statement:
+      s/"DX50 BVOP->PVOP"/"CLOSED GOP BVOP->PVOP"
+    * additional comments for low_delay_default mode within decoder_decode()
+    * divx userdata string: s/DivX999b000/DivX503b1393. this has been
+      suggested by dxn for improved hardware compatibility [nb: i dont
+      have a hardware player to confirm this]
+    * vbv_peakrate constraint is ignored if <= 0
+    
+    vfw frontend
+    ============
+    * dxn profiles now confirm to "DivX Certified Profile Compatibility v1.1",
+      February 2005. this document was provided by DivXNetworks, USA. when a
+      dxn profile is selected, strict conformance is enabled:
+      - force 1:1 picture aspect ratio
+      - disable bframes if interlacing is enabled
+      - force maximum of 1 consecutive bvops for the portable and ht profiles,
+        2 bvops for the hd profile
+      - always write divx 5 userdata string to bitstream
+      - force packed bitstream option
+    - updated dxn vbv parameters
+    * added PROFILE_4MV flag. 4mv is now disabled for the dxn handheld profile.
+    * moved PROFILE_AS/PROFILE_ARTS/PROFILE_S to config.c
+    * profile[].max_bitrate now measured in bit/sec (not kbps)
+    * profile->level box: widgets are now greyed-out if they are not used.
+    * increase vertical size of profile drop down list.
+    * about box button: s/Dismiss/OK
+
+    modified files:
+     src/bitstream/bitstream.c src/decoder.c src/encoder.c
+     src/plugins/plugin_2pass2.c src/xvid.h vfw/src/codec.c
+     vfw/src/config.c vfw/src/config.h vfw/src/resource.h
+     vfw/src/resource.rc
+
+
+2005-04-03 19:50:05 GMT	                                	patch-5
+
+    Summary:
+      Fixed bug in cartoon mode.
+    Revision:
+      xvidcore--head--0.0--patch-5
+
+    From Isiibar:
+     - Fixed cartoon bug as described by CrunCher.
+
+    modified files:
+     src/motion/estimation_pvop.c
+
+
+2005-03-22 20:40:47 GMT	                                	patch-4
+
+    Summary:
+      Added MPEG quant support for PPC
+    Revision:
+      xvidcore--head--0.0--patch-4
+
+    From Christoph Nageli:
+     * Added support for MPEG quant functions for PPC.
+
+    new files:
+     src/quant/ppc_asm/.arch-ids/quant_mpeg_altivec.c.id
+     src/quant/ppc_asm/quant_mpeg_altivec.c
+
+    modified files:
+     build/generic/sources.inc src/quant/quant.h src/xvid.c
+
+
+2005-03-18 18:00:13 GMT	                                	patch-3
+
+    Summary:
+      Updated ChangeLog
+    Revision:
+      xvidcore--head--0.0--patch-3
+
+    Updated ChangeLog
+    
+
+    modified files:
+     ChangeLog
+
+
 2005-03-18 17:53:24 GMT	                                	patch-2
 
     Summary:
