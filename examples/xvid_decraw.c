@@ -20,7 +20,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.12 2004-04-12 14:05:08 edgomez Exp $
+ * $Id: xvid_decraw.c,v 1.13 2004-04-13 21:20:45 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -79,8 +79,6 @@ static void *dec_handle = NULL;
  ****************************************************************************/
 
 static double msecond();
-static int write_pgm(char *filename,
-					 unsigned char *image);
 static int dec_init(int use_assembler, int debug_level);
 static int dec_main(unsigned char *istream,
 					unsigned char *ostream,
@@ -88,6 +86,9 @@ static int dec_main(unsigned char *istream,
 					xvid_dec_stats_t *xvid_dec_stats);
 static int dec_stop();
 static void usage();
+static int write_image(char *prefix, unsigned char *image);
+static int write_tga(char *filename, unsigned char *image);
+static int write_pnm(char *filename, unsigned char *image);
 
 
 const char * type2str(int type)
@@ -183,6 +184,12 @@ int main(int argc, char *argv[])
 			exit(-1);
 		}
 	}
+
+#if defined(_MSC_VER)
+	if (ARG_INPUTFILE==NULL) {
+		fprintf(stderr, "Warning: MSVC build does not read correctly from stdin. Use the -i switch.\n\n");
+	}
+#endif
   
 /*****************************************************************************
  * Values checking
@@ -343,7 +350,7 @@ int main(int argc, char *argv[])
 			sprintf(filename, "%sdec%05d", filepath, filenr);
 			if(write_image(filename, out_buffer)) {
 				fprintf(stderr,
-						"Error writing decoded PGM frame %s\n",
+						"Error writing decoded frame %s\n",
 						filename);
 			}
 		}
@@ -384,7 +391,7 @@ int main(int argc, char *argv[])
 			sprintf(filename, "%sdec%05d", filepath, filenr);
 			if(write_image(filename, out_buffer)) {
 				fprintf(stderr,
-						"Error writing decoded PGM frame %s\n",
+						"Error writing decoded frame %s\n",
 						filename);
 			}
 		}
@@ -397,11 +404,15 @@ int main(int argc, char *argv[])
  *     Calculate totals and averages for output, print results
  ****************************************************************************/
 
-	totalsize    /= filenr;
-	totaldectime /= filenr;
+	if (filenr>0) {
+ 		totalsize    /= filenr;
+		totaldectime /= filenr;
+		printf("Avg: dectime(ms) =%7.2f, fps =%7.2f, length(bytes) =%7d\n",
+			   totaldectime, 1000/totaldectime, (int)totalsize);
+	}else{
+		printf("Nothing was decoded!\n");
+	}
 	
-	printf("Avg: dectime(ms) =%7.2f, fps =%7.2f, length(bytes) =%7d\n",
-		   totaldectime, 1000/totaldectime, (int)totalsize);
 		
 /*****************************************************************************
  *      XviD PART  Stop
@@ -465,7 +476,7 @@ msecond()
  *              output functions
  ****************************************************************************/
 
-int write_image(char *prefix, unsigned char *image)
+static int write_image(char *prefix, unsigned char *image)
 {
 	char filename[1024];
 	char *ext;
@@ -493,7 +504,7 @@ int write_image(char *prefix, unsigned char *image)
 	return(ret);
 }
 
-int write_tga(char *filename, unsigned char *image)
+static int write_tga(char *filename, unsigned char *image)
 {
 	FILE * f;
 	char hdr[18];
