@@ -5,6 +5,8 @@
 
 #include "../utils/mbfunctions.h"
 
+#include <stdlib.h> /* malloc, free */
+
 #define ESCAPE 7167
 #define ABS(X) (((X)>0)?(X):-(X))
 #define CLIP(X,A) (X > A) ? (A) : (X)
