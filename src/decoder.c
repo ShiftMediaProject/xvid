@@ -55,7 +55,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@xvid.org>
  *
- *  $Id: decoder.c,v 1.40 2002-09-24 21:56:27 edgomez Exp $
+ *  $Id: decoder.c,v 1.41 2002-09-25 23:37:08 h Exp $
  *
  *************************************************************************/
 
@@ -585,7 +585,7 @@ decoder_pframe(DECODER * dec,
 
 	start_timer();
 	image_setedges(&dec->refn[0], dec->edged_width, dec->edged_height,
-				   dec->width, dec->height, dec->interlacing);
+				   dec->width, dec->height);
 	stop_edges_timer();
 
 	bound = 0;
@@ -1143,9 +1143,9 @@ decoder_bframe(DECODER * dec,
 
 	start_timer();
 	image_setedges(&dec->refn[0], dec->edged_width, dec->edged_height,
-				   dec->width, dec->height, dec->interlacing);
+				   dec->width, dec->height);
 	image_setedges(&dec->refn[1], dec->edged_width, dec->edged_height,
-				   dec->width, dec->height, dec->interlacing);
+				   dec->width, dec->height);
 	stop_edges_timer();
 
 #ifdef BFRAMES_DEC_DEBUG

@@ -28,7 +28,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.h,v 1.21 2002-09-04 21:42:56 edgomez Exp $
+ * $Id: encoder.h,v 1.22 2002-09-25 23:37:09 h Exp $
  *
  ****************************************************************************/
 
@@ -160,9 +160,7 @@ typedef struct
 #endif
 	IMAGE vInterH;
 	IMAGE vInterV;
-	IMAGE vInterVf;
 	IMAGE vInterHV;
-	IMAGE vInterHVf;
 
 	Statistics sStat;
 	RateControl rate_control;
