@@ -23,7 +23,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: portab.h,v 1.43 2003-02-15 15:22:17 edgomez Exp $
+ * $Id: portab.h,v 1.44 2003-02-16 01:41:24 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -35,18 +35,22 @@
  ****************************************************************************/
 
 /* Debug level masks */
-#define DPRINTF_ERROR		0x00000001
-#define DPRINTF_STARTCODE	0x00000002
-#define DPRINTF_HEADER		0x00000004
-#define DPRINTF_TIMECODE	0x00000008
-#define DPRINTF_MB			0x00000010
-#define DPRINTF_COEFF		0x00000020
-#define DPRINTF_MV			0x00000040
-#define DPRINTF_RC			0x00000080
-#define DPRINTF_DEBUG		0x80000000
+#define DPRINTF_ERROR       0x00000001
+#define DPRINTF_STARTCODE   0x00000002
+#define DPRINTF_HEADER      0x00000004
+#define DPRINTF_TIMECODE    0x00000008
+#define DPRINTF_MB          0x00000010
+#define DPRINTF_COEFF       0x00000020
+#define DPRINTF_MV          0x00000040
+#define DPRINTF_RC          0x00000080
+#define DPRINTF_DEBUG       0x80000000
 
 /* debug level for this library */
-#define DPRINTF_LEVEL		0
+#ifdef _DEBUG
+#define DPRINTF_LEVEL       0x000000ff
+#else
+#define DPRINTF_LEVEL       0
+#endif
 
 /* Buffer size for msvc implementation because it outputs to DebugOutput */
 #define DPRINTF_BUF_SZ  1024
@@ -108,8 +112,12 @@
  | Common msvc stuff
  *---------------------------------------------------------------------------*/
 
-#include <windows.h>
-#include <stdio.h>
+#    include <windows.h>
+#    include <stdio.h>
+
+     /* Non ANSI mapping */
+#    define snprintf _snprintf
+#    define vsnprintf _vsnprintf
 
     /*
      * This function must be declared/defined all the time because MSVC does
@@ -151,7 +159,6 @@
  *---------------------------------------------------------------------------*/
 #    if defined(ARCH_IS_IA32)
 #        define BSWAP(a) __asm mov eax,a __asm bswap eax __asm mov a, eax
-#        define EMMS() __asm {emms}
 
 #        ifdef _PROFILING_
              static __inline int64_t read_counter(void)
@@ -175,7 +182,6 @@
 #        define BSWAP(a) \
                 ((a) = (((a) & 0xff) << 24)  | (((a) & 0xff00) << 8) | \
                        (((a) >> 8) & 0xff00) | (((a) >> 24) & 0xff))
-#        define EMMS()
 
 #        ifdef _PROFILING_
 #            include <time.h>
@@ -240,7 +246,6 @@
  *---------------------------------------------------------------------------*/
 #    if defined(ARCH_IS_IA32)
 #        define BSWAP(a) __asm__ ( "bswapl %0\n" : "=r" (a) : "0" (a) );
-#        define EMMS() __asm__ ("emms\n\t");
 
 #        ifdef _PROFILING_
              static __inline int64_t read_counter(void)
@@ -259,7 +264,6 @@
 #    elif defined(ARCH_IS_PPC)
 #        define BSWAP(a) __asm__ __volatile__ \
                 ( "lwbrx %0,0,%1; eieio" : "=r" (a) : "r" (&(a)), "m" (a));
-#        define EMMS()
 
 #        ifdef _PROFILING_
              static __inline unsigned long get_tbl(void)
@@ -294,7 +298,6 @@
 #        define BSWAP(a)  __asm__ __volatile__ \
                 ("mux1 %1 = %0, @rev" ";;" \
                  "shr.u %1 = %1, 32" : "=r" (a) : "r" (a));
-#        define EMMS()
 
 #        ifdef _PROFILING_
              static __inline int64_t read_counter(void)
@@ -312,7 +315,6 @@
 #        define BSWAP(a) \
                 ((a) = (((a) & 0xff) << 24)  | (((a) & 0xff00) << 8) | \
                        (((a) >> 8) & 0xff00) | (((a) >> 24) & 0xff))
-#        define EMMS()
 
 #        ifdef _PROFILING_
 #            include <time.h>
@@ -330,9 +332,13 @@
 #        error You are trying to compile XviD without defining the architecture type.
 #    endif
 
+
+
+
 /*****************************************************************************
- *  OPEN WATCOM C/C++ compiler
+ *  Open WATCOM C/C++ compiler
  ****************************************************************************/
+
 #elif defined(__WATCOMC__)
 
 #    include <stdio.h>
@@ -358,12 +364,12 @@
                 type * name = (type *) (((int32_t) name##_storage+(alignment - 1)) & ~((int32_t)(alignment)-1))
 
 /*----------------------------------------------------------------------------
- | watcom x86 specific macros/functions
+ | watcom ia32 specific macros/functions
  *---------------------------------------------------------------------------*/
 #    if defined(ARCH_IS_IA32)
 
 #        define BSWAP(a)  __asm mov eax,a __asm bswap eax __asm mov a, eax
-#        define EMMS() __asm {emms}
+
 #        ifdef _PROFILING_
          static __inline int64_t read_counter(void)
          {
@@ -380,21 +386,28 @@
 #        endif
 
 /*----------------------------------------------------------------------------
- | watcom unsupported architecture
+ | watcom GENERIC (plain C only) specific macros/functions.
  *---------------------------------------------------------------------------*/
-#	else
+#	elif defined(ARCH_IS_GENERIC)
 
 #		define BSWAP(x) \
 			x = ((((x) & 0xff000000) >> 24) | \
 				(((x) & 0x00ff0000) >>  8) | \
 				(((x) & 0x0000ff00) <<  8) | \
 				(((x) & 0x000000ff) << 24))
-#        define EMMS()
+
 #        ifdef _PROFILING_
          static int64_t read_counter() { return 0; }
 #        endif
 
-#	endif
+/*----------------------------------------------------------------------------
+ | watcom Not given architecture - This is probably an user who tries to build
+ | XviD the wrong way.
+ *---------------------------------------------------------------------------*/
+#    else
+#        error You are trying to compile XviD without defining the architecture type.
+#    endif
+
 
 /*****************************************************************************
  *  Unknown compiler
@@ -432,8 +445,6 @@
             ((a) = (((a) & 0xff) << 24)  | (((a) & 0xff00) << 8) | \
                    (((a) >> 8) & 0xff00) | (((a) >> 24) & 0xff))
 
-#    define EMMS()
-
 #    ifdef _PROFILING_
 #       include <time.h>
         static __inline int64_t read_counter(void)
@@ -448,4 +459,4 @@
 #endif /* Compiler test */
 
 
-#endif
+#endif /* PORTAB_H */
