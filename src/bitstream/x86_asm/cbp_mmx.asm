@@ -32,6 +32,8 @@
 ; *
 ; *	History:
 ; *
+; *     22.03.2002      0.01          ; Min Chen <chenm001@163.com>
+; *                                   ; use 386 cpu's 'BTS' to replace 'cbp |= 1 << (edx-1)'
 ; *	24.11.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
 ; *
 ; *************************************************************************/
@@ -114,11 +116,14 @@ calc_cbp_mmx
 
 				; cbp |= 1 << (edx-1)
 				
-				mov		ecx, edx
-				dec		ecx
-				mov		ebx, 1
-				shl		ebx, cl
-				or		eax, ebx
+                                ; Change by Chenm001 <chenm001@163.com>
+                                ;mov             ecx, edx
+                                ;dec             ecx
+                                ;mov             ebx, 1
+                                ;shl             ebx, cl
+                                ;or              eax, ebx
+                                lea             ebx,[edx-1]
+                                bts             eax,ebx
 
 .iterate		dec	edx
 				jnz		.loop
