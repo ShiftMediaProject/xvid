@@ -42,11 +42,10 @@ sadInitFuncPtr sadInit;
 
 #define ABS(X) (((X)>0)?(X):-(X))
 
+#define MRSAD16_CORRFACTOR 8
 uint32_t
-sad8FuncPtr sad8;
+mrsad16_c(const uint8_t * const cur,
 		  const uint8_t * const ref,
-
-sad16biFuncPtr sad8bi;		// not really sad16, but no difference in prototype
 		  const uint32_t stride,
 		  const uint32_t best_sad)
 {

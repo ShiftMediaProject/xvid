@@ -37,7 +37,7 @@
  *  - 22.12.2001  API change: added xvid_init() - Isibaar
  *  - 16.12.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: xvid.c,v 1.32 2002-07-21 23:34:08 chl Exp $
+ *  $Id: xvid.c,v 1.33 2002-07-23 12:59:57 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -245,10 +245,11 @@ xvid_init(void *handle,
 	/* Functions used in motion estimation algorithms */
 	calc_cbp = calc_cbp_c;
 	sad16    = sad16_c;
-	sad16bi  = sad16bi_c;
 	sad8     = sad8_c;
-	dev16    = dev16_c;
+	sad16bi  = sad16bi_c;
 	sad8bi   = sad8bi_c;
+	dev16    = dev16_c;
+	
 	Halfpel8_Refine = Halfpel8_Refine_c;
 
 #ifdef ARCH_X86
@@ -303,9 +304,20 @@ xvid_init(void *handle,
 		calc_cbp = calc_cbp_mmx;
 		sad16    = sad16_mmx;
 		sad8     = sad8_mmx;
+		sad16bi = sad16bi_mmx;
+		sad8bi  = sad8bi_mmx;
 		dev16    = dev16_mmx;
 
 	}
+
+	/* these 3dnow functions are faster than mmx, but slower than xmm. */
+	if ((cpu_flags & XVID_CPU_3DNOW) > 0) {
+
+		/* ME functions */
+		sad16bi = sad16bi_3dn;
+		sad8bi  = sad8bi_3dn;
+	}
+
 
 	if ((cpu_flags & XVID_CPU_MMXEXT) > 0) {
 
@@ -329,8 +341,9 @@ xvid_init(void *handle,
 
 		/* ME functions */
 		sad16 = sad16_xmm;
-		sad16bi = sad16bi_xmm;
 		sad8  = sad8_xmm;
+		sad16bi = sad16bi_xmm;
+		sad8bi  = sad8bi_xmm;
 		dev16 = dev16_xmm;
 
 	}
