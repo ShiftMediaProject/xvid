@@ -2,6 +2,7 @@
  *
  *  Modifications:
  *
+ *  29.03.2002 removed MBFieldToFrame - no longer used (transfers instead)
  *  26.03.2002 interlacing support
  *  02.12.2001 motion estimation/compensation split
  *  16.11.2001 const/uint32_t changes to MBMotionEstComp()
@@ -81,8 +82,6 @@ uint32_t MBDecideFieldDCT(int16_t data[6*64]); /* <- decide whether to use field
 						  for interlacing */
 
 void MBFrameToField(int16_t data[6*64]);       /* de-interlace vertical Y blocks */
-
-void MBFieldToFrame(int16_t data[6*64]);       /* re-interlace vertical Y blocks */
 
 
 /** MBCoding.c **/
