@@ -36,7 +36,7 @@
  *  - 22.12.2001  API change: added xvid_init() - Isibaar
  *  - 16.12.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: xvid.c,v 1.21 2002-06-23 03:58:32 suxen_drol Exp $
+ *  $Id: xvid.c,v 1.22 2002-06-23 19:48:06 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -197,8 +197,10 @@ xvid_init(void *handle,
 		transfer_8to16copy = transfer_8to16copy_mmx;
 		transfer_16to8copy = transfer_16to8copy_mmx;
 		transfer_8to16sub  = transfer_8to16sub_mmx;
+		transfer_8to16sub2 = transfer_8to16sub2_mmx;
 		transfer_16to8add  = transfer_16to8add_mmx;
 		transfer8x8_copy   = transfer8x8_copy_mmx;
+
 
 		/* Image Interpolation related functions */
 		interpolate8x8_halfpel_h  = interpolate8x8_halfpel_h_mmx;

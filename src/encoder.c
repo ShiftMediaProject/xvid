@@ -37,7 +37,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.46 2002-06-23 03:58:32 suxen_drol Exp $
+ *  $Id: encoder.c,v 1.47 2002-06-23 19:48:06 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -51,7 +51,6 @@
 #include "global.h"
 #include "utils/timer.h"
 #include "image/image.h"
-#include "image/font.h"
 #include "motion/motion.h"
 #include "bitstream/cbp.h"
 #include "utils/mbfunctions.h"
