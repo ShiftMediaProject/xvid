@@ -95,10 +95,17 @@ SECTION .text
 cglobal interpolate8x8_halfpel_h_mmx
 cglobal interpolate8x8_halfpel_v_mmx
 cglobal interpolate8x8_halfpel_hv_mmx
+
 cglobal interpolate8x8_avg4_mmx
 cglobal interpolate8x8_avg2_mmx
+
 cglobal interpolate8x8_6tap_lowpass_h_mmx
 cglobal interpolate8x8_6tap_lowpass_v_mmx
+
+cglobal interpolate8x8_halfpel_add_mmx
+cglobal interpolate8x8_halfpel_h_add_mmx
+cglobal interpolate8x8_halfpel_v_add_mmx
+cglobal interpolate8x8_halfpel_hv_add_mmx
 
 %macro  CALC_AVG 6
   punpcklbw %3, %6
@@ -908,3 +915,317 @@ interpolate8x8_6tap_lowpass_v_mmx:
 
   pop ebx
   ret
+
+;===========================================================================
+;
+; The next functions combine both source halfpel interpolation step and the
+; averaging (with rouding) step to avoid wasting memory bandwidth computing
+; intermediate halfpel images and then averaging them.
+;
+;===========================================================================
+
+%macro PROLOG0 0
+  mov ecx, [esp+ 4] ; Dst
+  mov eax, [esp+ 8] ; Src
+  mov edx, [esp+12] ; BpS
+%endmacro
+
+%macro PROLOG 2   ; %1: Rounder, %2 load Dst-Rounder
+  pxor mm6, mm6
+  movq mm7, [%1]    ; TODO: dangerous! (eax isn't checked)
+%if %2
+  movq mm5, [rounding1_mmx]
+%endif
+
+  PROLOG0
+%endmacro
+
+  ; performs: mm0 == (mm0+mm2)  mm1 == (mm1+mm3)
+%macro MIX 0
+  punpcklbw mm0, mm6
+  punpcklbw mm2, mm6
+  punpckhbw mm1, mm6
+  punpckhbw mm3, mm6
+  paddusw mm0, mm2
+  paddusw mm1, mm3
+%endmacro
+
+%macro MIX_DST 0
+  movq mm3, mm2
+  paddusw mm0, mm7  ; rounder
+  paddusw mm1, mm7  ; rounder
+  punpcklbw mm2, mm6
+  punpckhbw mm3, mm6
+  psrlw mm0, 1
+  psrlw mm1, 1
+
+  paddusw mm0, mm2  ; mix Src(mm0/mm1) with Dst(mm2/mm3)
+  paddusw mm1, mm3
+  paddusw mm0, mm5
+  paddusw mm1, mm5
+  psrlw mm0, 1
+  psrlw mm1, 1
+
+  packuswb mm0, mm1
+%endmacro
+
+%macro MIX2 0
+  punpcklbw mm0, mm6
+  punpcklbw mm2, mm6
+  paddusw mm0, mm2
+  paddusw mm0, mm7
+  punpckhbw mm1, mm6
+  punpckhbw mm3, mm6
+  paddusw mm1, mm7
+  paddusw mm1, mm3
+  psrlw mm0, 1
+  psrlw mm1, 1
+
+  packuswb mm0, mm1
+%endmacro
+
+;===========================================================================
+;
+; void interpolate8x8_halfpel_add_mmx(uint8_t * const dst,
+;                       const uint8_t * const src,
+;                       const uint32_t stride,
+;                       const uint32_t rounding);
+;
+;
+;===========================================================================
+
+%macro ADD_FF_MMX 1
+  movq mm0, [eax]
+  movq mm2, [ecx]
+  movq mm1, mm0
+  movq mm3, mm2
+%if (%1!=0)
+  lea eax,[eax+%1*edx]
+%endif
+  MIX
+  paddusw mm0, mm5  ; rounder
+  paddusw mm1, mm5  ; rounder
+  psrlw mm0, 1
+  psrlw mm1, 1
+
+  packuswb mm0, mm1
+  movq [ecx], mm0
+%if (%1!=0)
+  lea ecx,[ecx+%1*edx]
+%endif
+%endmacro
+
+ALIGN 16
+interpolate8x8_halfpel_add_mmx:
+  PROLOG rounding1_mmx, 1
+  ADD_FF_MMX 1
+  ADD_FF_MMX 1
+  ADD_FF_MMX 1
+  ADD_FF_MMX 1
+  ADD_FF_MMX 1
+  ADD_FF_MMX 1
+  ADD_FF_MMX 1
+  ADD_FF_MMX 0
+  ret
+
+;===========================================================================
+;
+; void interpolate8x8_halfpel_h_add_mmx(uint8_t * const dst,
+;                       const uint8_t * const src,
+;                       const uint32_t stride,
+;                       const uint32_t rounding);
+;
+;
+;===========================================================================
+
+%macro ADD_FH_MMX 0
+  movq mm0, [eax]
+  movq mm2, [eax+1]
+  movq mm1, mm0
+  movq mm3, mm2
+
+  lea eax,[eax+edx]
+
+  MIX
+  movq mm2, [ecx]   ; prepare mix with Dst[0]
+  MIX_DST
+  movq [ecx], mm0
+%endmacro
+
+ALIGN 16
+interpolate8x8_halfpel_h_add_mmx:
+  PROLOG rounding1_mmx, 1
+
+  ADD_FH_MMX
+  lea ecx,[ecx+edx]
+  ADD_FH_MMX
+  lea ecx,[ecx+edx]
+  ADD_FH_MMX
+  lea ecx,[ecx+edx]
+  ADD_FH_MMX
+  lea ecx,[ecx+edx]
+  ADD_FH_MMX
+  lea ecx,[ecx+edx]
+  ADD_FH_MMX
+  lea ecx,[ecx+edx]
+  ADD_FH_MMX
+  lea ecx,[ecx+edx]
+  ADD_FH_MMX
+  ret
+
+;===========================================================================
+;
+; void interpolate8x8_halfpel_v_add_mmx(uint8_t * const dst,
+;                       const uint8_t * const src,
+;                       const uint32_t stride,
+;                       const uint32_t rounding);
+;
+;
+;===========================================================================
+
+%macro ADD_HF_MMX 0
+  movq mm0, [eax]
+  movq mm2, [eax+edx]
+  movq mm1, mm0
+  movq mm3, mm2
+
+  lea eax,[eax+edx]
+
+  MIX
+  movq mm2, [ecx]   ; prepare mix with Dst[0]
+  MIX_DST
+  movq [ecx], mm0
+
+%endmacro
+
+ALIGN 16
+interpolate8x8_halfpel_v_add_mmx:
+  PROLOG rounding1_mmx, 1
+
+  ADD_HF_MMX
+  lea ecx,[ecx+edx]
+  ADD_HF_MMX
+  lea ecx,[ecx+edx]
+  ADD_HF_MMX
+  lea ecx,[ecx+edx]
+  ADD_HF_MMX
+  lea ecx,[ecx+edx]
+  ADD_HF_MMX
+  lea ecx,[ecx+edx]
+  ADD_HF_MMX
+  lea ecx,[ecx+edx]
+  ADD_HF_MMX
+  lea ecx,[ecx+edx]
+  ADD_HF_MMX
+  ret
+
+; The trick is to correct the result of 'pavgb' with some combination of the
+; lsb's of the 4 input values i,j,k,l, and their intermediate 'pavgb' (s and t).
+; The boolean relations are:
+;   (i+j+k+l+3)/4 = (s+t+1)/2 - (ij&kl)&st
+;   (i+j+k+l+2)/4 = (s+t+1)/2 - (ij|kl)&st
+;   (i+j+k+l+1)/4 = (s+t+1)/2 - (ij&kl)|st
+;   (i+j+k+l+0)/4 = (s+t+1)/2 - (ij|kl)|st
+; with  s=(i+j+1)/2, t=(k+l+1)/2, ij = i^j, kl = k^l, st = s^t.
+
+; Moreover, we process 2 lines at a times, for better overlapping (~15% faster).
+
+;===========================================================================
+;
+; void interpolate8x8_halfpel_hv_add_mmx(uint8_t * const dst,
+;                       const uint8_t * const src,
+;                       const uint32_t stride,
+;                       const uint32_t rounding);
+;
+;
+;===========================================================================
+
+%macro ADD_HH_MMX 0
+  lea eax,[eax+edx]
+
+    ; transfert prev line to mm0/mm1
+  movq mm0, mm2
+  movq mm1, mm3
+
+    ; load new line in mm2/mm3
+  movq mm2, [eax]
+  movq mm4, [eax+1]
+  movq mm3, mm2
+  movq mm5, mm4
+
+  punpcklbw mm2, mm6
+  punpcklbw mm4, mm6
+  paddusw mm2, mm4
+  punpckhbw mm3, mm6
+  punpckhbw mm5, mm6
+  paddusw mm3, mm5
+
+    ; mix current line (mm2/mm3) with previous (mm0,mm1); 
+    ; we'll preserve mm2/mm3 for next line...
+
+  paddusw mm0, mm2  
+  paddusw mm1, mm3  
+
+  movq mm4, [ecx]   ; prepare mix with Dst[0]
+  movq mm5, mm4
+
+  paddusw mm0, mm7  ; finish mixing current line
+  paddusw mm1, mm7
+
+  punpcklbw mm4, mm6
+  punpckhbw mm5, mm6
+
+  psrlw mm0, 2
+  psrlw mm1, 2
+
+  paddusw mm0, mm4  ; mix Src(mm0/mm1) with Dst(mm2/mm3)
+  paddusw mm1, mm5
+
+  paddusw mm0, [rounding1_mmx]
+  paddusw mm1, [rounding1_mmx]
+
+  psrlw mm0, 1
+  psrlw mm1, 1
+
+  packuswb mm0, mm1
+
+  movq [ecx], mm0
+%endmacro
+
+ALIGN 16
+interpolate8x8_halfpel_hv_add_mmx:
+  PROLOG rounding2_mmx, 0    ; mm5 is busy. Don't load dst-rounder
+
+    ; preprocess first line
+  movq mm0, [eax]
+  movq mm2, [eax+1]
+  movq mm1, mm0
+  movq mm3, mm2
+
+  punpcklbw mm0, mm6
+  punpcklbw mm2, mm6
+  punpckhbw mm1, mm6
+  punpckhbw mm3, mm6
+  paddusw mm2, mm0
+  paddusw mm3, mm1
+
+   ; Input: mm2/mm3 contains the value (Src[0]+Src[1]) of previous line
+
+  ADD_HH_MMX
+  lea ecx,[ecx+edx]
+  ADD_HH_MMX
+  lea ecx,[ecx+edx]
+  ADD_HH_MMX
+  lea ecx,[ecx+edx]
+  ADD_HH_MMX
+  lea ecx,[ecx+edx]
+  ADD_HH_MMX
+  lea ecx,[ecx+edx]
+  ADD_HH_MMX
+  lea ecx,[ecx+edx]
+  ADD_HH_MMX
+  lea ecx,[ecx+edx]
+  ADD_HH_MMX
+
+  ret
+

@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.54 2004-07-15 10:08:21 suxen_drol Exp $
+ * $Id: xvid.c,v 1.55 2004-08-10 21:58:55 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -222,6 +222,11 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 	interpolate8x8_halfpel_v  = interpolate8x8_halfpel_v_c;
 	interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_c;
 
+	interpolate8x8_halfpel_add = interpolate8x8_halfpel_add_c;
+	interpolate8x8_halfpel_h_add = interpolate8x8_halfpel_h_add_c;
+	interpolate8x8_halfpel_v_add = interpolate8x8_halfpel_v_add_c;
+	interpolate8x8_halfpel_hv_add = interpolate8x8_halfpel_hv_add_c;
+
 	interpolate16x16_lowpass_h = interpolate16x16_lowpass_h_c;
 	interpolate16x16_lowpass_v = interpolate16x16_lowpass_v_c;
 	interpolate16x16_lowpass_hv = interpolate16x16_lowpass_hv_c;
@@ -357,6 +362,11 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 		interpolate8x8_halfpel_v  = interpolate8x8_halfpel_v_mmx;
 		interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_mmx;
 
+		interpolate8x8_halfpel_add = interpolate8x8_halfpel_add_mmx;
+		interpolate8x8_halfpel_h_add = interpolate8x8_halfpel_h_add_mmx;
+		interpolate8x8_halfpel_v_add = interpolate8x8_halfpel_v_add_mmx;
+		interpolate8x8_halfpel_hv_add = interpolate8x8_halfpel_hv_add_mmx;
+
 		interpolate8x8_6tap_lowpass_h = interpolate8x8_6tap_lowpass_h_mmx;
 		interpolate8x8_6tap_lowpass_v = interpolate8x8_6tap_lowpass_v_mmx;
 
@@ -425,6 +435,11 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 		interpolate8x8_halfpel_h  = interpolate8x8_halfpel_h_xmm;
 		interpolate8x8_halfpel_v  = interpolate8x8_halfpel_v_xmm;
 		interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_xmm;
+		
+		interpolate8x8_halfpel_add = interpolate8x8_halfpel_add_xmm;
+		interpolate8x8_halfpel_h_add = interpolate8x8_halfpel_h_add_xmm;
+		interpolate8x8_halfpel_v_add = interpolate8x8_halfpel_v_add_xmm;
+		interpolate8x8_halfpel_hv_add = interpolate8x8_halfpel_hv_add_xmm;
 
 		/* reduced resolution */
 		copy_upsampled_8x8_16to8 = xvid_Copy_Upsampled_8x8_16To8_xmm;
