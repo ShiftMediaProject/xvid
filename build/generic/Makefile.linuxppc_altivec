@@ -14,7 +14,7 @@ include Makefile.inc
 
 CC = gcc
 
-CFLAGS = -DLINUX -DARCH_PPC -DARCH_IS_BIG_ENDIAN
+CFLAGS = -DLINUX -DARCH_PPC -DARCH_IS_BIG_ENDIAN -DARCH_PPC_ALTIVEC
 LIBDIR = /usr/local/lib
 
 CFLAGS += -Wall -O3 -funroll-loops -ffast-math  
@@ -29,11 +29,17 @@ RM = rm -rf
 
 all: $(LIB) $(LIBSO)
 
-$(LIB): $(SRC:.c=.o) $(SRC_PPC:.s=.o)
+$(LIB): $(SRC:.c=.o) $(SRC_ALTIVEC:.s=.o)
+	@echo 
+	@echo WARNING: Because of memory alignment problems, Altivec does not work yet
+	@echo -
 	ar rcs $@ $^
 
 
-$(LIBSO): $(SRC:.c=.o) $(SRC_PPC:.s=.o)
+$(LIBSO): $(SRC:.c=.o) $(SRC_ALTIVEC:.s=.o)
+	@echo
+	@echo WARNING: Because of memory alignment problems, Altivec does not work yet
+	@echo
 	$(CC) $(CFLAGS) $^ -shared -lc -lm -o $@
 
 clean:	

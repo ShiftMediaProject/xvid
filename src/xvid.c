@@ -191,7 +191,11 @@ int xvid_init(void *handle, int opt, void *param1, void *param2)
 
 #endif
 #ifdef ARCH_PPC
+#ifdef ARCH_PPC_ALTIVEC
+	calc_cbp = calc_cbp_altivec;
+#else
 	calc_cbp = calc_cbp_ppc;
+#endif
 #endif
 	
 	// API version
