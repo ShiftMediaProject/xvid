@@ -333,17 +333,21 @@ int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding, uin
 				{
 					if (BitstreamGetBit(bs))		// load_intra_quant_mat
 					{
-						uint8_t *matrix;
+						uint8_t matrix[64];
 						bs_get_matrix(bs, matrix);
 						set_intra_matrix(matrix);
 					}
+					else
+						set_intra_matrix(get_default_intra_matrix());
 
 					if (BitstreamGetBit(bs))		// load_inter_quant_mat
 					{
-						uint8_t *matrix; 
+						uint8_t matrix[64]; 
 						bs_get_matrix(bs, matrix);
 						set_inter_matrix(matrix);
 					}
+					else
+						set_inter_matrix(get_default_inter_matrix());
 
 					if (dec->shape == VIDOBJLAY_SHAPE_GRAYSCALE)
 					{
