@@ -1,6 +1,30 @@
-diff -rubN /c/DX90SDK-orig/Include/strmif.h ./Include/strmif.h
+diff -burN /c/DX90SDK-orig/Include/DShow.h ./Include/DShow.h
+--- /c/DX90SDK-orig/Include/DShow.h	Mon Aug 18 21:22:52 2003
++++ ./Include/DShow.h	Tue Jul 27 20:43:16 2004
+@@ -44,7 +44,7 @@
+ // Include DirectShow include files
+ ///////////////////////////////////////////////////////////////////////////
+ #include <strmif.h>     // Generated IDL header file for streams interfaces
+-#include <amvideo.h>    // ActiveMovie video interfaces and definitions
++#include <Amvideo.h>    // ActiveMovie video interfaces and definitions
+ #include <amaudio.h>    // ActiveMovie audio interfaces and definitions
+ #include <control.h>    // generated from control.odl
+ #include <evcode.h>     // event code definitions
+diff -burN /c/DX90SDK-orig/Include/errors.h ./Include/errors.h
+--- /c/DX90SDK-orig/Include/errors.h	Mon Aug 18 21:22:52 2003
++++ ./Include/errors.h	Tue Jul 27 20:44:04 2004
+@@ -24,7 +24,7 @@
+ #define VFW_FIRST_CODE   0x200
+ #define MAX_ERROR_TEXT_LEN 160
+ 
+-#include <VFWMSGS.H>                    // includes all message definitions
++#include <vfwmsgs.h>                    // includes all message definitions
+ 
+ typedef BOOL (WINAPI* AMGETERRORTEXTPROCA)(HRESULT, char *, DWORD);
+ typedef BOOL (WINAPI* AMGETERRORTEXTPROCW)(HRESULT, WCHAR *, DWORD);
+diff -burN /c/DX90SDK-orig/Include/strmif.h ./Include/strmif.h
 --- /c/DX90SDK-orig/Include/strmif.h	Mon Aug 18 21:22:54 2003
-+++ ./Include/strmif.h	Wed Jul 21 21:45:28 2004
++++ ./Include/strmif.h	Tue Jul 27 20:45:07 2004
 @@ -5604,7 +5604,7 @@
      {
      DWORD dwVersion;
@@ -16,21 +40,22 @@ diff -rubN /c/DX90SDK-orig/Include/strmif.h ./Include/strmif.h
      {
 -    GUID *pGUID;
 -    GUID GUID;
-+    ::GUID *pGUID;
-+    ::GUID GUID;
++    struct _GUID *pGUID;
++    struct _GUID GUID;
      } 	VMRGUID;
  
  typedef struct tagVMRMONITORINFO
-diff -rubN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/Makefile ./Samples/C++/DirectShow/BaseClasses/Makefile
+diff -burN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/Makefile ./Samples/C++/DirectShow/BaseClasses/Makefile
 --- /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/Makefile	Thu Jan  1 10:00:00 1970
-+++ ./Samples/C++/DirectShow/BaseClasses/Makefile	Wed Jul 21 21:19:30 2004
-@@ -0,0 +1,25 @@
++++ ./Samples/C++/DirectShow/BaseClasses/Makefile	Tue Jul 27 20:47:27 2004
+@@ -0,0 +1,27 @@
 +SRC=amextra.cpp amfilter.cpp amvideo.cpp combase.cpp cprop.cpp ctlutil.cpp ddmm.cpp dllentry.cpp dllsetup.cpp mtype.cpp outputq.cpp pstream.cpp pullpin.cpp refclock.cpp renbase.cpp schedule.cpp seekpt.cpp source.cpp strmctl.cpp sysclock.cpp transfrm.cpp transip.cpp videoctl.cpp vtrans.cpp winctrl.cpp winutil.cpp wxdebug.cpp wxlist.cpp wxutil.cpp
 +
 +DXTREE=../../../..
 +DXBASECLASSES=$(DXTREE)/Samples/C++/DirectShow/BaseClasses
 +OBJ=$(SRC:.cpp=.o)
 +LIB=strmbase.lib
++RANLIB=ranlib
 +
 +CXX=g++
 +CXXFLAGS=-O2 -fno-for-scope -mthreads
@@ -39,6 +64,7 @@ diff -rubN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/Makefile ./Samples
 +
 +$(LIB): $(OBJ)
 +	$(AR) $(ARFLAGS) $@ $^
++	$(RANLIB) $@
 +
 +.cpp.o:
 +	$(CXX) $(CXXFLAGS) \
@@ -50,9 +76,9 @@ diff -rubN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/Makefile ./Samples
 +
 +clean:
 +	rm $(OBJ)
-diff -rubN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/amfilter.cpp ./Samples/C++/DirectShow/BaseClasses/amfilter.cpp
+diff -burN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/amfilter.cpp ./Samples/C++/DirectShow/BaseClasses/amfilter.cpp
 --- /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/amfilter.cpp	Mon Aug 18 16:03:32 2003
-+++ ./Samples/C++/DirectShow/BaseClasses/amfilter.cpp	Sun Jul 25 13:06:01 2004
++++ ./Samples/C++/DirectShow/BaseClasses/amfilter.cpp	Tue Jul 27 20:42:25 2004
 @@ -1363,7 +1363,7 @@
  
          /*  Make sure the destructor doesn't free these */
@@ -62,9 +88,9 @@ diff -rubN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/amfilter.cpp ./Sam
          cmt.pUnk     = NULL;
  
  
-diff -rubN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/ctlutil.cpp ./Samples/C++/DirectShow/BaseClasses/ctlutil.cpp
+diff -burN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/ctlutil.cpp ./Samples/C++/DirectShow/BaseClasses/ctlutil.cpp
 --- /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/ctlutil.cpp	Mon Aug 18 16:03:32 2003
-+++ ./Samples/C++/DirectShow/BaseClasses/ctlutil.cpp	Sun Jul 25 13:03:03 2004
++++ ./Samples/C++/DirectShow/BaseClasses/ctlutil.cpp	Tue Jul 27 20:42:25 2004
 @@ -709,7 +709,7 @@
  
  HRESULT
@@ -74,9 +100,9 @@ diff -rubN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/ctlutil.cpp ./Samp
  , LONGLONG * pll
  )
  {
-diff -rubN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/ctlutil.h ./Samples/C++/DirectShow/BaseClasses/ctlutil.h
+diff -burN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/ctlutil.h ./Samples/C++/DirectShow/BaseClasses/ctlutil.h
 --- /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/ctlutil.h	Mon Aug 18 16:03:32 2003
-+++ ./Samples/C++/DirectShow/BaseClasses/ctlutil.h	Sun Jul 25 13:02:59 2004
++++ ./Samples/C++/DirectShow/BaseClasses/ctlutil.h	Tue Jul 27 20:42:25 2004
 @@ -275,7 +275,7 @@
      //  Prevent bugs from constructing from LONG (which gets
      //  converted to double and then multiplied by 10000000
@@ -100,23 +126,23 @@ diff -rubN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/ctlutil.h ./Sample
                                  LONGLONG * pll );
  };
  
-diff -rubN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/ddmm.cpp ./Samples/C++/DirectShow/BaseClasses/ddmm.cpp
+diff -burN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/ddmm.cpp ./Samples/C++/DirectShow/BaseClasses/ddmm.cpp
 --- /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/ddmm.cpp	Mon Aug 18 16:03:32 2003
-+++ ./Samples/C++/DirectShow/BaseClasses/ddmm.cpp	Wed Jul 21 21:19:30 2004
++++ ./Samples/C++/DirectShow/BaseClasses/ddmm.cpp	Tue Jul 27 20:45:21 2004
 @@ -17,8 +17,8 @@
   */
  typedef struct {
  	LPSTR   szDevice;
 -	GUID*   lpGUID;
 -	GUID    GUID;
-+	::GUID*   lpGUID;
-+	::GUID    GUID;
++	struct _GUID*   lpGUID;
++	struct _GUID    GUID;
  	BOOL    fFound;
  }   FindDeviceData;
  
-diff -rubN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/mtype.cpp ./Samples/C++/DirectShow/BaseClasses/mtype.cpp
+diff -burN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/mtype.cpp ./Samples/C++/DirectShow/BaseClasses/mtype.cpp
 --- /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/mtype.cpp	Mon Aug 18 16:03:32 2003
-+++ ./Samples/C++/DirectShow/BaseClasses/mtype.cpp	Wed Jul 21 21:19:30 2004
++++ ./Samples/C++/DirectShow/BaseClasses/mtype.cpp	Tue Jul 27 20:42:25 2004
 @@ -13,7 +13,6 @@
  // in the streams IDL file, but also has (non-virtual) functions
  
@@ -125,9 +151,9 @@ diff -rubN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/mtype.cpp ./Sample
  
  CMediaType::~CMediaType(){
      FreeMediaType(*this);
-diff -rubN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/refclock.h ./Samples/C++/DirectShow/BaseClasses/refclock.h
+diff -burN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/refclock.h ./Samples/C++/DirectShow/BaseClasses/refclock.h
 --- /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/refclock.h	Mon Aug 18 16:03:32 2003
-+++ ./Samples/C++/DirectShow/BaseClasses/refclock.h	Sun Jul 25 12:36:21 2004
++++ ./Samples/C++/DirectShow/BaseClasses/refclock.h	Tue Jul 27 20:42:25 2004
 @@ -14,7 +14,11 @@
  
  const UINT RESOLUTION = 1;                      /* High resolution timer */
@@ -140,9 +166,21 @@ diff -rubN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/refclock.h ./Sampl
  
  inline LONGLONG WINAPI ConvertToMilliseconds(const REFERENCE_TIME& RT)
  {
-diff -rubN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/wxdebug.cpp ./Samples/C++/DirectShow/BaseClasses/wxdebug.cpp
+diff -ur /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/streams.h.orig ./Samples/C++/DirectShow/BaseClasses/streams.h
+--- /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/streams.h      2004-07-27 23:04:18.000000000 +0200
++++ ./Samples/C++/DirectShow/BaseClasses/streams.h   2004-07-27 23:03:57.000000000 +0200
+@@ -135,7 +135,7 @@
+
+ #include <reftime.h>    // Helper class for REFERENCE_TIME management
+ #include <wxdebug.h>    // Debug support for logging and ASSERTs
+-#include <amvideo.h>    // ActiveMovie video interfaces and definitions
++#include <Amvideo.h>    // ActiveMovie video interfaces and definitions
+ //include amaudio.h explicitly if you need it.  it requires the DirectX SDK.
+ //#include <amaudio.h>    // ActiveMovie audio interfaces and definitions
+ #include <wxutil.h>     // General helper classes for threads etc
+diff -burN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/wxdebug.cpp ./Samples/C++/DirectShow/BaseClasses/wxdebug.cpp
 --- /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/wxdebug.cpp	Mon Aug 18 16:03:32 2003
-+++ ./Samples/C++/DirectShow/BaseClasses/wxdebug.cpp	Wed Jul 21 21:19:30 2004
++++ ./Samples/C++/DirectShow/BaseClasses/wxdebug.cpp	Tue Jul 27 20:42:25 2004
 @@ -564,7 +564,7 @@
      {
          // re-read the registry every second. We cannot use RegNotify() to
@@ -187,9 +225,9 @@ diff -rubN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/wxdebug.cpp ./Samp
          pp->Release();
          return;
      }
-diff -rubN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/wxutil.cpp ./Samples/C++/DirectShow/BaseClasses/wxutil.cpp
+diff -burN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/wxutil.cpp ./Samples/C++/DirectShow/BaseClasses/wxutil.cpp
 --- /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/wxutil.cpp	Mon Aug 18 16:03:32 2003
-+++ ./Samples/C++/DirectShow/BaseClasses/wxutil.cpp	Sun Jul 25 12:56:29 2004
++++ ./Samples/C++/DirectShow/BaseClasses/wxutil.cpp	Tue Jul 27 20:42:25 2004
 @@ -742,8 +742,13 @@
  
      /*  This will catch c == 0 and overflow */
@@ -218,9 +256,9 @@ diff -rubN /c/DX90SDK-orig/Samples/C++/DirectShow/BaseClasses/wxutil.cpp ./Sampl
      }
  
      /*  Do the division */
-diff -rubN /c/DX90SDK-orig/mingw_dshow_port.h ./mingw_dshow_port.h
+diff -burN /c/DX90SDK-orig/mingw_dshow_port.h ./mingw_dshow_port.h
 --- /c/DX90SDK-orig/mingw_dshow_port.h	Thu Jan  1 10:00:00 1970
-+++ ./mingw_dshow_port.h	Wed Jul 21 21:19:30 2004
++++ ./mingw_dshow_port.h	Tue Jul 27 20:42:25 2004
 @@ -0,0 +1,12 @@
 +#include <wtypes.h>
 +#include <unknwn.h>
