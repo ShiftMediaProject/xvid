@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_stat.c,v 1.18 2002-12-18 21:48:46 edgomez Exp $
+ * $Id: xvid_stat.c,v 1.19 2003-02-09 19:32:52 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -66,7 +66,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#ifndef _MSC_VER
+#ifndef WIN32
 #include <sys/time.h>
 #else
 #include <time.h>
@@ -637,7 +637,7 @@ int main(int argc, char *argv[])
 /* Return time elapsed time in miliseconds since the program started */
 static double msecond()
 {	
-#ifndef _MSC_VER
+#ifndef WIN32
 	struct timeval  tv;
 	gettimeofday(&tv, 0);
 	return tv.tv_sec*1.0e3 + tv.tv_usec * 1.0e-3;

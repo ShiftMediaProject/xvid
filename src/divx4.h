@@ -6,11 +6,6 @@ extern "C"
 {
 #endif
 
-#if ((! defined(ARCH_IS_BIG_ENDIAN)) && (! defined (WIN32)) && (! defined (LINUX)) && (! defined (BEOS)))
-#define ARCH_IS_BIG_ENDIAN
-#endif
-
-
 /*********************************************************************************
  * Decoder part                                                                  *
  *********************************************************************************/

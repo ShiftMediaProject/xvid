@@ -1,0 +1,405 @@
+dnl ==========================================================================
+dnl
+dnl Autoconf script for XviD
+dnl
+dnl Copyright(C) 2003 Edouard Gomez <ed.gomez@free.fr>
+dnl
+dnl ==========================================================================
+
+AC_INIT([XviD], [0.9.1 (wip)], [xvid-devel@xvid.org])
+AC_CONFIG_SRCDIR(configure.in)
+
+dnl NASM version requirement
+minimum_nasm_patch_version=34
+nasm_prog="nasm"
+
+dnl Default CFLAGS -- Big impact on overall speed
+our_cflags_defaults="-Wall"
+our_cflags_defaults="$our_cflags_defaults -O2"
+our_cflags_defaults="$our_cflags_defaults -fPIC"
+our_cflags_defaults="$our_cflags_defaults -fomit-frame-pointer"
+our_cflags_defaults="$our_cflags_defaults -ffast-math"
+our_cflags_defaults="$our_cflags_defaults -funroll-loops"
+our_cflags_defaults="$our_cflags_defaults -fschedule-insns"
+our_cflags_defaults="$our_cflags_defaults -fschedule-insns2"
+
+dnl ==========================================================================
+dnl Features - configure options
+dnl ==========================================================================
+
+FEATURES=""
+DIVX4COMPAT_SOURCES=""
+
+dnl BIGLUT aka old VLC code
+AC_ARG_ENABLE(oldvlc,
+		AC_HELP_STRING([--enable-oldvlc],
+				 [Enable old VLC code (Needs much more memory ~10MB)]),
+		[if test "$enable_oldvlc" = "yes" ; then
+		    FEATURES="$FEATURES -DBIGLUT"
+		 fi])
+
+dnl Internal Debug
+AC_ARG_ENABLE(idebug,
+		AC_HELP_STRING([--enable-idebug],
+				 [Enable internal debug function]),
+		 [if test "$enable_idebug" = "yes" ; then
+		     FEATURES="$FEATURES -D_DEBUG"
+		  fi])
+
+dnl Internal Profile
+AC_ARG_ENABLE(iprofile,
+		AC_HELP_STRING([--enable-iprofile],
+				 [Enable internal profiling]),
+		 [if test "$enable_iprofile" = "yes" ; then
+		     FEATURES="$FEATURES -D_PROFILING_"
+		  fi])
+
+dnl Assembly code
+AC_ARG_ENABLE(assembly,
+		AC_HELP_STRING([--disable-assembly],
+				 [Disable assembly code]),
+		 [if test "$enable_assembly" = "no" ; then
+		     assembly="no"
+		  else
+		     if test "$enable_assembly" = "yes" ; then
+			assembly="yes"
+		     fi
+		  fi],
+		 [assembly="yes"])
+
+dnl Internal Debug
+AC_ARG_ENABLE(divx4compat,
+		AC_HELP_STRING([--enable-divx4compat],
+				 [Enable DivX4 compatibility API]),
+		 [if test "$enable_divx4compat" = "yes" ; then
+		     DIVX4COMPAT_SOURCES="SRC_DIVX4COMPAT"
+		  fi])
+
+
+dnl ==========================================================================
+dnl Default install prefix and checks build type
+dnl ==========================================================================
+
+AC_PREFIX_DEFAULT("/usr/local")
+AC_CANONICAL_BUILD
+AC_CANONICAL_HOST
+AC_CANONICAL_TARGET
+
+dnl ==========================================================================
+dnl Check for the C compiler (could be passed on command line)
+dnl ==========================================================================
+
+dnl
+dnl First we test if CFLAGS have been passed on command line
+dnl I do that because autoconf defaults (-g -O2) suck and they would kill
+dnl performance. To prevent that we define a good defult CFLAGS at the end
+dnl of the script if and only if CFLAGS has not been passed on the command
+dnl line
+dnl
+AC_MSG_CHECKING(whether to use default CFLAGS)
+if test  x"$CFLAGS" = x"" ; then
+   force_default_cc_options="yes"
+   CFLAGS="$our_cflags_defaults"
+   AC_MSG_RESULT([yes])
+else
+   force_default_cc_options="no"
+   AC_MSG_RESULT([no])
+fi
+
+dnl Now we can safely check for the C compiler
+AC_PROG_CC
+
+dnl ==========================================================================
+dnl Check for the install program
+dnl ==========================================================================
+
+AC_PROG_INSTALL
+
+dnl ==========================================================================
+dnl
+dnl This part looks for:
+dnl
+dnl ARCHITECTURE : The platform architecture
+dnl                - IA32 for mmx, mmx-ext, mmx2, sse assembly
+dnl                - IA64
+dnl                - PPC for PowerPC assembly routines
+dnl                - GENERIC for plain C sources only
+dnl
+dnl BUS: Address bus size (in bits)
+dnl      - 32
+dnl      - 64
+dnl
+dnl ENDIANNESS: I think you can guess what this thing means :-)
+dnl             - LITTLE_ENDIAN
+dnl             - BIG_ENDIAN
+dnl
+dnl ==========================================================================
+
+dnl
+dnl Looking what sources have to be compiled according to the CPU type
+dnl
+
+ARCHITECTURE=""
+
+AC_MSG_CHECKING([for whether to use assembly code])
+if test x"$assembly" = x"yes" ; then
+   AC_MSG_RESULT([yes])
+   AC_MSG_CHECKING([for architecture type])
+   case "$target_cpu" in
+	  i[[3456]]86)
+	  AC_MSG_RESULT(ia32)
+	  	ARCHITECTURE="IA32"
+		;;	
+		powerpc)
+		AC_MSG_RESULT(PowerPC)
+		ARCHITECTURE="PPC"
+		;;
+		ia64)
+		AC_MSG_RESULT(ia64)
+		ARCHITECTURE="IA64"
+		;;
+		*)
+		AC_MSG_RESULT($target_cpu)
+		ARCHITECTURE="GENERIC"
+		;;
+   esac
+else
+   AC_MSG_RESULT([no])
+   ARCHITECTURE="GENERIC"
+fi
+
+dnl
+dnl Testing address bus length
+dnl
+BUS=""
+
+AC_CHECK_SIZEOF([int *])
+case "$ac_cv_sizeof_int_p" in
+     4)
+	BUS="32BIT"
+	;;
+     8)
+	BUS="64BIT"
+	;;
+     *)
+	AC_MSG_ERROR([XviD supports only 32/64 bit architectures])
+	;;
+esac
+
+dnl
+dnl Testing endianness
+dnl
+ENDIANNESS=""
+
+AC_C_BIGENDIAN(ENDIANNESS="BIG_ENDIAN", ENDIANNESS="LITTLE_ENDIAN")
+
+dnl ==========================================================================
+dnl
+dnl Check for OS specific variables
+dnl    - SHARED_EXTENSION, STATIC_EXTENSION, OBJECT_EXTENSION
+dnl
+dnl ==========================================================================
+
+AC_MSG_CHECKING(for build extensions)
+SHARED_EXTENSION=""
+STATIC_EXTENSION=""
+OBJECT_EXTENSION=""
+case "$target_os" in
+     *bsd*|linux*|beos|irix*|solaris*)
+	AC_MSG_RESULT([.so .a .o])
+	STATIC_EXTENSION="a"
+	SHARED_EXTENSION="so"
+	OBJECT_EXTENSION="o"
+	;;
+     [[cC]][[yY]][[gG]][[wW]][[iI]][[nN]]|mingw32|mks)
+	AC_MSG_RESULT([.dll .lib .obj])
+	STATIC_EXTENSION="lib"
+	SHARED_EXTENSION="dll"
+	OBJECT_EXTENSION="obj"
+	;;
+     darwin*|raphsody*)
+	AC_MSG_RESULT([.dynlib .a .o])
+	STATIC_EXTENSION="a"
+	SHARED_EXTENSION="dylib"
+	OBJECT_EXTENSION="o"
+	;;
+     *)
+        AC_MSG_RESULT([Unknown OS - Using .so .a .o])
+	STATIC_EXTENSION="a"
+	SHARED_EXTENSION="so"
+	OBJECT_EXTENSION="o"
+	;;
+esac
+
+AC_MSG_CHECKING(for platform specific LDFLAGS/CFLAGS)
+OS_LDFLAGS=""
+case "$target_os" in
+     *bsd*|linux*|irix*|solaris*)
+	AC_MSG_RESULT([-shared -lc -lm])
+	OS_LDFLAGS="-shared -lc -lm"
+	;;
+     [[cC]][[yY]][[gG]][[wW]][[iI]][[nN]]|mingw32|mks)
+	AC_MSG_RESULT([-shared -Wl,--dll,--out-implib,\$@.a])
+	OS_LDFLAGS="-shared -Wl,--dll,--out-implib,\$@.a libxvidcore.def"
+	CFLAGS="$CFLAGS -mno-cygwin"
+	;;
+     darwin*|raphsody*)
+	AC_MSG_RESULT([-dynamiclib])
+	OS_LDFLAGS="-dynamiclib"
+	CFLAGS="$CFLAGS -fno-common"
+	;;
+     beos)
+	AC_MSG_RESULT([-nostart])
+	OS_LDFLAGS="-nostart"
+	;;
+     *)
+        AC_MSG_RESULT([Unknown OS - -shared -lc -lm])
+	OS_LDFLAGS=""
+	;;
+esac
+
+dnl ==========================================================================
+dnl
+dnl Assembler stuff - AS, AFLAGS, ASSEMBLY_EXTENSION, SOURCES
+dnl
+dnl ==========================================================================
+
+AS=""
+AFLAGS=""
+ASSEMBLY_EXTENSION=""
+GENERIC_SOURCES="SRC_GENERIC"
+ASSEMBLY_SOURCES=""
+
+dnl
+dnl IA32
+dnl
+
+if test "$ARCHITECTURE" = "IA32" ; then
+
+   dnl
+   dnl Checking nasm existence
+   dnl
+   AC_CHECK_PROG([ac_nasm], [$nasm_prog], [yes], [no], , [yes])
+   if test "$ac_nasm" = "yes" ; then
+
+      dnl
+      dnl Checking nasm patch version
+      dnl
+      AC_MSG_CHECKING([for nasm patch version])
+      nasm_patch=`nasm -r | cut -d '.' -f 3 | cut -d ' ' -f 1`
+      AC_MSG_RESULT([$nasm_patch])
+
+      if test "$nasm_patch" -lt "$minimum_nasm_patch_version" ; then
+        AC_MSG_WARN([nasm patch version too old - Compiling generic sources only])
+	ARCHITECTURE="GENERIC"
+      else
+
+         dnl
+         dnl Checking nasm format - win32 or elf
+         dnl
+         AC_MSG_CHECKING([for nasm object format])
+         case "$target_os" in
+              *bsd*|linux*|beos|irix*|solaris*)
+                  AC_MSG_RESULT([elf])
+                  NASM_FORMAT="elf"
+		  PREFIX=""
+                  ;;
+              [[cC]][[yY]][[gG]][[wW]][[iI]][[nN]]|mingw32|mks)
+                  AC_MSG_RESULT([win32])
+                  NASM_FORMAT="win32"
+		  PREFIX="-DPREFIX"
+                  ;;
+          esac
+
+          AS=nasm
+          AFLAGS="-I\$(<D) -f $NASM_FORMAT $PREFIX"
+          ASSEMBLY_EXTENSION="asm"
+          ASSEMBLY_SOURCES="SRC_IA32"
+       fi
+
+   else
+	AC_MSG_WARN([nasm not found - Compiling generic sources only])
+	ARCHITECTURE="GENERIC"
+   fi
+
+fi
+
+dnl
+dnl PPC
+dnl
+
+if test "$ARCHITECTURE" = "PPC" ; then
+   AS="\$(CC)"
+   AFLAGS="-c"
+   ASSEMBLY_EXTENSION="s"
+   ASSEMBLY_SOURCES="SRC_PPC"
+   AC_MSG_CHECKING([for Altivec support])
+   cat > conftest.S << EOF
+         .text
+         vxor 0,0,0
+EOF
+   if $CC -c conftest.S 2>/dev/null 1>/dev/null ; then
+        AC_MSG_RESULT(yes)
+        CFLAGS="$CFLAGS -DARCH_IS_PPC_ALTIVEC"
+        ASSEMBLY_SOURCES="SRC_ALTIVEC"
+   else
+        AC_MSG_RESULT(no)
+   fi
+   rm -f conftest.*
+fi
+
+dnl
+dnl IA64
+dnl
+
+if test "$ARCHITECTURE" = "IA64" ; then
+   AS="\$(CC)"
+   AFLAGS="-c"
+   ASSEMBLY_EXTENSION="s"
+   ASSEMBLY_SOURCES="SRC_IA64"
+fi
+
+dnl ==========================================================================
+dnl
+dnl Check for header files
+dnl
+dnl ==========================================================================
+
+AC_CHECK_HEADERS(
+	stdio.h \
+	signal.h \
+	, , AC_MSG_ERROR(Missing header file))
+
+dnl ==========================================================================
+dnl
+dnl Substitions
+dnl
+dnl ==========================================================================
+
+AC_SUBST(FEATURES)
+AC_SUBST(ARCHITECTURE)
+AC_SUBST(BUS)
+AC_SUBST(ENDIANNESS)
+AC_SUBST(SHARED_EXTENSION)
+AC_SUBST(STATIC_EXTENSION)
+AC_SUBST(OBJECT_EXTENSION)
+AC_SUBST(NASM_FORMAT)
+AC_SUBST(AS)
+AC_SUBST(AFLAGS)
+AC_SUBST(ASSEMBLY_EXTENSION)
+AC_SUBST(GENERIC_SOURCES)
+AC_SUBST(ASSEMBLY_SOURCES)
+AC_SUBST(CC)
+AC_SUBST(CFLAGS)
+AC_SUBST(OS_LDFLAGS)
+AC_SUBST(DIVX4COMPAT_SOURCES)
+
+dnl ==========================================================================
+dnl
+dnl Output files
+dnl
+dnl ==========================================================================
+
+AC_CONFIG_FILES(platform.inc)
+
+AC_OUTPUT

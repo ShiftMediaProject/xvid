@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.7 2002-12-26 14:36:06 edgomez Exp $
+ * $Id: xvid_encraw.c,v 1.8 2003-02-09 19:32:52 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -536,7 +536,7 @@ int main(int argc, char *argv[])
 /* Return time elapsed time in miliseconds since the program started */
 static double msecond()
 {	
-#ifndef _MSC_VER
+#ifndef WIN32
 	struct timeval  tv;
 	gettimeofday(&tv, 0);
 	return tv.tv_sec*1.0e3 + tv.tv_usec * 1.0e-3;

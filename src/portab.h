@@ -52,7 +52,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: portab.h,v 1.40 2002-12-28 13:53:08 edgomez Exp $
+ * $Id: portab.h,v 1.41 2003-02-09 19:32:52 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -84,19 +84,10 @@
  ****************************************************************************/
 
 /*----------------------------------------------------------------------------
- | Standard Unix include file (sorry, we put all unix into "linux" case)
+ | For MSVC
  *---------------------------------------------------------------------------*/
 
-#if defined(LINUX) || defined(BEOS) || defined(FREEBSD)
-
-/* All (u)int(size)_t types are defined here */
-#    include <inttypes.h>
-
-/*----------------------------------------------------------------------------
- | msvc (lacks such a header file)
- *---------------------------------------------------------------------------*/
-
-#elif defined(_MSC_VER)
+#if defined(_MSC_VER)
 #    define int8_t   char
 #    define uint8_t  unsigned char
 #    define int16_t  short
@@ -107,7 +98,7 @@
 #    define uint64_t unsigned __int64
 
 /*----------------------------------------------------------------------------
- | Fallback when using gcc
+ | For GNU C compatible compilers
  *---------------------------------------------------------------------------*/
 
 #elif defined(__GNUC__) || defined(__ICC)
@@ -126,23 +117,21 @@
  *---------------------------------------------------------------------------*/
 
 #else
-#    error Do not know how to define (u)int(size)_t types
+#    error Do not know how to define (u)int(size)_t types.
 #endif
 
 /*****************************************************************************
  *  Some things that are only architecture dependant
  ****************************************************************************/
 
-#if defined(ARCH_X86) || defined(ARCH_PPC) || defined(ARCH_MIPS)  || defined(ARCH_SPARC)
+#if defined(ARCH_IS_32BIT)
 #    define CACHE_LINE  16
 #    define ptr_t uint32_t
-#elif defined(ARCH_IA64)
+#elif defined(ARCH_IS_64BIT)
 #    define CACHE_LINE  32
 #    define ptr_t uint64_t
 #else
-/* todo: fix cache_line 0 operation */
-#    define CACHE_LINE  16
-#    define ptr_t uint32_t
+#    error You are trying to compile XviD without defining address bus size.
 #endif
 
 /*****************************************************************************
@@ -164,8 +153,12 @@
 
     /*
      * This function must be declared/defined all the time because MSVC does
-     * not support C99 variable arguments macros
+     * not support C99 variable arguments macros.
+     *
+     * Btw, if the MS compiler does its job well, it should remove the nop
+     * DPRINTF function when not compiling in _DEBUG mode
      */
+#   ifdef _DEBUG
     static __inline void DPRINTF(int level, char *fmt, ...)
     {
         if (DPRINTF_LEVEL & level) {
@@ -177,6 +170,11 @@
             fprintf(stderr, "%s\n", buf);
          }
      }
+#    else
+     static __inline void DPRINTF(int level, char *fmt, ...)
+     {
+     }
+#    endif
 
 #    if _MSC_VER <= 1200
 #        define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
@@ -191,10 +189,11 @@
 /*----------------------------------------------------------------------------
  | msvc x86 specific macros/functions
  *---------------------------------------------------------------------------*/
-#    if defined(ARCH_X86)
+#    if defined(ARCH_IS_IA32)
 #        define BSWAP(a) __asm mov eax,a __asm bswap eax __asm mov a, eax
 #        define EMMS() __asm {emms}
 
+#        ifdef _PROFILING_
              static __inline int64_t read_counter(void)
              {
                  int64_t ts;
@@ -207,19 +206,31 @@
                  ts = ((uint64_t) ts2 << 32) | ((uint64_t) ts1);
                  return ts;
              }
+#        endif
 
 /*----------------------------------------------------------------------------
- | msvc unknown architecture
+ | msvc GENERIC (plain C only) - Probably alpha or some embedded device
+ *---------------------------------------------------------------------------*/
+#    elif defined(ARCH_IS_GENERIC)
+#        define BSWAP(a) \
+                ((a) = (((a) & 0xff) << 24)  | (((a) & 0xff00) << 8) | \
+                       (((a) >> 8) & 0xff00) | (((a) >> 24) & 0xff))
+#        define EMMS()
+
+#        ifdef _PROFILING_
+#            include <time.h>
+             static __inline int64_t read_counter(void)
+             {
+                 return (int64_t)clock();
+             }
+#        endif
+
+/*----------------------------------------------------------------------------
+ | msvc Not given architecture - This is probably an user who tries to build
+ | XviD the wrong way.
  *---------------------------------------------------------------------------*/
 #    else
-/* ANSI C version of BSWAP */
-#define BSWAP(x) \
- x = ((((x) & 0xff000000) >> 24) | \
-     (((x) & 0x00ff0000) >>  8) | \
-     (((x) & 0x0000ff00) <<  8) | \
-     (((x) & 0x000000ff) << 24))
-
-#define EMMS()
+#        error You are trying to compile XviD without defining the architecture type.
 #    endif
 
 
@@ -243,17 +254,21 @@
 
         /* Needed for all debuf fprintf calls */
 #       include <stdio.h>
+#       include <stdarg.h>
 
-#       define DPRINTF(level, format, ...) \
-            do {\
-                if(DPRINTF_LEVEL & level)\
-                    fprintf(stderr, format"\n", ##__VA_ARGS__);\
-            }while(0);
+        static __inline void DPRINTF(int level, char *format, ...)
+        {
+            va_list args;
+            va_start(args, format);
+            if(DPRINTF_LEVEL & level) {
+                   vfprintf(stderr, format, args);
+					fprintf(stderr, "\n");
+			}
+		}
 
 #    else /* _DEBUG */
-#        define DPRINTF(level, format, ...)
+        static __inline void DPRINTF(int level, char *format, ...) {}
 #    endif /* _DEBUG */
-
 
 
 #    define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
@@ -261,109 +276,99 @@
             type * name = (type *) (((ptr_t) name##_storage+(alignment - 1)) & ~((ptr_t)(alignment)-1))
 
 /*----------------------------------------------------------------------------
- | gcc x86 specific macros/functions
+ | gcc IA32 specific macros/functions
  *---------------------------------------------------------------------------*/
-#    if defined(ARCH_X86)
+#    if defined(ARCH_IS_IA32)
 #        define BSWAP(a) __asm__ ( "bswapl %0\n" : "=r" (a) : "0" (a) );
 #        define EMMS() __asm__ ("emms\n\t");
 
-         static __inline int64_t read_counter(void)
-         {
-             int64_t ts;
-             uint32_t ts1, ts2;
-             __asm__ __volatile__("rdtsc\n\t":"=a"(ts1), "=d"(ts2));
-             ts = ((uint64_t) ts2 << 32) | ((uint64_t) ts1);
-             return ts;
-         }
+#        ifdef _PROFILING_
+             static __inline int64_t read_counter(void)
+             {
+                 int64_t ts;
+                 uint32_t ts1, ts2;
+                 __asm__ __volatile__("rdtsc\n\t":"=a"(ts1), "=d"(ts2));
+                 ts = ((uint64_t) ts2 << 32) | ((uint64_t) ts1);
+                 return ts;
+             }
+#        endif
 
 /*----------------------------------------------------------------------------
  | gcc PPC and PPC Altivec specific macros/functions
  *---------------------------------------------------------------------------*/
-#    elif defined(ARCH_PPC)
+#    elif defined(ARCH_IS_PPC)
 #        define BSWAP(a) __asm__ __volatile__ \
                 ( "lwbrx %0,0,%1; eieio" : "=r" (a) : "r" (&(a)), "m" (a));
 #        define EMMS()
 
-         static __inline unsigned long get_tbl(void)
-         {
-             unsigned long tbl;
-             asm volatile ("mftb %0":"=r" (tbl));
-             return tbl;
-         }
+#        ifdef _PROFILING_
+             static __inline unsigned long get_tbl(void)
+             {
+                 unsigned long tbl;
+                 asm volatile ("mftb %0":"=r" (tbl));
+                 return tbl;
+             }
 
-         static __inline unsigned long get_tbu(void)
-         {
-             unsigned long tbl;
-             asm volatile ("mftbu %0":"=r" (tbl));
-             return tbl;
-         }
+             static __inline unsigned long get_tbu(void)
+             {
+                 unsigned long tbl;
+                 asm volatile ("mftbu %0":"=r" (tbl));
+                 return tbl;
+             }
 
-         static __inline int64_t read_counter(void)
-         {
-             unsigned long tb, tu;
-             do {
-                 tu = get_tbu();
-                 tb = get_tbl();
-             }while (tb != get_tbl());
-             return (((int64_t) tu) << 32) | (int64_t) tb;
-         }
+             static __inline int64_t read_counter(void)
+             {
+                 unsigned long tb, tu;
+                 do {
+                     tu = get_tbu();
+                     tb = get_tbl();
+                 }while (tb != get_tbl());
+                 return (((int64_t) tu) << 32) | (int64_t) tb;
+             }
+#        endif
 
 /*----------------------------------------------------------------------------
  | gcc IA64 specific macros/functions
  *---------------------------------------------------------------------------*/
-#    elif defined(ARCH_IA64)
+#    elif defined(ARCH_IS_IA64)
 #        define BSWAP(a)  __asm__ __volatile__ \
                 ("mux1 %1 = %0, @rev" ";;" \
                  "shr.u %1 = %1, 32" : "=r" (a) : "r" (a));
 #        define EMMS()
 
-         static __inline int64_t read_counter(void) {
-             unsigned long result;
-             __asm__ __volatile__("mov %0=ar.itc" : "=r"(result) :: "memory");
-             return result;
-         }
+#        ifdef _PROFILING_
+             static __inline int64_t read_counter(void)
+             {
+                 unsigned long result;
+                 __asm__ __volatile__("mov %0=ar.itc" : "=r"(result) :: "memory");
+                 return result;
+             }
+#        endif
 
 /*----------------------------------------------------------------------------
- | gcc SPARC specific macros/functions
+ | gcc GENERIC (plain C only) specific macros/functions
  *---------------------------------------------------------------------------*/
-#    elif defined(ARCH_SPARC)
+#    elif defined(ARCH_IS_GENERIC)
 #        define BSWAP(a) \
                 ((a) = (((a) & 0xff) << 24)  | (((a) & 0xff00) << 8) | \
                        (((a) >> 8) & 0xff00) | (((a) >> 24) & 0xff))
 #        define EMMS()
 
-         static __inline int64_t read_counter(void)
-         {
-             return 0;
-         }
+#        ifdef _PROFILING_
+#            include <time.h>
+             static __inline int64_t read_counter(void)
+             {
+                 return (int64_t)clock();
+             }
+#        endif
 
 /*----------------------------------------------------------------------------
- | gcc MIPS specific macros/functions
- *---------------------------------------------------------------------------*/
-#    elif defined(ARCH_MIPS)
-#        define BSWAP(a) \
-                ((a) = (((a) & 0xff) << 24)  | (((a) & 0xff00) << 8) | \
-                       (((a) >> 8) & 0xff00) | (((a) >> 24) & 0xff))
-#        define EMMS()
-
-         static __inline int64_t read_counter(void)
-         {
-             return 0;
-         }
-
-/*----------------------------------------------------------------------------
- | XviD + gcc unsupported Architecture
+ | gcc Not given architecture - This is probably an user who tries to build
+ | XviD the wrong way.
  *---------------------------------------------------------------------------*/
 #    else
-/* ANSI C version of BSWAP */
-#define BSWAP(x) \
- x = ((((x) & 0xff000000) >> 24) | \
-     (((x) & 0x00ff0000) >>  8) | \
-     (((x) & 0x0000ff00) <<  8) | \
-     (((x) & 0x000000ff) << 24))
-
-#define EMMS()
-#    endif /* Architecture checking */
+#        error You are trying to compile XviD without defining the architecture type.
+#    endif
 
 /*****************************************************************************
  *  Unknown compiler

@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: emms.h,v 1.11 2002-11-26 23:44:11 edgomez Exp $
+ * $Id: emms.h,v 1.12 2003-02-09 19:32:52 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -79,16 +79,14 @@ emmsFunc emms_mmx;
  * Prototypes
  ****************************************************************************/
 
-#ifdef ARCH_X86
+#if defined(ARCH_IS_IA32)
 extern int check_cpu_features(void);
 extern void sse_os_trigger(void);
 extern void sse2_os_trigger(void);
-#else
-#ifdef ARCH_IA64
+#elif defined(ARCH_IS_IA64)
 static int check_cpu_features(void) { return XVID_CPU_IA64; }
 #else
 static int check_cpu_features(void) { return 0; } /* is 0 an acceptable value? */
-#endif
 #endif
 
 
