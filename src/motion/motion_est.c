@@ -186,6 +186,9 @@ MotionEstimation(MBParam * const pParam,
 	
 			MACROBLOCK *const pMB = &pMBs[x + y * iWcount];
 
+			if (pMB->mode == MODE_NOT_CODED)
+				continue; 
+				
 			predMV = get_pmv2(pMBs, pParam->mb_width, 0, x, y, 0);    
 
 			pMB->sad16 =
@@ -2888,6 +2891,9 @@ PMVfastIntSearch16(const uint8_t * const pRef,
 		*currMV = pmv[0] = pmv[1] = pmv[2] = pmv[3] = zeroMV;
 
 	} else {
+		
+		bPredEq = get_ipmvdata(pMBs, iWcount, 0, x, y, 0, pmv, psad);
+
 		threshA = psad[0];
 		threshB = threshA + 256;
 		if (threshA < 512)
@@ -2897,7 +2903,6 @@ PMVfastIntSearch16(const uint8_t * const pRef,
 		if (threshB > 1792)
 			threshB = 1792;
 
-		bPredEq = get_ipmvdata(pMBs, iWcount, 0, x, y, 0, pmv, psad);
 		*currMV = pmv[0];			/* current best := prediction */
 	}
 
