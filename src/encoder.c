@@ -166,7 +166,7 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 
 	if (pParam->bitrate)
 	{
-		RateControlInit(pParam->bitrate, pParam->rc_buffersize, pParam->fbase * 100 / pParam->fincr,
+		RateControlInit(pParam->bitrate, pParam->rc_buffersize, pParam->fbase * 1000 / pParam->fincr,
 				pParam->max_quantizer, pParam->min_quantizer);
 	}
 

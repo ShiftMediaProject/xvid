@@ -5,6 +5,8 @@
 
 #include <windows.h>
 
+#define DEBUGCBR(A,B,C) { char tmp[100]; wsprintf(tmp, "CBR: frame: %i, quant: %i, deviation: %i\n", (A), (B), (C)); OutputDebugString(tmp); }
+
 #ifdef _DEBUG
 #define DEBUG(S) OutputDebugString((S));
 #define DEBUG1(S,I) { char tmp[100]; wsprintf(tmp, "%s %i\n", (S), (I)); OutputDebugString(tmp); }
@@ -63,7 +65,6 @@ static __inline int64_t read_counter() {
 
 #elif defined(LINUX) || defined(DJGPP)
 
-
 #ifdef _DEBUG
 
 #include <stdio.h>
@@ -73,12 +74,14 @@ static __inline int64_t read_counter() {
 #define DEBUG2(S,A,B)             fprintf(DEBUG_WHERE, "%s%i=%i\n", (S), (A), (B))
 #define DEBUG3(S,A,B,C)           fprintf(DEBUG_WHERE, "%s %i %x %x\n", (S), (A), (B), (C))
 #define DEBUG8(S,A,B,C,D,E,F,G,H)
+#define DEBUGCBR(A,B,C)           fprintf(DEBUG_WHERE, "CBR: frame: %i, quant: %i, deviation: %i\n", (A), (B), (C))
 #else
 #define DEBUG(S)
 #define DEBUG1(S,I)
 #define DEBUG2(X,A,B)
 #define DEBUG3(X,A,B,C)
 #define DEBUG8(X,A,B,C,D,E,F,G,H)
+#define DEBUGCBR(A,B,C)
 #endif
 
 #define CACHE_LINE  16
@@ -158,6 +161,7 @@ static __inline int64_t read_counter() {
 #define DEBUG2(X,A,B)
 #define DEBUG3(X,A,B,C)
 #define DEBUG8(X,A,B,C,D,E,F,G,H)
+#define DEBUGCBR(A,B,C)
 
 #include <inttypes.h>
 
