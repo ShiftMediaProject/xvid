@@ -2,7 +2,7 @@
 #
 # XviD examples Makefile
 #
-# $Id: Makefile,v 1.2 2002-11-26 23:44:09 edgomez Exp $
+# $Id: Makefile,v 1.3 2002-11-27 21:09:10 edgomez Exp $
 #
 #############################################################################
 
@@ -10,7 +10,7 @@
 
 HDIR    = -I ../src
 CFLAGS  = -Wall -Os
-LDFLAGS = -lxvidcore -lc -lm
+LDFLAGS = -lc -lm
 
 SOURCES= xvid_stat.c xvid_encraw.c xvid_decraw.c
 OBJECTS=$(SOURCES:.c=.o)

@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.4 2002-09-28 16:01:15 edgomez Exp $
+ * $Id: xvid_encraw.c,v 1.5 2002-11-27 21:09:10 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -51,25 +51,25 @@
  ****************************************************************************/
 
 static int const motion_presets[7] = {
-	0,                                                        // Q 0
-	PMV_EARLYSTOP16,                                          // Q 1
-	PMV_EARLYSTOP16,                                          // Q 2
-	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16,                    // Q 3
-	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16,                    // Q 4
-	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 | PMV_EARLYSTOP8 |  // Q 5
+	0,                                                        /* Q 0 */
+	PMV_EARLYSTOP16,                                          /* Q 1 */
+	PMV_EARLYSTOP16,                                          /* Q 2 */
+	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16,                    /* Q 3 */
+	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16,                    /* Q 4 */
+	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 | PMV_EARLYSTOP8 |  /* Q 5 */
 	PMV_HALFPELREFINE8,
-	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 | PMV_EXTSEARCH16 | // Q 6
+	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 | PMV_EXTSEARCH16 | /* Q 6 */
 	PMV_USESQUARES16 | PMV_EARLYSTOP8 | PMV_HALFPELREFINE8
 };
 
 static int const general_presets[7] = {
-	XVID_H263QUANT,	                              // Q 0
-	XVID_MPEGQUANT,                               // Q 1
-	XVID_H263QUANT,                               // Q 2
-	XVID_H263QUANT | XVID_HALFPEL,                // Q 3
-	XVID_H263QUANT | XVID_HALFPEL | XVID_INTER4V, // Q 4
-	XVID_H263QUANT | XVID_HALFPEL | XVID_INTER4V, // Q 5
-	XVID_H263QUANT | XVID_HALFPEL | XVID_INTER4V  // Q 6
+	XVID_H263QUANT,	                              /* Q 0 */
+	XVID_MPEGQUANT,                               /* Q 1 */
+	XVID_H263QUANT,                               /* Q 2 */
+	XVID_H263QUANT | XVID_HALFPEL,                /* Q 3 */
+	XVID_H263QUANT | XVID_HALFPEL | XVID_INTER4V, /* Q 4 */
+	XVID_H263QUANT | XVID_HALFPEL | XVID_INTER4V, /* Q 5 */
+	XVID_H263QUANT | XVID_HALFPEL | XVID_INTER4V  /* Q 6 */
 };
 		
 
@@ -354,9 +354,9 @@ int main(int argc, char *argv[])
 	do {
 
 		if (ARG_INPUTTYPE)
-			status = read_pgmdata(in_file, in_buffer);	// read PGM data (YUV-format)
+			status = read_pgmdata(in_file, in_buffer);	/* read PGM data (YUV-format) */
 		else
-			status = read_yuvdata(in_file, in_buffer);	// read raw data (YUV-format)
+			status = read_yuvdata(in_file, in_buffer);	/* read raw data (YUV-format) */
 	      
 		if (status)
 		{
@@ -649,14 +649,14 @@ static int enc_main(unsigned char* image, unsigned char* bitstream,
 	XVID_ENC_STATS xstats;
 
 	xframe.bitstream = bitstream;
-	xframe.length = -1; 	// this is written by the routine
+	xframe.length = -1; 	/* this is written by the routine */
 
 	xframe.image = image;
-	xframe.colorspace = XVID_CSP_YV12;	// defined in <xvid.h>
+	xframe.colorspace = XVID_CSP_YV12;	/* defined in <xvid.h> */
 
-	xframe.intra = -1; // let the codec decide between I-frame (1) and P-frame (0)
+	xframe.intra = -1; /* let the codec decide between I-frame (1) and P-frame (0) */
 
-	xframe.quant = ARG_QUANTI;	// is quant != 0, use a fixed quant (and ignore bitrate)
+	xframe.quant = ARG_QUANTI;	/* is quant != 0, use a fixed quant (and ignore bitrate) */
 
 	xframe.motion = motion_presets[ARG_QUALITY];
 	xframe.general = general_presets[ARG_QUALITY];
