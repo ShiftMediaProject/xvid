@@ -55,7 +55,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: decoder.c,v 1.34 2002-07-24 00:49:04 Isibaar Exp $
+ *  $Id: decoder.c,v 1.35 2002-07-24 23:09:28 chl Exp $
  *
  *************************************************************************/
 
@@ -683,8 +683,8 @@ decoder_pframe(DECODER * dec,
 						mb->mvs[1].y = mb->mvs[2].y = mb->mvs[3].y =
 							mb->mvs[0].y;
 					}
-				} else if (mb->mode ==
-						   MODE_INTER4V /* || mb->mode == MODE_INTER4V_Q */ ) {
+				} else if (mb->mode == MODE_INTER4V ) {
+
 					get_motion_vector(dec, bs, x, y, 0, &mb->mvs[0], fcode, bound);
 					get_motion_vector(dec, bs, x, y, 1, &mb->mvs[1], fcode, bound);
 					get_motion_vector(dec, bs, x, y, 2, &mb->mvs[2], fcode, bound);
@@ -704,7 +704,7 @@ decoder_pframe(DECODER * dec,
 								rounding);
 			} else				// not coded
 			{
-				//DEBUG2("P-frame MB at (X,Y)=",x,y);
+				DEBUG2("P-frame MB at (X,Y)=",x,y);
 				mb->mode = MODE_NOT_CODED;
 				mb->mvs[0].x = mb->mvs[1].x = mb->mvs[2].x = mb->mvs[3].x = 0;
 				mb->mvs[0].y = mb->mvs[1].y = mb->mvs[2].y = mb->mvs[3].y = 0;
@@ -1277,16 +1277,7 @@ decoder_bframe(DECODER * dec,
 
 			default:
 				DEBUG1("Not support B-frame mb_type =", mb->mb_type);
-				;
 			}
-
-			if ( (x==19) && (y==8) ) 
-			{
-				fprintf(stderr,"D %d   %d    %d %d   %d %d  \n",0, mb->mb_type, 
-						mb->mvs[0].x, mb->mvs[0].y,mb->b_mvs[0].x, mb->b_mvs[0].y );
-			}
-
-
 
 		}						// end of FOR
 	}
