@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.35 2004-04-05 20:36:36 edgomez Exp $
+ * $Id: xvid.h,v 1.36 2004-04-15 12:05:19 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -57,7 +57,7 @@ extern "C" {
 #define XVID_API_MAJOR(a)        (((a)>>16) & 0xff)
 #define XVID_API_MINOR(a)        (((a)>> 0) & 0xff)
 
-#define XVID_VERSION             XVID_MAKE_VERSION(1,0,-123)
+#define XVID_VERSION             XVID_MAKE_VERSION(1,1,-127)
 #define XVID_API                 XVID_MAKE_API(4, 0)
 
 #define XVID_UNSTABLE
@@ -258,6 +258,7 @@ typedef struct {
 	void *bitstream;     /* [in]     bitstream (read from)*/
 	int length;          /* [in]     bitstream length */
 	xvid_image_t output; /* [in]     output image (written to) */
+/* ------- v1.1.0 ------- */
 	int brightness;		 /* [in]	 brightness offset (0=none) */
 } xvid_dec_frame_t;
 
