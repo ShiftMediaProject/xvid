@@ -1,16 +1,9 @@
-/**************************************************************************
+/*****************************************************************************
  *
  *  XVID MPEG-4 VIDEO CODEC
- *  -  Decoder main module  -
+ *  - Decoder Module -
  *
- *  This program is an implementation of a part of one or more MPEG-4
- *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
- *  to use this software module in hardware or software products are
- *  advised that its use may infringe existing patents or copyrights, and
- *  any such use would be at such party's own risk.  The original
- *  developer of this software module and his/her company, and subsequent
- *  editors and their companies, will have no liability for use of this
- *  software or modifications or derivatives thereof.
+ *  This file is part of XviD, a free MPEG-4 video encoder/decoder
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -26,38 +19,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *************************************************************************/
-
-/**************************************************************************
+ * $Id: decoder.c,v 1.48 2003-02-17 23:33:12 edgomez Exp $
  *
- *  History:
- *
- *  15.07.2002  fix a bug in B-frame decode at DIRECT mode
- *              MinChen <chenm001@163.com>
- *  10.07.2002  added BFRAMES_DEC_DEBUG support
- *              Fix a little bug for low_delay flage
- *              MinChen <chenm001@163.com>
- *  28.06.2002  added basic resync support to iframe/pframe_decode()
- *  22.06.2002	added primative N_VOP support
- *				#define BFRAMES_DEC now enables Minchen's bframe decoder
- *  08.05.2002  add low_delay support for B_VOP decode
- *              MinChen <chenm001@163.com>
- *  05.05.2002  fix some B-frame decode problem
- *  02.05.2002  add B-frame decode support(have some problem);
- *              MinChen <chenm001@163.com>
- *  22.04.2002  add some B-frame decode support;  chenm001 <chenm001@163.com>
- *  29.03.2002  interlacing fix - compensated block wasn't being used when
- *              reconstructing blocks, thus artifacts
- *              interlacing speedup - used transfers to re-interlace
- *              interlaced decoding should be as fast as progressive now
- *  26.03.2002  interlacing support - moved transfers outside decode loop
- *  26.12.2001  decoder_mbinter: dequant/idct moved within if(coded) block
- *  22.12.2001  lock based interpolation
- *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
- *
- *  $Id: decoder.c,v 1.47 2003-02-15 15:22:17 edgomez Exp $
- *
- *************************************************************************/
+ ****************************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -98,7 +62,6 @@ int
 decoder_resize(DECODER * dec)
 {
 	/* free existing */
-
 	image_destroy(&dec->cur, dec->edged_width, dec->edged_height);
 	image_destroy(&dec->refn[0], dec->edged_width, dec->edged_height);
 	image_destroy(&dec->refn[1], dec->edged_width, dec->edged_height);
@@ -113,7 +76,6 @@ decoder_resize(DECODER * dec)
 		xvid_free(dec->mbs);
 
 	/* realloc */
-
 	dec->mb_width = (dec->width + 15) / 16;
 	dec->mb_height = (dec->height + 15) / 16;
 
@@ -131,8 +93,7 @@ decoder_resize(DECODER * dec)
 		return XVID_ERR_MEMORY;
 	}
 
-	// add by chenm001 <chenm001@163.com>
-	// for support B-frame to reference last 2 frame
+	/* Support B-frame to reference last 2 frame */
 	if (image_create(&dec->refn[1], dec->edged_width, dec->edged_height)) {
 		image_destroy(&dec->cur, dec->edged_width, dec->edged_height);
 		image_destroy(&dec->refn[0], dec->edged_width, dec->edged_height);
@@ -180,8 +141,7 @@ decoder_resize(DECODER * dec)
 	}
 	memset(dec->mbs, 0, sizeof(MACROBLOCK) * dec->mb_width * dec->mb_height);
 
-	// add by chenm001 <chenm001@163.com>
-	// for skip MB flag
+	/* For skip MB flag */
 	dec->last_mbs =
 		xvid_malloc(sizeof(MACROBLOCK) * dec->mb_width * dec->mb_height,
 					CACHE_LINE);
@@ -224,7 +184,7 @@ decoder_create(XVID_DEC_PARAM * param)
 	image_null(&dec->tmp);
 	image_null(&dec->qtmp);
 
-/* image based GMC */
+	/* image based GMC */
 	image_null(&dec->gmc);
 
 
@@ -233,8 +193,7 @@ decoder_create(XVID_DEC_PARAM * param)
 
 	init_timer();
 
-	// add by chenm001 <chenm001@163.com>
-	// for support B-frame to save reference frame's time
+	/* For B-frame support (used to save reference frame's time */
 	dec->frames = 0;
 	dec->time = dec->time_base = dec->last_time_base = 0;
 	dec->low_delay = 0;
@@ -255,7 +214,8 @@ decoder_destroy(DECODER * dec)
 	xvid_free(dec->last_mbs);
 	xvid_free(dec->mbs);
 
-	image_destroy(&dec->gmc, dec->edged_width, dec->edged_height);		/* image based GMC */
+	/* image based GMC */
+	image_destroy(&dec->gmc, dec->edged_width, dec->edged_height);
 
 	image_destroy(&dec->refn[0], dec->edged_width, dec->edged_height);
 	image_destroy(&dec->refn[1], dec->edged_width, dec->edged_height);
@@ -277,8 +237,7 @@ static const int32_t dquant_table[4] = {
 
 
 
-// decode an intra macroblock
-
+/* decode an intra macroblock */
 void
 decoder_mbintra(DECODER * dec,
 				MACROBLOCK * pMB,
@@ -313,7 +272,7 @@ decoder_mbintra(DECODER * dec,
 		pV_Cur = dec->cur.v + (y_pos << 3) * stride2 + (x_pos << 3);
 	}
 
-	memset(block, 0, 6 * 64 * sizeof(int16_t));	// clear
+	memset(block, 0, 6 * 64 * sizeof(int16_t));	/* clear */
 
 	for (i = 0; i < 6; i++) {
 		uint32_t iDcScaler = get_dc_scaler(iQuant, i < 4);
@@ -336,7 +295,7 @@ decoder_mbintra(DECODER * dec,
 			dc_dif = dc_size ? get_dc_dif(bs, dc_size) : 0;
 
 			if (dc_size > 8) {
-				BitstreamSkip(bs, 1);	// marker
+				BitstreamSkip(bs, 1);	/* marker */
 			}
 
 			block[i * 64 + 0] = dc_dif;
@@ -348,7 +307,7 @@ decoder_mbintra(DECODER * dec,
 		}
 
 		start_timer();
-		if (cbp & (1 << (5 - i)))	// coded
+		if (cbp & (1 << (5 - i)))	/* coded */
 		{
 			int direction = dec->alternate_vertical_scan ?
 				2 : pMB->acpred_directions[i];
@@ -405,8 +364,7 @@ decoder_mbintra(DECODER * dec,
 
 
 
-// decode an inter macroblock
-
+/* decode an inter macroblock */
 void
 decoder_mbinter(DECODER * dec,
 				const MACROBLOCK * pMB,
@@ -520,7 +478,7 @@ decoder_mbinter(DECODER * dec,
 			interpolate16x16_switch(dec->cur.v, dec->refn[0].v , 16 * x_pos, 16 * y_pos,
 								  uv_dx, uv_dy, stride2, rounding);
 
-			// set_block(pY_Cur, stride, 32, 32, 127);
+			/* set_block(pY_Cur, stride, 32, 32, 127); */
 		} 
 		else
 		{
@@ -560,9 +518,9 @@ decoder_mbinter(DECODER * dec,
 	for (i = 0; i < 6; i++) {
 		int direction = dec->alternate_vertical_scan ? 2 : 0;
 
-		if (cbp & (1 << (5 - i)))	// coded
+		if (cbp & (1 << (5 - i)))	/* coded */
 		{
-			memset(&block[i * 64], 0, 64 * sizeof(int16_t));	// clear
+			memset(&block[i * 64], 0, 64 * sizeof(int16_t));	/* clear */
 
 			start_timer();
 			get_inter_block(bs, &block[i * 64], direction);
@@ -625,7 +583,7 @@ static __inline int gmc_sanitize(int value, int quarterpel, int fcode)
 {
 	int length = 1 << (fcode+4);
 
-//	if (quarterpel) value *= 2;
+/*	if (quarterpel) value *= 2; */
 
 	if (value < -length) 
 		return -length;
@@ -675,7 +633,8 @@ decoder_mbgmc(DECODER * dec,
 	}
 	pMB->mvs[0] = pMB->mvs[1] = pMB->mvs[2] = pMB->mvs[3] = pMB->amv;
 	
-/*	transfer16x16_copy(pY_Cur, dec->gmc.y + (y_pos << 4)*stride + (x_pos  << 4), stride);
+/*
+	transfer16x16_copy(pY_Cur, dec->gmc.y + (y_pos << 4)*stride + (x_pos  << 4), stride);
 	transfer8x8_copy(pU_Cur, dec->gmc.u + (y_pos << 3)*stride2 + (x_pos  << 3), stride2);
 	transfer8x8_copy(pV_Cur, dec->gmc.v + (y_pos << 3)*stride2 + (x_pos << 3), stride2);
 */
@@ -688,9 +647,9 @@ decoder_mbgmc(DECODER * dec,
 	for (i = 0; i < 6; i++) {
 		int direction = dec->alternate_vertical_scan ? 2 : 0;
 
-		if (cbp & (1 << (5 - i)))	// coded
+		if (cbp & (1 << (5 - i)))	/* coded */
 		{
-			memset(&block[i * 64], 0, 64 * sizeof(int16_t));	// clear
+			memset(&block[i * 64], 0, 64 * sizeof(int16_t));	/* clear */
 
 			start_timer();
 			get_inter_block(bs, &block[i * 64], direction);
@@ -711,10 +670,11 @@ decoder_mbgmc(DECODER * dec,
 	}
 
 /* interlace + GMC is this possible ??? */
-/*	if (dec->interlacing && pMB->field_dct) {
-		next_block = stride;
-		stride *= 2;
-	}
+/*
+  if (dec->interlacing && pMB->field_dct) {
+	  next_block = stride;
+	  stride *= 2;
+  }
 */
 	start_timer();
 	if (cbp & 32)
@@ -896,7 +856,7 @@ decoder_pframe(DECODER * dec,
 	if (gmc_warp)
 	{	
 
-		// accuracy:  0==1/2, 1=1/4, 2=1/8, 3=1/16
+		/* accuracy:  0==1/2, 1=1/4, 2=1/8, 3=1/16 */
 		if ( (dec->sprite_warping_accuracy != 3) || (dec->sprite_warping_points != 2) )
 		{	
 			fprintf(stderr,"Wrong GMC parameters acc=%d(-> 1/%d), %d!!!\n",
@@ -925,7 +885,7 @@ decoder_pframe(DECODER * dec,
 		for (x = 0; x < mb_width; x++) {
 			MACROBLOCK *mb;
 
-			// skip stuffing
+			/* skip stuffing */
 			while (BitstreamShowBits(bs, 10) == 1)
 				BitstreamSkip(bs, 10);
 
@@ -940,8 +900,8 @@ decoder_pframe(DECODER * dec,
 
 			DPRINTF(DPRINTF_MB, "macroblock (%i,%i) %08x", x, y, BitstreamShowBits(bs, 32));
 
-			//if (!(dec->mb_skip[y*dec->mb_width + x]=BitstreamGetBit(bs)))         // not_coded
-			if (!(BitstreamGetBit(bs)))	// block _is_ coded
+			/* if (!(dec->mb_skip[y*dec->mb_width + x]=BitstreamGetBit(bs))) */ /* not_coded */
+			if (!(BitstreamGetBit(bs)))	/* block _is_ coded */
 			{
 				uint32_t mcbpc;
 				uint32_t cbpc;
@@ -949,7 +909,7 @@ decoder_pframe(DECODER * dec,
 				uint32_t cbpy;
 				uint32_t cbp;
 				uint32_t intra;
-				int mcsel = 0;		// mcsel: '0'=local motion, '1'=GMC
+				int mcsel = 0;		/* mcsel: '0'=local motion, '1'=GMC */
 
 				cp_mb++;
 				mcbpc = get_mcbpc_inter(bs);
@@ -1031,7 +991,7 @@ decoder_pframe(DECODER * dec,
 					get_motion_vector(dec, bs, x, y, 1, &mb->mvs[1], fcode, bound);
 					get_motion_vector(dec, bs, x, y, 2, &mb->mvs[2], fcode, bound);
 					get_motion_vector(dec, bs, x, y, 3, &mb->mvs[3], fcode, bound);
-				} else			// MODE_INTRA, MODE_INTRA_Q
+				} else			/* MODE_INTRA, MODE_INTRA_Q */
 				{
 					mb->mvs[0].x = mb->mvs[1].x = mb->mvs[2].x = mb->mvs[3].x =
 						0;
@@ -1069,7 +1029,7 @@ decoder_pframe(DECODER * dec,
 
 				mb->mvs[0].x = mb->mvs[1].x = mb->mvs[2].x = mb->mvs[3].x = 0;
 				mb->mvs[0].y = mb->mvs[1].y = mb->mvs[2].y = mb->mvs[3].y = 0;
-				// copy macroblock directly from ref to cur
+				/* copy macroblock directly from ref to cur */
 
 				start_timer();
 
@@ -1117,8 +1077,7 @@ decoder_pframe(DECODER * dec,
 }
 
 
-// add by MinChen <chenm001@163.com>
-// decode B-frame motion vector
+/* decode B-frame motion vector */
 void
 get_b_motion_vector(DECODER * dec,
 					Bitstream * bs,
@@ -1162,8 +1121,7 @@ get_b_motion_vector(DECODER * dec,
 }
 
 
-// add by MinChen <chenm001@163.com>
-// decode an B-frame forward & backward inter macroblock
+/* decode an B-frame forward & backward inter macroblock */
 void
 decoder_bf_mbinter(DECODER * dec,
 				   const MACROBLOCK * pMB,
@@ -1247,9 +1205,9 @@ decoder_bf_mbinter(DECODER * dec,
 	for (i = 0; i < 6; i++) {
 		int direction = dec->alternate_vertical_scan ? 2 : 0;
 
-		if (cbp & (1 << (5 - i)))	// coded
+		if (cbp & (1 << (5 - i)))	/* coded */
 		{
-			memset(&block[i * 64], 0, 64 * sizeof(int16_t));	// clear
+			memset(&block[i * 64], 0, 64 * sizeof(int16_t));	/* clear */
 
 			start_timer();
 			get_inter_block(bs, &block[i * 64], direction);
@@ -1290,8 +1248,7 @@ decoder_bf_mbinter(DECODER * dec,
 	stop_transfer_timer();
 }
 
-// add by MinChen <chenm001@163.com>
-// decode an B-frame direct &  inter macroblock
+/* decode an B-frame direct &  inter macroblock */
 void
 decoder_bf_interpolate_mbinter(DECODER * dec,
 							   IMAGE forward,
@@ -1488,9 +1445,9 @@ decoder_bf_interpolate_mbinter(DECODER * dec,
 	for (i = 0; i < 6; i++) {
 		int direction = dec->alternate_vertical_scan ? 2 : 0;
 
-		if (cbp & (1 << (5 - i)))	// coded
+		if (cbp & (1 << (5 - i)))	/* coded */
 		{
-			memset(&block[i * 64], 0, 64 * sizeof(int16_t));	// clear
+			memset(&block[i * 64], 0, 64 * sizeof(int16_t));	/* clear */
 
 			start_timer();
 			get_inter_block(bs, &block[i * 64], direction);
@@ -1532,26 +1489,26 @@ decoder_bf_interpolate_mbinter(DECODER * dec,
 }
 
 
-// add by MinChen <chenm001@163.com>
-// for decode B-frame dbquant
+/* for decode B-frame dbquant */
 int32_t __inline
 get_dbquant(Bitstream * bs)
 {
-	if (!BitstreamGetBit(bs))	// '0'
+	if (!BitstreamGetBit(bs))      /*  '0' */
 		return (0);
-	else if (!BitstreamGetBit(bs))	// '10'
+	else if (!BitstreamGetBit(bs)) /* '10' */
 		return (-2);
-	else
-		return (2);				// '11'
+	else                           /* '11' */
+		return (2);
 }
 
-// add by MinChen <chenm001@163.com>
-// for decode B-frame mb_type
-// bit   ret_value
-// 1        0
-// 01       1
-// 001      2
-// 0001     3
+/*
+ * For decode B-frame mb_type
+ * bit   ret_value
+ * 1        0
+ * 01       1
+ * 001      2
+ * 0001     3
+ */
 int32_t __inline
 get_mbtype(Bitstream * bs)
 {
@@ -1600,7 +1557,7 @@ decoder_bframe(DECODER * dec,
 #endif
 
 	for (y = 0; y < dec->mb_height; y++) {
-		// Initialize Pred Motion Vector
+		/* Initialize Pred Motion Vector */
 		dec->p_fmv = dec->p_bmv = zeromv;
 		for (x = 0; x < dec->mb_width; x++) {
 			MACROBLOCK *mb = &dec->mbs[y * dec->mb_width + x];
@@ -1610,11 +1567,14 @@ decoder_bframe(DECODER * dec,
 			mb->b_mvs[0] = mb->b_mvs[1] = mb->b_mvs[2] = mb->b_mvs[3] =
 			mb->mvs[0] = mb->mvs[1] = mb->mvs[2] = mb->mvs[3] = zeromv;
 
-			// skip if the co-located P_VOP macroblock is not coded 
-			// if not codec in co-located S_VOP macroblock is _not_ automatically skipped
+			/*
+			 * skip if the co-located P_VOP macroblock is not coded 
+			 * if not codec in co-located S_VOP macroblock is _not_
+			 * automatically skipped
+			 */
 
 			if (last_mb->mode == MODE_NOT_CODED) {
-				//DEBUG2("Skip MB in B-frame at (X,Y)=!",x,y);
+				/* DEBUG2("Skip MB in B-frame at (X,Y)=!",x,y); */
 				mb->cbp = 0;
 #ifdef BFRAMES_DEC_DEBUG
 				mb->mb_type = MODE_NOT_CODED;
@@ -1622,19 +1582,21 @@ decoder_bframe(DECODER * dec,
 #endif
 				mb->mb_type = MODE_FORWARD;
 				mb->quant = last_mb->quant;
-				//mb->mvs[1].x = mb->mvs[2].x = mb->mvs[3].x = mb->mvs[0].x;
-				//mb->mvs[1].y = mb->mvs[2].y = mb->mvs[3].y = mb->mvs[0].y;
+				/*
+				  mb->mvs[1].x = mb->mvs[2].x = mb->mvs[3].x = mb->mvs[0].x;
+				  mb->mvs[1].y = mb->mvs[2].y = mb->mvs[3].y = mb->mvs[0].y;
+				*/
 
 				decoder_bf_mbinter(dec, mb, x, y, mb->cbp, bs, mb->quant, 1);
 				continue;
 			}
 
-			if (!BitstreamGetBit(bs)) {	// modb=='0'
+			if (!BitstreamGetBit(bs)) {	/* modb=='0' */
 				const uint8_t modb2 = BitstreamGetBit(bs);
 
 				mb->mb_type = get_mbtype(bs);
 
-				if (!modb2) {	// modb=='00'
+				if (!modb2) {	/* modb=='00' */
 					mb->cbp = BitstreamGetBits(bs, 6);
 				} else {
 					mb->cbp = 0;
@@ -1655,7 +1617,7 @@ decoder_bframe(DECODER * dec,
 
 			mb->quant = quant;
 			mb->mode = MODE_INTER4V;
-			//DEBUG1("Switch bm_type=",mb->mb_type);
+			/* DEBUG1("Switch bm_type=",mb->mb_type); */
 
 #ifdef BFRAMES_DEC_DEBUG
 	BFRAME_DEBUG
@@ -1684,7 +1646,7 @@ decoder_bframe(DECODER * dec,
 										  / TRD
 									    : mb->mvs[i].y - last_mb->mvs[i].y);
 					}
-					//DEBUG("B-frame Direct!\n");
+					/* DEBUG("B-frame Direct!\n"); */
 				}
 				decoder_bf_interpolate_mbinter(dec, dec->refn[1], dec->refn[0],
 											   mb, x, y, bs);
@@ -1702,7 +1664,7 @@ decoder_bframe(DECODER * dec,
 
 				decoder_bf_interpolate_mbinter(dec, dec->refn[1], dec->refn[0],
 											   mb, x, y, bs);
-				//DEBUG("B-frame Bidir!\n");
+				/* DEBUG("B-frame Bidir!\n"); */
 				break;
 
 			case MODE_BACKWARD:
@@ -1712,7 +1674,7 @@ decoder_bframe(DECODER * dec,
 
 				mb->mode = MODE_INTER;
 				decoder_bf_mbinter(dec, mb, x, y, mb->cbp, bs, quant, 0);
-				//DEBUG("B-frame Backward!\n");
+				/* DEBUG("B-frame Backward!\n"); */
 				break;
 
 			case MODE_FORWARD:
@@ -1722,15 +1684,15 @@ decoder_bframe(DECODER * dec,
 
 				mb->mode = MODE_INTER;
 				decoder_bf_mbinter(dec, mb, x, y, mb->cbp, bs, quant, 1);
-				//DEBUG("B-frame Forward!\n");
+				/* DEBUG("B-frame Forward!\n"); */
 				break;
 
 			default:
 				DPRINTF(DPRINTF_ERROR,"Not support B-frame mb_type = %i", mb->mb_type);
 			}
-
-		}						// end of FOR
+		} /* End of for */
 	}
+
 #ifdef BFRAMES_DEC_DEBUG
 	if (!first){
 		first=1;
@@ -1740,7 +1702,7 @@ decoder_bframe(DECODER * dec,
 #endif
 }
 
-// swap two MACROBLOCK array
+/* swap two MACROBLOCK array */
 void
 mb_swap(MACROBLOCK ** mb1,
 		MACROBLOCK ** mb2)
@@ -1814,7 +1776,7 @@ decoder_decode(DECODER * dec,
 		{
 			stats->notify = output ? XVID_DEC_VOP : XVID_DEC_NOTHING;
 			stats->data.vop.time_base = (int)dec->time_base;
-			stats->data.vop.time_increment = 0;	//XXX: todo
+			stats->data.vop.time_increment = 0;	/* XXX: todo */
 		}
 
 		emms();
@@ -1825,7 +1787,7 @@ decoder_decode(DECODER * dec,
 
 	BitstreamInit(&bs, frame->bitstream, frame->length);
 
-	// XXX: 0x7f is only valid whilst decoding vfw xvid/divx5 avi's
+	/* XXX: 0x7f is only valid whilst decoding vfw xvid/divx5 avi's */
 	if(dec->low_delay_default && frame->length == 1 && BitstreamShowBits(&bs, 8) == 0x7f)
 	{
 		if (stats)
@@ -1875,7 +1837,7 @@ repeat:
 		goto repeat;
 	} 
 
-	dec->p_bmv.x = dec->p_bmv.y = dec->p_fmv.y = dec->p_fmv.y = 0;	// init pred vector to 0
+	dec->p_bmv.x = dec->p_bmv.y = dec->p_fmv.y = dec->p_fmv.y = 0;	/* init pred vector to 0 */
 
 
 	/* packed_mode: special-N_VOP treament */
@@ -2005,7 +1967,7 @@ done :
 	{
 		stats->notify = output ? XVID_DEC_VOP : XVID_DEC_NOTHING;
 		stats->data.vop.time_base = (int)dec->time_base;
-		stats->data.vop.time_increment = 0;	//XXX: todo
+		stats->data.vop.time_increment = 0;	/* XXX: todo */
 	}
 	
 	emms();
