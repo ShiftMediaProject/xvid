@@ -36,7 +36,7 @@
  *  - 22.12.2001  API change: added xvid_init() - Isibaar
  *  - 16.12.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: xvid.c,v 1.22 2002-06-23 19:48:06 edgomez Exp $
+ *  $Id: xvid.c,v 1.23 2002-06-26 15:59:51 ia64p Exp $
  *
  ****************************************************************************/
 
@@ -98,11 +98,7 @@ xvid_init(void *handle,
 		cpu_flags = init_param->cpu_flags;
 	} else {
 
-#ifdef ARCH_X86
 		cpu_flags = check_cpu_features();
-#else
-		cpu_flags = 0;
-#endif
 		init_param->cpu_flags = cpu_flags;
 	}
 
