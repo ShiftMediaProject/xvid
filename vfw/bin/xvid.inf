@@ -54,14 +54,19 @@ HKLM,SYSTEM\CurrentControlSet\Control\MediaResources\icm\vidc.XVID,Description,,
 HKLM,SYSTEM\CurrentControlSet\Control\MediaResources\icm\vidc.XVID,Driver,,xvidvfw.dll
 HKLM,SYSTEM\CurrentControlSet\Control\MediaResources\icm\vidc.XVID,FriendlyName,,"XVID"
 
-HKLM,%UnInstallPath%,DisplayName,,%UninstallDispName%
+HKLM,%UnInstallPath%,DisplayName,,%XviD%
 HKLM,%UnInstallPath%,UninstallString,,"%10%\rundll.exe setupx.dll,InstallHinfSection Remove_XviD 132 %17%\%InfFile%"
 
 [MPEG4.AddRegNT]
 HKLM,SOFTWARE\Microsoft\Windows NT\CurrentVersion\drivers.desc,xvidvfw.dll,,%XviD%
 HKLM,SOFTWARE\Microsoft\Windows NT\CurrentVersion\drivers32,vidc.XVID,,xvidvfw.dll
 
-HKLM,%UnInstallPath%,DisplayName,,%UninstallDispName%
+HKLM,%UnInstallPath%,DisplayName,,%XviD%
+HKLM,%UnInstallPath%,DisplayIcon,,"%11%\xvidvfw.dll,0"
+HKLM,%UnInstallPath%,Publisher,,%mfgname%
+HKLM,%UnInstallPath%,HelpLink,,%Website%
+HKLM,%UnInstallPath%,NoModify,%REG_DWORD%,1
+HKLM,%UnInstallPath%,NoRepair,%REG_DWORD%,1
 HKLM,%UnInstallPath%,UninstallString,,"%11%\rundll32.exe setupapi,InstallHinfSection Remove_XviD 132 %17%\%InfFile%"
 
 [MPEG4.DoReg]
@@ -87,7 +92,8 @@ MPEG4.Copy.Inf = 17
 [Strings]
 XviD="XviD MPEG-4 Video Codec"
 InfFile="xvid.inf"
-UninstallDispName="XVID MPEG-4 CODEC"
 UnInstallPath="Software\Microsoft\Windows\CurrentVersion\Uninstall\xvid"
 MediaClassName="Media Devices"
-mfgname="www.videocoding.de"
+mfgname="XviD Development Team"
+Website="http://www.xvid.org/"
+REG_DWORD=0x00010001
