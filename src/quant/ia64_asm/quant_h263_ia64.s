@@ -1,4 +1,4 @@
-	.file	"quant_h263.1.c"
+	.file	"quant_h263_ia64.s"
 	.pred.safe_across_calls p1-p5,p16-p63
 		.section	.rodata
 	.align 4
@@ -43,7 +43,7 @@ multipliers:
 	.global quant_intra_ia64#
 	.proc quant_intra_ia64#
 quant_intra_ia64:
-	.prologue 12, 37
+	.prologue 
 	.save ar.pfs, r38
 	alloc r38 = ar.pfs, 4, 3, 2, 0
 	adds r16 = -8, r12
@@ -134,7 +134,7 @@ quant_intra_ia64:
 	(p6) st2 [r15] = r14
 	br .L12
 .L14:
-	.pred.rel.mutex p8, p9
+	.pred.rel "mutex", p8, p9
 	setf.sig f6 = r18
 	add r16 = r17, r32
 	;;
@@ -275,21 +275,21 @@ dequant_intra_ia64:
 quant_inter_ia64:
 
 
-/********************************************************
- *							*
- *	const uint32_t mult = multipliers[quant];	*
- *	const uint16_t quant_m_2 = quant << 1;		*
- *	const uint16_t quant_d_2 = quant >> 1;		*
- *	int sum = 0;					*
- *	uint32_t i;					*
- *	int16_t acLevel,acL;				*
- *							*
- ********************************************************/
+//*******************************************************
+//*							*
+//*	const uint32_t mult = multipliers[quant];	*
+//*	const uint16_t quant_m_2 = quant << 1;		*
+//*	const uint16_t quant_d_2 = quant >> 1;		*
+//*	int sum = 0;					*
+//*	uint32_t i;					*
+//*	int16_t acLevel,acL;				*
+//*							*
+//*******************************************************/
 
 
 
 	LL=3		// LL = load latency
-	
+			//if LL is changed, you'll also have to change the .pred.rel... parts below!	
 	.prologue
 	addl r14 = @ltoff(multipliers#), gp
 	dep.z r15 = r34, 2, 32
@@ -327,25 +327,28 @@ quant_inter_ia64:
 
 
 
-/********************************************************************************
- *										*
- *	for (i = 0; i < 64; i++) {						*
- *		acL=acLevel = data[i];						*
- *		acLevel = ((acLevel < 0)?-acLevel:acLevel) - quant_d_2;		*
- *		if (acLevel < quant_m_2){					*
- *			acLevel = 0;						*
- *		}								*
- *		acLevel = (acLevel * mult) >> SCALEBITS;			*
- *		sum += acLevel;							*
- *		coeff[i] = ((acL < 0)?-acLevel:acLevel);			*
- *	}									*		
- *										*	
- ********************************************************************************/ 
+//*******************************************************************************
+//*										*
+//*	for (i = 0; i < 64; i++) {						*
+//*		acL=acLevel = data[i];						*
+//*		acLevel = ((acLevel < 0)?-acLevel:acLevel) - quant_d_2;		*
+//*		if (acLevel < quant_m_2){					*
+//*			acLevel = 0;						*
+//*		}								*
+//*		acLevel = (acLevel * mult) >> SCALEBITS;			*
+//*		sum += acLevel;							*
+//*		coeff[i] = ((acL < 0)?-acLevel:acLevel);			*
+//*	}									*		
+//*										*	
+//*******************************************************************************/ 
 
 
 
 .explicit
 .L58:
+	.pred.rel "clear", p29, p37
+	.pred.rel "mutex", p29, p37
+	
 									//pipeline stage
 {.mmi
 	(p[0]) 		ld2 ac1[0]   = [r15],2				//   0		acL=acLevel = data[i];	
@@ -363,6 +366,7 @@ quant_inter_ia64:
 	(p[LL+3]) 	sxt2 ac2[2]   = ac2[2]				//   LL+3
 }	
 {.mmi
+	.pred.rel "mutex", p34, p42
 	(cmp1[6]) 	mov ac3[0] = ac2[6]				//   LL+7	ac3 = acLevel;
 	(cmp1neg[6])	sub ac3[0] = r0, ac2[6]				//   LL+7	ac3 = -acLevel;
 	(p[LL+6]) 	pmpyshr2.u ac2[5] = r29, ac2[5], 16		//   LL+6	acLevel = (acLevel * mult) >> SCALEBITS;
@@ -373,6 +377,8 @@ quant_inter_ia64:
 	br.ctop.sptk.few .L58
 	;;
 }
+
+	.pred.rel "clear", p29, p37
 .default
 	mov ar.ec = r17
 	;;
@@ -397,12 +403,12 @@ quant_inter_ia64:
 dequant_inter_ia64:
 	
 //***********************************************************************
-//									*
-//	const uint16_t quant_m_2 = quant << 1;				*
-//	const uint16_t quant_add = (quant & 1 ? quant : quant - 1);	*
-//	uint32_t i;							*				
-//									*		
-//***********************************************************************									*				
+//*									*
+//*	const uint16_t quant_m_2 = quant << 1;				*
+//*	const uint16_t quant_add = (quant & 1 ? quant : quant - 1);	*
+//*	uint32_t i;							*
+//*									*		
+//***********************************************************************
 	
 	
 	
@@ -432,32 +438,33 @@ dequant_inter_ia64:
 	mov pr.rot = 1 << 16
 	;;
 
-/********************************************************************************		
- *										*					
- *for (i = 0; i < 64; i++) {							*
- *		int16_t acLevel = coeff[i];					*
- *										*		
- *		if (acLevel == 0)						*
- *		{								*
- *			data[i] = 0;						*
- *		}								*
- *		else if (acLevel < 0)						*
- *		{								*
- *			acLevel = acLevel * quant_m_2 - quant_add;		*
- *			data[i] = (acLevel >= -2048 ? acLevel : -2048);		*
- *		}								*
- *		else // if (acLevel > 0)					*
- *		{								*				
- *			acLevel = acLevel * quant_m_2 + quant_add; 		*
- *			data[i] = (acLevel <= 2047 ? acLevel : 2047);		*
- *		}								*		
- *	}									*			
- *										*	
- ********************************************************************************/
+//*******************************************************************************
+//*										*
+//*for (i = 0; i < 64; i++) {							*
+//*		int16_t acLevel = coeff[i];					*
+//*										*		
+//*		if (acLevel == 0)						*
+//*		{								*
+//*			data[i] = 0;						*
+//*		}								*
+//*		else if (acLevel < 0)						*
+//*		{								*
+//*			acLevel = acLevel * quant_m_2 - quant_add;		*
+//*			data[i] = (acLevel >= -2048 ? acLevel : -2048);		*
+//*		}								*
+//*		else // if (acLevel > 0)					*
+//*		{								*
+//*			acLevel = acLevel * quant_m_2 + quant_add; 		*
+//*			data[i] = (acLevel <= 2047 ? acLevel : 2047);		*
+//*		}								*		
+//*	}									*
+//*										*	
+//*******************************************************************************/
 
 
 	
 	LL=2	// LL := load latency
+		//if LL is changed, you'll also have to change the .pred.rel... parts below!
 	
 	
 	.rotr ac1[LL+10], x[5], y1[3], y2[3]
@@ -467,6 +474,14 @@ dequant_inter_ia64:
 								//pipeline stage
 	
 .L60:
+	.pred.rel "clear", p36
+	.pred.rel "mutex", p47, p49
+	.pred.rel "mutex", p46, p48
+	.pred.rel "mutex", p40, p45
+	.pred.rel "mutex", p39, p44
+	.pred.rel "mutex", p38, p43
+	.pred.rel "mutex", p37, p42
+	.pred.rel "mutex", p36, p41
 {.mmi	
 	(p[0])ld2 ac1[0] = [r14] ,2				//	0  	acLevel = coeff[i];
 	(p[LL+1])cmp4.ne p6, cmp1neg[0] = 0, ac1[LL+1]		//	LL+1
@@ -490,8 +505,8 @@ dequant_inter_ia64:
 	(p[LL+4])sxt2 ac1[LL+4] = ac1[LL+4]			//	LL+4
 }
 {.mmi
-	(cmp2[4]) mov y1[0] = x[3]				//	LL+4
-	(cmp2[4]) mov y2[0] = ac1[LL+5]				//	LL+4
+	(cmp2[4]) mov y1[0] = x[3]				//	LL+5
+	(cmp2[4]) mov y2[0] = ac1[LL+5]				//	LL+5
 	(p[LL+6])cmp4.le cmp3[0], cmp3neg[0] = x[4], ac1[LL+6]	//	LL+6
 }
 {.mmi
@@ -505,6 +520,7 @@ dequant_inter_ia64:
 	br.ctop.sptk.few .L60
 	;;
 }
+	.pred.rel "clear", p36
 .default
 	mov ar.lc = r2
 	mov ar.pfs = r9
