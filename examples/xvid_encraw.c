@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.5 2002-11-27 21:09:10 edgomez Exp $
+ * $Id: xvid_encraw.c,v 1.6 2002-12-18 20:48:25 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -80,6 +80,12 @@ static int const general_presets[7] = {
 /* Maximum number of frames to encode */
 #define ABS_MAXFRAMENR 9999
 
+/* HINTMODEs */
+#define HINT_MODE_NONE 0
+#define HINT_MODE_GET  1
+#define HINT_MODE_SET  2
+#define HINT_FILE "hints.mv"
+
 static int   ARG_BITRATE = 900;
 static int   ARG_QUANTI = 0;
 static int   ARG_QUALITY = 6;
@@ -92,6 +98,7 @@ static int   ARG_INPUTTYPE = 0;
 static int   ARG_SAVEMPEGSTREAM = 0;
 static int   ARG_OUTPUTTYPE = 0;
 static char *ARG_OUTPUTFILE = NULL;
+static int   ARG_HINTMODE = HINT_MODE_NONE;
 static int   XDIM = 0;
 static int   YDIM = 0;
 #define IMAGE_SIZE(x,y) ((x)*(y)*3/2)
@@ -136,7 +143,8 @@ static int read_yuvdata(FILE* handle, unsigned char *image);
 static int enc_init(int use_assembler);
 static int enc_stop();
 static int enc_main(unsigned char* image, unsigned char* bitstream,
-					int *streamlength, int* frametype);
+					unsigned char *hints_buffer,
+					long *streamlength, long* frametype, long *hints_size);
 
 /*****************************************************************************
  *               Main function
@@ -148,22 +156,25 @@ int main(int argc, char *argv[])
 	unsigned char *mp4_buffer = NULL;
 	unsigned char *in_buffer = NULL;
 	unsigned char *out_buffer = NULL;
+	unsigned char *hints_buffer = NULL;
 
 	double enctime;
 	double totalenctime=0.;
   
 	long totalsize;
+	long hints_size;
 	int status;
-	int frame_type;
-	int bigendian;
+	long frame_type;
+	long bigendian;
   
-	int m4v_size;
+	long m4v_size;
 	int use_assembler=0;
   
 	char filename[256];
   
 	FILE *in_file = stdin;
 	FILE *out_file = NULL;
+	FILE *hints_file = NULL;
 
 	printf("xvid_decraw - raw mpeg4 bitstream encoder ");
 	printf("written by Christoph Lampert 2002\n\n");
@@ -221,6 +232,10 @@ int main(int argc, char *argv[])
 			i++;
 			ARG_OUTPUTTYPE = atoi(argv[i]);
 		}
+		else if (strcmp("-mv", argv[i]) == 0 && i < argc - 1 ) {
+			i++;
+			ARG_HINTMODE = atoi(argv[i]);
+		}
 		else if (strcmp("-o", argv[i]) == 0 && i < argc - 1 ) {
 			i++;
 			ARG_OUTPUTFILE = argv[i];
@@ -263,6 +278,37 @@ int main(int argc, char *argv[])
 	if ( ARG_MAXFRAMENR <= 0) {
 		fprintf(stderr,"Wrong number of frames\n");
 		return -1;
+	}
+
+	if ( ARG_HINTMODE != HINT_MODE_NONE &&
+		 ARG_HINTMODE != HINT_MODE_GET &&
+		 ARG_HINTMODE != HINT_MODE_SET)
+		ARG_HINTMODE = HINT_MODE_NONE;
+
+	if( ARG_HINTMODE != HINT_MODE_NONE) {
+		char *rights = "rb";
+
+		/*
+		 * If we are getting hints from core, we will have to write them to
+		 * hint file
+		 */
+		if(ARG_HINTMODE == HINT_MODE_GET)
+			rights = "w+b";
+
+		/* Open the hint file */
+		hints_file = fopen(HINT_FILE, rights);
+		if(hints_file == NULL) {
+			fprintf(stderr, "Error opening input file %s\n", HINT_FILE);
+			return -1;
+		}
+
+		/* Allocate hint memory space, we will be using rawhints */
+		/* NB : Hope 1Mb is enough */
+		if((hints_buffer = malloc(1024*1024)) == NULL) {
+			fprintf(stderr, "Memory allocation error\n");
+			return -1;
+		}
+
 	}
 
 	if ( ARG_INPUTFILE == NULL || strcmp(ARG_INPUTFILE, "stdin") == 0) {
@@ -365,11 +411,22 @@ int main(int argc, char *argv[])
 		}
 
 /*****************************************************************************
+ *                       Read hints from file
+ ****************************************************************************/
+
+		if(ARG_HINTMODE == HINT_MODE_SET) {
+			fread(&hints_size, 1, sizeof(long), hints_file);
+			hints_size = (!bigendian)?SWAP(hints_size):hints_size;
+			fread(hints_buffer, 1, hints_size, hints_file);
+		}
+
+/*****************************************************************************
  *                       Encode and decode this frame
  ****************************************************************************/
 
 		enctime = msecond();
-		status = enc_main(in_buffer, mp4_buffer, &m4v_size, &frame_type);
+		status = enc_main(in_buffer, mp4_buffer, hints_buffer,
+						  &m4v_size, &frame_type, &hints_size);
 		enctime = msecond() - enctime;
 
 		totalenctime += enctime;
@@ -377,6 +434,21 @@ int main(int argc, char *argv[])
 
 		printf("Frame %5d: intra %1d, enctime=%6.1f ms, size=%6dbytes\n",
 			   (int)filenr, (int)frame_type, (float)enctime, (int)m4v_size);
+
+/*****************************************************************************
+ *                       Save hints to file
+ ****************************************************************************/
+
+		if(ARG_HINTMODE == HINT_MODE_GET) {
+			hints_size = (!bigendian)?SWAP(hints_size):hints_size;
+			fwrite(&hints_size, 1, sizeof(long), hints_file);
+			hints_size = (!bigendian)?SWAP(hints_size):hints_size;
+			fwrite(hints_buffer, 1, hints_size, hints_file);
+		}
+
+/*****************************************************************************
+ *                       Save stream to file
+ ****************************************************************************/
 
 		if (ARG_SAVEMPEGSTREAM)
 		{
@@ -435,14 +507,18 @@ int main(int argc, char *argv[])
 			fprintf(stderr, "Encore RELEASE problem return value %d\n", status);
 	}
 
-	fclose(in_file);
+	if(in_file)
+		fclose(in_file);
 	if(out_file)
 		fclose(out_file);
+	if(hints_file)
+		fclose(hints_file);
 
  free_all_memory:
 	free(out_buffer);
 	free(mp4_buffer);
 	free(in_buffer);
+	if(hints_buffer) free(hints_buffer);
 
 	return 0;
 
@@ -496,6 +572,7 @@ static void usage()
 	fprintf(stderr, "                    + stream.m4v with -mt 0\n");
 	fprintf(stderr, "                    + stream.mp4u with -mt 1\n");
 	fprintf(stderr, " -mt integer    : output type (m4v=0, mp4u=1)\n");
+	fprintf(stderr, " -mv integer    : Use motion vector hints (no hints=0, get hints=1, set hints=2)\n");
 	fprintf(stderr, " -help          : prints this help message\n");
 	fprintf(stderr, " -quant integer : fixed quantizer (disables -b setting)\n");
 	fprintf(stderr, " (* means default)\n");
@@ -641,7 +718,8 @@ static int enc_stop()
 }
 
 static int enc_main(unsigned char* image, unsigned char* bitstream,
-					int *streamlength, int* frametype)
+					unsigned char* hints_buffer,
+					long *streamlength, long *frametype, long *hints_size)
 {
 	int xerr;
 
@@ -662,7 +740,23 @@ static int enc_main(unsigned char* image, unsigned char* bitstream,
 	xframe.general = general_presets[ARG_QUALITY];
 	xframe.quant_intra_matrix = xframe.quant_inter_matrix = NULL;
 
+	xframe.hint.hintstream = hints_buffer;
+
+	if(ARG_HINTMODE == HINT_MODE_SET) {
+		xframe.hint.hintlength = *hints_size;
+		xframe.hint.rawhints = 0;
+		xframe.general |= XVID_HINTEDME_SET;
+	}
+
+	if(ARG_HINTMODE == HINT_MODE_GET) {
+		xframe.hint.rawhints = 0;
+		xframe.general |= XVID_HINTEDME_GET;
+	}
+
 	xerr = xvid_encore(enc_handle, XVID_ENC_ENCODE, &xframe, &xstats);
+
+	if(ARG_HINTMODE == HINT_MODE_GET)
+		*hints_size = xframe.hint.hintlength;
 
 	/*
 	 * This is statictical data, e.g. for 2-pass. If you are not
