@@ -165,18 +165,18 @@ image_setedges(IMAGE * image,
 	src = image->y;
 
 	for (i = 0; i < EDGE_SIZE; i++) {
-		// if interlacing, edges contain top-most data from each field
+/*		// if interlacing, edges contain top-most data from each field
 		if (interlacing && (i & 1)) {
 			memset(dst, *(src + edged_width), EDGE_SIZE);
 			memcpy(dst + EDGE_SIZE, src + edged_width, width);
 			memset(dst + edged_width - EDGE_SIZE,
 				   *(src + edged_width + width - 1), EDGE_SIZE);
-		} else {
+		} else {*/
 			memset(dst, *src, EDGE_SIZE);
 			memcpy(dst + EDGE_SIZE, src, width);
 			memset(dst + edged_width - EDGE_SIZE, *(src + width - 1),
 				   EDGE_SIZE);
-		}
+		/*}*/
 		dst += edged_width;
 	}
 
@@ -189,18 +189,18 @@ image_setedges(IMAGE * image,
 
 	src -= edged_width;
 	for (i = 0; i < EDGE_SIZE; i++) {
-		// if interlacing, edges contain bottom-most data from each field
+/*		// if interlacing, edges contain bottom-most data from each field
 		if (interlacing && !(i & 1)) {
 			memset(dst, *(src - edged_width), EDGE_SIZE);
 			memcpy(dst + EDGE_SIZE, src - edged_width, width);
 			memset(dst + edged_width - EDGE_SIZE,
 				   *(src - edged_width + width - 1), EDGE_SIZE);
-		} else {
+		} else {*/
 			memset(dst, *src, EDGE_SIZE);
 			memcpy(dst + EDGE_SIZE, src, width);
 			memset(dst + edged_width - EDGE_SIZE, *(src + width - 1),
 				   EDGE_SIZE);
-		}
+		/*}*/
 		dst += edged_width;
 	}
 
