@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.2 2002-09-27 18:33:13 edgomez Exp $
+ * $Id: xvid_decraw.c,v 1.3 2002-09-27 20:58:30 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -429,7 +429,7 @@ msecond()
 #ifndef _MSC_VER
 	struct timeval  tv;
 	gettimeofday(&tv, 0);
-	return tv.tv_sec*10e3 + tv.tv_usec * 1.0e-3;
+	return (double)tv.tv_sec*1.0e3 + (double)tv.tv_usec*1.0e-3;
 #else
 	clock_t clk;
 	clk = clock();
