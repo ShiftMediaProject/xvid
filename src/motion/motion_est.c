@@ -153,9 +153,6 @@ MotionEstimation(MBParam * const pParam,
 	
 			MACROBLOCK *const pMB = &pMBs[x + y * iWcount];
 
-			if (pMB->mode == MODE_NOT_CODED)
-				continue; 
-				
 			predMV = get_pmv2(pMBs, pParam->mb_width, 0, x, y, 0);    
 
 			pMB->sad16 =
