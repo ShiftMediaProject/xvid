@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the xvid_free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: mbprediction.h,v 1.14 2002-09-07 13:43:00 edgomez Exp $
+ *  $Id: mbprediction.h,v 1.15 2002-09-08 17:25:10 edgomez Exp $
  *
  *************************************************************************/
 
@@ -138,7 +138,7 @@ get_pmv2(const MACROBLOCK * const mbs,
     lpos = lx + ly * mb_width;
     rpos = rx + ry * mb_width;
     tpos = tx + ty * mb_width;
-    num_cand = 0;
+    last_cand = num_cand = 0;
 
     if (lpos >= bound && lx >= 0) {
         num_cand++;
@@ -164,7 +164,14 @@ get_pmv2(const MACROBLOCK * const mbs,
         pmv[3] = zeroMV;
     }
 
-    /* if only one valid candidate predictor, the invalid candiates are set to the canidate */
+    /*
+	 * If there're more than one candidate, we return the median vector
+	 * edgomez : the special case "no candidates" is handled the same way
+	 *           because all vectors are set to zero. So the median vector
+	 *           is {0,0}, and this is exactly the vector we must return
+	 *           according to the mpeg4 specs.
+	 */
+
 	if (num_cand != 1) {
 		/* set median */
    
@@ -238,7 +245,7 @@ get_pmvdata2(const MACROBLOCK * const mbs,
     lpos = lx + ly * mb_width;
     rpos = rx + ry * mb_width;
     tpos = tx + ty * mb_width;
-    num_cand = 0;
+    last_cand = num_cand = 0;
 
     if (lpos >= bound && lx >= 0) {
         num_cand++;
@@ -356,7 +363,7 @@ get_ipmv(const MACROBLOCK * const mbs,
     lpos = lx + ly * mb_width;
     rpos = rx + ry * mb_width;
     tpos = tx + ty * mb_width;
-    num_cand = 0;
+    last_cand = num_cand = 0;
 
     if (lpos >= bound && lx >= 0) {
         num_cand++;
@@ -441,7 +448,7 @@ get_ipmvdata(const MACROBLOCK * const mbs,
     lpos = lx + ly * mb_width;
     rpos = rx + ry * mb_width;
     tpos = tx + ty * mb_width;
-    num_cand = 0;
+    last_cand = num_cand = 0;
 
     if (lpos >= bound && lx >= 0) {
         num_cand++;
