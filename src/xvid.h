@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.37 2004-04-15 19:44:05 edgomez Exp $
+ * $Id: xvid.h,v 1.38 2004-04-18 07:55:11 syskin Exp $
  *
  ****************************************************************************/
 
@@ -251,6 +251,12 @@ typedef struct {
 #define XVID_DEBLOCKY      (1<<2) /* perform luma deblocking */
 #define XVID_DEBLOCKUV     (1<<3) /* perform chroma deblocking */
 #define XVID_FILMEFFECT    (1<<4) /* adds film grain */
+#define XVID_DERINGUV      (1<<5) /* perform chroma deringing, requires deblocking to work */
+#define XVID_DERINGY       (1<<6) /* perform luma deringing, requires deblocking to work */
+
+#define XVID_DEC_FAST      (1<<29) /* disable postprocessing to decrease cpu usage *todo* */
+#define XVID_DEC_DROP      (1<<30) /* drop bframes to decrease cpu usage *todo* */
+#define XVID_DEC_PREROLL   (1<<31) /* decode as fast as you can, don't even show output *todo* */
 
 typedef struct {
 	int version;

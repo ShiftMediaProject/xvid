@@ -388,7 +388,9 @@
 #define IDC_TURBO                       1369
 #define IDC_DEC_DUV                     1370
 #define IDC_DEC_DR                      1371
+#define IDC_DEC_DRY                     1371
 #define IDC_DEBUGOUTPUT                 1372
+#define IDC_DEC_DRUV                    1372
 #define IDC_SHOWINTERNALS               1373
 #define IDC_DEC_FE                      1374
 #define IDC_BITRATE_TSIZE               1375
