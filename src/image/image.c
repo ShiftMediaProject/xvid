@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.c,v 1.28 2004-04-01 11:11:28 suxen_drol Exp $
+ * $Id: image.c,v 1.29 2004-04-12 15:49:56 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -35,6 +35,7 @@
 #include "interpolate8x8.h"
 #include "reduced.h"
 #include "../utils/mem_align.h"
+#include "../motion/sad.h"
 
 #include "font.h"		/* XXX: remove later */
 
@@ -893,24 +894,64 @@ float sse_to_PSNR(long sse, int pixels)
 
 }
 
-long plane_sse(uint8_t * orig,
-		   uint8_t * recon,
-		   uint16_t stride,
-		   uint16_t width,
-		   uint16_t height)
+long plane_sse(uint8_t *orig,
+			   uint8_t *recon,
+			   uint16_t stride,
+			   uint16_t width,
+			   uint16_t height)
 {
-	int diff, x, y;
-	long sse=0;
+	int y, bwidth, bheight;
+	long sse = 0;
 
-	for (y = 0; y < height; y++) {
+	bwidth  = width  & (~0x07);
+	bheight = height & (~0x07);
+
+	/* Compute the 8x8 integer part */
+	for (y = 0; y<bheight; y += 8) {
+		int x;
+
+		/* Compute sse for the band */
+		for (x = 0; x<bwidth; x += 8)
+			sse += sse8_8bit(orig  + x, recon + x, stride);
+
+		/* remaining pixels of the 8 pixels high band */
+		for (x = bwidth; x < width; x++) {
+			int diff;
+			diff = *(orig + 0*stride + x) - *(recon + 0*stride + x);
+			sse += diff * diff;
+			diff = *(orig + 1*stride + x) - *(recon + 1*stride + x);
+			sse += diff * diff;
+			diff = *(orig + 2*stride + x) - *(recon + 2*stride + x);
+			sse += diff * diff;
+			diff = *(orig + 3*stride + x) - *(recon + 3*stride + x);
+			sse += diff * diff;
+			diff = *(orig + 4*stride + x) - *(recon + 4*stride + x);
+			sse += diff * diff;
+			diff = *(orig + 5*stride + x) - *(recon + 5*stride + x);
+			sse += diff * diff;
+			diff = *(orig + 6*stride + x) - *(recon + 6*stride + x);
+			sse += diff * diff;
+			diff = *(orig + 7*stride + x) - *(recon + 7*stride + x);
+			sse += diff * diff;
+		}
+
+		orig  += 8*stride;
+		recon += 8*stride;
+	}
+
+	/* Compute the down rectangle sse */
+	for (y = bheight; y < height; y++) {
+		int x;
 		for (x = 0; x < width; x++) {
+			int diff;
 			diff = *(orig + x) - *(recon + x);
 			sse += diff * diff;
 		}
 		orig += stride;
 		recon += stride;
 	}
-	return sse;
+
+	return (sse);
 }
 
 #if 0

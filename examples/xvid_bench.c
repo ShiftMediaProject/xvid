@@ -19,15 +19,13 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.13 2004-04-05 20:36:36 edgomez Exp $
+ * $Id: xvid_bench.c,v 1.14 2004-04-12 15:49:56 edgomez Exp $
  *
  ****************************************************************************/
 
 /*****************************************************************************
  *                            
  *  'Reference' output is at the end of file.
- *  Don't take the checksums and crc too seriouly, they aren't
- *  bullet-proof (should plug some .md5 here)...
  *
  *   compiles with something like:
  *   gcc -o xvid_bench xvid_bench.c  -I../src/ -lxvidcore -lm
@@ -782,6 +780,95 @@ void test_quant()
 }
 
 /*********************************************************************
+ * test distortion operators
+ *********************************************************************/
+
+static void ieee_reseed(long s);
+static long ieee_rand(int Min, int Max);
+
+#define TEST_SSE(FUNCTION, SRC1, SRC2, STRIDE) \
+  do { \
+    t = gettime_usec(); \
+    tst = nb_tests; \
+    while((tst--)>0) sse = (FUNCTION)((SRC1), (SRC2), (STRIDE)); \
+    emms(); \
+    t = (gettime_usec() - t)/(double)nb_tests;	\
+  } while(0)
+
+
+void test_sse()
+{
+	const int nb_tests = 100000*speed_ref;
+	int i;
+	CPU *cpu;
+	DECLARE_ALIGNED_MATRIX(Src1, 8, 8, int16_t, 16);
+	DECLARE_ALIGNED_MATRIX(Src2, 8, 8, int16_t, 16);
+	DECLARE_ALIGNED_MATRIX(Src3, 8, 8, int16_t, 16);
+	DECLARE_ALIGNED_MATRIX(Src4, 8, 8, int16_t, 16);
+
+	printf( "\n =====  test sse =====\n" );
+
+	ieee_reseed(1);
+	for(i=0; i<64; ++i) {
+		Src1[i] = ieee_rand(-2048, 2047);
+		Src2[i] = ieee_rand(-2048, 2047);
+		Src3[i] = ieee_rand(-2048, 2047);
+		Src4[i] = ieee_rand(-2048, 2047);
+	}
+
+	for(cpu = cpu_list; cpu->name!=0; ++cpu)
+	{
+		double t;
+		int tst, sse;
+
+		if (!init_cpu(cpu))
+			continue;
+
+		/* 16 bit element blocks */
+		TEST_SSE(sse8_16bit, Src1, Src2, 16);
+		printf("%s -   sse8_16bit#1 %.3f usec       sse=%d %s\n",
+			   cpu->name, t, sse, (sse!=182013834)?"| ERROR": "");
+		TEST_SSE(sse8_16bit, Src1, Src3, 16);
+		printf("%s -   sse8_16bit#2 %.3f usec       sse=%d %s\n",
+			   cpu->name, t, sse, (sse!=142545203)?"| ERROR": "");
+		TEST_SSE(sse8_16bit, Src1, Src4, 16);
+		printf("%s -   sse8_16bit#3 %.3f usec       sse=%d %s\n",
+			   cpu->name, t, sse, (sse!=146340935)?"| ERROR": "");
+		TEST_SSE(sse8_16bit, Src2, Src3, 16);
+		printf("%s -   sse8_16bit#4 %.3f usec       sse=%d %s\n",
+			   cpu->name, t, sse, (sse!=130136661)?"| ERROR": "");
+		TEST_SSE(sse8_16bit, Src2, Src4, 16);
+		printf("%s -   sse8_16bit#5 %.3f usec       sse=%d %s\n",
+			   cpu->name, t, sse, (sse!=136870353)?"| ERROR": "");
+		TEST_SSE(sse8_16bit, Src3, Src4, 16);
+		printf("%s -   sse8_16bit#6 %.3f usec       sse=%d %s\n",
+			   cpu->name, t, sse, (sse!=164107772)?"| ERROR": "");
+
+		/* 8 bit element blocks */
+		TEST_SSE(sse8_8bit, (int8_t*)Src1, (int8_t*)Src2, 8);
+		printf("%s -    sse8_8bit#1 %.3f usec       sse=%d %s\n",
+			   cpu->name, t, sse, (sse!=1356423)?"| ERROR": "");
+		TEST_SSE(sse8_8bit, (int8_t*)Src1, (int8_t*)Src3, 8);
+		printf("%s -    sse8_8bit#2 %.3f usec       sse=%d %s\n",
+			   cpu->name, t, sse, (sse!=1173074)?"| ERROR": "");
+		TEST_SSE(sse8_8bit, (int8_t*)Src1, (int8_t*)Src4, 8);
+		printf("%s -    sse8_8bit#3 %.3f usec       sse=%d %s\n",
+			   cpu->name, t, sse, (sse!=1092357)?"| ERROR": "");
+		TEST_SSE(sse8_8bit, (int8_t*)Src2, (int8_t*)Src3, 8);
+		printf("%s -    sse8_8bit#4 %.3f usec       sse=%d %s\n",
+			   cpu->name, t, sse, (sse!=1360239)?"| ERROR": "");
+		TEST_SSE(sse8_8bit, (int8_t*)Src2, (int8_t*)Src4, 8);
+		printf("%s -    sse8_8bit#5 %.3f usec       sse=%d %s\n",
+			   cpu->name, t, sse, (sse!=1208414)?"| ERROR": "");
+		TEST_SSE(sse8_8bit, (int8_t*)Src3, (int8_t*)Src4, 8);
+		printf("%s -    sse8_8bit#6 %.3f usec       sse=%d %s\n",
+			   cpu->name, t, sse, (sse!=1099285)?"| ERROR": "");
+
+		printf(" ---\n");
+	}
+}
+
+/*********************************************************************
  * test non-zero AC counting
  *********************************************************************/
 
@@ -822,16 +909,16 @@ void test_cbp()
 			continue;
 
 		TEST_CBP(calc_cbp, Src1);
-		printf("%s -   calc_cbp#1 %.3f usec       cbp=0x%02x\n",
+		printf("%s -   calc_cbp#1 %.3f usec       cbp=0x%02x %s\n",
 			   cpu->name, t, cbp, (cbp!=0x15)?"| ERROR": "");
 		TEST_CBP(calc_cbp, Src2);
-		printf("%s -   calc_cbp#2 %.3f usec       cbp=0x%02x\n",
+		printf("%s -   calc_cbp#2 %.3f usec       cbp=0x%02x %s\n",
 			   cpu->name, t, cbp, (cbp!=0x38)?"| ERROR": "");
 		TEST_CBP(calc_cbp, Src3);
-		printf("%s -   calc_cbp#3 %.3f usec       cbp=0x%02x\n",
+		printf("%s -   calc_cbp#3 %.3f usec       cbp=0x%02x %s\n",
 			   cpu->name, t, cbp, (cbp!=0x0f)?"| ERROR": "" );
 		TEST_CBP(calc_cbp, Src4);
-		printf("%s -   calc_cbp#4 %.3f usec       cbp=0x%02x\n",
+		printf("%s -   calc_cbp#4 %.3f usec       cbp=0x%02x %s\n",
 			   cpu->name, t, cbp, (cbp!=0x05)?"| ERROR": "" );
 		printf( " --- \n" );
 	}
@@ -1501,6 +1588,7 @@ int main(int argc, char *argv[])
 	if (what==0 || what==4) test_transfer();
 	if (what==0 || what==5) test_quant();
 	if (what==0 || what==6) test_cbp();
+	if (what==0 || what==10) test_sse();
 
 	if (what==7) {
 		test_IEEE1180_compliance(-256, 255, 1);
@@ -1530,7 +1618,7 @@ int main(int argc, char *argv[])
 	if (what==-2)
 		test_quant_bug();
 
-	if (what >= 0 && what <= 6) {
+	if ((what >= 0 && what <= 6) || what == 10) {
 		printf("\n\n"
 			   "NB: If a function isn't optimised for a specific set of intructions,\n"
 			   "    a C function is used instead. So don't panic if some functions\n"

@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: sad.h,v 1.20 2004-04-05 20:36:36 edgomez Exp $
+ * $Id: sad.h,v 1.21 2004-04-12 15:49:56 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -151,6 +151,7 @@ dev16Func dev16_ia64;
 dev16Func dev16_altivec_c;
 #endif
 
+/* This function assumes blocks use 16bit signed elements */
 typedef uint32_t (sse8Func_16bit)(const int16_t * cur,
 								  const int16_t * ref,
 								  const uint32_t stride);
@@ -164,6 +165,18 @@ sse8Func_16bit sse8_16bit_mmx;
 
 #ifdef ARCH_IS_PPC
 sse8Func_16bit sse8_16bit_altivec_c;
+#endif
+
+/* This function assumes blocks use 8bit *un*signed elements */
+typedef uint32_t (sse8Func_8bit)(const uint8_t * cur,
+								 const uint8_t * ref,
+								 const uint32_t stride);
+typedef sse8Func_8bit *sse8Func_8bitPtr;
+extern sse8Func_8bitPtr sse8_8bit;
+
+sse8Func_8bit sse8_8bit_c;
+#ifdef ARCH_IS_IA32
+sse8Func_8bit sse8_8bit_mmx;
 #endif
 
 #endif							/* _ENCODER_SAD_H_ */

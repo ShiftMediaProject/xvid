@@ -6,6 +6,7 @@
 ; *  Copyright (C) 2001 Peter Ross <pross@xvid.org>
 ; *                2001 Michael Militzer <isibaar@xvid.org>
 ; *                2002 Pascal Massimino <skal@planet-d.net>
+; *                2004 Jean-Marc Bastide <jmtest@voila.fr>
 ; *
 ; *  This program is free software ; you can redistribute it and/or modify
 ; *  it under the terms of the GNU General Public License as published by
@@ -21,7 +22,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: mem_transfer_mmx.asm,v 1.10 2004-03-22 22:36:24 edgomez Exp $
+; * $Id: mem_transfer_mmx.asm,v 1.11 2004-04-12 15:49:56 edgomez Exp $
 ; *
 ; ***************************************************************************/
 
@@ -151,32 +152,27 @@ transfer_16to8copy_mmx:
 %macro COPY_8_TO_16_SUB 2
   movq mm0, [eax]      ; cur
   movq mm2, [eax+edx]
-  movq mm1, mm0
-  movq mm3, mm2
 
-  punpcklbw mm0, mm7
-  punpcklbw mm2, mm7
   movq mm4, [ebx]      ; ref
-  punpckhbw mm1, mm7
-  punpckhbw mm3, mm7
   movq mm5, [ebx+edx]  ; ref
 
-  movq mm6, mm4
 %if %2 == 1
   movq [eax], mm4
   movq [eax+edx], mm5
 %endif
-  punpcklbw mm4, mm7
-  punpckhbw mm6, mm7
-  psubsw mm0, mm4
-  psubsw mm1, mm6
-  movq mm6, mm5
-  punpcklbw mm5, mm7
-  punpckhbw mm6, mm7
-  psubsw mm2, mm5
+
   lea eax, [eax+2*edx]
-  psubsw mm3, mm6
+  
+  psubsb mm0,mm4
+  psubsb mm2,mm5
   lea ebx,[ebx+2*edx]
+  
+  movq mm1,mm0
+  movq mm3,mm2
+  punpcklbw mm0,mm7
+  punpckhbw mm1,mm7
+  punpcklbw mm2,mm7
+  punpckhbw mm3,mm7
 
   movq [ecx+%1*32+ 0], mm0 ; dst
   movq [ecx+%1*32+ 8], mm1
@@ -233,64 +229,42 @@ transfer_8to16subro_mmx:
 %macro COPY_8_TO_16_SUB2_MMX 1
   movq mm0, [eax]      ; cur
   movq mm2, [eax+edx]
-
+ 
   ; mm4 <- (ref1+ref2+1) / 2
+  ;(a+b+1)/2 = (a|b)-((a^b)>>1)
   movq mm4, [ebx]      ; ref1
   movq mm1, [esi]      ; ref2
-  movq mm6, mm4
-  movq mm3, mm1
-  punpcklbw mm4, mm7
-  punpcklbw mm1, mm7
-  punpckhbw mm6, mm7
-  punpckhbw mm3, mm7
-  paddusw mm4, mm1
-  paddusw mm6, mm3
-  paddusw mm4, [mmx_one]
-  paddusw mm6, [mmx_one]
-  psrlw mm4, 1
-  psrlw mm6, 1
-  packuswb mm4, mm6
-  movq [eax], mm4
-
-    ; mm5 <- (ref1+ref2+1) / 2
+  movq mm3, mm4
+  pxor mm3,mm1
+  por mm4,mm1
+  pandn mm3,mm6
+  psrlq mm3,1
+  psubb mm4,mm3
+  movq [eax],mm4
+  
+  ; mm5 <- (ref1+ref2+1) / 2
   movq mm5, [ebx+edx]  ; ref1
   movq mm1, [esi+edx]  ; ref2
-  movq mm6, mm5
-  movq mm3, mm1
-  punpcklbw mm5, mm7
-  punpcklbw mm1, mm7
-  punpckhbw mm6, mm7
-  punpckhbw mm3, mm7
-  paddusw mm5, mm1
-  paddusw mm6, mm3
-  paddusw mm5, [mmx_one]
-  paddusw mm6, [mmx_one]
+  movq mm3, mm5
+  pxor mm3,mm1
+  por mm5,mm1
+  pandn mm3,mm6
+  psrlq mm3,1
+  psubb mm5,mm3
+  movq [eax+edx],mm5
+  
+  psubsb mm0,mm4
+  psubsb mm2,mm5
   lea esi, [esi+2*edx]
-  psrlw mm5, 1
-  psrlw mm6, 1
-  packuswb mm5, mm6
-  movq [eax+edx], mm5
-
-  movq mm1, mm0
-  movq mm3, mm2
-  punpcklbw mm0, mm7
-  punpcklbw mm2, mm7
-  punpckhbw mm1, mm7
-  punpckhbw mm3, mm7
-
-  movq mm6, mm4
-  punpcklbw mm4, mm7
-  punpckhbw mm6, mm7
-  psubsw mm0, mm4
-  psubsw mm1, mm6
-  movq mm6, mm5
-  punpcklbw mm5, mm7
-  punpckhbw mm6, mm7
-  psubsw mm2, mm5
+  movq mm1,mm0
+  movq mm3,mm2
   lea eax, [eax+2*edx]
-  psubsw mm3, mm6
+  punpcklbw mm0,mm7
+  punpcklbw mm2,mm7
   lea ebx, [ebx+2*edx]
-
+  punpckhbw mm1,mm7
+  punpckhbw mm3,mm7
+  
   movq [ecx+%1*32+ 0], mm0 ; dst
   movq [ecx+%1*32+ 8], mm1
   movq [ecx+%1*32+16], mm2
@@ -306,7 +280,10 @@ transfer_8to16sub2_mmx:
   push esi
   mov esi, [esp+8+16] ; Ref2
   mov edx, [esp+8+20] ; Stride
+  pxor mm6,mm6
+  pcmpeqb mm5,mm5
   pxor mm7, mm7
+  psubb mm6, mm5; mm6=1
 
   COPY_8_TO_16_SUB2_MMX 0
   COPY_8_TO_16_SUB2_MMX 1
@@ -330,34 +307,28 @@ transfer_8to16sub2_mmx:
 %macro COPY_8_TO_16_SUB2_SSE 1
   movq mm0, [eax]      ; cur
   movq mm2, [eax+edx]
-  movq mm1, mm0
-  movq mm3, mm2
 
-  punpcklbw mm0, mm7
-  punpcklbw mm2, mm7
   movq mm4, [ebx]     ; ref1
   pavgb mm4, [esi]     ; ref2
-  movq [eax], mm4
-  punpckhbw mm1, mm7
-  punpckhbw mm3, mm7
+
   movq mm5, [ebx+edx] ; ref
   pavgb mm5, [esi+edx] ; ref2
-  movq [eax+edx], mm5
+  
+  movq [eax], mm4
+  movq [eax+edx], mm5 
 
-  movq mm6, mm4
-  punpcklbw mm4, mm7
-  punpckhbw mm6, mm7
-  psubsw mm0, mm4
-  psubsw mm1, mm6
+  psubsb mm0,mm4
+  psubsb mm2,mm5
   lea esi, [esi+2*edx]
-  movq mm6, mm5
-  punpcklbw mm5, mm7
-  punpckhbw mm6, mm7
-  psubsw mm2, mm5
+  movq mm1,mm0
+  movq mm3,mm2
   lea eax, [eax+2*edx]
-  psubsw mm3, mm6
+  punpcklbw mm0,mm7
+  punpcklbw mm2,mm7
   lea ebx, [ebx+2*edx]
-
+  punpckhbw mm1,mm7
+  punpckhbw mm3,mm7
+  
   movq [ecx+%1*32+ 0], mm0 ; dst
   movq [ecx+%1*32+ 8], mm1
   movq [ecx+%1*32+16], mm2
@@ -393,22 +364,16 @@ transfer_8to16sub2_xmm:
 ;-----------------------------------------------------------------------------
 
 %macro COPY_16_TO_8_ADD 1
-  movq mm0, [ecx]
-  movq mm2, [ecx+edx]
-  movq mm1, mm0
-  movq mm3, mm2
-  punpcklbw mm0, mm7
-  punpcklbw mm2, mm7
-  punpckhbw mm1, mm7
-  punpckhbw mm3, mm7
-  paddsw mm0, [eax+%1*32+ 0]
-  paddsw mm1, [eax+%1*32+ 8]
-  paddsw mm2, [eax+%1*32+16]
-  paddsw mm3, [eax+%1*32+24]
-  packuswb mm0, mm1
-  movq [ecx], mm0
-  packuswb mm2, mm3
-  movq [ecx+edx], mm2
+  movq mm0, [eax+%1*32+ 0] ;src
+  packuswb mm0,[eax+%1*32+8]
+  movq mm1, [eax+%1*32+ 16] 
+  packuswb mm1,[eax+%1*32+24]
+  
+  paddusb mm0,[ecx]
+  paddusb mm1,[ecx+edx]
+  movq [ecx],mm0
+  movq [ecx+edx],mm1
+
 %endmacro
 
 
@@ -417,7 +382,7 @@ transfer_16to8add_mmx:
   mov ecx, [esp+ 4] ; Dst
   mov eax, [esp+ 8] ; Src
   mov edx, [esp+12] ; Stride
-  pxor mm7, mm7
+ ; pxor mm7, mm7
 
   COPY_16_TO_8_ADD 0
   lea ecx,[ecx+2*edx]
@@ -437,25 +402,43 @@ transfer_16to8add_mmx:
 ;
 ;-----------------------------------------------------------------------------
 
-%macro COPY_8_TO_8 0
-  movq mm0, [eax]
-  movq mm1, [eax+edx]
-  movq [ecx], mm0
-  lea eax, [eax+2*edx]
-  movq [ecx+edx], mm1
-%endmacro
-
 ALIGN 16
 transfer8x8_copy_mmx:
-  mov ecx, [esp+ 4] ; Dst
-  mov eax, [esp+ 8] ; Src
-  mov edx, [esp+12] ; Stride
 
-  COPY_8_TO_8
-  lea ecx,[ecx+2*edx]
-  COPY_8_TO_8
-  lea ecx,[ecx+2*edx]
-  COPY_8_TO_8
-  lea ecx,[ecx+2*edx]
-  COPY_8_TO_8
-  ret
+  mov eax, [esp+ 8] ; Src
+  mov ecx, [esp+ 4] ; Dst
+  mov edx, [esp+12] ; Stride
+  
+  movq mm0,[eax]
+  lea eax,[eax+edx]
+  movq mm1,[eax]
+  lea eax,[eax+edx]
+  movq mm2,[eax]
+  lea eax,[eax+edx]
+  movq mm3,[eax]
+  lea eax,[eax+edx]
+  movq mm4,[eax]
+  lea eax,[eax+edx]
+  movq mm5,[eax]
+  lea eax,[eax+edx]
+  movq mm6,[eax]
+  lea eax,[eax+edx]
+  movq mm7,[eax]
+
+  movq [ecx],mm0
+  lea ecx,[ecx+edx]
+  movq [ecx],mm1
+  lea ecx,[ecx+edx]
+  movq [ecx],mm2
+  lea ecx,[ecx+edx]
+  movq [ecx],mm3
+  lea ecx,[ecx+edx]
+  movq [ecx],mm4
+  lea ecx,[ecx+edx]
+  movq [ecx],mm5
+  lea ecx,[ecx+edx]
+  movq [ecx],mm6
+  lea ecx,[ecx+edx]
+  movq [ecx],mm7
+		 
+ret

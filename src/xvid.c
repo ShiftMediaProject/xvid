@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.51 2004-04-12 14:05:08 edgomez Exp $
+ * $Id: xvid.c,v 1.52 2004-04-12 15:49:56 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -302,6 +302,7 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 	dev16      = dev16_c;
 	sad16v	   = sad16v_c;
 	sse8_16bit = sse8_16bit_c;
+	sse8_8bit  = sse8_8bit_c;
 
 #if defined(ARCH_IS_IA32)
 
@@ -389,14 +390,15 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 		yv12_to_uyvyi = yv12_to_uyvyi_mmx;
 
 		/* Motion estimation related functions */
-		calc_cbp = calc_cbp_mmx;
-		sad16    = sad16_mmx;
-		sad8     = sad8_mmx;
-		sad16bi = sad16bi_mmx;
-		sad8bi  = sad8bi_mmx;
-		dev16    = dev16_mmx;
-		sad16v	 = sad16v_mmx;
+		calc_cbp   = calc_cbp_mmx;
+		sad16      = sad16_mmx;
+		sad8       = sad8_mmx;
+		sad16bi    = sad16bi_mmx;
+		sad8bi     = sad8bi_mmx;
+		dev16      = dev16_mmx;
+		sad16v	   = sad16v_mmx;
 		sse8_16bit = sse8_16bit_mmx;
+		sse8_8bit  = sse8_8bit_mmx;
 	}
 
 	/* these 3dnow functions are faster than mmx, but slower than xmm. */
