@@ -25,7 +25,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: plugin_2pass2.c,v 1.3 2004-06-10 18:13:42 chl Exp $
+ * $Id: plugin_2pass2.c,v 1.4 2004-06-11 08:44:30 suxen_drol Exp $
  *
  *****************************************************************************/
 
@@ -290,7 +290,31 @@ rc_2pass2_create(xvid_plg_create_t * create, rc_2pass2_t **handle)
 	if (rc == NULL)
 		return XVID_ERR_MEMORY;
 
-	rc->param = *param;
+	/* v1.0.x */
+	rc->param.version = param->version;
+	rc->param.bitrate = param->bitrate;
+	rc->param.filename = param->filename;
+	rc->param.keyframe_boost = param->keyframe_boost;
+	rc->param.curve_compression_high = param->curve_compression_high;
+	rc->param.curve_compression_low = param->curve_compression_low;
+	rc->param.overflow_control_strength = param->overflow_control_strength;
+	rc->param.max_overflow_improvement = param->max_overflow_improvement;
+	rc->param.max_overflow_degradation = param->max_overflow_degradation;
+	rc->param.kfreduction = param->kfreduction;
+	rc->param.kfthreshold = param->kfthreshold;
+	rc->param.container_frame_overhead = param->container_frame_overhead;
+
+	if (XVID_VERSION_MINOR(param->version) >= 1) {
+		rc->param.vbv_size = param->vbv_size;
+		rc->param.vbv_initial = param->vbv_initial;
+		rc->param.vbv_maxrate = param->vbv_maxrate;
+		rc->param.vbv_peakrate = param->vbv_peakrate;
+	}else{
+		rc->param.vbv_size = 
+		rc->param.vbv_initial = 
+		rc->param.vbv_maxrate = 
+		rc->param.vbv_peakrate = 0;
+	}
 
 	/* Initialize all defaults */
 #define _INIT(a, b) if((a) <= 0) (a) = (b)
@@ -1631,6 +1655,7 @@ static int scale_curve_for_vbv_compliancy(rc_2pass2_t * rc, const float fps)
   {
     float S_red = 0.f;    /* how much to redistribute */
     float S_elig = 0.f;   /* sum of bit for those scenes you can still swallow something*/
+	float f_red;
     int l;
     
     for (l=0;l<num_scenes;l++)   /* check how much is wrong */
@@ -1673,7 +1698,7 @@ static int scale_curve_for_vbv_compliancy(rc_2pass2_t * rc, const float fps)
       return -2;
     }
 
-    const float f_red = (1.f + S_red/S_elig); 
+    f_red = (1.f + S_red/S_elig); 
 
 #ifdef VBV_DEBUG
     printf("Moving %.0f kB to avoid buffer underflow, correction factor: %.5f\n",S_red/1024.f,f_red);
