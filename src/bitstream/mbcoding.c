@@ -374,8 +374,8 @@ void MBCoding(const MBParam * pParam, MACROBLOCK *pMB,
 
 
 /***************************************************************
-/* decoding stuff starts here                                  *
-/***************************************************************/
+ * decoding stuff starts here                                  *
+ ***************************************************************/
 
 int get_mcbpc_intra(Bitstream * bs)
 {
