@@ -15,9 +15,9 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 #
-#    $Id: cbp_ppc.s,v 1.8 2002-03-27 15:06:14 canard Exp $
+#    $Id: cbp_ppc.s,v 1.9 2002-03-28 12:29:58 canard Exp $
 #    $Source: /home/xvid/cvs_copy/cvs-server-root/xvid/xvidcore/src/bitstream/ppc_asm/cbp_ppc.s,v $
-#    $Date: 2002-03-27 15:06:14 $
+#    $Date: 2002-03-28 12:29:58 $
 #    $Author: canard $
 #
 #    This is my first PPC ASM attempt. So I might do nasty things.
@@ -59,41 +59,41 @@
 .global calc_cbp_ppc
 calc_cbp_ppc:
 	# r9 will contain coeffs addr
-	mr 9,3
+	mr %r9,%r3
 	# r8 is the loop counter (rows)
-	li 8,5
+	li %r8,5
 	# r3 contains the result, therefore we set it to 0
-	li 3,0
+	li %r3,0
 .loop:
 	# CTR is the loop2 counter
-	li 4,16
-	mtctr 4
+	li %r4,16
+	mtctr %r4
 	# r6 is coeff pointer for this line
-	mr 6,9
-	lis 7,.skip@ha
-	addi 7,7,.skip@l
-	lwz 7,0(7)
+	mr %r6,%r9
+	lis %r7,.skip@ha
+	addi %r7,%r7,.skip@l
+	lwz %r7,0(%r7)
 .loop2:
 	# coeffs is a matrix of 16 bits cells
-	lwz 4,0(6)
-	and 4,4,7
-	li 7,-1
+	lwz %r4,0(%r6)
+	and %r4,%r4,%r7
+	li %r7,-1
 
-	lwz 5,4(6)
+	lwz %r5,4(%r6)
 	# or. updates CR0
-	or. 4,5,4
+	or. %r4,%r5,%r4
 	# testing bit 2 (is zero) of CR0
 	bf 2,.cbp
-	addi 6,6,8
+	addi %r6,%r6,8
 	bdnz .loop2
 	b .newline
 .cbp:
-	li 4,1
-	slw 4,4,8
-	or 3,3,4
+	li %r4,1
+	slw %r4,%r4,%r8
+	or %r3,%r3,%r4
 .newline:
-	addi 9,9,128
+	addi %r9,%r9,128
 	# updates CR0, blabla
-	subic. 8,8,1
+	subic. %r8,%r8,1
 	bf 0,.loop
 	blr
