@@ -4,6 +4,7 @@
 	      Inspired by the Linux Kernel Coding Style
 
 ----------------------------------------------------------------------
+$Id: CodingStyle,v 1.2 2002-06-12 21:23:49 edgomez Exp $
 
 
 This is a short document describing the preferred coding style for the
