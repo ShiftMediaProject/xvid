@@ -36,7 +36,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.36 2002-05-09 00:15:50 chenm001 Exp $
+ *  $Id: encoder.c,v 1.37 2002-06-07 10:21:48 edgomez Exp $
  *
  ***************************************************************************/
 
@@ -301,9 +301,14 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 
 	if (pParam->rc_bitrate)
 	{
-		RateControlInit(pParam->rc_bitrate, pParam->rc_reaction_delay_factor,
-			pParam->rc_averaging_period, pParam->rc_buffer, pParam->fbase * 1000 / pParam->fincr,
-			pParam->max_quantizer, pParam->min_quantizer);
+		RateControlInit(&pEnc->rate_control,
+				pParam->rc_bitrate,
+				pParam->rc_reaction_delay_factor,
+				pParam->rc_averaging_period,
+				pParam->rc_buffer,
+				pParam->fbase * 1000 / pParam->fincr,
+				pParam->max_quantizer,
+				pParam->min_quantizer);
 	}
 
 	init_timer();
@@ -637,7 +642,7 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 
 	if (pFrame->quant == 0)
 	{
-		pEnc->current->quant = RateControlGetQ(0);
+		pEnc->current->quant = RateControlGetQ(&pEnc->rate_control,0);
 	}
 	else
 	{
@@ -730,7 +735,10 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 
 	if (pFrame->quant == 0)
 	{
-		RateControlUpdate(pEnc->current->quant, pFrame->length, pFrame->intra);
+		RateControlUpdate(&pEnc->rate_control,
+				  pEnc->current->quant,
+				  pFrame->length,
+				  pFrame->intra);
 	}
 
 #ifdef _DEBUG
