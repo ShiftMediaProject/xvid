@@ -924,7 +924,7 @@ LRESULT decompress_get_format(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO 
 	outhdr->biPlanes = 1;
 	outhdr->biBitCount = 24;
 	outhdr->biCompression = BI_RGB;	/* sonic foundry vegas video v3 only supports BI_RGB */
-	outhdr->biSizeImage = outhdr->biWidth * outhdr->biHeight * outhdr->biBitCount;
+	outhdr->biSizeImage = outhdr->biWidth * outhdr->biHeight * outhdr->biBitCount / 8;
 	outhdr->biXPelsPerMeter = 0;
 	outhdr->biYPelsPerMeter = 0;
 	outhdr->biClrUsed = 0;
