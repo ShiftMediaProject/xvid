@@ -1,5 +1,11 @@
 #! /usr/bin/python
 
+# generate the linzer-feig multiply-add idct for ia64
+# (c) 2002 Christian Schwarz <schwarz@ira.uka.de>,
+#          Haiko Gaisser <haiko@gaisser.de>,
+#          Sebastian Hack <mail@s-hack.de>
+
+
 import math
 
 pre_shuffle = [ 0, 4, 2, 6, 1, 7, 3, 5 ]
@@ -274,12 +280,19 @@ def gen_store(matrix):
     for i in range(0, len(matrix), 2):
         print '\tst4   [addreg1] = r%d, 8' % (intregbase+i)
         print '\tst4   [addreg2] = r%d, 8' % (intregbase+i+1)
+	print '\t;;'
     
 def main():
     gen_consts()
 
     print '.text'
     print '.global idct_ia64'
+    print '.global idct_ia64_init'
+    print '.align 16'
+    print '.proc idct_ia64_init'
+    print 'idct_ia64_init:'
+    print 'br.ret.sptk.few b0'
+    print '.endp'
     print '.align 16'
     print '.proc idct_ia64'
     print 'idct_ia64:'
