@@ -29,7 +29,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbtransquant.c,v 1.14 2002-09-26 04:52:16 h Exp $
+ * $Id: mbtransquant.c,v 1.15 2002-10-07 08:11:48 chl Exp $
  *
  ****************************************************************************/
 
@@ -364,8 +364,9 @@ void
 MBQuantIntra(const MBParam * pParam,
 		  	 FRAMEINFO * frame,
 			 MACROBLOCK *pMB,
-		     int16_t qcoeff[6 * 64],
-			 int16_t data[6*64])
+			 int16_t data[6*64],
+ 		     int16_t qcoeff[6 * 64])
+)
 {
 	int i;
 	int iQuant = frame->quant;
