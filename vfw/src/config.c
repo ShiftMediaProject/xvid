@@ -169,13 +169,15 @@ typedef struct {
 } named_int_t;
 
 
-#define NO_AUDIO	5
+#define NO_AUDIO	7
 static const named_int_t audio_type_list[] = {
 	{	"MP3-CBR",		1000,	48000/1152/6					},
 	{	"MP3-VBR",		  24,	48000/1152/6					},
 	{	"OGG",	   /*?*/1000,	48000*(0.7F/1024 + 0.3F/180) 	},
 	{	"AC3",			  64,	48000/1536/6					},
 	{	"DTS",			  21,	/*?*/48000/1152/6				},
+	{	"AAC",			  21,	48000/1024/6					},
+	{	"HE-AAC",		  42,	48000/1024/6					},
 	{	"(None)",		   0,	0								},
 };
 		
@@ -937,7 +939,11 @@ static void adv_mode(HWND hDlg, int idd, CONFIG * config)
 			/* step 2: calculate audio_size (kbytes)*/
 			if (audio_type!=NO_AUDIO) {
 				if (audio_mode==0) {
-					audio_size = (1000 * duration * audio_rate) / (8*1024);
+					audio_size = (int)( (1000.0 * duration * audio_rate) / (8.0*1024) );
+					SetDlgItemInt(hDlg, IDC_BITRATE_ASIZE, audio_size, TRUE);
+				}else{
+					int tmp_rate = (int)( (audio_size * 8.0 * 1024) / (1000.0 * duration) );
+					SetDlgItemInt(hDlg, IDC_BITRATE_ARATE, tmp_rate, TRUE);
 				}
 			}else{
 				audio_size = 0;
@@ -977,8 +983,8 @@ static void adv_mode(HWND hDlg, int idd, CONFIG * config)
 				overhead /= 1024;
 				break;
 
-			case 3 :	/* OGM: inaccurate model */
-				overhead = (int)(0.0039F * (target_size - subtitle_size));
+			case 3 :	/* alexnoe formula */
+				overhead = (int)( (target_size - subtitle_size) * (28.0/4224.0 + (1.0/255.0)) );
 				break;
 
 			default	:	/* (none) */
