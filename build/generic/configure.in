@@ -8,12 +8,12 @@ dnl ==========================================================================
 
 AC_PREREQ([2.50])
 
-AC_INIT([XviD], [1.0.1], [xvid-devel@xvid.org])
+AC_INIT([XviD], [1.1.0-alpha], [xvid-devel@xvid.org])
 AC_CONFIG_SRCDIR(configure.in)
 
 dnl Do not forget to increase that when needed.
 API_MAJOR="4"
-API_MINOR="0"
+API_MINOR="1"
 
 dnl NASM version requirement
 minimum_nasm_patch_version=34
