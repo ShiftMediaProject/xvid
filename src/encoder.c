@@ -96,7 +96,7 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 	if (pParam->max_quantizer < pParam->min_quantizer)
 		pParam->max_quantizer = pParam->min_quantizer;
 
-	if ((pEnc = (Encoder *) xvid_malloc(sizeof(Encoder), 16)) == NULL)
+	if ((pEnc = (Encoder *) xvid_malloc(sizeof(Encoder), CACHE_LINE)) == NULL)
 		return XVID_ERR_MEMORY;
 
 	/* Fill members of Encoder structure */
@@ -161,7 +161,7 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 		return XVID_ERR_MEMORY;
 	}
 
-	pEnc->pMBs = xvid_malloc(sizeof(MACROBLOCK) * pEnc->mbParam.mb_width * pEnc->mbParam.mb_height, 16);
+	pEnc->pMBs = xvid_malloc(sizeof(MACROBLOCK) * pEnc->mbParam.mb_width * pEnc->mbParam.mb_height, CACHE_LINE);
 	if (pEnc->pMBs == NULL)
 	{
 		image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
@@ -253,7 +253,7 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 
 	if ((pEnc->mbParam.global_flags & XVID_LUMIMASKING) > 0)
 	{
-		int * temp_dquants = (int *) xvid_malloc(pEnc->mbParam.mb_width * pEnc->mbParam.mb_height * sizeof(int), 16);
+		int * temp_dquants = (int *) xvid_malloc(pEnc->mbParam.mb_width * pEnc->mbParam.mb_height * sizeof(int), CACHE_LINE);
 		
 		pEnc->mbParam.quant = adaptive_quantization(pEnc->sCurrent.y, pEnc->mbParam.width,
 							    temp_dquants, pFrame->quant, pFrame->quant,
