@@ -34,3 +34,4 @@ Edouard Gomez <ed.gomez@free.fr>
 Guillaume Morin <guillaume@morinfr.org>
 MinChen <chenm001@163.com>
 Pascal Massimino <skal@planet-d.net>
+Radoslaw Czyz <xvid@syskin.cjb.net>
