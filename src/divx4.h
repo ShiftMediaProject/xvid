@@ -1,14 +1,38 @@
+/*****************************************************************************
+ *
+ *  XVID MPEG-4 VIDEO CODEC
+ *  - DivX 4.0 Compatibility API -
+ *
+ *  This file is part of XviD, a free MPEG-4 video encoder/decoder
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ *
+ * $Id: divx4.h,v 1.7 2003-02-17 22:55:02 edgomez Exp $
+ *
+ ****************************************************************************/
+
 #ifndef _DIVX4_H_
 #define _DIVX4_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-/*********************************************************************************
- * Decoder part                                                                  *
- *********************************************************************************/
+/*****************************************************************************
+ * Decoder part
+ ****************************************************************************/
 
 /* decore commands */
 #define DEC_OPT_MEMORY_REQS	0
@@ -128,9 +152,9 @@ extern "C"
 
 
 
-/*********************************************************************************
- * Encoder part                                                                  *
- *********************************************************************************/
+/*****************************************************************************
+ * Encoder part
+ ****************************************************************************/
 
 /**
     Structure passed as an argument when creating encoder.
@@ -143,26 +167,26 @@ extern "C"
 **/
 	typedef struct _ENC_PARAM_
 	{
-		int x_dim;				// the x dimension of the frames to be encoded
-		int y_dim;				// the y dimension of the frames to be encoded
-		float framerate;		// the frame rate of the sequence to be encoded, in frames/second
-		int bitrate;			// the bitrate of the target encoded stream, in bits/second
-		int rc_period;			// the intended rate control averaging period
-		int rc_reaction_period;	// the reaction period for rate control
-		int rc_reaction_ratio;	// the ratio for down/up rate control
-		int max_quantizer;		// the upper limit of the quantizer
-		int min_quantizer;		// the lower limit of the quantizer
-		int max_key_interval;	// the maximum interval between key frames
-		int use_bidirect;		// use bidirectional coding
-		int deinterlace;		// fast deinterlace
-		int quality;			// the quality of compression ( 1 - fastest, 5 - best )
-		int obmc;				// flag to enable overlapped block motion compensation mode
-		void *handle;			// will be filled by encore
+		int x_dim;				/* the x dimension of the frames to be encoded */
+		int y_dim;				/* the y dimension of the frames to be encoded */
+		float framerate;		/* the frame rate of the sequence to be encoded, in frames/second */
+		int bitrate;			/* the bitrate of the target encoded stream, in bits/second */
+		int rc_period;			/* the intended rate control averaging period */
+		int rc_reaction_period;	/* the reaction period for rate control */
+		int rc_reaction_ratio;	/* the ratio for down/up rate control */
+		int max_quantizer;		/* the upper limit of the quantizer */
+		int min_quantizer;		/* the lower limit of the quantizer */
+		int max_key_interval;	/* the maximum interval between key frames */
+		int use_bidirect;		/* use bidirectional coding */
+		int deinterlace;		/* fast deinterlace */
+		int quality;			/* the quality of compression ( 1 - fastest, 5 - best ) */
+		int obmc;				/* flag to enable overlapped block motion compensation mode */
+		void *handle;			/* will be filled by encore */
 	}
 	ENC_PARAM;
 
 
-// encore2
+/* encore2 */
 
 
 /**
@@ -178,13 +202,13 @@ extern "C"
 **/
 	typedef struct _ENC_FRAME_
 	{
-		void *image;			// the image frame to be encoded
-		void *bitstream;		// the buffer for encoded bitstream
-		int length;				// the length of the encoded bitstream
-		int colorspace;			// the format of image frame
-		int quant;				// quantizer for this frame; only used in VBR modes
-		int intra;				// force this frame to be intra/inter; only used in VBR 2-pass
-		void *mvs;				// optional pointer to array of motion vectors
+		void *image;		/* the image frame to be encoded */
+		void *bitstream;	/* the buffer for encoded bitstream */
+		int length;			/* the length of the encoded bitstream */
+		int colorspace;		/* the format of image frame */
+		int quant;			/* quantizer for this frame; only used in VBR modes */
+		int intra;			/* force this frame to be intra/inter; only used in VBR 2-pass */
+		void *mvs;			/* optional pointer to array of motion vectors */
 	}
 	ENC_FRAME;
 
@@ -195,35 +219,32 @@ extern "C"
 **/
 	typedef struct _ENC_RESULT_
 	{
-		int is_key_frame;		// the current frame is encoded as a key frame
-		int quantizer;			// the quantizer used for this frame
-		int texture_bits;		// amount of bits spent on coding DCT coeffs
-		int motion_bits;		// amount of bits spend on coding motion
-		int total_bits;			// sum of two previous fields
+		int is_key_frame;	/* the current frame is encoded as a key frame */
+		int quantizer;		/* the quantizer used for this frame */
+		int texture_bits;	/* amount of bits spent on coding DCT coeffs */
+		int motion_bits;	/* amount of bits spend on coding motion */
+		int total_bits;		/* sum of two previous fields */
 	}
 	ENC_RESULT;
 
-// the prototype of the encore() - main encode engine entrance
-	int encore(void *handle,	// handle               - the handle of the calling entity, must be unique
+/* the prototype of the encore() - main encode engine entrance */
+	int encore(void *handle,	/* handle  - the handle of the calling entity, must be unique/
+			   int enc_opt,		/* enc_opt - the option for encoding, see below */
+			   void *param1,	/* param1  - the parameter 1 (its actually meaning depends on enc_opt */
+			   void *param2);	/* param2  - the parameter 2 (its actually meaning depends on enc_opt */
 
-			   int enc_opt,		// enc_opt              - the option for encoding, see below
-
-			   void *param1,	// param1               - the parameter 1 (its actually meaning depends on enc_opt
-
-			   void *param2);	// param2               - the parameter 2 (its actually meaning depends on enc_opt
-
-// encore options (the enc_opt parameter of encore())
-#define ENC_OPT_INIT    0		// initialize the encoder, return a handle
-#define ENC_OPT_RELEASE 1		// release all the resource associated with the handle
-#define ENC_OPT_ENCODE  2		// encode a single frame
-#define ENC_OPT_ENCODE_VBR 3	// encode a single frame, not using internal rate control algorithm
+/* encore options (the enc_opt parameter of encore()) */
+#define ENC_OPT_INIT    0		/* initialize the encoder, return a handle */
+#define ENC_OPT_RELEASE 1		/* release all the resource associated with the handle */
+#define ENC_OPT_ENCODE  2		/* encode a single frame */
+#define ENC_OPT_ENCODE_VBR 3	/* encode a single frame, not using internal rate control algorithm */
 #define ENC_OPT_VERSION	4
 
 #define ENCORE_VERSION		20010807
 
 
 
-// return code of encore()
+/* return code of encore() */
 #define ENC_FAIL		-1
 #define ENC_OK			0
 #define	ENC_MEMORY		1
@@ -253,4 +274,4 @@ extern "C"
 }
 #endif
 
-#endif							// _DIVX4_H_
+#endif	/* _DIVX4_H_ */
