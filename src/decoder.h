@@ -33,7 +33,7 @@
  *
  *  - 13.06.2002 Added legal header - Cosmetic
  *
- *  $Id: decoder.h,v 1.9 2002-07-09 01:37:22 chenm001 Exp $
+ *  $Id: decoder.h,v 1.10 2002-07-19 11:15:21 albeu Exp $
  *
  ****************************************************************************/
 
@@ -96,6 +96,8 @@ typedef struct
 	uint32_t time_pp;
 	uint32_t time_bp;
 	uint8_t low_delay;			// low_delay flage (1 means no B_VOP)
+
+	XVID_DEC_PICTURE* out_frm;                // This is used for slice rendering
 }
 DECODER;
 
