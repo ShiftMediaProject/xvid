@@ -8,7 +8,7 @@
 # Requires GNU Make because of shell expansion performed at a bad time with
 # other make programs (even using := variable assignments)
 #
-# $Id: Makefile,v 1.1 2004-07-18 02:00:05 suxen_drol Exp $
+# $Id: Makefile,v 1.2 2004-07-18 04:10:22 suxen_drol Exp $
 ##############################################################################
 
 include sources.inc
@@ -32,9 +32,7 @@ CFLAGS += -I$(SRC_DIR)/w32api -I$(LOCAL_XVID_SRCTREE)
 CFLAGS += -D_WIN32_IE=0x0500
 CFLAGS += -mno-cygwin
 
-## for some unknown reason, xvid.ax crashes if -g is not specified.
-## maybe a gcc-3.2.3 issue
-CXXFLAGS +=-g -mthreads
+CXXFLAGS +=-mthreads
 CXXFLAGS += -DRELEASE \
         -I$(LOCAL_XVID_SRCTREE) \
         -I$(DXTREE)/Include \
@@ -109,7 +107,7 @@ $(LIBSO): $(BUILD_DIR) $(OBJECTS)
 			-o $@ \
 			$(OBJECTS) xvid.ax.def \
 			-L$(DXTREE)/Lib -lstrmiids \
-			$(DXTREE)/samples/Multimedia/DirectShow/BaseClasses/strmbase.a \
+			$(DXTREE)/samples/Multimedia/DirectShow/BaseClasses/strmbase.lib \
 			-luuid -lwinmm -lole32 -loleaut32 -lcomctl32 -lstdc++
 			
 
