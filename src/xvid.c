@@ -462,12 +462,6 @@ xvid_encore(void *handle,
 {
 	switch (opt) {
 	case XVID_ENC_ENCODE:
-#ifdef BFRAMES
-		if (((Encoder *) handle)->mbParam.max_bframes >= 0)
-		return encoder_encode_bframes((Encoder *) handle, (XVID_ENC_FRAME *) param1,
-							  (XVID_ENC_STATS *) param2);
-		else 
-#endif
 		return encoder_encode((Encoder *) handle, (XVID_ENC_FRAME *) param1,
 							  (XVID_ENC_STATS *) param2);
 
