@@ -290,38 +290,6 @@ bool MotionEstimation(
 	if (sadInit)
 		(*sadInit)();
 
-
-	/* eventhough we have a seperate prevMBs,
-	   pmvfast/epsz does something "funny" with the previous frames data */
-
-/*	for (i = 0; i < iHcount; i++)
-		for (j = 0; j < iWcount; j++)
-		{
-			pMBs[j + i * iWcount].mvs[0] = prevMBs[j + i * iWcount].mvs[0];
-			pMBs[j + i * iWcount].mvs[1] = prevMBs[j + i * iWcount].mvs[1];
-			pMBs[j + i * iWcount].mvs[2] = prevMBs[j + i * iWcount].mvs[2];
-			pMBs[j + i * iWcount].mvs[3] = prevMBs[j + i * iWcount].mvs[3];
-		}
-*/
-	/*dprintf("*** BEFORE ***");
-	for (i = 0; i < iHcount; i++)
-		for (j = 0; j < iWcount; j++)
-		{
-			dprintf("   [%i,%i] mode=%i dquant=%i mvs=(%i %i %i %i) sad8=(%i %i %i %i) sad16=(%i)", j,i,
-				pMBs[j + i * iWcount].mode,
-				pMBs[j + i * iWcount].dquant,
-				pMBs[j + i * iWcount].mvs[0],
-				pMBs[j + i * iWcount].mvs[1],
-				pMBs[j + i * iWcount].mvs[2],
-				pMBs[j + i * iWcount].mvs[3],
-				prevMBs[j + i * iWcount].sad8[0],
-				prevMBs[j + i * iWcount].sad8[1],
-				prevMBs[j + i * iWcount].sad8[2],
-				prevMBs[j + i * iWcount].sad8[3],
-				prevMBs[j + i * iWcount].sad16);
-		}
-	*/
-		
 	// note: i==horizontal, j==vertical
 	for (i = 0; i < iHcount; i++)
 		for (j = 0; j < iWcount; j++)
@@ -396,11 +364,18 @@ bool MotionEstimation(
 					pMB->mode = MODE_INTER;
 					pMB->mvs[0].x = pMB->mvs[1].x = pMB->mvs[2].x = pMB->mvs[3].x = mv16.x;
 					pMB->mvs[0].y = pMB->mvs[1].y = pMB->mvs[2].y = pMB->mvs[3].y = mv16.y;
+					pMB->sad8[0] = pMB->sad8[1] = pMB->sad8[2] = pMB->sad8[3] = sad16;
 					pMB->pmvs[0].x = pmv16.x;
 					pMB->pmvs[0].y = pmv16.y;
 				}
 				else
+				{
 					pMB->mode = MODE_INTER4V;
+                                        pMB->sad8[0] *= 4;
+					pMB->sad8[1] *= 4;
+					pMB->sad8[2] *= 4;
+					pMB->sad8[3] *= 4;
+				}
 			}
 			else 
 			{
@@ -408,29 +383,12 @@ bool MotionEstimation(
 				pMB->mode = MODE_INTER;
 				pMB->mvs[0].x = pMB->mvs[1].x = pMB->mvs[2].x = pMB->mvs[3].x = mv16.x;
 				pMB->mvs[0].y = pMB->mvs[1].y = pMB->mvs[2].y = pMB->mvs[3].y = mv16.y;
+                                pMB->sad8[0] = pMB->sad8[1] = pMB->sad8[2] = pMB->sad8[3] = sad16;
+
 				pMB->pmvs[0].x = pmv16.x;
 				pMB->pmvs[0].y = pmv16.y;
 			}
 		}
-
-/*	dprintf("*** AFTER ***", pMBs[0].b_mvs[0].x);
-	for (i = 0; i < iHcount; i++)
-		for (j = 0; j < iWcount; j++)
-		{
-			dprintf("   [%i,%i] mode=%i dquant=%i mvs=(%i %i %i %i) sad8=(%i %i %i %i) sad16=(%i)", j,i,
-				pMBs[j + i * iWcount].mode,
-				pMBs[j + i * iWcount].dquant,
-				pMBs[j + i * iWcount].mvs[0],
-				pMBs[j + i * iWcount].mvs[1],
-				pMBs[j + i * iWcount].mvs[2],
-				pMBs[j + i * iWcount].mvs[3],
-				pMBs[j + i * iWcount].sad8[0],
-				pMBs[j + i * iWcount].sad8[1],
-				pMBs[j + i * iWcount].sad8[2],
-				pMBs[j + i * iWcount].sad8[3],
-				pMBs[j + i * iWcount].sad16);
-		}
-	*/
 
 	return 0;
 }
