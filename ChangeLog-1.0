@@ -2040,7 +2040,7 @@
        the bvop lag frame (black with error message).
     
     Fixing previous patch a bit:
-     * added $Id: ChangeLog,v 1.5 2004-06-12 13:02:12 edgomez Exp $ fields
+     * added $Id: ChangeLog-1.0,v 1.1 2004-07-10 17:39:05 edgomez Exp $ fields
      * Fixed copyright
 
     modified files:
