@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.109 2004-12-05 13:01:27 syskin Exp $
+ * $Id: encoder.c,v 1.110 2004-12-05 13:56:13 syskin Exp $
  *
  ****************************************************************************/
 
@@ -1317,9 +1317,6 @@ repeat:
 
 		/* prevent vol/vop misuse */
 
-		if (!(pEnc->current->vol_flags & XVID_VOL_REDUCED_ENABLE))
-			pEnc->current->vop_flags &= ~XVID_VOP_REDUCED;
-
 		if (!(pEnc->current->vol_flags & XVID_VOL_INTERLACING))
 			pEnc->current->vop_flags &= ~(XVID_VOP_TOPFIELDFIRST|XVID_VOP_ALTERNATESCAN);
 
@@ -1447,20 +1444,6 @@ FrameCodeI(Encoder * pEnc,
 
 	uint16_t x, y;
 
-	if ((pEnc->current->vol_flags & XVID_VOL_REDUCED_ENABLE))
-	{
-		mb_width = (pEnc->mbParam.width + 31) / 32;
-		mb_height = (pEnc->mbParam.height + 31) / 32;
-
-		/* 16x16->8x8 downsample requires 1 additional edge pixel*/
-		/* XXX: setedges is overkill */
-		start_timer();
-		image_setedges(&pEnc->current->image,
-			pEnc->mbParam.edged_width, pEnc->mbParam.edged_height,
-			pEnc->mbParam.width, pEnc->mbParam.height, 0);
-		stop_edges_timer();
-	}
-
 	pEnc->mbParam.m_rounding_type = 1;
 	pEnc->current->rounding_type = pEnc->mbParam.m_rounding_type;
 	pEnc->current->coding_type = I_VOP;
@@ -1505,12 +1488,6 @@ FrameCodeI(Encoder * pEnc,
 			stop_coding_timer();
 		}
 
-	if ((pEnc->current->vop_flags & XVID_VOP_REDUCED))
-	{
-		image_deblock_rrv(&pEnc->current->image, pEnc->mbParam.edged_width,
-			pEnc->current->mbs, mb_width, mb_height, pEnc->mbParam.mb_width,
-			16, 0);
-	}
 	emms();
 
 	BitstreamPadAlways(bs); /* next_start_code() at the end of VideoObjectPlane() */
@@ -1555,13 +1532,6 @@ FrameCodeP(Encoder * pEnc,
 
 	/* IMAGE *pCurrent = &current->image; */
 	IMAGE *pRef = &reference->image;
-
-	if ((current->vop_flags & XVID_VOP_REDUCED))
-	{
-		mb_width = (pParam->width + 31) / 32;
-		mb_height = (pParam->height + 31) / 32;
-	}
-
 
 	if (!reference->is_edged) {	
 		start_timer();
@@ -1829,13 +1799,6 @@ FrameCodeP(Encoder * pEnc,
 		}
 	}
 
-	if ((current->vop_flags & XVID_VOP_REDUCED))
-	{
-		image_deblock_rrv(&current->image, pParam->edged_width,
-			current->mbs, mb_width, mb_height, pParam->mb_width,
-			16, 0);
-	}
-
 	emms();
 
 	if (current->sStat.iMvCount == 0)
@@ -1943,8 +1906,6 @@ FrameCodeB(Encoder * pEnc,
 #define BFRAME_DEBUG  	if (!first && fp){ \
 		fprintf(fp,"Y=%3d   X=%3d   MB=%2d   CBP=%02X\n",y,x,mb->mode,mb->cbp); \
 	}
-
-	/* XXX: pEnc->current->global_flags &= ~XVID_VOP_REDUCED;  reduced resoltion not yet supported */
 
 	if (!first){
 		fp=fopen("C:\\XVIDDBGE.TXT","w");

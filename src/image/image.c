@@ -19,21 +19,19 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.c,v 1.29 2004-04-12 15:49:56 edgomez Exp $
+ * $Id: image.c,v 1.30 2004-12-05 13:56:13 syskin Exp $
  *
  ****************************************************************************/
 
 #include <stdlib.h>
 #include <string.h>				/* memcpy, memset */
 #include <math.h>
-
 #include "../portab.h"
 #include "../global.h"			/* XVID_CSP_XXX's */
 #include "../xvid.h"			/* XVID_CSP_XXX's */
 #include "image.h"
 #include "colorspace.h"
 #include "interpolate8x8.h"
-#include "reduced.h"
 #include "../utils/mem_align.h"
 #include "../motion/sad.h"
 
@@ -1139,78 +1137,3 @@ image_clear(IMAGE * img, int width, int height, int edged_width,
 		p += edged_width/2;
 	}
 }
-
-
-/* reduced resolution deblocking filter
-	block = block size (16=rrv, 8=full resolution)
-	flags = XVID_DEC_YDEBLOCK|XVID_DEC_UVDEBLOCK
-*/
-void
-image_deblock_rrv(IMAGE * img, int edged_width,
-				const MACROBLOCK * mbs, int mb_width, int mb_height, int mb_stride,
-				int block, int flags)
-{
-	const int edged_width2 = edged_width /2;
-	const int nblocks = block / 8;	/* skals code uses 8pixel block uints */
-	int i,j;
-
-	/* luma: j,i in block units */
-
-		for (j = 1; j < mb_height*2; j++)		/* horizontal deblocking */
-		for (i = 0; i < mb_width*2; i++)
-		{
-			if (mbs[(j-1)/2*mb_stride + (i/2)].mode != MODE_NOT_CODED ||
-				mbs[(j+0)/2*mb_stride + (i/2)].mode != MODE_NOT_CODED)
-			{
-				hfilter_31(img->y + (j*block - 1)*edged_width + i*block,
-								  img->y + (j*block + 0)*edged_width + i*block, nblocks);
-			}
-		}
-
-		for (j = 0; j < mb_height*2; j++)		/* vertical deblocking */
-		for (i = 1; i < mb_width*2; i++)
-		{
-			if (mbs[(j/2)*mb_stride + (i-1)/2].mode != MODE_NOT_CODED ||
-				mbs[(j/2)*mb_stride + (i+0)/2].mode != MODE_NOT_CODED)
-			{
-				vfilter_31(img->y + (j*block)*edged_width + i*block - 1,
-						   img->y + (j*block)*edged_width + i*block + 0,
-						   edged_width, nblocks);
-			}
-		}
-
-
-
-	/* chroma */
-
-		for (j = 1; j < mb_height; j++)		/* horizontal deblocking */
-		for (i = 0; i < mb_width; i++)
-		{
-			if (mbs[(j-1)*mb_stride + i].mode != MODE_NOT_CODED ||
-				mbs[(j+0)*mb_stride + i].mode != MODE_NOT_CODED)
-			{
-				hfilter_31(img->u + (j*block - 1)*edged_width2 + i*block,
-						   img->u + (j*block + 0)*edged_width2 + i*block, nblocks);
-				hfilter_31(img->v + (j*block - 1)*edged_width2 + i*block,
-						   img->v + (j*block + 0)*edged_width2 + i*block, nblocks);
-			}
-		}
-
-		for (j = 0; j < mb_height; j++)		/* vertical deblocking */
-		for (i = 1; i < mb_width; i++)
-		{
-			if (mbs[j*mb_stride + i - 1].mode != MODE_NOT_CODED ||
-				mbs[j*mb_stride + i + 0].mode != MODE_NOT_CODED)
-			{
-				vfilter_31(img->u + (j*block)*edged_width2 + i*block - 1,
-						   img->u + (j*block)*edged_width2 + i*block + 0,
-						   edged_width2, nblocks);
-				vfilter_31(img->v + (j*block)*edged_width2 + i*block - 1,
-						   img->v + (j*block)*edged_width2 + i*block + 0,
-						   edged_width2, nblocks);
-			}
-		}
-
-
-}
-

@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbtransquant.c,v 1.25 2004-05-26 05:45:53 syskin Exp $
+ * $Id: mbtransquant.c,v 1.26 2004-12-05 13:56:13 syskin Exp $
  *
  ****************************************************************************/
 
@@ -42,7 +42,6 @@
 #include "../quant/quant.h"
 #include "../encoder.h"
 
-#include "../image/reduced.h"
 #include  "../quant/quant_matrix.h"
 
 MBFIELDTEST_PTR MBFieldTest;
@@ -310,38 +309,22 @@ MBTrans8to16(const MBParam * const pParam,
 	uint32_t stride = pParam->edged_width;
 	uint32_t stride2 = stride / 2;
 	uint32_t next_block = stride * 8;
-	int32_t cst;
-	int vop_reduced;
 	uint8_t *pY_Cur, *pU_Cur, *pV_Cur;
 	const IMAGE * const pCurrent = &frame->image;
-	transfer_operation_8to16_t * const functions[2] =
-		{
-			(transfer_operation_8to16_t *)transfer_8to16copy,
-			(transfer_operation_8to16_t *)filter_18x18_to_8x8
-		};
-	transfer_operation_8to16_t *transfer_op = NULL;
-
-	vop_reduced = !!(frame->vop_flags & XVID_VOP_REDUCED);
 
 	/* Image pointers */
-	pY_Cur = pCurrent->y + (y_pos << (4+vop_reduced)) * stride  + (x_pos << (4+vop_reduced));
-	pU_Cur = pCurrent->u + (y_pos << (3+vop_reduced)) * stride2 + (x_pos << (3+vop_reduced));
-	pV_Cur = pCurrent->v + (y_pos << (3+vop_reduced)) * stride2 + (x_pos << (3+vop_reduced));
-
-	/* Block size */
-	cst = 8<<vop_reduced;
-
-	/* Operation function */
-	transfer_op = functions[vop_reduced];
+	pY_Cur = pCurrent->y + (y_pos << 4) * stride  + (x_pos << 4);
+	pU_Cur = pCurrent->u + (y_pos << 3) * stride2 + (x_pos << 3);
+	pV_Cur = pCurrent->v + (y_pos << 3) * stride2 + (x_pos << 3);
 
 	/* Do the transfer */
 	start_timer();
-	transfer_op(&data[0 * 64], pY_Cur, stride);
-	transfer_op(&data[1 * 64], pY_Cur + cst, stride);
-	transfer_op(&data[2 * 64], pY_Cur + next_block, stride);
-	transfer_op(&data[3 * 64], pY_Cur + next_block + cst, stride);
-	transfer_op(&data[4 * 64], pU_Cur, stride2);
-	transfer_op(&data[5 * 64], pV_Cur, stride2);
+	transfer_8to16copy(&data[0 * 64], pY_Cur, stride);
+	transfer_8to16copy(&data[1 * 64], pY_Cur + 8, stride);
+	transfer_8to16copy(&data[2 * 64], pY_Cur + next_block, stride);
+	transfer_8to16copy(&data[3 * 64], pY_Cur + next_block + 8, stride);
+	transfer_8to16copy(&data[4 * 64], pU_Cur, stride2);
+	transfer_8to16copy(&data[5 * 64], pV_Cur, stride2);
 	stop_transfer_timer();
 }
 
@@ -359,48 +342,38 @@ MBTrans16to8(const MBParam * const pParam,
 	uint32_t stride = pParam->edged_width;
 	uint32_t stride2 = stride / 2;
 	uint32_t next_block = stride * 8;
-	uint32_t cst;
-	int vop_reduced;
 	const IMAGE * const pCurrent = &frame->image;
 
-	/* Array of function pointers, indexed by [vop_reduced<<1+add] */
-	transfer_operation_16to8_t  * const functions[4] =
+	/* Array of function pointers, indexed by [add] */
+	transfer_operation_16to8_t  * const functions[2] =
 		{
 			(transfer_operation_16to8_t*)transfer_16to8copy,
 			(transfer_operation_16to8_t*)transfer_16to8add,
-			(transfer_operation_16to8_t*)copy_upsampled_8x8_16to8,
-			(transfer_operation_16to8_t*)add_upsampled_8x8_16to8
 		};
 
 	transfer_operation_16to8_t *transfer_op = NULL;
 
-	/* Makes this vars booleans */
-	vop_reduced = !!(frame->vop_flags & XVID_VOP_REDUCED);
-
 	/* Image pointers */
-	pY_Cur = pCurrent->y + (y_pos << (4+vop_reduced)) * stride  + (x_pos << (4+vop_reduced));
-	pU_Cur = pCurrent->u + (y_pos << (3+vop_reduced)) * stride2 + (x_pos << (3+vop_reduced));
-	pV_Cur = pCurrent->v + (y_pos << (3+vop_reduced)) * stride2 + (x_pos << (3+vop_reduced));
+	pY_Cur = pCurrent->y + (y_pos << 4) * stride  + (x_pos << 4);
+	pU_Cur = pCurrent->u + (y_pos << 3) * stride2 + (x_pos << 3);
+	pV_Cur = pCurrent->v + (y_pos << 3) * stride2 + (x_pos << 3);
 
 	if (pMB->field_dct) {
 		next_block = stride;
 		stride *= 2;
 	}
 
-	/* Block size */
-	cst = 8<<vop_reduced;
-
 	/* Operation function */
-	transfer_op = functions[(vop_reduced<<1) + add];
+	transfer_op = functions[add];
 
 	/* Do the operation */
 	start_timer();
-	if (cbp&32) transfer_op(pY_Cur,                    &data[0 * 64], stride);
-	if (cbp&16) transfer_op(pY_Cur + cst,              &data[1 * 64], stride);
-	if (cbp& 8) transfer_op(pY_Cur + next_block,       &data[2 * 64], stride);
-	if (cbp& 4) transfer_op(pY_Cur + next_block + cst, &data[3 * 64], stride);
-	if (cbp& 2) transfer_op(pU_Cur,                    &data[4 * 64], stride2);
-	if (cbp& 1) transfer_op(pV_Cur,                    &data[5 * 64], stride2);
+	if (cbp&32) transfer_op(pY_Cur,						&data[0 * 64], stride);
+	if (cbp&16) transfer_op(pY_Cur + 8,					&data[1 * 64], stride);
+	if (cbp& 8) transfer_op(pY_Cur + next_block,		&data[2 * 64], stride);
+	if (cbp& 4) transfer_op(pY_Cur + next_block + 8,	&data[3 * 64], stride);
+	if (cbp& 2) transfer_op(pU_Cur,						&data[4 * 64], stride2);
+	if (cbp& 1) transfer_op(pV_Cur,						&data[5 * 64], stride2);
 	stop_transfer_timer();
 }
 
