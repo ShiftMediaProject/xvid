@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.cpp,v 1.5 2004-04-14 03:25:41 syskin Exp $
+ * $Id: CXvidDecoder.cpp,v 1.6 2004-04-15 19:44:05 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -782,7 +782,7 @@ repeat :
 	}
 
 	if (stats.type == XVID_TYPE_NOTHING && length > 0) {
-		DPRINTF("B-Frame decoder lag");
+		DPRINTF(" B-Frame decoder lag");
 		return S_FALSE;
 	}
 
