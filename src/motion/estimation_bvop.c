@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.7 2004-07-08 07:12:54 syskin Exp $
+ * $Id: estimation_bvop.c,v 1.8 2004-07-10 11:23:41 syskin Exp $
  *
  ****************************************************************************/
 
@@ -525,6 +525,8 @@ SkipDecisionB(MACROBLOCK * const pMB, const SearchData * const Data)
 {
 	int k;
 
+	pMB->mode = MODE_DIRECT; /* just to initialize it */
+
 	if (!Data->chroma) {
 		int dx = 0, dy = 0, b_dx = 0, b_dy = 0;
 		int32_t sum;
@@ -554,7 +556,11 @@ SkipDecisionB(MACROBLOCK * const pMB, const SearchData * const Data)
 						Data->RefP[5] + (dy/2) * stride + dx/2,
 						Data->b_RefP[5] + (b_dy/2) * stride + b_dx/2,
 						stride);
-		
+
+		if (sum >= MAX_CHROMA_SAD_FOR_SKIP * (int)Data->iQuant) return; /* no skip */
+	} else {
+		int sum = Data->chromaSAD; /* chroma-sad SAD caching keeps it there */
+
 		if (sum >= MAX_CHROMA_SAD_FOR_SKIP * (int)Data->iQuant) return; /* no skip */
 	}
 
