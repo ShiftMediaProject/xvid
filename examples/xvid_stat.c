@@ -1,22 +1,36 @@
-/**************************************************************************
+/*****************************************************************************
  *
- *      XVID MPEG-4 VIDEO CODEC - Example for encoding and decoding
+ *  XVID MPEG-4 VIDEO CODEC
+ *  - Console based test application  -
  *
- *      This program is free software; you can redistribute it and/or modify
- *      it under the terms of the GNU General Public License as published by
- *      the Free Software Foundation; either version 2 of the License, or
- *      (at your option) any later version.
+ *  Copyright(C) 2002 Christoph Lampert
  *
- *      This program is distributed in the hope that it will be useful,
- *      but WITHOUT ANY WARRANTY; without even the implied warranty of
- *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *      GNU General Public License for more details.
+ *  This program is an implementation of a part of one or more MPEG-4
+ *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
+ *  to use this software module in hardware or software products are
+ *  advised that its use may infringe existing patents or copyrights, and
+ *  any such use would be at such party's own risk.  The original
+ *  developer of this software module and his/her company, and subsequent
+ *  editors and their companies, will have no liability for use of this
+ *  software or modifications or derivatives thereof.
  *
- *      You should have received a copy of the GNU General Public License
- *      along with this program; if not, write to the Free Software
- *      Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *************************************************************************/
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ *
+ * $Id: xvid_stat.c,v 1.5 2002-09-12 19:18:12 chl Exp $
+ *
+ ****************************************************************************/
 
 /************************************************************************
  *		                    
@@ -107,7 +121,6 @@ int ARG_MAXFRAMENR=ABS_MAXFRAMENR;
 #define MAX(A,B) ( ((A)>(B)) ? (A) : (B) )
 #define SMALL_EPS 1e-10
 
-
 /* these are global variables. Not very elegant, but easy, and this is an easy program */
 	
 int XDIM=0;
@@ -140,7 +153,6 @@ double msecond()
 	gettimeofday(&tv, 0);
 	return tv.tv_sec + tv.tv_usec * 1.0e-6;
 }
-
 
 
 double absdistq(int x,int y, unsigned char* buf1, int stride1, unsigned char* buf2, int stride2)
@@ -295,8 +307,8 @@ int enc_init(int use_assembler)
 	        xparam.fbase = (int)(FRAMERATE_INCR * ARG_FRAMERATE);
 	}
 	xparam.rc_reaction_delay_factor = 16;
-        xparam.rc_averaging_period = 100;
-        xparam.rc_buffer = 10;
+    xparam.rc_averaging_period = 100;
+    xparam.rc_buffer = 10;
 	xparam.rc_bitrate = ARG_BITRATE*1000; 
 	xparam.min_quantizer = 1;
 	xparam.max_quantizer = 31;
@@ -433,7 +445,7 @@ int main(int argc, char *argv[])
   
   int m4v_size;
   int frame_type[ABS_MAXFRAMENR];
-  int Iframes=0, Pframes=0, Bframes=0, use_assembler=0;
+  int Iframes=0, Pframes=0, use_assembler=0;
   double framepsnr[ABS_MAXFRAMENR];
   
   double Ipsnr=0.,Imaxpsnr=0.,Iminpsnr=999.,Ivarpsnr=0.;
@@ -646,10 +658,7 @@ int main(int argc, char *argv[])
 			Iframes++;
 			Ipsnr += framepsnr[i];
 			break;
-		case 2:
 		default:
-			Bframes++;
-			Bpsnr += framepsnr[i];
 			break;
 		}
 	}
@@ -658,9 +667,6 @@ int main(int argc, char *argv[])
 		Ppsnr /= Pframes;	
 	if (Iframes)
 		Ipsnr /= Iframes;	
-	if (Bframes)
-		Bpsnr /= Bframes;	
-		
 		
 	for (i=0;i<filenr;i++)	// calculate statistics for every frametype: P,I (and B)
 	{	
@@ -679,13 +685,7 @@ int main(int argc, char *argv[])
 			if (framepsnr[i] < Pminpsnr)
 				Iminpsnr = framepsnr[i];
 			Ivarpsnr += (framepsnr[i] - Ipsnr)*(framepsnr[i] - Ipsnr) /Iframes;
-			break;
-		case 2:
-			if (framepsnr[i] > Bmaxpsnr)
-				Bmaxpsnr = framepsnr[i];
-			if (framepsnr[i] < Pminpsnr)
-				Bminpsnr = framepsnr[i];
-			Bvarpsnr += (framepsnr[i] - Bpsnr)*(framepsnr[i] - Bpsnr) /Bframes;
+		default:
 			break;
 		}
 	}
@@ -699,8 +699,6 @@ int main(int argc, char *argv[])
 	printf("enc: %6.1f fps, dec: %6.1f fps \n",1/totalenctime, 1/totaldectime);
 	printf("PSNR P(%d): %5.2f ( %5.2f , %5.2f ; %5.4f ) ",Pframes,Ppsnr,Pminpsnr,Pmaxpsnr,sqrt(Pvarpsnr/filenr));
 	printf("I(%d): %5.2f ( %5.2f , %5.2f ; %5.4f ) ",Iframes,Ipsnr,Iminpsnr,Imaxpsnr,sqrt(Ivarpsnr/filenr));
-	if (Bframes)
-		printf("B(%d): %5.2f ( %5.2f , %5.2f ; %5.4f ) ",Bframes,Bpsnr,Bminpsnr,Bmaxpsnr,sqrt(Bvarpsnr/filenr));
 	printf("\n");
 		
 /*********************************************************************/
