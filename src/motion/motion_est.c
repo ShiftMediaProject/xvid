@@ -1388,7 +1388,7 @@ SearchP(const IMAGE * const pRef,
 		if ((Data->chroma) && (!(GlobalFlags & XVID_MODEDECISION_BITS))) {
 			// chroma is only used for comparsion to INTER. if the comparsion will be done in BITS domain, there is no reason to compute it
 			int sumx = 0, sumy = 0;
-			const int div = Data->qpel ? 2 : 0;
+			const int div = Data->qpel ? 2 : 1;
 			const VECTOR * const mv = Data->qpel ? pMB->qmvs : pMB->mvs;
 
 			for (i = 0; i < 4; i++) {
