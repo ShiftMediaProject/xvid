@@ -135,7 +135,6 @@ typedef struct
 	VECTOR b_qmvs[4];
 
 	int mb_type;
-	int dbquant;
 
 	// stuff for block based ME (needed for Qpel ME)
 	// backup of last integer ME vectors/sad
