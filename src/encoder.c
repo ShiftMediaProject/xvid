@@ -431,7 +431,10 @@ void HintedMESet(Encoder * pEnc, int * intra)
 
 			pMB->mode = (hint->rawhints) ? bhint->mode : BitstreamGetBits(&bs, MODEBITS);
 
-			if (pMB->mode == MODE_INTER || pMB->mode == MODE_INTER_Q)
+			pMB->mode = (pMB->mode == MODE_INTER_Q) ? MODE_INTER : pMB->mode;
+			pMB->mode = (pMB->mode == MODE_INTRA_Q) ? MODE_INTRA : pMB->mode;
+
+			if (pMB->mode == MODE_INTER)
 			{
 				tmp.x  = (hint->rawhints) ? bhint->mvs[0].x : BitstreamGetBits(&bs, length);
 				tmp.y  = (hint->rawhints) ? bhint->mvs[0].y : BitstreamGetBits(&bs, length);
@@ -465,11 +468,21 @@ void HintedMESet(Encoder * pEnc, int * intra)
 					pMB->pmvs[vec].y = pMB->mvs[vec].y - pred[0].y;
 				}
 			}
-			else	// intra / intra_q / stuffing / not_coded
+			else	// intra / stuffing / not_coded
 			{
 				for (vec=0 ; vec<4 ; ++vec)
 				{
 					pMB->mvs[vec].x  = pMB->mvs[vec].y  = 0;
+				}
+			}
+
+			if (pMB->dquant != NO_CHANGE && pMB->mode == MODE_INTER4V)
+			{
+				pMB->mode = MODE_INTRA;
+
+				for (vec=0 ; vec<4 ; ++vec)
+				{
+					pMB->mvs[vec].x = pMB->mvs[vec].y = 0;
 				}
 			}
 		}
