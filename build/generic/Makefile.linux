@@ -4,7 +4,7 @@
 # 
 # Edit this file to enable/disable optimizations
 #
-# $Id: Makefile.linux,v 1.8 2002-09-22 10:19:51 edgomez Exp $
+# $Id: Makefile.linux,v 1.9 2002-09-22 10:27:52 edgomez Exp $
 # 
 #############################################################################
 
@@ -84,7 +84,14 @@ else
   # CFLAGS += -g
      # Includes profiling code in generated code, don't forget to disable
      # -fomit-frame-pointer as these 2 options are exclusive.
-  # CFLAGS += -p
+  # CFLAGS += -pg
+     # Precise profiling + test coverage (-pg must be activated)
+     # Build the library twice and execute a program using the lib twice too
+       # First pass : Will create sourcefile.da files to keep branch statistics
+  # CFLAGS += -fprofile-arcs 
+       # Second pass : Will create .bb and .bbg files suitable for coverage and
+       #               branch probabilities during compilation
+  # CFLAGS += -fprofile-arcs -fbranch-probabilities -ftest-coverage
 
 
   # Architecture options : Valid for every gcc version
