@@ -41,7 +41,9 @@
   *																			   *	
   *  Revision history:                                                         *
   *                                                                            *
-  *  26.03.2002 interlacing support - modified putvol/vopheaders paramters
+  *  28.06.2002 addded BitstreamNumBitsToByteAlign()                           *
+  *                    BitstreamShowBitsFromByteAlign()                        *
+  *  26.03.2002 interlacing support - modified putvol/vopheaders paramters     *
   *  04.03.2002 putbits speedup (Isibaar)                                      *
   *  03.03.2002 merged BITREADER and BITWRITER (Isibaar)                       *
   *	 16.12.2001	inital version                                           	   *
@@ -109,6 +111,14 @@
 #define B_VOP	2
 #define S_VOP	3
 #define N_VOP	4
+
+// resync-specific
+#define NUMBITS_VP_RESYNC_MARKER  17
+#define RESYNC_MARKER 1
+
+
+int
+read_video_packet_header(Bitstream *bs, int addbits);
 
 
 // header stuff
@@ -228,6 +238,36 @@ BitstreamSkip(Bitstream * const bs,
 		bs->pos -= 32;
 	}
 }
+
+
+// number of bits to next byte alignment
+static __inline uint32_t 
+BitstreamNumBitsToByteAlign(Bitstream *bs)
+{
+	uint32_t n = (32 - bs->pos) % 8;
+	return n == 0 ? 8 : n;
+}
+
+
+// show nbits from next byte alignment
+static __inline uint32_t
+BitstreamShowBitsFromByteAlign(Bitstream *bs, int bits)
+{
+	int bspos = bs->pos + BitstreamNumBitsToByteAlign(bs);
+	int nbit = (bits + bspos) - 32;
+
+	if (bspos >= 32) {
+		return bs->bufb >> (32 - nbit);
+	} else	if (nbit > 0) {
+		return ((bs->bufa & (0xffffffff >> bspos)) << nbit) | (bs->
+																 bufb >> (32 -
+																		  nbit));
+	} else {
+		return (bs->bufa & (0xffffffff >> bspos)) >> (32 - bspos - bits);
+	}
+
+}
+
 
 
 /* move forward to the next byte boundary */

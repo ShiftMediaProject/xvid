@@ -119,6 +119,49 @@ bs_get_matrix(Bitstream * bs,
 	}
 }
 
+
+
+// for PVOP addbits == fcode - 1
+// for BVOP addbits == max(fcode,bcode) - 1
+// returns mbpos
+int
+read_video_packet_header(Bitstream *bs, int addbits)
+{
+	int nbits;
+	int mbnum;
+	int quant;
+	int hec;
+	
+	nbits = NUMBITS_VP_RESYNC_MARKER;
+
+	BitstreamSkip(bs, BitstreamNumBitsToByteAlign(bs));
+	BitstreamSkip(bs, nbits);
+
+	// if (dec->shape != VIDOBJLAY_SHAPE_RECTANGULAR) {
+		// hec
+		// vop_width
+		// marker_bit
+		// vop_height
+		// marker_bit
+
+	//}
+
+	mbnum = BitstreamGetBits(bs, 9);
+	//printf("mbnum %i    [%i,%i]\n", mbnum, mbnum % dec->mb_width, mbnum / dec->mb_width);
+
+	// if (dec->shape != VIDOBJLAY_SHAPE_BINARYONLY)
+	quant = BitstreamGetBits(bs, 5);
+
+	// if (dec->shape != VIDOBJLAY_SHAPE_RECTANGULAR)
+	hec = BitstreamGetBit(bs);
+	// if (hec)
+	//   .. decoder hec-header ...
+
+	return mbnum;
+}
+
+
+
 /*
 decode headers
 returns coding_type, or -1 if error

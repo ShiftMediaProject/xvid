@@ -32,6 +32,7 @@
  *
  *  History:
  *
+ *  28.06.2002  added basic resync support to iframe/pframe_decode()
  *	22.06.2002	added primative N_VOP support
  *				#define BFRAMES_DEC now enables Minchenm's bframe decoder
  *  08.05.2002  add low_delay support for B_VOP decode
@@ -49,7 +50,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: decoder.c,v 1.21 2002-06-22 07:23:09 suxen_drol Exp $
+ *  $Id: decoder.c,v 1.22 2002-06-28 15:14:40 suxen_drol Exp $
  *
  *************************************************************************/
 
@@ -203,7 +204,9 @@ decoder_mbintra(DECODER * dec,
 				const uint32_t cbp,
 				Bitstream * bs,
 				const uint32_t quant,
-				const uint32_t intra_dc_threshold)
+				const uint32_t intra_dc_threshold,
+				const unsigned int bound_x,
+				const unsigned int bound_y)
 {
 
 	DECLARE_ALIGNED_MATRIX(block, 6, 64, int16_t, CACHE_LINE);
@@ -229,7 +232,7 @@ decoder_mbintra(DECODER * dec,
 
 		start_timer();
 		predict_acdc(dec->mbs, x_pos, y_pos, dec->mb_width, i, &block[i * 64],
-					 iQuant, iDcScaler, predictors);
+					 iQuant, iDcScaler, predictors, bound_x, bound_y);
 		if (!acpred_flag) {
 			pMB->acpred_directions[i] = 0;
 		}
@@ -422,12 +425,14 @@ decoder_iframe(DECODER * dec,
 			   int quant,
 			   int intra_dc_threshold)
 {
-
+	uint32_t bound_x, bound_y;
 	uint32_t x, y;
+
+	bound_x = bound_y = 0;
 
 	for (y = 0; y < dec->mb_height; y++) {
 		for (x = 0; x < dec->mb_width; x++) {
-			MACROBLOCK *mb = &dec->mbs[y * dec->mb_width + x];
+			MACROBLOCK *mb;
 
 			uint32_t mcbpc;
 			uint32_t cbpc;
@@ -435,16 +440,21 @@ decoder_iframe(DECODER * dec,
 			uint32_t cbpy;
 			uint32_t cbp;
 
+			skip_stuffing(bs);
+			if (check_resync_marker(bs, 0))
+			{
+				int mbnum = read_video_packet_header(bs, 0);
+				x = bound_x = mbnum % dec->mb_width;
+				y = bound_y = mbnum / dec->mb_width;
+			}
+
+			mb = &dec->mbs[y * dec->mb_width + x];
+
 			mcbpc = get_mcbpc_intra(bs);
 			mb->mode = mcbpc & 7;
 			cbpc = (mcbpc >> 4);
 
 			acpred_flag = BitstreamGetBit(bs);
-
-			if (mb->mode == MODE_STUFFING) {
-				DEBUG("-- STUFFING ?");
-				continue;
-			}
 
 			cbpy = get_cbpy(bs, 1);
 			cbp = (cbpy << 2) | cbpc;
@@ -465,7 +475,7 @@ decoder_iframe(DECODER * dec,
 			}
 
 			decoder_mbintra(dec, mb, x, y, acpred_flag, cbp, bs, quant,
-							intra_dc_threshold);
+							intra_dc_threshold, bound_x, bound_y);
 		}
 	}
 
@@ -479,7 +489,9 @@ get_motion_vector(DECODER * dec,
 				  int y,
 				  int k,
 				  VECTOR * mv,
-				  int fcode)
+				  int fcode,
+				  const int bound_x,
+				  const int bound_y)
 {
 
 	int scale_fac = 1 << (fcode - 1);
@@ -494,7 +506,7 @@ get_motion_vector(DECODER * dec,
 	int pmv_x, pmv_y;
 
 
-	get_pmvdata(dec->mbs, x, y, dec->mb_width, k, pmv, psad);
+	get_pmvdata(dec->mbs, x, y, dec->mb_width, k, pmv, psad, bound_x, bound_y);
 
 	pmv_x = pmv[0].x;
 	pmv_y = pmv[0].y;
@@ -533,15 +545,27 @@ decoder_pframe(DECODER * dec,
 {
 
 	uint32_t x, y;
+	uint32_t bound_x, bound_y;
 
 	start_timer();
 	image_setedges(&dec->refn[0], dec->edged_width, dec->edged_height,
 				   dec->width, dec->height, dec->interlacing);
 	stop_edges_timer();
 
+	bound_x = bound_y = 0;
+
 	for (y = 0; y < dec->mb_height; y++) {
 		for (x = 0; x < dec->mb_width; x++) {
-			MACROBLOCK *mb = &dec->mbs[y * dec->mb_width + x];
+			MACROBLOCK *mb;
+
+			skip_stuffing(bs);
+			if (check_resync_marker(bs, 0))
+			{
+				int mbnum = read_video_packet_header(bs, 0);
+				x = bound_x = mbnum % dec->mb_width;
+				y = bound_y = mbnum / dec->mb_width;
+			}
+			mb = &dec->mbs[y * dec->mb_width + x];
 
 			//if (!(dec->mb_skip[y*dec->mb_width + x]=BitstreamGetBit(bs)))         // not_coded
 			if (!(BitstreamGetBit(bs)))	// not_coded
@@ -562,11 +586,6 @@ decoder_pframe(DECODER * dec,
 
 				if (intra) {
 					acpred_flag = BitstreamGetBit(bs);
-				}
-
-				if (mb->mode == MODE_STUFFING) {
-					DEBUG("-- STUFFING ?");
-					continue;
 				}
 
 				cbpy = get_cbpy(bs, intra);
@@ -602,12 +621,12 @@ decoder_pframe(DECODER * dec,
 				if (mb->mode == MODE_INTER || mb->mode == MODE_INTER_Q) {
 					if (dec->interlacing && mb->field_pred) {
 						get_motion_vector(dec, bs, x, y, 0, &mb->mvs[0],
-										  fcode);
+										  fcode, bound_x, bound_y);
 						get_motion_vector(dec, bs, x, y, 0, &mb->mvs[1],
-										  fcode);
+										  fcode, bound_x, bound_y);
 					} else {
 						get_motion_vector(dec, bs, x, y, 0, &mb->mvs[0],
-										  fcode);
+										  fcode, bound_x, bound_y);
 						mb->mvs[1].x = mb->mvs[2].x = mb->mvs[3].x =
 							mb->mvs[0].x;
 						mb->mvs[1].y = mb->mvs[2].y = mb->mvs[3].y =
@@ -615,10 +634,10 @@ decoder_pframe(DECODER * dec,
 					}
 				} else if (mb->mode ==
 						   MODE_INTER4V /* || mb->mode == MODE_INTER4V_Q */ ) {
-					get_motion_vector(dec, bs, x, y, 0, &mb->mvs[0], fcode);
-					get_motion_vector(dec, bs, x, y, 1, &mb->mvs[1], fcode);
-					get_motion_vector(dec, bs, x, y, 2, &mb->mvs[2], fcode);
-					get_motion_vector(dec, bs, x, y, 3, &mb->mvs[3], fcode);
+					get_motion_vector(dec, bs, x, y, 0, &mb->mvs[0], fcode, bound_x, bound_y);
+					get_motion_vector(dec, bs, x, y, 1, &mb->mvs[1], fcode, bound_x, bound_y);
+					get_motion_vector(dec, bs, x, y, 2, &mb->mvs[2], fcode, bound_x, bound_y);
+					get_motion_vector(dec, bs, x, y, 3, &mb->mvs[3], fcode, bound_x, bound_y);
 				} else			// MODE_INTRA, MODE_INTRA_Q
 				{
 					mb->mvs[0].x = mb->mvs[1].x = mb->mvs[2].x = mb->mvs[3].x =
@@ -626,7 +645,7 @@ decoder_pframe(DECODER * dec,
 					mb->mvs[0].y = mb->mvs[1].y = mb->mvs[2].y = mb->mvs[3].y =
 						0;
 					decoder_mbintra(dec, mb, x, y, acpred_flag, cbp, bs, quant,
-									intra_dc_threshold);
+									intra_dc_threshold, bound_x, bound_y);
 					continue;
 				}
 

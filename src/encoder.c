@@ -37,7 +37,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.49 2002-06-25 09:41:53 suxen_drol Exp $
+ *  $Id: encoder.c,v 1.50 2002-06-28 15:14:40 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -1335,7 +1335,7 @@ HintedMESet(Encoder * pEnc,
 				tmp.y -= (tmp.y >= high) ? high * 2 : 0;
 
 				get_pmvdata(pEnc->current->mbs, x, y, pEnc->mbParam.mb_width,
-							0, pred, dummy);
+							0, pred, dummy, 0, 0);
 
 				for (vec = 0; vec < 4; ++vec) {
 					pMB->mvs[vec].x = tmp.x;
@@ -1355,7 +1355,7 @@ HintedMESet(Encoder * pEnc,
 					tmp.y -= (tmp.y >= high) ? high * 2 : 0;
 
 					get_pmvdata(pEnc->current->mbs, x, y,
-								pEnc->mbParam.mb_width, vec, pred, dummy);
+								pEnc->mbParam.mb_width, vec, pred, dummy, 0, 0);
 
 					pMB->mvs[vec].x = tmp.x;
 					pMB->mvs[vec].y = tmp.y;

@@ -1280,7 +1280,7 @@ PMVfastSearch16(const uint8_t * const pRef,
 	}
 
 	/* because we might use something like IF (dx>max_dx) THEN dx=max_dx; */
-	bPredEq = get_pmvdata(pMBs, x, y, iWcount, 0, pmv, psad);
+	bPredEq = get_pmvdata(pMBs, x, y, iWcount, 0, pmv, psad, 0, 0);
 
 	if ((x == 0) && (y == 0)) {
 		threshA = 512;
@@ -1699,7 +1699,7 @@ PMVfastSearch8(const uint8_t * const pRef,
 
 	/* because we might use IF (dx>max_dx) THEN dx=max_dx; */
 	bPredEq =
-		get_pmvdata(pMBs, (x >> 1), (y >> 1), iWcount, iSubBlock, pmv, psad);
+		get_pmvdata(pMBs, (x >> 1), (y >> 1), iWcount, iSubBlock, pmv, psad, 0, 0);
 
 	if ((x == 0) && (y == 0)) {
 		threshA = 512 / 4;
@@ -2009,7 +2009,7 @@ EPZSSearch16(const uint8_t * const pRef,
 		max_dy = EVEN(max_dy);
 	}
 	/* because we might use something like IF (dx>max_dx) THEN dx=max_dx; */
-	bPredEq = get_pmvdata(pMBs, x, y, iWcount, 0, pmv, psad);
+	bPredEq = get_pmvdata(pMBs, x, y, iWcount, 0, pmv, psad, 0, 0);
 
 /* Step 4: Calculate SAD around the Median prediction. 
         MinSAD=SAD 
@@ -2287,7 +2287,7 @@ EPZSSearch8(const uint8_t * const pRef,
 		max_dy = EVEN(max_dy);
 	}
 	/* because we might use something like IF (dx>max_dx) THEN dx=max_dx; */
-	bPredEq = get_pmvdata(pMBs, x >> 1, y >> 1, iWcount, iSubBlock, pmv, psad);
+	bPredEq = get_pmvdata(pMBs, x >> 1, y >> 1, iWcount, iSubBlock, pmv, psad, 0, 0);
 
 
 /* Step 4: Calculate SAD around the Median prediction. 
