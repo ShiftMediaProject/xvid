@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_pvop.c,v 1.4 2004-04-20 06:10:40 syskin Exp $
+ * $Id: estimation_pvop.c,v 1.5 2004-04-22 13:39:33 syskin Exp $
  *
  ****************************************************************************/
 
@@ -312,7 +312,8 @@ ModeDecision_SAD(SearchData * const Data,
 				const IMAGE * const pCurrent,
 				const IMAGE * const pRef,
 				const IMAGE * const vGMC,
-				const int coding_type)
+				const int coding_type,
+				const int skip_sad)
 {
 	int mode = MODE_INTER;
 	int mcsel = 0;
@@ -338,8 +339,8 @@ ModeDecision_SAD(SearchData * const Data,
 	}
 
 	/* final skip decision, a.k.a. "the vector you found, really that good?" */
-	if (skip_possible && (pMB->sad16 < (int)iQuant * MAX_SAD00_FOR_SKIP))
-		if ( (100*sad)/(pMB->sad16+1) > FINAL_SKIP_THRESH)
+	if (skip_possible && (skip_sad < (int)iQuant * MAX_SAD00_FOR_SKIP))
+		if ( (100*skip_sad)/(pMB->sad16+1) > FINAL_SKIP_THRESH)
 			if (Data->chroma || xvid_me_SkipDecisionP(pCurrent, pRef, x, y, Data->iEdgedWidth/2, iQuant, Data->rrv)) {
 				mode = MODE_NOT_CODED;
 				sad = 0;
@@ -896,6 +897,8 @@ MotionEstimation(MBParam * const pParam,
 				sad32v_c(pCurrent->y + (x + y * iEdgedWidth) * 32,
 							pRef->y + (x + y * iEdgedWidth) * 32,
 							pParam->edged_width, pMB->sad8 );
+			
+			sad00 = 4*MAX(MAX(pMB->sad8[0], pMB->sad8[1]), MAX(pMB->sad8[2], pMB->sad8[3]));
 
 			if (Data.chroma) {
 				Data.chromaSAD = sad8(pCurrent->u + x*8 + y*(iEdgedWidth/2)*8,
@@ -903,19 +906,15 @@ MotionEstimation(MBParam * const pParam,
 								+ sad8(pCurrent->v + (x + y*(iEdgedWidth/2))*8,
 									pRef->v + (x + y*(iEdgedWidth/2))*8, iEdgedWidth/2);
 				pMB->sad16 += Data.chromaSAD;
+				sad00 += Data.chromaSAD;
 			}
 
-			sad00 = pMB->sad16;
+			sad00 = 4*MAX(MAX(pMB->sad8[0], pMB->sad8[1]), MAX(pMB->sad8[2], pMB->sad8[3]));
 
 			/* initial skip decision */
 			/* no early skip for GMC (global vector = skip vector is unknown!)  */
 			if (current->coding_type != S_VOP)	{ /* no fast SKIP for S(GMC)-VOPs */
-				if (pMB->dquant == 0 
-					&& pMB->sad8[0] < pMB->quant * skip_thresh
-					&& pMB->sad8[1] < pMB->quant * skip_thresh
-					&& pMB->sad8[2] < pMB->quant * skip_thresh
-					&& pMB->sad8[3] < pMB->quant * skip_thresh)
-
+				if (pMB->dquant == 0 && sad00 < pMB->quant * skip_thresh)
 					if (Data.chroma || xvid_me_SkipDecisionP(pCurrent, pRef, x, y, iEdgedWidth/2, pMB->quant, Data.rrv)) {
 						ZeroMacroblockP(pMB, sad00);
 						pMB->mode = MODE_NOT_CODED;
@@ -965,7 +964,7 @@ MotionEstimation(MBParam * const pParam,
 			else
 				ModeDecision_SAD(&Data, pMB, pMBs, x, y, pParam,
 								MotionFlags, current->vop_flags, current->vol_flags,
-								pCurrent, pRef, pGMC, current->coding_type);
+								pCurrent, pRef, pGMC, current->coding_type, sad00);
 
 
 			if (pMB->mode == MODE_INTRA)

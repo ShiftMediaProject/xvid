@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.3 2004-04-20 06:10:40 syskin Exp $
+ * $Id: estimation_bvop.c,v 1.4 2004-04-22 13:39:33 syskin Exp $
  *
  ****************************************************************************/
 
@@ -55,18 +55,25 @@ ChromaSAD2(const int fx, const int fy, const int bx, const int by,
 		interpolate8x8_halfpel_hv
 	};
 	
+	if (data->chromaX == fx && data->chromaY == fy && 
+		data->b_chromaX == bx && data->b_chromaY == by) 
+		return data->chromaSAD;
+
 	offset = (fx>>1) + (fy>>1)*stride;
 	filter = ((fx & 1) << 1) | (fy & 1);
 
 	if (filter != 0) {
 		f_refu = data->RefQ;
 		f_refv = data->RefQ + 8;
-		interpolate8x8_halfpel[filter](f_refu, data->RefP[4] + offset, stride, data->rounding);
-		interpolate8x8_halfpel[filter](f_refv, data->RefP[5] + offset, stride, data->rounding);
+		if (data->chromaX != fx || data->chromaY != fy) {
+			interpolate8x8_halfpel[filter](f_refu, data->RefP[4] + offset, stride, data->rounding);
+			interpolate8x8_halfpel[filter](f_refv, data->RefP[5] + offset, stride, data->rounding);
+		}
 	} else {
 		f_refu = (uint8_t*)data->RefP[4] + offset;
 		f_refv = (uint8_t*)data->RefP[5] + offset;
 	}
+	data->chromaX = fx; data->chromaY = fy;
 
 	offset = (bx>>1) + (by>>1)*stride;
 	filter = ((bx & 1) << 1) | (by & 1);
@@ -74,16 +81,20 @@ ChromaSAD2(const int fx, const int fy, const int bx, const int by,
 	if (filter != 0) {
 		b_refu = data->RefQ + 16;
 		b_refv = data->RefQ + 24;
-		interpolate8x8_halfpel[filter](b_refu, data->b_RefP[4] + offset, stride, data->rounding);
-		interpolate8x8_halfpel[filter](b_refv, data->b_RefP[5] + offset, stride, data->rounding);
+		if (data->b_chromaX != bx || data->b_chromaY != by) {
+			interpolate8x8_halfpel[filter](b_refu, data->b_RefP[4] + offset, stride, data->rounding);
+			interpolate8x8_halfpel[filter](b_refv, data->b_RefP[5] + offset, stride, data->rounding);
+		}
 	} else {
 		b_refu = (uint8_t*)data->b_RefP[4] + offset;
 		b_refv = (uint8_t*)data->b_RefP[5] + offset;
 	}
+	data->b_chromaX = bx; data->b_chromaY = by;
 
 	sad = sad8bi(data->CurU, b_refu, f_refu, stride);
 	sad += sad8bi(data->CurV, b_refv, f_refv, stride);
 
+	data->chromaSAD = sad;
 	return sad;
 }
 
@@ -186,8 +197,9 @@ CheckCandidateDirect(const int x, const int y, SearchData * const data, const un
 		ReferenceF = xvid_me_interpolate8x8qpel(mvs.x, mvs.y, k, 0, data);
 		ReferenceB = xvid_me_interpolate8x8qpel(b_mvs.x, b_mvs.y, k, 1, data);
 
-		sad += sad8bi(data->Cur + 8*(k&1) + 8*(k>>1)*(data->iEdgedWidth),
-						ReferenceF, ReferenceB, data->iEdgedWidth);
+		sad += data->iMinSAD[k+1] = 
+			sad8bi(data->Cur + 8*(k&1) + 8*(k>>1)*(data->iEdgedWidth),
+					ReferenceF, ReferenceB, data->iEdgedWidth);
 		if (sad > *(data->iMinSAD)) return;
 	}
 
@@ -558,6 +570,7 @@ SearchDirect(const IMAGE * const f_Ref,
 	Data->max_dy = k * (pParam->height - y * 16);
 	Data->min_dx = -k * (16 + x * 16);
 	Data->min_dy = -k * (16 + y * 16);
+	Data->chromaX = Data->chromaY = Data->b_chromaX = Data->b_chromaY = 256*4096;
 
 	Data->referencemv = Data->qpel ? b_mb->qmvs : b_mb->mvs;
 	Data->qpel_precision = 0;
@@ -585,19 +598,24 @@ SearchDirect(const IMAGE * const f_Ref,
 		}
 	}
 
-	CheckCandidate = b_mb->mode == MODE_INTER4V ? CheckCandidateDirect : CheckCandidateDirectno4v;
-
-	CheckCandidate(0, 0, Data, 255);
+	CheckCandidateDirect(0, 0, Data, 255);	/* will also fill iMinSAD[1..4] with 8x8 SADs */
 
 	/* initial (fast) skip decision */
-	if (*Data->iMinSAD < (int)Data->iQuant * INITIAL_SKIP_THRESH) {
+	if (Data->iMinSAD[1] < (int)Data->iQuant * INITIAL_SKIP_THRESH
+		&& Data->iMinSAD[2] < (int)Data->iQuant * INITIAL_SKIP_THRESH
+		&& Data->iMinSAD[3] < (int)Data->iQuant * INITIAL_SKIP_THRESH
+		&& Data->iMinSAD[4] < (int)Data->iQuant * INITIAL_SKIP_THRESH) {
 		/* possible skip */
 		SkipDecisionB(pCur, f_Ref, b_Ref, pMB, x, y, Data);
-		if (pMB->mode == MODE_DIRECT_NONE_MV) return *Data->iMinSAD; /* skipped */
+		if (pMB->mode == MODE_DIRECT_NONE_MV)
+			return *Data->iMinSAD; /* skipped */
 	}
 
 	*Data->iMinSAD += Data->lambda16;
-	skip_sad = *Data->iMinSAD;
+	skip_sad = 4*MAX(MAX(Data->iMinSAD[1],Data->iMinSAD[2]), MAX(Data->iMinSAD[3],Data->iMinSAD[4]));
+	if (Data->chroma) skip_sad += Data->chromaSAD;
+
+	CheckCandidate = b_mb->mode == MODE_INTER4V ? CheckCandidateDirect : CheckCandidateDirectno4v;
 
 	if (!(MotionFlags & XVID_ME_SKIP_DELTASEARCH)) {
 		if (MotionFlags & XVID_ME_USESQUARES16) MainSearchPtr = xvid_me_SquareSearch;
@@ -696,6 +714,8 @@ SearchInterpolate(const IMAGE * const f_Ref,
 	Data->RefP[5] = f_Ref->v + (x + (Data->iEdgedWidth/2) * y) * 8;
 	Data->b_RefP[4] = b_Ref->u + (x + (Data->iEdgedWidth/2) * y) * 8;
 	Data->b_RefP[5] = b_Ref->v + (x + (Data->iEdgedWidth/2) * y) * 8;
+
+	Data->chromaX = Data->chromaY = 256*4096;
 
 	Data->predMV = *f_predMV;
 	Data->bpredMV = *b_predMV;
@@ -948,7 +968,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 			}
 
 			/* final skip decision */
-			if ( (skip_sad < Data.iQuant * MAX_SAD00_FOR_SKIP * (Data.chroma ? 3:2) )
+			if ( (skip_sad < Data.iQuant * MAX_SAD00_FOR_SKIP )
 				&& ((100*best_sad)/(skip_sad+1) > FINAL_SKIP_THRESH) )
 
 				SkipDecisionB(&frame->image, f_ref, b_ref, pMB, i, j, &Data);

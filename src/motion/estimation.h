@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation.h,v 1.3 2004-04-20 06:10:39 syskin Exp $
+ * $Id: estimation.h,v 1.4 2004-04-22 13:39:33 syskin Exp $
  *
  ****************************************************************************/
 
@@ -47,7 +47,7 @@
 
 #define BITS_MULT				16
 
-#define INITIAL_SKIP_THRESH		5
+#define INITIAL_SKIP_THRESH		6
 #define FINAL_SKIP_THRESH		50
 #define MAX_SAD00_FOR_SKIP		20
 #define MAX_CHROMA_SAD_FOR_SKIP	22
@@ -102,6 +102,7 @@ typedef struct
 	const uint8_t * b_RefP[6];	/* backward reference pictures - N, V, H, HV, cU, cV */
 	VECTOR bpredMV;				/* backward prediction - used interpolate mode only */
 	uint32_t bFcode;			/* backward fcode - used as above */
+	int b_chromaX, b_chromaY;
 
 	/* fields for direct mode */
 	VECTOR directmvF[4];		/* scaled reference vectors */
