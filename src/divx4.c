@@ -314,11 +314,24 @@ int decore(unsigned long key, unsigned long opt,
 #define FRAMERATE_INCR		1001
 
 int divx4_motion_presets[7] = {
-	0, PMV_QUICKSTOP16, PMV_EARLYSTOP16, PMV_EARLYSTOP16 | PMV_EARLYSTOP8,
+	0, 
+	PMV_QUICKSTOP16, 
+	PMV_EARLYSTOP16, 
+	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16,
 	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 | PMV_EARLYSTOP8 | PMV_HALFPELDIAMOND8,
 	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 | PMV_EARLYSTOP8 | PMV_HALFPELDIAMOND8,
-	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 | PMV_EXTSEARCH16 |
-	PMV_EARLYSTOP8 | PMV_HALFPELREFINE8 | PMV_HALFPELDIAMOND8
+	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 | PMV_EXTSEARCH16 | PMV_EARLYSTOP8 | PMV_HALFPELREFINE8 | PMV_HALFPELDIAMOND8
+};
+
+
+int divx4_general_presets[7] = {
+	0, 
+	XVID_H263QUANT, 
+	XVID_H263QUANT,
+	XVID_H263QUANT | XVID_HALFPEL,
+	XVID_H263QUANT | XVID_INTER4V | XVID_HALFPEL,
+   	XVID_H263QUANT | XVID_INTER4V | XVID_HALFPEL, 
+	XVID_H263QUANT | XVID_INTER4V | XVID_HALFPEL
 };
 
 int quality;
@@ -383,12 +396,8 @@ int encore(void * handle, int opt, void * param1, void * param2)
 			xframe.bitstream = eframe->bitstream;
 			xframe.length = eframe->length;
 
-			xframe.general = XVID_HALFPEL | XVID_H263QUANT;
-
-			if(quality > 3)
-				xframe.general |= XVID_INTER4V;
-
 			xframe.motion = divx4_motion_presets[quality];
+			xframe.general = divx4_general_presets[quality];
 
 			xframe.image = eframe->image;
 			switch (eframe->colorspace)
