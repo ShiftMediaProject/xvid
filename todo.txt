@@ -2,37 +2,37 @@ todo
 
 
 *** build environment ***
+
 - portable makefile [DONE]
-	more testing needed
+
+- QuickTime frontend
+- Java frontend
 
 
 *** api ***
 - decore/encore2 wrappers; [DONE]
-
 - xvid_init() [DONE]
-	handle cpu detection, yuv/dct lookup table init
-	return api version number
-	return core build number [build number should be incremented automatically, how?]
-
+	handle cpu detection, yuv/dct lookup table init	[DONT]
+	return api version number [DONE]
+	return core build number [HALTED; how?]
 
 *** common ***
 
 - mpeg-4 quantizer (quant4) testing [DONE]
 - consder moving a modified mbprediction/mbdeprediction here [DONE]
-
 - add [-2048,2048] to mmx dequant [DONE]
-
-
 - mmx quant4 [DONE]
-- sse2: convert intel's idct/sad/comp apnotes to nasm [IN PROGRESS]
+- sse2 [DONE]
+
+- sse2 quant4
 - mlib
 	
 
 *** image ***
 
 - sort out in/out & conversion func naming issues [DONE]
-maybe,	in_yuv, in_yuyv, in_uyuv, in_rgbXX
-		out_yuv, out_yuyv, out_uyuv, out_rgbXX
+- rgb16. [DONE]
+
 
 - input flipping support
 output flipping support is not 'perfect'.
@@ -41,11 +41,7 @@ using negative height is bad, best to have seperate vflip parameter
 - rgb24/32_mmx cause yellow dots to appear on left hand size
 (only visibile with high contrast colors)
 
-- rgb16. [DONE]
-can be done generically using r,g,b masks
-or just code for the popular 16bit formats 555, 565
-
-- diff between basic-yuv and iso-yuv
+- investigate difference between basic-yuv and iso-yuv
 
 
 *** decoder ***
@@ -53,59 +49,47 @@ or just code for the popular 16bit formats 555, 565
 - quant=1 encoder material appears "soft" [FIXED]
 - block based interpolation [DONE]
 
-- msmpeg-4 support... dont hold your breath [IN PROGRESS]
-	best to write an entirely new 'decoder' than bolt stuff onto
-	the existing one.
-
-- post processing [IN PROGRESS]
-
 - add basic mpeg4 stuff:
 	- custom mpeg quant matrixes [DONE]
 	- intra_dc_vlc_threshold [DONE]
 	- quarterpel  [in progress]
 	- resync?
 
+- msmpeg-4 support [IN PROGRESS]
+- post processing [IN PROGRESS]
 - b-vops [IN PROGRESS]
-- figure out what todo with time codes, and fatal error
 
+- proper handling of time codes and fatal/non-fatal errors
 
 
 *** encoder ***
 
 - purple mb block (rare) [FIXED]
-- coeff range checks need to be verified against mpeg-4 spec [DONE/PARTIAL]
+- coeff range checks need to be verified against mpeg-4 spec [DONE]
 	- dequants now clamp to [-2048,2047]. [DONE]
 	- fdct_mmx clamps to [-2048,2047], it doesnt have to (but prevents overflows in mmx quantization)
 	- quants _should_ clamp to [-127,127], but this introduces errors at low quant levels so we ignore it
 	- idct _should_ clamp [-256,255], but its really unnessary overhead.
-	
 - pmvfast bug fixing [DONE]
-
-- quater pixel motion search [IN PROGRESS]
-
-- bidirectional coding [IN PROGRESS]
-
-- global motion compensation
-
-- redo coefficient thresholding like described in H26L
-
 - 'smearing bug' when motion occurs in straight vertical direction (
 http://www.videocoding.de/forum/viewtopic.php?topic=71&forum=2&6 )
 coefficient thresholding problems? [FIXED/REMOVED]
-
 - better luminance masking [DONE]
 
+
+- quater pixel motion search [IN PROGRESS]
+- bidirectional coding [IN PROGRESS]
+- virtualdub support [IN PROGRESS]
+
+- global motion compensation
+- redo coefficient thresholding like described in H26L
 - further improve adaptive quantisation, maybe implement JND maps
-
-- use N_VOP when a interframe is entirely composed of ublks
-	& frame dropping. eg. simple ublk threshold
-
+- use N_VOP when a interframe is entirely composed of ublks & frame dropping. eg. simple ublk threshold
 
 
 *** gpl conversion ***
 
 mbdecoding.c [REPLACED]
-
 encoder.c	[REPLACED]
 mbmotionestcomp.c	[REPLACED]
 mbcoding [REPLACED]
