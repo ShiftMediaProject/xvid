@@ -3,6 +3,8 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - OpenDivx API wrapper -
  *
+ *  Copyright(C) 2001-2002 Peter Ross <pross@cs.rmit.edu.au>
+ *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
  *  to use this software module in hardware or software products are
@@ -25,20 +27,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- *************************************************************************/
-
-/**************************************************************************
- *
- *  History:
- *
- *	24.02.2002	#def BFRAMES compatibility
- *  26.02.2001  fixed dec_csp bugs
- *  26.12.2001  xvid_init() support
- *  22.12.2001  removed some compiler warnings
- *  16.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
- *
- *  $Id: divx4.c,v 1.17 2002-09-04 20:46:00 edgomez Exp $
  *
  *************************************************************************/
 
