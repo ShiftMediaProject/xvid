@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: Configure.cpp,v 1.2 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: Configure.cpp,v 1.3 2004-07-18 02:00:05 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -29,11 +29,8 @@
 #include "config.h"
 #include "resource.h"
 
-/* "DllEntryPoint@12" in strmbase.lib\dllentry.obj stores the module in g_hInst 
-    this function must be called on DllEntry, inorder for property pages to function
-	likewise, we need g_hInst inorder to display property sheets from command line
-*/
-extern HINSTANCE g_hInst;
+
+static HINSTANCE g_xvid_hInst;
 
 
 int adv_dialog(HWND hwndOwner)
@@ -43,7 +40,7 @@ int adv_dialog(HWND hwndOwner)
 
 	psp[0].dwSize = sizeof (PROPSHEETPAGE);
 	psp[0].dwFlags = PSP_USETITLE;
-	psp[0].hInstance = g_hInst;
+	psp[0].hInstance = g_xvid_hInst;
 	psp[0].pszTemplate = MAKEINTRESOURCE (IDD_ABOUT);
 	psp[0].pszIcon = NULL;
 	psp[0].pfnDlgProc = adv_proc;
@@ -53,11 +50,11 @@ int adv_dialog(HWND hwndOwner)
 	psh.dwSize = sizeof (PROPSHEETHEADER);
 	psh.dwFlags = PSH_PROPSHEETPAGE;
 	psh.hwndParent = hwndOwner;
-	psh.hInstance = g_hInst;
+	psh.hInstance = g_xvid_hInst;
 	psh.pszIcon = NULL;
 	psh.pszCaption = (LPSTR)"XviD Configuration";
 	psh.nPages = sizeof (psp) / sizeof (PROPSHEETPAGE);
-	psh.ppsp = (LPCPROPSHEETPAGE) &psp;
+	psh.ppsp = psp;
 
 	return PropertySheet (&psh);
 }
@@ -70,3 +67,17 @@ void CALLBACK Configure(HWND hWndParent, HINSTANCE hInstParent, LPSTR lpCmdLine,
 	LoadRegistryInfo();
 	adv_dialog( GetDesktopWindow() );
 }
+
+
+/* strmbase.lib\dllentry.obj:DllEntryPoint@12 */
+extern "C" BOOL WINAPI DllEntryPoint(HINSTANCE, ULONG, LPVOID);
+
+
+BOOL WINAPI DllMain(HINSTANCE hInst, DWORD fdwReason, LPVOID lpvReserved)
+{
+	g_xvid_hInst = hInst;
+
+	/* Call directshow DllEntryPoint@12 */
+    return DllEntryPoint(hInst, fdwReason, lpvReserved);
+}
+

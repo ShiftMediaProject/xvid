@@ -59,3 +59,4 @@ BOOL CALLBACK adv_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 
 #endif
+
