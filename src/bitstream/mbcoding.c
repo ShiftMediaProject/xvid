@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: mbcoding.c,v 1.37 2003-01-05 16:54:36 edgomez Exp $
+ * $Id: mbcoding.c,v 1.38 2003-01-07 21:57:19 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -66,9 +66,9 @@
 #define ABS(X) (((X)>0)?(X):-(X))
 #define CLIP(X,A) (X > A) ? (A) : (X)
 
-/*#define _BIGLUT_*/
+/* #define BIGLUT */
 
-#ifdef _BIGLUT_
+#ifdef BIGLUT
 #define LEVELOFFSET 2048
 #else
 #define LEVELOFFSET 32
@@ -80,9 +80,9 @@
 
 static REVERSE_EVENT DCT3D[2][4096];
 
-#ifdef _BIGLUT_
+#ifdef BIGLUT
 static VLC coeff_VLC[2][2][4096][64];
-VLC *intra_table, *inter_table; 
+static VLC *intra_table, *inter_table; 
 #else
 static VLC coeff_VLC[2][2][64][64];
 #endif
@@ -94,13 +94,11 @@ static VLC coeff_VLC[2][2][64][64];
 void
 init_vlc_tables(void)
 {
-	uint32_t i, j, intra, last, run, offset;
-	int32_t level;
-	VLC coeff_VLC_temp[2][2][64][64];
+	uint32_t i, j, intra, last, run,  run_esc, level, level_esc, escape, escape_len, offset;
 
-#ifdef _BIGLUT_
-	intra_table = coeff_VLC[1];
-	inter_table = coeff_VLC[0]; 
+#ifdef BIGLUT
+	intra_table = (VLC*)coeff_VLC[1];
+	inter_table = (VLC*)coeff_VLC[0]; 
 #endif
 
 
@@ -114,12 +112,11 @@ init_vlc_tables(void)
 			for (run = 0; run < 63 + last; run++)
 				for (level = 0; level < 32 << intra; level++)
 				{
-#ifdef _BIGLUT_
+#ifdef BIGLUT
 					offset = LEVELOFFSET;
 #else
 					offset = !intra * LEVELOFFSET;
 #endif
-					coeff_VLC_temp[intra][last][level][run].len		= 128;
 					coeff_VLC[intra][last][level + offset][run].len = 128;
 				}
 		}
@@ -127,7 +124,7 @@ init_vlc_tables(void)
 	for (intra = 0; intra < 2; intra++)
 		for (i = 0; i < 102; i++)
 		{
-#ifdef _BIGLUT_
+#ifdef BIGLUT
 			offset = LEVELOFFSET;
 #else
 			offset = !intra * LEVELOFFSET;
@@ -138,16 +135,11 @@ init_vlc_tables(void)
 				DCT3D[intra][(coeff_tab[intra][i].vlc.code << (12 - coeff_tab[intra][i].vlc.len)) | j].event = coeff_tab[intra][i].event;
 			}
 
-			coeff_VLC_temp[intra][coeff_tab[intra][i].event.last][coeff_tab[intra][i].event.level][coeff_tab[intra][i].event.run].code
-				= coeff_tab[intra][i].vlc.code << 1;
-			coeff_VLC_temp[intra][coeff_tab[intra][i].event.last][coeff_tab[intra][i].event.level][coeff_tab[intra][i].event.run].len
-				= coeff_tab[intra][i].vlc.len + 1;
-
 			coeff_VLC[intra][coeff_tab[intra][i].event.last][coeff_tab[intra][i].event.level + offset][coeff_tab[intra][i].event.run].code
 				= coeff_tab[intra][i].vlc.code << 1;
 			coeff_VLC[intra][coeff_tab[intra][i].event.last][coeff_tab[intra][i].event.level + offset][coeff_tab[intra][i].event.run].len
 				= coeff_tab[intra][i].vlc.len + 1;
-#ifndef _BIGLUT_
+#ifndef BIGLUT
 			if (!intra)
 #endif
 			{
@@ -164,69 +156,70 @@ init_vlc_tables(void)
 			{
 				for (level = 1; level < 32 << intra; level++)
 				{
-#ifdef _BIGLUT_
+					if (level <= max_level[intra][last][run] && run <= max_run[intra][last][level])
+					    continue;
+
+#ifdef BIGLUT
 					offset = LEVELOFFSET;
 #else
 					offset = !intra * LEVELOFFSET;
 #endif
-					if ((max_level[intra][last][run]) && (level > max_level[intra][last][run]))
-						if (coeff_VLC_temp[intra][last][level - max_level[intra][last][run]][run].len != 128
-							&& coeff_VLC[intra][last][level + offset][run].len == 128)
+                    level_esc = level - max_level[intra][last][run];
+					run_esc = run - 1 - max_run[intra][last][level];
+					/*use this test to use shorter esc2 codes when possible
+					if (level_esc <= max_level[intra][last][run] && run <= max_run[intra][last][level_esc]
+						&& !(coeff_VLC[intra][last][level_esc + offset][run].len + 7 + 1
+							 > coeff_VLC[intra][last][level + offset][run_esc].code + 7 + 2))*/
+
+					if (level_esc <= max_level[intra][last][run] && run <= max_run[intra][last][level_esc])
+					{
+						escape     = ESCAPE1;
+						escape_len = 7 + 1;
+						run_esc    = run;
+					}
+					else
+					{
+						if (level <= max_level[intra][last][run_esc] && run_esc <= max_run[intra][last][level])
 						{
-							coeff_VLC[intra][last][level + offset][run].code
-								= (ESCAPE1 << coeff_VLC_temp[intra][last][level - max_level[intra][last][run]][run].len)
-								|  coeff_VLC_temp[intra][last][level - max_level[intra][last][run]][run].code;
-							coeff_VLC[intra][last][level + offset][run].len
-								= coeff_VLC_temp[intra][last][level - max_level[intra][last][run]][run].len + 7 + 1;
-#ifndef _BIGLUT_
+							escape     = ESCAPE2;
+							escape_len = 7 + 2;
+							level_esc  = level;
+						}
+						else
+						{
+#ifndef BIGLUT
 							if (!intra)
 #endif
 							{
-								coeff_VLC[intra][last][offset - level][run].code
-									= (ESCAPE1 << coeff_VLC_temp[intra][last][level - max_level[intra][last][run]][run].len)
-									|  coeff_VLC_temp[intra][last][level - max_level[intra][last][run]][run].code | 1;
-								coeff_VLC[intra][last][offset - level][run].len
-									= coeff_VLC_temp[intra][last][level - max_level[intra][last][run]][run].len + 7 + 1;
+								coeff_VLC[intra][last][level + offset][run].code
+									= (ESCAPE3 << 21) | (last << 20) | (run << 14) | (1 << 13) | ((level & 0xfff) << 1) | 1;
+								coeff_VLC[intra][last][level + offset][run].len = 30;
+									coeff_VLC[intra][last][offset - level][run].code
+									= (ESCAPE3 << 21) | (last << 20) | (run << 14) | (1 << 13) | ((-level & 0xfff) << 1) | 1;
+								coeff_VLC[intra][last][offset - level][run].len = 30;
 							}
+							continue;
 						}
-					if (run > max_run[intra][last][level])
-						if (coeff_VLC_temp[intra][last][level][run - 1 - max_run[intra][last][level]].len != 128
-							&& coeff_VLC[intra][last][level + offset][run].len == 128)
-						/*use the lower test instead of the upper to use shorter escape codes when possible :
-						if (coeff_VLC_temp[intra][last][level][run - 1 - max_run[intra][last][level]].len + 7 + 2
-							< coeff_VLC[intra][last][level + offset][run].len)*/
-						{
-							coeff_VLC[intra][last][level + offset][run].code
-								= (ESCAPE2 << coeff_VLC_temp[intra][last][level][run - 1 - max_run[intra][last][level]].len)
-								|  coeff_VLC_temp[intra][last][level][run - 1 - max_run[intra][last][level]].code;
-							coeff_VLC[intra][last][level + offset][run].len
-								= coeff_VLC_temp[intra][last][level][run - 1 - max_run[intra][last][level]].len + 7 + 2;
-#ifndef _BIGLUT_
-							if (!intra)
-#endif
-							{
-								coeff_VLC[intra][last][offset - level][run].code
-									= (ESCAPE2 << coeff_VLC_temp[intra][last][level][run - 1 - max_run[intra][last][level]].len)
-									|  coeff_VLC_temp[intra][last][level][run - 1 - max_run[intra][last][level]].code | 1;
-								coeff_VLC[intra][last][offset - level][run].len
-									= coeff_VLC_temp[intra][last][level][run - 1 - max_run[intra][last][level]].len + 7 + 2;
-							}
-						}
-#ifndef _BIGLUT_
+					}
+
+					coeff_VLC[intra][last][level + offset][run].code
+						= (escape << coeff_VLC[intra][last][level_esc + offset][run_esc].len)
+						|  coeff_VLC[intra][last][level_esc + offset][run_esc].code;
+					coeff_VLC[intra][last][level + offset][run].len
+						= coeff_VLC[intra][last][level_esc + offset][run_esc].len + escape_len;
+#ifndef BIGLUT
 					if (!intra)
 #endif
-						if (coeff_VLC[intra][last][level + offset][run].len == 128)
-						{
-							coeff_VLC[intra][last][level + offset][run].code
-								= (ESCAPE3 << 21) | (last << 20) | (run << 14) | (1 << 13) | ((level & 0xfff) << 1) | 1;
-							coeff_VLC[intra][last][level + offset][run].len = 30;
-
-							coeff_VLC[intra][last][offset - level][run].code
-								= (ESCAPE3 << 21) | (last << 20) | (run << 14) | (1 << 13) | ((-level & 0xfff) << 1) | 1;
-							coeff_VLC[intra][last][offset - level][run].len = 30;
-						}
+					{
+						coeff_VLC[intra][last][offset - level][run].code
+							= (escape << coeff_VLC[intra][last][level_esc + offset][run_esc].len)
+							|  coeff_VLC[intra][last][level_esc + offset][run_esc].code | 1;
+						coeff_VLC[intra][last][offset - level][run].len
+							= coeff_VLC[intra][last][level_esc + offset][run_esc].len + escape_len;
+					}
 				}
-#ifdef _BIGLUT_
+
+#ifdef BIGLUT
 				for (level = 32 << intra; level < 2048; level++)
 				{
 					coeff_VLC[intra][last][level + offset][run].code
@@ -307,7 +300,7 @@ CodeVector(Bitstream * bs,
 
 }
 
-#ifdef __BIGLUT_
+#ifdef BIGLUT
 
 static __inline void
 CodeCoeff(Bitstream * bs,
@@ -519,7 +512,7 @@ CodeBlockIntra(const FRAMEINFO * frame,
 		if (pMB->cbp & (1 << (5 - i))) {
 			bits = BitstreamPos(bs);
 
-#ifdef _BIGLUT_
+#ifdef BIGLUT
 			CodeCoeff(bs, &qcoeff[i * 64], intra_table,
 					  scan_tables[pMB->acpred_directions[i]], 1);
 #else
@@ -588,7 +581,7 @@ CodeBlockInter(const FRAMEINFO * frame,
 	/* code block coeffs */
 	for (i = 0; i < 6; i++)
 		if (pMB->cbp & (1 << (5 - i)))
-#ifdef _BIGLUT_
+#ifdef BIGLUT
 			CodeCoeff(bs, &qcoeff[i * 64], inter_table, scan_tables[0], 0);
 #else
 			CodeCoeffInter(bs, &qcoeff[i * 64], scan_tables[0]);
