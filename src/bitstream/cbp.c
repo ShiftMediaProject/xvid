@@ -30,36 +30,36 @@ calc_cbp_plain(const int16_t codes[6 * 64])
 uint32_t
 calc_cbp_c(const int16_t codes[6 * 64])
 {
-	int i, j;
+	unsigned int i=6;
 	uint32_t cbp = 0;
-/* if definition is changed (e.g. from int16_t to something like int) this routine 
-   is not possible anymore! */
 
-   for (i = 5; i >= 0; i--, codes += 64) {
+/* uses fixed relation: 4*codes = 1*codes64 */
+/* if prototype is changed (e.g. from int16_t to something like int32) this routine 
+   has to be changed! */
 
-		uint64_t *codes64 = (uint64_t*)codes;
+	do  {
+		uint64_t *codes64 = (uint64_t*)codes;	/* the compiler doesn't really make this */
+		uint32_t *codes32 = (uint32_t*)codes;	/* variables, just "addressing modes" */
+
 		cbp += cbp; 
-        if (codes[1] || codes[2] || codes[3]) {
+        if (codes[1] || codes32[1]) {
 			cbp++;
-			continue;
 		}
-        if (codes64[1] | codes64[2] | codes64[3]) {
+        else if (codes64[1] | codes64[2] | codes64[3]) {
 			cbp++;
-			continue;
 		}
-        if (codes64[4] | codes64[5] | codes64[6] | codes64[7]) {
+        else if (codes64[4] | codes64[5] | codes64[6] | codes64[7]) {
 			cbp++;
-			continue;
 		}
-        if (codes64[8] | codes64[9] | codes64[10] | codes64[11]) {
+        else if (codes64[8] | codes64[9] | codes64[10] | codes64[11]) {
 			cbp++;
-			continue;
 		}
-        if (codes64[12] | codes64[13] | codes64[14] | codes64[15]) {
+        else if (codes64[12] | codes64[13] | codes64[14] | codes64[15]) {
 			cbp++;
-			continue;
 		}
-    }
+		codes += 64;
+		i--;
+    } while (i != 0);
 
 	return cbp;
 }
