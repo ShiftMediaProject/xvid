@@ -52,6 +52,9 @@ static __inline int64_t read_counter() {
 
 #elif defined(LINUX) || defined(DJGPP)
 
+
+#ifdef _DEBUG
+
 #include <stdio.h>
 #define DEBUG_WHERE		stdout
 #define DEBUG(S)        fprintf(DEBUG_WHERE, "%s\n", (S));
@@ -59,6 +62,13 @@ static __inline int64_t read_counter() {
 #define DEBUG2(S,A,B)   fprintf(DEBUG_WHERE, "%s%i=%i\n", (S), (A), (B))
 #define DEBUG3(S,A,B,C) fprintf(DEBUG_WHERE, "%s %i %x %x\n", (S), (A), (B), (C))
 #define DEBUG8(S,A,B,C,D,E,F,G,H)
+#else
+#define DEBUG(S)
+#define DEBUG1(S,I)
+#define DEBUG2(X,A,B)
+#define DEBUG3(X,A,B,C)
+#define DEBUG8(X,A,B,C,D,E,F,G,H)
+#endif
 
 #if defined(LINUX)
 
