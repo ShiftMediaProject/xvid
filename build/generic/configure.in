@@ -162,6 +162,10 @@ if test x"$assembly" = x"yes" ; then
 	  i[[3456]]86)
 	  AC_MSG_RESULT(ia32)
 	  	ARCHITECTURE="IA32"
+                ;;
+          x86_64)
+                AC_MSG_RESULT(x86_64)
+                ARCHITECTURE="X86_64"
 		;;	
 		powerpc)
 		AC_MSG_RESULT(PowerPC)
@@ -326,7 +330,7 @@ dnl
 dnl IA32
 dnl
 
-if test "$ARCHITECTURE" = "IA32" ; then
+if test "$ARCHITECTURE" = "IA32" -o "$ARCHITECTURE" = "X86_64" ; then
 
    dnl
    dnl Checking for nasm compatible programs
@@ -345,7 +349,7 @@ if test "$ARCHITECTURE" = "IA32" ; then
    fi
 
    dnl if yasm hasn't been found, then check for nasm (not buggy version)
-   if test "$found_nasm_comp_prog" = "no" ; then
+   if test "$found_nasm_comp_prog" = "no" -a "$ARCHITECTURE" != "X86_64" ; then
        AC_CHECK_PROG([ac_nasm], [$nasm_prog], [yes], [no], , [yes])
        if test "$ac_nasm" = "yes" ; then
            dnl
@@ -389,9 +393,12 @@ if test "$ARCHITECTURE" = "IA32" ; then
        esac
 
        AS="$chosen_asm_prog"
-       AFLAGS="-I\$(<D)/ -f $NASM_FORMAT $PREFIX $MARK_FUNCS"
        ASSEMBLY_EXTENSION="asm"
-       ASSEMBLY_SOURCES="SRC_IA32"
+       AFLAGS="-I\$(<D)/ -f $NASM_FORMAT $PREFIX $MARK_FUNCS"
+       ASSEMBLY_SOURCES="SRC_${ARCHITECTURE}"
+       if test "$ARCHITECTURE" = "X86_64" ; then
+               AFLAGS=${AFLAGS}" -m amd64"
+       fi
    else 
        AC_MSG_WARN([no correct assembler was found - Compiling generic sources only])
        ARCHITECTURE="GENERIC"

@@ -79,6 +79,20 @@ SRC_IA32 = \
 	utils/x86_asm/interlacing_mmx.asm \
 	utils/x86_asm/cpuid.asm
 
+SRC_X86_64 = \
+	dct/x86_64_asm/fdct_mmx_skal.asm \
+	dct/x86_64_asm/idct_mmx.asm \
+	image/x86_64_asm/interpolate8x8_mmx.asm \
+	image/x86_64_asm/interpolate8x8_xmm.asm \
+	image/x86_64_asm/qpel_mmx.asm \
+	motion/x86_64_asm/sad_mmx.asm \
+	motion/x86_64_asm/sad_xmm.asm \
+	quant/x86_64_asm/quantize_h263_mmx.asm \
+	quant/x86_64_asm/quantize_mpeg_xmm.asm \
+	utils/x86_64_asm/cpuid.asm \
+	utils/x86_64_asm/interlacing_mmx.asm \
+	utils/x86_64_asm/mem_transfer_mmx.asm
+
 SRC_IA64 = \
 	dct/ia64_asm/fdct_ia64.s \
 	image/ia64_asm/interpolate8x8_ia64.s \

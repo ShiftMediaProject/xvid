@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: quant.h,v 1.3 2004-04-05 20:36:37 edgomez Exp $
+ * $Id: quant.h,v 1.4 2005-01-05 23:02:15 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -71,6 +71,11 @@ quant_intraFunc quant_h263_intra_ia64;
 quant_intraFunc quant_h263_intra_altivec_c;
 #endif
 
+#ifdef ARCH_IS_X86_64
+quant_intraFunc quant_h263_intra_x86_64;
+quant_intraFunc quant_mpeg_intra_x86_64;
+#endif
+
 /* DeQuant functions */
 quant_intraFunc dequant_h263_intra_c;
 quant_intraFunc dequant_mpeg_intra_c;
@@ -91,6 +96,11 @@ quanth263_intraFunc dequant_intra_ia64;
 
 #ifdef ARCH_IS_PPC
 quant_intraFunc dequant_h263_intra_altivec_c;
+#endif
+
+#ifdef ARCH_IS_X86_64
+quant_intraFunc dequant_h263_intra_x86_64;
+quant_intraFunc dequant_mpeg_intra_x86_64;
 #endif
 
 /*****************************************************************************
@@ -134,6 +144,11 @@ quant_interFunc quant_h263_inter_ia64;
 quant_interFunc quant_h263_inter_altivec_c;
 #endif
 
+#ifdef ARCH_IS_X86_64
+quant_interFunc quant_h263_inter_x86_64;
+quant_interFunc quant_mpeg_inter_x86_64;
+#endif
+
 quant_interFunc dequant_h263_inter_c;
 quant_interFunc dequant_mpeg_inter_c;
 
@@ -153,6 +168,11 @@ quant_interFunc dequant_h263_inter_ia64;
 
 #ifdef ARCH_IS_PPC
 quant_interFunc dequant_h263_inter_altivec_c;
+#endif
+
+#ifdef ARCH_IS_X86_64
+quant_interFunc dequant_h263_inter_x86_64;
+quant_interFunc dequant_mpeg_inter_x86_64;
 #endif
 
 #endif /* _QUANT_H_ */

@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: qpel.h,v 1.5 2004-10-17 10:20:15 edgomez Exp $
+ * $Id: qpel.h,v 1.6 2005-01-05 23:02:15 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -81,6 +81,11 @@ extern XVID_QP_FUNCS xvid_QP_Add_Funcs_mmx;
 #ifdef ARCH_IS_PPC
 extern XVID_QP_FUNCS xvid_QP_Funcs_Altivec_C;
 extern XVID_QP_FUNCS xvid_QP_Add_Funcs_Altivec_C;
+#endif
+
+#ifdef ARCH_IS_X86_64
+extern XVID_QP_FUNCS xvid_QP_Funcs_x86_64;
+extern XVID_QP_FUNCS xvid_QP_Add_Funcs_x86_64;
 #endif
 
 extern XVID_QP_FUNCS *xvid_QP_Funcs;      /* <- main pointer for enc/dec structure */

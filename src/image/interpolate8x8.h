@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: interpolate8x8.h,v 1.14 2004-10-17 10:20:15 edgomez Exp $
+ * $Id: interpolate8x8.h,v 1.15 2005-01-05 23:02:15 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -157,6 +157,17 @@ INTERPOLATE8X8 interpolate8x8_halfpel_v_add_altivec_c;
 INTERPOLATE8X8 interpolate8x8_halfpel_hv_add_altivec_c;
 #endif
 
+#ifdef ARCH_IS_X86_64
+INTERPOLATE8X8 interpolate8x8_halfpel_h_x86_64;
+INTERPOLATE8X8 interpolate8x8_halfpel_v_x86_64;
+INTERPOLATE8X8 interpolate8x8_halfpel_hv_x86_64;
+
+INTERPOLATE8X8 interpolate8x8_halfpel_add_x86_64;
+INTERPOLATE8X8 interpolate8x8_halfpel_h_add_x86_64;
+INTERPOLATE8X8 interpolate8x8_halfpel_v_add_x86_64;
+INTERPOLATE8X8 interpolate8x8_halfpel_hv_add_x86_64;
+#endif
+
 INTERPOLATE8X8_AVG2 interpolate8x8_avg2_c;
 INTERPOLATE8X8_AVG4 interpolate8x8_avg4_c;
 
@@ -168,6 +179,11 @@ INTERPOLATE8X8_AVG4 interpolate8x8_avg4_mmx;
 #ifdef ARCH_IS_PPC
 INTERPOLATE8X8_AVG2 interpolate8x8_avg2_altivec_c;
 INTERPOLATE8X8_AVG4 interpolate8x8_avg4_altivec_c;
+#endif
+
+#ifdef ARCH_IS_X86_64
+INTERPOLATE8X8_AVG2 interpolate8x8_avg2_x86_64;
+INTERPOLATE8X8_AVG4 interpolate8x8_avg4_x86_64;
 #endif
 
 INTERPOLATE_LOWPASS interpolate8x8_lowpass_h_c;
@@ -189,6 +205,11 @@ INTERPOLATE8X8_6TAP_LOWPASS interpolate8x8_6tap_lowpass_v_mmx;
 
 #ifdef ARCH_IS_PPC
 INTERPOLATE8X8_6TAP_LOWPASS interpolate8x8_6tap_lowpass_h_altivec_c;
+#endif
+
+#ifdef ARCH_IS_X86_64
+INTERPOLATE8X8_6TAP_LOWPASS interpolate8x8_6tap_lowpass_h_x86_64;
+INTERPOLATE8X8_6TAP_LOWPASS interpolate8x8_6tap_lowpass_v_x86_64;
 #endif
 
 static __inline void

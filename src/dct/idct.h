@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: idct.h,v 1.10 2004-04-05 20:36:36 edgomez Exp $
+ * $Id: idct.h,v 1.11 2005-01-05 23:02:15 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -53,6 +53,10 @@ idctFunc idct_ia64;
 
 #ifdef ARCH_IS_PPC
 idctFunc idct_altivec_c;
+#endif
+
+#ifdef ARCH_IS_X86_64
+idctFunc idct_x86_64;
 #endif
 
 #endif							/* _IDCT_H_ */

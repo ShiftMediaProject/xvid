@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: emms.h,v 1.15 2004-04-05 20:36:37 edgomez Exp $
+ * $Id: emms.h,v 1.16 2005-01-05 23:02:15 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -41,7 +41,7 @@ extern emmsFuncPtr emms;
 
 emmsFunc emms_c;
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 emmsFunc emms_mmx;
 emmsFunc emms_3dn;
 #endif
@@ -50,7 +50,7 @@ emmsFunc emms_3dn;
  * Prototypes
  ****************************************************************************/
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 /* cpu_flag detection helper functions */
 extern int check_cpu_features(void);
 extern void sse_os_trigger(void);
