@@ -152,7 +152,9 @@ if test x"$assembly" = x"yes" ; then
 		;;	
 		powerpc)
 		AC_MSG_RESULT(PowerPC)
-		ARCHITECTURE="PPC"
+		dnl ATM the ppc port is out of date 
+		dnl ARCHITECTURE="PPC"
+		ARCHITECTURE="GENERIC"
 		;;
 		ia64)
 		AC_MSG_RESULT(ia64)
