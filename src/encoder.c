@@ -241,9 +241,9 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 		pEnc->mbParam.quant = adaptive_quantization(pEnc->sCurrent.y,
 							    pEnc->mbParam.width,
 							    temp_dquants,
-							    pFrame->quant,
-							    pFrame->quant,
-							    2*pFrame->quant,
+							    pEnc->mbParam.quant,
+							    pEnc->mbParam.quant,
+							    2*pEnc->mbParam.quant,
 							    pEnc->mbParam.mb_width,
 							    pEnc->mbParam.mb_height);
 			
@@ -422,11 +422,11 @@ static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool forc
 
 	start_timer();
 	image_setedges(pRef,
-		       pEnc->mbParam.edged_width,
-		       pEnc->mbParam.edged_height,
-		       pEnc->mbParam.width,
-		       pEnc->mbParam.height,
-		       pEnc->mbParam.global_flags & XVID_INTERLACING);
+				pEnc->mbParam.edged_width,
+				pEnc->mbParam.edged_height,
+				pEnc->mbParam.width,
+				pEnc->mbParam.height,
+				pEnc->mbParam.global_flags & XVID_INTERLACING);
 	stop_edges_timer();
 
 	pEnc->mbParam.rounding_type = 1 - pEnc->mbParam.rounding_type;
@@ -436,18 +436,49 @@ static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool forc
 	else
 		iLimit = pEnc->mbParam.mb_width * pEnc->mbParam.mb_height + 1;
 
-	if ((pEnc->mbParam.global_flags & XVID_HALFPEL) > 0) {
+	if ((pEnc->mbParam.global_flags & XVID_HALFPEL) > 0)
+	{
+		IMAGE *vInterV = NULL;
+		IMAGE *vInterVf = NULL;
+		IMAGE *vInterHV = NULL;
+		IMAGE *vInterHVf = NULL;
+
+		// interpolate fields together if field ME is used
+		if (pEnc->mbParam.global_flags & XVID_INTERLACING &&
+			pEnc->mbParam.global_flags & XVID_FIELDME)
+		{
+			vInterVf = &pEnc->vInterVf;
+			vInterHVf = &pEnc->vInterHVf;
+		}
+
+		// perform normal interpolation, unless only field-based ME is allowed
+		if (!(pEnc->mbParam.global_flags & XVID_INTERLACING) ||
+			!(pEnc->mbParam.global_flags & XVID_FIELDMEONLY))
+		{
+			vInterV = &pEnc->vInterV;
+			vInterHV = &pEnc->vInterHV;
+		}
+
 		start_timer();
-		image_interpolate(pRef, &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV,
-				  pEnc->mbParam.edged_width, pEnc->mbParam.edged_height,
-				  pEnc->mbParam.rounding_type);
+		image_interpolate(pRef,
+				&pEnc->vInterH,
+				vInterV, vInterVf,
+				vInterHV, vInterHVf,
+				pEnc->mbParam.edged_width,
+				pEnc->mbParam.edged_height,
+				pEnc->mbParam.rounding_type);
 		stop_inter_timer();
 	}
 
 	start_timer();
-	bIntra = MotionEstimation(pEnc->pMBs, &pEnc->mbParam, &pEnc->sReference,
-				  &pEnc->vInterH, &pEnc->vInterV,
-				  &pEnc->vInterHV, &pEnc->sCurrent, iLimit);
+	bIntra = MotionEstimation(pEnc->pMBs,
+				&pEnc->mbParam,
+				&pEnc->sReference,
+				&pEnc->vInterH,
+				&pEnc->vInterV, &pEnc->vInterVf,
+				&pEnc->vInterHV, &pEnc->vInterHVf,
+				&pEnc->sCurrent,
+				iLimit);
 	stop_motion_timer();
 
 	if (bIntra == 1)
@@ -482,8 +513,8 @@ static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool forc
 						     x, y,
 						     &pEnc->sReference,
 						     &pEnc->vInterH,
-						     &pEnc->vInterV,
-						     &pEnc->vInterHV,
+						     &pEnc->vInterV, &pEnc->vInterVf,
+						     &pEnc->vInterHV, &pEnc->vInterHVf,
 						     &pEnc->sCurrent,
 						     dct_codes,
 						     pEnc->mbParam.width,
