@@ -70,6 +70,21 @@ DIRS_INTEL = \
 	$(SRCDIR)/quant/x86_asm/*.o \
 	$(SRCDIR)/utils/x86_asm/*.o
 
+SRC_IA64 = \
+	$(SRCDIR)/dct/ia64_asm/fdct_ia64.s \
+	$(SRCDIR)/dct/ia64_asm/idct_ia64.s \
+	$(SRCDIR)/image/ia64_asm/interpolate8x8_ia64.s \
+	$(SRCDIR)/motion/ia64_asm/sad_ia64.s \
+	$(SRCDIR)/quant/ia64_asm/quant_h263_ia64.s \
+	$(SRCDIR)/utils/ia64_asm/mem_transfer_ia64.s
+
+DIRS_IA64 = \
+	$(SRCDIR)/dct/ia64_asm/*.o \
+	$(SRCDIR)/image/ia64_asm/*.o \
+	$(SRCDIR)/motion/ia64_asm/*.o \
+	$(SRCDIR)/quant/ia64_asm/*.o \
+	$(SRCDIR)/utils/ia64_asm/*.o
+
 SRC_PPC = \
 	$(SRCDIR)/bitstream/ppc_asm/cbp_ppc.s
 
