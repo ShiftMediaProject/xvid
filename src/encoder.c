@@ -36,13 +36,14 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.41 2002-06-12 20:38:40 edgomez Exp $
+ *  $Id: encoder.c,v 1.42 2002-06-13 11:42:15 edgomez Exp $
  *
  ****************************************************************************/
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 
 #include "encoder.h"
 #include "prediction/mbprediction.h"
@@ -206,6 +207,10 @@ encoder_create(XVID_ENC_PARAM * pParam)
 	pEnc = (Encoder *) xvid_malloc(sizeof(Encoder), CACHE_LINE);
 	if (pEnc == NULL)
 		return XVID_ERR_MEMORY;
+
+	/* Zero the Encoder Structure */
+
+	memset(pEnc, 0, sizeof(Encoder));
 
 	/* Fill members of Encoder structure */
 
@@ -640,7 +645,7 @@ encoder_encode(Encoder * pEnc,
 
 	SWAP(pEnc->current, pEnc->reference);
 
-	EMMS();
+	emms();
 
 	if (pFrame->quant == 0)
 		pEnc->current->quant = RateControlGetQ(&pEnc->rate_control, 0);
@@ -673,7 +678,7 @@ encoder_encode(Encoder * pEnc,
 			   pEnc->mbParam.edged_width, pEnc->mbParam.height);
 #endif
 
-	EMMS();
+	emms();
 
 	/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	 * Luminance masking
@@ -802,7 +807,7 @@ encoder_encode(Encoder * pEnc,
 		pResult->ublks = pEnc->sStat.ublks;
 	}
 
-	EMMS();
+	emms();
 
 #ifdef _DEBUG
 	psnr =
@@ -876,7 +881,7 @@ encoder_encode(Encoder * pEnc,
 			   pEnc->mbParam.edged_width, pEnc->mbParam.height);
 #endif
 
-	EMMS();
+	emms();
 
 	BitstreamInit(&bs, pFrame->bitstream, 0);
 
@@ -975,7 +980,7 @@ encoder_encode(Encoder * pEnc,
 		pResult->ublks = pEnc->sStat.ublks;
 	}
 
-	EMMS();
+	emms();
 
 	if (pFrame->quant == 0) {
 		RateControlUpdate(&pEnc->rate_control, pEnc->current->quant,
