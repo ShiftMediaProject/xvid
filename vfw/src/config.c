@@ -198,6 +198,7 @@ static const REG_INT reg_ints[] = {
 	{"quant_type",				&reg.quant_type,				0},
 	{"lum_masking",				&reg.lum_masking,				0},
 	{"interlacing",				&reg.interlacing,				0},
+	{"tff",						&reg.tff,						0},
 	{"qpel",					&reg.qpel,						0},
 	{"gmc",						&reg.gmc,						0},
 	{"reduced_resolution",		&reg.reduced_resolution,		0},
@@ -839,6 +840,7 @@ static void adv_mode(HWND hDlg, int idd, CONFIG * config)
 		EnableDlgWindow(hDlg, IDC_QUANTMATRIX, custom_quant);
 		EnableDlgWindow(hDlg, IDC_LUMMASK, profiles[profile].flags&PROFILE_ADAPTQUANT);
 		EnableDlgWindow(hDlg, IDC_INTERLACING, profiles[profile].flags&PROFILE_INTERLACE);
+		EnableDlgWindow(hDlg, IDC_TFF, IsDlgChecked(hDlg, IDC_INTERLACING));
 		EnableDlgWindow(hDlg, IDC_QPEL, profiles[profile].flags&PROFILE_QPEL);
 		EnableDlgWindow(hDlg, IDC_GMC, profiles[profile].flags&PROFILE_GMC);
 		EnableDlgWindow(hDlg, IDC_REDUCED, profiles[profile].flags&PROFILE_REDUCED);
@@ -1048,6 +1050,7 @@ static void adv_upload(HWND hDlg, int idd, CONFIG * config)
 		SendDlgItemMessage(hDlg, IDC_QUANTTYPE, CB_SETCURSEL, config->quant_type, 0);
 		CheckDlg(hDlg, IDC_LUMMASK, config->lum_masking);
   		CheckDlg(hDlg, IDC_INTERLACING, config->interlacing);
+		CheckDlg(hDlg, IDC_TFF, config->tff);
 		CheckDlg(hDlg, IDC_QPEL, config->qpel);
   		CheckDlg(hDlg, IDC_GMC, config->gmc);
 		CheckDlg(hDlg, IDC_REDUCED, config->reduced_resolution);
@@ -1194,6 +1197,7 @@ static void adv_download(HWND hDlg, int idd, CONFIG * config)
 		config->quant_type = SendDlgItemMessage(hDlg, IDC_QUANTTYPE, CB_GETCURSEL, 0, 0);
 		config->lum_masking = IsDlgChecked(hDlg, IDC_LUMMASK);
 		config->interlacing = IsDlgChecked(hDlg, IDC_INTERLACING);
+		config->tff = IsDlgChecked(hDlg, IDC_TFF);
 		config->qpel = IsDlgChecked(hDlg, IDC_QPEL);
 		config->gmc = IsDlgChecked(hDlg, IDC_GMC);
 		config->reduced_resolution = IsDlgChecked(hDlg, IDC_REDUCED);
@@ -1396,6 +1400,7 @@ static BOOL CALLBACK adv_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 		{
 			switch (LOWORD(wParam))
 			{
+			case IDC_INTERLACING :
 			case IDC_BVOP :
 			case IDC_ZONE_MODE_WEIGHT :
 			case IDC_ZONE_MODE_QUANT :
