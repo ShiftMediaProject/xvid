@@ -2,11 +2,13 @@ dnl ==========================================================================
 dnl
 dnl Autoconf script for XviD
 dnl
-dnl Copyright(C) 2003 Edouard Gomez <ed.gomez@free.fr>
+dnl Copyright(C) 2003-2004 Edouard Gomez <ed.gomez@free.fr>
 dnl
 dnl ==========================================================================
 
-AC_INIT([XviD], [1.0.0 rc4], [xvid-devel@xvid.org])
+AC_PREREQ([2.50])
+
+AC_INIT([XviD], [1.0.0], [xvid-devel@xvid.org])
 AC_CONFIG_SRCDIR(configure.in)
 
 dnl Do not forget to increase that when needed.
@@ -502,6 +504,10 @@ dnl ==========================================================================
 AC_CHECK_HEADERS(
 	stdio.h \
 	signal.h \
+	stdlib.h \
+	string.h \
+	assert.h \
+	math.h \
 	, , AC_MSG_ERROR(Missing header file))
 
 dnl ==========================================================================

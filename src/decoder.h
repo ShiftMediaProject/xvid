@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.h,v 1.15 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: decoder.h,v 1.16 2004-05-21 14:40:15 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -159,6 +159,9 @@ typedef struct
 	xvid_image_t* out_frm;                /* This is used for slice rendering */
 
 	int * qscale;				/* quantization table for decoder's stats */
+
+	/* Tells if the reference image is edged or not */
+	int is_edged[2];
 }
 DECODER;
 

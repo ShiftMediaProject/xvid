@@ -1,9 +1,13 @@
 #!/bin/sh
 #
+# - Bootstrap script -
+#
+# Copyright(C) 2003-2004 Edouard Gomez <ed.gomez@free.fr>
+#
 # This file builds the configure script and copies all needed files
 # provided by automake/libtoolize
 #
-# $Id: bootstrap.sh,v 1.5 2004-03-22 22:36:23 edgomez Exp $
+# $Id: bootstrap.sh,v 1.6 2004-05-21 14:40:15 edgomez Exp $
 
 
 ##############################################################################
@@ -12,14 +16,14 @@
 
 # Find a suitable autoconf
 AUTOCONF="autoconf2.50"
-$AUTOCONF --version 2>/dev/null 1>/dev/null
+$AUTOCONF --version 1>/dev/null 2>&1
 
 if [ $? -ne 0 ] ; then
     AUTOCONF="autoconf"
-    $AUTOCONF --version 2>/dev/null 1>/dev/null
+    $AUTOCONF --version 1>/dev/null 2>&1
 
-    if [ $? -ne 0 ] ; then
-        echo "'autoconf' not found"
+	if [ $? -ne 0 ] ; then
+        echo "ERROR: 'autoconf' not found"
         exit -1
     fi
 fi
@@ -30,26 +34,34 @@ AC_MAJORVER=`echo $AC_VER | cut -f1 -d'.'`
 AC_MINORVER=`echo $AC_VER | cut -f2 -d'.'`
 
 if [ "$AC_MAJORVER" -lt "2" ]; then
-    echo "This bootstrapper needs Autoconf >= 2.50 (detected $AC_VER)"
+    echo "ERROR: This bootstrapper requires Autoconf >= 2.50 (detected $AC_VER)"
     exit -1
 fi
 
 if [ "$AC_MINORVER" -lt "50" ]; then
-    echo "This bootstrapper needs Autoconf >= 2.50 (detected $AC_VER)"
+    echo "ERROR: This bootstrapper requires Autoconf >= 2.50 (detected $AC_VER)"
     exit -1
 fi
 
 LIBTOOLIZE="libtoolize"
-$LIBTOOLIZE --version 1>/dev/null 2>/dev/null
+$LIBTOOLIZE --version 1>/dev/null 2>&1
 
 if [ $? -ne 0 ] ; then
     LIBTOOLIZE="glibtoolize"
-    $LIBTOOLIZE --version 1>/dev/null 2>/dev/null
+    $LIBTOOLIZE --version 1>/dev/null 2>&1
 
     if [ $? -ne 0 ] ; then
-        echo "'libtoolize' not found"
+        echo "ERROR: 'libtoolize' not found"
         exit -1
     fi
+fi
+
+AUTOMAKE="automake"
+$AUTOMAKE --version 1>/dev/null 2>&1
+
+if [ $? -ne 0 ] ; then
+    echo "ERROR: 'automake' not found"
+	exit -1
 fi
 
 ##############################################################################
@@ -60,11 +72,11 @@ echo "Creating ./configure"
 $AUTOCONF
 
 echo "Copying files provided by automake"
-automake -c -a 1>/dev/null 2>/dev/null
+$AUTOMAKE -c -a 1>/dev/null 2>&1
 
 echo "Copying files provided by libtool"
-$LIBTOOLIZE -f -c 1>/dev/null 2>/dev/null
+$LIBTOOLIZE -f -c 1>/dev/null 2>&1
 
 echo "Removing files that are not needed"
-rm -rf autom4*
-rm -rf ltmain.sh
+rm -rf autom4* 1>/dev/null 2>&1 
+rm -rf ltmain.sh 1>/dev/null 2>&1 

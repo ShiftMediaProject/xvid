@@ -1,9 +1,381 @@
-#
 # Ed.Gomez: This ChangeLog is generated from a personal tree maintained
 # under the arch revision control tool. That's why dates may be skewed. I
 # also removed all my email adresses from the output because they are not
 # relevant.
-#
+
+#########################################################################
+# 1.0.0 final (Bitstream Version 34)
+#########################################################################
+
+2004-05-06 17:56:52 GMT	                                	patch-26
+
+    Summary:
+      Small mismatch in hint<->widget in VFW
+    Revision:
+      xvidcore--stable--1.0--patch-26
+
+    From sysKin:
+     * Small mismatch in hint<->widget.
+
+    modified files:
+     vfw/src/resource.rc
+
+
+2004-05-02 22:40:50 GMT	                                	patch-25
+
+    Summary:
+      DC prediction fix. 
+    Revision:
+      xvidcore--stable--1.0--patch-25
+
+    From ed.gomez:
+     * DC predictors weren't clipped to the [-2048, 2047] range.
+    
+     BS version increased to 33
+     
+     Thanks to jnorish on our forums to point out the problem.
+
+    modified files:
+     src/bitstream/bitstream.c src/decoder.c
+     src/motion/estimation_rd_based.c src/prediction/mbprediction.c
+     src/prediction/mbprediction.h src/xvid.h
+
+
+2004-05-02 10:30:29 GMT	                                	patch-24
+
+    Summary:
+      Possible VOL header corruption. 
+    Revision:
+      xvidcore--stable--1.0--patch-24
+
+    From ed.gomez:
+     * The VOL header could be corrupted when passing fincr=fbase=1 which
+       happens for fps=1 sequences.
+    
+    BS version bumped up to 32
+    
+    Original report:
+    http://www.xvid.org/modules.php?op=modload&name=phpBB2&file=viewtopic&t=2026&highlight=
+
+    modified files:
+     src/bitstream/bitstream.c src/xvid.h
+
+
+2004-04-30 23:10:19 GMT	                                	patch-23
+
+    Summary:
+      Some very light Unix build system changes 
+    Revision:
+      xvidcore--stable--1.0--patch-23
+
+    To prepare testing framework merging.
+    
+    From ed.gomez:
+     * Some typos
+     * Copyright updates (it's 2004 since a few months ;-)
+     * Added some checking to bootstrap.sh
+     * Added m4 AC_PREREQ macro to configure.in
+
+    modified files:
+     build/generic/Makefile build/generic/bootstrap.sh
+     build/generic/configure.in
+
+
+2004-04-20 19:40:29 GMT	                                	patch-22
+
+    Summary:
+      Small visual fix.
+    Revision:
+      xvidcore--stable--1.0--patch-22
+
+    From sysKin:
+     * Small visual fix
+
+    modified files:
+     vfw/src/config.c
+
+
+2004-04-20 19:38:24 GMT	                                	patch-21
+
+    Summary:
+      Fix crash in decoder for non IFrame 1st frame.
+    Revision:
+      xvidcore--stable--1.0--patch-21
+
+    From sysKin:
+     * Fixed the crash caused by non IFrame 1st frame.
+
+    modified files:
+     src/decoder.c
+
+
+2004-04-18 16:21:50 GMT	                                	patch-20
+
+    Summary:
+      Typo
+    Revision:
+      xvidcore--stable--1.0--patch-20
+
+    Typo
+    
+
+    modified files:
+     vfw/src/resource.rc
+
+
+2004-04-17 17:04:20 GMT	                                	patch-19
+
+    Summary:
+      vfw opens audio file in shared access mode
+    Revision:
+      xvidcore--stable--1.0--patch-19
+
+    vfw opens audio file in shared access mode
+    
+
+    modified files:
+     vfw/src/config.c
+
+
+2004-04-15 22:39:12 GMT	                                	patch-18
+
+    Summary:
+      Tiny xvid_decraw cleaning
+    Revision:
+      xvidcore--stable--1.0--patch-18
+
+    Tiny xvid_decraw cleaning
+    
+
+    modified files:
+     examples/xvid_decraw.c
+
+
+2004-04-15 19:14:31 GMT	                                	patch-17
+
+    Summary:
+      Tiny minor fixes for msvc.
+    Revision:
+      xvidcore--stable--1.0--patch-17
+
+    From pete:
+     * Missing arch endianness define in project files.
+     * Add a textual warning about win32 console EOF misreading.
+     * Prevent a SIGFPE when no frames were decoded.
+
+    modified files:
+     build/win32/xvid_decraw.dsp build/win32/xvid_encraw.dsp
+     examples/xvid_decraw.c
+
+
+2004-04-14 22:41:07 GMT	                                	patch-16
+
+    Summary:
+      Fixed missing 1st frame in dshow output.
+    Revision:
+      xvidcore--stable--1.0--patch-16
+
+    From sysKin:
+     * decoder flags were overwritten, this was preventing from outputing
+       the first frame immediatly.
+
+    modified files:
+     dshow/src/CXvidDecoder.cpp
+
+
+2004-04-14 22:39:17 GMT	                                	patch-15
+
+    Summary:
+      Ressource leaking in dshow.
+    Revision:
+      xvidcore--stable--1.0--patch-15
+
+    From sysKin:
+     * Same kind of ressource leaking as in vfw. Same cure.
+
+    modified files:
+     dshow/src/CXvidDecoder.cpp dshow/src/CXvidDecoder.h
+
+
+2004-04-14 19:45:23 GMT	                                	patch-14
+
+    Summary:
+      Fixed small bug in trellis code.
+    Revision:
+      xvidcore--stable--1.0--patch-14
+
+    From ed.gomez (spotted by jean marc):
+     * Trellis optimization was computing the sum |coeffs| wrongly
+       because the Compute_sum function wasn't doing zigzag scanning
+       and stopped at last non zero coeffs in linear scanning...
+       The trivial fix could have been to pass the zigzag to the compute
+       sum function so it could have done its job right.
+       But... Why computing stuff that is already known in the upper layer ?
+       I removed the compute sum function, and just pass the original sum
+       value in trellis function parameters, just in case we have to return
+       it again because trellis failed optimizing the block coeffs.
+    
+       This fix the bug and saves cycles :-) (but should not be noticeable)
+
+    modified files:
+     src/utils/mbtransquant.c src/xvid.h
+
+
+2004-04-12 12:06:12 GMT	                                	patch-13
+
+    Summary:
+      Don't do SAD and RD based searches for qp.
+    Revision:
+      xvidcore--stable--1.0--patch-13
+
+    From sysKin:
+     * MakeGoodFlags function wasn't disabling SAD based search when
+       using RD. This was causing slowdown for no gain at all. This
+       patch should speed up encoding in qp mode.
+     
+
+    modified files:
+     src/motion/estimation_pvop.c
+
+
+2004-04-12 12:01:19 GMT	                                	patch-12
+
+    Summary:
+      3dnow functions proper separation.
+    Revision:
+      xvidcore--stable--1.0--patch-12
+
+    From pete (thx to a forum report):
+     * Separate correctly pure 3dnow functions and 3dnow+mmxext functions.
+       This fix "Illegal instruction" crash on old k6-2 CPUs.
+
+    modified files:
+     src/xvid.c
+
+
+2004-04-12 11:57:20 GMT	                                	patch-11
+
+    Summary:
+      Better MV clipping code.
+    Revision:
+      xvidcore--stable--1.0--patch-11
+
+    From sysKin:
+     * Better MV clipping. DivX 5 generates out of range vectors and clipping
+       them directly borks the decoding of other MVs for which out of range
+       MVs were predictors. So it's just better to clip them for the block
+       decoding and keep an unclipped version for predictions.
+
+    modified files:
+     src/decoder.c
+
+
+2004-04-08 20:34:54 GMT	                                	patch-10
+
+    Summary:
+      PGM support back in xvid_decraw.
+    Revision:
+      xvidcore--stable--1.0--patch-10
+
+    From ed.gomez:
+     * pgm/pnm format added back to xvid_decraw
+       + pgm/pnm formats are now default for yv12/i420/rgb24 pixel format.
+       + tga is default for rgb16/32
+       + use option -f to choose tga, or pnm/pgm
+
+    modified files:
+     examples/xvid_decraw.c
+
+
+2004-04-07 22:30:15 GMT	                                	patch-9
+
+    Summary:
+      3DNow Ext functions use MMXEXT opcodes.
+    Revision:
+      xvidcore--stable--1.0--patch-9
+
+    From Soltius (XviD Forum):
+     * Most of 3dnow extension functions do use MMXEXT opcodes, so
+       classify these functions as 3dnowext+mmxext. Avoids K6-2
+       boxes to crash with an invalid instruction error reported
+       by the host OS.
+    
+    PS: original bug report
+    http://www.xvid.org/modules.php?op=modload&name=phpBB2&file=viewtopic&t=1656
+
+    modified files:
+     src/xvid.c
+
+
+2004-04-07 22:01:54 GMT	                                	patch-8
+
+    Summary:
+      RGB 16bit output fix.
+    Revision:
+      xvidcore--stable--1.0--patch-8
+
+    From ScarletteTout (XviD Forum):
+     * Fix RGB 16bit output in C functions.
+    
+    From ed.gomez:
+     * Replaced PGM output by TGA output so it's easy to implement
+       RGB 16/24/32 and greyscale bitmaps support in a single format.
+       (pgm could have supported RGB 24 and Greyscale only)
+     * Added colorspace choice to xvid_decraw
+       Use option -c csp, where csp is either rgb16, rgb24, rgb32, yv12 or i420
+       Defaults to i420.
+    
+    PS: original bug report
+    http://www.xvid.org/modules.php?op=modload&name=phpBB2&file=viewtopic&t=1960&highlight=
+
+    modified files:
+     examples/xvid_decraw.c src/image/colorspace.c
+
+
+#########################################################################
+# 1.0.0 RC4 (Bitstream Version 30)
+#########################################################################
+
+2004-04-04 20:21:38 GMT	                                	patch-7
+
+    Summary:
+      DShow widget hiding.
+    Revision:
+      xvidcore--stable--1.0--patch-7
+
+    From Michael:
+     * No need to keep widget visibles if they won't be in 1.0.0.
+
+    modified files:
+     dshow/src/xvid.ax.rc
+
+
+2004-04-04 20:17:52 GMT	                                	patch-6
+
+    Summary:
+      Compiler quirk in portab.h
+    Revision:
+      xvidcore--stable--1.0--patch-6
+
+    From Michael:
+     * The VC.NET workaround was causing trouble. Inversed the test.
+
+    modified files:
+     src/portab.h
+
+
+2004-04-04 14:19:10 GMT	                                	patch-5
+
+    Summary:
+      Marking RC4
+    Revision:
+      xvidcore--stable--1.0--patch-5
+
+    Marking RC4
+    
+
+    modified files:
+     ChangeLog build/generic/configure.in src/xvid.h
 
 
 2004-04-04 14:07:00 GMT	                                	patch-4
@@ -283,7 +655,7 @@
 
 
 #########################################################################
-# 1.0.0 RC3
+# 1.0.0 RC3 (Bistream Version 29)
 #########################################################################
 
 2004-02-29 13:17:10 GMT	                                	patch-39
@@ -394,7 +766,7 @@
      src/image/image.h
 
 #########################################################################
-# 1.0.0 RC2
+# 1.0.0 RC2 (Bistream Version 28)
 #########################################################################
 
 2004-02-08 01:06:40 GMT	                                	patch-32
@@ -617,7 +989,7 @@
      src/decoder.c
 
 #########################################################################
-# 1.0.0 RC1
+# 1.0.0 RC1 (Bistream Version 26)
 #########################################################################
 
 2004-01-25 16:01:06 GMT	                                	patch-18
@@ -925,7 +1297,7 @@
     Archive cycling...
 
 #########################################################################
-# 1.0.0 beta3
+# 1.0.0 beta3 (Bistream Version 25)
 #########################################################################
 
 2003-12-26 22:21:35 GMT	                                	patch-162
@@ -1470,7 +1842,7 @@
        the bvop lag frame (black with error message).
     
     Fixing previous patch a bit:
-     * added $Id: ChangeLog,v 1.3 2004-04-05 20:36:36 edgomez Exp $ fields
+     * added $Id: ChangeLog,v 1.4 2004-05-21 14:40:15 edgomez Exp $ fields
      * Fixed copyright
 
     modified files:
@@ -1568,7 +1940,7 @@
      src/plugins/plugin_2pass2.c
 
 #########################################################################
-# 1.0.0 beta2
+# 1.0.0 beta2 (Bitstream Version 23)
 #########################################################################
 
 2003-12-05 14:43:53 GMT	                                	patch-123
@@ -1788,7 +2160,7 @@
 
 
 #########################################################################
-# 1.0.0 beta1
+# 1.0.0 beta1 (Bitstream Version 21)
 #########################################################################
 
 2003-11-29 17:21:08 GMT	                                	patch-111

@@ -2,7 +2,7 @@
 #
 # - Unified Makefile for XviD for *nix environments -
 #
-# Copyright(C) 2003 Edouard Gomez <ed.gomez@free.fr>
+# Copyright(C) 2003-2004 Edouard Gomez <ed.gomez@free.fr>
 #
 #
 # Description:
@@ -11,11 +11,12 @@
 #  platform.inc file. This platform.inc file is usually created by the
 #  ./configure script whenever a unix shell is available.
 #
-# Makefile functionnal dependencies:
+# Makefile functional dependencies:
 #  - echo
 #  - rm (with option -r and -f)
 #  - cd
 #  - make VPATH support (eg: GNU make, solaris 8 make)
+#  - ar
 #
 # Building output:
 #  - C means "_C_ompiling"
@@ -56,7 +57,7 @@ OBJECTS += $(ASSEMBLY_OBJECTS)
 OBJECTS += $(DCT_IA64_OBJECTS)
 OBJECTS += $(PPC_ALTIVEC_OBJECTS)
 
-# The VPATH mecanism could use a "per target" build directory
+# The VPATH mechanism could use a "per target" build directory
 # To keep it simple at the moment, the directory is fixed to "build"
 BUILD_DIR = =build
 VPATH     = $(SRC_DIR):$(BUILD_DIR)
@@ -176,7 +177,7 @@ distclean: clean
 	@$(RM) autom4te.cache
 
 mrproper: distclean
-	@echo "  Cl: Boostrapped build files"
+	@echo "  Cl: Bootstrapped build files"
 	@$(RM) configure
 	@$(RM) install-sh
 	@$(RM) missing
