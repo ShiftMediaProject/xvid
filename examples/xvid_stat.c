@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_stat.c,v 1.8 2002-09-15 20:43:52 edgomez Exp $
+ * $Id: xvid_stat.c,v 1.9 2002-09-21 09:29:36 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -126,7 +126,7 @@ static int const general_presets[7] = {
 	XVID_H263QUANT | XVID_HALFPEL,                // Q 3
 	XVID_H263QUANT | XVID_HALFPEL | XVID_INTER4V, // Q 4
 	XVID_H263QUANT | XVID_HALFPEL | XVID_INTER4V, // Q 5
-	XVID_H263QUANT | XVID_HALFPEL | XVID_INTER4V  // Q 6
+	XVID_H263QUANT | XVID_HALFPEL | XVID_INTER4V | XVID_LUMIMASKING  // Q 6
 };
 		
 
@@ -497,7 +497,7 @@ int main(int argc, char *argv[])
 	
 	/* Print all statistics */
 	printf("Avg. Q%1d %2s ",ARG_QUALITY, (ARG_QUANTI ? " q" : "br"));
-	printf("%04d ",MAX(ARG_QUANTI,ARG_BITRATE));
+	printf("%04d ",(ARG_QUANTI)?ARG_QUANTI:ARG_BITRATE);
 	printf("( %.2f bpp) ", (double)ARG_BITRATE*1000/XDIM/YDIM/ARG_FRAMERATE);
 	printf("size %6d ",totalsize);
 	printf("( %4d kbps ",(int)(totalsize*8*ARG_FRAMERATE/1000));
