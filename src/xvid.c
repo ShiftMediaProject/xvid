@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.50 2004-04-05 20:36:36 edgomez Exp $
+ * $Id: xvid.c,v 1.51 2004-04-12 14:05:08 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -462,38 +462,43 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 
 	if ((cpu_flags & XVID_CPU_3DNOWEXT)) {
 
-		/* Inverse DCT */
-		idct =  idct_3dne;
-
 		/* Buffer transfer */
 		transfer_8to16copy =  transfer_8to16copy_3dne;
 		transfer_16to8copy = transfer_16to8copy_3dne;
 		transfer_8to16sub =  transfer_8to16sub_3dne;
 		transfer_8to16subro =  transfer_8to16subro_3dne;
-		transfer_8to16sub2 =  transfer_8to16sub2_3dne;
 		transfer_16to8add = transfer_16to8add_3dne;
 		transfer8x8_copy = transfer8x8_copy_3dne;
 
-		/* Quantization */
-		quant_h263_intra = quant_h263_intra_3dne;
-		quant_h263_inter = quant_h263_inter_3dne;
-		dequant_mpeg_intra = dequant_mpeg_intra_3dne;
-		dequant_mpeg_inter = dequant_mpeg_inter_3dne;
-		dequant_h263_intra = dequant_h263_intra_3dne;
-		dequant_h263_inter = dequant_h263_inter_3dne;
+		if ((cpu_flags & XVID_CPU_MMXEXT)) {
+			/* Inverse DCT */
+			idct =  idct_3dne;
 
-		/* ME functions */
-		calc_cbp = calc_cbp_3dne;
-		sad16 = sad16_3dne;
-		sad8 = sad8_3dne;
-		sad16bi = sad16bi_3dne;
-		sad8bi = sad8bi_3dne;
-		dev16 = dev16_3dne;
+			/* Buffer transfer */
+			transfer_8to16sub2 =  transfer_8to16sub2_3dne;
 
-		/* Interpolation */
-		interpolate8x8_halfpel_h = interpolate8x8_halfpel_h_3dne;
-		interpolate8x8_halfpel_v = interpolate8x8_halfpel_v_3dne;
-		interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_3dne;
+			/* Interpolation */
+			interpolate8x8_halfpel_h = interpolate8x8_halfpel_h_3dne;
+			interpolate8x8_halfpel_v = interpolate8x8_halfpel_v_3dne;
+			interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_3dne;
+
+			/* Quantization */
+			quant_h263_intra = quant_h263_intra_3dne;		/* cmov only */
+			quant_h263_inter = quant_h263_inter_3dne;
+			dequant_mpeg_intra = dequant_mpeg_intra_3dne;	/* cmov only */
+			dequant_mpeg_inter = dequant_mpeg_inter_3dne;
+			dequant_h263_intra = dequant_h263_intra_3dne;
+			dequant_h263_inter = dequant_h263_inter_3dne;
+
+			/* ME functions */
+			calc_cbp = calc_cbp_3dne;
+
+			sad16 = sad16_3dne;
+			sad8 = sad8_3dne;
+			sad16bi = sad16bi_3dne;
+			sad8bi = sad8bi_3dne;
+			dev16 = dev16_3dne;
+		}
 	}
 
 	if ((cpu_flags & XVID_CPU_SSE2)) {

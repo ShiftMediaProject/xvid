@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_pvop.c,v 1.2 2004-03-22 22:36:24 edgomez Exp $
+ * $Id: estimation_pvop.c,v 1.3 2004-04-12 14:05:08 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -853,6 +853,9 @@ MakeGoodMotionFlags(const uint32_t MotionFlags, const uint32_t VopFlags, const u
 
 	if (Flags & XVID_ME_QUARTERPELREFINE8_RD)
 		Flags &= ~XVID_ME_QUARTERPELREFINE8;
+
+	if (Flags & XVID_ME_QUARTERPELREFINE16_RD)
+		Flags &= ~XVID_ME_QUARTERPELREFINE16;
 
 	if (!(VolFlags & XVID_VOL_QUARTERPEL))
 		Flags &= ~(XVID_ME_QUARTERPELREFINE16+XVID_ME_QUARTERPELREFINE8+XVID_ME_QUARTERPELREFINE16_RD+XVID_ME_QUARTERPELREFINE8_RD);

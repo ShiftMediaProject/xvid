@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: colorspace.c,v 1.9 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: colorspace.c,v 1.10 2004-04-12 14:05:08 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -339,12 +339,12 @@ MAKE_COLORSPACE(uyvyi_to_yv12_c,   2,2,4, YUYVI_TO_YV12,  1,0,3,2)
 	((MAX(0,MIN(255, B)) >> 3) & 0x001f)
 
 #define WRITE_RGB16(ROW,UV_ROW,C1)	\
-	rgb_y = RGB_Y_tab[ y_ptr[y_stride + 0] ];			\
+	rgb_y = RGB_Y_tab[ y_ptr[y_stride*(ROW) + 0] ];						\
 	b[ROW] = (b[ROW] & 0x7) + ((rgb_y + b_u##UV_ROW) >> SCALEBITS_OUT);	\
 	g[ROW] = (g[ROW] & 0x7) + ((rgb_y - g_uv##UV_ROW) >> SCALEBITS_OUT);	\
 	r[ROW] = (r[ROW] & 0x7) + ((rgb_y + r_v##UV_ROW) >> SCALEBITS_OUT);		\
 	*(uint16_t *) (x_ptr+((ROW)*x_stride)+0) = C1(r[ROW], g[ROW], b[ROW]);	\
-	rgb_y = RGB_Y_tab[ y_ptr[y_stride + 1] ];				\
+	rgb_y = RGB_Y_tab[ y_ptr[y_stride*(ROW) + 1] ];				\
 	b[ROW] = (b[ROW] & 0x7) + ((rgb_y + b_u##UV_ROW) >> SCALEBITS_OUT);		\
 	g[ROW] = (g[ROW] & 0x7) + ((rgb_y - g_uv##UV_ROW) >> SCALEBITS_OUT);	\
 	r[ROW] = (r[ROW] & 0x7) + ((rgb_y + r_v##UV_ROW) >> SCALEBITS_OUT);		\
