@@ -1,0 +1,48 @@
+#/**************************************************************************
+# *
+# * djgpp makefile
+# *
+# * treat "deltree /y" with care
+# *
+# *************************************************************************/
+
+
+include Makefile.inc
+
+
+CC = gcc
+CFLAGS = -Wall -DARCH_X86
+# CFLAGS += -funroll-loops -ffast-math -fstrict-aliasing -fomit-frame-pointer
+# CFLAGS += -fPIC
+# CFLAGS += -m486
+# CFLAGS += -march=pentium -mcpu=pentium
+# CFLAGS += -march=pentiumpro -mcpu=pentiumpro
+
+
+AS = nasm
+AFLAGS = -f coff -DPREFIX
+%.o: %.asm
+	$(AS) $(AFLAGS) $< -o $@
+
+
+RM = deltree /y
+
+
+all: $(LIB)
+
+
+$(LIB): $(SRC:.c=.o) $(SRC_INTEL:.asm=.o)
+	ar rcs $@ $^
+
+
+clean:
+	$(RM) $(SRCDIR)/*.o
+	$(RM) $(SRCDIR)/common/*.o
+	$(RM) $(SRCDIR)/decoder/*.o
+	$(RM) $(SRCDIR)/encoder/*.o
+	$(RM) $(SRCDIR)/image/*.o
+	$(RM) $(SRCDIR)/common/intel_mmx/*.o
+	$(RM) $(SRCDIR)/decoder/intel_mmx/*.o
+	$(RM) $(SRCDIR)/encoder/intel_mmx/*.o
+	$(RM) $(SRCDIR)/image/intel_mmx/*.o
+	$(RM) $(LIB)

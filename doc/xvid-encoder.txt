@@ -1,0 +1,181 @@
+/*************************************************************
+ * Short explanation for the XviD data strutures and routines 
+ * 
+ *                       encoding part 
+ *
+ * if you have further questions, visit http://www.xvid.org
+ *
+ **************************************************************/
+
+/* these are are structures/routines from xvid.h needed for encoding */
+
+--------------------------------------------------------------------------
+
+#define API_VERSION ((1 << 16) | (0))
+
+This is the revision of the xvid.h file that you have in front of you. Check it against the library's version.
+
+--------------------------------------------------------------------------
+
+typedef struct 
+{
+	int cpu_flags;		[in/out]
+	int api_version;	[out]
+	int core_build;		[out]
+} XVID_INIT_PARAM;
+
+This is filled by xvid_init with the correct CPU flags for initialization
+(auto-detect), unless you pass flag to it (cpu_flags!=0). Do not use that
+unless you really know what you are doing. 
+api_version can (should) be checked against API_VERSION, to see if you
+have the right core library.
+
+Used in:  xvid_init(NULL, 0, &xinit, NULL);
+
+--------------------------------------------------------------------------
+
+typedef struct
+{
+  int width, height;	
+  int fincr;    // frame increment is relative to fbase 
+  int fbase;    // so each frame takes "fincr/fbase" seconds
+  int bitrate;	// the bitrate of the target encoded stream, in bits/second
+  int rc_period;		// the intended rate control averaging period
+  int rc_reaction_period;	// the reaction period for rate control
+  int rc_reaction_ratio;	// the ratio for down/up rate control
+  int max_quantizer;	// the upper limit of the quantizer
+  int min_quantizer;	// the lower limit of the quantizer
+  int max_key_interval;	// the maximum interval between key frames
+  int motion_search;	// the quality of compression ( 1=fastest, 6=best )
+  int lum_masking;	// lum masking on/off
+  int quant_type;	// 0=h.263, 1=mpeg4
+
+  void * handle;	// [out] encoder instance handle
+						
+} XVID_ENC_PARAM;
+
+This structure has to be filled to create a new encoding instance: 
+
+width and height are the size of the image to be encoded. 
+
+fincr and fbase are the MPEG-way of defining the framerate. 
+If you have an integer framerate, say 24, 25 or 30fps, use 
+fincr=1, fbase=framerate. 
+However, if framerate is non-integer, like 23.996fps you can 
+e.g. multiply with 1000, getting fincr=1000 and fbase=23996,
+giving you integer values again. 
+
+rc-parameters are for ratecontrol, you don't have to change them, 
+good defaults are 
+rc_period = 2000    rc_reacton_period = 10    rc_reaction_ratio = 20
+
+min_quantizer, max_quantizer limit the range of allowed quantizers. 
+normally quantizers range is [1..31], so min=1 and max=31. 
+!!! the HIGHER the quantizer, the LOWER the quality  !!!
+!!! the HIGHER the quantizer, the HIGHER the compression ratio !!!
+
+min_quant=1 is somewhat overkill, min_quant=2 is good enough
+max_quant depends on what you encode, leave it with 31 or lower it
+to something like 15 or 10 for better quality (but encoding with
+very low bitrate might fail then). 
+
+max_key_interval is the maximum value of frames between two keyframe
+(I-frames). Keyframes are also inserted dynamically at scene breaks. 
+It is important to have some keyframes, even in longer scenes, if you 
+want to skip position in the resulting file, because skipping is only 
+possible from one keyframe to the next. However, keyframes are much larger 
+than non-keyframes, so do not use too many of them. 
+A value of framerate*10 is a good choice normally. 
+
+motion_search determines the quality of motion search done by the codec.
+The better the search, the smaller the files (or the better the quality).
+Since low modes (1-3) are hardly faster than high modes (4,5) a value of
+5 is a good choice normally. 6 is possible, but a little slower. If you
+want absolutely highest quality, use 6. 
+
+lum_masking stand for "luminance masking" which is an experimental feature.
+It tries to compress better by using facts about the human eye. 
+You might try to switch it on and decide yourself, if you gain anything from it. 
+
+quant_type is technical, is changes the way coefficient are quantized. 
+Both values are okay, though a value of 0 might be faster. 
+
+Used in:    xerr = xvid_encore(NULL, XVID_ENC_CREATE, &xparam, NULL);
+
+--------------------------------------------------------------------------
+
+
+typedef struct
+{
+	void * bitstream;	// [in] bitstream ptr
+	int length;		// [out] bitstream length (bytes)
+
+	void * image;		// [in] image ptr
+	int colorspace;		// [in] source colorspace
+
+	int quant;		// [in] frame quantizer (vbr)
+	int intra;		// [in]	force intra frame (vbr only)
+				// [out] intra state
+} XVID_ENC_FRAME;
+
+
+The main structure to encode a frame: image points to the picture, 
+in a format that is given by colorspace, e.g. XVID_CSP_RGB24 or 
+XVID_CSP_YV12. 
+
+If you set quant=0, then the ratecontrol chooses quantizer for you.
+If quant!=0, then this value is used as quantizer, so make 1<=quant<=31.
+
+intra decides where the frame is going to be a keyframe or not.
+  intra=1 means: make it a keyframe
+  intra=0 means: don't make it a keyframe
+  intra=-1 means: let encoder decide (based on contents and max_key_interval)
+
+So for an ordinary encoding step, you would set quant=0 and intra=-1. 
+
+The length of the MPEG4-bitstream is returned in length, and 
+if you set intra to -1, it now contains the encoder's decision: 
+  0 for non-keyframe, 
+  1 for keyframe because of a scene change, 
+  2 for keyframe because max_key_interval was reached.
+
+Used in:    xerr = xvid_encore(enchandle, XVID_ENC_ENCODE, &xframe, &xstats);
+
+--------------------------------------------------------------------------
+
+typedef struct
+{
+	int quant;			// [out] frame quantizer
+	int hlength;			// [out] header length (bytes)
+	int kblks, mblks, ublks;	// [out]
+	
+} XVID_ENC_STATS;
+
+In this structure the encoder return statistical data about the encoding
+process, e.g. to be saved for two-pass-encoding. 
+quant is the quantizer chosen for this frame (if you let ratecontrol do it)
+hlength is the length of the frame's header, including motion information etc.
+kblks, mblks, ublks are unused at the moment.
+
+Used in:    xerr = xvid_encore(enchandle, XVID_ENC_ENCODE, &xframe, &xstats);
+
+--------------------------------------------------------------------------
+
+int xvid_encore(void * handle,
+		int opt,
+		void * param1,
+		void * param2);
+
+
+XviD uses a single-function API, so everything you want to do is done by
+this routine. The opt parameter chooses the behaviour of the routine: 
+
+XVID_ENC_CREATE:   create a new encoder, XVID_ENC_PARAM in param1, 
+		   a handle to the new encoder is returned in handle
+			
+XVID_ENC_ENCODE:   encode one frame, XVID_ENC_FRAME-structure in param1, 
+		   XVID_ENC_STATS in param2 (or NULL, if you are not
+		   interested in statistical data). 
+
+XVID_DEC_DESTROY:  shut down this encoder, do not use handle afterwards
+

@@ -1,0 +1,39 @@
+#/**************************************************************************
+# *
+# * sparc makefile
+# *
+# *
+# *
+# *************************************************************************/
+
+
+include Makefile.inc
+
+
+CC = gcc
+CFLAGS = -fPIC -Wall -DARCH_IS_BIG_ENDIAN -DARCH_SPARC
+
+
+RM = rm -rf
+
+
+all: $(LIB) $(LIBSO)
+
+
+$(LIB): $(SRC:.c=.o)
+	ar rcs $@ $^
+
+
+$(LIBSO): $(SRC:.c=.o)
+	$(CC) $^ -shared -lc -lm -o $@
+
+
+clean:
+	$(RM) $(DIRS)
+	$(RM) $(DIRS_INTEL)
+	$(RM) $(LIB)
+	$(RM) $(LIBSO)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -o $@ -c $<
+

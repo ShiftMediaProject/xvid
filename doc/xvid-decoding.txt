@@ -1,0 +1,98 @@
+/*************************************************************
+ * Short explanation for the XviD data strutures and routines 
+ * 
+ *                       decoding part 
+ *
+ * if you have further questions, visit http://www.xvid.org
+ *
+ **************************************************************/
+
+/* these are are structures/routines from xvid.h needed for decoding */
+
+--------------------------------------------------------------------------
+
+#define API_VERSION ((1 << 16) | (0))
+
+This is the revision of the xvid.h file that you have in front of you.
+Check it against the
+library's version.
+
+--------------------------------------------------------------------------
+
+typedef struct 
+{
+	int cpu_flags;		[in/out]
+	int api_version;	[out]
+	int core_build;		[out]
+} XVID_INIT_PARAM;
+
+This is filled by xvid_init with the correct CPU flags for initialization
+(auto-detect), unless you pass flag to it (cpu_flags!=0). Do not use that
+unless you really know what you are doing. 
+api_version can (should) be checked against API_VERSION, to see if you
+have the right core library.
+
+Used in:  xvid_init(NULL, 0, &xinit, NULL);
+
+--------------------------------------------------------------------------
+
+typedef struct 
+{
+	int width;	[in]	(should be a multiple of 16, max is )
+	int height;	[in]    (should be a multiple of 16, max is )
+	void *handle;	[out]
+} XVID_DEC_PARAM;
+
+When creating decoder, you have to provide it with height and width of the
+image to decode (this is _not_ in the bytestream itself!). 
+In handle a unique handle is given back, that has to be used to identify
+this instance of decoding. 
+
+Used in:  xerr = xvid_decore(NULL, XVID_DEC_CREATE, &xparam, NULL);
+
+--------------------------------------------------------------------------
+
+typedef struct
+{
+	void * bitstream;	[in]
+	int length;		[in]
+
+	void * image;		[in]
+	int stride;		[in]
+	int colorspace;		[in]
+} XVID_DEC_FRAME;
+
+This is the main structure for decoding itself. You provide the
+MPEG4-bitstream and it's length,
+image is the position where the decoded picture should be stored. 
+stride is the difference between the memory address of the first pixel of
+a row in the image and the first pixel of the next row. If the image is
+going to be one big block, then stride=width, but by making it larger you
+can create an "edged" picture. 
+By colorspace the output format for the image is given, XVID_CSP_RGB24 or
+XVID_CSP_YV12 might be might common. 
+
+A special case is XVID_CSP_USER. If you use this, then *image will not
+filled with the image but with a structure that contains pointers to the
+decoder's internal representation of it. That's faster, because no memcopy
+is involved, but don't use it, if you don't know what you're doing. 
+
+Used in:   xerr = xvid_decore(dechandle, XVID_DEC_DECODE, &xframe, NULL);
+
+--------------------------------------------------------------------------
+
+int xvid_decore(void * handle,		[in/out]
+		int opt,		[in]
+		void * param1,		[in]
+		void * param2);		[in]
+
+
+XviD uses a single-function API, so everything you want to do is done by
+this routine. The opt parameter chooses the behaviour of the routine: 
+
+XVID_DEC_CREATE:   create a new decoder, XVID_DEC_PARAM in param1, 
+		   a handle to the new decoder is returned in handle
+			
+XVID_DEC_DECODE:   decode one frame, XVID_DEC_FRAME-structure in param1
+
+XVID_DEC_DESTROY:  shut down this decoder, do not use handle afterwards

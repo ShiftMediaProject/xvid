@@ -1,0 +1,18 @@
+Documentation of XviD
+-----------------------
+
+xvid-decoding.txt
+=================
+A short overview of routine(s) and data structures needed for 
+decoding with XviD-API.
+
+
+
+xvid-encoder.txt
+================
+A short overview of routine(s) and data structure needed for
+encoding with XviD-API.
+
+
+Questions and suggestions to the forums at http://www.xvid.org
+(C) Christoph Lampert (gruel@web.de)
