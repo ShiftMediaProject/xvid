@@ -81,6 +81,7 @@ SRC_IA64 = \
 	$(SRCDIR)/dct/ia64_asm/idct_ia64.s \
 	$(SRCDIR)/image/ia64_asm/interpolate8x8_ia64.s \
 	$(SRCDIR)/motion/ia64_asm/sad_ia64.s \
+	$(SRCDIR)/motion/ia64_asm/halfpel8_refine_ia64.s \
 	$(SRCDIR)/quant/ia64_asm/quant_h263_ia64.s \
 	$(SRCDIR)/utils/ia64_asm/mem_transfer_ia64.s
 
