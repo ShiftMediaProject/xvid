@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation.h,v 1.8 2004-12-05 13:56:13 syskin Exp $
+ * $Id: estimation.h,v 1.9 2004-12-08 12:43:48 syskin Exp $
  *
  ****************************************************************************/
 
@@ -68,6 +68,8 @@ static const VECTOR zeroMV = { 0, 0 };
 
 typedef struct
 {
+	int max_dx, min_dx, max_dy, min_dy; /* maximum search range */
+
 	/* data modified by CheckCandidates */
 	int32_t iMinSAD[5];			/* smallest SADs found so far */
 	VECTOR currentMV[5];		/* best vectors found so far */
@@ -77,7 +79,6 @@ typedef struct
 	int chromaX, chromaY, chromaSAD; /* info to make ChromaSAD faster */
 
 	/* general fields */
-	int max_dx, min_dx, max_dy, min_dy; /* maximum range */
 	uint32_t rounding;			/* rounding type in use */
 	VECTOR predMV;				/* vector which predicts current vector */
 	const uint8_t * RefP[6];	/* reference pictures - N, V, H, HV, cU, cV */
@@ -192,5 +193,7 @@ ModeDecision_BVOP_RD(SearchData * const Data_d,
 					 const MBParam * const pParam,
 					 int x, int y);
 
+unsigned int
+getMinFcode(const int MVmax);
 
 #endif							/* _ESTIMATION_H_ */

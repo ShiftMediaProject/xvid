@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.110 2004-12-05 13:56:13 syskin Exp $
+ * $Id: encoder.c,v 1.111 2004-12-08 12:43:48 syskin Exp $
  *
  ****************************************************************************/
 
@@ -1558,6 +1558,9 @@ FrameCodeP(Encoder * pEnc,
 		}
 	}
 
+	current->sStat.iTextBits = current->sStat.iMvSum = current->sStat.iMvCount =
+		current->sStat.kblks = current->sStat.mblks = current->sStat.ublks = 0;
+
 	current->coding_type = P_VOP;
 
 	call_plugins(pEnc, pEnc->current, NULL, XVID_PLG_FRAME, NULL, NULL, NULL);
@@ -1625,10 +1628,6 @@ FrameCodeP(Encoder * pEnc,
 	set_timecodes(current,reference,pParam->fbase);
 
 	BitstreamWriteVopHeader(bs, &pEnc->mbParam, current, 1, current->mbs[0].quant);
-
-	current->sStat.iTextBits = current->sStat.iMvSum = current->sStat.iMvCount =
-		current->sStat.kblks = current->sStat.mblks = current->sStat.ublks = 0;
-
 
 	for (y = 0; y < mb_height; y++) {
 		for (x = 0; x < mb_width; x++) {
@@ -1806,21 +1805,15 @@ FrameCodeP(Encoder * pEnc,
 
 	fSigma = (float) sqrt((float) current->sStat.iMvSum / current->sStat.iMvCount);
 
-	iSearchRange = 1 << (3 + pParam->m_fcode);
+	iSearchRange = 16 << pParam->m_fcode;
 
-	if ((fSigma > iSearchRange / 3)
-		&& (pParam->m_fcode <= (3 +  (pParam->vol_flags & XVID_VOL_QUARTERPEL?1:0)  )))	/* maximum search range 128 */
-	{
+	if ((3.0 * fSigma > iSearchRange) && (pParam->m_fcode <= 5) )
 		pParam->m_fcode++;
-		iSearchRange *= 2;
-	} else if ((fSigma < iSearchRange / 6)
-			   && (pEnc->fMvPrevSigma >= 0)
-			   && (pEnc->fMvPrevSigma < iSearchRange / 6)
-			   && (pParam->m_fcode >= (2 + (pParam->vol_flags & XVID_VOL_QUARTERPEL?1:0) )))	/* minimum search range 16 */
-	{
+
+	else if ((5.0 * fSigma < iSearchRange)
+			   && (4.0 * pEnc->fMvPrevSigma < iSearchRange)
+			   && (pParam->m_fcode >= 2) )	/* minimum search range 32 */
 		pParam->m_fcode--;
-		iSearchRange /= 2;
-	}
 
 	pEnc->fMvPrevSigma = fSigma;
 

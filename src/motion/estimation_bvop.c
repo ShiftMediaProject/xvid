@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.17 2004-12-05 04:53:01 syskin Exp $
+ * $Id: estimation_bvop.c,v 1.18 2004-12-08 12:43:48 syskin Exp $
  *
  ****************************************************************************/
 
@@ -918,6 +918,32 @@ ModeDecision_BVOP_SAD(const SearchData * const Data_d,
 	}
 }
 
+static __inline void
+maxMotionBVOP(int * const MVmaxF, int * const MVmaxB, const MACROBLOCK * const pMB, const int qpel)
+{
+	if (pMB->mode == MODE_FORWARD || pMB->mode == MODE_INTERPOLATE) {
+		const VECTOR * const mv = qpel ? pMB->qmvs : pMB->mvs;
+		int max = *MVmaxF;
+		if (mv[0].x > max) max = mv[0].x;
+		else if (-mv[0].x - 1 > max) max = -mv[0].x - 1;
+		if (mv[0].y > max) max = mv[0].y;
+		else if (-mv[0].y - 1 > max) max = -mv[0].y - 1;
+
+		*MVmaxF = max;
+	}
+
+	if (pMB->mode == MODE_BACKWARD || pMB->mode == MODE_INTERPOLATE) {
+		const VECTOR * const mv = qpel ? pMB->b_qmvs : pMB->b_mvs;
+		int max = *MVmaxB;
+		if (mv[0].x > max) max = mv[0].x;
+		else if (-mv[0].x - 1 > max) max = -mv[0].x - 1;
+		if (mv[0].y > max) max = mv[0].y;
+		else if (-mv[0].y - 1 > max) max = -mv[0].y - 1;
+		*MVmaxB = max;
+	}
+}
+
+
 void
 MotionEstimationBVOP(MBParam * const pParam,
 					 FRAMEINFO * const frame,
@@ -945,6 +971,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 
 	VECTOR f_predMV, b_predMV;
 
+	int MVmaxF = 0, MVmaxB = 0;
 	const int32_t TRB = time_pp - time_bp;
 	const int32_t TRD = time_pp;
 	DECLARE_ALIGNED_MATRIX(dct_space, 3, 64, int16_t, CACHE_LINE);
@@ -968,9 +995,8 @@ MotionEstimationBVOP(MBParam * const pParam,
 	memcpy(&Data_b, &Data_d, sizeof(SearchData));
 	memcpy(&Data_i, &Data_d, sizeof(SearchData));
 
-	Data_f.iFcode = Data_i.iFcode = frame->fcode;
-	Data_b.iFcode = Data_i.bFcode = frame->bcode;
-
+	Data_f.iFcode = Data_i.iFcode = frame->fcode = b_reference->fcode;
+	Data_b.iFcode = Data_i.bFcode = frame->bcode = b_reference->fcode;
 
 	for (j = 0; j < pParam->mb_height; j++) {
 
@@ -1050,6 +1076,11 @@ MotionEstimationBVOP(MBParam * const pParam,
 			else
 				ModeDecision_BVOP_SAD(&Data_d, &Data_b, &Data_f, &Data_i, pMB, b_mb, &f_predMV, &b_predMV);
 
+			maxMotionBVOP(&MVmaxF, &MVmaxB, pMB, Data_d.qpel);
+
 		}
 	}
+
+	frame->fcode = getMinFcode(MVmaxF);
+	frame->bcode = getMinFcode(MVmaxB);
 }

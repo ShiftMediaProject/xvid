@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_pvop.c,v 1.9 2004-12-05 04:53:01 syskin Exp $
+ * $Id: estimation_pvop.c,v 1.10 2004-12-08 12:43:48 syskin Exp $
  *
  ****************************************************************************/
 
@@ -751,6 +751,41 @@ MakeGoodMotionFlags(const uint32_t MotionFlags, const uint32_t VopFlags, const u
 	return Flags;
 }
 
+static __inline void
+motionStatsPVOP(int * const MVmax, int * const mvCount, int * const mvSum,
+				const MACROBLOCK * const pMB, const int qpel)
+{
+	const VECTOR * const mv = qpel ? pMB->qmvs : pMB->mvs;
+	int i;
+	int max = *MVmax;
+
+	switch (pMB->mode) {
+	case MODE_INTER4V:
+		*mvCount += 3;
+		for(i = 3; i; i--) {
+			if (mv[i].x > max) max = mv[i].x;
+			else if (-mv[i].x - 1 > max) max = -mv[i].x - 1;
+			*mvSum += mv[i].x * mv[i].x;
+			if (mv[i].y > max) max = mv[i].y;
+			else if (-mv[i].y - 1 > max) max = -mv[i].y - 1;
+			*mvSum += mv[i].y * mv[i].y;
+		}
+	case MODE_INTER:
+		(*mvCount)++;	/* add mcsel==1 vector to statistics too, or else we ignore useful motion range info */
+		*mvSum += mv[0].x * mv[0].x;
+		*mvSum += mv[0].y * mv[0].y;
+		if (pMB->mcsel == 0) {
+			if (mv[0].x > max) max = mv[0].x;
+			else if (-mv[0].x - 1 > max) max = -mv[0].x - 1;
+			if (mv[0].y > max) max = mv[0].y;
+			else if (-mv[0].y - 1 > max) max = -mv[0].y - 1;
+			*MVmax = max;
+		}
+	default:
+		break;
+	}
+}
+
 bool
 MotionEstimation(MBParam * const pParam,
 				 FRAMEINFO * const current,
@@ -770,6 +805,7 @@ MotionEstimation(MBParam * const pParam,
 	const uint32_t iEdgedWidth = pParam->edged_width;
 	const uint32_t MotionFlags = MakeGoodMotionFlags(current->motion_flags, current->vop_flags, current->vol_flags);
 	int stat_thresh = 0;
+	int MVmax = 0, mvSum = 0, mvCount = 0;
 
 	uint32_t x, y;
 	int32_t sad00;
@@ -868,9 +904,13 @@ MotionEstimation(MBParam * const pParam,
 								pCurrent, pRef, pGMC, current->coding_type, sad00);
 
 
+			motionStatsPVOP(&MVmax, &mvCount, &mvSum, pMB, Data.qpel);
 		}
 	}
+
+	current->fcode = getMinFcode(MVmax);
+	current->sStat.iMvSum = mvSum;
+	current->sStat.iMvCount = mvCount;
+
 	return 0;
 }
-
-
