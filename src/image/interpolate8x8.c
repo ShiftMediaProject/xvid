@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: interpolate8x8.c,v 1.13 2004-08-10 21:58:55 edgomez Exp $
+ * $Id: interpolate8x8.c,v 1.14 2004-08-29 05:32:29 syskin Exp $
  *
  ****************************************************************************/
 
@@ -53,8 +53,8 @@ INTERPOLATE_LOWPASS_HV_PTR interpolate16x16_lowpass_hv;
 INTERPOLATE8X8_6TAP_LOWPASS_PTR interpolate8x8_6tap_lowpass_h;
 INTERPOLATE8X8_6TAP_LOWPASS_PTR interpolate8x8_6tap_lowpass_v;
 
-void __inline
-interpolate8x8_avg2_c(uint8_t *dst, const uint8_t *src1, const uint8_t *src2, const uint32_t stride, const uint32_t rounding, const uint32_t height)
+void
+interpolate8x8_avg2_c(uint8_t * dst, const uint8_t * src1, const uint8_t *src2, const uint32_t stride, const uint32_t rounding, const uint32_t height)
 {
     uint32_t i;
 	const int32_t round = 1 - rounding;
@@ -76,7 +76,7 @@ interpolate8x8_avg2_c(uint8_t *dst, const uint8_t *src1, const uint8_t *src2, co
 }
 
 void
-interpolate8x8_halfpel_add_c(uint8_t *dst, const uint8_t *src, const uint32_t stride, const uint32_t rounding)
+interpolate8x8_halfpel_add_c(uint8_t * const dst, const uint8_t * const src, const uint32_t stride, const uint32_t rounding)
 {
 	interpolate8x8_avg2_c(dst, dst, src, stride, 0, 8);
 }
