@@ -1,18 +1,350 @@
-08.05.2002
-- added decode support for B-frame
+*****************************************************************************
+* Long list of very basic changes :
+*
+* The aim is simple, make sure we take care of GPL headers, copyrights, and
+* easy compiler warnings
+*
+* We'll do better source cleaning once this first step is finnished
+*****************************************************************************
 
-08.03.2002
-- added support for custom MPEG4 quant matrices
+===[ todo.txt ]===
+  1.7 (edgomez) Updated
+  1.6 (edgomez) Updated
+  1.5 (edgomez) - Added new item
+               - Moved the $id$ keyword out of the box
+  1.4 (edgomez) Stable tree ToDo List
 
-08.03.2002
+===[ build/generic/Makefile.inc ]===
+  1.17 (edgomez) Removed font.c from Makefile (only used in bframe)
+  1.16 (chl) Removed SMP
 
-- new core structure
-- mbcoding/mbdecoding rewrite
-- API change, introduced feature flags
-- Bitreader/Bitwriter merge
-- putbits speedup
-- ratecontrol rewrite (it's total crap, just a 5 minute hack...)
-- split motion estimation and motion compensation into different files
-- encoder.c cleanup
-- NOTE: DivX4 API compatibility is partly broken right now
-- NOTE: custom MPEG quant matrices are currently ignored
+===[ build/generic/Makefile.linux ]===
+  1.7 (edgomez) Removed BFRAMES options
+  1.6.2.1 (chl) Adding installing of xvid.h to /usr/local/include  (just to test branching)
+
+===[ src/decoder.c ]===
+  1.37 (h) interlacing bugfix (inter cbp behaviour)
+
+===[ src/divx4.c ]===
+  1.18 (edgomez) - Removed History from file header.
+               - Moved Peter copyright to the top of the file.
+  1.17 (edgomez) Removed BFRAMES parts of the code
+
+===[ src/encoder.c ]===
+  1.82 (edgomez) - Compiler warning fixed.
+  1.81 (chl) Call MBPrediction only of INTRA/INTRA_Q blocks
+  1.80 (edgomez) Thanks to christoph i removed this nasty horrible bug ! Kidding of course :-)
+  1.79 (edgomez) Added $Id: changelog.txt,v 1.4 2002-09-10 23:15:31 edgomez Exp $ keyword again
+  1.78 (edgomez) Removed BFRAMES parts of the code.
+  1.77 (edgomez) - Removed history header
+               - File Copyright to Michael until we find who wrote this file
+
+===[ src/encoder.h ]===
+  1.21 (edgomez) Added $Id: changelog.txt,v 1.4 2002-09-10 23:15:31 edgomez Exp $ keyword again.
+  1.20 (edgomez) Removed BFRAMES part of the code
+  1.19 (edgomez) - Removed History Header
+               - Added Michael Militzer Copyright (well Michael seems to be the first contributor)
+
+===[ src/global.h ]===
+  1.14 (edgomez) - Added legal header
+               - Added copyright (temporary set to Michael)
+
+===[ src/portab.h ]===
+  1.27 (edgomez) - Added legal header
+               - Temporary copyright
+
+===[ src/xvid.c ]===
+  1.36 (edgomez) Added $Id: changelog.txt,v 1.4 2002-09-10 23:15:31 edgomez Exp $ keyword again
+  1.35 (edgomez) Removed BFRAME code
+  1.34 (edgomez) Removed History, moved copyright.
+
+===[ src/xvid.h ]===
+  1.19 (edgomez) - Removed simple BFRAMES part of structures
+               
+               ToDo : remove last BFRAMES bits once bframe code has been removed from the stable tree
+  1.18 (edgomez) - Fixed header to mention possible patent infringement
+               - Removed History
+
+===[ src/bitstream/bitstream.c ]===
+  1.29 (edgomez) Added headers, removed unused code
+
+===[ src/bitstream/bitstream.h ]===
+  1.12 (edgomez) Added headers, removed unused code
+  1.11 (edgomez) - Changed header
+               - Extended peter's copyright to 2002
+               - Cosmetic separation between logical sections
+
+===[ src/bitstream/cbp.c ]===
+  1.7 (edgomez) - hey this file is mine :-) Apply my copyright.
+  1.6 (edgomez) - Legal header
+               - Cosmetic
+
+===[ src/bitstream/cbp.h ]===
+  1.7 (edgomez) - Added legal headers
+               - Cosmetic
+
+===[ src/bitstream/mbcoding.c ]===
+  1.30 (edgomez) Added headers, removed unused code
+  1.29 (edgomez) - Respect const qualifier changes in vlc_codes.h
+  1.28 (edgomez) - Little mistake in previous commit fixed, all bframe functions have been disabled
+  1.27 (edgomez) - Moved get_coeff from vlc_codes.h
+               - Disabled MBCodingBVOP with #ifdef 0 #endif (Will be removed completly when i'm sure it doesn't hurt)
+  1.26 (edgomez) - Changed header
+               - Added static qualifier to local arrays
+               - Cosmetic
+  1.25 (h) interlacing bugfix (inter cbp behaviour)
+
+===[ src/bitstream/mbcoding.h ]===
+  1.9 (edgomez) Added headers, removed unused code
+
+===[ src/bitstream/vlc_codes.h ]===
+  1.10 (edgomez) - Changed const type qualifiers
+  1.9 (edgomez) - Pure cosmetic - tabs->spaces
+  1.8 (edgomez) moved get_coeff inlined function to mbcoding.c
+  1.7 (edgomez) - Added GPL Header + patent infringement
+               - Cosmetic
+               - The inlined function will be moved later
+
+===[ src/bitstream/zigzag.h ]===
+  1.3 (edgomez) Added legal header
+
+===[ src/dct/README.IJG ]===
+  1.1 (chl) Original README file from Intependent JPEG Group software as required by
+               their license since we use parts of their code for integer (i)DCT
+
+===[ src/dct/fdct.c ]===
+  1.3 (chl) updated copyright header
+
+===[ src/dct/idct.c ]===
+  1.3 (chl) updated copyright header
+
+===[ src/dct/ia64_asm/fdct_ia64.s ]===
+  1.4 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/dct/ppc_asm/fdct_altivec.s ]===
+  1.3 (edgomez) Adde legal header + canard copyright
+
+===[ src/dct/ppc_asm/idct_altivec.s ]===
+  1.4 (edgomez) Added legal header + copyright (go canard, go !) :-)</private joke>
+
+===[ src/dct/x86_asm/fdct_mmx.asm ]===
+  1.5 (chl) updated copyright headers
+  1.4 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/dct/x86_asm/idct_mmx.asm ]===
+  1.4 (chl) updated copyright headers
+
+===[ src/image/colorspace.c ]===
+  1.4 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/image/font.c ]===
+  1.2 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/image/font.h ]===
+  1.2 (edgomez) - Added newline at eof to shut up gcc 3.x compilers
+
+===[ src/image/image.c ]===
+  1.22 (chl) Removed B-frames
+  1.21 (chl) - Update license/copyright header
+               - Removed history header
+  1.20 (h) branches:  1.20.2;
+               interlacing bugfix (edging behaviour)
+  1.20.2.1 (suxen_drol) block-based encoder interpolation/compensation for normal & bframes.
+
+===[ src/image/interpolate8x8.c ]===
+  1.5 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/image/interpolate8x8.h ]===
+  1.6 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/image/x86_asm/interpolate8x8_3dn.asm ]===
+  1.2 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/image/x86_asm/interpolate8x8_mmx.asm ]===
+  1.9 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/image/x86_asm/interpolate8x8_xmm.asm ]===
+  1.2 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/image/x86_asm/rgb_to_yv12_mmx.asm ]===
+  1.2 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/image/x86_asm/yuv_to_yv12_mmx.asm ]===
+  1.6 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/image/x86_asm/yuyv_to_yv12_mmx.asm ]===
+  1.2 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/image/x86_asm/yv12_to_rgb24_mmx.asm ]===
+  1.3 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/image/x86_asm/yv12_to_rgb32_mmx.asm ]===
+  1.3 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/image/x86_asm/yv12_to_yuyv_mmx.asm ]===
+  1.2 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/motion/motion.h ]===
+  1.16 (chl) Removed SMP
+  1.15 (chl) Removed B-frames
+  1.14 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/motion/motion_comp.c ]===
+  1.13 (chl) Removed B-frames
+  1.12 (chl) - Update license/copyright header
+               - Removed history header
+  1.11.2.1 (suxen_drol) block-based encoder interpolation/compensation for normal & bframes.
+
+===[ src/motion/motion_est.c ]===
+  1.47 (edgomez) Removed old get_pmv calls
+  1.46 (chl) Removed B-frames
+  1.45 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/motion/sad.c ]===
+  1.8 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/motion/sad.h ]===
+  1.14 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/motion/ia64_asm/sad_ia64.s ]===
+  1.6 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/motion/ppc_asm/sad_altivec.c ]===
+  1.4 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/motion/x86_asm/sad_3dn.asm ]===
+  1.3 (chl) typo
+  1.2 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/motion/x86_asm/sad_mmx.asm ]===
+  1.9 (chl) typo
+  1.8 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/motion/x86_asm/sad_sse2.asm ]===
+  1.4 (chl) typo
+  1.3 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/motion/x86_asm/sad_xmm.asm ]===
+  1.4 (chl) updated license header
+  1.3 (chl) - Update license/copyright header
+               - Removed history header
+
+===[ src/prediction/mbprediction.c ]===
+  1.8 (edgomez) - Added headers
+               - Added copyrights
+               - Removed old getpmv functions
+
+===[ src/prediction/mbprediction.h ]===
+  1.15 (edgomez) - Fixed compilers warnings
+               - Clarified a comment
+  1.14 (edgomez) - Added headers
+               - Added copyrights
+               - Removed old getpmv functions
+
+===[ src/quant/adapt_quant.c ]===
+  1.7 (edgomez) - Added Legal header
+               - Cosmetic
+               - Added Copyrigths
+  1.6 (edgomez) Reentrancy problem fixed in adaptive code
+
+===[ src/quant/adapt_quant.h ]===
+  1.4 (edgomez) Added legal header + copyright (definitive)
+
+===[ src/quant/quant_h263.h ]===
+  1.7 (edgomez) - Legal header
+               - Copyright
+
+===[ src/quant/quant_matrix.c ]===
+  1.8 (edgomez) - removed const qualifiers because the functions do not return const matrices
+                 (i'll change that in a later time)
+  1.7 (edgomez) - Hmmm, i've been obliged to revert the previous patch because ofthe mmx code using the same arrays, so they need to be global. We'll have to fix that, because it's not *thread safe*.
+  1.6 (edgomez) - Header
+               - Copyright
+               - Warning about tread safeness in this module
+
+===[ src/quant/quant_mpeg4.c ]===
+  1.4 (edgomez) - header fixed
+               - removed history from file
+               - moved peter's copyright to top of file
+
+===[ src/quant/quant_mpeg4.h ]===
+  1.4 (edgomez) - Added Legal header
+               - Cosmetic
+               - Added Copyrigths
+
+===[ src/quant/x86_asm/quantize4_mmx.asm ]===
+  1.6 (chl) updated copyright headers
+
+===[ src/quant/x86_asm/quantize_mmx.asm ]===
+  1.6 (chl) updated copyright headers
+
+===[ src/utils/emms.c ]===
+  1.5 (edgomez) Added copyright
+  1.4 (edgomez) Removed history
+
+===[ src/utils/emms.h ]===
+  1.8 (edgomez) - Removed history
+               - Added copyright (definitive)
+
+===[ src/utils/mbfunctions.h ]===
+  1.12 (edgomez) Little mistake
+  1.11 (edgomez) - Header changed
+               - Small cosmetic schanges
+
+===[ src/utils/mbtransquant.c ]===
+  1.12 (edgomez) - Changed header
+               - Removed history from file
+  1.11 (h) interlacing bug fix - to comply with spec, no field blocks at boundary
+
+===[ src/utils/mem_align.c ]===
+  1.9 (edgomez) - Added copyrights (yeehaw, my only copyrighted file in XviD :-)
+               - Removed history from file
+
+===[ src/utils/mem_align.h ]===
+  1.4 (edgomez) - Added legal header
+               - Michael's copyright (until we find who is the origibal author)
+
+===[ src/utils/mem_transfer.c ]===
+  1.5 (edgomez) - Updated legal header with Peter's copyright for 2002
+
+===[ src/utils/mem_transfer.h ]===
+  1.9 (edgomez) - Fixed copyright
+               - Removed history
+
+===[ src/utils/ratecontrol.c ]===
+  1.14 (edgomez) Added patent infringement notice
+
+===[ src/utils/ratecontrol.h ]===
+  1.6 (edgomez) Added legal header
+
+===[ src/utils/timer.c ]===
+  1.4 (edgomez) - Added information about possible patent infringements
+               - Added NotaBene about the non thread safe state of the code
+
+===[ src/utils/timer.h ]===
+  1.5 (edgomez) - Added header
+               - Cosmetic
