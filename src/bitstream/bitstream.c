@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.c,v 1.44 2004-05-31 21:36:23 edgomez Exp $
+ * $Id: bitstream.c,v 1.45 2004-07-09 14:52:56 syskin Exp $
  *
  ****************************************************************************/
 
@@ -71,8 +71,10 @@ bs_get_matrix(Bitstream * bs,
 		matrix[scan_tables[0][i++]] = value;
 	}
 	while (value != 0 && i < 64);
-        i--;    /* fix little bug at coeff not full */
 
+	if (value != 0) return;
+
+	i--;
 	while (i < 64) {
 		matrix[scan_tables[0][i++]] = last;
 	}
