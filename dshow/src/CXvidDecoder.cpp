@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.cpp,v 1.7 2004-04-18 07:55:11 syskin Exp $
+ * $Id: CXvidDecoder.cpp,v 1.8 2004-07-11 10:22:47 syskin Exp $
  *
  ****************************************************************************/
 
@@ -212,8 +212,6 @@ CXvidDecoder::CXvidDecoder(LPUNKNOWN punk, HRESULT *phr) :
 	memset(&init, 0, sizeof(init));
 	init.version = XVID_VERSION;
 
-	ar_x = ar_y = 0;
-
 	m_hdll = LoadLibrary(XVID_DLL_NAME);
 	if (m_hdll == NULL) {
 		DPRINTF("dll load failed");
@@ -285,6 +283,25 @@ CXvidDecoder::CXvidDecoder(LPUNKNOWN punk, HRESULT *phr) :
 		USE_RGB32 = true;
 		break;
 	}
+
+	switch (g_config.aspect_ratio)
+	{
+	case 0:	// Auto mode
+		ar_x = ar_y = 0;
+		break;
+	case 1:
+		ar_x = 4;
+		ar_y = 3;
+		break;
+	case 2:
+		ar_x = 16;
+		ar_y = 9;
+		break;
+	case 3:
+		ar_x = 47;
+		ar_y = 20;
+		break;
+	}
 }
 
 void CXvidDecoder::CloseLib()
@@ -331,8 +348,11 @@ HRESULT CXvidDecoder::CheckInputType(const CMediaType * mtIn)
 		hdr = &vih->bmiHeader;
 		/* PAR (x:y) is (1/ppm_X):(1/ppm_Y) where ppm is pixels-per-meter
 		   which is equal to ppm_Y:ppm_X */
-		ar_x = vih->bmiHeader.biYPelsPerMeter * abs(hdr->biWidth);
-		ar_y = vih->bmiHeader.biXPelsPerMeter * abs(hdr->biHeight);
+		if ((ar_x == 0) && (ar_y == 0)) // selected Auto-mode
+		{
+			ar_x = vih->bmiHeader.biYPelsPerMeter * abs(hdr->biWidth);
+			ar_y = vih->bmiHeader.biXPelsPerMeter * abs(hdr->biHeight);
+		}
 		DPRINTF("VIDEOINFOHEADER PAR: %d:%d -> AR %d:%d",
 			vih->bmiHeader.biYPelsPerMeter,vih->bmiHeader.biXPelsPerMeter, ar_x, ar_y);
 	}
@@ -340,8 +360,11 @@ HRESULT CXvidDecoder::CheckInputType(const CMediaType * mtIn)
 	{
 		VIDEOINFOHEADER2 * vih2 = (VIDEOINFOHEADER2 *) mtIn->Format();
 		hdr = &vih2->bmiHeader;
-		ar_x = vih2->dwPictAspectRatioX;
-		ar_y = vih2->dwPictAspectRatioY;
+		if ((ar_x == 0) && (ar_y == 0)) // selected Auto-mode
+		{
+			ar_x = vih2->dwPictAspectRatioX;
+			ar_y = vih2->dwPictAspectRatioY;
+		}
 		DPRINTF("VIDEOINFOHEADER2 AR: %d:%d", ar_x, ar_y);
 	}
 	else
