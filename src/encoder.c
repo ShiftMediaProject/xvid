@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.113 2004-12-10 01:31:20 syskin Exp $
+ * $Id: encoder.c,v 1.114 2004-12-10 03:45:18 syskin Exp $
  *
  ****************************************************************************/
 
@@ -1503,24 +1503,43 @@ FrameCodeI(Encoder * pEnc,
 	return 1;					/* intra */
 }
 
+static __inline void
+updateFcode(Statistics * sStat, Encoder * pEnc)
+{
+	float fSigma;
+	int iSearchRange;
 
-#define INTRA_THRESHOLD 0.5
+	if (sStat->iMvCount == 0)
+		sStat->iMvCount = 1;
+
+	fSigma = (float) sqrt((float) sStat->iMvSum / sStat->iMvCount);
+
+	iSearchRange = 16 << pEnc->mbParam.m_fcode;
+
+	if ((3.0 * fSigma > iSearchRange) && (pEnc->mbParam.m_fcode <= 5) )
+		pEnc->mbParam.m_fcode++;
+
+	else if ((5.0 * fSigma < iSearchRange)
+			   && (4.0 * pEnc->fMvPrevSigma < iSearchRange)
+			   && (pEnc->mbParam.m_fcode >= 2) )
+		pEnc->mbParam.m_fcode--;
+
+	pEnc->fMvPrevSigma = fSigma;
+}
+
 #define BFRAME_SKIP_THRESHHOLD 30
-
 
 /* FrameCodeP also handles S(GMC)-VOPs */
 static int
 FrameCodeP(Encoder * pEnc,
 		   Bitstream * bs)
 {
-	float fSigma;
 	int bits = BitstreamPos(bs);
 
 	DECLARE_ALIGNED_MATRIX(dct_codes, 6, 64, int16_t, CACHE_LINE);
 	DECLARE_ALIGNED_MATRIX(qcoeff, 6, 64, int16_t, CACHE_LINE);
 
 	int x, y, k;
-	int iSearchRange;
 	int skip_possible;
 	FRAMEINFO *const current = pEnc->current;
 	FRAMEINFO *const reference = pEnc->reference;
@@ -1529,8 +1548,6 @@ FrameCodeP(Encoder * pEnc,
 	int mb_height = pParam->mb_height;
 	int coded = 1;
 
-
-	/* IMAGE *pCurrent = &current->image; */
 	IMAGE *pRef = &reference->image;
 
 	if (!reference->is_edged) {	
@@ -1798,23 +1815,7 @@ FrameCodeP(Encoder * pEnc,
 	}
 
 	emms();
-
-	if (current->sStat.iMvCount == 0)
-		current->sStat.iMvCount = 1;
-
-	fSigma = (float) sqrt((float) current->sStat.iMvSum / current->sStat.iMvCount);
-
-	iSearchRange = 16 << pParam->m_fcode;
-
-	if ((3.0 * fSigma > iSearchRange) && (pParam->m_fcode <= 5) )
-		pParam->m_fcode++;
-
-	else if ((5.0 * fSigma < iSearchRange)
-			   && (4.0 * pEnc->fMvPrevSigma < iSearchRange)
-			   && (pParam->m_fcode >= 2) )	/* minimum search range 32 */
-		pParam->m_fcode--;
-
-	pEnc->fMvPrevSigma = fSigma;
+	updateFcode(&current->sStat, pEnc);
 
 	/* frame drop code */
 #if 0
