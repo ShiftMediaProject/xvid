@@ -39,7 +39,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.73 2002-08-07 10:09:00 chl Exp $
+ *  $Id: encoder.c,v 1.74 2002-08-09 20:05:28 chl Exp $
  *
  ****************************************************************************/
 
@@ -1949,7 +1949,7 @@ FrameCodeB(Encoder * pEnc,
 
 			mb->quant = frame->quant;
 			mb->cbp =
-				MBTransQuantInter(&pEnc->mbParam, frame, mb, x, y, dct_codes,
+				MBTransQuantInterBVOP(&pEnc->mbParam, frame, mb, x, y, dct_codes,
 								  qcoeff);
 			//mb->cbp = MBTransQuantBVOP(&pEnc->mbParam, x, y, dct_codes, qcoeff, &frame->image, frame->quant);
 
