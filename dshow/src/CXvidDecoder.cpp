@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.cpp,v 1.13 2004-10-25 10:29:10 suxen_drol Exp $
+ * $Id: CXvidDecoder.cpp,v 1.14 2005-03-14 01:18:20 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -204,9 +204,24 @@ STDMETHODIMP CXvidDecoder::NonDelegatingQueryInterface(REFIID riid, void **ppv)
 #define XVID_DLL_NAME "xvidcore.dll"
 
 CXvidDecoder::CXvidDecoder(LPUNKNOWN punk, HRESULT *phr) :
-    CVideoTransformFilter(NAME("CXvidDecoder"), punk, CLSID_XVID)
+    CVideoTransformFilter(NAME("CXvidDecoder"), punk, CLSID_XVID), m_hdll (NULL)
 {
 	DPRINTF("Constructor");
+
+    xvid_decore_func = NULL; // Hmm, some strange errors appearing if I try to initialize...
+    xvid_global_func = NULL; // ...this in constructor's init-list. So, they assigned here.
+
+    LoadRegistryInfo();
+
+    *phr = OpenLib();
+}
+
+HRESULT CXvidDecoder::OpenLib()
+{
+    DPRINTF("OpenLib");
+
+    if (m_hdll != NULL)
+		return E_UNEXPECTED; // Seems, that library already opened.
 
 	xvid_gbl_init_t init;
 	memset(&init, 0, sizeof(init));
@@ -216,25 +231,34 @@ CXvidDecoder::CXvidDecoder(LPUNKNOWN punk, HRESULT *phr) :
 	if (m_hdll == NULL) {
 		DPRINTF("dll load failed");
 		MessageBox(0, XVID_DLL_NAME " not found","Error", MB_TOPMOST);
-		return;
+		return E_FAIL;
 	}
 
 	xvid_global_func = (int (__cdecl *)(void *, int, void *, void *))GetProcAddress(m_hdll, "xvid_global");
 	if (xvid_global_func == NULL) {
+        FreeLibrary(m_hdll);
+        m_hdll = NULL;
 		MessageBox(0, "xvid_global() not found", "Error", MB_TOPMOST);
-		return;
+		return E_FAIL;
 	}
 
 	xvid_decore_func = (int (__cdecl *)(void *, int, void *, void *))GetProcAddress(m_hdll, "xvid_decore");
 	if (xvid_decore_func == NULL) {
+        xvid_global_func = NULL;
+        FreeLibrary(m_hdll);
+        m_hdll = NULL;
 		MessageBox(0, "xvid_decore() not found", "Error", MB_TOPMOST);
-		return;
+		return E_FAIL;
 	}
 
 	if (xvid_global_func(0, XVID_GBL_INIT, &init, NULL) < 0)
 	{
+        xvid_global_func = NULL;
+        xvid_decore_func = NULL;
+        FreeLibrary(m_hdll);
+        m_hdll = NULL;
 		MessageBox(0, "xvid_global() failed", "Error", MB_TOPMOST);
-		return;
+		return E_FAIL;
 	}
 
 	memset(&m_create, 0, sizeof(m_create));
@@ -243,8 +267,6 @@ CXvidDecoder::CXvidDecoder(LPUNKNOWN punk, HRESULT *phr) :
 
 	memset(&m_frame, 0, sizeof(m_frame));
 	m_frame.version = XVID_VERSION;
-
-	LoadRegistryInfo();
 
 	USE_IYUV = false;
 	USE_YV12 = false;
@@ -302,13 +324,16 @@ CXvidDecoder::CXvidDecoder(LPUNKNOWN punk, HRESULT *phr) :
 		ar_y = 20;
 		break;
 	}
+	
+	return S_OK;
 }
 
 void CXvidDecoder::CloseLib()
 {
-	DPRINTF("Destructor");
+	DPRINTF("CloseLib");
 
-	if (m_create.handle != NULL) {
+	if ((m_create.handle != NULL) && (xvid_decore_func != NULL))
+	{
 		xvid_decore_func(m_create.handle, XVID_DEC_DESTROY, 0, 0);
 		m_create.handle = NULL;
 	}
@@ -317,12 +342,15 @@ void CXvidDecoder::CloseLib()
 		FreeLibrary(m_hdll);
 		m_hdll = NULL;
 	}
+    xvid_decore_func = NULL;
+    xvid_global_func = NULL;
 }
 
 /* destructor */
 
 CXvidDecoder::~CXvidDecoder()
 {
+    DPRINTF("Destructor");
 	CloseLib();
 }
 
@@ -343,6 +371,14 @@ HRESULT CXvidDecoder::CheckInputType(const CMediaType * mtIn)
 		CloseLib();
 		return VFW_E_TYPE_NOT_ACCEPTED;
 	}
+
+    if (m_hdll == NULL)
+    {
+		HRESULT hr = OpenLib();
+
+        if (FAILED(hr) || (m_hdll == NULL)) // Paranoid checks.
+			return VFW_E_TYPE_NOT_ACCEPTED;
+    }
 
 	if (*mtIn->FormatType() == FORMAT_VideoInfo)
 	{
@@ -710,6 +746,9 @@ HRESULT CXvidDecoder::Transform(IMediaSample *pIn, IMediaSample *pOut)
 
 	if (m_create.handle == NULL)
 	{
+		if (xvid_decore_func == NULL)
+			return E_FAIL;
+
 		if (xvid_decore_func(0, XVID_DEC_CREATE, &m_create, 0) < 0)
 		{
             DPRINTF("*** XVID_DEC_CREATE error");
@@ -769,6 +808,9 @@ HRESULT CXvidDecoder::Transform(IMediaSample *pIn, IMediaSample *pOut)
 	m_frame.output.csp &= ~XVID_CSP_VFLIP;
 	m_frame.output.csp |= rgb_flip^(g_config.nFlipVideo ? XVID_CSP_VFLIP : 0);
 
+    // Paranoid check.
+    if (xvid_decore_func == NULL)
+		return E_FAIL;
 
 
 
@@ -816,7 +858,7 @@ repeat :
 		/* Disable postprocessing to speed-up seeking */
 		m_frame.general &= ~XVID_DEBLOCKY;
 		m_frame.general &= ~XVID_DEBLOCKUV;
-/*		m_frame.general &= ~XVID_DERING; */
+		/*m_frame.general &= ~XVID_DERING;*/
 		m_frame.general &= ~XVID_FILMEFFECT;
 
 		length = xvid_decore_func(m_create.handle, XVID_DEC_DECODE, &m_frame, &stats);
