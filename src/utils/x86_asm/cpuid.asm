@@ -65,9 +65,9 @@ bits 32
 %define XVID_CPU_TSC            0x00000040
 
 
-%macro cglobal 1 
+%macro cglobal 1
 	%ifdef PREFIX
-		global _%1 
+		global _%1
 		%define %1 _%1
 	%else
 		global %1
@@ -78,9 +78,6 @@ ALIGN 32
 
 section .data
 
-features	dd 0
-
-vendor		dd 0,0,0
 vendorAMD	db "AuthenticAMD"
 
 %macro  CHECK_FEATURE         3
@@ -90,7 +87,7 @@ vendorAMD	db "AuthenticAMD"
     neg     ecx
     sbb     ecx, ecx
     and     ecx, %2
-    or      [%3], ecx
+    or      %3, ecx
 
 %endmacro
 
@@ -100,11 +97,16 @@ section .text
 
 cglobal check_cpu_features
 check_cpu_features:
-	
-	pushad
-	pushfd	                        
+
+	push ebx
+	push esi
+	push edi
+	push ebp
+
+	xor ebp,ebp
 
 	; CPUID command ?
+	pushfd
 	pop		eax
 	mov		ecx, eax
 	xor		eax, 0x200000
@@ -119,30 +121,28 @@ check_cpu_features:
 
 	; get vendor string, used later
     xor     eax, eax
-    cpuid           
-    mov     [vendor], ebx       ; vendor string 
-    mov     [vendor+4], edx     
-    mov     [vendor+8], ecx     
+    cpuid
+    mov     [esp-12], ebx       ; vendor string
+    mov     [esp-12+4], edx
+    mov     [esp-12+8], ecx
     test    eax, eax
 
     jz      near .cpu_quit
 
-    mov     eax, 1 
+    mov     eax, 1
     cpuid
 
-
     ; RDTSC command ?
-	CHECK_FEATURE CPUID_TSC, XVID_CPU_TSC, features
+	CHECK_FEATURE CPUID_TSC, XVID_CPU_TSC, ebp
 
     ; MMX support ?
-	CHECK_FEATURE CPUID_MMX, XVID_CPU_MMX, features
+	CHECK_FEATURE CPUID_MMX, XVID_CPU_MMX, ebp
 
     ; SSE support ?
-	CHECK_FEATURE CPUID_SSE, (XVID_CPU_MMXEXT+XVID_CPU_SSE), features
+	CHECK_FEATURE CPUID_SSE, (XVID_CPU_MMXEXT|XVID_CPU_SSE), ebp
 
 	; SSE2 support?
-	CHECK_FEATURE CPUID_SSE2, XVID_CPU_SSE2, features
-
+	CHECK_FEATURE CPUID_SSE2, XVID_CPU_SSE2, ebp
 
 	; extended functions?
     mov     eax, 0x80000000
@@ -152,28 +152,50 @@ check_cpu_features:
 
     mov     eax, 0x80000001
     cpuid
-         
-    ; 3DNow! support ?
-	CHECK_FEATURE EXT_CPUID_3DNOW, XVID_CPU_3DNOW, features
 
 	; AMD cpu ?
     lea     esi, [vendorAMD]
-    lea     edi, [vendor]
+    lea     edi, [esp-12]
     mov     ecx, 12
     cld
     repe    cmpsb
     jnz     .cpu_quit
 
+    ; 3DNow! support ?
+	CHECK_FEATURE EXT_CPUID_3DNOW, XVID_CPU_3DNOW, ebp
+
 	; 3DNOW extended ?
-	CHECK_FEATURE EXT_CPUID_AMD_3DNOWEXT, XVID_CPU_3DNOWEXT, features
+	CHECK_FEATURE EXT_CPUID_AMD_3DNOWEXT, XVID_CPU_3DNOWEXT, ebp
 
 	; extended MMX ?
-	CHECK_FEATURE EXT_CPUID_AMD_MMXEXT, XVID_CPU_MMXEXT, features
-        
-.cpu_quit:  
+	CHECK_FEATURE EXT_CPUID_AMD_MMXEXT, XVID_CPU_MMXEXT, ebp
 
-	popad
-	
-	mov eax, [features]
-	
+.cpu_quit:
+
+	mov eax, ebp
+
+	pop ebp
+	pop edi
+	pop esi
+	pop ebx
+
 	ret
+
+
+
+; sse/sse2 operating support detection routines
+; these will trigger an invalid instruction signal if not supported.
+
+cglobal sse_os_trigger
+align 16
+sse_os_trigger:
+	xorps xmm0, xmm0
+	ret
+
+
+cglobal sse2_os_trigger
+align 16
+sse2_os_trigger:
+	xorpd xmm0, xmm0
+	ret
+
