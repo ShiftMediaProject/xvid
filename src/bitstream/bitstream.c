@@ -41,7 +41,8 @@
   *																			   *	
   *  Revision history:                                                         *
   *																			   *	
-  *  01.05.2002 added BVOP support to BitstreamWriteVopHeader
+  *  06.05.2002 fixed fincr/fbase error                                        *
+  *  01.05.2002 added BVOP support to BitstreamWriteVopHeader                  *
   *  15.04.2002 rewrite log2bin use asm386  By MinChen <chenm001@163.com>      *
   *  26.03.2002 interlacing support											   *
   *  03.03.2002 qmatrix writing												   *
@@ -58,7 +59,7 @@
 #include "../quant/quant_matrix.h"
 
 
-static int __inline log2bin(int value)
+static uint32_t __inline log2bin(uint32_t value)
 {
 /* Changed by Chenm001 */
 #ifndef WIN32
@@ -651,7 +652,11 @@ void BitstreamWriteVolHeader(Bitstream * const bs,
 			25fps		res=25		inc=1
 			29.97fps	res=30000	inc=1001
 	*/
+#ifdef BFRAMES
+	BitstreamPutBits(bs, pParam->fbase, 16);
+#else
 	BitstreamPutBits(bs, 2, 16);
+#endif
 
 	WRITE_MARKER();
 
@@ -733,7 +738,7 @@ void BitstreamWriteVopHeader(Bitstream * const bs,
 
 	// time_increment: value=nth_of_sec, nbits = log2(resolution)
 #ifdef BFRAMES
-	BitstreamPutBits(bs, frame->ticks, 5);	
+	BitstreamPutBits(bs, frame->ticks, log2bin(pParam->fbase));	
 	dprintf("[%i:%i] %c\n", frame->seconds, frame->ticks, frame->coding_type == I_VOP ? 'I' : frame->coding_type == P_VOP ? 'P' : 'B');
 #else
 	BitstreamPutBits(bs, 1, 1);		
@@ -743,7 +748,7 @@ void BitstreamWriteVopHeader(Bitstream * const bs,
 
 	BitstreamPutBits(bs, 1, 1);				// vop_coded
 
-	if (frame->coding_type != I_VOP)
+	if (frame->coding_type == P_VOP)
 		BitstreamPutBits(bs, frame->rounding_type, 1);
     
 	BitstreamPutBits(bs, 0, 3);				// intra_dc_vlc_threshold
