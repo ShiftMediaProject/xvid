@@ -32,12 +32,13 @@
  *
  *  History:
  *
+ *	24.02.2002	#def BFRAMES compatibility
  *  26.02.2001  fixed dec_csp bugs
  *  26.12.2001  xvid_init() support
  *  22.12.2001  removed some compiler warnings
  *  16.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: divx4.c,v 1.14 2002-06-12 20:38:39 edgomez Exp $
+ *  $Id: divx4.c,v 1.15 2002-06-24 09:53:17 suxen_drol Exp $
  *
  *************************************************************************/
 
@@ -368,6 +369,12 @@ encore(void *handle,
 			xparam.min_quantizer = eparam->min_quantizer;
 			xparam.max_quantizer = eparam->max_quantizer;
 			xparam.max_key_interval = eparam->max_key_interval;
+
+#ifdef BFRAMES
+			xparam.global = 0;
+			xparam.max_bframes = -1;	/* use "original" IP-frame encoder */
+			xparam.bquant_ratio = 200;
+#endif
 
 			/* Create the encoder session */
 			xerr = encoder_create(&xparam);

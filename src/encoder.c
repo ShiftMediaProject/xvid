@@ -37,7 +37,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.47 2002-06-23 19:48:06 edgomez Exp $
+ *  $Id: encoder.c,v 1.48 2002-06-24 09:53:17 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -51,6 +51,9 @@
 #include "global.h"
 #include "utils/timer.h"
 #include "image/image.h"
+#ifdef BFRAMES
+#include "image/font.h"
+#endif
 #include "motion/motion.h"
 #include "bitstream/cbp.h"
 #include "utils/mbfunctions.h"
@@ -375,6 +378,7 @@ encoder_create(XVID_ENC_PARAM * pParam)
 	pEnc->bframenum_head = 0;
 	pEnc->bframenum_tail = 0;
 	pEnc->flush_bframes = 0;
+	pEnc->bframenum_dx50bvop = -1;
 
 	pEnc->queue = NULL;
 
@@ -756,7 +760,23 @@ ipvop_loop:
 
 bvop_loop:
 
-	if (input_valid) {
+	if (pEnc->bframenum_dx50bvop != -1)
+	{
+
+		SWAP(pEnc->current, pEnc->reference);
+		SWAP(pEnc->current, pEnc->bframes[pEnc->bframenum_dx50bvop]);		
+
+		if ((pEnc->global & XVID_GLOBAL_DEBUG)) {
+			image_printf(&pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.height, 5, 100, "DX50 IVOP");
+		}
+
+		if (input_valid)
+		{
+			queue_image(pEnc, pFrame);
+			input_valid = 0;
+		}
+
+	} else if (input_valid) {
 
 		SWAP(pEnc->current, pEnc->reference);
 
@@ -815,82 +835,80 @@ bvop_loop:
 	 * comment style :-)
 	 * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
-//$$	SWAP(pEnc->current, pEnc->reference);
-
 	emms();
 
-	if (pFrame->quant == 0)
-		pEnc->current->quant = RateControlGetQ(&pEnc->rate_control, 0);
-	else
-		pEnc->current->quant = pFrame->quant;
+	// only inc frame num, adapt quant, etc. if we havent seen it before
+	if (pEnc->bframenum_dx50bvop < 0 )
+	{
+		if (pFrame->quant == 0)
+			pEnc->current->quant = RateControlGetQ(&pEnc->rate_control, 0);
+		else
+			pEnc->current->quant = pFrame->quant;
 
-	if (pEnc->current->quant < 1)
-		pEnc->current->quant = 1;
+		if (pEnc->current->quant < 1)
+			pEnc->current->quant = 1;
 
-	if (pEnc->current->quant > 31)
-		pEnc->current->quant = 31;
+		if (pEnc->current->quant > 31)
+			pEnc->current->quant = 31;
 
-	pEnc->current->global_flags = pFrame->general;
-	pEnc->current->motion_flags = pFrame->motion;
-	pEnc->current->seconds = pEnc->mbParam.m_seconds;
-	pEnc->current->ticks = pEnc->mbParam.m_ticks;
-	/* ToDo : dynamic fcode (in both directions) */
-	pEnc->current->fcode = pEnc->mbParam.m_fcode;
-	pEnc->current->bcode = pEnc->mbParam.m_fcode;
+		pEnc->current->global_flags = pFrame->general;
+		pEnc->current->motion_flags = pFrame->motion;
 
-//$$$	start_timer();
-//$$$	if (image_input
-//$$$		(&pEnc->current->image, pEnc->mbParam.width, pEnc->mbParam.height,
-//$$$		 pEnc->mbParam.edged_width, pFrame->image, pFrame->colorspace))
-//$$$		return XVID_ERR_FORMAT;
-//$$$	stop_conv_timer();
+		/* ToDo : dynamic fcode (in both directions) */
+		pEnc->current->fcode = pEnc->mbParam.m_fcode;
+		pEnc->current->bcode = pEnc->mbParam.m_fcode;
+
+		pEnc->current->seconds = pEnc->mbParam.m_seconds;
+		pEnc->current->ticks = pEnc->mbParam.m_ticks;
+
+		inc_frame_num(pEnc);
 
 #ifdef _DEBUG_PSNR
-	image_copy(&pEnc->sOriginal, &pEnc->current->image,
+		image_copy(&pEnc->sOriginal, &pEnc->current->image,
 			   pEnc->mbParam.edged_width, pEnc->mbParam.height);
 #endif
 
-	emms();
+		emms();
 
-	if ((pEnc->global & XVID_GLOBAL_DEBUG)) {
-		image_printf(&pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.height, 5, 5, 
-			"%i  if:%i  st:%i:%i", pEnc->m_framenum++, pEnc->iFrameNum, pEnc->current->seconds, pEnc->current->ticks);
-	}
-
+		if ((pEnc->global & XVID_GLOBAL_DEBUG)) {
+			image_printf(&pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.height, 5, 5, 
+				"%i  if:%i  st:%i:%i", pEnc->m_framenum++, pEnc->iFrameNum, pEnc->current->seconds, pEnc->current->ticks);
+		}
 
 	/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	 * Luminance masking
 	 * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
-	if ((pEnc->current->global_flags & XVID_LUMIMASKING)) {
-		int *temp_dquants =
-			(int *) xvid_malloc(pEnc->mbParam.mb_width *
+		if ((pEnc->current->global_flags & XVID_LUMIMASKING)) {
+			int *temp_dquants =
+				(int *) xvid_malloc(pEnc->mbParam.mb_width *
 								pEnc->mbParam.mb_height * sizeof(int),
 								CACHE_LINE);
 
-		pEnc->current->quant =
-			adaptive_quantization(pEnc->current->image.y,
+			pEnc->current->quant =
+				adaptive_quantization(pEnc->current->image.y,
 								  pEnc->mbParam.edged_width, temp_dquants,
 								  pEnc->current->quant, pEnc->current->quant,
 								  2 * pEnc->current->quant,
 								  pEnc->mbParam.mb_width,
 								  pEnc->mbParam.mb_height);
 
-		for (y = 0; y < pEnc->mbParam.mb_height; y++) {
+			for (y = 0; y < pEnc->mbParam.mb_height; y++) {
 
 #define OFFSET(x,y) ((x) + (y)*pEnc->mbParam.mb_width)
 
-			for (x = 0; x < pEnc->mbParam.mb_width; x++) {
-				MACROBLOCK *pMB = &pEnc->current->mbs[OFFSET(x, y)];
+				for (x = 0; x < pEnc->mbParam.mb_width; x++) {
+					MACROBLOCK *pMB = &pEnc->current->mbs[OFFSET(x, y)];
 
-				pMB->dquant = iDQtab[temp_dquants[OFFSET(x, y)] + 2];
-			}
+					pMB->dquant = iDQtab[temp_dquants[OFFSET(x, y)] + 2];
+				}
 
 #undef OFFSET
+			}
 
+			xvid_free(temp_dquants);
 		}
 
-		xvid_free(temp_dquants);
 	}
 
 	/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -898,7 +916,7 @@ bvop_loop:
 	 * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
 
-	if (pEnc->iFrameNum == 0 || pFrame->intra == 1 ||
+	if (pEnc->iFrameNum == 0 || pFrame->intra == 1 || pEnc->bframenum_dx50bvop != -1 ||
 		(pFrame->intra < 0 && pEnc->iMaxKeyInterval > 0 &&
 		 pEnc->iFrameNum >= pEnc->iMaxKeyInterval)
 		|| image_mad(&pEnc->reference->image, &pEnc->current->image,
@@ -916,12 +934,28 @@ bvop_loop:
 			image_printf(&pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.height, 5, 200, "IVOP");
 		}
 
-		FrameCodeI(pEnc, &bs, &bits);
+		// when we reach an iframe in DX50BVOP mode, encode the last bframe as a pframe
 
-		pFrame->intra = 1;
+		if ((pEnc->global & XVID_GLOBAL_DX50BVOP) && pEnc->bframenum_tail > 0) {
+
+			pEnc->bframenum_tail--;
+			pEnc->bframenum_dx50bvop = pEnc->bframenum_tail;
+
+			SWAP(pEnc->current, pEnc->bframes[pEnc->bframenum_dx50bvop]);
+			if ((pEnc->global & XVID_GLOBAL_DEBUG)) {
+				image_printf(&pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.height, 5, 100, "DX50 BVOP->PVOP");
+			}
+			FrameCodeP(pEnc, &bs, &bits, 1, 0);
+
+			pFrame->intra = 0;
+			
+		} else {
+			pEnc->bframenum_dx50bvop = -1;
+			FrameCodeI(pEnc, &bs, &bits);
+			pFrame->intra = 1;
+		}
+
 		pEnc->flush_bframes = 1;
-
-		inc_frame_num(pEnc);
 
 		if ((pEnc->global & XVID_GLOBAL_PACKED)) {
 			BitstreamPad(&bs);
@@ -949,8 +983,6 @@ bvop_loop:
 		FrameCodeP(pEnc, &bs, &bits, 1, 0);
 		pFrame->intra = 0;
 		pEnc->flush_bframes = 1;
-
-		inc_frame_num(pEnc);
 
 		if ((pEnc->global & XVID_GLOBAL_PACKED)) {
 			BitstreamPad(&bs);
@@ -987,8 +1019,6 @@ bvop_loop:
 
 		pFrame->intra = 0;
 		pFrame->length = 0;
-
-		inc_frame_num(pEnc);
 
 		input_valid = 0;
 		goto bvop_loop;
