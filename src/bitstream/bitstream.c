@@ -1069,6 +1069,12 @@ BitstreamReadHeaders(Bitstream * bs,
 			}
 
 			DPRINTF(DPRINTF_STARTCODE, "<user_data>: %s\n", tmp);
+			
+			/* read xvid bitstream version */
+			if(strncmp(tmp, "XviD", 4) == 0) {
+				sscanf(tmp, "XviD%d", &dec->bs_version);
+				DPRINTF(DPRINTF_HEADER, "xvid bitstream version=%i", dec->bs_version);
+			}
 
 		    /* divx detection */
 			i = sscanf(tmp, "DivX%dBuild%d%c", &version, &build, &packed);

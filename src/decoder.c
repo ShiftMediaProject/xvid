@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.49 2003-02-19 21:59:30 edgomez Exp $
+ * $Id: decoder.c,v 1.50 2003-06-09 17:02:38 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1752,6 +1752,7 @@ decoder_decode(DECODER * dec,
 	int success = 0;
 	int output = 0;
 	int seen_something = 0;
+	idctFuncPtr idct_save = idct;
 
 	start_global_timer();
 
@@ -1839,6 +1840,8 @@ repeat:
 
 	dec->p_bmv.x = dec->p_bmv.y = dec->p_fmv.y = dec->p_fmv.y = 0;	/* init pred vector to 0 */
 
+	if((idct == simple_idct_mmx) && (dec->bs_version < 10)) /* rather ugly but should work */
+		idct = idct_mmx;
 
 	/* packed_mode: special-N_VOP treament */
 	if (dec->packed_mode && vop_type == N_VOP)
@@ -1960,6 +1963,8 @@ done :
 			decoder_output(dec, &dec->cur, NULL, frame, 1 /*disable pp*/);	
 		}
 	}
+
+	idct = idct_save;
 
 	frame->length = BitstreamPos(&bs) / 8;
 

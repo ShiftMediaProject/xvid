@@ -33,7 +33,7 @@
  *
  *  - 13.06.2002 Added legal header - Cosmetic
  *
- *  $Id: decoder.h,v 1.13 2003-02-15 15:22:17 edgomez Exp $
+ *  $Id: decoder.h,v 1.14 2003-06-09 17:05:51 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -114,6 +114,8 @@ typedef struct
 
 	int newpred_enable;
 	int reduced_resolution_enable;
+
+	int bs_version;
 
 	// image
 

@@ -17,7 +17,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.45 2003-02-21 00:00:57 edgomez Exp $
+ * $Id: xvid.c,v 1.46 2003-06-09 17:07:10 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -320,7 +320,7 @@ int xvid_init_init(XVID_INIT_PARAM * init_param)
 
 		/* Forward and Inverse Discrete Cosine Transformation functions */
 		fdct = fdct_mmx;
-		idct = idct_mmx;
+		idct = simple_idct_mmx; /* use simple idct by default */
 
 		/* Quantization related functions */
 		quant_intra   = quant_intra_mmx;
@@ -406,7 +406,7 @@ int xvid_init_init(XVID_INIT_PARAM * init_param)
 	if ((cpu_flags & XVID_CPU_MMXEXT)) {
 
 		/* Inverse DCT */
-		idct = idct_xmm;
+		/* idct = idct_xmm; Don't use Walken idct anymore! */
 
 		/* Interpolation */
 		interpolate8x8_halfpel_h  = interpolate8x8_halfpel_h_xmm;
@@ -452,7 +452,7 @@ int xvid_init_init(XVID_INIT_PARAM * init_param)
 	if ((cpu_flags & XVID_CPU_3DNOWEXT)) {
 
 		/* Inverse DCT */
-		idct =  idct_3dne;
+		/* idct =  idct_3dne; Don't use Walken idct anymore */
 
 		/* Buffer transfer */
 		transfer_8to16copy =  transfer_8to16copy_3dne;
@@ -502,8 +502,8 @@ int xvid_init_init(XVID_INIT_PARAM * init_param)
 		dev16    = dev16_sse2;
 #endif
 		/* Forward and Inverse DCT */
-		idct  = idct_sse2;
-		fdct = fdct_sse2;
+		/* idct  = idct_sse2;
+		/* fdct = fdct_sse2; Both are none to be unprecise - better deactivate for now */
 	}
 #endif
 
