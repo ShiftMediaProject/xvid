@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: font.c,v 1.5 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: font.c,v 1.6 2004-05-31 21:36:23 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -590,6 +590,7 @@ void image_printf(IMAGE * img, int edged_width, int height,
 
 	va_start(args, fmt);
 	vsprintf(buf, fmt, args);
+	va_end(args);
 
 	for (i = 0; i < buf[i]; i++) {
 		const char * font;
