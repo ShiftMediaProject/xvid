@@ -2448,7 +2448,7 @@ PMVfastIntSearch16(const uint8_t * const pRef,
 
 	iMinSAD =
 		sad16(cur,
-			  get_ref_mv(pRef, pRefH, pRefV, pRefHV, x, y, 16, currMV,
+			  get_iref_mv(pRef, x, y, 16, currMV,
 						 iEdgedWidth), iEdgedWidth, MV_MAX_ERROR);
 	iMinSAD +=
 		calc_delta_16(currMV->x - pmv[0].x, currMV->y - pmv[0].y,
@@ -2643,6 +2643,7 @@ PMVfastInt16_Terminate_without_Refine:
 void
 MotionEstimationBVOP(MBParam * const pParam,
 					 FRAMEINFO * const frame,
+				//	 const float scalefactor,
 					 // forward (past) reference 
 					 const MACROBLOCK * const f_mbs,
 					 const IMAGE * const f_ref,
@@ -2656,20 +2657,31 @@ MotionEstimationBVOP(MBParam * const pParam,
 					 const IMAGE * const b_refV,
 					 const IMAGE * const b_refHV)
 {
-	const uint32_t mb_width = pParam->mb_width;
-	const uint32_t mb_height = pParam->mb_height;
-	const int32_t edged_width = pParam->edged_width;
+	const int mb_width = pParam->mb_width;
+	const int mb_height = pParam->mb_height;
+	const int edged_width = pParam->edged_width;
 
-	uint32_t i, j;
+	const float scalefactor=0.666;
+	int i, j;
 
-	int32_t f_sad16;
-	int32_t b_sad16;
-	int32_t i_sad16;
-	int32_t d_sad16;
-	int32_t best_sad;
+//	static const VECTOR zeroMV={0,0};
+	
+	int f_sad16;	/* forward (as usual) search */
+	int b_sad16;	/* backward (only in b-frames) search */
+	int i_sad16;	/* interpolated (both direction, b-frames only) */
+	int d_sad16;	/* direct mode (assume linear motion) */
+
+	int best_sad;
 
 	VECTOR pmv_dontcare;
 
+	int f_count=0;
+	int b_count=0;
+	int i_count=0;
+	int d_count=0;
+	int dnv_count=0;
+	int s_count=0;
+	
 	// note: i==horizontal, j==vertical
 	for (j = 0; j < mb_height; j++) {
 		for (i = 0; i < mb_width; i++) {
@@ -2677,8 +2689,12 @@ MotionEstimationBVOP(MBParam * const pParam,
 			const MACROBLOCK *f_mb = &f_mbs[i + j * mb_width];
 			const MACROBLOCK *b_mb = &b_mbs[i + j * mb_width];
 
+			VECTOR directMV=b_mb->mvs[0];		/* direct mode: presume linear motion */
+			
+/* special case, if collocated block is SKIPed: encoding is forward(0,0)  */
+
 			if (b_mb->mode == MODE_INTER && b_mb->cbp == 0 &&
-				b_mb->mvs[0].x == 0 && b_mb->mvs[0].y == 0) {
+				b_mb->mvs[0].x == 0 && b_mb->mvs[0].y == 0) {	
 				mb->mode = MODE_NOT_CODED;
 				mb->mvs[0].x = 0;
 				mb->mvs[0].y = 0;
@@ -2686,26 +2702,36 @@ MotionEstimationBVOP(MBParam * const pParam,
 				mb->b_mvs[0].y = 0;
 				continue;
 			}
-		/* force F_SAD16
-			f_sad16 = 100;
-			b_sad16 = 65535;
-				
-			mb->mode = MODE_FORWARD;
-			mb->mvs[0].x = 1;
-			mb->mvs[0].y = 1;
-			mb->b_mvs[0].x = 1;
-			mb->b_mvs[0].y = 1;
-			continue;
-		 ^^ force F_SAD16 */
 
+			/* candidates for best MV assumes linear motion */
+			/* next vector is linearly scaled (factor depends on distance to that frame) */
+			
+			mb->mvs[0].x = (int)(directMV.x * scalefactor + 0.75);		
+			mb->mvs[0].y = (int)(directMV.y * scalefactor + 0.75);
+			
+			mb->b_mvs[0].x = (int)(directMV.x * (scalefactor-1.) + 0.75); /* opposite direction! */
+			mb->b_mvs[0].y = (int)(directMV.y * (scalefactor-1.) + 0.75);
 
+			DEBUG2("last: ",f_mb->mvs[0].x,f_mb->mvs[0].y);
+			DEBUG2("next: ",b_mb->mvs[0].x,b_mb->mvs[0].y);
+			DEBUG2("directF: ",mb->mvs[0].x,mb->mvs[0].y);
+			DEBUG2("directB: ",mb->b_mvs[0].x,mb->b_mvs[0].y);
+	
+			d_sad16 =
+				sad16bi(frame->image.y + i * 16 + j * 16 * edged_width,
+						  get_ref_mv(f_ref->y, f_refH->y, f_refV->y, f_refHV->y,
+								i, j, 16, &mb->mvs[0], edged_width), 
+						  get_ref_mv(b_ref->y, b_refH->y, b_refV->y, b_refHV->y,
+								i, j, 16, &mb->b_mvs[0], edged_width),
+						  edged_width);
+						  
 			// forward search
-			f_sad16 =
-				SEARCH16(f_ref->y, f_refH->y, f_refV->y, f_refHV->y,
-						 &frame->image, i, j, frame->motion_flags,
-						 frame->quant, frame->fcode, pParam, 
-						 f_mbs,	 f_mbs, /* todo */
-						 &mb->mvs[0], &pmv_dontcare);	// ignore pmv
+			f_sad16 = SEARCH16(f_ref->y, f_refH->y, f_refV->y, f_refHV->y,
+						&frame->image, i, j, frame->motion_flags,
+						frame->quant, frame->fcode, pParam, 
+						f_mbs, f_mbs, /* todo */
+						&mb->mvs[0], &pmv_dontcare);	// ignore pmv (why?)
+
 
 			// backward search
 			b_sad16 = SEARCH16(b_ref->y, b_refH->y, b_refV->y, b_refHV->y, 
@@ -2713,29 +2739,29 @@ MotionEstimationBVOP(MBParam * const pParam,
 						frame->quant, frame->bcode, pParam, 
 						b_mbs, b_mbs,	/* todo */
 						&mb->b_mvs[0], &pmv_dontcare);	// ignore pmv
-
-			// interpolate search (simple, but effective)
-			i_sad16 = 65535;
-
-			/*
-			x/y range somewhat buggy
+			
 			i_sad16 =
-				sad16bi_c(frame->image.y + i * 16 + j * 16 * edged_width,
-						  get_ref(f_ref->y, f_refH->y, f_refV->y, f_refHV->y,
-								  i, j, 16, mb->mvs[0].x, mb->mvs[0].y,
-								  edged_width), get_ref(b_ref->y, b_refH->y,
-														b_refV->y, b_refHV->y,
-														i, j, 16,
-														mb->b_mvs[0].x,
-														mb->b_mvs[0].x,
-														edged_width),
+				sad16bi(frame->image.y + i * 16 + j * 16 * edged_width,
+						  get_ref_mv(f_ref->y, f_refH->y, f_refV->y, f_refHV->y,
+								i, j, 16, &mb->mvs[0], edged_width), 
+						  get_ref(b_ref->y, b_refH->y, b_refV->y, b_refHV->y,
+								i, j, 16, -mb->b_mvs[0].x, -mb->b_mvs[0].y, edged_width),
 						  edged_width);
-			*/
 
 			// TODO: direct search
 			// predictor + range of [-32,32]
-			d_sad16 = 65535;
 
+ 			DEBUG2("f_MV: ",mb->mvs[0].x,mb->mvs[0].y);
+			DEBUG2("b_MV: ",mb->b_mvs[0].x,mb->b_mvs[0].y);
+
+/*			fprintf(stderr,"f_sad16 = %d, b_sad16 = %d, i_sad16 = %d, d_sad16 = %d\n",
+				f_sad16,b_sad16,i_sad16,d_sad16);
+*/
+
+//			d_sad16 -= 50;
+//			d_sad16 = 65535;
+//			i_sad16 = 65535;
+//			b_sad16 = 65535;
 
 			if (f_sad16 < b_sad16) {
 				best_sad = f_sad16;
@@ -2752,9 +2778,31 @@ MotionEstimationBVOP(MBParam * const pParam,
 
 			if (d_sad16 < best_sad) {
 				best_sad = d_sad16;
-				mb->mode = MODE_DIRECT;
+				mb->mode = MODE_DIRECT_NONE_MV;
 			}
 
+			switch (mb->mode)
+			{
+				case MODE_FORWARD:
+					f_count++; break;
+				case MODE_BACKWARD:
+					b_count++; break;
+				case MODE_INTERPOLATE:
+					i_count++; break;
+				case MODE_DIRECT:
+					d_count++; break;
+				case MODE_DIRECT_NONE_MV:
+					dnv_count++; break;
+				default:
+					s_count++; break;
+			}
+			
 		}
 	}
+	
+#ifdef _DEBUG_BFRAME_STAT
+	fprintf(stderr,"B-Stat: F: %04d   B: %04d   I: %04d  D0: %04d   D: %04d   S: %04d\n",
+				f_count,b_count,i_count,dnv_count,d_count,s_count);
+#endif
+
 }
