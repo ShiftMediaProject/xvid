@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.41 2004-06-11 08:44:30 suxen_drol Exp $
+ * $Id: xvid.h,v 1.42 2004-07-15 10:08:22 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -263,7 +263,7 @@ typedef struct {
 	void *bitstream;     /* [in]     bitstream (read from)*/
 	int length;          /* [in]     bitstream length */
 	xvid_image_t output; /* [in]     output image (written to) */
-/* ------- v1.1.0 ------- */
+/* ------- v1.1.x ------- */
 	int brightness;		 /* [in]	 brightness offset (0=none) */
 } xvid_dec_frame_t;
 
@@ -508,7 +508,7 @@ typedef struct {
 typedef struct {
 	int version;
 
-	int bitrate;                  /* [in] bits per second */
+	int bitrate;                  /* [in] target bitrate (bits per second) */
 	char * filename;              /* [in] first pass stats filename */
 
 	int keyframe_boost;           /* [in] keyframe boost percentage: [0..100] */
@@ -526,11 +526,11 @@ typedef struct {
 
 	int container_frame_overhead; /* [in] How many bytes the controller has to compensate per frame due to container format overhead */
 
-/* ------- v1.1.0 ------- */
-	int vbv_size;
-	int vbv_initial;
-	int vbv_maxrate;
-	int vbv_peakrate;
+/* ------- v1.1.x ------- */
+	int vbv_size;                 /* [in] buffer size (bits) */
+	int vbv_initial;              /* [in] initial buffer occupancy (bits) */
+	int vbv_maxrate;              /* [in] max processing bitrate (bits per second) */
+	int vbv_peakrate;             /* [in:opt] max average bitrate over 3 seconds (bits per second) */
 
 }xvid_plugin_2pass2_t;
 
