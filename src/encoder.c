@@ -39,7 +39,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.70 2002-08-04 21:32:56 Isibaar Exp $
+ *  $Id: encoder.c,v 1.71 2002-08-04 22:34:49 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -1252,7 +1252,9 @@ encoder_encode(Encoder * pEnc,
 	DEBUG(temp);
 #endif
 
+#ifdef BFRAMES
 	inc_frame_num(pEnc);
+#endif
 	pEnc->iFrameNum++;
 
 	stop_global_timer();
