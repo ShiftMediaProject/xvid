@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_stat.c,v 1.9 2002-09-21 09:29:36 edgomez Exp $
+ * $Id: xvid_stat.c,v 1.10 2002-09-21 09:38:17 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -126,7 +126,7 @@ static int const general_presets[7] = {
 	XVID_H263QUANT | XVID_HALFPEL,                // Q 3
 	XVID_H263QUANT | XVID_HALFPEL | XVID_INTER4V, // Q 4
 	XVID_H263QUANT | XVID_HALFPEL | XVID_INTER4V, // Q 5
-	XVID_H263QUANT | XVID_HALFPEL | XVID_INTER4V | XVID_LUMIMASKING  // Q 6
+	XVID_H263QUANT | XVID_HALFPEL | XVID_INTER4V  // Q 6
 };
 		
 
