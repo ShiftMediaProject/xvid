@@ -106,8 +106,6 @@ uint8_t MBTransQuantInter2(const MBParam * pParam,
 uint8_t MBTransQuantInterBVOP(const MBParam * pParam,
 						  FRAMEINFO * frame,
 						  MACROBLOCK * pMB,
-						  const uint32_t x_pos,
-						  const uint32_t y_pos,	
 						  int16_t data[6 * 64],
 						  int16_t qcoeff[6 * 64]);
 
