@@ -1,43 +1,43 @@
 /**************************************************************************
  *
- *	XVID MPEG-4 VIDEO CODEC
- *	OpenDivx API wrapper
+ *  XVID MPEG-4 VIDEO CODEC
+ *  - OpenDivx API wrapper -
  *
- *	This program is an implementation of a part of one or more MPEG-4
- *	Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
- *	to use this software module in hardware or software products are
- *	advised that its use may infringe existing patents or copyrights, and
- *	any such use would be at such party's own risk.  The original
- *	developer of this software module and his/her company, and subsequent
- *	editors and their companies, will have no liability for use of this
- *	software or modifications or derivatives thereof.
+ *  This program is an implementation of a part of one or more MPEG-4
+ *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
+ *  to use this software module in hardware or software products are
+ *  advised that its use may infringe existing patents or copyrights, and
+ *  any such use would be at such party's own risk.  The original
+ *  developer of this software module and his/her company, and subsequent
+ *  editors and their companies, will have no liability for use of this
+ *  software or modifications or derivatives thereof.
  *
- *	This program is free software; you can redistribute it and/or modify
- *	it under the terms of the GNU General Public License as published by
- *	the Free Software Foundation; either version 2 of the License, or
- *	(at your option) any later version.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *	This program is distributed in the hope that it will be useful,
- *	but WITHOUT ANY WARRANTY; without even the implied warranty of
- *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *	GNU General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *	You should have received a copy of the GNU General Public License
- *	along with this program; if not, write to the Free Software
- *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  *************************************************************************/
 
 /**************************************************************************
  *
- *	History:
+ *  History:
  *
- *	26.02.2001  fixed dec_csp bugs
- *	26.12.2001  xvid_init() support
- *	22.12.2001  removed some compiler warnings
- *	16.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
+ *  26.02.2001  fixed dec_csp bugs
+ *  26.12.2001  xvid_init() support
+ *  22.12.2001  removed some compiler warnings
+ *  16.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- * $Id: divx4.c,v 1.12 2002-05-22 12:40:25 chl Exp $
+ *  $Id: divx4.c,v 1.13 2002-06-09 23:05:35 edgomez Exp $
  *
  *************************************************************************/
 
@@ -404,8 +404,10 @@ encore(void * handle, int opt, void * param1, void * param2)
 		{
 			return ENC_FAIL;
 		}
-
+		
+		einst_remove(handle);
 		xerr = encoder_destroy((Encoder *) handle);
+
 		break;
 	}
 
