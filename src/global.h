@@ -43,11 +43,9 @@ typedef struct
 {
 	// decoder/encoder 
 	VECTOR mvs[4];
-	int32_t sad8[4];		// (signed!) SAD values for inter4v-VECTORs
-	int32_t sad16;			// (signed!) SAD value for inter-VECTOR
 
-    short int pred_values[6][MBPRED_SIZE];
-    int acpred_directions[6];
+	short int pred_values[6][MBPRED_SIZE];
+	int acpred_directions[6];
     
 	int mode;
 	int quant;		// absolute quant
@@ -59,7 +57,12 @@ typedef struct
 
 	// encoder specific
 
+	VECTOR mv16;
 	VECTOR pmvs[4];
+
+        int32_t sad8[4];                // SAD values for inter4v-VECTORs
+        int32_t sad16;                  // SAD value for inter-VECTOR
+
 	int dquant;
 	int cbp;
 
