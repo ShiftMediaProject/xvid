@@ -2521,18 +2521,33 @@ MotionEstimationBVOP(MBParam * const pParam,
 				mb->b_mvs[0].y = 0;
 				continue;
 			}
+		/* force F_SAD16
+			f_sad16 = 100;
+			b_sad16 = 65535;
+				
+			mb->mode = MODE_FORWARD;
+			mb->mvs[0].x = 1;
+			mb->mvs[0].y = 1;
+			mb->b_mvs[0].x = 1;
+			mb->b_mvs[0].y = 1;
+			continue;
+		 ^^ force F_SAD16 */
+
 
 			// forward search
 			f_sad16 =
 				SEARCH16(f_ref->y, f_refH->y, f_refV->y, f_refHV->y,
 						 &frame->image, i, j, frame->motion_flags,
-						 frame->quant, frame->fcode, pParam, f_mbs,
-						 f_mbs /* todo */ ,
+						 frame->quant, frame->fcode, pParam, 
+						 f_mbs,	 f_mbs, /* todo */
 						 &mb->mvs[0], &pmv_dontcare);	// ignore pmv
 
 			// backward search
-			b_sad16 = SEARCH16(b_ref->y, b_refH->y, b_refV->y, b_refHV->y, &frame->image, i, j, frame->motion_flags, frame->quant, frame->bcode, pParam, b_mbs, b_mbs,	/* todo */
-							   &mb->b_mvs[0], &pmv_dontcare);	// ignore pmv
+			b_sad16 = SEARCH16(b_ref->y, b_refH->y, b_refV->y, b_refHV->y, 
+						&frame->image, i, j, frame->motion_flags, 
+						frame->quant, frame->bcode, pParam, 
+						b_mbs, b_mbs,	/* todo */
+						&mb->b_mvs[0], &pmv_dontcare);	// ignore pmv
 
 			// interpolate search (simple, but effective)
 			i_sad16 = 65535;
