@@ -247,7 +247,7 @@ case "$target_os" in
 	;;
      darwin*|raphsody*)
 	AC_MSG_RESULT([-dynamiclib])
-	OS_LDFLAGS="-dynamiclib"
+	OS_LDFLAGS="-dynamiclib -flat_namespace"
 	CFLAGS="$CFLAGS -fno-common"
 	;;
      beos)
