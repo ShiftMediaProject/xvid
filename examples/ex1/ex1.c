@@ -1,7 +1,8 @@
 /*******************************************************************************
 * This file is a example for how to use the xvid core to compress YUV file
 *
-*
+* 0.01b   28.05.2002    chenm001<chenm001@163.com>
+*                       fix a little bug for encode only codec I frame
 * 0.01a   27.05.2002    chenm001<chenm001@163.com>
 *                       fix a little bug for BFRAMES define locate
 * 0.01    23.05.2002    chenm001<chenm001@163.com>
@@ -118,6 +119,7 @@ int Encode(char *in, int width, int height, char *out)
 	// Encode Frame
 	temp=fread(inBuf, 1, width*height*3/2, fpi);	// Read YUV data
 	while(temp == width*height*3/2){
+		//printf("Frames=%d\n",num);
 		set_enc_frame(&frame);
 		if (!(num%param.max_key_interval))
 			frame.intra = 1;	// Encode as I-frame
@@ -126,6 +128,7 @@ int Encode(char *in, int width, int height, char *out)
 		xvid_encore(param.handle, XVID_ENC_ENCODE, &frame, &stats);
 		fwrite(outBuf, 1, frame.length, fpo);
 		temp=fread(inBuf, 1, width*height*3/2, fpi);	// Read next YUV data
+		num++;
 	}
 	
 	// Free Encode Core
