@@ -41,6 +41,7 @@
   *																			   *	
   *  Revision history:                                                         *
   *																			   *	
+  *  06.05.2002 low_delay                                                      *
   *  06.05.2002 fixed fincr/fbase error                                        *
   *  01.05.2002 added BVOP support to BitstreamWriteVopHeader                  *
   *  15.04.2002 rewrite log2bin use asm386  By MinChen <chenm001@163.com>      *
@@ -642,7 +643,23 @@ void BitstreamWriteVolHeader(Bitstream * const bs,
 	BitstreamPutBits(bs, 0, 8);			// video_object_type_indication
 	BitstreamPutBit(bs, 0);				// is_object_layer_identified (0=not given)
 	BitstreamPutBits(bs, 1, 4);			// aspect_ratio_info (1=1:1)
-	BitstreamPutBit(bs, 0);				// vol_control_parameters (0=not given)
+
+#ifdef BFRAMES
+	if (pParam->max_bframes > 0)
+	{
+		dprintf("low_delay=1");
+		BitstreamPutBit(bs, 1);				// vol_control_parameters
+		BitstreamPutBits(bs, 1, 2);			// chroma_format 1="4:2:0"
+		BitstreamPutBit(bs, 0);				// low_delay
+		BitstreamPutBit(bs, 0);				// vbv_parameters (0=not given)
+	}
+	else
+#endif
+	{
+		BitstreamPutBits(bs, 0, 1);			// vol_control_parameters (0=not given)
+	}
+
+
 	BitstreamPutBits(bs, 0, 2);			// video_object_layer_shape (0=rectangular)
 
 	WRITE_MARKER();
