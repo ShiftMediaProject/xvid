@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  *  XVID MPEG-4 VIDEO CODEC
- *  - Vector Length Coding tables -
+ *  - Macro Block coding functions -
  *
  *  Copyright(C) 2002 Michael Militzer <isibaar@xvid.org>
  *
@@ -29,7 +29,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbcoding.c,v 1.26 2002-09-08 14:43:04 edgomez Exp $
+ * $Id: mbcoding.c,v 1.27 2002-09-08 15:39:01 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -56,7 +56,7 @@ static VLC DCT3Dintra[4096];
 static VLC DCT3Dinter[4096];
 
 /*****************************************************************************
- * Functions
+ * Vector Length Coding Initialization
  ****************************************************************************/
 
 void
@@ -180,6 +180,10 @@ init_vlc_tables(void)
 
 }
 
+/*****************************************************************************
+ * Local inlined functions for MB coding
+ ****************************************************************************/
+
 static __inline void
 CodeVector(Bitstream * bs,
 		   int32_t value,
@@ -235,7 +239,6 @@ CodeVector(Bitstream * bs,
 
 }
 
-
 static __inline void
 CodeCoeff(Bitstream * bs,
 		  const int16_t qcoeff[64],
@@ -274,6 +277,9 @@ CodeCoeff(Bitstream * bs,
 
 }
 
+/*****************************************************************************
+ * Local functions
+ ****************************************************************************/
 
 static void
 CodeBlockIntra(const FRAMEINFO * frame,
@@ -400,6 +406,9 @@ CodeBlockInter(const FRAMEINFO * frame,
 
 }
 
+/*****************************************************************************
+ * Macro Block bitstream encoding functions
+ ****************************************************************************/
 
 void
 MBCoding(const FRAMEINFO * frame,
@@ -504,8 +513,7 @@ put_bvop_dbquant(Bitstream * bs,
 	}
 }
 
-
-
+#if 0
 void
 MBCodingBVOP(const MACROBLOCK * mb,
 			 const int16_t qcoeff[6 * 64],
@@ -565,18 +573,20 @@ MBCodingBVOP(const MACROBLOCK * mb,
 		}
 	}
 }
+#endif
 
 
+/*****************************************************************************
+ * decoding stuff starts here
+ ****************************************************************************/
 
-/***************************************************************
- * decoding stuff starts here                                  *
- ***************************************************************/
+/*
+ * For IVOP addbits == 0
+ * For PVOP addbits == fcode - 1
+ * For BVOP addbits == max(fcode,bcode) - 1
+ * returns true or false
+ */
 
-
-// for IVOP addbits == 0
-// for PVOP addbits == fcode - 1
-// for BVOP addbits == max(fcode,bcode) - 1
-// returns true or false
 int 
 check_resync_marker(Bitstream * bs, int addbits)
 {
@@ -752,6 +762,105 @@ get_dc_size_chrom(Bitstream * bs)
 	return 3 - BitstreamGetBits(bs, 2);
 
 }
+
+/*****************************************************************************
+ * Local inlined function to "decode" written vlc codes
+ ****************************************************************************/
+
+static __inline int
+get_coeff(Bitstream * bs,
+		  int *run,
+		  int *last,
+		  int intra,
+		  int short_video_header)
+{
+
+	uint32_t mode;
+	const VLC *tab;
+	int32_t level;
+
+	if (short_video_header)		// inter-VLCs will be used for both intra and inter blocks
+		intra = 0;
+
+	tab = &DCT3D[intra][BitstreamShowBits(bs, 12)];
+
+	if (tab->code == -1)
+		goto error;
+
+	BitstreamSkip(bs, tab->len);
+
+	if (tab->code != ESCAPE) {
+		if (!intra) {
+			*run = (tab->code >> 4) & 255;
+			level = tab->code & 15;
+			*last = (tab->code >> 12) & 1;
+		} else {
+			*run = (tab->code >> 8) & 255;
+			level = tab->code & 255;
+			*last = (tab->code >> 16) & 1;
+		}
+		return BitstreamGetBit(bs) ? -level : level;
+	}
+
+	if (short_video_header) {
+		// escape mode 4 - H.263 type, only used if short_video_header = 1 
+		*last = BitstreamGetBit(bs);
+		*run = BitstreamGetBits(bs, 6);
+		level = BitstreamGetBits(bs, 8);
+
+		if (level == 0 || level == 128)
+			DEBUG1("Illegal LEVEL for ESCAPE mode 4:", level);
+
+		return (level >= 128 ? -(256 - level) : level);
+	}
+
+	mode = BitstreamShowBits(bs, 2);
+
+	if (mode < 3) {
+		BitstreamSkip(bs, (mode == 2) ? 2 : 1);
+
+		tab = &DCT3D[intra][BitstreamShowBits(bs, 12)];
+		if (tab->code == -1)
+			goto error;
+
+		BitstreamSkip(bs, tab->len);
+
+		if (!intra) {
+			*run = (tab->code >> 4) & 255;
+			level = tab->code & 15;
+			*last = (tab->code >> 12) & 1;
+		} else {
+			*run = (tab->code >> 8) & 255;
+			level = tab->code & 255;
+			*last = (tab->code >> 16) & 1;
+		}
+
+		if (mode < 2)			// first escape mode, level is offset
+			level += max_level[*last + (!intra << 1)][*run];	// need to add back the max level
+		else if (mode == 2)		// second escape mode, run is offset
+			*run += max_run[*last + (!intra << 1)][level] + 1;
+
+		return BitstreamGetBit(bs) ? -level : level;
+	}
+	// third escape mode - fixed length codes
+	BitstreamSkip(bs, 2);
+	*last = BitstreamGetBits(bs, 1);
+	*run = BitstreamGetBits(bs, 6);
+	BitstreamSkip(bs, 1);		// marker
+	level = BitstreamGetBits(bs, 12);
+	BitstreamSkip(bs, 1);		// marker
+
+	return (level & 0x800) ? (level | (-1 ^ 0xfff)) : level;
+
+  error:
+	*run = VLC_ERROR;
+	return 0;
+
+}
+
+/*****************************************************************************
+ * MB reading functions
+ ****************************************************************************/
 
 void
 get_intra_block(Bitstream * bs,
