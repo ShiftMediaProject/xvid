@@ -82,6 +82,8 @@ int xvid_init(void *handle, int opt, void *param1, void *param2)
 	fdct = fdct_int32;
 	idct = idct_int32;
 
+	sadInit = 0;
+	
 	emms = emms_c;
 
 	quant_intra = quant_intra_c;
@@ -197,6 +199,7 @@ int xvid_init(void *handle, int opt, void *param1, void *param2)
 	calc_cbp = calc_cbp_altivec;
 	fdct = fdct_altivec;
 	idct = idct_altivec;
+	sadInit = sadInit_altivec;
 	sad16 = sad16_altivec;
 	sad8 = sad8_altivec;
 	dev16 = dev16_altivec;

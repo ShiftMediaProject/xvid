@@ -17,16 +17,59 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-    $Id: sad_altivec.c,v 1.1 2002-04-03 14:17:05 canard Exp $
+    $Id: sad_altivec.c,v 1.2 2002-04-11 10:18:40 canard Exp $
     $Source: /home/xvid/cvs_copy/cvs-server-root/xvid/xvidcore/src/motion/ppc_asm/sad_altivec.c,v $
-    $Date: 2002-04-03 14:17:05 $
+    $Date: 2002-04-11 10:18:40 $
     $Author: canard $
 
 */
 
+#define G_REG
+
+#ifdef G_REG
+register vector unsigned char perm0 asm ("%v29");
+register vector unsigned char perm1 asm ("%v30");
+register vector unsigned int zerovec asm ("%v31");
+#endif
+
 #include <stdio.h>
 
 #undef DEBUG
+
+static const vector unsigned char perms[2] = {
+	(vector unsigned char)( /* Used when cur is aligned */
+	  	0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+  		0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17
+  	),
+	(vector unsigned char)( /* Used when cur is unaligned */
+	  	0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+  		0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f
+  	),
+};
+
+#ifdef G_REG
+void sadInit_altivec(void)
+{
+	perm0 = perms[0];
+	perm1 = perms[1];
+	zerovec = (vector unsigned int)(0);
+}
+static inline const vector unsigned char get_perm(unsigned long i)
+{
+	return i ? perm1 : perm0;
+}
+#define ZERODEF
+#define ZEROVEC zerovec
+#else
+void sadInit_altivec(void) { }
+static inline const vector unsigned char get_perm(unsigned long i)
+{
+	return perms[i];
+}
+#define ZERODEF vector unsigned int zerovec = (vector unsigned int)(0)
+#define ZEROVEC zerovec
+#endif
+
 
 #define SAD16() \
 t1  = vec_perm(ref[0], ref[1], perm);  /* align current vector  */ \
@@ -47,10 +90,11 @@ sad16_altivec(	const vector unsigned char * cur,
 {
   vector unsigned char perm;
   vector unsigned char t1, t2, t3, t4 ;
-  vector unsigned int sad, zero;
+  vector unsigned int sad;
   vector signed int sumdiffs, best_vec;
   unsigned long result;
-
+  ZERODEF;
+  
 #ifdef DEBUG
   if (((unsigned long)cur) & 0xf)
   	fprintf(stderr, "sad16_altivec:incorrect align, cur: %x\n", cur);
@@ -60,8 +104,7 @@ sad16_altivec(	const vector unsigned char * cur,
   	fprintf(stderr, "sad16_altivec:incorrect align, stride: %x\n", stride);
 #endif  	
   /* initialization */
-  zero = (vector unsigned int)(0); 
-  sad  = (vector unsigned int)(0);
+  sad  = (vector unsigned int)(ZEROVEC);
   stride >>= 4;
   perm = vec_lvsl(0, (unsigned char *)ref);
   *((unsigned long *)&best_vec) = best_sad;
@@ -73,14 +116,14 @@ sad16_altivec(	const vector unsigned char * cur,
   SAD16();
   SAD16();
   /* Temp sum for exit */
-  sumdiffs = vec_sums((vector signed int) sad, (vector signed int) zero);
+  sumdiffs = vec_sums((vector signed int) sad, (vector signed int)ZEROVEC);
   if (vec_all_ge(sumdiffs, best_vec))
   	goto bail;
   SAD16();
   SAD16();
   SAD16();
   SAD16();
-  sumdiffs = vec_sums((vector signed int) sad, (vector signed int) zero);
+  sumdiffs = vec_sums((vector signed int) sad, (vector signed int)ZEROVEC);
   if (vec_all_ge(sumdiffs, best_vec))
   	goto bail;
   SAD16();
@@ -93,7 +136,7 @@ sad16_altivec(	const vector unsigned char * cur,
   SAD16();
   
   /* sum all parts of difference into one 32 bit quantity */
-  sumdiffs = vec_sums((vector signed int) sad, (vector signed int) zero);
+  sumdiffs = vec_sums((vector signed int) sad, (vector signed int)ZEROVEC);
 bail:
   /* copy vector sum into unaligned result */
   sumdiffs = vec_splat( sumdiffs, 3 );  
@@ -112,17 +155,6 @@ t5  = vec_sub(t3, t4);                   /* find absolute difference      */ \
 sad = vec_sum4s(t5, sad);                /* accumulate sum of differences */ \
 cur += stride<<1; ref += stride<<1;
 
-static const vector unsigned char perms[2] = {
-	(vector unsigned char)( /* Used when cur is aligned */
-	  	0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-  		0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17
-  	),
-	(vector unsigned char)( /* Used when cur is unaligned */
-	  	0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-  		0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f
-  	),
-};
-
 /*
  * This function assumes cur is 8 bytes aligned, stride is 16 bytes
  * aligned and ref is unaligned
@@ -133,11 +165,12 @@ sad8_altivec(	const vector unsigned char * cur,
 		unsigned long stride)
 {
   vector unsigned char t1, t2, t3, t4, t5, tp ;
-  vector unsigned int sad, zero;
+  vector unsigned int sad;
   vector signed int sumdiffs;
   vector unsigned char perm_cur;
   vector unsigned char perm_ref1, perm_ref2;
   unsigned long result;
+  ZERODEF;
 
 #ifdef DEBUG
   if (((unsigned long)cur) & 0x7)
@@ -148,13 +181,12 @@ sad8_altivec(	const vector unsigned char * cur,
   	fprintf(stderr, "sad8_altivec:incorrect align, stride: %x\n", stride);
 #endif  	
 
-  perm_cur = perms[(((unsigned long)cur)>>3) & 0x01];
+  perm_cur = get_perm((((unsigned long)cur)>>3) & 0x01);
   perm_ref1 = vec_lvsl(0, (unsigned char *)ref);
-  perm_ref2 = perms[0];
+  perm_ref2 = get_perm(0);
   	
   /* initialization */
-  zero = (vector unsigned int)(0); 
-  sad  = (vector unsigned int)(0);
+  sad  = (vector unsigned int)(ZEROVEC);
   stride >>= 4;
   
   /* perform sum of differences between current and previous */
@@ -164,7 +196,7 @@ sad8_altivec(	const vector unsigned char * cur,
   SAD8();
 
   /* sum all parts of difference into one 32 bit quantity */
-  sumdiffs = vec_sums((vector signed int) sad, (vector signed int) zero);
+  sumdiffs = vec_sums((vector signed int) sad, (vector signed int)ZEROVEC);
   
   /* copy vector sum into unaligned result */
   sumdiffs = vec_splat( sumdiffs, 3 );  
@@ -188,14 +220,14 @@ dev16_altivec(	const vector unsigned char * cur,
 		unsigned long stride)
 {
   vector unsigned char t2,t3,t4, mn;
-  vector unsigned int mean, dev, zero;
+  vector unsigned int mean, dev;
   vector signed int sumdiffs;
   vector unsigned char c0,c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,c11,c12,c13,c14,c15;
   unsigned long result;
+  ZERODEF;
 
-  zero = (vector unsigned int)(0); 
-  mean = (vector unsigned int)(0); 
-  dev = (vector unsigned int)(0); 
+  mean = (vector unsigned int)(ZEROVEC); 
+  dev = (vector unsigned int)(ZEROVEC); 
   stride >>= 4;
 
   MEAN16(0);
@@ -215,7 +247,7 @@ dev16_altivec(	const vector unsigned char * cur,
   MEAN16(14);
   MEAN16(15);
 
-  sumdiffs = vec_sums((vector signed int) mean, (vector signed int) zero);  
+  sumdiffs = vec_sums((vector signed int) mean, (vector signed int) ZEROVEC);  
   mn = vec_perm((vector unsigned char)sumdiffs, (vector unsigned char)sumdiffs,
   	(vector unsigned char)(14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14));
   DEV16(0);
@@ -236,7 +268,7 @@ dev16_altivec(	const vector unsigned char * cur,
   DEV16(15);
 
   /* sum all parts of difference into one 32 bit quantity */
-  sumdiffs = vec_sums((vector signed int) dev, (vector signed int) zero);
+  sumdiffs = vec_sums((vector signed int) dev, (vector signed int) ZEROVEC);
   
   /* copy vector sum into unaligned result */
   sumdiffs = vec_splat( sumdiffs, 3 );  

@@ -340,6 +340,9 @@ bool MotionEstimation(
 	int32_t sad16;
 	int32_t deviation;
 
+	if (sadInit);
+		(*sadInit)();
+		
 	// note: i==horizontal, j==vertical
 	for (i = 0; i < iHcount; i++)
 		for (j = 0; j < iWcount; j++)
