@@ -1,7 +1,7 @@
 ;/**************************************************************************
 ; *
 ; *	XVID MPEG-4 VIDEO CODEC
-; *	mmx cbp calc
+; *	sse2 cbp calc
 ; *
 ; *	This program is an implementation of a part of one or more MPEG-4
 ; *	Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
@@ -32,8 +32,9 @@
 ; *
 ; *	History:
 ; *
-; *	14.06.2002	some further tweaks by -Skal-
-; *	24.11.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
+; * 14.06.2002  cleanup -Skal-
+; * 24.04.2002  had to use sse2's movdqu instead of movdqa (???)
+; * 17.04.2002  initial version (c) 2002 Daniel Smith
 ; *
 ; *************************************************************************/
 
@@ -57,68 +58,74 @@ ignore_dc	dw		0, -1, -1, -1, -1, -1, -1, -1
 
 section .text
 
-cglobal calc_cbp_mmx
+cglobal calc_cbp_sse2
 
 ;===========================================================================
 ;
-; uint32_t calc_cbp_mmx(const int16_t coeff[6][64]);
+; uint32_t calc_cbp_sse2(const int16_t coeff[6][64]);
+;
+; not enabled - slower than mmx?
 ;
 ;===========================================================================
+
+%macro LOOP_SSE2 1
+    movdqa	xmm0, [edx+(%1)*128]
+	pand	xmm0, xmm7
+	movdqa	xmm1, [edx+(%1)*128+16]
+
+	por		xmm0, [edx+(%1)*128+32]
+	por		xmm1, [edx+(%1)*128+48]
+	por		xmm0, [edx+(%1)*128+64]
+	por		xmm1, [edx+(%1)*128+80]
+	por		xmm0, [edx+(%1)*128+96]
+	por		xmm1, [edx+(%1)*128+112]
+
+	por		xmm0, xmm1     ; xmm0 = xmm1 = 128 bits worth of info
+	psadbw	xmm0, xmm6     ; contains 2 dwords with sums
+	movhlps	xmm1, xmm0     ; move high dword from xmm0 to low xmm1
+	por		xmm0, xmm1     ; combine
+	movd	ecx, xmm0      ; if ecx set, values were found
+	test    ecx, ecx
+%endmacro
 
 align 16
-calc_cbp_mmx:
-  push	ebx
-  push	esi
 
-  mov       esi, [esp + 8 + 4]	; coeff
-  xor		eax, eax			; cbp = 0
-  mov		edx, (1 << 5)
+calc_cbp_sse2:
+    mov     edx, [esp+4]        ; coeff[]
+    xor		eax, eax		    ; cbp = 0
 
-  movq		mm7, [ignore_dc]
+	movdqu	xmm7, [ignore_dc]	; mask to ignore dc value
+	pxor	xmm6, xmm6          ; zero
 
-.loop
-  movq		mm0, [esi]
-  movq		mm1, [esi+8]
-  pand		mm0, mm7
-
-  por     	mm0, [esi+16]
-  por     	mm1, [esi+24]
-
-  por     	mm0, [esi+32]
-  por     	mm1, [esi+40]
-
-  por     	mm0, [esi+48]
-  por     	mm1, [esi+56]
-
-  por     	mm0, [esi+64]
-  por     	mm1, [esi+72]
-
-  por     	mm0, [esi+80]
-  por     	mm1, [esi+88]
-
-  por     	mm0, [esi+96]
-  por     	mm1, [esi+104]
-
-  por     	mm0, [esi+112]
-  por     	mm1, [esi+120]
-
-  por     	mm0, mm1
-  movq    	mm1, mm0
-  psrlq   	mm1, 32
-  lea		esi, [esi + 128]
-
-  por     	mm0, mm1
-  movd		ebx, mm0
-
-  test 		ebx, ebx
-  jz		.next
-  or 		eax, edx     ; cbp |= 1 << (5-i)
-
-.next
-  shr 		edx,1
-  jnc		.loop
-
-  pop		esi
-  pop		ebx
+  LOOP_SSE2 0
+	test ecx, ecx	
+	jz		.blk2
+    or eax, (1<<5)
+.blk2
+  LOOP_SSE2 1
+	test ecx, ecx	
+	jz		.blk3
+  or eax, (1<<4)
+.blk3
+  LOOP_SSE2 2
+	test ecx, ecx	
+	jz		.blk4
+  or eax, (1<<3)
+.blk4
+  LOOP_SSE2 3
+	test ecx, ecx	
+	jz		.blk5
+  or eax, (1<<2)
+.blk5
+  LOOP_SSE2 4
+	test ecx, ecx	
+	jz		.blk6
+  or eax, (1<<1)
+.blk6
+  LOOP_SSE2 5
+	test ecx, ecx	
+	jz		.finished
+  or eax, (1<<0)
+.finished
 				
   ret

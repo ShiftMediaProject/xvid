@@ -37,7 +37,7 @@ sad16biFunc sad16bi_c;
 sad16biFunc sad16bi_ia64;
 
 //sad16biFunc sad16bi_mmx;
-//sad16biFunc sad16bi_xmm;
+sad16biFunc sad16bi_xmm;
 
 
 typedef uint32_t(sad8Func) (const uint8_t * const cur,

@@ -1,31 +1,31 @@
 # Microsoft Developer Studio Project File - Name="core" - Package Owner=<4>
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
-# ** DO NOT EDIT **
+# ** NICHT BEARBEITEN **
 
 # TARGTYPE "Win32 (x86) Static Library" 0x0104
 
 CFG=core - Win32 Debug
-!MESSAGE This is not a valid makefile. To build this project using NMAKE,
-!MESSAGE use the Export Makefile command and run
+!MESSAGE Dies ist kein gültiges Makefile. Zum Erstellen dieses Projekts mit NMAKE
+!MESSAGE verwenden Sie den Befehl "Makefile exportieren" und führen Sie den Befehl
 !MESSAGE 
 !MESSAGE NMAKE /f "core.mak".
 !MESSAGE 
-!MESSAGE You can specify a configuration when running NMAKE
-!MESSAGE by defining the macro CFG on the command line. For example:
+!MESSAGE Sie können beim Ausführen von NMAKE eine Konfiguration angeben
+!MESSAGE durch Definieren des Makros CFG in der Befehlszeile. Zum Beispiel:
 !MESSAGE 
 !MESSAGE NMAKE /f "core.mak" CFG="core - Win32 Debug"
 !MESSAGE 
-!MESSAGE Possible choices for configuration are:
+!MESSAGE Für die Konfiguration stehen zur Auswahl:
 !MESSAGE 
-!MESSAGE "core - Win32 Release" (based on "Win32 (x86) Static Library")
-!MESSAGE "core - Win32 Debug" (based on "Win32 (x86) Static Library")
+!MESSAGE "core - Win32 Release" (basierend auf  "Win32 (x86) Static Library")
+!MESSAGE "core - Win32 Debug" (basierend auf  "Win32 (x86) Static Library")
 !MESSAGE 
 
 # Begin Project
 # PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
-CPP=cl.exe
+CPP=xicl6.exe
 RSC=rc.exe
 
 !IF  "$(CFG)" == "core - Win32 Release"
@@ -47,7 +47,7 @@ RSC=rc.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LIB32=link.exe -lib
+LIB32=xilink6.exe -lib
 # ADD BASE LIB32 /nologo
 # ADD LIB32 /nologo /out:"bin\core.lib"
 
@@ -70,7 +70,7 @@ LIB32=link.exe -lib
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LIB32=link.exe -lib
+LIB32=xilink6.exe -lib
 # ADD BASE LIB32 /nologo
 # ADD LIB32 /nologo /out:"bin\core.lib"
 
@@ -128,6 +128,37 @@ InputName=cbp_mmx
 IntDir=.\Debug
 InputPath=..\..\src\bitstream\x86_asm\cbp_mmx.asm
 InputName=cbp_mmx
+
+"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasm -f win32 -DPREFIX -o $(IntDir)\$(InputName).obj $(InputPath)
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\bitstream\x86_asm\cbp_sse2.asm
+
+!IF  "$(CFG)" == "core - Win32 Release"
+
+# Begin Custom Build - Assembling $(InputPath)
+IntDir=.\Release
+InputPath=..\..\src\bitstream\x86_asm\cbp_sse2.asm
+InputName=cbp_sse2
+
+"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasm -f win32 -DPREFIX -o $(IntDir)\$(InputName).obj $(InputPath)
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "core - Win32 Debug"
+
+# Begin Custom Build - Assembling $(InputPath)
+IntDir=.\Debug
+InputPath=..\..\src\bitstream\x86_asm\cbp_sse2.asm
+InputName=cbp_sse2
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	nasm -f win32 -DPREFIX -o $(IntDir)\$(InputName).obj $(InputPath)
@@ -273,6 +304,37 @@ SOURCE=..\..\src\dct\idct.c
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\..\src\image\x86_asm\interpolate8x8_3dn.asm
+
+!IF  "$(CFG)" == "core - Win32 Release"
+
+# Begin Custom Build - Assembling $(InputPath)
+IntDir=.\Release
+InputPath=..\..\src\image\x86_asm\interpolate8x8_3dn.asm
+InputName=interpolate8x8_3dn
+
+"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasm -f win32 -DPREFIX -o $(IntDir)\$(InputName).obj $(InputPath)
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "core - Win32 Debug"
+
+# Begin Custom Build - Assembling $(InputPath)
+IntDir=.\Debug
+InputPath=..\..\src\image\x86_asm\interpolate8x8_3dn.asm
+InputName=interpolate8x8_3dn
+
+"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasm -f win32 -DPREFIX -o $(IntDir)\$(InputName).obj $(InputPath)
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\src\image\x86_asm\interpolate8x8_mmx.asm
 
 !IF  "$(CFG)" == "core - Win32 Release"
@@ -293,6 +355,37 @@ InputName=interpolate8x8_mmx
 IntDir=.\Debug
 InputPath=..\..\src\image\x86_asm\interpolate8x8_mmx.asm
 InputName=interpolate8x8_mmx
+
+"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasm -f win32 -DPREFIX -o $(IntDir)\$(InputName).obj $(InputPath)
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\image\x86_asm\interpolate8x8_xmm.asm
+
+!IF  "$(CFG)" == "core - Win32 Release"
+
+# Begin Custom Build - Assembling $(InputPath)
+IntDir=.\Release
+InputPath=..\..\src\image\x86_asm\interpolate8x8_xmm.asm
+InputName=interpolate8x8_xmm
+
+"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasm -f win32 -DPREFIX -o $(IntDir)\$(InputName).obj $(InputPath)
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "core - Win32 Debug"
+
+# Begin Custom Build - Assembling $(InputPath)
+IntDir=.\Debug
+InputPath=..\..\src\image\x86_asm\interpolate8x8_xmm.asm
+InputName=interpolate8x8_xmm
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	nasm -f win32 -DPREFIX -o $(IntDir)\$(InputName).obj $(InputPath)
@@ -563,6 +656,68 @@ InputName=sad_mmx
 !ENDIF 
 
 # End Source File
+# Begin Source File
+
+SOURCE=..\..\src\motion\x86_asm\sad_sse2.asm
+
+!IF  "$(CFG)" == "core - Win32 Release"
+
+# Begin Custom Build - Assembling $(InputPath)
+IntDir=.\Release
+InputPath=..\..\src\motion\x86_asm\sad_sse2.asm
+InputName=sad_sse2
+
+"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasm -f win32 -DPREFIX -o $(IntDir)\$(InputName).obj $(InputPath)
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "core - Win32 Debug"
+
+# Begin Custom Build - Assembling $(InputPath)
+IntDir=.\Debug
+InputPath=..\..\src\motion\x86_asm\sad_sse2.asm
+InputName=sad_sse2
+
+"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasm -f win32 -DPREFIX -o $(IntDir)\$(InputName).obj $(InputPath)
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\motion\x86_asm\sad_xmm.asm
+
+!IF  "$(CFG)" == "core - Win32 Release"
+
+# Begin Custom Build - Assembling $(InputPath)
+IntDir=.\Release
+InputPath=..\..\src\motion\x86_asm\sad_xmm.asm
+InputName=sad_xmm
+
+"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasm -f win32 -DPREFIX -o $(IntDir)\$(InputName).obj $(InputPath)
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "core - Win32 Debug"
+
+# Begin Custom Build - Assembling $(InputPath)
+IntDir=.\Debug
+InputPath=..\..\src\motion\x86_asm\sad_xmm.asm
+InputName=sad_xmm
+
+"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasm -f win32 -DPREFIX -o $(IntDir)\$(InputName).obj $(InputPath)
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
 # End Group
 # Begin Group "motion_h"
 
@@ -574,6 +729,10 @@ SOURCE=..\..\src\motion\motion.h
 # Begin Source File
 
 SOURCE=..\..\src\motion\sad.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\motion\smp_motion_est.h
 # End Source File
 # End Group
 # Begin Source File
@@ -587,6 +746,10 @@ SOURCE=..\..\src\motion\motion_est.c
 # Begin Source File
 
 SOURCE=..\..\src\motion\sad.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\motion\smp_motion_est.c
 # End Source File
 # End Group
 # Begin Group "prediction"
