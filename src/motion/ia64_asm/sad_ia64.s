@@ -539,7 +539,7 @@ dev16_ia64:
 }
 {.mib
 	add mean0 = mean0, mean1
-	// add mean2 = 127, mean2	// this could make our division more exact, but does not help much
+	// add mean2 = 127, mean2	// this could make our division more exactly, but does not help much
 	;;
 }
 {.mib

@@ -1046,7 +1046,7 @@ Full8_MainSearch(const uint8_t * const pRef,
 	return iMinSAD;
 }
 
-
+Halfpel8_RefineFuncPtr Halfpel8_Refine;
 
 int32_t
 Halfpel16_Refine(const uint8_t * const pRef,
@@ -1472,7 +1472,7 @@ Diamond8_MainSearch(const uint8_t * const pRef,
 }
 
 int32_t
-Halfpel8_Refine(const uint8_t * const pRef,
+Halfpel8_Refine_c(const uint8_t * const pRef,
 				const uint8_t * const pRefH,
 				const uint8_t * const pRefV,
 				const uint8_t * const pRefHV,
