@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.60 2004-07-03 08:33:16 syskin Exp $
+ * $Id: decoder.c,v 1.61 2004-07-10 17:49:31 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -393,7 +393,6 @@ decoder_mb_decode(DECODER * dec,
 				const int reduced_resolution,
 				const MACROBLOCK * pMB)
 {
-	DECLARE_ALIGNED_MATRIX(block, 1, 64, int16_t, CACHE_LINE);
 	DECLARE_ALIGNED_MATRIX(data, 6, 64, int16_t, CACHE_LINE);
 
 	int stride = dec->edged_width;
@@ -402,21 +401,28 @@ decoder_mb_decode(DECODER * dec,
 	int i;
 	const uint32_t iQuant = pMB->quant;
 	const int direction = dec->alternate_vertical_scan ? 2 : 0;
-	const quant_interFuncPtr dequant = dec->quant_type == 0 ? dequant_h263_inter : dequant_mpeg_inter;
+	typedef void (*get_inter_block_function_t)(
+			Bitstream * bs,
+			int16_t * block,
+			int direction,
+			const int quant,
+			const uint16_t *matrix);
+
+	const get_inter_block_function_t get_inter_block = (dec->quant_type == 0)
+		? get_inter_block_h263
+		: get_inter_block_mpeg;
+	
+	memset(&data[0], 0, 6*64*sizeof(int16_t));	/* clear */
 
 	for (i = 0; i < 6; i++) {
 
 		if (cbp & (1 << (5 - i))) {	/* coded */
 
-			memset(block, 0, 64 * sizeof(int16_t));	/* clear */
 
+			/* Decode coeffs and dequantize on the fly */
 			start_timer();
-			get_inter_block(bs, block, direction);
+			get_inter_block(bs, &data[i*64], direction, iQuant, get_inter_matrix(dec->mpeg_quant_matrices));
 			stop_coding_timer();
-
-			start_timer();
-			dequant(&data[i * 64], block, iQuant, dec->mpeg_quant_matrices);
-			stop_iquant_timer();
 
 			start_timer();
 			idct(&data[i * 64]);
