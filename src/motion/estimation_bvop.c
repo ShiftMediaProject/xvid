@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.10 2004-07-18 11:48:08 syskin Exp $
+ * $Id: estimation_bvop.c,v 1.11 2004-07-21 12:50:30 syskin Exp $
  *
  ****************************************************************************/
 
@@ -375,8 +375,7 @@ initialize_searchData(SearchData * Data_d,
 	Data_d->CurU = Data_f->CurU = Data_b->CurU = Data_i->CurU = Cur[1];
 	Data_d->CurV = Data_f->CurV = Data_b->CurV = Data_i->CurV = Cur[2];
 
-	Data_d->lambda16 = lambda;
-	Data_f->lambda16 = Data_b->lambda16 = Data_i->lambda16 = lambda;
+	Data_d->lambda16 = Data_f->lambda16 = Data_b->lambda16 = Data_i->lambda16 = lambda;
 
 	/* reset chroma-sad cache */
 	Data_d->b_chromaX = Data_d->b_chromaY = Data_d->chromaX = Data_d->chromaY = Data_d->chromaSAD = 256*4096; 
@@ -401,11 +400,9 @@ PreparePredictionsBF(VECTOR * const pmv, const int x, const int y,
 							const uint32_t mode_curr,
 							const VECTOR hint)
 {
-
 	/* [0] is prediction */
-	pmv[0].x = (pmv[0].x); pmv[0].y = (pmv[0].y);
-
-	pmv[1].x = pmv[1].y = 0; /* [1] is zero */
+	/* [1] is zero */
+	pmv[1].x = pmv[1].y = 0; 
 
 	pmv[2].x = hint.x; pmv[2].y = hint.y;
 
@@ -616,7 +613,6 @@ SearchDirect_initial(const int x, const int y,
 											SKIP sad */
 
 	CheckCandidateDirect(0, 0, Data, 255);	/* will also fill iMinSAD[1..4] with 8x8 SADs */
-
 
 	/* initial (fast) skip decision */
 	if (Data->iMinSAD[1] < (int)Data->iQuant * INITIAL_SKIP_THRESH
@@ -875,6 +871,7 @@ ModeDecision_BVOP_SAD(const SearchData * const Data_d,
 			*f_predMV = Data_f->currentMV[0];
 		}
 		pMB->mvs[0] = *Data_f->currentMV;
+		pMB->b_mvs[0] = *Data_b->currentMV; /* hint for future searches */
 		break;
 
 	case MODE_BACKWARD:
@@ -889,6 +886,7 @@ ModeDecision_BVOP_SAD(const SearchData * const Data_d,
 			*b_predMV = Data_b->currentMV[0];
 		}
 		pMB->b_mvs[0] = *Data_b->currentMV;
+		pMB->mvs[0] = *Data_f->currentMV; /* hint for future searches */
 		break;
 
 
@@ -1001,7 +999,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 				pMB->sad16 = best_sad;
 				continue;
 			}
-			
+
 			SearchBF_initial(i, j, frame->motion_flags, frame->fcode, pParam, pMB,
 						&f_predMV, &best_sad, MODE_FORWARD, &Data_f, Data_d.currentMV[1]);
 

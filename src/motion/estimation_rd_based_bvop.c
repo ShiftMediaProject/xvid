@@ -576,6 +576,7 @@ ModeDecision_BVOP_RD(SearchData * const Data_d,
 		}
 		pMB->mvs[0] = *Data_f->currentMV;
 		pMB->cbp = *Data_f->cbp;
+		pMB->b_mvs[0] = *Data_b->currentMV; /* hint for future searches */
 		break;
 
 	case MODE_BACKWARD:
@@ -591,6 +592,7 @@ ModeDecision_BVOP_RD(SearchData * const Data_d,
 		}
 		pMB->b_mvs[0] = *Data_b->currentMV;
 		pMB->cbp = *Data_b->cbp;
+		pMB->mvs[0] = *Data_f->currentMV; /* hint for future searches */
 		break;
 
 
