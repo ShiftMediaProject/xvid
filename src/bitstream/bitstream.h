@@ -28,7 +28,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.h,v 1.11 2002-09-10 22:25:23 edgomez Exp $
+ * $Id: bitstream.h,v 1.12 2002-09-10 22:52:12 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -130,10 +130,6 @@ void BitstreamWriteVopHeader(Bitstream * const bs,
 							 const MBParam * pParam,
 							 const FRAMEINFO * frame,
 							 int vop_coded);
-
-void BitstreamWriteUserData(Bitstream * const bs, 
-							uint8_t * data, 
-							const int length);
 
 /*****************************************************************************
  * Inlined functions

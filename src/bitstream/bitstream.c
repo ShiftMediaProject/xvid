@@ -1,73 +1,44 @@
- /******************************************************************************
-  *                                                                            *
-  *  This file is part of XviD, a free MPEG-4 video encoder/decoder            *
-  *                                                                            *
-  *  XviD is an implementation of a part of one or more MPEG-4 Video tools     *
-  *  as specified in ISO/IEC 14496-2 standard.  Those intending to use this    *
-  *  software module in hardware or software products are advised that its     *
-  *  use may infringe existing patents or copyrights, and any such use         *
-  *  would be at such party's own risk.  The original developer of this        *
-  *  software module and his/her company, and subsequent editors and their     *
-  *  companies, will have no liability for use of this software or             *
-  *  modifications or derivatives thereof.                                     *
-  *                                                                            *
-  *  XviD is free software; you can redistribute it and/or modify it           *
-  *  under the terms of the GNU General Public License as published by         *
-  *  the Free Software Foundation; either version 2 of the License, or         *
-  *  (at your option) any later version.                                       *
-  *                                                                            *
-  *  XviD is distributed in the hope that it will be useful, but               *
-  *  WITHOUT ANY WARRANTY; without even the implied warranty of                *
-  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
-  *  GNU General Public License for more details.                              *
-  *                                                                            *
-  *  You should have received a copy of the GNU General Public License         *
-  *  along with this program; if not, write to the Free Software               *
-  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA  *
-  *                                                                            *
-  ******************************************************************************/
-
- /******************************************************************************
-  *                                                                            *
-  *  bitstream.c                                                               *
-  *                                                                            *
-  *  Copyright (C) 2001 - Peter Ross <pross@cs.rmit.edu.au>                    *
-  *                                                                            *
-  *  For more information visit the XviD homepage: http://www.xvid.org         *
-  *                                                                            *
-  ******************************************************************************/
-
- /******************************************************************************
-  *                                                                            *
-  *  Revision history:                                                         *
-  *                                                                            *
-  *  11.07.2002 add VOP width & height return to dec when dec->width           *
-  *             or dec->height is 0  (for use in examples/ex1.c)               *
-  *             MinChen <chenm001@163.com>                                     *
-  *  22.05.2002 bs_put_matrix fix                                              *
-  *  20.05.2002 added BitstreamWriteUserData                                   *
-  *  19.06.2002  Fix a little bug in use custom quant matrix                   *
-  *              MinChen <chenm001@163.com>                                    *
-  *  08.05.2002  add low_delay support for B_VOP decode                        *
-  *              MinChen <chenm001@163.com>                                    *
-  *  06.05.2002 low_delay                                                      *
-  *  06.05.2002 fixed fincr/fbase error                                        *
-  *  01.05.2002 added BVOP support to BitstreamWriteVopHeader                  *
-  *  15.04.2002 rewrite log2bin use asm386  By MinChen <chenm001@163.com>      *
-  *  26.03.2002 interlacing support                                            *
-  *  03.03.2002 qmatrix writing                                                *
-  *  03.03.2002 merged BITREADER and BITWRITER                                 *
-  *      30.02.2002     intra_dc_threshold support                             *
-  *      04.12.2001     support for additional headers                         *
-  *      16.12.2001     inital version                                         *
-  *
-  ******************************************************************************/
-
+/*****************************************************************************
+ *
+ *  XVID MPEG-4 VIDEO CODEC
+ *  - Bitstream reader/writer functions -
+ *
+ *  Copyright (C) 2001-2002 - Peter Ross <pross@cs.rmit.edu.au>
+ *
+ *  This program is an implementation of a part of one or more MPEG-4
+ *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
+ *  to use this software module in hardware or software products are
+ *  advised that its use may infringe existing patents or copyrights, and
+ *  any such use would be at such party's own risk.  The original
+ *  developer of this software module and his/her company, and subsequent
+ *  editors and their companies, will have no liability for use of this
+ *  software or modifications or derivatives thereof.
+ *
+ *  This program is free software ; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation ; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY ; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program ; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ *
+ * $Id: bitstream.c,v 1.29 2002-09-10 22:52:12 edgomez Exp $
+ *
+ ****************************************************************************/
 
 #include "bitstream.h"
 #include "zigzag.h"
 #include "../quant/quant_matrix.h"
 
+/*****************************************************************************
+ * Functions
+ ****************************************************************************/
 
 static uint32_t __inline
 log2bin(uint32_t value)
@@ -860,22 +831,5 @@ BitstreamWriteVopHeader(Bitstream * const bs,
 
 	if (frame->coding_type == B_VOP)
 		BitstreamPutBits(bs, frame->bcode, 3);	// backward_fixed_code
-
-}
-
-
-void 
-BitstreamWriteUserData(Bitstream * const bs, 
-						uint8_t * data, 
-						const int length)
-{
-	int i;
-
-	BitstreamPad(bs);
-	BitstreamPutBits(bs, USERDATA_START_CODE, 32);
-
-	for (i = 0; i < length; i++) {
-		BitstreamPutBits(bs, data[i], 8);
-	}
 
 }
