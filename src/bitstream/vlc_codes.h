@@ -29,7 +29,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: vlc_codes.h,v 1.9 2002-09-10 20:01:07 edgomez Exp $
+ * $Id: vlc_codes.h,v 1.10 2002-09-10 21:28:17 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -61,7 +61,7 @@ static VLC *DCT3D[2];
  ****************************************************************************/
 
 /* constants taken from momusys/vm_common/inlcude/max_level.h */
-static char max_level[4][64] = {
+static char const max_level[4][64] = {
 	/* intra, last = 0 */
 	{
 	 27, 10, 5, 4, 3, 3, 3, 3,
@@ -111,7 +111,7 @@ static char max_level[4][64] = {
 	 }
 };
 
-static char max_run[4][256] = {
+static char const max_run[4][256] = {
 	/* intra, last = 0 */
 	{
 	 0, 14, 9, 7, 3, 2, 1, 1,
@@ -267,7 +267,7 @@ static char max_run[4][256] = {
 
 /* first part of coeffs for last = 0. Indexed by [run][level-1] */
 
-static VLC coeff_tab0[2][12] = {
+static VLC const coeff_tab0[2][12] = {
 	/* run = 0  */
 	{
 		{0x02, 2},  {0x0f, 4},  {0x15, 6},  {0x17, 7},
@@ -285,7 +285,7 @@ static VLC coeff_tab0[2][12] = {
 
 /* rest of coeffs for last = 0. indexing by [run-2][level-1] */
 
-static VLC coeff_tab1[25][4] = {
+static VLC const coeff_tab1[25][4] = {
 	/* First row is run=2, then each row is run 2 + index */
 	{{0x0e, 4}, {0x1d, 8}, {0x0e, 10}, {0x51, 12}},
 	{{0x0d, 5}, {0x23, 9},  {0x0d, 10}, {0x00, 0}},
@@ -317,7 +317,7 @@ static VLC coeff_tab1[25][4] = {
 
 /* first coeffs of last = 1. indexing by [run][level-1] */
 
-static VLC coeff_tab2[2][3] = {
+static VLC const coeff_tab2[2][3] = {
 	/*  run = 0 */
 	{{0x07, 4}, {0x19, 9},  {0x05, 11}},
 	/* run = 1 */
@@ -326,7 +326,7 @@ static VLC coeff_tab2[2][3] = {
 
 /* rest of coeffs for last = 1. indexing by [run-2] */
 
-static VLC coeff_tab3[40][1] = {
+static VLC const coeff_tab3[40][1] = {
 	{{0x0e, 6}},  {{0x0d, 6}},  {{0x0c, 6}},  {{0x13, 7}},
 	{{0x12, 7}},  {{0x11, 7}},  {{0x10, 7}},  {{0x1a, 8}},
 	{{0x19, 8}},  {{0x18, 8}},  {{0x17, 8}},  {{0x16, 8}},
@@ -346,7 +346,7 @@ static VLC coeff_tab3[40][1] = {
 
 /* Coeffs for last = 0, run = 0. Indexed by [level-1] */
 
-static VLC coeff_tab4[27] = {
+static VLC const coeff_tab4[27] = {
 	/* run = 0 */
 	{0x02, 2},  {0x06, 3},  {0x0f, 4},
 	{0x0d, 5},  {0x0c, 5},  {0x15, 6},
@@ -361,7 +361,7 @@ static VLC coeff_tab4[27] = {
 
 /* Coeffs for last = 0, run = 1. Indexed by [level-1] */
 
-static VLC coeff_tab5[10] = {
+static VLC const coeff_tab5[10] = {
 	{0x0e, 4}, {0x14, 6},  {0x16, 7},  {0x1c, 8},  {0x20, 9},
 	{0x1f, 9}, {0x0d, 10}, {0x22, 11}, {0x53, 12}, {0x55, 12}
 };
@@ -396,7 +396,7 @@ static VLC coeff_tab6[8][5] = {
 
 /* Coeffs for last = 0, run = 10 -> 14. Indexed by [run-10] */
 
-static VLC coeff_tab7[5][1] = {
+static VLC const coeff_tab7[5][1] = {
 	{{0x17, 8}},
 	{{0x19, 9}},
 	{{0x18, 9}},
@@ -406,14 +406,14 @@ static VLC coeff_tab7[5][1] = {
 
 /* Coeffs for last = 1, run = 0. Indexed by [level-1] */
 
-static VLC coeff_tab8[8] = {
+static VLC const coeff_tab8[8] = {
 	{0x07, 4},  {0x0c, 6},  {0x16, 8},  {0x17, 9},
 	{0x06, 10}, {0x05, 11}, {0x04, 11}, {0x59, 12}
 };
 
 /* Coeffs for last = 1, run = 1 -> 6. Indexed by [run-1][level-1] */
 
-static VLC coeff_tab9[6][3] = {
+static VLC const coeff_tab9[6][3] = {
 	/* run = 1 */
 	{{0x0f, 6}, {0x16, 9}, {0x05, 10}},
 
@@ -435,7 +435,7 @@ static VLC coeff_tab9[6][3] = {
 
 /* Coeffs for last = 1, run = 7 -> 20. Indexed by [run-7] */
 
-static VLC coeff_tab10[14][1] = {
+static VLC const coeff_tab10[14][1] = {
 	{{0x14, 8}},
 	{{0x13, 8}},
 	{{0x1a, 8}},
@@ -453,7 +453,7 @@ static VLC coeff_tab10[14][1] = {
 };
 
 
-static VLC *coeff_intra_last0[15] = {
+static VLC const *coeff_intra_last0[15] = {
 	coeff_tab4,
 	coeff_tab5,
 	coeff_tab6[0],
@@ -471,7 +471,7 @@ static VLC *coeff_intra_last0[15] = {
 	coeff_tab7[4]
 };
 
-static VLC *coeff_intra_last1[21] = {
+static VLC const *coeff_intra_last1[21] = {
 	coeff_tab8,
 	coeff_tab9[0],
 	coeff_tab9[1],
@@ -495,7 +495,7 @@ static VLC *coeff_intra_last1[21] = {
 	coeff_tab10[13],
 };
 
-static VLC *coeff_inter_last0[27] = {
+static VLC const *coeff_inter_last0[27] = {
 	coeff_tab0[0],
 	coeff_tab0[1],
 	coeff_tab1[0],
@@ -525,7 +525,7 @@ static VLC *coeff_inter_last0[27] = {
 	coeff_tab1[24],
 };
 
-static VLC *coeff_inter_last1[42] = {
+static VLC const *coeff_inter_last1[42] = {
 	coeff_tab2[0],
 	coeff_tab2[1],
 	coeff_tab3[0],
@@ -570,7 +570,7 @@ static VLC *coeff_inter_last1[42] = {
 	coeff_tab3[39],
 };
 
-static VLC **coeff_vlc[4] = {
+static VLC const **coeff_vlc[4] = {
 	coeff_intra_last0,
 	coeff_intra_last1,
 	coeff_inter_last0,
@@ -583,7 +583,7 @@ static VLC **coeff_vlc[4] = {
  * Example: cbpc = 01 and mode = 4 gives index = 0110 = 6.
  */
 
-static VLC mcbpc_intra_tab[15] = {
+static VLC const mcbpc_intra_tab[15] = {
 	{0x01, 9}, {0x01, 1}, {0x01, 4}, {0x00, 0},
 	{0x00, 0}, {0x01, 3}, {0x01, 6}, {0x00, 0},
 	{0x00, 0}, {0x02, 3}, {0x02, 6}, {0x00, 0},
@@ -593,19 +593,19 @@ static VLC mcbpc_intra_tab[15] = {
 /* MCBPC inter.
    Addressing: 5 bit ccmmm (cc = CBPC, mmm = mode (1-4 binary)) */
 
-static VLC mcbpc_inter_tab[29] = {
+static VLC const mcbpc_inter_tab[29] = {
 	{1, 1}, {3, 3}, {2, 3}, {3, 5}, {4, 6}, {1, 9}, {0, 0}, {0, 0},
 	{3, 4}, {7, 7}, {5, 7}, {4, 8}, {4, 9}, {0, 0}, {0, 0}, {0, 0},
 	{2, 4}, {6, 7}, {4, 7}, {3, 8}, {3, 9}, {0, 0}, {0, 0}, {0, 0},
 	{5, 6}, {5, 9}, {5, 8}, {3, 7}, {2, 9}
 };
 
-static const VLC cbpy_tab[16] = {
+static VLC const cbpy_tab[16] = {
 	{3, 4}, {5, 5}, {4, 5}, {9, 4}, {3, 5}, {7, 4}, {2, 6}, {11, 4},
 	{2, 5}, {3, 6}, {5, 4}, {10, 4}, {4, 4}, {8, 4}, {6, 4}, {3, 2}
 };
 
-static const VLC dcy_tab[511] = {
+static VLC const dcy_tab[511] = {
 	{0x100, 15}, {0x101, 15}, {0x102, 15}, {0x103, 15},
 	{0x104, 15}, {0x105, 15}, {0x106, 15}, {0x107, 15},
 	{0x108, 15}, {0x109, 15}, {0x10a, 15}, {0x10b, 15},
@@ -736,7 +736,7 @@ static const VLC dcy_tab[511] = {
 	{0x1fd, 15}, {0x1fe, 15}, {0x1ff, 15},
 };
 
-static const VLC dcc_tab[511] = {
+static VLC const dcc_tab[511] = {
 	{0x100, 16}, {0x101, 16}, {0x102, 16}, {0x103, 16},
 	{0x104, 16}, {0x105, 16}, {0x106, 16}, {0x107, 16},
 	{0x108, 16}, {0x109, 16}, {0x10a, 16}, {0x10b, 16},
@@ -868,7 +868,7 @@ static const VLC dcc_tab[511] = {
 };
 
 
-static const VLC mb_motion_table[65] = {
+static VLC const mb_motion_table[65] = {
 	{0x05, 13}, {0x07, 13}, {0x05, 12}, {0x07, 12},
 	{0x09, 12}, {0x0b, 12}, {0x0d, 12}, {0x0f, 12},
 	{0x09, 11}, {0x0b, 11}, {0x0d, 11}, {0x0f, 11},
@@ -893,7 +893,7 @@ static const VLC mb_motion_table[65] = {
  * decoder tables                                                 *
  ******************************************************************/
 
-static const VLC mcbpc_intra_table[64] = {
+static VLC const mcbpc_intra_table[64] = {
 	{-1, 0}, {20, 6}, {36, 6}, {52, 6}, {4, 4},  {4, 4},  {4, 4},  {4, 4},
 	{19, 3}, {19, 3}, {19, 3}, {19, 3}, {19, 3}, {19, 3}, {19, 3}, {19, 3},
 	{35, 3}, {35, 3}, {35, 3}, {35, 3}, {35, 3}, {35, 3}, {35, 3}, {35, 3},
@@ -905,8 +905,8 @@ static const VLC mcbpc_intra_table[64] = {
 };
 
 
-static const VLC mcbpc_inter_table[257] = {
-	{VLC_ERROR, 0},	{255, 9}, {52, 9}, {36, 9}, {20, 9}, {49, 9}, {35, 8}, {35, 8},
+static VLC const mcbpc_inter_table[257] = {
+	{VLC_ERROR, 0}, {255, 9}, {52, 9}, {36, 9}, {20, 9}, {49, 9}, {35, 8}, {35, 8},
 	{19, 8}, {19, 8}, {50, 8}, {50, 8}, {51, 7}, {51, 7}, {51, 7}, {51, 7},
 	{34, 7}, {34, 7}, {34, 7}, {34, 7}, {18, 7}, {18, 7}, {18, 7}, {18, 7},
 	{33, 7}, {33, 7}, {33, 7}, {33, 7}, {17, 7}, {17, 7}, {17, 7}, {17, 7},
@@ -941,7 +941,7 @@ static const VLC mcbpc_inter_table[257] = {
 	{0, 1}
 };
 
-static const VLC cbpy_table[64] = {
+static VLC const cbpy_table[64] = {
 	{-1, 0}, {-1, 0}, {6, 6},  {9, 6},  {8, 5},  {8, 5},  {4, 5},  {4, 5},
 	{2, 5},  {2, 5},  {1, 5},  {1, 5},  {0, 4},  {0, 4},  {0, 4},  {0, 4},
 	{12, 4}, {12, 4}, {12, 4}, {12, 4}, {10, 4}, {10, 4}, {10, 4}, {10, 4},
@@ -953,12 +953,12 @@ static const VLC cbpy_table[64] = {
 };
 
 
-VLC TMNMVtab0[] = {
+static VLC const TMNMVtab0[] = {
 	{3, 4}, {-3, 4}, {2, 3}, {2, 3}, {-2, 3}, {-2, 3}, {1, 2},
 	{1, 2}, {1, 2}, {1, 2}, {-1, 2}, {-1, 2}, {-1, 2}, {-1, 2}
 };
 
-VLC TMNMVtab1[] = {
+static VLC const TMNMVtab1[] = {
 	{12, 10}, {-12, 10}, {11, 10}, {-11, 10},
 	{10, 9}, {10, 9}, {-10, 9}, {-10, 9},
 	{9, 9}, {9, 9}, {-9, 9}, {-9, 9},
@@ -985,7 +985,7 @@ VLC TMNMVtab1[] = {
 	{-4, 6}, {-4, 6}, {-4, 6}, {-4, 6}
 };
 
-VLC TMNMVtab2[] = {
+static VLC const TMNMVtab2[] = {
 	{32, 12}, {-32, 12}, {31, 12}, {-31, 12},
 	{30, 11}, {30, 11}, {-30, 11}, {-30, 11},
 	{29, 11}, {29, 11}, {-29, 11}, {-29, 11},
@@ -1020,7 +1020,7 @@ VLC TMNMVtab2[] = {
 };
 
 
-VLC DCT3Dtab0[] = {
+static VLC const DCT3Dtab0[] = {
 	{4225, 7}, {4209, 7}, {4193, 7}, {4177, 7}, {193, 7}, {177, 7},
 	{161, 7}, {4, 7}, {4161, 6}, {4161, 6}, {4145, 6}, {4145, 6},
 	{4129, 6}, {4129, 6}, {4113, 6}, {4113, 6}, {145, 6}, {145, 6},
@@ -1043,7 +1043,7 @@ VLC DCT3Dtab0[] = {
 };
 
 
-VLC DCT3Dtab1[] = {
+static VLC const DCT3Dtab1[] = {
 	{9, 10}, {8, 10}, {4481, 9}, {4481, 9}, {4465, 9}, {4465, 9},
 	{4449, 9}, {4449, 9}, {4433, 9}, {4433, 9}, {4417, 9}, {4417, 9},
 	{4401, 9}, {4401, 9}, {4385, 9}, {4385, 9}, {4369, 9}, {4369, 9},
@@ -1062,7 +1062,7 @@ VLC DCT3Dtab1[] = {
 	{19, 8}, {19, 8}, {5, 8}, {5, 8}, {5, 8}, {5, 8}
 };
 
-VLC DCT3Dtab2[] = {
+static VLC const DCT3Dtab2[] = {
 	{4114, 11}, {4114, 11}, {4099, 11}, {4099, 11}, {11, 11}, {11, 11},
 	{10, 11}, {10, 11}, {4545, 10}, {4545, 10}, {4545, 10}, {4545, 10},
 	{4529, 10}, {4529, 10}, {4529, 10}, {4529, 10}, {4513, 10}, {4513, 10},
@@ -1089,7 +1089,7 @@ VLC DCT3Dtab2[] = {
 
 /* New tables for Intra luminance blocks */
 
-VLC DCT3Dtab3[] = {
+static VLC const DCT3Dtab3[] = {
 	{0x10401, 7}, {0x10301, 7}, {0x00601, 7}, {0x10501, 7},
 	{0x00701, 7}, {0x00202, 7}, {0x00103, 7}, {0x00009, 7},
 	{0x10002, 6}, {0x10002, 6}, {0x00501, 6}, {0x00501, 6},
@@ -1121,7 +1121,7 @@ VLC DCT3Dtab3[] = {
 };
 
 
-VLC DCT3Dtab4[] = {
+static VLC const DCT3Dtab4[] = {
 	{0x00012, 10}, {0x00011, 10}, {0x10e01, 9}, {0x10e01, 9},
 	{0x10d01, 9}, {0x10d01, 9}, {0x10c01, 9}, {0x10c01, 9},
 	{0x10b01, 9}, {0x10b01, 9}, {0x10a01, 9}, {0x10a01, 9},
@@ -1148,7 +1148,7 @@ VLC DCT3Dtab4[] = {
 	{0x0000a, 8}, {0x0000a, 8}, {0x0000a, 8}, {0x0000a, 8}
 };
 
-VLC DCT3Dtab5[] = {
+static VLC const DCT3Dtab5[] = {
 	{0x10007, 11}, {0x10007, 11}, {0x10006, 11}, {0x10006, 11},
 	{0x00016, 11}, {0x00016, 11}, {0x00015, 11}, {0x00015, 11},
 	{0x10202, 10}, {0x10202, 10}, {0x10202, 10}, {0x10202, 10},
@@ -1181,7 +1181,19 @@ VLC DCT3Dtab5[] = {
 	{0x01bff, 7}, {0x01bff, 7}, {0x01bff, 7}, {0x01bff, 7}
 };
 
-VLC ERRtab[] = {
+static short const dc_threshold[] = {
+	26708,   29545,   25120,   28265,   29281,    8313,   29557,   29541,
+	18208,   21838,   18208,   19536,   29472,   26223,   30580,   29281,
+	 8293,   25956,   26994,   25974,    8292,   29286,   28015,   22560,
+	18774,    8260,   20557,   18245,    8244,   26664,   29812,   14960,
+	12079,   30583,   11895,   30328,   25705,   28462,   26482,   29472,
+	30063,   25458,   29541,    8233,   29505,    8299,   28518,    8306,
+	26740,    8293,   28531,   29301,   25955,    8307,   28532,   31008,
+	30063,    8306,   26980,   29811,   26994,   30050,   28532,    2674
+};
+
+
+static VLC const ERRtab[] = {
 	{VLC_ERROR, 0}, {VLC_ERROR, 0}, {VLC_ERROR, 0},
 	{VLC_ERROR, 0}, {VLC_ERROR, 0}, {VLC_ERROR, 0},
 	{VLC_ERROR, 0}, {VLC_ERROR, 0}, {VLC_ERROR, 0},
@@ -1189,7 +1201,7 @@ VLC ERRtab[] = {
 	{VLC_ERROR, 0}, {VLC_ERROR, 0}, {VLC_ERROR, 0}
 };
 
-static const VLC dc_lum_tab[] = {
+static VLC const dc_lum_tab[] = {
 	{0, 0}, {4, 3}, {3, 3}, {0, 3},
 	{2, 2}, {2, 2}, {1, 2}, {1, 2},
 };
