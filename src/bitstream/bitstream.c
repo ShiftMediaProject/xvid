@@ -446,13 +446,12 @@ BitstreamReadHeaders(Bitstream * bs,
 
 
 				if (vol_ver_id != 1) {
-					dec->quarterpel = BitstreamGetBit(bs);	// quarter_sampe
-					if (dec->quarterpel) {
-						DPRINTF(DPRINTF_ERROR, "quarter_sample not supported");
-					}
-				} else {
-					dec->quarterpel = 0;
+					DEBUG("QUARTERPEL BITSTREAM");
+					dec->quarterpel = BitstreamGetBit(bs);	// quarter_sample
 				}
+				else
+					dec->quarterpel = 0;
+				
 
 				if (!BitstreamGetBit(bs))	// complexity_estimation_disable
 				{
