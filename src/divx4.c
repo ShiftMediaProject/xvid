@@ -309,6 +309,16 @@ int decore(unsigned long key, unsigned long opt,
 
 #define FRAMERATE_INCR		1001
 
+int pmvfast_presets[7] = {
+	0, PMV_QUICKSTOP16, PMV_EARLYSTOP16, PMV_EARLYSTOP16 | PMV_EARLYSTOP8,
+	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 | PMV_EARLYSTOP8 | PMV_HALFPELDIAMOND8,
+	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 | PMV_EARLYSTOP8 | PMV_HALFPELDIAMOND8,
+	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 | PMV_EXTSEARCH16 |
+	PMV_EARLYSTOP8 | PMV_HALFPELREFINE8 | PMV_HALFPELDIAMOND8
+};
+
+int quality;
+
 int encore(void * handle, int opt, void * param1, void * param2)
 {
 	int xerr;
@@ -337,10 +347,11 @@ int encore(void * handle, int opt, void * param1, void * param2)
 				xparam.fbase = (int)(FRAMERATE_INCR * eparam->framerate);
 			}
 			xparam.bitrate = eparam->bitrate;
-			xparam.rc_buffersize = eparam->bitrate;
+			xparam.rc_buffersize = 10 * eparam->bitrate;
 			xparam.min_quantizer = eparam->min_quantizer;
 			xparam.max_quantizer = eparam->max_quantizer;
 			xparam.max_key_interval = eparam->max_key_interval;
+			quality = eparam->quality;
 
 			xerr = encoder_create(&xparam);
 
@@ -365,6 +376,13 @@ int encore(void * handle, int opt, void * param1, void * param2)
 
 			xframe.bitstream = eframe->bitstream;
 			xframe.length = eframe->length;
+
+			xframe.general = XVID_HALFPEL | XVID_H263QUANT;
+
+			if(quality > 3)
+				xframe.general |= XVID_INTER4V;
+
+			xframe.motion = pmvfast_presets[quality];
 
 			xframe.image = eframe->image;
 			switch (eframe->colorspace)
