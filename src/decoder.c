@@ -47,7 +47,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: decoder.c,v 1.17 2002-05-09 00:15:51 chenm001 Exp $
+ *  $Id: decoder.c,v 1.18 2002-05-20 17:12:53 Isibaar Exp $
  *
  *************************************************************************/
 
@@ -1141,10 +1141,11 @@ int decoder_decode(DECODER * dec, XVID_DEC_FRAME * frame)
 
 	// add by chenm001 <chenm001@163.com>
 	// for support B-frame to reference last 2 frame
-	dec->frames ++;
+	dec->frames++;
 	vop_type=BitstreamReadHeaders(&bs, dec, &rounding, &quant, &fcode_forward, &fcode_backward, &intra_dc_threshold);
 	
 	dec->p_bmv.x=dec->p_bmv.y=dec->p_fmv.y=dec->p_fmv.y=0;		// init pred vector to 0
+
 	switch (vop_type)
 	{
 	case P_VOP :
@@ -1158,12 +1159,14 @@ int decoder_decode(DECODER * dec, XVID_DEC_FRAME * frame)
 		break;
 
 	case B_VOP :
+#ifdef BFRAMES
 		if (dec->time_pp > dec->time_bp){
 			DEBUG1("B_VOP  Time=",dec->time);
 			decoder_bframe(dec, &bs, quant, fcode_forward, fcode_backward);
 		} else {
 			DEBUG("broken B-frame!");
 		}
+#endif
 		break;
 	
 	case N_VOP :	// vop not coded
@@ -1175,10 +1178,13 @@ int decoder_decode(DECODER * dec, XVID_DEC_FRAME * frame)
 
 	frame->length = BitstreamPos(&bs) / 8;
 
+#ifdef BFRAMES
 	// test if no B_VOP
 	if (dec->low_delay){
+#endif
 	    image_output(&dec->cur, dec->width, dec->height, dec->edged_width,
 				     frame->image, frame->stride, frame->colorspace);
+#ifdef BFRAMES
 	} else {
 		if (dec->frames >= 1){
 			start_timer();
@@ -1193,6 +1199,8 @@ int decoder_decode(DECODER * dec, XVID_DEC_FRAME * frame)
 			stop_conv_timer();
 		}
 	}
+#endif
+
 	if (vop_type==I_VOP || vop_type==P_VOP){
 		image_swap(&dec->refn[0], &dec->refn[1]);
 		image_swap(&dec->cur, &dec->refn[0]);
