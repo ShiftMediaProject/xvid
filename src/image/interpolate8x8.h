@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: interpolate8x8.h,v 1.13 2004-08-10 21:58:55 edgomez Exp $
+ * $Id: interpolate8x8.h,v 1.14 2004-10-17 10:20:15 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -150,6 +150,11 @@ INTERPOLATE8X8 interpolate8x8_halfpel_hv_ia64;
 INTERPOLATE8X8 interpolate8x8_halfpel_h_altivec_c;
 INTERPOLATE8X8 interpolate8x8_halfpel_v_altivec_c;
 INTERPOLATE8X8 interpolate8x8_halfpel_hv_altivec_c;
+
+INTERPOLATE8X8 interpolate8x8_halfpel_add_altivec_c;
+INTERPOLATE8X8 interpolate8x8_halfpel_h_add_altivec_c;
+INTERPOLATE8X8 interpolate8x8_halfpel_v_add_altivec_c;
+INTERPOLATE8X8 interpolate8x8_halfpel_hv_add_altivec_c;
 #endif
 
 INTERPOLATE8X8_AVG2 interpolate8x8_avg2_c;
