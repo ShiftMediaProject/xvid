@@ -61,6 +61,7 @@ SRC_IA32 = \
 	image/x86_asm/interpolate8x8_mmx.asm \
 	image/x86_asm/interpolate8x8_xmm.asm \
 	image/x86_asm/postprocessing_mmx.asm \
+	image/x86_asm/postprocessing_sse2.asm \
 	image/x86_asm/reduced_mmx.asm \
 	image/x86_asm/qpel_mmx.asm \
 	motion/x86_asm/sad_xmm.asm \
