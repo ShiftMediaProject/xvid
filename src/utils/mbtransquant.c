@@ -29,7 +29,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbtransquant.c,v 1.13 2002-09-21 03:07:56 suxen_drol Exp $
+ * $Id: mbtransquant.c,v 1.14 2002-09-26 04:52:16 h Exp $
  *
  ****************************************************************************/
 
@@ -602,7 +602,7 @@ MBDecideFieldDCT(int16_t data[6 * 64])
 		MBFrameToField(data);
 	}
 
-	return (frame > field);
+	return (frame > (field + 350));
 }
 
 
