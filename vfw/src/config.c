@@ -108,40 +108,48 @@ BOOL CALLBACK enum_tooltips(HWND hWnd, LPARAM lParam)
 
 /* default vbv_occupancy is (64/170)*vbv_buffer_size */
 
+#define PROFILE_S       (PROFILE_4MV)
+#define PROFILE_ARTS		(PROFILE_4MV|PROFILE_ADAPTQUANT)
+#define PROFILE_AS			(PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_MPEGQUANT|PROFILE_INTERLACE|PROFILE_QPEL|PROFILE_GMC)
+
 const profile_t profiles[] =
 {
-/*	name				 p@l,	w	h  fps  obj  Tvmv  vmv	vcv   ac%	 vbv	  pkt   kbps  flags */
-	{ "Simple @ L0",	   0x08,  176, 144, 15,  1,  198,   99,   1485, 100,  10*16368,  2048,   64, 0 },
-	/* simple@l0: max f_code=1, intra_dc_vlc_threshold=0 */
-	/* if ac preidition is used, adaptive quantization must not be used */
-	/* <=qcif must be used */
-	{ "Simple @ L1",	   0x01,  176, 144, 15,  4,  198,   99,   1485, 100,  10*16368,  2048,   64, PROFILE_ADAPTQUANT },
-	{ "Simple @ L2",	   0x02,  352, 288, 15,  4,  792,  396,   5940, 100,  40*16368,  4096,  128, PROFILE_ADAPTQUANT },
-	{ "Simple @ L3",	   0x03,  352, 288, 15,  4,  792,  396,  11880, 100,  40*16368,  8192,  384, PROFILE_ADAPTQUANT },
+/*  name                p@l    w    h    fps  obj Tvmv vmv    vcv    ac%   vbv        pkt     bps    vbv_peak dbf flags */
+  { "Simple @ L0",      0x08,  176, 144, 15,  1,  198,   99,   1485, 100,  10*16368,  2048,   64000,        0, -1, PROFILE_S },
+  /* simple@l0: max f_code=1, intra_dc_vlc_threshold=0 */
+  /* if ac preidition is used, adaptive quantization must not be used */
+  /* <=qcif must be used */
+  { "Simple @ L1",      0x01,  176, 144, 15,  4,  198,   99,   1485, 100,  10*16368,  2048,   64000,        0, -1, PROFILE_S|PROFILE_ADAPTQUANT },
+  { "Simple @ L2",      0x02,  352, 288, 15,  4,  792,  396,   5940, 100,  40*16368,  4096,  128000,        0, -1, PROFILE_S|PROFILE_ADAPTQUANT },
+  { "Simple @ L3",      0x03,  352, 288, 15,  4,  792,  396,  11880, 100,  40*16368,  8192,  384000,        0, -1, PROFILE_S|PROFILE_ADAPTQUANT },
 
-	{ "ARTS @ L1",		 0x91,  176, 144, 15,  4,  198,   99,   1485, 100,  10*16368,  8192,   64, PROFILE_ARTS },
-	{ "ARTS @ L2",		 0x92,  352, 288, 15,  4,  792,  396,   5940, 100,  40*16368, 16384,  128, PROFILE_ARTS },
-	{ "ARTS @ L3",		 0x93,  352, 288, 30,  4,  792,  396,  11880, 100,  40*16368, 16384,  384, PROFILE_ARTS },
-	{ "ARTS @ L4",		 0x94,  352, 288, 30, 16,  792,  396,  11880, 100,  80*16368, 16384, 2000, PROFILE_ARTS },
-
-	{ "AS @ L0",		   0xf0,  176, 144, 30,  1,  297,   99,   2970, 100,  10*16368,  2048,  128, PROFILE_AS },
-	{ "AS @ L1",		   0xf1,  176, 144, 30,  4,  297,   99,   2970, 100,  10*16368,  2048,  128, PROFILE_AS },
-	{ "AS @ L2",		   0xf2,  352, 288, 15,  4, 1188,  396,   5940, 100,  40*16368,  4096,  384, PROFILE_AS },
-	{ "AS @ L3",		   0xf3,  352, 288, 30,  4, 1188,  396,  11880, 100,  40*16368,  4096,  768, PROFILE_AS },
- /*  ISMA Profile 1, (ASP) @ L3b (CIF, 1.5 Mb/s) CIF(352x288), 30fps, 1.5Mbps max ??? */
-	{ "AS @ L4",		   0xf4,  352, 576, 30,  4, 2376,  792,  23760,  50,  80*16368,  8192, 3000, PROFILE_AS },
-	{ "AS @ L5",		   0xf5,  720, 576, 30,  4, 4860, 1620,  48600,  25, 112*16368, 16384, 8000, PROFILE_AS },
-
-#ifdef DXN_PROFILES
-	{ "DXN Handheld",	   0x00,  176, 144, 15, -1,  198,   99,   1485, 100,  16*16368,	-1,  128, PROFILE_ADAPTQUANT },
-	{ "DXN Portable NTSC", 0x00,  352, 240, 30, -1,  990,  330,   9900, 100,  64*16368,	-1,  768, PROFILE_ADAPTQUANT|PROFILE_BVOP },
-	{ "DXN Portable PAL",  0x00,  352, 288, 25, -1, 1188,  396,   9900, 100,  64*16368,	-1,  768, PROFILE_ADAPTQUANT|PROFILE_BVOP },
-	{ "DXN HT NTSC",	   0x00,  720, 480, 30, -1, 4050, 1350,  40500, 100, 192*16368,	-1, 4000, PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_INTERLACE },
-	{ "DXN HT PAL",		0x00,  720, 576, 25, -1, 4860, 1620,  40500, 100, 192*16368,	-1, 4000, PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_INTERLACE },
-	{ "DXN HDTV",		  0x00, 1280, 720, 30, -1,10800, 3600, 108000, 100, 384*16368,	-1, 8000, PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_INTERLACE },
+#if 0 /* since rrv encoding is no longer support, these profiles have little use */
+  { "ARTS @ L1",        0x91,  176, 144, 15,  4,  198,   99,   1485, 100,  10*16368,  8192,   64000,        0, -1, PROFILE_ARTS },
+  { "ARTS @ L2",        0x92,  352, 288, 15,  4,  792,  396,   5940, 100,  40*16368, 16384,  128000,        0, -1, PROFILE_ARTS },
+  { "ARTS @ L3",        0x93,  352, 288, 30,  4,  792,  396,  11880, 100,  40*16368, 16384,  384000,        0, -1, PROFILE_ARTS },
+  { "ARTS @ L4",        0x94,  352, 288, 30, 16,  792,  396,  11880, 100,  80*16368, 16384, 2000000,        0, -1, PROFILE_ARTS },
 #endif
 
-	{ "(unrestricted)",	0x00,	0,   0,  0,  0,	0,	0,	  0, 100,   0*16368,	 0,	0, 0xffffffff },
+  { "AS @ L0",          0xf0,  176, 144, 30,  1,  297,   99,   2970, 100,  10*16368,  2048,  128000,        0, -1, PROFILE_AS },
+  { "AS @ L1",          0xf1,  176, 144, 30,  4,  297,   99,   2970, 100,  10*16368,  2048,  128000,        0, -1, PROFILE_AS },
+  { "AS @ L2",          0xf2,  352, 288, 15,  4, 1188,  396,   5940, 100,  40*16368,  4096,  384000,        0, -1, PROFILE_AS },
+  { "AS @ L3",          0xf3,  352, 288, 30,  4, 1188,  396,  11880, 100,  40*16368,  4096,  768000,        0, -1, PROFILE_AS },
+ /*  ISMA Profile 1, (ASP) @ L3b (CIF, 1.5 Mb/s) CIF(352x288), 30fps, 1.5Mbps max ??? */
+  { "AS @ L4",          0xf4,  352, 576, 30,  4, 2376,  792,  23760,  50,  80*16368,  8192, 3000000,        0, -1, PROFILE_AS },
+  { "AS @ L5",          0xf5,  720, 576, 30,  4, 4860, 1620,  48600,  25, 112*16368, 16384, 8000000,        0, -1, PROFILE_AS },
+
+#ifdef DXN_PROFILES
+//	information provided by DivXNetworks, USA.
+//  "DivX Certified Profile Compatibility v1.1", February 2005
+  { "DXN Handheld",     0x00,  176, 144, 15,  1,  198,   99,   1485, 100,   32*8192,    -1,  537600,   800000,  0, PROFILE_ADAPTQUANT|PROFILE_DXN },
+  { "DXN Portable NTSC",0x00,  352, 240, 30,  1,  990,  330,  36000, 100,  384*8192,    -1, 4854000,  8000000,  1, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_DXN },
+  { "DXN Portable PAL", 0x00,  352, 288, 25,  1, 1188,  396,  36000, 100,  384*8192,    -1, 4854000,  8000000,  1, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_DXN },
+  { "DXN HT NTSC",      0x00,  720, 480, 30,  1, 4050, 1350,  40500, 100,  384*8192,    -1, 4854000,  8000000,  1, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_INTERLACE|PROFILE_DXN },
+  { "DXN HT PAL",       0x00,  720, 576, 25,  1, 4860, 1620,  40500, 100,  384*8192,    -1, 4854000,  8000000,  1, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_INTERLACE|PROFILE_DXN },
+  { "DXN HDTV",         0x00, 1280, 720, 30,  1,10800, 3600, 108000, 100,  768*8192,    -1, 9708400, 16000000,  2, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_INTERLACE|PROFILE_DXN },
+#endif
+
+  { "(unrestricted)",   0x00,    0,   0,  0,  0,    0,    0,      0, 100,   0*16368,    -1,       0,        0, -1, 0xffffffff & ~PROFILE_DXN },
 };
 
 
@@ -547,6 +555,12 @@ static void set_dlgitem_float(HWND hDlg, UINT item, int value)
 	SetDlgItemText(hDlg, item, buf);
 }
 
+static void set_dlgitem_float1000(HWND hDlg, UINT item, int value)
+{
+	char buf[FLOAT_BUF_SZ];
+	sprintf(buf, "%.3f", (float)value/1000);
+	SetDlgItemText(hDlg, item, buf);
+}
 
 #define HEX_BUF_SZ  16
 static unsigned int get_dlgitem_hex(HWND hDlg, UINT item, unsigned int def)
@@ -890,7 +904,36 @@ static void adv_mode(HWND hDlg, int idd, CONFIG * config)
 		SetDlgItemInt(hDlg, IDC_LEVEL_VMV, profiles[profile].max_vmv_buffer_sz, FALSE);
 		SetDlgItemInt(hDlg, IDC_LEVEL_VCV, profiles[profile].vcv_decoder_rate, FALSE);
 		SetDlgItemInt(hDlg, IDC_LEVEL_VBV, profiles[profile].max_vbv_size, FALSE);
-		SetDlgItemInt(hDlg, IDC_LEVEL_BITRATE, profiles[profile].max_bitrate, FALSE);
+    set_dlgitem_float1000(hDlg, IDC_LEVEL_BITRATE, profiles[profile].max_bitrate);
+    SetDlgItemInt(hDlg, IDC_LEVEL_PEAKRATE, profiles[profile].vbv_peakrate, FALSE);
+
+    {
+      int en_dim = profiles[profile].width && profiles[profile].height;
+      int en_vmv = profiles[profile].max_vmv_buffer_sz;
+      int en_vcv = profiles[profile].vcv_decoder_rate;
+      EnableDlgWindow(hDlg, IDC_LEVEL_LEVEL_G, en_dim || en_vmv || en_vcv);
+      EnableDlgWindow(hDlg, IDC_LEVEL_DIM_S, en_dim);
+      EnableDlgWindow(hDlg, IDC_LEVEL_WIDTH, en_dim);
+      EnableDlgWindow(hDlg, IDC_LEVEL_HEIGHT,en_dim);
+      EnableDlgWindow(hDlg, IDC_LEVEL_FPS,   en_dim);
+      EnableDlgWindow(hDlg, IDC_LEVEL_VMV_S, en_vmv);
+      EnableDlgWindow(hDlg, IDC_LEVEL_VMV,   en_vmv);
+      EnableDlgWindow(hDlg, IDC_LEVEL_VCV_S, en_vcv);
+      EnableDlgWindow(hDlg, IDC_LEVEL_VCV,   en_vcv);
+    }
+    {
+      int en_vbv = profiles[profile].max_vbv_size;
+      int en_br = profiles[profile].max_bitrate;
+      int en_pr = profiles[profile].vbv_peakrate;
+
+      EnableDlgWindow(hDlg, IDC_LEVEL_VBV_G,      en_vbv || en_br || en_pr);
+      EnableDlgWindow(hDlg, IDC_LEVEL_VBV_S,      en_vbv);
+      EnableDlgWindow(hDlg, IDC_LEVEL_VBV,        en_vbv);
+      EnableDlgWindow(hDlg, IDC_LEVEL_BITRATE_S,  en_br);
+      EnableDlgWindow(hDlg, IDC_LEVEL_BITRATE,    en_br);
+      EnableDlgWindow(hDlg, IDC_LEVEL_PEAKRATE_S, en_pr);
+      EnableDlgWindow(hDlg, IDC_LEVEL_PEAKRATE,   en_pr);
+    }
 		break;
 
 	case IDD_BITRATE :

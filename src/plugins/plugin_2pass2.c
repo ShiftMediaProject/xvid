@@ -25,7 +25,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: plugin_2pass2.c,v 1.6 2005-01-09 20:26:42 edgomez Exp $
+ * $Id: plugin_2pass2.c,v 1.7 2005-03-27 03:59:42 suxen_drol Exp $
  *
  *****************************************************************************/
 
@@ -457,8 +457,8 @@ rc_2pass2_create(xvid_plg_create_t * create, rc_2pass2_t **handle)
 	if (rc->param.vbv_size==0) {
 		rc->param.vbv_size      =  3145728;
 		rc->param.vbv_initial   =  2359296;
-		rc->param.vbv_maxrate  =  4000000;
-		rc->param.vbv_peakrate = 10000000;
+		rc->param.vbv_maxrate   =  4854000;
+		rc->param.vbv_peakrate  =  8000000;
 	}
 #endif
 
@@ -1461,8 +1461,8 @@ check_curve_for_vbv_compliancy(rc_2pass2_t * rc, const float fps)
 	 * typical values from DivX Home Theater profile:
 	 *  vbv_size= 384*1024 (384kB)
 	 *  vbv_initial= 288*1024 (75% fill)
-	 *  maxrate= 4000000 (4MBps)
-	 *  peakrate= 10000000 (10MBps)
+	 *  maxrate= 4854000 (4.854MBps)
+	 *  peakrate= 8000000 (8MBps)
 	 *
 	 *  PAL: offset3s = 75 (3 seconds of 25fps)
 	 *  NTSC: offset3s = 90 (3 seconds of 29.97fps) or 72 (3 seconds of 23.976fps)
@@ -1490,7 +1490,8 @@ check_curve_for_vbv_compliancy(rc_2pass2_t * rc, const float fps)
 		if (i>=offset3s)
 			bytes3s -= rc->stats[i-offset3s].scaled_length;
 
-		if (8.f*bytes3s > 3*peakrate)
+    /* ignore peakrate constraint if peakrate is <= 0.f */
+		if (peakrate>0.f && 8.f*bytes3s > 3*peakrate)
 			return(VBV_PEAKRATE);
 
 		/* update vbv fill level */

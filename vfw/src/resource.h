@@ -330,6 +330,7 @@
 #define IDC_LEVEL_VBV                   1299
 #define IDC_LEVEL_BITRATE               1300
 #define IDC_BITRATE                     1302
+#define IDC_LEVEL_PEAKRATE              1302
 #define IDC_BITRATE_MIN                 1303
 #define IDC_BITRATE_MAX                 1304
 #define IDC_ZONE_BVOPTHRESHOLD_S        1305
@@ -418,6 +419,14 @@
 #define IDC_TFF                         1394
 #define IDC_VHQ_BFRAME                  1395
 #define IDC_LICENSE_TEXT                1396
+#define IDC_LEVEL_PEAKRATE_S            1397
+#define IDC_LEVEL_BITRATE_S             1398
+#define IDC_LEVEL_VBV_S                 1399
+#define IDC_LEVEL_VBV_G                 1400
+#define IDC_LEVEL_DIM_S                 1401
+#define IDC_LEVEL_VMV_S                 1402
+#define IDC_LEVEL_VCV_S                 1403
+#define IDC_LEVEL_LEVEL_G               1404
 
 // Next default values for new objects
 // 
@@ -425,7 +434,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        132
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1397
+#define _APS_NEXT_CONTROL_VALUE         1405
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

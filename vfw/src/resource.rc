@@ -78,9 +78,9 @@ END
 IDD_MAIN DIALOGEX 0, 0, 225, 255
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "XviD Configuration"
-FONT 8, "MS Shell Dlg", 0, 0, 0x1
+FONT 8, "MS Shell Dlg"
 BEGIN
-    COMBOBOX        IDC_PROFILE,88,16,91,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
+    COMBOBOX        IDC_PROFILE,88,16,91,200,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     PUSHBUTTON      "more...",IDC_PROFILE_ADV,184,16,28,12
     COMBOBOX        IDC_MODE,88,34,92,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
@@ -521,7 +521,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "",IDC_STATIC,8,120,196,86
     LTEXT           "Profile @ Level:",IDC_STATIC,8,10,52,8
-    COMBOBOX        IDC_PROFILE_PROFILE,84,8,116,76,CBS_DROPDOWNLIST | 
+    COMBOBOX        IDC_PROFILE_PROFILE,84,8,116,200,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_QUANTTYPE,111,32,76,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
@@ -586,29 +586,38 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Level"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    COMBOBOX        IDC_LEVEL_PROFILE,84,8,116,76,CBS_DROPDOWNLIST | 
+    COMBOBOX        IDC_LEVEL_PROFILE,84,8,116,200,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     EDITTEXT        IDC_LEVEL_WIDTH,88,43,28,12,ES_AUTOHSCROLL | ES_READONLY
     EDITTEXT        IDC_LEVEL_HEIGHT,128,43,28,12,ES_AUTOHSCROLL | 
                     ES_READONLY
     EDITTEXT        IDC_LEVEL_FPS,168,43,28,12,ES_AUTOHSCROLL | ES_READONLY
-    EDITTEXT        IDC_LEVEL_VMV,156,60,40,12,ES_AUTOHSCROLL | ES_READONLY
-    EDITTEXT        IDC_LEVEL_VCV,156,77,40,12,ES_AUTOHSCROLL | ES_READONLY
-    EDITTEXT        IDC_LEVEL_VBV,156,115,40,12,ES_AUTOHSCROLL | ES_READONLY
-    EDITTEXT        IDC_LEVEL_BITRATE,156,131,40,12,ES_AUTOHSCROLL | 
+    EDITTEXT        IDC_LEVEL_VMV,156,60,40,12,ES_RIGHT | ES_AUTOHSCROLL | 
                     ES_READONLY
+    EDITTEXT        IDC_LEVEL_VCV,156,77,40,12,ES_RIGHT | ES_AUTOHSCROLL | 
+                    ES_READONLY
+    EDITTEXT        IDC_LEVEL_VBV,156,115,40,12,ES_RIGHT | ES_AUTOHSCROLL | 
+                    ES_READONLY
+    EDITTEXT        IDC_LEVEL_BITRATE,156,131,40,12,ES_RIGHT | 
+                    ES_AUTOHSCROLL | ES_READONLY
     LTEXT           "Profile @ Level:",IDC_STATIC,8,10,52,8
     GROUPBOX        "Level - XviD will not force you to respect these",
-                    IDC_STATIC,8,28,196,66
-    LTEXT           "Suggested:",IDC_STATIC,16,45,48,8
+                    IDC_LEVEL_LEVEL_G,8,28,196,66
+    LTEXT           "Suggested:",IDC_LEVEL_DIM_S,16,45,48,8
     LTEXT           "x",IDC_STATIC,120,45,8,8
-    LTEXT           "Max bitrate (kbps)",IDC_STATIC,16,133,108,8
-    LTEXT           "Max buffer size (bits):",IDC_STATIC,16,117,108,8
-    LTEXT           "Max processing rate (mbs/sec)",IDC_STATIC,16,79,108,8
-    LTEXT           "Max frame size (macroblocks):",IDC_STATIC,16,63,108,8
+    LTEXT           "Max bitrate (kbps)",IDC_LEVEL_BITRATE_S,16,133,108,8
+    LTEXT           "Max buffer size (bits):",IDC_LEVEL_VBV_S,16,117,108,8
+    LTEXT           "Max processing rate (mbs/sec)",IDC_LEVEL_VCV_S,16,79,
+                    108,8
+    LTEXT           "Max frame size (macroblocks):",IDC_LEVEL_VMV_S,16,63,
+                    108,8
     LTEXT           "x",IDC_STATIC,160,45,8,8
     GROUPBOX        "Video Buffer Verifier - used in Two-Pass mode",
-                    IDC_STATIC,8,100,196,49
+                    IDC_LEVEL_VBV_G,8,100,196,66
+    EDITTEXT        IDC_LEVEL_PEAKRATE,156,148,40,12,ES_RIGHT | 
+                    ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Max bits over any one second interval:",
+                    IDC_LEVEL_PEAKRATE_S,16,150,128,8
 END
 
 IDD_DEC DIALOG DISCARDABLE  0, 0, 212, 212
@@ -853,7 +862,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "GNU General Public License"
 FONT 8, "MS Sans Serif"
 BEGIN
-    PUSHBUTTON      "Dismiss",IDOK,172,218,84,14
+    PUSHBUTTON      "OK",IDOK,172,218,84,14
     EDITTEXT        IDC_LICENSE_TEXT,2,2,426,212,ES_MULTILINE | 
                     ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
 END
@@ -1008,7 +1017,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDC_PROFILE_PROFILE     "Restrict the usage of MPEG-4 tools and limit the encoded bitrate such that bitstreams are compatible with hardware decoders."
+    IDC_PROFILE_PROFILE     "Restrict the usage of MPEG-4 tools and limit the encoded bitrate such that bitstreams are compatible with hardware decoders.\n\nWhen a DXN profile is selected, the following constraints take effect:\n* force 1:1 picture aspect ratio\n* disable bvops if interlaced encoding is enabled\n* force a maximum of 1 consecutive bvop for the portable and HT profiles, and a maximum of 2 consecutive bvops for the HD profile\n* always write divx5 user data string into the bitstream\n* force packed bitstream"
     IDC_BVOP_THRESHOLD      "Change the amount of b-frames in this zone. Recommended values are between -20 (almost no b-vops) and 30 (many b-vops).\nThe hardcoded maximum in profile/level will never be exceeded"
 END
 

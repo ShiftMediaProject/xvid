@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.48 2005-01-16 10:34:52 edgomez Exp $
+ * $Id: xvid.h,v 1.49 2005-03-27 03:59:42 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -593,7 +593,8 @@ extern int xvid_encore(void *handle, int opt, void *param1, void *param2);
 #define XVID_GLOBAL_VOL_AT_IVOP       (1<<3) /* write vol at every ivop: WIN32/divx compatibility */
 #define XVID_GLOBAL_FORCE_VOL         (1<<4) /* when vol-based parameters are changed, insert an ivop NOT recommended */
 #endif
-
+#define XVID_GLOBAL_DIVX5_USERDATA    (1<<5) /* write divx5 userdata string 
+                                                this is implied if XVID_GLOBAL_PACKED is set */
 
 /*----------------------------------------------------------------------------
  * "VOL" flags
