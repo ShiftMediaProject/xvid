@@ -880,7 +880,7 @@ IDI_ICON                ICON    DISCARDABLE     "xvid.ico"
 // TEXT
 //
 
-IDR_GPL                 TEXT    DISCARDABLE     "../../LICENSE"
+IDR_GPL                 TEXT    DISCARDABLE     "../LICENSE"
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
