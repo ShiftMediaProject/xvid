@@ -140,6 +140,9 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 		image_create(&pEnc->vInterVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
 		image_create(&pEnc->vInterHV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
 		image_create(&pEnc->vInterHVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
+#ifdef _DEBUG
+		image_create(&pEnc->sOriginal, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
+#endif
 		(pEnc->pMBs = xvid_malloc(sizeof(MACROBLOCK) * pEnc->mbParam.mb_width * pEnc->mbParam.mb_height, CACHE_LINE)) == NULL)
 	{
 		image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
@@ -149,6 +152,9 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 		image_destroy(&pEnc->vInterVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->vInterHV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->vInterHVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+#ifdef _DEBUG
+		image_destroy(&pEnc->sOriginal, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+#endif
 		if (pEnc)
 		{
 			xvid_free(pEnc);
@@ -190,6 +196,9 @@ int encoder_destroy(Encoder * pEnc)
 	image_destroy(&pEnc->vInterVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 	image_destroy(&pEnc->vInterHV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 	image_destroy(&pEnc->vInterHVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+#ifdef _DEBUG
+		image_destroy(&pEnc->sOriginal, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+#endif
 	xvid_free(pEnc);
 
 	return XVID_ERR_OK;
@@ -201,6 +210,10 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	Bitstream bs;
 	uint32_t bits;
 	uint16_t write_vol_header = 0;
+#ifdef _DEBUG
+	float psnr;
+	uint8_t temp[100];
+#endif
 
 	start_global_timer();
 
@@ -222,6 +235,10 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	stop_conv_timer();
 
 	EMMS();
+
+#ifdef _DEBUG
+	image_copy(&pEnc->sOriginal, &pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.height);
+#endif
 
 	BitstreamInit(&bs, pFrame->bitstream, 0);
 
@@ -322,6 +339,14 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	{
 		RateControlUpdate(pEnc->mbParam.quant, pFrame->length, pFrame->intra);
 	}
+
+#ifdef _DEBUG
+	psnr = image_psnr(&pEnc->sOriginal, &pEnc->sCurrent, pEnc->mbParam.edged_width,
+				pEnc->mbParam.width, pEnc->mbParam.height);
+
+	sprintf(temp, "PSNR: %f\n", psnr);
+	DEBUG(temp);
+#endif
 
 	pEnc->iFrameNum++;
 	image_swap(&pEnc->sCurrent, &pEnc->sReference);

@@ -97,6 +97,9 @@ typedef struct
 
     IMAGE sCurrent;
     IMAGE sReference;
+#ifdef _DEBUG
+	IMAGE sOriginal;
+#endif
     IMAGE vInterH;
     IMAGE vInterV;
 	IMAGE vInterVf;
