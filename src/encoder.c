@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.103 2004-03-30 12:31:52 syskin Exp $
+ * $Id: encoder.c,v 1.104 2004-04-03 10:41:42 syskin Exp $
  *
  ****************************************************************************/
 
@@ -57,9 +57,7 @@ static int FrameCodeI(Encoder * pEnc,
 					  Bitstream * bs);
 
 static int FrameCodeP(Encoder * pEnc,
-					  Bitstream * bs,
-					  bool force_inter,
-					  bool vol_header);
+					  Bitstream * bs);
 
 static void FrameCodeB(Encoder * pEnc,
 					   FRAMEINFO * frame,
@@ -1091,7 +1089,7 @@ repeat:
 				pEnc->queue_head, pEnc->queue_tail, pEnc->queue_size);
 				pEnc->mbParam.frame_drop_ratio = -1; /* it must be a coded vop */
 
-				FrameCodeP(pEnc, &bs, 1, 0);
+				FrameCodeP(pEnc, &bs);
 
 
 				if ((pEnc->mbParam.global_flags & XVID_GLOBAL_PACKED) && pEnc->bframenum_tail==0) {
@@ -1343,7 +1341,7 @@ repeat:
 				   pEnc->mbParam.edged_width, pEnc->mbParam.height);
 		}
 
-		if ( FrameCodeP(pEnc, &bs, 1, 0) == 0 ) {
+		if ( FrameCodeP(pEnc, &bs) == 0 ) {
 			/* N-VOP, we mustn't code b-frames yet */
 			call_plugins(pEnc, pEnc->current, &pEnc->sOriginal, XVID_PLG_AFTER, 0, 0, stats);
 			goto done;
@@ -1525,9 +1523,7 @@ FrameCodeI(Encoder * pEnc,
 /* FrameCodeP also handles S(GMC)-VOPs */
 static int
 FrameCodeP(Encoder * pEnc,
-		   Bitstream * bs,
-		   bool force_inter,
-		   bool vol_header)
+		   Bitstream * bs)
 {
 	float fSigma;
 	int bits = BitstreamPos(bs);
@@ -1535,10 +1531,9 @@ FrameCodeP(Encoder * pEnc,
 	DECLARE_ALIGNED_MATRIX(dct_codes, 6, 64, int16_t, CACHE_LINE);
 	DECLARE_ALIGNED_MATRIX(qcoeff, 6, 64, int16_t, CACHE_LINE);
 
-	int iLimit;
 	int x, y, k;
 	int iSearchRange;
-	int bIntra=0, skip_possible;
+	int skip_possible;
 	FRAMEINFO *const current = pEnc->current;
 	FRAMEINFO *const reference = pEnc->reference;
 	MBParam * const pParam = &pEnc->mbParam;
@@ -1568,11 +1563,6 @@ FrameCodeP(Encoder * pEnc,
 	pParam->m_rounding_type = 1 - pParam->m_rounding_type;
 	current->rounding_type = pParam->m_rounding_type;
 	current->fcode = pParam->m_fcode;
-
-	if (!force_inter)
-		iLimit = (int)(mb_width * mb_height *  INTRA_THRESHOLD);
-	else
-		iLimit = mb_width * mb_height + 1;
 
 	if ((current->vop_flags & XVID_VOP_HALFPEL)) {
 		if (reference->is_interpolated != current->rounding_type) {
@@ -1644,21 +1634,14 @@ FrameCodeP(Encoder * pEnc,
 		}
 	}
 
-	bIntra =
-		MotionEstimation(&pEnc->mbParam, current, reference,
+	MotionEstimation(&pEnc->mbParam, current, reference,
 					 &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV,
-					 &pEnc->vGMC, iLimit);
+					 &pEnc->vGMC, 256*4096);
 
 
 	stop_motion_timer();
 
-	if (bIntra == 1) return FrameCodeI(pEnc, bs);
-
 	set_timecodes(current,reference,pParam->fbase);
-	if (vol_header)
-	{	BitstreamWriteVolHeader(bs, &pEnc->mbParam, current);
-		BitstreamPad(bs);
-	}
 
 	BitstreamWriteVopHeader(bs, &pEnc->mbParam, current, 1, current->mbs[0].quant);
 
@@ -1671,7 +1654,7 @@ FrameCodeP(Encoder * pEnc,
 			MACROBLOCK *pMB =
 				&current->mbs[x + y * pParam->mb_width];
 
-			bIntra = (pMB->mode == MODE_INTRA) || (pMB->mode == MODE_INTRA_Q);
+			int bIntra = (pMB->mode == MODE_INTRA) || (pMB->mode == MODE_INTRA_Q);
 
 			if (bIntra) {
 				CodeIntraMB(pEnc, pMB);
