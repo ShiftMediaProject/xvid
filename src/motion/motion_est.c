@@ -1154,7 +1154,7 @@ ModeDecision(const uint32_t iQuant, SearchData * const Data,
 	int mode = MODE_INTER;
 
 	if (!(GlobalFlags & XVID_MODEDECISION_BITS)) { //normal, fast, SAD-based mode decision
-		int intra = 0;
+//		int intra = 0;
 		int sad;
 		int InterBias = MV16_INTER_BIAS;
 		if (inter4v == 0 || Data->iMinSAD[0] < Data->iMinSAD[1] + Data->iMinSAD[2] +
@@ -2271,7 +2271,11 @@ GlobalMotionEst(const MACROBLOCK * const pMBs,
 	double meanx,meany;
 	int num,oldnum;
 
-	if (!MBmask) { fprintf(stderr,"Mem error\n"); return gmc;}
+	if (!MBmask) { fprintf(stderr,"Mem error\n"); 
+			       gmc.duv[0].x= gmc.duv[0].y = 
+				   		gmc.duv[1].x= gmc.duv[1].y = 			
+						gmc.duv[2].x= gmc.duv[2].y = 0;
+					return gmc; }
 
 // filter mask of all blocks
 
