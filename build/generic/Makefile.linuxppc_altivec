@@ -20,11 +20,11 @@ LIBDIR = /usr/local/lib
 CFLAGS += -Wall -O3 -funroll-loops -ffast-math  
 CFLAGS += -fstrict-aliasing -fomit-frame-pointer 
 
-## for debugging, comment the previous lines and uncomment the next one.
-#CFLAGS += -Wall -g -D_PROFILING_
+## for profiling, uncomment the next line.
+#CFLAGS += -D_PROFILING_ 
 
-## for profiling, comment the previous lines and uncomment the next one.
-#CFLAGS += -Wall -D_PROFILING_ -O2
+## for debugging, comment the previous lines and uncomment the next one.
+#CFLAGS += -Wall -g
 
 AS = as
 
