@@ -15,9 +15,9 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 #
-#    $Id: cbp_ppc.s,v 1.5 2002-03-22 12:51:22 canard Exp $
+#    $Id: cbp_ppc.s,v 1.6 2002-03-22 13:05:45 canard Exp $
 #    $Source: /home/xvid/cvs_copy/cvs-server-root/xvid/xvidcore/src/bitstream/ppc_asm/cbp_ppc.s,v $
-#    $Date: 2002-03-22 12:51:22 $
+#    $Date: 2002-03-22 13:05:45 $
 #    $Author: canard $
 #
 #    This is my first PPC ASM attempt. So I might do nasty things.
@@ -61,8 +61,8 @@ calc_cbp_ppc:
 	xor 3,3,3
 .loop:
 	# CTR is the loop2 counter
-	li 7,15
-	mtspr 9,7
+	li 4,15
+	mtctr 4
 	# r6 is coeff pointer for this line
 	mr 6,9
 .loop2:
