@@ -1534,10 +1534,6 @@ SOURCE=..\..\src\encoder.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\generic\libxvidcore_static.def
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\src\xvid.c
 # End Source File
 # End Target
