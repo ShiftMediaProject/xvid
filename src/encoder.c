@@ -312,7 +312,7 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	BitstreamPutBits(&bs, 0xFFFF, 16);
 	BitstreamPad(&bs);
 	pFrame->length = BitstreamLength(&bs);
-		
+
 	if (pResult)
 	{
 		pResult->quant = pEnc->mbParam.quant;
@@ -322,7 +322,7 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 		pResult->ublks = pEnc->sStat.ublks;
 	}
    
-	if (pEnc->bitrate)
+	if (pFrame->quant == 0)
 	{
 		RateControlUpdate(pEnc->mbParam.quant, pFrame->length, pFrame->intra);
 	}
