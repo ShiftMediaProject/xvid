@@ -15,9 +15,9 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 #
-#    $Id: cbp_altivec.s,v 1.1 2002-03-26 23:21:02 canard Exp $
+#    $Id: cbp_altivec.s,v 1.2 2002-03-28 12:29:58 canard Exp $
 #    $Source: /home/xvid/cvs_copy/cvs-server-root/xvid/xvidcore/src/bitstream/ppc_asm/cbp_altivec.s,v $
-#    $Date: 2002-03-26 23:21:02 $
+#    $Date: 2002-03-28 12:29:58 $
 #    $Author: canard $
 #
 #    This is my first PPC ASM attempt. So I might do nasty things.
@@ -58,43 +58,52 @@
 .text
 .global calc_cbp_altivec
 calc_cbp_altivec:
+	# Set VRSAVE
+	li %r4,0xFFFFFFFF
+	mtspr 256,%r4	
+
 	# r9 will contain coeffs addr
-	mr 9,3
+	mr %r9,%r3
 	# r3 contains the result, therefore we set it to 0
-	xor 3,3,3
+	li %r3,0
 	
 	# CTR is the loop counter (rows)
-	li 4,6
-	mtctr 4	
-	vxor 12,12,12
-	lis 4,.skip@ha
-	addi 4,4,.skip@l
-	lvx 10,0,4
+	li %r4,6
+	mtctr %r4	
+
+	# VR9 contains 0
+	vxor 9,9,9
+
+	# VR10 will help us to remove the first 16 bits of each row
+	lis %r4,.skip@ha
+	addi %r4,4,.skip@l
+	lvx 10,0,%r4
 .loop:
-	mr 6,9
-	# coeffs is a matrix of 16 bits cells
-	lvxl 1,0,6
+	mr %r6,%r9
+
+	lvxl 1,0,%r6
+	# Set the first 16 bits to 0
 	vand 1,1,10
 
-	addi 6,6,16
+	addi %r6,%r6,16
 	lvxl 2,0,6
 	
-	addi 6,6,16
+	addi %r6,%r6,16
 	lvxl 3,0,6
 	
-	addi 6,6,16
+	addi %r6,%r6,16
 	lvxl 4,0,6
 	
-	addi 6,6,16
+	addi %r6,%r6,16
 	lvxl 5,0,6
 	
-	addi 6,6,16
+	addi %r6,%r6,16
 	lvxl 6,0,6
 	
-	addi 6,6,16
+	addi %r6,%r6,16
 	lvxl 7,0,6
 	
-	addi 6,6,16
+	addi %r6,%r6,16
 	lvxl 8,0,6
 
 	vor 1,2,1
@@ -105,15 +114,17 @@ calc_cbp_altivec:
 	vor 1,7,1
 	vor 1,8,1
 	
-	vcmpequw. 3,1,12
+	# is VR1 == 0
+	vcmpequw. 3,1,9
 	bt 24,.newline
 .cbp:
-	mfctr 5
-	subi 5,5,1
-	li 4,1
-	slw 4,4,5
-	or 3,3,4
+	# cbp calc
+	mfctr %r5
+	subi %r5,%r5,1
+	li %r4,1
+	slw %r4,%r4,%r5
+	or %r3,%r3,%r4
 .newline:
-	addi 9,9,128
+	addi %r9,%r9,128
 	bdnz .loop
 	blr
