@@ -1420,9 +1420,9 @@ static BOOL CALLBACK adv_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 
 				ofn.hwndOwner = hDlg;
 				if (LOWORD(wParam)==IDC_BITRATE_SSELECT) {
-					ofn.lpstrFilter = "Subtitle files (*.sub, *.ssa)\0*.sub;*.ssa\0All files (*.*)\0*.*\0\0";
+					ofn.lpstrFilter = "Subtitle files (*.sub, *.ssa, *.txt, *.dat)\0*.sub;*.ssa;*.txt;*.dat\0All files (*.*)\0*.*\0\0";
 				}else{
-					ofn.lpstrFilter = "Audio files (*.mp3, *.ac3)\0*.mp3; *.ac3\0All files (*.*)\0*.*\0\0";
+					ofn.lpstrFilter = "Audio files (*.mp3, *.ac3, *.aac, *.ogg, *.wav)\0*.mp3; *.ac3; *.aac; *.ogg; *.wav\0All files (*.*)\0*.*\0\0";
 				}
 				
 				ofn.lpstrFile = filename;
