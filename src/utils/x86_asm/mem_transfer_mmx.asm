@@ -358,6 +358,238 @@ transfer_8to16sub_mmx
 		ret
 
 
+;===========================================================================
+;
+; void transfer_8to16sub2_xmm(int16_t * const dct,
+;							  uint8_t * const cur,
+;							  const uint8_t * ref1,
+;							  const uint8_t * ref2,
+;							  const uint32_t stride);
+;
+;===========================================================================
+
+align 16
+cglobal transfer_8to16sub2_xmm
+transfer_8to16sub2_xmm
+
+		push edi
+		push esi
+		push ebx
+	
+		mov edi, [esp + 12 +  4] ; edi = &dct
+		mov esi, [esp + 12 +  8] ; esi = &cur
+		mov ebx, [esp + 12 + 12] ; ebx = &ref1
+		mov edx, [esp + 12 + 16] ; edx = &ref2
+		mov eax, [esp + 12 + 20] ; eax = stride
+
+		pxor mm7, mm7	; mm7 = 0
+		shl eax, 1      ; eax = stride<<1
+		add eax, 16
+
+		; Row processing
+		; One row at a time
+		movq mm0, [esi + 0] ; mm0 = cur row
+		movq mm2, [ebx + 0]	; mm2 = ref1 row
+		movq mm3, [edx + 0]	; mm3 = ref2 row
+		movq mm1, mm0	; mm1 = cur row
+
+		pavgb mm2, mm3		; mm2 = (ref1 + ref2 + 1)/2 (== avg)
+		punpcklbw mm0, mm7	; mm0 = cur(3-0) <-> 16bit
+	
+		movq mm3,mm2		; mm3 = avg
+		punpckhbw mm1, mm7	; mm1 = cur(7-4) <-> 16bit
+	
+		punpcklbw mm2, mm7	; mm2 = avg(3-0) <-> 16bit
+		punpckhbw mm3, mm7	; mm3 = avg(7-4) <-> 16bit 
+
+		psubw mm0, mm2		; mm0 = cur(3-0) - avg(3-0)
+		psubw mm1, mm3		; mm1 = cur(7-4) - avg(7-4)
+
+		movq [edi + 0], mm0 ; dct(3-0) = mm0
+		movq [edi + 8], mm1 ; dct(7-4) = mm1
+
+		; Increment all pointers
+		add edi, eax	; edi = &(next dct row)
+
+		; Row processing
+		; One row at a time
+		movq mm0, [esi + 8] ; mm0 = cur row
+		movq mm2, [ebx + 8]	; mm2 = ref1 row
+		movq mm3, [edx + 8]	; mm3 = ref2 row
+		movq mm1, mm0	; mm1 = cur row
+
+		pavgb mm2, mm3		; mm2 = (ref1 + ref2 + 1)/2 (== avg)
+		punpcklbw mm0, mm7	; mm0 = cur(3-0) <-> 16bit
+	
+		movq mm3,mm2		; mm3 = avg
+		punpckhbw mm1, mm7	; mm1 = cur(7-4) <-> 16bit
+	
+		punpcklbw mm2, mm7	; mm2 = avg(3-0) <-> 16bit
+		punpckhbw mm3, mm7	; mm3 = avg(7-4) <-> 16bit 
+
+		psubw mm0, mm2		; mm0 = cur(3-0) - avg(3-0)
+		psubw mm1, mm3		; mm1 = cur(7-4) - avg(7-4)
+
+		movq [edi + 0], mm0 ; dct(3-0) = mm0
+		movq [edi + 8], mm1 ; dct(7-4) = mm1
+
+		; Increment all pointers
+		add edi, eax	; edi = &(next dct row)
+
+		; Row processing
+		; One row at a time
+		movq mm0, [esi + 16] ; mm0 = cur row
+		movq mm2, [ebx + 16]	; mm2 = ref1 row
+		movq mm3, [edx + 16]	; mm3 = ref2 row
+		movq mm1, mm0	; mm1 = cur row
+
+		pavgb mm2, mm3		; mm2 = (ref1 + ref2 + 1)/2 (== avg)
+		punpcklbw mm0, mm7	; mm0 = cur(3-0) <-> 16bit
+	
+		movq mm3,mm2		; mm3 = avg
+		punpckhbw mm1, mm7	; mm1 = cur(7-4) <-> 16bit
+	
+		punpcklbw mm2, mm7	; mm2 = avg(3-0) <-> 16bit
+		punpckhbw mm3, mm7	; mm3 = avg(7-4) <-> 16bit 
+
+		psubw mm0, mm2		; mm0 = cur(3-0) - avg(3-0)
+		psubw mm1, mm3		; mm1 = cur(7-4) - avg(7-4)
+
+		movq [edi + 0], mm0 ; dct(3-0) = mm0
+		movq [edi + 8], mm1 ; dct(7-4) = mm1
+
+		; Increment all pointers
+		add edi, eax	; edi = &(next dct row)
+
+		; Row processing
+		; One row at a time
+		movq mm0, [esi + 24] ; mm0 = cur row
+		movq mm2, [ebx + 24]	; mm2 = ref1 row
+		movq mm3, [edx + 24]	; mm3 = ref2 row
+		movq mm1, mm0	; mm1 = cur row
+
+		pavgb mm2, mm3		; mm2 = (ref1 + ref2 + 1)/2 (== avg)
+		punpcklbw mm0, mm7	; mm0 = cur(3-0) <-> 16bit
+	
+		movq mm3,mm2		; mm3 = avg
+		punpckhbw mm1, mm7	; mm1 = cur(7-4) <-> 16bit
+	
+		punpcklbw mm2, mm7	; mm2 = avg(3-0) <-> 16bit
+		punpckhbw mm3, mm7	; mm3 = avg(7-4) <-> 16bit 
+
+		psubw mm0, mm2		; mm0 = cur(3-0) - avg(3-0)
+		psubw mm1, mm3		; mm1 = cur(7-4) - avg(7-4)
+
+		movq [edi + 0], mm0 ; dct(3-0) = mm0
+		movq [edi + 8], mm1 ; dct(7-4) = mm1
+
+		; Increment all pointers
+		add edi, eax	; edi = &(next dct row)
+
+		; Row processing
+		; One row at a time
+		movq mm0, [esi + 32] ; mm0 = cur row
+		movq mm2, [ebx + 32]	; mm2 = ref1 row
+		movq mm3, [edx + 32]	; mm3 = ref2 row
+		movq mm1, mm0	; mm1 = cur row
+
+		pavgb mm2, mm3		; mm2 = (ref1 + ref2 + 1)/2 (== avg)
+		punpcklbw mm0, mm7	; mm0 = cur(3-0) <-> 16bit
+	
+		movq mm3,mm2		; mm3 = avg
+		punpckhbw mm1, mm7	; mm1 = cur(7-4) <-> 16bit
+	
+		punpcklbw mm2, mm7	; mm2 = avg(3-0) <-> 16bit
+		punpckhbw mm3, mm7	; mm3 = avg(7-4) <-> 16bit 
+
+		psubw mm0, mm2		; mm0 = cur(3-0) - avg(3-0)
+		psubw mm1, mm3		; mm1 = cur(7-4) - avg(7-4)
+
+		movq [edi + 0], mm0 ; dct(3-0) = mm0
+		movq [edi + 8], mm1 ; dct(7-4) = mm1
+
+		; Increment all pointers
+		add edi, eax	; edi = &(next dct row)
+
+		; Row processing
+		; One row at a time
+		movq mm0, [esi + 40] ; mm0 = cur row
+		movq mm2, [ebx + 40]	; mm2 = ref1 row
+		movq mm3, [edx + 40]	; mm3 = ref2 row
+		movq mm1, mm0	; mm1 = cur row
+
+		pavgb mm2, mm3		; mm2 = (ref1 + ref2 + 1)/2 (== avg)
+		punpcklbw mm0, mm7	; mm0 = cur(3-0) <-> 16bit
+	
+		movq mm3,mm2		; mm3 = avg
+		punpckhbw mm1, mm7	; mm1 = cur(7-4) <-> 16bit
+	
+		punpcklbw mm2, mm7	; mm2 = avg(3-0) <-> 16bit
+		punpckhbw mm3, mm7	; mm3 = avg(7-4) <-> 16bit 
+
+		psubw mm0, mm2		; mm0 = cur(3-0) - avg(3-0)
+		psubw mm1, mm3		; mm1 = cur(7-4) - avg(7-4)
+
+		movq [edi + 0], mm0 ; dct(3-0) = mm0
+		movq [edi + 8], mm1 ; dct(7-4) = mm1
+
+		; Increment all pointers
+		add edi, eax	; edi = &(next dct row)
+
+		; Row processing
+		; One row at a time
+		movq mm0, [esi + 48] ; mm0 = cur row
+		movq mm2, [ebx + 48]	; mm2 = ref1 row
+		movq mm3, [edx + 48]	; mm3 = ref2 row
+		movq mm1, mm0	; mm1 = cur row
+
+		pavgb mm2, mm3		; mm2 = (ref1 + ref2 + 1)/2 (== avg)
+		punpcklbw mm0, mm7	; mm0 = cur(3-0) <-> 16bit
+	
+		movq mm3,mm2		; mm3 = avg
+		punpckhbw mm1, mm7	; mm1 = cur(7-4) <-> 16bit
+	
+		punpcklbw mm2, mm7	; mm2 = avg(3-0) <-> 16bit
+		punpckhbw mm3, mm7	; mm3 = avg(7-4) <-> 16bit 
+
+		psubw mm0, mm2		; mm0 = cur(3-0) - avg(3-0)
+		psubw mm1, mm3		; mm1 = cur(7-4) - avg(7-4)
+
+		movq [edi + 0], mm0 ; dct(3-0) = mm0
+		movq [edi + 8], mm1 ; dct(7-4) = mm1
+
+		; Increment all pointers
+		add edi, eax	; edi = &(next dct row)
+
+		; Row processing
+		; One row at a time
+		movq mm0, [esi + 56] ; mm0 = cur row
+		movq mm2, [ebx + 56]	; mm2 = ref1 row
+		movq mm3, [edx + 56]	; mm3 = ref2 row
+		movq mm1, mm0	; mm1 = cur row
+
+		pavgb mm2, mm3		; mm2 = (ref1 + ref2 + 1)/2 (== avg)
+		punpcklbw mm0, mm7	; mm0 = cur(3-0) <-> 16bit
+	
+		movq mm3,mm2		; mm3 = avg
+		punpckhbw mm1, mm7	; mm1 = cur(7-4) <-> 16bit
+	
+		punpcklbw mm2, mm7	; mm2 = avg(3-0) <-> 16bit
+		punpckhbw mm3, mm7	; mm3 = avg(7-4) <-> 16bit 
+
+		psubw mm0, mm2		; mm0 = cur(3-0) - avg(3-0)
+		psubw mm1, mm3		; mm1 = cur(7-4) - avg(7-4)
+
+		movq [edi + 0], mm0 ; dct(3-0) = mm0
+		movq [edi + 8], mm1 ; dct(7-4) = mm1
+
+		; Exit
+
+		pop ebx
+		pop esi
+		pop edi
+	
+		ret
 
 ;===========================================================================
 ;
