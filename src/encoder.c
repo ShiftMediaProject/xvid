@@ -39,7 +39,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.66 2002-07-29 19:21:23 chl Exp $
+ *  $Id: encoder.c,v 1.67 2002-07-30 12:14:37 chl Exp $
  *
  ****************************************************************************/
 
@@ -1777,7 +1777,7 @@ FrameCodeP(Encoder * pEnc,
 #ifdef BFRAMES
 	/* frame drop code */
 	// DPRINTF(DPRINTF_DEBUG, "kmu %i %i %i", pEnc->sStat.kblks, pEnc->sStat.mblks, pEnc->sStat.ublks);
-	if (pEnc->sStat.kblks + pEnc->sStat.mblks <=
+	if (pEnc->sStat.kblks + pEnc->sStat.mblks <
 		(pEnc->frame_drop_ratio * pEnc->mbParam.mb_width * pEnc->mbParam.mb_height) / 100)
 	{
 		pEnc->sStat.kblks = pEnc->sStat.mblks = 0;
