@@ -3,9 +3,83 @@
 # also removed all my email adresses from the output because they are not
 # relevant.
 
+
+2004-07-10 17:27:06 GMT	                                	patch-43
+
+    Summary:
+      Small mem leak in vfw.
+    Revision:
+      xvidcore--stable--1.0--patch-43
+
+    From sysKin:
+     * Free zones.
+
+    modified files:
+     vfw/src/codec.c
+
+
+2004-07-10 16:55:53 GMT	                                	patch-42
+
+    Summary:
+      Fix wrong matrix reading logic. 
+    Revision:
+      xvidcore--stable--1.0--patch-42
+
+    From sysKin:
+     * Fix a problem reading quantization matrix.
+
+    modified files:
+     src/bitstream/bitstream.c
+
+
+2004-06-26 21:26:35 GMT	                                	patch-41
+
+    Summary:
+      low delay guessing (il)logic fix.
+    Revision:
+      xvidcore--stable--1.0--patch-41
+
+    From sysKin:
+     * bframes were decoded wrong when trying to guess low_delay flag
+       as specified in the standard when vol_control_parameters aren't
+       available.
+
+    modified files:
+     src/decoder.c
+
+
+2004-06-13 19:15:05 GMT	                                	patch-40
+
+    Summary:
+      Small memory error in ia32 cpuid function.
+    Revision:
+      xvidcore--stable--1.0--patch-40
+
+    From ed.gomez:
+     * Valgrind detected a write to suspicious stack space. To avoid
+       any false reporting, added an explicit stack space allocation.
+
+    modified files:
+     src/utils/x86_asm/cpuid.asm
+
 #########################################################################
 # 1.0.1 (Bitstream Version 35)
 #########################################################################
+
+2004-06-05 22:55:56 GMT	                                	patch-39
+
+    Summary:
+      Marking 1.0.1 release
+    Revision:
+      xvidcore--stable--1.0--patch-39
+
+    Marking 1.0.1 release
+    
+
+    modified files:
+     ChangeLog TODO build/generic/configure.in src/xvid.c
+     src/xvid.h
+
 
 2004-06-02 20:58:38 GMT	                                	patch-38
 
@@ -2040,7 +2114,7 @@
        the bvop lag frame (black with error message).
     
     Fixing previous patch a bit:
-     * added $Id: ChangeLog-1.0,v 1.1 2004-07-10 17:39:05 edgomez Exp $ fields
+     * added $Id: ChangeLog-1.0,v 1.2 2004-07-10 17:40:42 edgomez Exp $ fields
      * Fixed copyright
 
     modified files:
