@@ -64,6 +64,15 @@ section .data
 	%endif
 %endmacro
 
+%macro cextern 1 
+	%ifdef PREFIX
+		extern _%1 
+		%define %1 _%1
+	%else
+		extern %1
+	%endif
+%endmacro
+
 mmx_one times 4	dw	 1
 
 ;===========================================================================
@@ -113,96 +122,26 @@ mmx_div
 
 ;===========================================================================
 ;
-; default intra matrix 
+; intra matrix 
 ;
 ;===========================================================================
 
-mmx_intra_matrix
-		dw 8, 17, 18, 19
-		dw 21, 23, 25, 27
-		dw 17, 18, 19, 21
-		dw 23, 25, 27, 28
-		dw 20, 21, 22, 23
-		dw 24, 26, 28, 30
-		dw 21, 22, 23, 24
-		dw 26, 28, 30, 32
-		dw 22, 23, 24, 26
-		dw 28, 30, 32, 35
-		dw 23, 24, 26, 28
-		dw 30, 32, 35, 38
-		dw 25, 26, 28, 30
-		dw 32, 35, 38, 41
-		dw 27, 28, 30, 32
-		dw 35, 38, 41, 45
-
-%macro MMX_FIX  4
-dw (1 << 16) / (%1) + 1, (1 << 16) / (%2) + 1, (1 << 16) / (%3) + 1, (1 << 16) / (%4) + 1
-%endmacro
-
-mmx_intra_matrix_fix
-		MMX_FIX 8, 17, 18, 19
-		MMX_FIX 21, 23, 25, 27
-		MMX_FIX 17, 18, 19, 21
-		MMX_FIX 23, 25, 27, 28
-		MMX_FIX 20, 21, 22, 23
-		MMX_FIX 24, 26, 28, 30
-		MMX_FIX 21, 22, 23, 24
-		MMX_FIX 26, 28, 30, 32
-		MMX_FIX 22, 23, 24, 26
-		MMX_FIX 28, 30, 32, 35
-		MMX_FIX 23, 24, 26, 28
-		MMX_FIX 30, 32, 35, 38
-		MMX_FIX 25, 26, 28, 30
-		MMX_FIX 32, 35, 38, 41
-		MMX_FIX 27, 28, 30, 32
-		MMX_FIX 35, 38, 41, 45
-
+cextern intra_matrix
+cextern intra_matrix_fix
 
 ;===========================================================================
 ;
-; default inter matrix
+; inter matrix
 ;
 ;===========================================================================
 
-mmx_inter_matrix
-		dw 16,17,18,19
-		dw 20,21,22,23
-		dw 17,18,19,20
-		dw 21,22,23,24
-		dw 18,19,20,21
-		dw 22,23,24,25
-		dw 19,20,21,22
-		dw 23,24,26,27
-		dw 20,21,22,23
-		dw 25,26,27,28
-		dw 21,22,23,24
-		dw 26,27,28,30
-		dw 22,23,24,26
-		dw 27,28,30,31
-		dw 23,24,25,27
-		dw 28,30,31,33
+cextern inter_matrix
+cextern inter_matrix_fix
 
-
-mmx_inter_matrix_fix
-		MMX_FIX 16,17,18,19
-		MMX_FIX 20,21,22,23
-		MMX_FIX 17,18,19,20
-		MMX_FIX 21,22,23,24
-		MMX_FIX 18,19,20,21
-		MMX_FIX 22,23,24,25
-		MMX_FIX 19,20,21,22
-		MMX_FIX 23,24,26,27
-		MMX_FIX 20,21,22,23
-		MMX_FIX 25,26,27,28
-		MMX_FIX 21,22,23,24
-		MMX_FIX 26,27,28,30
-		MMX_FIX 22,23,24,26
-		MMX_FIX 27,28,30,31
-		MMX_FIX 23,24,25,27
-		MMX_FIX 28,30,31,33
 
 %define VM18P 3
 %define VM18Q 4
+
 
 ;===========================================================================
 ;
@@ -246,57 +185,6 @@ quantd
 		MMX_QUANTD 29
 		MMX_QUANTD 30
 		MMX_QUANTD 31
-
-
-;===========================================================================
-;
-; multiple by matrix table
-;
-;===========================================================================
-
-%macro MMX_MUL 4
-dw  %1
-dw  %2
-dw  %3
-dw  %4
-%endmacro
-
-default_inter_matrix_mul
-	MMX_MUL    16,17,18,19
-	MMX_MUL    20,21,22,23	
-	MMX_MUL    17,18,19,20
-	MMX_MUL    21,22,23,24
-	MMX_MUL    18,19,20,21
-	MMX_MUL    22,23,24,25
-	MMX_MUL    19,20,21,22
-	MMX_MUL    23,24,26,27
-	MMX_MUL    20,21,22,23
-	MMX_MUL    25,26,27,28
-	MMX_MUL    21,22,23,24
-	MMX_MUL    26,27,28,30
-	MMX_MUL    22,23,24,26
-	MMX_MUL    27,28,30,31
-	MMX_MUL    23,24,25,27
-	MMX_MUL    28,30,31,33
-
-
-default_intra_matrix_mul
-	MMX_MUL 8,17,18,19
-	MMX_MUL 21,23,25,27
-	MMX_MUL 17,18,19,21
-	MMX_MUL 23,25,27,28
-	MMX_MUL 20,21,22,23
-	MMX_MUL 24,26,28,30
-	MMX_MUL 21,22,23,24
-	MMX_MUL 26,28,30,32
-	MMX_MUL 22,23,24,26
-	MMX_MUL 28,30,32,35
-	MMX_MUL 23,24,26,28
-	MMX_MUL 30,32,35,38
-	MMX_MUL 25,26,28,30
-	MMX_MUL 32,35,38,41
-	MMX_MUL 27,28,30,32
-	MMX_MUL 35,38,41,45
 
 
 ;===========================================================================
@@ -405,18 +293,18 @@ align ALIGN
 		psllw   mm0, 4			; level << 4
 		psllw   mm3, 4			;
 		
-		movq    mm2, [mmx_intra_matrix + 8*ecx]
+		movq    mm2, [intra_matrix + 8*ecx]
 		psrlw   mm2, 1			; intra_matrix[i]>>1
 		paddw   mm0, mm2		
 		
-		movq    mm2, [mmx_intra_matrix_fix + ecx*8]
+		movq    mm2, [intra_matrix_fix + ecx*8]
 		pmulhw  mm0, mm2		; (level<<4 + intra_matrix[i]>>1) / intra_matrix[i]
 
-		movq    mm2, [mmx_intra_matrix + 8*ecx + 8]
+		movq    mm2, [intra_matrix + 8*ecx + 8]
 		psrlw   mm2, 1
 		paddw   mm3, mm2
 
-		movq    mm2, [mmx_intra_matrix_fix + ecx*8 + 8]
+		movq    mm2, [intra_matrix_fix + ecx*8 + 8]
 		pmulhw  mm3, mm2
 
 	    paddw   mm0, mm5		; + quantd
@@ -484,18 +372,18 @@ align ALIGN
 		psllw   mm0, 4
 		psllw   mm3, 4
 		
-		movq    mm2, [mmx_intra_matrix + 8*ecx]
+		movq    mm2, [intra_matrix + 8*ecx]
 		psrlw   mm2, 1
 		paddw   mm0, mm2
 		
-		movq    mm2, [mmx_intra_matrix_fix + ecx*8]
+		movq    mm2, [intra_matrix_fix + ecx*8]
 		pmulhw  mm0, mm2		; (level<<4 + intra_matrix[i]>>1) / intra_matrix[i]
 
-		movq    mm2, [mmx_intra_matrix + 8*ecx + 8]
+		movq    mm2, [intra_matrix + 8*ecx + 8]
 		psrlw   mm2, 1
 		paddw   mm3, mm2
 
-		movq    mm2, [mmx_intra_matrix_fix + ecx*8 + 8]
+		movq    mm2, [intra_matrix_fix + ecx*8 + 8]
 		pmulhw  mm3, mm2
 
         paddw   mm0, mm5
@@ -537,18 +425,18 @@ align ALIGN
 		psllw   mm0, 4
 		psllw   mm3, 4
 		
-		movq    mm2, [mmx_intra_matrix + 8*ecx]
+		movq    mm2, [intra_matrix + 8*ecx]
 		psrlw   mm2, 1
 		paddw   mm0, mm2
 		
-		movq    mm2, [mmx_intra_matrix_fix + ecx*8]
+		movq    mm2, [intra_matrix_fix + ecx*8]
 		pmulhw  mm0, mm2		; (level<<4 + intra_matrix[i]>>1) / intra_matrix[i]
 
-		movq    mm2, [mmx_intra_matrix + 8*ecx + 8]
+		movq    mm2, [intra_matrix + 8*ecx + 8]
 		psrlw   mm2, 1
 		paddw   mm3, mm2
 
-		movq    mm2, [mmx_intra_matrix_fix + ecx*8 + 8]
+		movq    mm2, [intra_matrix_fix + ecx*8 + 8]
 		pmulhw  mm3, mm2
 
         paddw   mm0, mm5
@@ -619,18 +507,18 @@ align ALIGN
 		psllw   mm0, 4
 		psllw   mm3, 4
 		
-		movq    mm2, [mmx_inter_matrix + 8*ecx]
+		movq    mm2, [inter_matrix + 8*ecx]
 		psrlw   mm2, 1
 		paddw   mm0, mm2
 		
-		movq    mm2, [mmx_inter_matrix_fix + ecx*8]
+		movq    mm2, [inter_matrix_fix + ecx*8]
 		pmulhw  mm0, mm2		; (level<<4 + inter_matrix[i]>>1) / inter_matrix[i]
 
-		movq    mm2, [mmx_inter_matrix + 8*ecx + 8]
+		movq    mm2, [inter_matrix + 8*ecx + 8]
 		psrlw   mm2, 1
 		paddw   mm3, mm2
 
-		movq    mm2, [mmx_inter_matrix_fix + ecx*8 + 8]
+		movq    mm2, [inter_matrix_fix + ecx*8 + 8]
 		pmulhw  mm3, mm2
 
 		pmulhw	mm0, mm7		; mm0 = (mm0 / 2Q) >> 16
@@ -683,18 +571,18 @@ align ALIGN
 		psllw   mm0, 4
 		psllw   mm3, 4
 		
-		movq    mm2, [mmx_inter_matrix + 8*ecx]
+		movq    mm2, [inter_matrix + 8*ecx]
 		psrlw   mm2, 1
 		paddw   mm0, mm2
 		
-		movq    mm2, [mmx_inter_matrix_fix + ecx*8]
+		movq    mm2, [inter_matrix_fix + ecx*8]
 		pmulhw  mm0, mm2		; (level<<4 + inter_matrix[i]>>1) / inter_matrix[i]
 
-		movq    mm2, [mmx_inter_matrix + 8*ecx + 8]
+		movq    mm2, [inter_matrix + 8*ecx + 8]
 		psrlw   mm2, 1
 		paddw   mm3, mm2
 
-		movq    mm2, [mmx_inter_matrix_fix + ecx*8 + 8]
+		movq    mm2, [inter_matrix_fix + ecx*8 + 8]
 		pmulhw  mm3, mm2
  
 		psrlw	mm0, 1			; mm0 >>= 1   (/2)
@@ -736,18 +624,18 @@ align ALIGN
 		psllw   mm0, 4
 		psllw   mm3, 4
 		
-		movq    mm2, [mmx_inter_matrix + 8*ecx]
+		movq    mm2, [inter_matrix + 8*ecx]
 		psrlw   mm2, 1
 		paddw   mm0, mm2
 		
-		movq    mm2, [mmx_inter_matrix_fix + ecx*8]
+		movq    mm2, [inter_matrix_fix + ecx*8]
 		pmulhw  mm0, mm2		; (level<<4 + inter_matrix[i]>>1) / inter_matrix[i]
 
-		movq    mm2, [mmx_inter_matrix + 8*ecx + 8]
+		movq    mm2, [inter_matrix + 8*ecx + 8]
 		psrlw   mm2, 1
 		paddw   mm3, mm2
 
-		movq    mm2, [mmx_inter_matrix_fix + ecx*8 + 8]
+		movq    mm2, [inter_matrix_fix + ecx*8 + 8]
 		pmulhw  mm3, mm2
  
 		psrlw	mm0, 2			; mm0 >>= 1   (/2)
@@ -809,7 +697,7 @@ align 16
 
         pmullw    mm0, mm7                ; mm0 *= quant
         
-        movq    mm3, [default_intra_matrix_mul + 8*eax]
+        movq    mm3, [intra_matrix + 8*eax]
 
         movq  mm4, mm0                    ;
         pmullw    mm0, mm3                ; mm0 = low(mm0 * mm3)
@@ -913,7 +801,7 @@ align 16
         paddsw    mm0, mm6            ; mm0 = 2*mm0 + 1
         pmullw    mm0, mm7            ; mm0 *= quant
 
-        movq    mm3, [default_inter_matrix_mul + 8*eax]
+        movq    mm3, [inter_matrix + 8*eax]
 
         movq  mm4, mm0
         pmullw    mm0, mm3            ; mm0 = low(mm0 * mm3)
