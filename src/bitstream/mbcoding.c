@@ -41,6 +41,7 @@
   *																			   *	
   *  Revision history:                                                         *
   *                                                                            *
+  *  28.06.2002 added check_resync_marker()                                    *
   *  14.04.2002 bframe encoding												   *
   *  08.03.2002 initial version; isibaar					                   *
   *																			   *
@@ -571,15 +572,47 @@ MBCodingBVOP(const MACROBLOCK * mb,
  * decoding stuff starts here                                  *
  ***************************************************************/
 
+
+void
+skip_stuffing(Bitstream *bs)
+{
+	while (BitstreamShowBits(bs, 9) == 1)
+		BitstreamSkip(bs, 9);
+}
+
+
+
+// for IVOP addbits == 0
+// for PVOP addbits == fcode - 1
+// for BVOP addbits == max(fcode,bcode) - 1
+// returns true or false
+int 
+check_resync_marker(Bitstream * bs, int addbits)
+{
+	uint32_t nbits;
+	uint32_t code;
+	uint32_t nbitsresyncmarker = NUMBITS_VP_RESYNC_MARKER + addbits;
+
+	nbits = BitstreamNumBitsToByteAlign(bs);
+	code = BitstreamShowBits(bs, nbits);
+
+	if (code == (((uint32_t)1 << (nbits - 1)) - 1))
+	{
+		return BitstreamShowBitsFromByteAlign(bs, nbitsresyncmarker) == RESYNC_MARKER;
+	}
+
+	return 0;
+}
+
+
+
 int
 get_mcbpc_intra(Bitstream * bs)
 {
 
 	uint32_t index;
 
-	while ((index = BitstreamShowBits(bs, 9)) == 1)
-		BitstreamSkip(bs, 9);
-
+	index = BitstreamShowBits(bs, 9);
 	index >>= 3;
 
 	BitstreamSkip(bs, mcbpc_intra_table[index].len);
@@ -593,9 +626,8 @@ get_mcbpc_inter(Bitstream * bs)
 {
 
 	uint32_t index;
-
-	while ((index = CLIP(BitstreamShowBits(bs, 9), 256)) == 1)
-		BitstreamSkip(bs, 9);
+	
+	index = CLIP(BitstreamShowBits(bs, 9), 256);
 
 	BitstreamSkip(bs, mcbpc_inter_table[index].len);
 
