@@ -24,7 +24,6 @@
 \usepackage{times}
 \makeindex
 \setcounter{tocdepth}{1}
-\setlength{\footrulewidth}{0.4pt}
 \begin{document}
 \begin{titlepage}
 \vspace*{7cm}
