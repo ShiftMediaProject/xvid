@@ -47,7 +47,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: decoder.c,v 1.19 2002-06-12 20:38:39 edgomez Exp $
+ *  $Id: decoder.c,v 1.20 2002-06-14 13:21:13 Isibaar Exp $
  *
  *************************************************************************/
 
@@ -96,6 +96,7 @@ decoder_create(XVID_DEC_PARAM * param)
 
 	dec->edged_width = 16 * dec->mb_width + 2 * EDGE_SIZE;
 	dec->edged_height = 16 * dec->mb_height + 2 * EDGE_SIZE;
+	dec->low_delay = 0;
 
 	if (image_create(&dec->cur, dec->edged_width, dec->edged_height)) {
 		xvid_free(dec);
@@ -134,6 +135,9 @@ decoder_create(XVID_DEC_PARAM * param)
 		xvid_free(dec);
 		return XVID_ERR_MEMORY;
 	}
+
+	memset(dec->mbs, 0, sizeof(MACROBLOCK) * dec->mb_width * dec->mb_height);
+
 	// add by chenm001 <chenm001@163.com>
 	// for skip MB flag
 	dec->last_mbs =
@@ -148,6 +152,8 @@ decoder_create(XVID_DEC_PARAM * param)
 		xvid_free(dec);
 		return XVID_ERR_MEMORY;
 	}
+
+	memset(dec->last_mbs, 0, sizeof(MACROBLOCK) * dec->mb_width * dec->mb_height);
 
 	init_timer();
 

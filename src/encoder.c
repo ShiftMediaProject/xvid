@@ -36,7 +36,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.42 2002-06-13 11:42:15 edgomez Exp $
+ *  $Id: encoder.c,v 1.43 2002-06-14 13:21:35 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -225,6 +225,8 @@ encoder_create(XVID_ENC_PARAM * pParam)
 
 	pEnc->mbParam.fbase = pParam->fbase;
 	pEnc->mbParam.fincr = pParam->fincr;
+
+	pEnc->mbParam.m_quant_type = H263_QUANT;
 
 	pEnc->sStat.fMvPrevSigma = -1;
 
