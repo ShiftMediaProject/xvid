@@ -638,8 +638,8 @@ generate_GMCimage(	const GMC_DATA *const gmc_data, 	// [input] precalculated dat
 	unsigned int mj,mi;
 	VECTOR avgMV;
 	
-	for (mj=0;mj<mb_height;mj++)
-	for (mi=0;mi<mb_width; mi++)
+	for (mj=0;mj<(unsigned int)mb_height;mj++)
+	for (mi=0;mi<(unsigned int)mb_width; mi++)
 	{
 		avgMV = generate_GMCimageMB(gmc_data, pRef, mi, mj, 
 					stride, stride2, quarterpel, rounding, pGMC);

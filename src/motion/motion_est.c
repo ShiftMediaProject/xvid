@@ -2303,8 +2303,8 @@ GlobalMotionEst(const MACROBLOCK * const pMBs,
 
 // filter mask of all blocks
 
-	for (my = 1; my < MBh-1; my++)
-	for (mx = 1; mx < MBw-1; mx++)
+	for (my = 1; my < (uint32_t)MBh-1; my++)
+	for (mx = 1; mx < (uint32_t)MBw-1; mx++)
 	{
 		const int mbnum = mx + my * MBw;
 		const MACROBLOCK *pMB = &pMBs[mbnum];
@@ -2320,8 +2320,8 @@ GlobalMotionEst(const MACROBLOCK * const pMBs,
 			MBmask[mbnum]=1;
 	}
 
-	for (my = 1; my < MBh-1; my++)
-	for (mx = 1; mx < MBw-1; mx++)
+	for (my = 1; my < (uint32_t)MBh-1; my++)
+	for (mx = 1; mx < (uint32_t)MBw-1; mx++)
 	{
 		const uint8_t *const pCur = current->image.y + 16*my*pParam->edged_width + 16*mx;
 
@@ -2329,9 +2329,9 @@ GlobalMotionEst(const MACROBLOCK * const pMBs,
 		if (!MBmask[mbnum])
 			continue;
 
-		if (sad16 ( pCur, pCur+1 , pParam->edged_width, 65536) <= grad )
+		if (sad16 ( pCur, pCur+1 , pParam->edged_width, 65536) <= (uint32_t)grad )
 			MBmask[mbnum] = 0;
-		if (sad16 ( pCur, pCur+pParam->edged_width, pParam->edged_width, 65536) <= grad )
+		if (sad16 ( pCur, pCur+pParam->edged_width, pParam->edged_width, 65536) <= (uint32_t)grad )
 			MBmask[mbnum] = 0;
 
 	}
@@ -2342,8 +2342,8 @@ GlobalMotionEst(const MACROBLOCK * const pMBs,
 
 	a = b = c = n = 0;
 	DtimesF[0] = DtimesF[1] = DtimesF[2] = DtimesF[3] = 0.;
-	for (my = 0; my < MBh; my++)
-		for (mx = 0; mx < MBw; mx++)
+	for (my = 0; my < (uint32_t)MBh; my++)
+		for (mx = 0; mx < (uint32_t)MBw; mx++)
 		{
 			const int mbnum = mx + my * MBw;
 			const MACROBLOCK *pMB = &pMBs[mbnum];
@@ -2380,8 +2380,8 @@ GlobalMotionEst(const MACROBLOCK * const pMBs,
 
 	meanx = meany = 0.;
 	oldnum = 0;
-	for (my = 0; my < MBh; my++)
-		for (mx = 0; mx < MBw; mx++)
+	for (my = 0; my < (uint32_t)MBh; my++)
+		for (mx = 0; mx < (uint32_t)MBw; mx++)
 		{
 			const int mbnum = mx + my * MBw;
 			const MACROBLOCK *pMB = &pMBs[mbnum];
@@ -2409,8 +2409,8 @@ GlobalMotionEst(const MACROBLOCK * const pMBs,
 	fprintf(stderr,"meanx = %8.5f  meany = %8.5f   %d\n",meanx,meany, oldnum);
 */
 	num = 0;
-	for (my = 0; my < MBh; my++)
-		for (mx = 0; mx < MBw; mx++)
+	for (my = 0; my < (uint32_t)MBh; my++)
+		for (mx = 0; mx < (uint32_t)MBw; mx++)
 		{
 			const int mbnum = mx + my * MBw;
 			const MACROBLOCK *pMB = &pMBs[mbnum];
