@@ -9,7 +9,7 @@
 
 #define DPRINTF_BUF_SZ  1024
 static void
-dprintf(char *fmt,
+DPRINTF(char *fmt,
 		...)
 {
 	va_list args;
@@ -86,6 +86,21 @@ read_counter()
 }
 
 #elif defined(LINUX) || defined(DJGPP) || defined(FREEBSD)
+
+#include <stdio.h>
+#include <stdarg.h>
+#define DPRINTF_BUF_SZ  1024
+static void
+DPRINTF(char *fmt,
+		...)
+{
+	va_list args;
+	char buf[DPRINTF_BUF_SZ];
+
+	va_start(args, fmt);
+	vsprintf(buf, fmt, args);
+	fprintf(stdout, "%s\n", buf);
+}
 
 #ifdef _DEBUG
 
@@ -214,6 +229,23 @@ read_counter()
 #endif
 
 #else							// OTHER OS
+
+
+#include <stdio.h>
+#include <stdarg.h>
+#define DPRINTF_BUF_SZ  1024
+static void
+DPRINTF(char *fmt,
+		...)
+{
+	va_list args;
+	char buf[DPRINTF_BUF_SZ];
+
+	va_start(args, fmt);
+	vsprintf(buf, fmt, args);
+	fprintf(stdout, "%s\n", buf);
+}
+
 
 #define DEBUG(S)
 #define DEBUG1(S,I)

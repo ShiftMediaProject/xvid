@@ -41,6 +41,7 @@
   *                                                                            *
   *  Revision history:                                                         *
   *                                                                            *
+  *  20.05.2002 added BitstreamWriteUserData                                   *
   *  19.06.2002  Fix a little bug in use custom quant matrix                   *
   *              MinChen <chenm001@163.com>                                    *
   *  08.05.2002  add low_delay support for B_VOP decode                        *
@@ -616,7 +617,7 @@ BitstreamWriteVolHeader(Bitstream * const bs,
 
 #ifdef BFRAMES
 	if (pParam->max_bframes > 0) {
-		dprintf("low_delay=1");
+		DPRINTF("low_delay=1");
 		BitstreamPutBit(bs, 1);	// vol_control_parameters
 		BitstreamPutBits(bs, 1, 2);	// chroma_format 1="4:2:0"
 		BitstreamPutBit(bs, 0);	// low_delay
@@ -696,7 +697,8 @@ BitstreamWriteVolHeader(Bitstream * const bs,
 void
 BitstreamWriteVopHeader(Bitstream * const bs,
 						const MBParam * pParam,
-						const FRAMEINFO * frame)
+						const FRAMEINFO * frame,
+						int vop_coded)
 {
 #ifdef BFRAMES
 	uint32_t i;
@@ -721,7 +723,7 @@ BitstreamWriteVopHeader(Bitstream * const bs,
 	// time_increment: value=nth_of_sec, nbits = log2(resolution)
 #ifdef BFRAMES
 	BitstreamPutBits(bs, frame->ticks, log2bin(pParam->fbase));
-	dprintf("[%i:%i] %c\n", frame->seconds, frame->ticks,
+	DPRINTF("[%i:%i] %c\n", frame->seconds, frame->ticks,
 			frame->coding_type == I_VOP ? 'I' : frame->coding_type ==
 			P_VOP ? 'P' : 'B');
 #else
@@ -729,6 +731,11 @@ BitstreamWriteVopHeader(Bitstream * const bs,
 #endif
 
 	WRITE_MARKER();
+
+	if (!vop_coded) {
+		BitstreamPutBits(bs, 0, 1);
+		return;
+	}
 
 	BitstreamPutBits(bs, 1, 1);	// vop_coded
 
@@ -749,5 +756,22 @@ BitstreamWriteVopHeader(Bitstream * const bs,
 
 	if (frame->coding_type == B_VOP)
 		BitstreamPutBits(bs, frame->bcode, 3);	// backward_fixed_code
+
+}
+
+
+void 
+BitstreamWriteUserData(Bitstream * const bs, 
+						uint8_t * data, 
+						const int length)
+{
+	int i;
+
+	BitstreamPad(bs);
+	BitstreamPutBits(bs, USERDATA_START_CODE, 32);
+
+	for (i = 0; i < length; i++) {
+		BitstreamPutBits(bs, data[i], 8);
+	}
 
 }

@@ -127,7 +127,12 @@ void BitstreamWriteVolHeader(Bitstream * const bs,
 
 void BitstreamWriteVopHeader(Bitstream * const bs,
 							 const MBParam * pParam,
-							 const FRAMEINFO * frame);
+							 const FRAMEINFO * frame,
+							 int vop_coded);
+
+void BitstreamWriteUserData(Bitstream * const bs, 
+							uint8_t * data, 
+							const int length);
 
 /* initialise bitstream structure */
 
