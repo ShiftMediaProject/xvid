@@ -132,9 +132,10 @@ int enc_init()
 	        xparam.fincr = FRAMERATE_INCR;
 	        xparam.fbase = (int)(FRAMERATE_INCR * ARG_FRAMERATE);
 	}
-	xparam.bitrate = ARG_BITRATE*1000; 
-	xparam.rc_buffersize = 2048000; // amount of data you have to buffer for continous
-								    // playback in a streaming app (in bytes)
+	xparam.rc_bitrate = ARG_BITRATE*1000; 
+	xparam.rc_reaction_delay_factor = 16;
+	xparam.rc_averaging_period = 100;
+	xparam.rc_buffer = 100;
 	xparam.min_quantizer = 2;		
 	xparam.max_quantizer = 31;
 	xparam.max_key_interval = (int)ARG_FRAMERATE*10;
