@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the xvid_free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: mbprediction.h,v 1.7 2002-05-07 19:40:36 chl Exp $
+ *  $Id: mbprediction.h,v 1.8 2002-05-07 19:59:10 chl Exp $
  *
  *************************************************************************/
 
@@ -204,17 +204,17 @@ static __inline int get_pmvdata(const MACROBLOCK * const pMBs,
 	int yin1, yin2, yin3;
 	int vec1, vec2, vec3;
 
-	static VECTOR zeroMV;
 	uint32_t index = x + y * x_dim;
-	zeroMV.x = zeroMV.y = 0;
+	const VECTOR zeroMV = { 0,0 };
 
-	// first row (special case)
+	// first row of blocks (special case)
 	if (y == 0 && (block == 0 || block == 1))
 	{
 		if ((x == 0) && (block == 0))		// first column, first block
 		{ 
 			pmv[0] = pmv[1] = pmv[2] = pmv[3] = zeroMV;
-			psad[0] = psad[1] = psad[2] = psad[3] = 0;
+			psad[0] = 0;
+			psad[1] = psad[2] = psad[3] = MV_MAX_ERROR;
 			return 0;
 		}
 		if (block == 1)		// second block; has only a left neighbour
@@ -222,7 +222,7 @@ static __inline int get_pmvdata(const MACROBLOCK * const pMBs,
 			pmv[0] = pmv[1] = pMBs[index].mvs[0];
 			pmv[2] = pmv[3] = zeroMV;
 			psad[0] = psad[1] = pMBs[index].sad8[0];
-			psad[2] = psad[3] = 0;
+			psad[2] = psad[3] = MV_MAX_ERROR;
 			return 0;
 		}
 		else /* block==0, but x!=0, so again, there is a left neighbour*/
@@ -230,7 +230,7 @@ static __inline int get_pmvdata(const MACROBLOCK * const pMBs,
 			pmv[0] = pmv[1] = pMBs[index-1].mvs[1];
 			pmv[2] = pmv[3] = zeroMV;
 			psad[0] = psad[1] = pMBs[index-1].sad8[1];
-			psad[2] = psad[3] = 0;
+			psad[2] = psad[3] = MV_MAX_ERROR;
 			return 0;
 		}
 	}
@@ -272,7 +272,7 @@ static __inline int get_pmvdata(const MACROBLOCK * const pMBs,
 	}
 
 
-	if (xin1 < 0 || /* yin1 < 0  || */ xin1 >= (int32_t)x_dim)
+	if (xin1 < 0 ||  xin1 >= (int32_t)x_dim)
 	{
 		pmv[1] = zeroMV;
 		psad[1] = MV_MAX_ERROR;
@@ -283,7 +283,7 @@ static __inline int get_pmvdata(const MACROBLOCK * const pMBs,
 		psad[1] = pMBs[xin1 + yin1 * x_dim].sad8[vec1]; 
 	}
 
-	if (xin2 < 0 || /* yin2 < 0 || */ xin2 >= (int32_t)x_dim)
+	if (xin2 < 0 || xin2 >= (int32_t)x_dim)
 	{
 		pmv[2] = zeroMV;
 		psad[2] = MV_MAX_ERROR;
@@ -294,7 +294,7 @@ static __inline int get_pmvdata(const MACROBLOCK * const pMBs,
 		psad[2] = pMBs[xin2 + yin2 * x_dim].sad8[vec2]; 
 	}
 
-	if (xin3 < 0 || /* yin3 < 0 || */ xin3 >= (int32_t)x_dim)
+	if (xin3 < 0 || xin3 >= (int32_t)x_dim)
 	{
 		pmv[3] = zeroMV;
 		psad[3] = MV_MAX_ERROR;
@@ -308,7 +308,7 @@ static __inline int get_pmvdata(const MACROBLOCK * const pMBs,
 	if ( (MVequal(pmv[1],pmv[2])) && (MVequal(pmv[1],pmv[3])) )
 	{	
 		pmv[0]=pmv[1];
-		psad[0]=MIN(MIN(psad[1],psad[2]),psad[3]);
+		psad[0]=MIN( MIN(psad[1],psad[2]), psad[3]);
 		return 1;
 	}
 
@@ -316,7 +316,7 @@ static __inline int get_pmvdata(const MACROBLOCK * const pMBs,
 	
 	pmv[0].x = MIN(MAX(pmv[1].x, pmv[2].x), MIN(MAX(pmv[2].x, pmv[3].x), MAX(pmv[1].x, pmv[3].x)));
 	pmv[0].y = MIN(MAX(pmv[1].y, pmv[2].y), MIN(MAX(pmv[2].y, pmv[3].y), MAX(pmv[1].y, pmv[3].y)));
-	psad[0]=MIN(MIN(psad[1],psad[2]),psad[3]);
+	psad[0]=MIN( MIN(psad[1],psad[2]), psad[3]);
 
 	return 0;
 }
