@@ -111,7 +111,6 @@ int decoder_create(XVID_DEC_PARAM * param)
 	}
 
 	init_timer();
-	create_vlc_tables();
 
 	return XVID_ERR_OK;
 }
@@ -123,8 +122,6 @@ int decoder_destroy(DECODER * dec)
 	image_destroy(&dec->refn, dec->edged_width, dec->edged_height);
 	image_destroy(&dec->cur, dec->edged_width, dec->edged_height);
 	xvid_free(dec);
-
-	destroy_vlc_tables();
 
 	write_timer();
 	return XVID_ERR_OK;
