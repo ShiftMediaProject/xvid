@@ -29,9 +29,9 @@
 
  /******************************************************************************
   *                                                                            *
-  *  bitstream.c                                                               *
+  *  mbcoding.c                                                                *
   *                                                                            *
-  *  Copyright (C) 2001 - Peter Ross <pross@cs.rmit.edu.au>                    *
+  *  Copyright (C) 2002 - Michael Militzer <isibaar@xvid.org>                  *
   *                                                                            *
   *  For more information visit the XviD homepage: http://www.xvid.org         *
   *                                                                            *
@@ -41,7 +41,7 @@
   *																			   *	
   *  Revision history:                                                         *
   *                                                                            *
-  *  14.04.2002 bframe encoding
+  *  14.04.2002 bframe encoding												   *
   *  08.03.2002 initial version; isibaar					                   *
   *																			   *
   ******************************************************************************/
@@ -60,13 +60,11 @@
 #define ABS(X) (((X)>0)?(X):-(X))
 #define CLIP(X,A) (X > A) ? (A) : (X)
 
-VLC intra_table[65536]; 
-VLC inter_table[65536];
+VLC intra_table[524032]; 
+VLC inter_table[524032];
 
 VLC DCT3Dintra[4096];
 VLC DCT3Dinter[4096];
-
-static int16_t clip_table[4096];
 
 void init_vlc_tables(void)
 {
@@ -82,23 +80,15 @@ void init_vlc_tables(void)
 	vlc[0] = intra_table;
 	vlc[1] = inter_table;
 	
-	// initialize the clipping table
-	for(i = -2048; i < 2048; i++) {
-		clip_table[i + 2048] = i;
-		if(i < -255)
-			clip_table[i + 2048] = -255;
-		if(i > 255)
-			clip_table[i + 2048] = 255;
-	}
-	
 	// generate encoding vlc lookup tables
+	// the lookup table idea is taken from the excellent fame project by Vivien Chapellier
 	for(i = 0; i < 4; i++) {
 		intra = i % 2;
 		last = i / 2;
 
 		coeff_ptr = coeff_vlc[last + 2 * intra];
-			
-		for(k = -255; k < 256; k++) { // level
+		
+		for(k = -2047; k < 2048; k++) { // level
 			int8_t *max_level_ptr = max_level[last + 2 * intra];
 			int8_t *max_run_ptr = max_run[last + 2 * intra];
 	
@@ -259,19 +249,20 @@ static __inline void CodeCoeff(Bitstream *bs,
 	j = intra;
 	last = intra;
 
-	while((v = qcoeff[zigzag[j]]) == 0) j++;
+	while(j < 64 && (v = qcoeff[zigzag[j]]) == 0) j++;
     
 	do {
-		// count zeroes
-		vlc = table + 64*255 + (clip_table[2048+v] << 6) + j - last;
+		vlc = table + 64 * 2047 + (v << 6) + j - last;
 		last = ++j;
+
+		// count zeroes
 		while(j < 64 && (v = qcoeff[zigzag[j]]) == 0) j++;
 				
 		// write code
 		if(j != 64) {
 			BitstreamPutBits(bs, vlc->code, vlc->len);
 		} else {
-			vlc += 64*511;
+			vlc += 64 * 4095;
 			BitstreamPutBits(bs, vlc->code, vlc->len);
 			break;
 		}
