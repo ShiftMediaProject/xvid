@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbtransquant.c,v 1.24 2004-04-15 19:44:06 edgomez Exp $
+ * $Id: mbtransquant.c,v 1.25 2004-05-26 05:45:53 syskin Exp $
  *
  ****************************************************************************/
 
@@ -1003,7 +1003,7 @@ dct_quantize_trellis_c(int16_t *const Out,
 	memset(Out, 0x00, 64*sizeof(*Out));
 	Out[Zigzag[Last_Node]] = Last.Level;
 	i = Last_Node - Last.Run;
-	Sum = 0;
+	Sum = abs(Last.Level);
 	while(i>=0) {
 		Out[Zigzag[i]] = Nodes[i].Level;
 		Sum += abs(Nodes[i].Level);
