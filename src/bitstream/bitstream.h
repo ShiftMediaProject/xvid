@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.h,v 1.19 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: bitstream.h,v 1.20 2004-12-05 13:56:13 syskin Exp $
  *
  ****************************************************************************/
 
@@ -128,7 +128,6 @@ int read_video_packet_header(Bitstream *bs,
 int BitstreamReadHeaders(Bitstream * bs,
 						 DECODER * dec,
 						 uint32_t * rounding,
-						 uint32_t * reduced_resolution,
 						 uint32_t * quant,
 						 uint32_t * fcode_forward,
 						 uint32_t * fcode_backward,

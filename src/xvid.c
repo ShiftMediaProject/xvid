@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.56 2004-10-17 10:20:15 edgomez Exp $
+ * $Id: xvid.c,v 1.57 2004-12-05 13:56:13 syskin Exp $
  *
  ****************************************************************************/
 
@@ -36,7 +36,6 @@
 #include "dct/fdct.h"
 #include "image/colorspace.h"
 #include "image/interpolate8x8.h"
-#include "image/reduced.h"
 #include "utils/mem_transfer.h"
 #include "utils/mbfunctions.h"
 #include "quant/quant.h"
@@ -244,14 +243,6 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 	/* postprocessing */
 	image_brightness = image_brightness_c;
 
-	/* reduced resolution */
-	copy_upsampled_8x8_16to8 = xvid_Copy_Upsampled_8x8_16To8_C;
-	add_upsampled_8x8_16to8 = xvid_Add_Upsampled_8x8_16To8_C;
-	vfilter_31 = xvid_VFilter_31_C;
-	hfilter_31 = xvid_HFilter_31_C;
-	filter_18x18_to_8x8 = xvid_Filter_18x18_To_8x8_C;
-	filter_diff_18x18_to_8x8 = xvid_Filter_Diff_18x18_To_8x8_C;
-
 	/* Initialize internal colorspace transformation tables */
 	colorspace_init();
 
@@ -310,11 +301,6 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 	sse8_8bit  = sse8_8bit_c;
 
 #if defined(ARCH_IS_IA32)
-
-	if ((cpu_flags & XVID_CPU_ASM))	{
-		vfilter_31 = xvid_VFilter_31_x86;
-		hfilter_31 = xvid_HFilter_31_x86;
-	}
 
 	if ((cpu_flags & XVID_CPU_MMX) || (cpu_flags & XVID_CPU_MMXEXT) ||
 		(cpu_flags & XVID_CPU_3DNOW) || (cpu_flags & XVID_CPU_3DNOWEXT) ||
@@ -376,13 +362,6 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 		/* postprocessing */
 		image_brightness = image_brightness_mmx;
 
-		/* reduced resolution */
-		copy_upsampled_8x8_16to8 = xvid_Copy_Upsampled_8x8_16To8_mmx;
-		add_upsampled_8x8_16to8 = xvid_Add_Upsampled_8x8_16To8_mmx;
-		hfilter_31 = xvid_HFilter_31_mmx;
-		filter_18x18_to_8x8 = xvid_Filter_18x18_To_8x8_mmx;
-		filter_diff_18x18_to_8x8 = xvid_Filter_Diff_18x18_To_8x8_mmx;
-
 		/* image input xxx_to_yv12 related functions */
 		yv12_to_yv12  = yv12_to_yv12_mmx;
 		bgr_to_yv12   = bgr_to_yv12_mmx;
@@ -440,10 +419,6 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 		interpolate8x8_halfpel_h_add = interpolate8x8_halfpel_h_add_xmm;
 		interpolate8x8_halfpel_v_add = interpolate8x8_halfpel_v_add_xmm;
 		interpolate8x8_halfpel_hv_add = interpolate8x8_halfpel_hv_add_xmm;
-
-		/* reduced resolution */
-		copy_upsampled_8x8_16to8 = xvid_Copy_Upsampled_8x8_16To8_xmm;
-		add_upsampled_8x8_16to8 = xvid_Add_Upsampled_8x8_16To8_xmm;
 
 		/* Quantization */
 		quant_mpeg_intra = quant_mpeg_intra_xmm;

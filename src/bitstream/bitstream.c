@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.c,v 1.47 2004-10-03 16:20:51 syskin Exp $
+ * $Id: bitstream.c,v 1.48 2004-12-05 13:56:13 syskin Exp $
  *
  ****************************************************************************/
 
@@ -381,7 +381,6 @@ int
 BitstreamReadHeaders(Bitstream * bs,
 					 DECODER * dec,
 					 uint32_t * rounding,
-					 uint32_t * reduced_resolution,
 					 uint32_t * quant,
 					 uint32_t * fcode_forward,
 					 uint32_t * fcode_backward,
@@ -862,12 +861,8 @@ BitstreamReadHeaders(Bitstream * bs,
 				dec->shape == VIDOBJLAY_SHAPE_RECTANGULAR &&
 				(coding_type == P_VOP || coding_type == I_VOP)) {
 
-				*reduced_resolution = BitstreamGetBit(bs);
-				DPRINTF(XVID_DEBUG_HEADER, "reduced_resolution %i\n", *reduced_resolution);
-			}
-			else
-			{
-				*reduced_resolution = 0;
+				if (BitstreamGetBit(bs));
+					DPRINTF(XVID_DEBUG_ERROR, "RRV not supported (anymore)\n");
 			}
 
 			if (dec->shape != VIDOBJLAY_SHAPE_RECTANGULAR) {
@@ -1342,7 +1337,7 @@ BitstreamWriteVopHeader(
 		BitstreamPutBits(bs, frame->rounding_type, 1);
 
 	if ((frame->vol_flags & XVID_VOL_REDUCED_ENABLE))
-		BitstreamPutBit(bs, (frame->vop_flags & XVID_VOP_REDUCED)?1:0);
+		BitstreamPutBit(bs, 0);
 
 	BitstreamPutBits(bs, 0, 3);	/* intra_dc_vlc_threshold */
 

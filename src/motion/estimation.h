@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation.h,v 1.7 2004-12-05 04:53:01 syskin Exp $
+ * $Id: estimation.h,v 1.8 2004-12-05 13:56:13 syskin Exp $
  *
  ****************************************************************************/
 
@@ -30,7 +30,6 @@
 
 #include "../portab.h"
 #include "../global.h"
-#include "../image/reduced.h"
 
 /* hard coded motion search parameters */
 
