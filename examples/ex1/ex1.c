@@ -55,7 +55,9 @@ void set_enc_param(XVID_ENC_PARAM *param)
 	param->max_quantizer = 31;
 	param->max_key_interval = 100;
 
+#ifdef BFRAMES
 	param->max_bframes = 0;		// Disable B-frame
+#endif
 }
 
 void set_enc_frame(XVID_ENC_FRAME *frame)
