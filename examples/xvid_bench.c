@@ -24,12 +24,15 @@
  *  Don't take the checksums and crc too seriouly, they aren't
  *  bullet-proof (should plug some .md5 here)...
  *
- *   compiles with something like:
- *   gcc -o xvid_bench xvid_bench.c  -I../src/ -lxvidcore -lm
+ *   compiles best at xvidcore/src-dir with something like 
+ *   
+ *   gcc -DARCH_IS_IA32 -DARCH_IS_32BIT -o xvid_bench xvid_bench.c  \
+ *        ../build/generic/libxvidcore.a -lm
  *
  *	History:
  *
  *	06.06.2002  initial coding      -Skal-
+ *	27.02.2003  minor changes (compile, sad16v) <gruel@web.de>
  *
  *************************************************************************/
 
@@ -216,7 +219,7 @@ void test_dct()
 void test_sad()
 {
   const int nb_tests = 2000*speed_ref;
-  int tst;
+  int tst,dummy[4];
   CPU *cpu;
   int i;
   uint8_t Cur[16*16], Ref1[16*16], Ref2[16*16];
@@ -245,10 +248,18 @@ void test_sad()
 
     t = gettime_usec();
     emms();
-    for(tst=0; tst<nb_tests; ++tst) s = sad16(Cur, Ref1, 16, -1);
+    for(tst=0; tst<nb_tests; ++tst) s = sad16(Cur, Ref1, 16, 65535);
     emms();
     t = (gettime_usec() - t) / nb_tests;
     printf( "%s - sad16   %.3f usec       sad=%d\n", cpu->name, t, s );
+    if (s!=27214) printf( "*** CRC ERROR! ***\n" );
+
+    t = gettime_usec();
+    emms();
+    for(tst=0; tst<nb_tests; ++tst) s = sad16v(Cur, Ref1, 16, dummy);
+    emms();
+    t = (gettime_usec() - t) / nb_tests;
+    printf( "%s - sad16v  %.3f usec       sad=%d\n", cpu->name, t, s );
     if (s!=27214) printf( "*** CRC ERROR! ***\n" );
 
     t = gettime_usec();
