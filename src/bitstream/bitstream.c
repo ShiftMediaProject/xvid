@@ -52,7 +52,7 @@
 
 #include "bitstream.h"
 #include "zigzag.h"
-
+#include "../quant/quant_matrix.h"
 
 static int __inline log2bin(int value)
 {
@@ -78,6 +78,25 @@ static const uint32_t intra_dc_threshold_table[] =
 	1,
 };
 
+
+void bs_get_matrix(Bitstream * bs, uint8_t * matrix) 
+{ 
+	int i = 0; 
+    int last, value = 0; 
+    
+    do 
+	{ 
+		last = value; 
+        value = BitstreamGetBits(bs, 8); 
+        matrix[ scan_tables[0][i++] ]  = value; 
+    } 
+    while (value != 0 && i < 64); 
+    
+	while (i < 64) 
+	{ 
+		matrix[ scan_tables[0][i++] ]  = last; 
+	} 
+} 
 
 /*
 decode headers
@@ -314,15 +333,16 @@ int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding, uin
 				{
 					if (BitstreamGetBit(bs))		// load_intra_quant_mat
 					{
-						DEBUG("TODO: load_intra_quant_mat");
-						// TODO
-						return -1;
+						uint8_t *matrix;
+						bs_get_matrix(bs, matrix);
+						set_intra_matrix(matrix);
 					}
+
 					if (BitstreamGetBit(bs))		// load_inter_quant_mat
 					{
-						DEBUG("TODO: load_inter_quant_mat");
-						// TODO
-						return -1;
+						uint8_t *matrix; 
+						bs_get_matrix(bs, matrix);
+						set_inter_matrix(matrix);
 					}
 
 					if (dec->shape == VIDOBJLAY_SHAPE_GRAYSCALE)
@@ -331,6 +351,7 @@ int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding, uin
 						DEBUG("TODO: grayscale matrix stuff");
 						return -1;
 					}
+
 				}
 
 			
@@ -536,7 +557,7 @@ int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding, uin
 
 /* write custom quant matrix */
 
-static void bs_put_matrix(Bitstream * bs, const int16_t * matrix)
+static void bs_put_matrix(Bitstream * bs, const int16_t *matrix)
 {
 	int i, j;
 	const int last = matrix[scan_tables[0][63]];
@@ -609,27 +630,21 @@ void BitstreamWriteVolHeader(Bitstream * const bs,
 
 	// quant_type   0=h.263  1=mpeg4(quantizer tables)
 	BitstreamPutBit(bs, quant_type);
-/*	
+	
 	if (quant_type)
 	{
-		BitstreamPutBit(bs, qmatrix->custom_intra);		// load_intra_quant_mat
-		if (qmatrix->custom_intra)
+		BitstreamPutBit(bs, get_intra_matrix_status());	// load_intra_quant_mat
+		if (get_intra_matrix_status())
 		{
-			bs_put_matrix(bs, qmatrix->intra);
+			bs_put_matrix(bs, get_intra_matrix());
 		}
 
-		BitstreamPutBit(bs, qmatrix->custom_inter);		// load_inter_quant_mat
-		if (qmatrix->custom_inter)
+		BitstreamPutBit(bs, get_inter_matrix_status());		// load_inter_quant_mat
+		if (get_inter_matrix_status())
 		{
-			bs_put_matrix(bs, qmatrix->inter);
+			bs_put_matrix(bs, get_inter_matrix());
 		}
 
-	}
-*/
-	if (quant_type)
-	{
-		BitstreamPutBit(bs, 0);		// load_intra_quant_mat
-		BitstreamPutBit(bs, 0);		// load_inter_quant_mat
 	}
 
 	BitstreamPutBit(bs, 1);		// complexity_estimation_disable

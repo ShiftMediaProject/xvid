@@ -42,8 +42,7 @@
 
 
 #include "quant_mpeg4.h"
-
-
+#include "quant_matrix.h"
 
 // function pointers
 quant_intraFuncPtr quant4_intra;
@@ -76,30 +75,6 @@ static const uint32_t multipliers[32] =
     FIX(56),    FIX(58),    FIX(60),    FIX(62)
 }; 
 
-
-static const int16_t default_intra_matrix[64] = {
-     8,17,18,19,21,23,25,27,
-    17,18,19,21,23,25,27,28,
-    20,21,22,23,24,26,28,30,
-    21,22,23,24,26,28,30,32,
-    22,23,24,26,28,30,32,35,
-    23,24,26,28,30,32,35,38,
-    25,26,28,30,32,35,38,41,
-    27,28,30,32,35,38,41,45
-};
-
-static const int16_t default_inter_matrix[64] = {
-    16,17,18,19,20,21,22,23,
-    17,18,19,20,21,22,23,24,
-    18,19,20,21,22,23,24,25,
-    19,20,21,22,23,24,26,27,
-    20,21,22,23,25,26,27,28,
-    21,22,23,24,26,27,28,30,
-    22,23,24,26,27,28,30,31,
-    23,24,25,27,28,30,31,33
-};
-
-
 /*    quantize intra-block
 
     // const int32_t quantd = DIV_DIV(VM18P*quant, VM18Q);
@@ -113,6 +88,9 @@ void quant4_intra_c(int16_t * coeff, const int16_t * data, const uint32_t quant,
     const uint32_t quantd = ((VM18P*quant) + (VM18Q/2)) / VM18Q;
     const uint32_t mult = multipliers[quant];
     uint32_t i;
+	int16_t *intra_matrix;
+
+	intra_matrix = get_intra_matrix();
 
     coeff[0] = DIV_DIV(data[0], (int32_t)dcscalar);
 
@@ -121,14 +99,14 @@ void quant4_intra_c(int16_t * coeff, const int16_t * data, const uint32_t quant,
         if (data[i] < 0)
         {
             uint32_t level = -data[i];
-            level = ((level<<4) + (default_intra_matrix[i]>>1)) / default_intra_matrix[i];
+            level = ((level<<4) + (intra_matrix[i]>>1)) / intra_matrix[i];
             level = ((level + quantd) * mult) >> 17;
             coeff[i] = -(int16_t)level;
         }
         else if (data[i] > 0)
         {
             uint32_t level = data[i];
-            level = ((level<<4) + (default_intra_matrix[i]>>1)) / default_intra_matrix[i];
+            level = ((level<<4) + (intra_matrix[i]>>1)) / intra_matrix[i];
             level = ((level + quantd) * mult) >> 17;
             coeff[i] = level;
         }
@@ -148,6 +126,9 @@ void quant4_intra_c(int16_t * coeff, const int16_t * data, const uint32_t quant,
 void dequant4_intra_c(int16_t *data, const int16_t *coeff, const uint32_t quant, const uint32_t dcscalar)
 {
     uint32_t i;
+	int16_t *intra_matrix;
+
+	intra_matrix = get_intra_matrix();
     
     data[0] = coeff[0]  * dcscalar;
     if (data[0] < -2048)
@@ -168,13 +149,13 @@ void dequant4_intra_c(int16_t *data, const int16_t *coeff, const uint32_t quant,
         else if (coeff[i] < 0)
         {
             uint32_t level = -coeff[i];
-            level = (level * default_intra_matrix[i] * quant) >> 3;
+            level = (level * intra_matrix[i] * quant) >> 3;
             data[i] = (level <= 2048 ? -(int16_t)level : -2048);
         }
         else // if (coeff[i] > 0)
         {
             uint32_t level = coeff[i];
-            level = (level * default_intra_matrix[i] * quant) >> 3;
+            level = (level * intra_matrix[i] * quant) >> 3;
             data[i] = (level <= 2047 ? level : 2047);
         }
     }
@@ -194,13 +175,16 @@ uint32_t quant4_inter_c(int16_t * coeff, const int16_t * data, const uint32_t qu
     const uint32_t mult = multipliers[quant];
     uint32_t sum = 0;
     uint32_t i;
+	int16_t *inter_matrix;
+
+	inter_matrix = get_inter_matrix();
     
     for (i = 0; i < 64; i++)
     {
         if (data[i] < 0)
         {
             uint32_t level = -data[i];
-            level = ((level<<4) + (default_inter_matrix[i]>>1)) / default_inter_matrix[i];
+            level = ((level<<4) + (inter_matrix[i]>>1)) / inter_matrix[i];
             level = (level * mult) >> 17;
             sum += level;
             coeff[i] = -(int16_t)level;
@@ -208,7 +192,7 @@ uint32_t quant4_inter_c(int16_t * coeff, const int16_t * data, const uint32_t qu
         else if (data[i] > 0)
         {
             uint32_t level = data[i];
-            level = ((level<<4) + (default_inter_matrix[i]>>1)) / default_inter_matrix[i];
+            level = ((level<<4) + (inter_matrix[i]>>1)) / inter_matrix[i];
             level = (level * mult) >> 17;
             sum += level;
             coeff[i] = level;
@@ -231,6 +215,9 @@ void dequant4_inter_c(int16_t *data, const int16_t *coeff, const uint32_t quant)
 {
     uint32_t sum = 0;
     uint32_t i;
+	int16_t *inter_matrix;
+
+	inter_matrix = get_inter_matrix();
     
     for (i = 0; i < 64; i++)
     {
@@ -241,13 +228,13 @@ void dequant4_inter_c(int16_t *data, const int16_t *coeff, const uint32_t quant)
         else if (coeff[i] < 0)
         {
             int32_t level = -coeff[i];
-            level = ((2 * level + 1) * default_inter_matrix[i] * quant) >> 4;
+            level = ((2 * level + 1) * inter_matrix[i] * quant) >> 4;
             data[i] = (level <= 2048 ? -level : -2048);
         } 
         else // if (coeff[i] > 0)
         {
             uint32_t level = coeff[i];
-            level = ((2 * level + 1) * default_inter_matrix[i] * quant) >> 4;
+            level = ((2 * level + 1) * inter_matrix[i] * quant) >> 4;
             data[i] = (level <= 2047 ? level : 2047);
         }
 

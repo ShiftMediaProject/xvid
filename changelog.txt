@@ -1,4 +1,8 @@
 08.03.2002
+- added support for custom MPEG4 quant matrices
+
+08.03.2002
+
 - new core structure
 - mbcoding/mbdecoding rewrite
 - API change, introduced feature flags
