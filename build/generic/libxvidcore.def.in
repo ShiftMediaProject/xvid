@@ -2,5 +2,5 @@ EXPORTS
 	xvid_decore; 
 	xvid_encore; 
 	xvid_init; 
-	decore; 
-	encore; 
+	@DIVX4_ENCORE@
+	@DIVX4_DECORE@

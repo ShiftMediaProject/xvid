@@ -54,8 +54,7 @@ SRC_IA32 = \
 	$(SRCDIR)/motion/x86_asm/sad_sse2.asm \
 	\
 	$(SRCDIR)/image/x86_asm/interpolate8x8_3dn.asm \
-	$(SRCDIR)/motion/x86_asm/sad_3dn.asm 
-	
+	$(SRCDIR)/motion/x86_asm/sad_3dn.asm
 
 SRC_IA64 = \
 	$(SRCDIR)/dct/ia64_asm/fdct_ia64.s \
@@ -64,7 +63,6 @@ SRC_IA64 = \
 	$(SRCDIR)/motion/ia64_asm/halfpel8_refine_ia64.s \
 	$(SRCDIR)/quant/ia64_asm/quant_h263_ia64.s \
 	$(SRCDIR)/utils/ia64_asm/mem_transfer_ia64.s \
-	$(SRCDIR)/dct/ia64_asm/idct_ia64_gcc.s 
 
 SRC_PPC = \
 	$(SRCDIR)/bitstream/ppc_asm/cbp_ppc.s
