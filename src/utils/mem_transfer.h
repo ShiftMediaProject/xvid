@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mem_transfer.h,v 1.13 2004-03-22 22:36:24 edgomez Exp $
+ * $Id: mem_transfer.h,v 1.14 2004-04-05 20:36:37 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -51,6 +51,10 @@ extern TRANSFER_8TO16COPY transfer_8to16copy_3dne;
 extern TRANSFER_8TO16COPY transfer_8to16copy_ia64;
 #endif
 
+#ifdef ARCH_IS_PPC
+extern TRANSFER_8TO16COPY transfer_8to16copy_altivec_c;
+#endif
+
 /*****************************************************************************
  * transfer16to8 API
  ****************************************************************************/
@@ -73,6 +77,10 @@ extern TRANSFER_16TO8COPY transfer_16to8copy_3dne;
 
 #ifdef ARCH_IS_IA64
 extern TRANSFER_16TO8COPY transfer_16to8copy_ia64;
+#endif
+
+#ifdef ARCH_IS_PPC
+extern TRANSFER_16TO8COPY transfer_16to8copy_altivec_c;
 #endif
 
 /*****************************************************************************
@@ -101,6 +109,10 @@ extern TRANSFER_8TO16SUB transfer_8to16sub_3dne;
 extern TRANSFER_8TO16SUB transfer_8to16sub_ia64;
 #endif
 
+#ifdef ARCH_IS_PPC
+extern TRANSFER_8TO16SUB transfer_8to16sub_altivec_c;
+#endif
+
 /*****************************************************************************
  * transfer8to16 + substraction *readonly* op API
  ****************************************************************************/
@@ -123,6 +135,10 @@ extern TRANSFER_8TO16SUBRO transfer_8to16subro_mmx;
 extern TRANSFER_8TO16SUBRO transfer_8to16subro_3dne;
 #endif
 
+#ifdef ARCH_IS_PPC
+extern TRANSFER_8TO16SUBRO transfer_8to16subro_altivec_c;
+#endif
+
 /*****************************************************************************
  * transfer8to16 + substraction op API - Bidirectionnal Version
  ****************************************************************************/
@@ -139,7 +155,7 @@ typedef TRANSFER_8TO16SUB2 *TRANSFER_8TO16SUB2_PTR;
 extern TRANSFER_8TO16SUB2_PTR transfer_8to16sub2;
 
 /* Implemented functions */
-extern TRANSFER_8TO16SUB2 transfer_8to16sub2_c;
+TRANSFER_8TO16SUB2 transfer_8to16sub2_c;
 
 #ifdef ARCH_IS_IA32
 extern TRANSFER_8TO16SUB2 transfer_8to16sub2_mmx;
@@ -149,6 +165,10 @@ extern TRANSFER_8TO16SUB2 transfer_8to16sub2_3dne;
 
 #ifdef ARCH_IS_IA64
 extern TRANSFER_8TO16SUB2 transfer_8to16sub2_ia64;
+#endif
+
+#ifdef ARCH_IS_PPC
+extern TRANSFER_8TO16SUB2 transfer_8to16sub2_altivec_c;
 #endif
 
 /*****************************************************************************
@@ -176,6 +196,10 @@ extern TRANSFER_16TO8ADD transfer_16to8add_3dne;
 extern TRANSFER_16TO8ADD transfer_16to8add_ia64;
 #endif
 
+#ifdef ARCH_IS_PPC
+extern TRANSFER_16TO8ADD transfer_16to8add_altivec_c;
+#endif
+
 /*****************************************************************************
  * transfer8to8 + no op
  ****************************************************************************/
@@ -199,6 +223,10 @@ extern TRANSFER8X8_COPY transfer8x8_copy_3dne;
 
 #ifdef ARCH_IS_IA64
 extern TRANSFER8X8_COPY transfer8x8_copy_ia64;
+#endif
+
+#ifdef ARCH_IS_PPC
+extern TRANSFER8X8_COPY transfer8x8_copy_altivec_c;
 #endif
 
 static __inline void
