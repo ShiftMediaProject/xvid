@@ -111,13 +111,6 @@ sad16bi_c(const uint8_t * const cur,
 
 		for (i = 0; i < 16; i++) {
 			int pixel = (ptr_ref1[i] + ptr_ref2[i] + 1) / 2;
-
-			if (pixel < 0) {
-				pixel = 0;
-			} else if (pixel > 255) {
-				pixel = 255;
-			}
-
 			sad += ABS(ptr_cur[i] - pixel);
 		}
 
@@ -148,13 +141,6 @@ sad8bi_c(const uint8_t * const cur,
 
 		for (i = 0; i < 8; i++) {
 			int pixel = (ptr_ref1[i] + ptr_ref2[i] + 1) / 2;
-
-			if (pixel < 0) {
-				pixel = 0;
-			} else if (pixel > 255) {
-				pixel = 255;
-			}
-
 			sad += ABS(ptr_cur[i] - pixel);
 		}
 
