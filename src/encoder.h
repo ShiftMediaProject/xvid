@@ -56,6 +56,10 @@ typedef struct
 	uint32_t fincr;
 	uint32_t fbase;
 
+#ifdef BFRAMES
+	int max_bframes;
+#endif
+
     /* rounding type; alternate 0-1 after each interframe */
 	/* 1 <= fixed_code <= 4
 	   automatically adjusted using motion vector statistics inside
@@ -136,7 +140,6 @@ typedef struct
 
 #ifdef BFRAMES
 	/* constants */
-	int max_bframes;
 	int bquant_ratio;
 	/* vars */
 	int bframenum_head;

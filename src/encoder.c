@@ -34,7 +34,7 @@
  *
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.34 2002-05-03 15:26:30 edgomez Exp $
+ *  $Id: encoder.c,v 1.35 2002-05-06 10:07:18 suxen_drol Exp $
  *
  ***************************************************************************/
 
@@ -264,15 +264,15 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 #ifdef BFRAMES
 	
 	// TODO: handle malloc() == NULL
-	pEnc->max_bframes = pParam->max_bframes;
+	pEnc->mbParam.max_bframes = pParam->max_bframes;
 	pEnc->bquant_ratio = pParam->bquant_ratio;
-	if (pEnc->max_bframes > 0)
+	if (pEnc->mbParam.max_bframes > 0)
 	{
 		int n;
 
-		pEnc->bframes = malloc(pEnc->max_bframes * sizeof(FRAMEINFO *));
+		pEnc->bframes = malloc(pEnc->mbParam.max_bframes * sizeof(FRAMEINFO *));
 
-		for (n = 0; n < pEnc->max_bframes; n++)
+		for (n = 0; n < pEnc->mbParam.max_bframes; n++)
 		{
 			pEnc->bframes[n] = malloc(sizeof(FRAMEINFO));
 			pEnc->bframes[n]->mbs = malloc(sizeof(MACROBLOCK) * pEnc->mbParam.mb_width * pEnc->mbParam.mb_height);
@@ -316,10 +316,10 @@ int encoder_destroy(Encoder * pEnc)
 
 // =================================================================
 #ifdef BFRAMES
-	if (pEnc->max_bframes > 0)
+	if (pEnc->mbParam.max_bframes > 0)
 	{
 		int n;
-		for (n = 0; n < pEnc->max_bframes; n++)
+		for (n = 0; n < pEnc->mbParam.max_bframes; n++)
 		{
 			image_destroy(&pEnc->bframes[n]->image, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 			free(pEnc->bframes[n]->mbs);
@@ -507,7 +507,7 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 		/* note: sequences like "IIBB" decode fine with msfdam but,
 		   go screwy with divx5.00 */
 	}
-	else if (pEnc->bframenum_tail >= pEnc->max_bframes)
+	else if (pEnc->bframenum_tail >= pEnc->mbParam.max_bframes)
 	{
 		dprintf("--- PFRAME ---");
 
