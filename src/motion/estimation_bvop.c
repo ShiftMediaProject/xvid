@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.5 2004-05-26 09:15:02 edgomez Exp $
+ * $Id: estimation_bvop.c,v 1.6 2004-07-03 08:46:39 syskin Exp $
  *
  ****************************************************************************/
 
@@ -63,8 +63,8 @@ ChromaSAD2(const int fx, const int fy, const int bx, const int by,
 	filter = ((fx & 1) << 1) | (fy & 1);
 
 	if (filter != 0) {
-		f_refu = data->RefQ;
-		f_refv = data->RefQ + 8;
+		f_refu = data->RefQ + 64;
+		f_refv = data->RefQ + 64 + 8;
 		if (data->chromaX != fx || data->chromaY != fy) {
 			interpolate8x8_halfpel[filter](f_refu, data->RefP[4] + offset, stride, data->rounding);
 			interpolate8x8_halfpel[filter](f_refv, data->RefP[5] + offset, stride, data->rounding);
@@ -79,8 +79,8 @@ ChromaSAD2(const int fx, const int fy, const int bx, const int by,
 	filter = ((bx & 1) << 1) | (by & 1);
 
 	if (filter != 0) {
-		b_refu = data->RefQ + 16;
-		b_refv = data->RefQ + 24;
+		b_refu = data->RefQ + 64 + 16;
+		b_refv = data->RefQ + 64 + 24;
 		if (data->b_chromaX != bx || data->b_chromaY != by) {
 			interpolate8x8_halfpel[filter](b_refu, data->b_RefP[4] + offset, stride, data->rounding);
 			interpolate8x8_halfpel[filter](b_refv, data->b_RefP[5] + offset, stride, data->rounding);
