@@ -28,7 +28,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.c,v 1.32 2002-09-21 03:07:56 suxen_drol Exp $
+ * $Id: bitstream.c,v 1.33 2002-09-22 17:01:36 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -417,7 +417,7 @@ BitstreamReadHeaders(Bitstream * bs,
 
 
 				if (vol_ver_id != 1) {
-					DEBUG("QUARTERPEL BITSTREAM");
+					DPRINTF(DPRINTF_DEBUG, "QUARTERPEL BITSTREAM");
 					dec->quarterpel = BitstreamGetBit(bs);	// quarter_sample
 				}
 				else

@@ -55,7 +55,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@xvid.org>
  *
- *  $Id: decoder.c,v 1.38 2002-09-21 03:07:56 suxen_drol Exp $
+ *  $Id: decoder.c,v 1.39 2002-09-22 17:01:36 edgomez Exp $
  *
  *************************************************************************/
 
@@ -379,7 +379,7 @@ decoder_mbinter(DECODER * dec,
 
 	start_timer();
 	if(dec->quarterpel) {
-		DEBUG("QUARTERPEL");
+		DPRINTF(DPRINTF_DEBUG, "QUARTERPEL\n");
 		interpolate8x8_quarterpel(dec->cur.y, dec->refn[0].y, 16*x_pos, 16*y_pos,
 								  pMB->mvs[0].x, pMB->mvs[0].y, stride,  rounding);
 		interpolate8x8_quarterpel(dec->cur.y, dec->refn[0].y, 16*x_pos + 8, 16*y_pos,
@@ -509,7 +509,7 @@ decoder_iframe(DECODER * dec,
 
 			if (dec->interlacing) {
 				mb->field_dct = BitstreamGetBit(bs);
-				DEBUG1("deci: field_dct: ", mb->field_dct);
+				DPRINTF(DPRINTF_DEBUG, "deci: field_dct: %d", mb->field_dct);
 			}
 
 			decoder_mbintra(dec, mb, x, y, acpred_flag, cbp, bs, quant,
@@ -655,18 +655,18 @@ decoder_pframe(DECODER * dec,
 				if (dec->interlacing) {
 					if (cbp || intra) {
 						mb->field_dct = BitstreamGetBit(bs);
-						DEBUG1("decp: field_dct: ", mb->field_dct);
+						DPRINTF(DPRINTF_DEBUG, "decp: field_dct: %d", mb->field_dct);
 					}
 
 					if (mb->mode == MODE_INTER || mb->mode == MODE_INTER_Q) {
 						mb->field_pred = BitstreamGetBit(bs);
-						DEBUG1("decp: field_pred: ", mb->field_pred);
+						DPRINTF(DPRINTF_DEBUG, "decp: field_pred: %d", mb->field_pred);
 
 						if (mb->field_pred) {
 							mb->field_for_top = BitstreamGetBit(bs);
-							DEBUG1("decp: field_for_top: ", mb->field_for_top);
+							DPRINTF(DPRINTF_DEBUG, "decp: field_for_top: %d", mb->field_for_top);
 							mb->field_for_bot = BitstreamGetBit(bs);
-							DEBUG1("decp: field_for_bot: ", mb->field_for_bot);
+							DPRINTF(DPRINTF_DEBUG, "decp: field_for_bot: %d", mb->field_for_bot);
 						}
 					}
 				}
@@ -706,7 +706,8 @@ decoder_pframe(DECODER * dec,
 								rounding);
 			} else				// not coded
 			{
-				DEBUG2("P-frame MB at (X,Y)=",x,y);
+				DPRINTF(DPRINTF_DEBUG, "P-frame MB at (X,Y)=(%d,%d)", x, y);
+
 				mb->mode = MODE_NOT_CODED;
 				mb->mvs[0].x = mb->mvs[1].x = mb->mvs[2].x = mb->mvs[3].x = 0;
 				mb->mvs[0].y = mb->mvs[1].y = mb->mvs[2].y = mb->mvs[3].y = 0;
@@ -1278,7 +1279,7 @@ decoder_bframe(DECODER * dec,
 				break;
 
 			default:
-				DEBUG1("Not support B-frame mb_type =", mb->mb_type);
+				DPRINTF(DPRINTF_ERROR, "Not support B-frame mb_type = %d", mb->mb_type);
 			}
 
 		}						// end of FOR

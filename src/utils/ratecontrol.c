@@ -28,7 +28,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: ratecontrol.c,v 1.14 2002-09-05 21:23:03 edgomez Exp $
+ * $Id: ratecontrol.c,v 1.15 2002-09-22 17:01:36 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -132,8 +132,9 @@ RateControlUpdate(RateControl * rate_control,
 					 (double) rate_control->framerate) *
 					(double) rate_control->frames));
 
-	DEBUGCBR((int32_t) (rate_control->frames - 1), rate_control->rtn_quant,
-			 (int32_t) deviation);
+	DPRINTF(DPRINTF_DEBUG, "CBR: frame: %i, quant: %i, deviation: %i\n",
+			(int32_t) (rate_control->frames - 1), rate_control->rtn_quant,
+			(int32_t) deviation);
 
 	if (rate_control->rtn_quant >= 2) {
 		averaging_period = (double) rate_control->averaging_period;

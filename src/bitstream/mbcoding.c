@@ -29,7 +29,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbcoding.c,v 1.31 2002-09-21 02:26:12 suxen_drol Exp $
+ * $Id: mbcoding.c,v 1.32 2002-09-22 17:01:36 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -374,13 +374,13 @@ CodeBlockInter(const FRAMEINFO * frame,
 	if (frame->global_flags & XVID_INTERLACING) {
 		if (pMB->cbp) {
 			BitstreamPutBit(bs, pMB->field_dct);
-			DEBUG1("codep: field_dct: ", pMB->field_dct);
+			DPRINTF(DPRINTF_DEBUG, "codep: field_dct: %d", pMB->field_dct);
 		}
 
 		// if inter block, write field ME flag
 		if (pMB->mode == MODE_INTER || pMB->mode == MODE_INTER_Q) {
 			BitstreamPutBit(bs, pMB->field_pred);
-			DEBUG1("codep: field_pred: ", pMB->field_pred);
+			DPRINTF(DPRINTF_DEBUG, "codep: field_pred: %d", pMB->field_pred);
 
 			// write field prediction references
 			if (pMB->field_pred) {
@@ -671,7 +671,7 @@ get_coeff(Bitstream * bs,
 		level = BitstreamGetBits(bs, 8);
 
 		if (level == 0 || level == 128)
-			DEBUG1("Illegal LEVEL for ESCAPE mode 4:", level);
+			DPRINTF(DPRINTF_ERROR, "Illegal LEVEL for ESCAPE mode 4: %d", level);
 
 		return (level >= 128 ? -(256 - level) : level);
 	}
@@ -739,7 +739,7 @@ get_intra_block(Bitstream * bs,
 	do {
 		level = get_coeff(bs, &run, &last, 1, 0);
 		if (run == -1) {
-			DEBUG("fatal: invalid run");
+			DPRINTF(DPRINTF_DEBUG, "fatal: invalid run");
 			break;
 		}
 		coeff += run;
@@ -749,7 +749,7 @@ get_intra_block(Bitstream * bs,
 		//DPRINTF(DPRINTF_COEFF,"block[%i] %i %08x", scan[coeff], level, BitstreamShowBits(bs, 32));
 
 		if (level < -127 || level > 127) {
-			DEBUG1("warning: intra_overflow", level);
+			DPRINTF(DPRINTF_DEBUG, "warning: intra_overflow: %d", level);
 		}
 		coeff++;
 	} while (!last);
@@ -771,7 +771,7 @@ get_inter_block(Bitstream * bs,
 	do {
 		level = get_coeff(bs, &run, &last, 0, 0);
 		if (run == -1) {
-			DEBUG("fatal: invalid run");
+			DPRINTF(DPRINTF_ERROR, "fatal: invalid run");
 			break;
 		}
 		p += run;
@@ -779,10 +779,9 @@ get_inter_block(Bitstream * bs,
 		block[scan[p]] = level;
 
 		DPRINTF(DPRINTF_COEFF,"block[%i] %i", scan[p], level);
-		// DPRINTF(DPRINTF_COEFF,"block[%i] %i %08x", scan[p], level, BitstreamShowBits(bs, 32));
 
 		if (level < -127 || level > 127) {
-			DEBUG1("warning: inter_overflow", level);
+			DPRINTF(DPRINTF_DEBUG, "warning: inter_overflow: %d", level);
 		}
 		p++;
 	} while (!last);
