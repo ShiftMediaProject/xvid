@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.cpp,v 1.9 2004-07-16 15:38:01 syskin Exp $
+ * $Id: CXvidDecoder.cpp,v 1.10 2004-07-18 00:58:14 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -788,7 +788,9 @@ repeat :
 			{
 				CMediaType mtOut2 = m_pOutput->CurrentMediaType();
 				VIDEOINFOHEADER2* vihOut2 = (VIDEOINFOHEADER2*)mtOut2.Format();
-				if (vihOut2->dwPictAspectRatioX != ar_x && vihOut2->dwPictAspectRatioY != ar_y)
+
+				if (*mtOut2.FormatType() == FORMAT_VideoInfo2 && 
+					vihOut2->dwPictAspectRatioX != ar_x && vihOut2->dwPictAspectRatioY != ar_y)
 				{
 					vihOut2->dwPictAspectRatioX = ar_x;
 					vihOut2->dwPictAspectRatioY = ar_y;
