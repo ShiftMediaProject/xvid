@@ -94,6 +94,7 @@ typedef struct
 	uint32_t *tail;
 	uint32_t *start;
 	uint32_t length;
+	uint32_t initpos;
 }
 Bitstream;
 
