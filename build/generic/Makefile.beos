@@ -1,0 +1,167 @@
+#############################################################################
+#
+# GNU/Linux Makefile
+# 
+# Edit this file to enable/disable optimizations
+#
+# $Id: Makefile.beos,v 1.1 2002-08-18 14:06:32 Isibaar Exp $
+# 
+#############################################################################
+
+include Makefile.inc
+
+# You can set/add options to CC and CFLAGS without editing this Makefile
+# You have just to export an environment CC/CFLAGS variable before running
+# make.
+#
+# Examples :
+# $ export CC='gcc-3.1'
+# $ export CFLAGS='-maccumulate-outgoing-args'
+# $ make
+# ...
+
+# You can choose a specific compiler here removing the sharp symbol
+#   - Default is 'cc' which is a symlink to your default distro gcc
+
+
+# CC = gcc
+# CC = gcc-3.1
+# CC = icc
+
+# Assembler
+AS = nasm
+AFLAGS = -f elf
+
+# Constants which should not be modified
+CFLAGS += -DARCH_X86
+CFLAGS += -DBEOS
+
+# Enable multithreaded ME (experimental), other routines to follow
+# CFLAGS += -D_SMP
+
+# Enable some experimental/debugging code
+#   (Use only if you know what you're doing !)
+    # PSNR during encoding
+# CFLAGS += -D_DEBUG_PSNR
+    # BFRAMES encoding
+# CFLAGS += -DBFRAMES
+    # BFRAMES decoding
+# CFLAGS += -DBFRAMES_DEC
+
+LIBDIR = /usr/local/lib
+
+ifeq ($(CC),icc)
+
+    # -tpp7 might be faster (P4 optmization)...
+    CFLAGS += -O3 -ip -tpp6 -xM
+    CFLAGS += -I/opt/intel/compiler50/ia32/include
+    CFLAGS += -I/opt/intel/compiler50/ia32/substitute_headers/
+
+else
+
+  # Warning level options
+      # Shows all warnings
+  CFLAGS += -Wall
+      # To detect non ANSI C code (xvid is not ANSI C (yet?))
+  # CFLAGS += -pedantic
+
+
+  # General Optimization options
+      # Optimize code for size (implies -O2)
+  CFLAGS += -Os
+      # Unroll loops code, this might speed up loops
+  CFLAGS += -funroll-loops
+      # Generates FPU math code
+  CFLAGS += -ffast-math
+      # ??? (man gcc)
+  CFLAGS += -fstrict-aliasing
+      # Omit the x86 push ebp; mov ebp, esp function
+      # header and its corresponding function tailer
+  CFLAGS += -fomit-frame-pointer
+      # Generates Position Independant Code depending on your nasm version,
+      # this could generate shared libraries that segfault because of a nasm
+      # bug
+  CFLAGS += -fPIC
+
+  # Debugging and Profiling options
+     # Writes debugging symbols in object files
+  # CFLAGS += -g
+     # Includes profiling code in generated code, don't forget to disable
+     # -fomit-frame-pointer as these 2 options are exclusive.
+  # CFLAGS += -p
+
+
+  # Architecture options : Valid for every gcc version
+  # Uncomment the one which you want to compile for
+
+  # CFLAGS += -march=i586 -mcpu=i586
+   CFLAGS += -march=i686 -mcpu=i686
+  # CFLAGS += -march=pentium -mcpu=pentium
+  # CFLAGS += -march=pentiumpro -mcpu=pentiumpro
+
+  # Architecture options : Valid for every gcc >= 3.1
+  # Uncomment the one which you want to compile for
+
+  # CFLAGS += -march=pentium-mmx -mcpu=pentium-mmx
+  # CFLAGS += -march=pentium3 -mcpu=pentium3
+  # CFLAGS += -march=pentium4 -mcpu=pentium4
+  # CFLAGS += -march=athlon -mcpu=athlon
+  # CFLAGS += -march=k6 -mcpu=k6
+  # CFLAGS += -march=k6-2 -mcpu=k6-2
+  # CFLAGS += -march=k6-3 -mcpu=k6-3
+  # CFLAGS += -march=athlon-tbird -mcpu=athlon-tbird
+  # CFLAGS += -march=athlon-xp -mcpu=athlon-xp
+  # CFLAGS += -march=athlon-mp -mcpu=athlon-mp
+
+  # x86 specific optimization for every gcc
+      # Aligns the stack to 2^4=16bytes boundaries in each function
+      # Local variables should be aligned and make the code faster
+      # some gcc versions (3.0.4) have problems with this option
+      # we can't really trust gcc output :-( You're warned.
+  CFLAGS += -mpreferred-stack-boundary=4
+
+  # Architecture specific optimization available in gcc >= 3.1
+      # generates floating point sse code (for >= pentium 3)
+  # CFLAGS += -mfpmath=sse
+      # generates both floating point sse and 387 code, this double the amount
+      # of fp registers and could make the code faster
+      # (Still experimental in gcc 3.1.0)
+  # CFLAGS += -mfpmath=sse,387
+
+endif
+
+#############################################################################
+#
+# Makefile rules
+#
+#############################################################################
+
+%.o: %.asm
+	$(AS) $(AFLAGS) $< -o $@
+
+RM = rm -rf
+
+
+all: $(LIB) $(LIBSO)
+
+
+$(LIB): $(SRC:.c=.o) $(SRC_INTEL:.asm=.o)
+	ar rcs $@ $^
+
+
+$(LIBSO): $(SRC:.c=.o) $(SRC_INTEL:.asm=.o)
+	$(CC) $(CFLAGS) $^ -nostart -lbe -o $@
+
+
+clean:	
+	$(RM) `find $(SRCDIR) -name "*.o"`
+	$(RM) $(LIB)
+	$(RM) $(LIBSO)
+
+install: libxvidcore.so
+	cp libxvidcore.so $(LIBDIR)			# you have to bee root for this
+	/sbin/ldconfig 
+
+install-test: libxvidcore.so				# if you don't want to overwrite previous compile
+	cp libxvidcore.so $(LIBDIR)/libtestcore.so
+	/sbin/ldconfig
