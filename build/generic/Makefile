@@ -137,15 +137,15 @@ $(SHARED_LIB): $(BUILD_DIR) $(OBJECTS)
 
 install: $(BUILD_DIR)/$(STATIC_LIB) $(BUILD_DIR)/$(SHARED_LIB)
 	@echo "  D: $(libdir)"
-	@$(INSTALL) -d $(libdir)
+	@$(INSTALL) -d $(DESTDIR)$(libdir)
 	@echo "  I: $(libdir)/$(SHARED_LIB)"
-	@$(INSTALL) -m 755 $(BUILD_DIR)/$(SHARED_LIB) $(libdir)/$(SHARED_LIB)
+	@$(INSTALL) -m 755 $(BUILD_DIR)/$(SHARED_LIB) $(DESTDIR)$(libdir)/$(SHARED_LIB)
 	@echo "  I: $(libdir)/$(STATIC_LIB)"
-	@$(INSTALL) -m 755 $(BUILD_DIR)/$(STATIC_LIB) $(libdir)/$(STATIC_LIB)
+	@$(INSTALL) -m 755 $(BUILD_DIR)/$(STATIC_LIB) $(DESTDIR)$(libdir)/$(STATIC_LIB)
 	@echo "  D: $(includedir)"
-	@$(INSTALL) -d $(includedir)
+	@$(INSTALL) -d $(DESTDIR)$(includedir)
 	@echo "  I: $(includedir)/xvid.h"
-	@$(INSTALL) -m 644 $(SRC_DIR)/xvid.h $(includedir)/xvid.h
+	@$(INSTALL) -m 644 $(SRC_DIR)/xvid.h $(DESTDIR)$(includedir)/xvid.h
 
 #-----------------------------------------------------------------------------
 # Platorm specific file -- dumb rules for people executing make before

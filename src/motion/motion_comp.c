@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: motion_comp.c,v 1.21 2004-08-10 21:58:55 edgomez Exp $
+ * $Id: motion_comp.c,v 1.22 2004-10-12 21:08:41 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -86,13 +86,13 @@ get_ref(const uint8_t * const refn,
 {
 	switch (((dx & 1) << 1) + (dy & 1)) {
 	case 0:
-		return refn + (int) ((x * block + dx / 2) + (y * block + dy / 2) * stride);
+		return refn + (int) (((int)x * (int)block + dx / 2) + ((int)y * (int)block + dy / 2) * (int)stride);
 	case 1:
-		return refv + (int) ((x * block + dx / 2) + (y * block + (dy - 1) / 2) * stride);
+		return refv + (int) (((int)x * (int)block + dx / 2) + ((int)y * (int)block + (dy - 1) / 2) * (int)stride);
 	case 2:
-		return refh + (int) ((x * block + (dx - 1) / 2) + (y * block + dy / 2) * stride);
+		return refh + (int) (((int)x * (int)block + (dx - 1) / 2) + ((int)y * (int)block + dy / 2) * (int)stride);
 	default:
-		return refhv + (int) ((x * block + (dx - 1) / 2) + (y * block + (dy - 1) / 2) * stride);
+		return refhv + (int) (((int)x * (int)block + (dx - 1) / 2) + ((int)y * (int)block + (dy - 1) / 2) * (int)stride);
 	}
 }
 
@@ -123,7 +123,7 @@ compensate16x16_interpolate(int16_t * const dct_codes,
 											(uint8_t *) ref, tmp + 32,
 											tmp + 64, tmp + 96, x, y, dx, dy, stride, rounding);
 				ptr = tmp;
-			} else ptr =  ref + (y + dy/4)*stride + x + dx/4; /* fullpixel position */
+			} else ptr =  ref + ((int)y + dy/4)*(int)stride + (int)x + dx/4; /* fullpixel position */
 
 		} else ptr = get_ref(ref, refh, refv, refhv, x, y, 1, dx, dy, stride);
 
@@ -185,7 +185,7 @@ compensate8x8_interpolate(	int16_t * const dct_codes,
 										(uint8_t *) ref, tmp + 32,
 										tmp + 64, tmp + 96, x, y, dx, dy, stride, rounding);
 				ptr = tmp;
-			} else ptr = ref + (y + dy/4)*stride + x + dx/4; /* fullpixel position */
+			} else ptr = ref + ((int)y + dy/4)*(int)stride + (int)x + dx/4; /* fullpixel position */
 		} else ptr = get_ref(ref, refh, refv, refhv, x, y, 1, dx, dy, stride);
 
 			transfer_8to16sub(dct_codes, cur + y * stride + x, ptr, stride);
@@ -451,14 +451,14 @@ MBMotionCompensationBVOP(MBParam * pParam,
 					(uint8_t *) f_ref->y, tmp + 32,
 					tmp + 64, tmp + 96, 16*i, 16*j, dx, dy, edged_width, 0);
 				ptr1 = tmp;
-			} else ptr1 = f_ref->y + (16*j + dy/4)*edged_width + 16*i + dx/4; /* fullpixel position */
+			} else ptr1 = f_ref->y + (16*(int)j + dy/4)*(int)edged_width + 16*(int)i + dx/4; /* fullpixel position */
 
 			if ((b_dx&3) | (b_dy&3)) {
 				interpolate16x16_quarterpel(tmp - i * 16 - j * 16 * edged_width + 16,
 					(uint8_t *) b_ref->y, tmp + 32,
 					tmp + 64, tmp + 96, 16*i, 16*j, b_dx, b_dy, edged_width, 0);
 				ptr2 = tmp + 16;
-			} else ptr2 = b_ref->y + (16*j + b_dy/4)*edged_width + 16*i + b_dx/4; /* fullpixel position */
+			} else ptr2 = b_ref->y + (16*(int)j + b_dy/4)*(int)edged_width + 16*(int)i + b_dx/4; /* fullpixel position */
 
 			b_dx /= 2;
 			b_dy /= 2;
@@ -505,7 +505,7 @@ MBMotionCompensationBVOP(MBParam * pParam,
 						tmp + 32, tmp + 64, tmp + 96,
 						16*i + (k&1)*8, 16*j + (k>>1)*8, dx, dy, edged_width, 0);
 					ptr1 = tmp;
-				} else ptr1 = f_ref->y + (16*j + (k>>1)*8 + dy/4)*edged_width + 16*i + (k&1)*8 + dx/4;
+				} else ptr1 = f_ref->y + (16*(int)j + (k>>1)*8 + dy/4)*(int)edged_width + 16*(int)i + (k&1)*8 + dx/4;
 
 				if ((b_dx&3) | (b_dy&3)) {
 					interpolate8x8_quarterpel(tmp - (i * 16+(k&1)*8) - (j * 16+((k>>1)*8)) * edged_width + 16,
@@ -513,7 +513,7 @@ MBMotionCompensationBVOP(MBParam * pParam,
 						tmp + 16, tmp + 32, tmp + 48,
 						16*i + (k&1)*8, 16*j + (k>>1)*8, b_dx, b_dy, edged_width, 0);
 					ptr2 = tmp + 16;
-				} else ptr2 = b_ref->y + (16*j + (k>>1)*8 + b_dy/4)*edged_width + 16*i + (k&1)*8 + b_dx/4;
+				} else ptr2 = b_ref->y + (16*(int)j + (k>>1)*8 + b_dy/4)*(int)edged_width + 16*(int)i + (k&1)*8 + b_dx/4;
 			} else {
 				sumx += dx; sumy += dy;
 				b_sumx += b_dx; b_sumy += b_dy;
