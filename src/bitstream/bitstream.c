@@ -652,11 +652,12 @@ BitstreamWriteVolHeader(Bitstream * const bs,
 
 	WRITE_MARKER();
 
-	// fixed_vop_rate
-	BitstreamPutBit(bs, 0);
-
-	// fixed_time_increment: value=nth_of_sec, nbits = log2(resolution)
-	// BitstreamPutBits(bs, 0, 15);
+#ifdef BFRAMES
+	BitstreamPutBit(bs, 1);		// fixed_vop_rate = 1
+	BitstreamPutBits(bs, pParam->fincr, log2bin(pParam->fbase));	// fixed_vop_time_increment
+#else
+	BitstreamPutBit(bs, 0);		// fixed_vop_rate = 0
+#endif
 
 	WRITE_MARKER();
 	BitstreamPutBits(bs, pParam->width, 13);	// width
