@@ -39,7 +39,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.57 2002-07-19 14:56:00 chl Exp $
+ *  $Id: encoder.c,v 1.58 2002-07-19 15:02:38 chl Exp $
  *
  ****************************************************************************/
 
@@ -1725,7 +1725,6 @@ FrameCodeP(Encoder * pEnc,
 	*pBits = BitstreamPos(bs) - *pBits;
 
 	pEnc->time_pp = ((int32_t)pEnc->mbParam.fbase - (int32_t)pEnc->last_pframe + (int32_t)pEnc->mbParam.m_ticks) % (int32_t)pEnc->mbParam.fbase;
-        fprintf(stderr,"fbase=%d last_p=%d ticks=%d time_pp = %d\n",pEnc->mbParam.fbase,pEnc->last_pframe,pEnc->mbParam.m_ticks,pEnc->time_pp); 
 
 	pEnc->last_pframe = pEnc->mbParam.m_ticks;
 	return 0;					// inter
@@ -1783,7 +1782,6 @@ FrameCodeB(Encoder * pEnc,
 	stop_inter_timer();
 
 	start_timer();
-	fprintf(stderr,"m_ticks =%d\n",(int32_t)pEnc->mbParam.m_ticks+1);
 	MotionEstimationBVOP(&pEnc->mbParam, frame, 
  	  ((int32_t)pEnc->mbParam.fbase + (int32_t)pEnc->mbParam.m_ticks + 1 - (int32_t)pEnc->last_pframe) % pEnc->mbParam.fbase, 
 						pEnc->time_pp, 

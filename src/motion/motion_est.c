@@ -2684,7 +2684,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 	const int64_t TRB = (int32_t)time_pp - (int32_t)time_bp;
     	const int64_t TRD = (int32_t)time_pp;
 
-	fprintf(stderr,"TRB = %lld  TRD = %lld  time_bp =%d time_pp =%d\n\n",TRB,TRD,time_bp,time_pp);
+	// fprintf(stderr,"TRB = %lld  TRD = %lld  time_bp =%d time_pp =%d\n\n",TRB,TRD,time_bp,time_pp);
 	// note: i==horizontal, j==vertical
 	for (j = 0; j < mb_height; j++) {
 		for (i = 0; i < mb_width; i++) {
