@@ -1005,7 +1005,7 @@ static void adv_mode(HWND hDlg, int idd, CONFIG * config)
 			if (vsize > 0) {
 				SetDlgItemInt(hDlg, IDC_BITRATE_VSIZE, vsize, TRUE);
 				/* convert from kbytes to kbits-per-second */
-				SetDlgItemInt(hDlg, IDC_BITRATE_VRATE, (vsize * 8 * 128) / (duration * 125), TRUE);
+				SetDlgItemInt(hDlg, IDC_BITRATE_VRATE, ((__int64)vsize * 8 * 128) / (duration * 125), TRUE);
 			}else{
 				SetDlgItemText(hDlg, IDC_BITRATE_VSIZE, "Overflow");
 				SetDlgItemText(hDlg, IDC_BITRATE_VRATE, "Overflow");
