@@ -108,19 +108,32 @@ interpolate8x8_halfpel_h_c(uint8_t * const dst,
 						   const uint32_t stride,
 						   const uint32_t rounding)
 {
-	uint32_t i, j;
-
-	for (j = 0; j < 8; j++) {
-		for (i = 0; i < 8; i++) {
-
-			int16_t tot =
-				(int32_t) src[j * stride + i] + (int32_t) src[j * stride + i +
-															  1];
-
-			tot = (int32_t) ((tot + 1 - rounding) >> 1);
-			dst[j * stride + i] = (uint8_t) tot;
+	intptr_t j;
+	
+	if (rounding)
+		for (j = 7*stride; j >= 0; j-=stride)
+		{
+				dst[j + 0] = (uint8_t)((src[j + 0] + src[j + 1] )>>1);
+				dst[j + 1] = (uint8_t)((src[j + 1] + src[j + 2] )>>1);
+				dst[j + 2] = (uint8_t)((src[j + 2] + src[j + 3] )>>1);
+				dst[j + 3] = (uint8_t)((src[j + 3] + src[j + 4] )>>1);
+				dst[j + 4] = (uint8_t)((src[j + 4] + src[j + 5] )>>1);
+				dst[j + 5] = (uint8_t)((src[j + 5] + src[j + 6] )>>1);
+				dst[j + 6] = (uint8_t)((src[j + 6] + src[j + 7] )>>1);
+				dst[j + 7] = (uint8_t)((src[j + 7] + src[j + 8] )>>1);
 		}
-	}
+	else
+		for (j = 0; j < 8*stride; j+=stride)		/* forward or backwards? Who knows ... */
+		{
+				dst[j + 0] = (uint8_t)((src[j + 0] + src[j + 1] + 1)>>1);
+				dst[j + 1] = (uint8_t)((src[j + 1] + src[j + 2] + 1)>>1);
+				dst[j + 2] = (uint8_t)((src[j + 2] + src[j + 3] + 1)>>1);
+				dst[j + 3] = (uint8_t)((src[j + 3] + src[j + 4] + 1)>>1);
+				dst[j + 4] = (uint8_t)((src[j + 4] + src[j + 5] + 1)>>1);
+				dst[j + 5] = (uint8_t)((src[j + 5] + src[j + 6] + 1)>>1);
+				dst[j + 6] = (uint8_t)((src[j + 6] + src[j + 7] + 1)>>1);
+				dst[j + 7] = (uint8_t)((src[j + 7] + src[j + 8] + 1)>>1);
+		}
 }
 
 
@@ -131,16 +144,33 @@ interpolate8x8_halfpel_v_c(uint8_t * const dst,
 						   const uint32_t stride,
 						   const uint32_t rounding)
 {
-	uint32_t i, j;
+	intptr_t j;
+//	const uint8_t * const src2 = src+stride;		/* using a second pointer is _not_ faster here */
 
-	for (j = 0; j < 8; j++) {
-		for (i = 0; i < 8; i++) {
-			int16_t tot = src[j * stride + i] + src[j * stride + i + stride];
-
-			tot = ((tot + 1 - rounding) >> 1);
-			dst[j * stride + i] = (uint8_t) tot;
+	if (rounding)
+		for (j = 0; j < 8*stride; j+=stride)		/* forward is better. Some automatic prefetch perhaps. */
+		{
+				dst[j + 0] = (uint8_t)((src[j + 0] + src[j + stride + 0] )>>1);
+				dst[j + 1] = (uint8_t)((src[j + 1] + src[j + stride + 1] )>>1);
+				dst[j + 2] = (uint8_t)((src[j + 2] + src[j + stride + 2] )>>1);
+				dst[j + 3] = (uint8_t)((src[j + 3] + src[j + stride + 3] )>>1);
+				dst[j + 4] = (uint8_t)((src[j + 4] + src[j + stride + 4] )>>1);
+				dst[j + 5] = (uint8_t)((src[j + 5] + src[j + stride + 5] )>>1);
+				dst[j + 6] = (uint8_t)((src[j + 6] + src[j + stride + 6] )>>1);
+				dst[j + 7] = (uint8_t)((src[j + 7] + src[j + stride + 7] )>>1);
 		}
-	}
+	else
+		for (j = 0; j < 8*stride; j+=stride)
+		{
+				dst[j + 0] = (uint8_t)((src[j + 0] + src[j + stride + 0] + 1)>>1);
+				dst[j + 1] = (uint8_t)((src[j + 1] + src[j + stride + 1] + 1)>>1);
+				dst[j + 2] = (uint8_t)((src[j + 2] + src[j + stride + 2] + 1)>>1);
+				dst[j + 3] = (uint8_t)((src[j + 3] + src[j + stride + 3] + 1)>>1);
+				dst[j + 4] = (uint8_t)((src[j + 4] + src[j + stride + 4] + 1)>>1);
+				dst[j + 5] = (uint8_t)((src[j + 5] + src[j + stride + 5] + 1)>>1);
+				dst[j + 6] = (uint8_t)((src[j + 6] + src[j + stride + 6] + 1)>>1);
+				dst[j + 7] = (uint8_t)((src[j + 7] + src[j + stride + 7] + 1)>>1);
+		}
 }
 
 
@@ -150,19 +180,36 @@ interpolate8x8_halfpel_hv_c(uint8_t * const dst,
 							const uint32_t stride,
 							const uint32_t rounding)
 {
-	uint32_t i, j;
+	intptr_t j;
 
-	for (j = 0; j < 8; j++) {
-		for (i = 0; i < 8; i++) {
-			int16_t tot =
-				src[j * stride + i] + src[j * stride + i + 1] +
-				src[j * stride + i + stride] + src[j * stride + i + stride +
-												   1];
-			tot = ((tot + 2 - rounding) >> 2);
-			dst[j * stride + i] = (uint8_t) tot;
+	if (rounding)
+		for (j = 7*stride; j >= 0; j-=stride)
+		{
+				dst[j + 0] = (uint8_t)((src[j+0] + src[j+1] + src[j+stride+0] + src[j+stride+1] +1)>>2);
+				dst[j + 1] = (uint8_t)((src[j+1] + src[j+2] + src[j+stride+1] + src[j+stride+2] +1)>>2);
+				dst[j + 2] = (uint8_t)((src[j+2] + src[j+3] + src[j+stride+2] + src[j+stride+3] +1)>>2);
+				dst[j + 3] = (uint8_t)((src[j+3] + src[j+4] + src[j+stride+3] + src[j+stride+4] +1)>>2);
+				dst[j + 4] = (uint8_t)((src[j+4] + src[j+5] + src[j+stride+4] + src[j+stride+5] +1)>>2);
+				dst[j + 5] = (uint8_t)((src[j+5] + src[j+6] + src[j+stride+5] + src[j+stride+6] +1)>>2);
+				dst[j + 6] = (uint8_t)((src[j+6] + src[j+7] + src[j+stride+6] + src[j+stride+7] +1)>>2);
+				dst[j + 7] = (uint8_t)((src[j+7] + src[j+8] + src[j+stride+7] + src[j+stride+8] +1)>>2);
 		}
-	}
+	else
+		for (j = 7*stride; j >= 0; j-=stride)
+		{
+				dst[j + 0] = (uint8_t)((src[j+0] + src[j+1] + src[j+stride+0] + src[j+stride+1] +2)>>2);
+				dst[j + 1] = (uint8_t)((src[j+1] + src[j+2] + src[j+stride+1] + src[j+stride+2] +2)>>2);
+				dst[j + 2] = (uint8_t)((src[j+2] + src[j+3] + src[j+stride+2] + src[j+stride+3] +2)>>2);
+				dst[j + 3] = (uint8_t)((src[j+3] + src[j+4] + src[j+stride+3] + src[j+stride+4] +2)>>2);
+				dst[j + 4] = (uint8_t)((src[j+4] + src[j+5] + src[j+stride+4] + src[j+stride+5] +2)>>2);
+				dst[j + 5] = (uint8_t)((src[j+5] + src[j+6] + src[j+stride+5] + src[j+stride+6] +2)>>2);
+				dst[j + 6] = (uint8_t)((src[j+6] + src[j+7] + src[j+stride+6] + src[j+stride+7] +2)>>2);
+				dst[j + 7] = (uint8_t)((src[j+7] + src[j+8] + src[j+stride+7] + src[j+stride+8] +2)>>2);
+		}
 }
+
+
+
 
 /*************************************************************
  * QPEL STUFF STARTS HERE                                    *
