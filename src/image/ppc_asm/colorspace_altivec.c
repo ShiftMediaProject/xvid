@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: colorspace_altivec.c,v 1.3 2004-12-09 23:02:54 edgomez Exp $
+ * $Id: colorspace_altivec.c,v 1.4 2005-03-18 18:01:34 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -28,6 +28,7 @@
 #endif
 
 #include "../../portab.h"
+#include "../colorspace.h"
 
 #undef DEBUG
 #include <stdio.h>
@@ -493,6 +494,24 @@ MAKE_COLORSPACE_ALTIVEC_FROM_YUV(uyvy_to_yv12_altivec_c, 2, 16, 2, YUYV_TO_YV12_
         WRITE_YUYV_ALTIVEC(1, 0, C1,C2,C3,C4)
 
 
-MAKE_COLORSPACE_ALTIVEC_TO_YUV(yv12_to_yuyv_altivec_c, 2, 16, 2, YV12_TO_YUYV_ALTIVEC, 0, 1, 2, 3)
-MAKE_COLORSPACE_ALTIVEC_TO_YUV(yv12_to_uyvy_altivec_c, 2, 16, 2, YV12_TO_YUYV_ALTIVEC, 1, 0, 3, 2)
+MAKE_COLORSPACE_ALTIVEC_TO_YUV(yv12_to_yuyv_altivec_unaligned_c, 2, 16, 2, YV12_TO_YUYV_ALTIVEC, 0, 1, 2, 3)
+MAKE_COLORSPACE_ALTIVEC_TO_YUV(yv12_to_uyvy_altivec_unaligned_c, 2, 16, 2, YV12_TO_YUYV_ALTIVEC, 1, 0, 3, 2)
 
+
+/* This intermediate functions are used because gcc v3.3 seems to produces an invalid register usage with the fallback directly integrated in the altivec routine (!!!) */
+
+#define CHECK_COLORSPACE_ALTIVEC_TO_YUV(NAME,FAST,FALLBACK) \
+void \
+NAME(uint8_t *x_ptr, int x_stride,  \
+                                uint8_t *y_ptr, uint8_t *u_ptr, uint8_t *v_ptr, \
+                                int y_stride, int uv_stride,    \
+                                int width, int height, int vflip)   \
+{\
+	if( ((uint32_t)x_ptr & 15) | (x_stride & 15) )\
+		FALLBACK(x_ptr, x_stride, y_ptr, u_ptr, v_ptr, y_stride, uv_stride, width, height, vflip);\
+	else\
+		FAST(x_ptr, x_stride, y_ptr, u_ptr, v_ptr, y_stride, uv_stride, width, height, vflip);\
+}
+
+CHECK_COLORSPACE_ALTIVEC_TO_YUV(yv12_to_yuyv_altivec_c, yv12_to_yuyv_altivec_unaligned_c, yv12_to_yuyv_c)
+CHECK_COLORSPACE_ALTIVEC_TO_YUV(yv12_to_uyvy_altivec_c, yv12_to_uyvy_altivec_unaligned_c, yv12_to_uyvy_c)

@@ -4,6 +4,157 @@
 # relevant.
 
 
+2005-03-18 17:53:24 GMT	                                	patch-2
+
+    Summary:
+      Colorspace code for PPC
+    Revision:
+      xvidcore--head--0.0--patch-2
+
+    From Christoph Nageli:
+     - Colorspace function fixes for non 16bytes aligned target adresses.
+
+    modified files:
+     src/image/ppc_asm/colorspace_altivec.c
+
+
+2005-03-18 17:39:00 GMT	                                	patch-1
+
+    Summary:
+      Fix for 64bit interlacing
+    Revision:
+      xvidcore--head--0.0--patch-1
+
+    From Andrew Dunstan:
+     * Fixed bug where 64bit mov shoud have been 32bit
+
+    modified files:
+     src/utils/x86_64_asm/interlacing_mmx.asm
+
+
+2005-03-18 17:28:00 GMT	                                	base-0
+
+    Summary:
+      tag of ed.gomez@free.fr--2004-1/xvidcore--head--0.0--patch-121
+    Revision:
+      xvidcore--head--0.0--base-0
+
+    (automatically generated log message)
+
+# Change of arch/tla archive, explains the patch number wraparound
+
+2005-03-18 16:58:08 GMT	                                	patch-121
+
+    Summary:
+      ME work
+    Revision:
+      xvidcore--head--0.0--patch-121
+
+    From Isiibar:
+     - Cartoon mode bugfix
+     - New lambda tables for R-D motion search. The old tables were
+       obviously taken from h.264, which uses a logarithmic quantizer
+       scale. This lead to bad results at very low bit-rates. With this
+       patch, compression efficiency at low bit-rates is greatly improved.
+
+    modified files:
+     src/motion/estimation.h src/motion/estimation_bvop.c
+     src/motion/estimation_common.c src/motion/estimation_pvop.c
+
+
+2005-03-18 16:56:13 GMT	                                	patch-120
+
+    Summary:
+      Better instruction pairing in sad mmx
+    Revision:
+      xvidcore--head--0.0--patch-120
+
+    From Dark sylinc (dark_sylinc at yahoo dor com dor ar), commited by Isiibar:
+     * Better instruction pairing in sad_mmx.asm, improves speed.
+
+    modified files:
+     src/motion/x86_asm/sad_mmx.asm src/utils/emms.c
+
+
+2005-03-18 16:53:00 GMT	                                	patch-119
+
+    Summary:
+      Fixed resource leak in Dshow
+    Revision:
+      xvidcore--head--0.0--patch-119
+
+    From antonz, commited by Isiibar:
+     * Fixed resource leaking caused by poor xvidcore initialization tracking.
+
+    modified files:
+     dshow/src/CXvidDecoder.cpp dshow/src/CXvidDecoder.h
+
+
+2005-03-18 16:50:44 GMT	                                	patch-118
+
+    Summary:
+      Debug flag support in vfw
+    Revision:
+      xvidcore--head--0.0--patch-118
+
+    From pete:
+     * debug flag support for vfw decoder.
+
+    modified files:
+     vfw/src/codec.c
+
+
+#########################################################################
+# 1.1.0-beta1 (Bitstream Version 38)
+#########################################################################
+
+
+2005-01-16 10:27:41 GMT	                                	patch-117
+
+    Summary:
+      License was using wrong linefeeds for vfw
+    Revision:
+      xvidcore--head--0.0--patch-117
+
+    License was using wrong linefeeds for vfw
+    
+
+    new files:
+     vfw/.arch-ids/LICENSE.id vfw/LICENSE
+
+    modified files:
+     vfw/src/resource.rc
+
+
+2005-01-10 22:59:46 GMT	                                	patch-116
+
+    Summary:
+      Last minutes vfw bugfixes/improvements
+    Revision:
+      xvidcore--head--0.0--patch-116
+
+    From sysKin:
+     * last minute fixes and improvements to vfw frontend.
+
+    modified files:
+     vfw/src/codec.c vfw/src/config.c vfw/src/config.h
+     vfw/src/resource.rc
+
+
+2005-01-09 20:37:32 GMT	                                	patch-115
+
+    Summary:
+      Marking 1.1.0 beta1
+    Revision:
+      xvidcore--head--0.0--patch-115
+
+    From ed.gomez:
+     * Marking xvid 1.1.0 beta1 release.
+
+    modified files:
+     ChangeLog build/generic/configure.in src/xvid.c src/xvid.h
+
+
 2005-01-09 20:15:14 GMT	                                	patch-114
 
     Summary:
