@@ -212,7 +212,7 @@ init_vlc_tables(void)
 									= (ESCAPE3 << 21) | (last << 20) | (run << 14) | (1 << 13) | ((level & 0xfff) << 1) | 1;
 								coeff_VLC[intra][last][level + offset][run].len = 30;
 									coeff_VLC[intra][last][offset - level][run].code
-									= (ESCAPE3 << 21) | (last << 20) | (run << 14) | (1 << 13) | ((-level & 0xfff) << 1) | 1;
+									= (ESCAPE3 << 21) | (last << 20) | (run << 14) | (1 << 13) | ((-(int32_t)level & 0xfff) << 1) | 1;
 								coeff_VLC[intra][last][offset - level][run].len = 30;
 							}
 							continue;
