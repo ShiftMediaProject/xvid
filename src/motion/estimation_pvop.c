@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_pvop.c,v 1.6 2004-04-23 11:57:47 syskin Exp $
+ * $Id: estimation_pvop.c,v 1.7 2004-05-27 14:25:49 syskin Exp $
  *
  ****************************************************************************/
 
@@ -42,7 +42,7 @@
 
 static const int xvid_me_lambda_vec8[32] =
 	{     0    ,(int)(1.00235 * NEIGH_TEND_8X8 + 0.5),
-	(int)(1.15582 + NEIGH_TEND_8X8 + 0.5), (int)(1.31976*NEIGH_TEND_8X8 + 0.5),
+	(int)(1.15582*NEIGH_TEND_8X8 + 0.5), (int)(1.31976*NEIGH_TEND_8X8 + 0.5),
 	(int)(1.49591*NEIGH_TEND_8X8 + 0.5), (int)(1.68601*NEIGH_TEND_8X8 + 0.5),
 	(int)(1.89187*NEIGH_TEND_8X8 + 0.5), (int)(2.11542*NEIGH_TEND_8X8 + 0.5),
 	(int)(2.35878*NEIGH_TEND_8X8 + 0.5), (int)(2.62429*NEIGH_TEND_8X8 + 0.5),
