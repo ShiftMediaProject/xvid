@@ -68,7 +68,7 @@ int decoder_create(XVID_DEC_PARAM * param)
 {
 	DECODER * dec;
 
-	dec = xvid_malloc(sizeof(DECODER), 16);
+	dec = xvid_malloc(sizeof(DECODER), CACHE_LINE);
 	if (dec == NULL) 
 	{
 		return XVID_ERR_MEMORY;
@@ -97,7 +97,7 @@ int decoder_create(XVID_DEC_PARAM * param)
 		return XVID_ERR_MEMORY;
 	}
 
-	dec->mbs = xvid_malloc(sizeof(MACROBLOCK) * dec->mb_width * dec->mb_height, 16);
+	dec->mbs = xvid_malloc(sizeof(MACROBLOCK) * dec->mb_width * dec->mb_height, CACHE_LINE);
 	if (dec->mbs == NULL)
 	{
 		image_destroy(&dec->cur, dec->edged_width, dec->edged_height);
@@ -142,8 +142,8 @@ void decoder_mbintra(DECODER * dec, MACROBLOCK * mb, int x, int y, uint32_t acpr
 	for (k = 0; k < 6; k++)
 	{
 		uint32_t dcscalar;
-		int16_t block[64];
-		int16_t data[64];
+		CACHE_ALIGN int16_t block[64];
+		CACHE_ALIGN int16_t data[64];
 		int16_t predictors[8];
 		int start_coeff;
 
@@ -272,8 +272,8 @@ void decoder_mbinter(DECODER * dec, MACROBLOCK * mb, int x, int y, uint32_t acpr
 
 	for (k = 0; k < 6; k++)
 	{
-		int16_t block[64];
-		int16_t data[64];
+		CACHE_ALIGN int16_t block[64];
+		CACHE_ALIGN int16_t data[64];
 		
 		if (cbp & (1 << (5-k)))			// coded
 		{
