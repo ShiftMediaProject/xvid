@@ -68,7 +68,7 @@ all: platform.inc $(STATIC_LIB) $(SHARED_LIB)
 
 .c.$(OBJECT_EXTENSION):
 	@echo -n "Compiling $< ... "
-	@$(CC) -c $(CFLAGS) $< -o $@
+	@$(CC) -c $(ARCHITECTURE) $(BUS) $(ENDIANNESS) $(FEATURES) $(SPECIFIC_CFLAGS) $(CFLAGS) $< -o $@
 	@echo "Done"
 
 #-----------------------------------------------------------------------------
@@ -122,7 +122,7 @@ platform.inc: platform.inc.in
 # .PHONY targets
 #-----------------------------------------------------------------------------
 
-.PHONY: distclean clean info list-objects list-targets list-install-path
+.PHONY: distclean clean info list-objects list-targets list-install-path list-cflags
 
 clean:
 	@echo -n "Cleaning objects... "
@@ -170,4 +170,12 @@ list-install-path:
 	@echo Library: $(libdir)
 	@echo
 
-info: list-objects list-targets list-install-path
+list-cflags:
+	@echo
+	@echo "Using CFLAGS"
+	@echo "---------------------------------------------------------------"
+	@echo
+	@echo CFLAGS=$(CFLAGS)
+	@echo
+
+info: list-objects list-cflags list-targets list-install-path

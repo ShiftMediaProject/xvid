@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: mbcoding.c,v 1.40 2003-02-06 00:48:08 edgomez Exp $
+ * $Id: mbcoding.c,v 1.41 2003-02-13 17:31:33 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -110,7 +110,7 @@ init_vlc_tables(void)
 		for (last = 0; last < 2; last++)
 		{
 			for (run = 0; run < 63 + last; run++)
-				for (level = 0; level < 32 << intra; level++)
+				for (level = 0; level < (uint32_t)(32 << intra); level++)
 				{
 #ifdef BIGLUT
 					offset = LEVELOFFSET;
@@ -235,6 +235,10 @@ init_vlc_tables(void)
 				}
 #endif
 			}
+
+	/* Shut up the compiler -- gcc 3.3 pre release */
+	i = dc_threshold[0];
+
 }
 
 /*****************************************************************************
