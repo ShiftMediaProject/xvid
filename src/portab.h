@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: portab.h,v 1.52 2004-05-31 21:36:23 edgomez Exp $
+ * $Id: portab.h,v 1.53 2004-06-12 13:02:12 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -208,45 +208,46 @@ static __inline int64_t read_counter(void)
  */
 #    ifdef _DEBUG
 
-        /* Needed for all debuf fprintf calls */
+/* Needed for all debuf fprintf calls */
 #       include <stdio.h>
 #       include <stdarg.h>
 
-        static __inline void DPRINTF(int level, char *format, ...)
-        {
-            va_list args;
-            va_start(args, format);
-            if(xvid_debug & level) {
-                   vfprintf(stderr, format, args);
-            }
-        }
+static __inline void DPRINTF(int level, char *format, ...)
+{
+	va_list args;
+	va_start(args, format);
+	if(xvid_debug & level) {
+		vfprintf(stderr, format, args);
+	}
+	va_end(args);
+}
 
 #    else /* _DEBUG */
-        static __inline void DPRINTF(int level, char *format, ...) {}
+static __inline void DPRINTF(int level, char *format, ...) {}
 #    endif /* _DEBUG */
 
 
 #    define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
-            type name##_storage[(sizex)*(sizey)+(alignment)-1]; \
-            type * name = (type *) (((ptr_t) name##_storage+(alignment - 1)) & ~((ptr_t)(alignment)-1))
+	type name##_storage[(sizex)*(sizey)+(alignment)-1]; \
+type * name = (type *) (((ptr_t) name##_storage+(alignment - 1)) & ~((ptr_t)(alignment)-1))
 
 /*----------------------------------------------------------------------------
- | gcc IA32 specific macros/functions
+  | gcc IA32 specific macros/functions
  *---------------------------------------------------------------------------*/
 #    if defined(ARCH_IS_IA32)
 #        define BSWAP(a) __asm__ ( "bswapl %0\n" : "=r" (a) : "0" (a) );
 
-         static __inline int64_t read_counter(void)
-         {
-             int64_t ts;
-             uint32_t ts1, ts2;
-             __asm__ __volatile__("rdtsc\n\t":"=a"(ts1), "=d"(ts2));
-             ts = ((uint64_t) ts2 << 32) | ((uint64_t) ts1);
-             return ts;
-         }
+static __inline int64_t read_counter(void)
+{
+	int64_t ts;
+	uint32_t ts1, ts2;
+	__asm__ __volatile__("rdtsc\n\t":"=a"(ts1), "=d"(ts2));
+	ts = ((uint64_t) ts2 << 32) | ((uint64_t) ts1);
+	return ts;
+}
 
 /*----------------------------------------------------------------------------
- | gcc PPC and PPC Altivec specific macros/functions
+  | gcc PPC and PPC Altivec specific macros/functions
  *---------------------------------------------------------------------------*/
 #    elif defined(ARCH_IS_PPC)
 
@@ -259,64 +260,64 @@ static __inline int64_t read_counter(void)
 #        endif
 
 #        define BSWAP(a) __asm__ __volatile__ \
-                ( "lwbrx %0,0,%1; eieio" : "=r" (a) : "r" (&(a)), "m" (a));
+	( "lwbrx %0,0,%1; eieio" : "=r" (a) : "r" (&(a)), "m" (a));
 
-         static __inline unsigned long get_tbl(void)
-         {
-             unsigned long tbl;
-             asm volatile ("mftb %0":"=r" (tbl));
-             return tbl;
-         }
+static __inline unsigned long get_tbl(void)
+{
+	unsigned long tbl;
+	asm volatile ("mftb %0":"=r" (tbl));
+	return tbl;
+}
 
-         static __inline unsigned long get_tbu(void)
-         {
-             unsigned long tbl;
-             asm volatile ("mftbu %0":"=r" (tbl));
-             return tbl;
-         }
+static __inline unsigned long get_tbu(void)
+{
+	unsigned long tbl;
+	asm volatile ("mftbu %0":"=r" (tbl));
+	return tbl;
+}
 
-         static __inline int64_t read_counter(void)
-         {
-             unsigned long tb, tu;
-             do {
-                 tu = get_tbu();
-                 tb = get_tbl();
-             }while (tb != get_tbl());
-             return (((int64_t) tu) << 32) | (int64_t) tb;
-         }
+static __inline int64_t read_counter(void)
+{
+	unsigned long tb, tu;
+	do {
+		tu = get_tbu();
+		tb = get_tbl();
+	}while (tb != get_tbl());
+	return (((int64_t) tu) << 32) | (int64_t) tb;
+}
 
 /*----------------------------------------------------------------------------
- | gcc IA64 specific macros/functions
+  | gcc IA64 specific macros/functions
  *---------------------------------------------------------------------------*/
 #    elif defined(ARCH_IS_IA64)
 #        define BSWAP(a)  __asm__ __volatile__ \
-                ("mux1 %1 = %0, @rev" ";;" \
-                 "shr.u %1 = %1, 32" : "=r" (a) : "r" (a));
+	("mux1 %1 = %0, @rev" ";;" \
+	 "shr.u %1 = %1, 32" : "=r" (a) : "r" (a));
 
-         static __inline int64_t read_counter(void)
-         {
-             unsigned long result;
-             __asm__ __volatile__("mov %0=ar.itc" : "=r"(result) :: "memory");
-             return result;
-         }
+static __inline int64_t read_counter(void)
+{
+	unsigned long result;
+	__asm__ __volatile__("mov %0=ar.itc" : "=r"(result) :: "memory");
+	return result;
+}
 
 /*----------------------------------------------------------------------------
- | gcc GENERIC (plain C only) specific macros/functions
+  | gcc GENERIC (plain C only) specific macros/functions
  *---------------------------------------------------------------------------*/
 #    elif defined(ARCH_IS_GENERIC)
 #        define BSWAP(a) \
-                ((a) = (((a) & 0xff) << 24)  | (((a) & 0xff00) << 8) | \
-                       (((a) >> 8) & 0xff00) | (((a) >> 24) & 0xff))
+	((a) = (((a) & 0xff) << 24)  | (((a) & 0xff00) << 8) | \
+	 (((a) >> 8) & 0xff00) | (((a) >> 24) & 0xff))
 
 #        include <time.h>
-         static __inline int64_t read_counter(void)
-         {
-             return (int64_t)clock();
-         }
+static __inline int64_t read_counter(void)
+{
+	return (int64_t)clock();
+}
 
 /*----------------------------------------------------------------------------
- | gcc Not given architecture - This is probably an user who tries to build
- | XviD the wrong way.
+  | gcc Not given architecture - This is probably an user who tries to build
+  | XviD the wrong way.
  *---------------------------------------------------------------------------*/
 #    else
 #        error You are trying to compile XviD without defining the architecture type.

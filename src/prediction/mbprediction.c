@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbprediction.c,v 1.15 2004-05-21 14:40:15 edgomez Exp $
+ * $Id: mbprediction.c,v 1.16 2004-06-12 13:02:12 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -67,8 +67,7 @@ predict_acdc(MACROBLOCK * pMBs,
 			 uint32_t current_quant,
 			 int32_t iDcScaler,
 			 int16_t predictors[8],
-			 const int bound,
-			 const int bsversion)
+			 const int bound)
 
 {
 	const int mbpos = (y * mb_width) + x;
@@ -187,24 +186,15 @@ predict_acdc(MACROBLOCK * pMBs,
 
 	/* determine ac prediction direction & ac/dc predictor place rescaled ac/dc
 	 * predictions into predictors[] for later use */
-	
-	/* Workaround: Bitstream versions <= 32 used to have a wrong predictor
-	 * stored as it wasn't clipped to the [-2048, 2047] range. We only
-	 * use the right predictors for bs versions > 32 */
-#define BUGGY_CLIPPING_BS_VERSION 32
 	if (abs(pLeft[0] - pDiag[0]) < abs(pDiag[0] - pTop[0])) {
 		*acpred_direction = 1;	/* vertical */
 		predictors[0] = DIV_DIV(pTop[0], iDcScaler);
-		if (bsversion == 0 || bsversion > BUGGY_CLIPPING_BS_VERSION)
-			predictors[0] = CLIP(predictors[0], -2048, 2047);
 		for (i = 1; i < 8; i++) {
 			predictors[i] = rescale(top_quant, current_quant, pTop[i]);
 		}
 	} else {
 		*acpred_direction = 2;	/* horizontal */
 		predictors[0] = DIV_DIV(pLeft[0], iDcScaler);
-		if (bsversion == 0 || bsversion > BUGGY_CLIPPING_BS_VERSION)
-			predictors[0] = CLIP(predictors[0], -2048, 2047);
 		for (i = 1; i < 8; i++) {
 			predictors[i] = rescale(left_quant, current_quant, pLeft[i + 7]);
 		}
@@ -216,13 +206,17 @@ predict_acdc(MACROBLOCK * pMBs,
    store current coeffs to pred_values[] for future prediction
 */
 
+/* Up to this version, no DC clipping was performed, so we try to be backward
+ * compatible to avoid artifacts */
+#define BS_VERSION_BUGGY_DC_CLIPPING 34
 
 void
 add_acdc(MACROBLOCK * pMB,
 		 uint32_t block,
 		 int16_t dct_codes[64],
 		 uint32_t iDcScaler,
-		 int16_t predictors[8])
+		 int16_t predictors[8],
+		 const int bsversion)
 {
 	uint8_t acpred_direction = pMB->acpred_directions[block];
 	int16_t *pCurrent = pMB->pred_values[block];
@@ -231,7 +225,10 @@ add_acdc(MACROBLOCK * pMB,
 	DPRINTF(XVID_DEBUG_COEFF,"predictor[0] %i\n", predictors[0]);
 
 	dct_codes[0] += predictors[0];	/* dc prediction */
-	pCurrent[0] = dct_codes[0] * iDcScaler;
+	pCurrent[0] = dct_codes[0]*iDcScaler;
+	if (!bsversion || bsversion > BS_VERSION_BUGGY_DC_CLIPPING) {
+		pCurrent[0] = CLIP(pCurrent[0], -2048, 2047);
+	}
 
 	if (acpred_direction == 1) {
 		for (i = 1; i < 8; i++) {
@@ -288,6 +285,7 @@ calc_acdc_coeff(MACROBLOCK * pMB,
 	/* store current coeffs to pred_values[] for future prediction */
 
 	pCurrent[0] = qcoeff[0] * iDcScaler;
+	pCurrent[0] = CLIP(pCurrent[0], -2048, 2047);
 	for (i = 1; i < 8; i++) {
 		pCurrent[i] = qcoeff[i];
 		pCurrent[i + 7] = qcoeff[i * 8];
@@ -344,6 +342,7 @@ calc_acdc_bits(MACROBLOCK * pMB,
 
 	/* store current coeffs to pred_values[] for future prediction */
 	pCurrent[0] = qcoeff[0] * iDcScaler;
+	pCurrent[0] = CLIP(pCurrent[0], -2048, 2047);
 	for (i = 1; i < 8; i++) {
 		pCurrent[i] = qcoeff[i];
 		pCurrent[i + 7] = qcoeff[i * 8];
@@ -427,7 +426,7 @@ MBPrediction(FRAMEINFO * frame,
 			iDcScaler = get_dc_scaler(iQuant, j<4);
 
 			predict_acdc(frame->mbs, x, y, mb_width, j, &qcoeff[j * 64],
-						 iQuant, iDcScaler, predictors[j], 0, 0);
+						 iQuant, iDcScaler, predictors[j], 0);
 
 			if ((frame->vop_flags & XVID_VOP_HQACPRED))
 				S += calc_acdc_bits(pMB, j, &qcoeff[j * 64], iDcScaler, predictors[j]);

@@ -4,8 +4,206 @@
 # relevant.
 
 #########################################################################
+# 1.0.1 (Bitstream Version 35)
+#########################################################################
+
+2004-06-02 20:58:38 GMT	                                	patch-38
+
+    Summary:
+      DC clipping bug for real
+    Revision:
+      xvidcore--stable--1.0--patch-38
+
+    From ed.gomez:
+     * patch-25  was  supposed to fix a DC clipping  bug. However  i
+       added the additional  clipping  code in the  wrong place. But
+       at least, my fix  didn't cause any trouble, it was just noop.
+       This patch should really fix this very "unlikely bug" (i  just
+       want to remind the reader that this bug isn't easy to  trigger,
+       and eg: my test sequences don't trigger it at all)
+    
+    BS version incremented: 35
+
+    modified files:
+     src/decoder.c src/motion/estimation_rd_based.c
+     src/prediction/mbprediction.c src/prediction/mbprediction.h
+     src/xvid.h
+
+
+2004-05-31 21:11:49 GMT	                                	patch-37
+
+    Summary:
+      time fixes to decoder.
+    Revision:
+      xvidcore--stable--1.0--patch-37
+
+    From ed.gomez:
+     * timestamps were badly computed by teh decoder in some corner cases
+       (1fps). This bug revealed that, timestamps were indeed wrong as
+       expected, but that bvop blocks in direct mode (vectors interpolated)
+       were somewhat compensated with wrong vectors in these same corner
+       cases.
+
+    modified files:
+     src/bitstream/bitstream.c src/decoder.c src/decoder.h
+
+
+2004-05-30 09:36:13 GMT	                                	patch-36
+
+    Summary:
+      Wrong license header.
+    Revision:
+      xvidcore--stable--1.0--patch-36
+
+    From ed.gomez:
+     * Pascal did agree a plain GPL migration long ago, but this file
+       remained GPL+location restriction.
+
+    modified files:
+     src/image/reduced.c
+
+
+2004-05-29 09:02:25 GMT	                                	patch-35
+
+    Summary:
+      More missing va_end() calls.
+    Revision:
+      xvidcore--stable--1.0--patch-35
+
+    From pete:
+     * portab.h is plenty of missing calls to va_end().
+
+    modified files:
+     src/portab.h
+
+
+2004-05-28 21:28:21 GMT	                                	patch-34
+
+    Summary:
+      FPS=1 problem in decoder.
+    Revision:
+      xvidcore--stable--1.0--patch-34
+
+    From ed.gomez:
+     * patch-24 did fix bad behavior in encoder, so at least, compliant
+       streams were generated but the decoder was still doing the maths
+       a wrong way. Apply same logic to decoder.
+    
+    Thanks to the patch-24 bug reporter for this followup.
+
+    modified files:
+     src/bitstream/bitstream.c
+
+
+2004-05-27 20:04:01 GMT	                                	patch-33
+
+    Summary:
+      Nasty typo in pvop vector lambdas.
+    Revision:
+      xvidcore--stable--1.0--patch-33
+
+    From sysKin:
+     * s/+/*/ in the lambda value array for vectors in the pvop
+       estimation module.
+
+    modified files:
+     src/motion/estimation_pvop.c
+
+
+2004-05-26 13:23:38 GMT	                                	patch-32
+
+    Summary:
+      Bits/Bytes confusion in the VFW frontend.
+    Revision:
+      xvidcore--stable--1.0--patch-32
+
+    From sysKin:
+     * confusion between the kilo, in kilobits (1000) and
+       the kilo in kilobytes (1024, should be named KiB anyway)
+     * biSizeImage is in bytes, not bits according to the Win32
+       API.
+
+    modified files:
+     vfw/src/codec.c vfw/src/config.c
+
+
+2004-05-26 09:28:31 GMT	                                	patch-31
+
+    Summary:
+      Close variable argument list.
+    Revision:
+      xvidcore--stable--1.0--patch-31
+
+    From ed.gomez:
+     * Close the variable argument list as specified by the ANSI C
+       standard. Reported by Carsten <list4darav at gmx dot de> on
+       xvid-devel.
+
+    modified files:
+     src/image/font.c
+
+
+2004-05-26 09:00:26 GMT	                                	patch-30
+
+    Summary:
+      ICM compatibility for VFW 
+    Revision:
+      xvidcore--stable--1.0--patch-30
+
+    From sysKin:
+     * Makes the VFW frontend compatible with ICM applications
+       (Ooo, MS Office... etc). Reported on IRC.
+
+    modified files:
+     vfw/src/config.c vfw/src/driverproc.c
+
+
+2004-05-26 08:58:56 GMT	                                	patch-29
+
+    Summary:
+      Small trellis bug 
+    Revision:
+      xvidcore--stable--1.0--patch-29
+
+    From sysKin:
+     * Last coeff wasn't summed.
+    
+    Reported by Jean Marc. 
+
+    modified files:
+     src/utils/mbtransquant.c
+
+
+2004-05-26 08:46:45 GMT	                                	patch-28
+
+    Summary:
+      Small bug in bframe ME. 
+    Revision:
+      xvidcore--stable--1.0--patch-28
+
+    From sysKin:
+     * Small bug in bframe ME.
+
+    modified files:
+     src/motion/estimation_bvop.c
+
+#########################################################################
 # 1.0.0 final (Bitstream Version 34)
 #########################################################################
+
+2004-05-08 22:26:06 GMT	                                	patch-27
+
+    Summary:
+      Marking 1.0.0 final
+    Revision:
+      xvidcore--stable--1.0--patch-27
+
+    From ed.gomez:
+     * Marking 1.0.0 final \o/
+
+    modified files:
+     ChangeLog build/generic/configure.in src/xvid.h
+
 
 2004-05-06 17:56:52 GMT	                                	patch-26
 
@@ -1842,7 +2040,7 @@
        the bvop lag frame (black with error message).
     
     Fixing previous patch a bit:
-     * added $Id: ChangeLog,v 1.4 2004-05-21 14:40:15 edgomez Exp $ fields
+     * added $Id: ChangeLog,v 1.5 2004-06-12 13:02:12 edgomez Exp $ fields
      * Fixed copyright
 
     modified files:

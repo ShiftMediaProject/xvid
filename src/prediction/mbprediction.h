@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbprediction.h,v 1.23 2004-05-21 14:40:15 edgomez Exp $
+ * $Id: mbprediction.h,v 1.24 2004-06-12 13:02:12 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -49,7 +49,8 @@ void add_acdc(MACROBLOCK * pMB,
 			uint32_t block,
 			int16_t dct_codes[64],
 			uint32_t iDcScaler,
-			int16_t predictors[8]);
+			int16_t predictors[8],
+			const int bsversion);
 
 void predict_acdc(MACROBLOCK * pMBs,
 				uint32_t x,
@@ -60,8 +61,7 @@ void predict_acdc(MACROBLOCK * pMBs,
 				uint32_t current_quant,
 				int32_t iDcScaler,
 				int16_t predictors[8],
-				const int bound,
-				const int bsversion);
+				const int bound);
 
 VECTOR
 get_pmv2(const MACROBLOCK * const mbs,

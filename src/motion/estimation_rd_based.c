@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_rd_based.c,v 1.4 2004-05-21 14:40:15 edgomez Exp $
+ * $Id: estimation_rd_based.c,v 1.5 2004-06-12 13:02:12 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -128,13 +128,14 @@ Block_CalcBitsIntra(MACROBLOCK * pMB,
 	}
 
 	predict_acdc(pMB-(x+mb_width*y), x, y, mb_width, block, qcoeff,
-				quant, iDcScaler, predictors, 0, 0);
+				quant, iDcScaler, predictors, 0);
 	
 	direction = pMB->acpred_directions[block];
 	pCurrent = pMB->pred_values[block];
 
 	/* store current coeffs to pred_values[] for future prediction */
 	pCurrent[0] = qcoeff[0] * iDcScaler;
+	pCurrent[0] = CLIP(pCurrent[0], -2048, 2047);
 	for (i = 1; i < 8; i++) {
 		pCurrent[i] = qcoeff[i];
 		pCurrent[i + 7] = qcoeff[i * 8];
