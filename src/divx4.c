@@ -32,17 +32,18 @@
  *
  *	History:
  *
- *	26.02.2001	fixed dec_csp bugs
- *	26.12.2001	xvid_init() support
- *	22.12.2001	removed some compiler warnings
- *	16.12.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
+ *	26.02.2001  fixed dec_csp bugs
+ *	26.12.2001  xvid_init() support
+ *	22.12.2001  removed some compiler warnings
+ *	16.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- * $Id: divx4.c,v 1.10 2002-04-28 20:03:14 edgomez Exp $
+ * $Id: divx4.c,v 1.11 2002-05-04 12:26:06 edgomez Exp $
  *
  *************************************************************************/
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "xvid.h"
 #include "divx4.h"
@@ -74,6 +75,15 @@ typedef struct DINST
 
 } DINST;
 
+typedef struct EINST
+{
+	struct EINST * next;
+
+	void * handle;
+	int quality;
+
+} EINST;
+
 /**************************************************************************
  * Global data (needed to emulate correctly exported symbols from divx4)
  *************************************************************************/
@@ -87,6 +97,7 @@ int quiet_encore = 1;
 
 /* The Divx4 instance chainlist */
 static DINST * dhead = NULL;
+static EINST * ehead = NULL;
 
 /* Divx4 quality to XviD encoder motion flag presets */
 static int const divx4_motion_presets[7] = {
@@ -121,12 +132,6 @@ static int const divx4_general_presets[7] = {
 	XVID_H263QUANT | XVID_INTER4V | XVID_HALFPEL
 };
 
-/*
- * Current divx4 encoder quality
- * ToDo : this data should not be shared between encoder instances
- */
-static int quality;
-
 /**************************************************************************
  * Local Prototypes
  *************************************************************************/
@@ -135,6 +140,10 @@ static int quality;
 static DINST * dinst_find(unsigned long key);
 static DINST * dinst_add(unsigned long key);
 static void    dinst_remove(unsigned long key);
+
+static EINST * einst_find(void *handle);
+static EINST * einst_add(void *handle);
+static void    einst_remove(void *handle);
 
 /* Converts divx4 colorspaces codes to xvid codes */
 static int xvid_to_opendivx_dec_csp(int csp);
@@ -334,6 +343,7 @@ encore(void * handle, int opt, void * param1, void * param2)
 	switch(opt) {
 	case ENC_OPT_INIT :
 	{
+		EINST *ecur;
 		ENC_PARAM * eparam = (ENC_PARAM *)param1;
 		XVID_INIT_PARAM xinit;
 		XVID_ENC_PARAM xparam;
@@ -362,18 +372,40 @@ encore(void * handle, int opt, void * param1, void * param2)
 		xparam.min_quantizer = eparam->min_quantizer;
 		xparam.max_quantizer = eparam->max_quantizer;
 		xparam.max_key_interval = eparam->max_key_interval;
-		quality = eparam->quality;
 
 		/* Create the encoder session */
 		xerr = encoder_create(&xparam);
 
 		eparam->handle = xparam.handle;
 
+		/* Create an encoder instance in the chainlist */
+		if ((ecur = einst_find(xparam.handle)) == NULL)
+		{
+			ecur = einst_add(xparam.handle);
+
+			if(ecur == NULL) {
+				encoder_destroy((Encoder*)xparam.handle);
+				return ENC_MEMORY;
+			}
+
+		}
+
+		ecur->quality = eparam->quality;
+		if(ecur->quality < 0) ecur->quality = 0;
+		if(ecur->quality > 6) ecur->quality = 6;
+
 		break;
 	}
 
 	case ENC_OPT_RELEASE :
 	{
+		EINST *ecur;
+
+		if ((ecur = einst_find(handle)) == NULL)
+		{
+			return ENC_FAIL;
+		}
+
 		xerr = encoder_destroy((Encoder *) handle);
 		break;
 	}
@@ -381,17 +413,23 @@ encore(void * handle, int opt, void * param1, void * param2)
 	case ENC_OPT_ENCODE :
 	case ENC_OPT_ENCODE_VBR :
 	{
+		EINST *ecur;
+
 		ENC_FRAME * eframe = (ENC_FRAME *)param1;
 		ENC_RESULT * eresult = (ENC_RESULT *)param2;
 		XVID_ENC_FRAME xframe;
 		XVID_ENC_STATS xstats;
 
+		if ((ecur = einst_find(handle)) == NULL)
+		{
+			return ENC_FAIL;
+		}
+
 		/* Copy the divx4 info into the xvid structure */
 		xframe.bitstream = eframe->bitstream;
 		xframe.length = eframe->length;
-
-		xframe.motion = divx4_motion_presets[quality];
-		xframe.general = divx4_general_presets[quality];
+		xframe.motion = divx4_motion_presets[ecur->quality];
+		xframe.general = divx4_general_presets[ecur->quality];
 
 		xframe.image = eframe->image;
 		xframe.colorspace =
@@ -519,6 +557,77 @@ static void dinst_remove(unsigned long key)
 	}
 }
 
+
+/***************************************
+ * EINST chainlist helper functions    *
+ ***************************************/
+
+/* Find an element in the chainlist according to its handle */
+static EINST * einst_find(void *handle)
+{
+	EINST * ecur = ehead;
+
+	while (ecur)
+	{
+		if (ecur->handle == handle)
+		{
+			return ecur;
+		}
+		ecur = ecur->next;
+	}
+
+	return NULL;
+}
+
+
+/* Add an element to the chainlist */
+static EINST * einst_add(void *handle)
+{
+	EINST * enext = ehead;
+
+	ehead = malloc(sizeof(EINST));
+	if (ehead == NULL)
+	{
+		ehead = enext;
+		return NULL;
+	}
+
+	ehead->handle = handle;
+	ehead->next = enext;
+
+	return ehead;
+}
+
+
+/* Remove an elmement from the chainlist */
+static void einst_remove(void *handle)
+{
+	EINST * ecur = ehead;
+
+	if (ehead == NULL)
+	{
+		return;
+	}
+
+	if (ecur->handle == handle)
+	{
+		ehead = ecur->next;
+		free(ecur);
+		return;
+	}
+
+	while (ecur->next)
+	{
+		if (ecur->next->handle == handle)
+		{
+			EINST * tmp = ecur->next;
+			ecur->next = tmp->next;
+			free(tmp);
+			return;
+		}
+		ecur = ecur->next;
+	}
+}
 /***************************************
  * Colorspace code converter           *
  ***************************************/
