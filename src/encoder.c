@@ -121,55 +121,38 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 	pEnc->iFrameNum = 0;
 	pEnc->iMaxKeyInterval = pParam->max_key_interval;
 
-	if (image_create(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
-	{
-		xvid_free(pEnc);
-		return XVID_ERR_MEMORY;
-	}
+	/* try to allocate memory */
 
-	if (image_create(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
-	{
-		image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		xvid_free(pEnc);
-		return XVID_ERR_MEMORY;
-	}
+	pEnc->sCurrent.y	=	pEnc->sCurrent.u	=	pEnc->sCurrent.v	= NULL;
+	pEnc->sReference.y	=	pEnc->sReference.u	=	pEnc->sReference.v	= NULL;
+	pEnc->vInterH.y		=	pEnc->vInterH.u		=	pEnc->vInterH.v		= NULL;
+	pEnc->vInterV.y		=	pEnc->vInterV.u		=	pEnc->vInterV.v		= NULL;
+	pEnc->vInterVf.y	=	pEnc->vInterVf.u	=	pEnc->vInterVf.v	= NULL;
+	pEnc->vInterHV.y	=	pEnc->vInterHV.u	=	pEnc->vInterHV.v	= NULL;
+	pEnc->vInterHVf.y	=	pEnc->vInterHVf.u	=	pEnc->vInterHVf.v	= NULL;
 
-	if (image_create(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
-	{
-		image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		image_destroy(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		xvid_free(pEnc);
-		return XVID_ERR_MEMORY;
-	}
+	pEnc->pMBs = NULL;
 
-	if (image_create(&pEnc->vInterV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
-	{
-		image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		image_destroy(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		image_destroy(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		xvid_free(pEnc);
-		return XVID_ERR_MEMORY;
-	}
-
-	if (image_create(&pEnc->vInterHV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
+	if (image_create(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
+		image_create(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
+		image_create(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
+		image_create(&pEnc->vInterV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
+		image_create(&pEnc->vInterVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
+		image_create(&pEnc->vInterHV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
+		image_create(&pEnc->vInterHVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
+		(pEnc->pMBs = xvid_malloc(sizeof(MACROBLOCK) * pEnc->mbParam.mb_width * pEnc->mbParam.mb_height, CACHE_LINE)) == NULL)
 	{
 		image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->vInterV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		xvid_free(pEnc);
-		return XVID_ERR_MEMORY;
-	}
-
-	pEnc->pMBs = xvid_malloc(sizeof(MACROBLOCK) * pEnc->mbParam.mb_width * pEnc->mbParam.mb_height, CACHE_LINE);
-	if (pEnc->pMBs == NULL)
-	{
-		image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		image_destroy(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		image_destroy(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		image_destroy(&pEnc->vInterV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+		image_destroy(&pEnc->vInterVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->vInterHV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		xvid_free(pEnc);
+		image_destroy(&pEnc->vInterHVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+		if (pEnc)
+		{
+			xvid_free(pEnc);
+		}
 		return XVID_ERR_MEMORY;
 	}
 
