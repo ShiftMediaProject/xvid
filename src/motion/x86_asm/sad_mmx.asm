@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: sad_mmx.asm,v 1.16 2004-08-29 10:02:38 edgomez Exp $
+; * $Id: sad_mmx.asm,v 1.17 2005-02-19 23:20:27 suxen_drol Exp $
 ; *
 ; ***************************************************************************/
 
@@ -74,25 +74,24 @@ mmx_one:
   lea eax, [eax+ecx]
   movq mm5, mm2
   psubusb mm2, mm3
-  lea edx, [edx+ecx]
 
   psubusb mm1, mm4
-  por mm0, mm1
   psubusb mm3, mm5
+  por mm0, mm1
   por mm2, mm3
 
   movq mm1, mm0
-  movq mm3, mm2
-
   punpcklbw mm0,mm7
+  movq mm3, mm2
   punpckhbw mm1,mm7
+  lea edx, [edx+ecx]
   punpcklbw mm2,mm7
-  punpckhbw mm3,mm7
-
   paddusw mm0, mm1
+  punpckhbw mm3,mm7
   paddusw mm6, mm0
   paddusw mm2, mm3
   paddusw mm6, mm2
+
 %endmacro
 
 %macro SAD_8x8_MMX	0
@@ -111,57 +110,52 @@ mmx_one:
   psubusb mm2, mm3
 
   psubusb mm1, mm4
-  por mm0, mm1
   psubusb mm3, mm5
+  por mm0, mm1
   por mm2, mm3
 
   movq mm1,mm0
-  movq mm3,mm2
-
   punpcklbw mm0,mm7
+  movq mm3,mm2
   punpckhbw mm1,mm7
   punpcklbw mm2,mm7
-  punpckhbw mm3,mm7
-
   paddusw mm0,mm1
+  punpckhbw mm3,mm7
   paddusw mm6,mm0
   paddusw mm2,mm3
   paddusw mm6,mm2
 %endmacro
+
 
 %macro SADV_16x16_MMX 0
   movq mm0, [eax]
   movq mm1, [edx]
 
   movq mm2, [eax+8]
-  movq mm3, [edx+8]
-
   movq mm4, mm0
+  movq mm3, [edx+8]
   psubusb mm0, mm1
 
   psubusb mm1, mm4
-  por mm0, mm1
   lea eax,[eax+ecx]
+  por mm0, mm1
 
   movq mm4, mm2
   psubusb mm2, mm3
 
   psubusb mm3, mm4
   por mm2, mm3
-  lea edx,[edx+ecx]
-
+  
   movq mm1,mm0
-  movq mm3,mm2
-
   punpcklbw mm0,mm7
+  movq mm3,mm2
   punpckhbw mm1,mm7
   punpcklbw mm2,mm7
-  punpckhbw mm3,mm7
-
   paddusw mm0,mm1
-  paddusw mm2,mm3
-
+  punpckhbw mm3,mm7
   paddusw mm5, mm0
+  paddusw mm2,mm3
+  lea edx,[edx+ecx]
   paddusw mm6, mm2
 %endmacro
 
@@ -220,13 +214,13 @@ mmx_one:
   movq mm2, [eax+8]
   lea eax, [eax+ecx]
   movq mm1, mm0
-  movq mm3, mm2
   punpcklbw mm0, mm7
-  punpcklbw mm2, mm7
+  movq mm3, mm2
   punpckhbw mm1, mm7
-  punpckhbw mm3, mm7
   paddw mm5, mm0
+  punpcklbw mm2, mm7
   paddw mm6, mm1
+  punpckhbw mm3, mm7
   paddw mm5, mm2
   paddw mm6, mm3
 %endmacro
