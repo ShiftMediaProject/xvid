@@ -39,7 +39,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.72 2002-08-04 23:27:40 Isibaar Exp $
+ *  $Id: encoder.c,v 1.73 2002-08-07 10:09:00 chl Exp $
  *
  ****************************************************************************/
 
@@ -425,6 +425,7 @@ encoder_create(XVID_ENC_PARAM * pParam)
 	pEnc->mbParam.m_ticks = 0;
 	pEnc->m_framenum = 0;
 	pEnc->last_pframe = 0;
+	pEnc->last_sync = 0;
 #endif
 
 	pParam->handle = (void *) pEnc;
@@ -625,8 +626,21 @@ void inc_frame_num(Encoder * pEnc)
 {
 	pEnc->mbParam.m_ticks += pEnc->mbParam.fincr;
 
-	pEnc->mbParam.m_seconds = pEnc->mbParam.m_ticks / pEnc->mbParam.fbase;
 	pEnc->mbParam.m_ticks = pEnc->mbParam.m_ticks % pEnc->mbParam.fbase;
+
+/*	fprintf(stderr, "ENC %c %i:%i %i\n", 
+		pEnc->current->coding_type == I_VOP ? 'I' : pEnc->current->coding_type == P_VOP ? 'P' : 'B',
+		pEnc->mbParam.m_seconds, pEnc->mbParam.m_ticks,pEnc->last_sync);
+*/
+
+	if (pEnc->mbParam.m_ticks < pEnc->last_sync) 
+		pEnc->mbParam.m_seconds = 1;		// more than 1 second since last I or P is not supported. 
+	else
+		pEnc->mbParam.m_seconds = 0;
+
+	if (pEnc->current->coding_type != B_VOP)
+		pEnc->last_sync = pEnc->mbParam.m_ticks;
+
 }
 #endif
 
