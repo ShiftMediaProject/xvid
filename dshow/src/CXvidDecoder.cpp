@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.cpp,v 1.8 2004-07-11 10:22:47 syskin Exp $
+ * $Id: CXvidDecoder.cpp,v 1.9 2004-07-16 15:38:01 syskin Exp $
  *
  ****************************************************************************/
 
@@ -215,25 +215,25 @@ CXvidDecoder::CXvidDecoder(LPUNKNOWN punk, HRESULT *phr) :
 	m_hdll = LoadLibrary(XVID_DLL_NAME);
 	if (m_hdll == NULL) {
 		DPRINTF("dll load failed");
-		MessageBox(0, XVID_DLL_NAME " not found","Error", 0);
+		MessageBox(0, XVID_DLL_NAME " not found","Error", MB_TOPMOST);
 		return;
 	}
 
 	xvid_global_func = (int (__cdecl *)(void *, int, void *, void *))GetProcAddress(m_hdll, "xvid_global");
 	if (xvid_global_func == NULL) {
-		MessageBox(0, "xvid_global() not found", "Error", 0);
+		MessageBox(0, "xvid_global() not found", "Error", MB_TOPMOST);
 		return;
 	}
 
 	xvid_decore_func = (int (__cdecl *)(void *, int, void *, void *))GetProcAddress(m_hdll, "xvid_decore");
 	if (xvid_decore_func == NULL) {
-		MessageBox(0, "xvid_decore() not found", "Error", 0);
+		MessageBox(0, "xvid_decore() not found", "Error", MB_TOPMOST);
 		return;
 	}
 
 	if (xvid_global_func(0, XVID_GBL_INIT, &init, NULL) < 0)
 	{
-		MessageBox(0, "xvid_global() failed", "Error", 0);
+		MessageBox(0, "xvid_global() failed", "Error", MB_TOPMOST);
 		return;
 	}
 
@@ -286,18 +286,18 @@ CXvidDecoder::CXvidDecoder(LPUNKNOWN punk, HRESULT *phr) :
 
 	switch (g_config.aspect_ratio)
 	{
-	case 0:	// Auto mode
-		ar_x = ar_y = 0;
-		break;
+	case 0:
 	case 1:
+		break;
+	case 2:
 		ar_x = 4;
 		ar_y = 3;
 		break;
-	case 2:
+	case 3:
 		ar_x = 16;
 		ar_y = 9;
 		break;
-	case 3:
+	case 4:
 		ar_x = 47;
 		ar_y = 20;
 		break;
@@ -334,6 +334,8 @@ HRESULT CXvidDecoder::CheckInputType(const CMediaType * mtIn)
 {
 	DPRINTF("CheckInputType");
 	BITMAPINFOHEADER * hdr;
+
+	ar_x = ar_y = 0;
 	
 	if (*mtIn->Type() != MEDIATYPE_Video)
 	{
@@ -346,22 +348,12 @@ HRESULT CXvidDecoder::CheckInputType(const CMediaType * mtIn)
 	{
 		VIDEOINFOHEADER * vih = (VIDEOINFOHEADER *) mtIn->Format();
 		hdr = &vih->bmiHeader;
-		/* PAR (x:y) is (1/ppm_X):(1/ppm_Y) where ppm is pixels-per-meter
-		   which is equal to ppm_Y:ppm_X */
-		if ((ar_x == 0) && (ar_y == 0)) // selected Auto-mode
-		{
-			ar_x = vih->bmiHeader.biYPelsPerMeter * abs(hdr->biWidth);
-			ar_y = vih->bmiHeader.biXPelsPerMeter * abs(hdr->biHeight);
-		}
-		DPRINTF("VIDEOINFOHEADER PAR: %d:%d -> AR %d:%d",
-			vih->bmiHeader.biYPelsPerMeter,vih->bmiHeader.biXPelsPerMeter, ar_x, ar_y);
 	}
 	else if (*mtIn->FormatType() == FORMAT_VideoInfo2)
 	{
 		VIDEOINFOHEADER2 * vih2 = (VIDEOINFOHEADER2 *) mtIn->Format();
 		hdr = &vih2->bmiHeader;
-		if ((ar_x == 0) && (ar_y == 0)) // selected Auto-mode
-		{
+		if (g_config.aspect_ratio == 0 || g_config.aspect_ratio == 1) {
 			ar_x = vih2->dwPictAspectRatioX;
 			ar_y = vih2->dwPictAspectRatioY;
 		}
@@ -444,11 +436,12 @@ HRESULT CXvidDecoder::GetMediaType(int iPosition, CMediaType *mtOut)
 		if (ar_x != 0 && ar_y != 0) {
 			vih->dwPictAspectRatioX = ar_x;
 			vih->dwPictAspectRatioY = ar_y;
+			forced_ar = true;
 		} else { // just to be safe
 			vih->dwPictAspectRatioX = m_create.width;
 			vih->dwPictAspectRatioY = abs(m_create.height);
-		}
-
+			forced_ar = false;
+		} 
 	} else {
 
 		VIDEOINFOHEADER * vih = (VIDEOINFOHEADER *) mtOut->ReallocFormatBuffer(sizeof(VIDEOINFOHEADER));
@@ -771,6 +764,9 @@ HRESULT CXvidDecoder::Transform(IMediaSample *pIn, IMediaSample *pOut)
 	m_frame.output.csp &= ~XVID_CSP_VFLIP;
 	m_frame.output.csp |= rgb_flip^(g_config.nFlipVideo ? XVID_CSP_VFLIP : 0);
 
+
+
+
 repeat :
 
 	if (pIn->IsPreroll() != S_OK)
@@ -781,6 +777,26 @@ repeat :
 		{
             DPRINTF("*** XVID_DEC_DECODE");
 			return S_FALSE;
+		} else 
+			if (g_config.aspect_ratio == 0 || g_config.aspect_ratio == 1 && forced_ar == false) {
+			// inspired by minolta! works for VMR 7 + 9
+
+			IMediaSample2 *pOut2 = NULL;
+			AM_SAMPLE2_PROPERTIES outProp2;
+			if (SUCCEEDED(pOut->QueryInterface(IID_IMediaSample2, (void **)&pOut2)) &&
+				SUCCEEDED(pOut2->GetProperties(FIELD_OFFSET(AM_SAMPLE2_PROPERTIES, tStart), (PBYTE)&outProp2)))
+			{
+				CMediaType mtOut2 = m_pOutput->CurrentMediaType();
+				VIDEOINFOHEADER2* vihOut2 = (VIDEOINFOHEADER2*)mtOut2.Format();
+				if (vihOut2->dwPictAspectRatioX != ar_x && vihOut2->dwPictAspectRatioY != ar_y)
+				{
+					vihOut2->dwPictAspectRatioX = ar_x;
+					vihOut2->dwPictAspectRatioY = ar_y;
+					pOut2->SetMediaType(&mtOut2);
+					m_pOutput->SetMediaType(&mtOut2);
+				}
+				pOut2->Release();
+			}
 		}
 	}
 	else
@@ -821,9 +837,22 @@ repeat :
 			DPRINTF("TODO: auto-resize");
 			return S_FALSE;
 		}
-		
-//		pOut->SetDiscontinuity(TRUE);
+
 		pOut->SetSyncPoint(TRUE);
+
+		if (g_config.aspect_ratio == 0 || g_config.aspect_ratio == 1) { /* auto */
+			int par_x, par_y;
+			if (stats.data.vol.par == XVID_PAR_EXT) {
+				par_x = stats.data.vol.par_width;
+				par_y = stats.data.vol.par_height;
+			} else {
+				par_x = PARS[stats.data.vol.par][0];
+				par_y = PARS[stats.data.vol.par][1];
+			}
+
+			ar_x = par_x * stats.data.vol.width;
+			ar_y = par_y * stats.data.vol.height;
+		}
 
 		m_frame.bitstream = (BYTE*)m_frame.bitstream + length;
 		m_frame.length -= length;
