@@ -3,54 +3,40 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Encoder header -
  *
- *  Copyright(C) 2002 Michael Militzer <isibaar@xvid.org>
+ *  This program is an implementation of a part of one or more MPEG-4
+ *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
+ *  to use this software module in hardware or software products are
+ *  advised that its use may infringe existing patents or copyrights, and
+ *  any such use would be at such party's own risk.  The original
+ *  developer of this software module and his/her company, and subsequent
+ *  editors and their companies, will have no liability for use of this
+ *  software or modifications or derivatives thereof.
  *
- *  This file is part of XviD, a free MPEG-4 video encoder/decoder
- *
- *  XviD is free software; you can redistribute it and/or modify it
- *  under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
+ *  This program is free software ; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation ; either version 2 of the License, or
  *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  but WITHOUT ANY WARRANTY ; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
+ *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  Under section 8 of the GNU General Public License, the copyright
- *  holders of XVID explicitly forbid distribution in the following
- *  countries:
+ ****************************************************************************/
+/*****************************************************************************
  *
- *    - Japan
- *    - United States of America
+ *  History
  *
- *  Linking XviD statically or dynamically with other modules is making a
- *  combined work based on XviD.  Thus, the terms and conditions of the
- *  GNU General Public License cover the whole combination.
+ *  - 13.06.2002 Added legal header
+ *  - 22.08.2001 Added support for EXT_MODE encoding mode
+ *               support for EXTENDED API
+ *  - 22.08.2001 fixed bug in iDQtab
  *
- *  As a special exception, the copyright holders of XviD give you
- *  permission to link XviD with independent modules that communicate with
- *  XviD solely through the VFW1.1 and DShow interfaces, regardless of the
- *  license terms of these independent modules, and to copy and distribute
- *  the resulting combined work under terms of your choice, provided that
- *  every copy of the combined work is accompanied by a complete copy of
- *  the source code of XviD (the version of XviD used to produce the
- *  combined work), being distributed under the terms of the GNU General
- *  Public License plus this exception.  An independent module is a module
- *  which is not derived from or based on XviD.
- *
- *  Note that people who make modified versions of XviD are not obligated
- *  to grant this special exception for their modified versions; it is
- *  their choice whether to do so.  The GNU General Public License gives
- *  permission to release a modified version without this exception; this
- *  exception also makes it possible to release a modified version which
- *  carries forward this exception.
- *
- * $Id: encoder.h,v 1.26 2002-11-28 07:27:37 suxen_drol Exp $
+ *  $Id: encoder.h,v 1.27 2003-02-15 15:22:17 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -60,7 +46,6 @@
 #include "xvid.h"
 #include "portab.h"
 #include "global.h"
-#include "image/image.h"
 #include "utils/ratecontrol.h"
 
 /*****************************************************************************
@@ -84,7 +69,8 @@ typedef enum
 {
 	I_VOP = 0,
 	P_VOP = 1,
-	B_VOP = 2
+	B_VOP = 2,
+	S_VOP = 3
 }
 VOP_TYPE;
 
@@ -106,6 +92,15 @@ typedef struct
 	uint32_t fincr;
 	uint32_t fbase;
 
+	/* constants */
+	int global;
+	int bquant_ratio;
+	int bquant_offset;
+	int frame_drop_ratio;
+
+	int iMaxKeyInterval;
+	int max_bframes;
+
 	/* rounding type; alternate 0-1 after each interframe */
 	/* 1 <= fixed_code <= 4
 	   automatically adjusted using motion vector statistics inside
@@ -115,14 +110,27 @@ typedef struct
 	uint32_t m_quant_type;
 	uint32_t m_rounding_type;
 	uint32_t m_fcode;
+	uint32_t m_quarterpel;
+	int m_reduced_resolution;	/* reduced_resolution_enable */
 
 	HINTINFO *hint;
 
-	uint32_t m_seconds;
-	uint32_t m_ticks;
-
+	int64_t m_stamp;
 }
 MBParam;
+
+
+typedef struct
+{
+	int iTextBits;
+	int iMvSum;
+	int iMvCount;
+	int kblks;
+	int mblks;
+	int ublks;
+	int gblks;
+}
+Statistics;
 
 
 typedef struct
@@ -133,31 +141,24 @@ typedef struct
 
 	VOP_TYPE coding_type;
 	uint32_t rounding_type;
+	uint32_t quarterpel;
 	uint32_t fcode;
 	uint32_t bcode;
 
 	uint32_t seconds;
 	uint32_t ticks;
+	int64_t stamp;
 
 	IMAGE image;
 
 	MACROBLOCK *mbs;
 
+	WARPPOINTS warp;		// as in bitstream
+	GMC_DATA gmc_data;		// common data for all MBs
+		
+	Statistics sStat;
 }
 FRAMEINFO;
-
-typedef struct
-{
-	int iTextBits;
-	float fMvPrevSigma;
-	int iMvSum;
-	int iMvCount;
-	int kblks;
-	int mblks;
-	int ublks;
-}
-Statistics;
-
 
 
 typedef struct
@@ -165,23 +166,44 @@ typedef struct
 	MBParam mbParam;
 
 	int iFrameNum;
-	int iMaxKeyInterval;
 	int bitrate;
 
-	/* images */
+	// images
 
 	FRAMEINFO *current;
 	FRAMEINFO *reference;
 
-#ifdef _DEBUG_PSNR
 	IMAGE sOriginal;
-#endif
 	IMAGE vInterH;
 	IMAGE vInterV;
+	IMAGE vInterVf;
 	IMAGE vInterHV;
+	IMAGE vInterHVf;
 
-	Statistics sStat;
+	IMAGE vGMC;
+
+	/* image queue */
+	int queue_head;
+	int queue_tail;
+	int queue_size;
+	IMAGE *queue;
+
+	/* bframe buffer */
+	int bframenum_head;
+	int bframenum_tail;
+	int flush_bframes;
+
+	FRAMEINFO **bframes;
+	IMAGE f_refh;
+	IMAGE f_refv;
+	IMAGE f_refhv;
+	int bframenum_dx50bvop;
+
+	int m_framenum; /* debug frame num counter; unlike iFrameNum, does not reset at ivop */
+
 	RateControl rate_control;
+
+	float fMvPrevSigma;
 }
 Encoder;
 

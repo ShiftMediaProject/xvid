@@ -3,52 +3,37 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Decoder header -
  *
- *  This file is part of XviD, a free MPEG-4 video encoder/decoder
+ *  This program is an implementation of a part of one or more MPEG-4
+ *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
+ *  to use this software module in hardware or software products are
+ *  advised that its use may infringe existing patents or copyrights, and
+ *  any such use would be at such party's own risk.  The original
+ *  developer of this software module and his/her company, and subsequent
+ *  editors and their companies, will have no liability for use of this
+ *  software or modifications or derivatives thereof.
  *
- *  XviD is free software; you can redistribute it and/or modify it
- *  under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
+ *  This program is free software ; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation ; either version 2 of the License, or
  *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  but WITHOUT ANY WARRANTY ; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
+ *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  Under section 8 of the GNU General Public License, the copyright
- *  holders of XVID explicitly forbid distribution in the following
- *  countries:
+ ****************************************************************************/
+/*****************************************************************************
  *
- *    - Japan
- *    - United States of America
+ *  History
  *
- *  Linking XviD statically or dynamically with other modules is making a
- *  combined work based on XviD.  Thus, the terms and conditions of the
- *  GNU General Public License cover the whole combination.
+ *  - 13.06.2002 Added legal header - Cosmetic
  *
- *  As a special exception, the copyright holders of XviD give you
- *  permission to link XviD with independent modules that communicate with
- *  XviD solely through the VFW1.1 and DShow interfaces, regardless of the
- *  license terms of these independent modules, and to copy and distribute
- *  the resulting combined work under terms of your choice, provided that
- *  every copy of the combined work is accompanied by a complete copy of
- *  the source code of XviD (the version of XviD used to produce the
- *  combined work), being distributed under the terms of the GNU General
- *  Public License plus this exception.  An independent module is a module
- *  which is not derived from or based on XviD.
- *
- *  Note that people who make modified versions of XviD are not obligated
- *  to grant this special exception for their modified versions; it is
- *  their choice whether to do so.  The GNU General Public License gives
- *  permission to release a modified version without this exception; this
- *  exception also makes it possible to release a modified version which
- *  carries forward this exception.
- *
- * $Id: decoder.h,v 1.12 2002-11-26 23:44:09 edgomez Exp $
+ *  $Id: decoder.h,v 1.13 2003-02-15 15:22:17 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -64,55 +49,115 @@
  * Structures
  ****************************************************************************/
 
+/* complexity estimation toggles */
 typedef struct
 {
-	/* bitstream */
+	int method;
+
+	int opaque;
+	int transparent;
+	int intra_cae;
+	int inter_cae;
+	int no_update;
+	int upsampling;
+
+	int intra_blocks;
+	int inter_blocks;
+	int inter4v_blocks;
+	int gmc_blocks;
+	int not_coded_blocks;
+
+	int dct_coefs;
+	int dct_lines;
+	int vlc_symbols;
+	int vlc_bits;
+
+	int apm;
+	int npm;
+	int interpolate_mc_q;
+	int forw_back_mc_q;
+	int halfpel2;
+	int halfpel4;
+
+	int sadct;
+	int quarterpel;
+} ESTIMATION;
+
+
+typedef struct
+{
+	// vol bitstream
+
+	int time_inc_resolution;
+	int fixed_time_inc;
+	uint32_t time_inc_bits;
 
 	uint32_t shape;
-	uint32_t time_inc_bits;
 	uint32_t quant_bits;
 	uint32_t quant_type;
-	uint32_t quarterpel;
+	int32_t quarterpel;
+	int complexity_estimation_disable;
+	ESTIMATION estimation;
 
-	uint32_t interlacing;
+	int interlacing;
 	uint32_t top_field_first;
 	uint32_t alternate_vertical_scan;
 
-	/* image */
+	int aspect_ratio;
+	int par_width;
+	int par_height;
 
+	int sprite_enable;
+	int sprite_warping_points;
+	int sprite_warping_accuracy;
+	int sprite_brightness_change;
+
+	int newpred_enable;
+	int reduced_resolution_enable;
+
+	// image
+
+	int fixed_dimensions;
 	uint32_t width;
 	uint32_t height;
 	uint32_t edged_width;
 	uint32_t edged_height;
 
 	IMAGE cur;
-	IMAGE refn[3];				/* 0   -- last I or P VOP */
-	/* 1   -- first I or P */
-	/* 2   -- for interpolate mode B-frame */
-	IMAGE refh;
-	IMAGE refv;
-	IMAGE refhv;
+	IMAGE refn[2];				// 0   -- last I or P VOP
+								// 1   -- first I or P
+	IMAGE tmp;		/* bframe interpolation, and post processing tmp buffer */
+	IMAGE qtmp;		/* quarter pel tmp buffer */
 
-	/* macroblock */
+	// macroblock
 
 	uint32_t mb_width;
 	uint32_t mb_height;
 	MACROBLOCK *mbs;
 
-	/* for B-frame */
-	int32_t frames;				/* total frame number */
+	// for B-frame & low_delay==0
+	// XXX: should move frame based stuff into a DECODER_FRAMEINFO struct */
+	MACROBLOCK *last_mbs;			// last MB
+	int last_reduced_resolution;	// last reduced_resolution value
+	int32_t frames;				// total frame number
+	int32_t packed_mode;		// bframes packed bitstream? (1 = yes)
 	int8_t scalability;
-	VECTOR p_fmv, p_bmv;		/* pred forward & backward motion vector */
-	MACROBLOCK *last_mbs;		/* last MB */
-	int64_t time;				/* for record time */
+	VECTOR p_fmv, p_bmv;		// pred forward & backward motion vector
+	int64_t time;				// for record time
 	int64_t time_base;
 	int64_t last_time_base;
 	int64_t last_non_b_time;
 	uint32_t time_pp;
 	uint32_t time_bp;
-	uint8_t low_delay;			/* low_delay flage (1 means no B_VOP) */
+	uint32_t low_delay;			// low_delay flage (1 means no B_VOP)
+	uint32_t low_delay_default;	// default value for low_delay flag
 
-	XVID_DEC_PICTURE* out_frm;                /* This is used for slice rendering */
+	// for GMC: central place for all parameters
+	
+	IMAGE gmc;		/* gmc tmp buffer, remove for blockbased compensation */
+	GMC_DATA gmc_data;
+	
+	XVID_DEC_PICTURE* out_frm;                // This is used for slice rendering
 }
 DECODER;
 
@@ -125,7 +170,7 @@ void init_decoder(uint32_t cpu_flags);
 int decoder_create(XVID_DEC_PARAM * param);
 int decoder_destroy(DECODER * dec);
 int decoder_decode(DECODER * dec,
-				   XVID_DEC_FRAME * frame);
+				   XVID_DEC_FRAME * frame, XVID_DEC_STATS * stats);
 
 
 #endif

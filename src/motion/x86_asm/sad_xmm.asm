@@ -1,58 +1,42 @@
-;/*****************************************************************************
+;/**************************************************************************
 ; *
-; *  XVID MPEG-4 VIDEO CODEC
-; *  xmm (extended mmx) sum of absolute difference
+; *	XVID MPEG-4 VIDEO CODEC
+; *	xmm sum of absolute difference
 ; *
-; *  Copyright(C) 2002 Peter Ross <pross@xvid.org>
-; *  Copyright(C) 2002 Michael Militzer <michael@xvid.org>
-; *  Copyright(C) 2002 Pascal Massimino <skal@planet-d.net>
+; *	This program is an implementation of a part of one or more MPEG-4
+; *	Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
+; *	to use this software module in hardware or software products are
+; *	advised that its use may infringe existing patents or copyrights, and
+; *	any such use would be at such party's own risk.  The original
+; *	developer of this software module and his/her company, and subsequent
+; *	editors and their companies, will have no liability for use of this
+; *	software or modifications or derivatives thereof.
 ; *
-; *  This file is part of XviD, a free MPEG-4 video encoder/decoder
+; *	This program is free software; you can redistribute it and/or modify
+; *	it under the terms of the GNU General Public License as published by
+; *	the Free Software Foundation; either version 2 of the License, or
+; *	(at your option) any later version.
 ; *
-; *  XviD is free software; you can redistribute it and/or modify it
-; *  under the terms of the GNU General Public License as published by
-; *  the Free Software Foundation; either version 2 of the License, or
-; *  (at your option) any later version.
+; *	This program is distributed in the hope that it will be useful,
+; *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+; *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; *	GNU General Public License for more details.
 ; *
-; *  This program is distributed in the hope that it will be useful,
-; *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-; *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; *  GNU General Public License for more details.
+; *	You should have received a copy of the GNU General Public License
+; *	along with this program; if not, write to the Free Software
+; *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 ; *
-; *  You should have received a copy of the GNU General Public License
-; *  along with this program; if not, write to the Free Software
-; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+; *************************************************************************/
+
+;/**************************************************************************
 ; *
-; *  Under section 8 of the GNU General Public License, the copyright
-; *  holders of XVID explicitly forbid distribution in the following
-; *  countries:
+; *	History:
 ; *
-; *    - Japan
-; *    - United States of America
-; *
-; *  Linking XviD statically or dynamically with other modules is making a
-; *  combined work based on XviD.  Thus, the terms and conditions of the
-; *  GNU General Public License cover the whole combination.
-; *
-; *  As a special exception, the copyright holders of XviD give you
-; *  permission to link XviD with independent modules that communicate with
-; *  XviD solely through the VFW1.1 and DShow interfaces, regardless of the
-; *  license terms of these independent modules, and to copy and distribute
-; *  the resulting combined work under terms of your choice, provided that
-; *  every copy of the combined work is accompanied by a complete copy of
-; *  the source code of XviD (the version of XviD used to produce the
-; *  combined work), being distributed under the terms of the GNU General
-; *  Public License plus this exception.  An independent module is a module
-; *  which is not derived from or based on XviD.
-; *
-; *  Note that people who make modified versions of XviD are not obligated
-; *  to grant this special exception for their modified versions; it is
-; *  their choice whether to do so.  The GNU General Public License gives
-; *  permission to release a modified version without this exception; this
-; *  exception also makes it possible to release a modified version which
-; *  carries forward this exception.
-; *
-; * $Id: sad_xmm.asm,v 1.5 2002-11-17 00:32:06 edgomez Exp $
+; * 23.07.2002	sad8bi_xmm; <pross@xvid.org>
+; * 04.06.2002  rewrote some funcs (XMM mainly)     -Skal-
+; * 17.11.2001  bugfix and small improvement for dev16_xmm,
+; *             removed terminate early in sad16_xmm (Isibaar)
+; *	12.11.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
 ; *
 ; *************************************************************************/
 
@@ -373,6 +357,7 @@ dev16_xmm:
 
     mov eax, [esp+ 4] ; Src
 
+
     pxor mm5, mm5 ; sums
     pxor mm6, mm6
 
@@ -401,3 +386,57 @@ dev16_xmm:
 
     movd eax, mm6
     ret
+
+cglobal sad16v_xmm
+
+;===========================================================================
+;int sad16v_xmm(const uint8_t * const cur,
+;               const uint8_t * const ref,
+;               const uint32_t stride,
+;               int* sad8);
+;===========================================================================
+align 16
+sad16v_xmm:
+    push ebx
+    mov eax, [esp+4+ 4] ; Src1
+    mov edx, [esp+4+ 8] ; Src2
+    mov ecx, [esp+4+12] ; Stride
+    mov ebx, [esp+4+16] ; sad ptr
+
+    pxor mm5, mm5 ; accum1
+    pxor mm6, mm6 ; accum2
+    pxor mm7, mm7 ; total
+    SAD_16x16_SSE
+    SAD_16x16_SSE
+    SAD_16x16_SSE
+    SAD_16x16_SSE
+    SAD_16x16_SSE
+    SAD_16x16_SSE
+    SAD_16x16_SSE
+    SAD_16x16_SSE
+    paddusw mm7, mm5
+    paddusw mm7, mm6
+    movd [ebx], mm5
+    movd [ebx+4], mm6
+
+    pxor mm5, mm5 ; accum1
+    pxor mm6, mm6 ; accum2
+    SAD_16x16_SSE
+    SAD_16x16_SSE
+    SAD_16x16_SSE
+    SAD_16x16_SSE
+    SAD_16x16_SSE
+    SAD_16x16_SSE
+    SAD_16x16_SSE
+    SAD_16x16_SSE
+    paddusw mm7, mm5
+    paddusw mm7, mm6
+    movd [ebx+8], mm5
+    movd [ebx+12], mm6
+
+    movd eax, mm7
+    pop ebx
+    ret
+;--------
+
+

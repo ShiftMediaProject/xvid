@@ -23,36 +23,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  Under section 8 of the GNU General Public License, the copyright
- *  holders of XVID explicitly forbid distribution in the following
- *  countries:
- *
- *    - Japan
- *    - United States of America
- *
- *  Linking XviD statically or dynamically with other modules is making a
- *  combined work based on XviD.  Thus, the terms and conditions of the
- *  GNU General Public License cover the whole combination.
- *
- *  As a special exception, the copyright holders of XviD give you
- *  permission to link XviD with independent modules that communicate with
- *  XviD solely through the VFW1.1 and DShow interfaces, regardless of the
- *  license terms of these independent modules, and to copy and distribute
- *  the resulting combined work under terms of your choice, provided that
- *  every copy of the combined work is accompanied by a complete copy of
- *  the source code of XviD (the version of XviD used to produce the
- *  combined work), being distributed under the terms of the GNU General
- *  Public License plus this exception.  An independent module is a module
- *  which is not derived from or based on XviD.
- *
- *  Note that people who make modified versions of XviD are not obligated
- *  to grant this special exception for their modified versions; it is
- *  their choice whether to do so.  The GNU General Public License gives
- *  permission to release a modified version without this exception; this
- *  exception also makes it possible to release a modified version which
- *  carries forward this exception.
- *
- * $Id: portab.h,v 1.42 2003-02-09 22:48:38 edgomez Exp $
+ * $Id: portab.h,v 1.43 2003-02-15 15:22:17 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -71,6 +42,7 @@
 #define DPRINTF_MB			0x00000010
 #define DPRINTF_COEFF		0x00000020
 #define DPRINTF_MV			0x00000040
+#define DPRINTF_RC			0x00000080
 #define DPRINTF_DEBUG		0x80000000
 
 /* debug level for this library */
@@ -87,7 +59,7 @@
  | For MSVC
  *---------------------------------------------------------------------------*/
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined (__WATCOMC__)
 #    define int8_t   char
 #    define uint8_t  unsigned char
 #    define int16_t  short
@@ -357,6 +329,72 @@
 #    else
 #        error You are trying to compile XviD without defining the architecture type.
 #    endif
+
+/*****************************************************************************
+ *  OPEN WATCOM C/C++ compiler
+ ****************************************************************************/
+#elif defined(__WATCOMC__)
+
+#    include <stdio.h>
+#    include <stdarg.h>
+
+#    ifdef _DEBUG
+    static __inline void DPRINTF(int level, char *fmt, ...)
+    {
+		if (DPRINTF_LEVEL & level) {
+            va_list args;
+            char buf[DPRINTF_BUF_SZ];
+            va_start(args, fmt);
+            vsprintf(buf, fmt, args);
+			fprintf(stderr, "%s\n", buf);
+		}
+	}
+#    else /* _DEBUG */
+        static __inline void DPRINTF(int level, char *format, ...) {}
+#    endif /* _DEBUG */
+
+#       define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
+                type name##_storage[(sizex)*(sizey)+(alignment)-1]; \
+                type * name = (type *) (((int32_t) name##_storage+(alignment - 1)) & ~((int32_t)(alignment)-1))
+
+/*----------------------------------------------------------------------------
+ | watcom x86 specific macros/functions
+ *---------------------------------------------------------------------------*/
+#    if defined(ARCH_IS_IA32)
+
+#        define BSWAP(a)  __asm mov eax,a __asm bswap eax __asm mov a, eax
+#        define EMMS() __asm {emms}
+#        ifdef _PROFILING_
+         static __inline int64_t read_counter(void)
+         {
+             uint64_t ts;
+             uint32_t ts1, ts2;
+             __asm {
+                 rdtsc
+                 mov ts1, eax
+                 mov ts2, edx
+             }
+             ts = ((uint64_t) ts2 << 32) | ((uint64_t) ts1);
+             return ts;
+         }
+#        endif
+
+/*----------------------------------------------------------------------------
+ | watcom unsupported architecture
+ *---------------------------------------------------------------------------*/
+#	else
+
+#		define BSWAP(x) \
+			x = ((((x) & 0xff000000) >> 24) | \
+				(((x) & 0x00ff0000) >>  8) | \
+				(((x) & 0x0000ff00) <<  8) | \
+				(((x) & 0x000000ff) << 24))
+#        define EMMS()
+#        ifdef _PROFILING_
+         static int64_t read_counter() { return 0; }
+#        endif
+
+#	endif
 
 /*****************************************************************************
  *  Unknown compiler

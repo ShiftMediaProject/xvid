@@ -1,57 +1,46 @@
 /**************************************************************************
  *
  *	XVID MPEG-4 VIDEO CODEC
- *	- quantization/dequantization -
+ *	quantization/dequantization
  *
- *  This file is part of XviD, a free MPEG-4 video encoder/decoder
+ *	This program is an implementation of a part of one or more MPEG-4
+ *	Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
+ *	to use this software module in hardware or software products are
+ *	advised that its use may infringe existing patents or copyrights, and
+ *	any such use would be at such party's own risk.  The original
+ *	developer of this software module and his/her company, and subsequent
+ *	editors and their companies, will have no liability for use of this
+ *	software or modifications or derivatives thereof.
  *
- *  XviD is free software; you can redistribute it and/or modify it
- *  under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *	This program is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *	This program is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
- *
- *  Under section 8 of the GNU General Public License, the copyright
- *  holders of XVID explicitly forbid distribution in the following
- *  countries:
- *
- *    - Japan
- *    - United States of America
- *
- *  Linking XviD statically or dynamically with other modules is making a
- *  combined work based on XviD.  Thus, the terms and conditions of the
- *  GNU General Public License cover the whole combination.
- *
- *  As a special exception, the copyright holders of XviD give you
- *  permission to link XviD with independent modules that communicate with
- *  XviD solely through the VFW1.1 and DShow interfaces, regardless of the
- *  license terms of these independent modules, and to copy and distribute
- *  the resulting combined work under terms of your choice, provided that
- *  every copy of the combined work is accompanied by a complete copy of
- *  the source code of XviD (the version of XviD used to produce the
- *  combined work), being distributed under the terms of the GNU General
- *  Public License plus this exception.  An independent module is a module
- *  which is not derived from or based on XviD.
- *
- *  Note that people who make modified versions of XviD are not obligated
- *  to grant this special exception for their modified versions; it is
- *  their choice whether to do so.  The GNU General Public License gives
- *  permission to release a modified version without this exception; this
- *  exception also makes it possible to release a modified version which
- *  carries forward this exception.
- *
- * $Id: quant_h263.c,v 1.6 2002-12-15 01:21:12 edgomez Exp $
+ *	You should have received a copy of the GNU General Public License
+ *	along with this program; if not, write to the Free Software
+ *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  *************************************************************************/
 
+/**************************************************************************
+ *
+ *	History:
+ *
+ *  26.12.2001	dequant_inter bug fix
+ *	22.12.2001	clamp dequant output to [-2048,2047]
+ *  19.11.2001  quant_inter now returns sum of abs. coefficient values
+ *	02.11.2001	added const to function args <pross@cs.rmit.edu.au>
+ *	28.10.2001	total rewrite <pross@cs.rmit.edu.au>
+ *
+ *************************************************************************/
+
+#include "../global.h"
 #include "quant_h263.h"
 
 /*	mutliply+shift division table
@@ -73,9 +62,7 @@ static const uint32_t multipliers[32] = {
 
 
 
-#define DIV_DIV(a, b) ((a)>0) ? ((a)+((b)>>1))/(b) : ((a)-((b)>>1))/(b)
-
-/* function pointers */
+// function pointers
 quanth263_intraFuncPtr quant_intra;
 quanth263_intraFuncPtr dequant_intra;
 
@@ -95,10 +82,10 @@ quant_intra_c(int16_t * coeff,
 			  const uint32_t dcscalar)
 {
 	const uint32_t mult = multipliers[quant];
-	const uint16_t quant_m_2 = (uint16_t)(quant << 1);
+	const uint16_t quant_m_2 = quant << 1;
 	uint32_t i;
 
-	coeff[0] = (int16_t)(DIV_DIV(data[0], (int32_t) dcscalar));
+	coeff[0] = DIV_DIV(data[0], (int32_t) dcscalar);
 
 	for (i = 1; i < 64; i++) {
 		int16_t acLevel = data[i];
@@ -109,14 +96,14 @@ quant_intra_c(int16_t * coeff,
 				coeff[i] = 0;
 				continue;
 			}
-			acLevel = (int16_t)(((uint32_t)acLevel * mult) >> SCALEBITS);
+			acLevel = (acLevel * mult) >> SCALEBITS;
 			coeff[i] = -acLevel;
 		} else {
 			if (acLevel < quant_m_2) {
 				coeff[i] = 0;
 				continue;
 			}
-			acLevel = (int16_t)(((uint32_t)acLevel * mult) >> SCALEBITS);
+			acLevel = (acLevel * mult) >> SCALEBITS;
 			coeff[i] = acLevel;
 		}
 	}
@@ -132,8 +119,8 @@ quant_inter_c(int16_t * coeff,
 			  const uint32_t quant)
 {
 	const uint32_t mult = multipliers[quant];
-	const uint16_t quant_m_2 = (uint16_t)(quant << 1);
-	const uint16_t quant_d_2 = (uint16_t)(quant >> 1);
+	const uint16_t quant_m_2 = quant << 1;
+	const uint16_t quant_d_2 = quant >> 1;
 	int sum = 0;
 	uint32_t i;
 
@@ -147,8 +134,8 @@ quant_inter_c(int16_t * coeff,
 				continue;
 			}
 
-			acLevel = (int16_t)(((uint32_t)acLevel * mult) >> SCALEBITS);
-			sum += acLevel;		/* sum += |acLevel| */
+			acLevel = (acLevel * mult) >> SCALEBITS;
+			sum += acLevel;		// sum += |acLevel|
 			coeff[i] = -acLevel;
 		} else {
 			acLevel -= quant_d_2;
@@ -156,7 +143,7 @@ quant_inter_c(int16_t * coeff,
 				coeff[i] = 0;
 				continue;
 			}
-			acLevel = (int16_t)(((uint32_t)acLevel * mult) >> SCALEBITS);
+			acLevel = (acLevel * mult) >> SCALEBITS;
 			sum += acLevel;
 			coeff[i] = acLevel;
 		}
@@ -179,7 +166,7 @@ dequant_intra_c(int16_t * data,
 	const int32_t quant_add = (quant & 1 ? quant : quant - 1);
 	uint32_t i;
 
-	data[0] = (int16_t)(coeff[0] * dcscalar);
+	data[0] = coeff[0] * dcscalar;
 	if (data[0] < -2048) {
 		data[0] = -2048;
 	} else if (data[0] > 2047) {
@@ -195,7 +182,7 @@ dequant_intra_c(int16_t * data,
 		} else if (acLevel < 0) {
 			acLevel = quant_m_2 * -acLevel + quant_add;
 			data[i] = (acLevel <= 2048 ? -acLevel : -2048);
-		} else					/*  if (acLevel > 0) { */
+		} else					//  if (acLevel > 0) {
 		{
 			acLevel = quant_m_2 * acLevel + quant_add;
 			data[i] = (acLevel <= 2047 ? acLevel : 2047);
@@ -213,8 +200,8 @@ dequant_inter_c(int16_t * data,
 				const int16_t * coeff,
 				const uint32_t quant)
 {
-	const uint16_t quant_m_2 = (uint16_t)(quant << 1);
-	const uint16_t quant_add = (uint16_t)(quant & 1 ? quant : quant - 1);
+	const uint16_t quant_m_2 = quant << 1;
+	const uint16_t quant_add = (quant & 1 ? quant : quant - 1);
 	uint32_t i;
 
 	for (i = 0; i < 64; i++) {
@@ -225,7 +212,7 @@ dequant_inter_c(int16_t * data,
 		} else if (acLevel < 0) {
 			acLevel = acLevel * quant_m_2 - quant_add;
 			data[i] = (acLevel >= -2048 ? acLevel : -2048);
-		} else					/* if (acLevel > 0) */
+		} else					// if (acLevel > 0)
 		{
 			acLevel = acLevel * quant_m_2 + quant_add;
 			data[i] = (acLevel <= 2047 ? acLevel : 2047);

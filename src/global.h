@@ -1,59 +1,3 @@
-/*****************************************************************************
- *
- *  XVID MPEG-4 VIDEO CODEC
- *  - Global structures, constants -
- *
- *  Copyright(C) 2002 Michael Militzer <isibaar@xvid.org>
- *
- *  This file is part of XviD, a free MPEG-4 video encoder/decoder
- *
- *  XviD is free software; you can redistribute it and/or modify it
- *  under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
- *
- *  Under section 8 of the GNU General Public License, the copyright
- *  holders of XVID explicitly forbid distribution in the following
- *  countries:
- *
- *    - Japan
- *    - United States of America
- *
- *  Linking XviD statically or dynamically with other modules is making a
- *  combined work based on XviD.  Thus, the terms and conditions of the
- *  GNU General Public License cover the whole combination.
- *
- *  As a special exception, the copyright holders of XviD give you
- *  permission to link XviD with independent modules that communicate with
- *  XviD solely through the VFW1.1 and DShow interfaces, regardless of the
- *  license terms of these independent modules, and to copy and distribute
- *  the resulting combined work under terms of your choice, provided that
- *  every copy of the combined work is accompanied by a complete copy of
- *  the source code of XviD (the version of XviD used to produce the
- *  combined work), being distributed under the terms of the GNU General
- *  Public License plus this exception.  An independent module is a module
- *  which is not derived from or based on XviD.
- *
- *  Note that people who make modified versions of XviD are not obligated
- *  to grant this special exception for their modified versions; it is
- *  their choice whether to do so.  The GNU General Public License gives
- *  permission to release a modified version without this exception; this
- *  exception also makes it possible to release a modified version which
- *  carries forward this exception.
- *
- * $Id: global.h,v 1.18 2002-12-15 01:21:12 edgomez Exp $
- *
- ****************************************************************************/
-
 #ifndef _GLOBAL_H_
 #define _GLOBAL_H_
 
@@ -67,8 +11,8 @@
 #define MODE_INTER4V	2
 #define	MODE_INTRA		3
 #define MODE_INTRA_Q	4
-#define MODE_STUFFING	7
 #define MODE_NOT_CODED	16
+#define MODE_NOT_CODED_GMC	17
 
 /* --- bframe specific --- */
 
@@ -77,6 +21,68 @@
 #define MODE_BACKWARD		2
 #define MODE_FORWARD		3
 #define MODE_DIRECT_NONE_MV	4
+#define MODE_DIRECT_NO4V	5
+
+typedef struct 
+{
+	VECTOR duv[3];
+}
+WARPPOINTS;
+
+/* save all warping parameters for GMC once and for all, instead of 
+   recalculating for every block. This is needed for encoding&decoding
+   When switching to incremental calculations, this will get much shorter 
+*/
+
+/*	we don't include WARPPOINTS wp	here, but in FRAMEINFO itself */
+
+typedef struct 
+{
+	int num_wp;		//	[input]: 0=none, 1=translation, 2,3 = warping
+							//  a value of -1 means: "structure not initialized!"
+	int s;					//  [input]: calc is done with 1/s pel resolution
+
+	int W;
+	int H;
+	
+	int ss;		
+	int smask;	
+	int sigma;     
+	
+	int r;		
+	int rho;	
+
+	int i0s;
+	int j0s;
+	int i1s;
+	int j1s;
+	int i2s;
+	int j2s;
+	
+	int i1ss; 
+	int j1ss; 
+	int i2ss; 
+	int j2ss; 
+
+	int alpha;
+	int beta;
+	int Ws; 
+	int Hs; 
+	
+	int dxF, dyF, dxG, dyG; 
+	int Fo, Go;
+	int cFo, cGo;
+}
+GMC_DATA;
+
+
+typedef struct
+{
+	uint8_t *y;
+	uint8_t *u;
+	uint8_t *v;
+}
+IMAGE;
 
 
 typedef struct
@@ -97,57 +103,64 @@ Bitstream;
 
 typedef struct
 {
-	/* decoder/encoder  */
+	// decoder/encoder 
 	VECTOR mvs[4];
 
 	short int pred_values[6][MBPRED_SIZE];
 	int acpred_directions[6];
 
 	int mode;
-	int quant;					/* absolute quant */
+	int quant;					// absolute quant
 
 	int field_dct;
 	int field_pred;
 	int field_for_top;
 	int field_for_bot;
 
-	/* encoder specific */
+	// encoder specific
 
 	VECTOR mv16;
 	VECTOR pmvs[4];
+	VECTOR qmvs[4];				// mvs in quarter pixel resolution
 
-	int32_t sad8[4];			/* SAD values for inter4v-VECTORs */
-	int32_t sad16;				/* SAD value for inter-VECTOR */
+	int32_t sad8[4];			// SAD values for inter4v-VECTORs
+	int32_t sad16;				// SAD value for inter-VECTOR
 
 	int dquant;
 	int cbp;
 
-	/* bframe stuff */
+	// bframe stuff
 
 	VECTOR b_mvs[4];
-	VECTOR b_pmvs[4];
+	VECTOR b_qmvs[4];
+//	VECTOR b_pmvs[1];
 
-	/* bframe direct mode */
+	// bframe direct mode
 
-	VECTOR directmv[4];
-	VECTOR deltamv;
+//	VECTOR directmv[4];
+//	VECTOR deltamv;
 
 	int mb_type;
 	int dbquant;
 
-	/* stuff for block based ME (needed for Qpel ME) */
-	/* backup of last integer ME vectors/sad */
-	
-	VECTOR i_mv16;
+	// stuff for block based ME (needed for Qpel ME)
+	// backup of last integer ME vectors/sad
+
+//	VECTOR i_mv16;
 	VECTOR i_mvs[4];
 
-	int32_t i_sad8[4];	/* SAD values for inter4v-VECTORs */
-	int32_t i_sad16;	/* SAD value for inter-VECTOR */
+	int32_t i_sad8[4];	// SAD values for inter4v-VECTORs
+//	int32_t i_sad16;	// SAD value for inter-VECTOR
+
+	VECTOR amv; // average motion vectors from GMC 
+	int32_t mcsel;
+
+/* This structure has become way to big! What to do? Split it up?   */ 
 
 }
 MACROBLOCK;
 
-static __inline int8_t
+static __inline uint32_t
 get_dc_scaler(uint32_t quant,
 			  uint32_t lum)
 {
@@ -155,26 +168,28 @@ get_dc_scaler(uint32_t quant,
 		return 8;
 
 	if (quant < 25 && !lum)
-		return (int8_t)((quant + 13) / 2);
+		return (quant + 13) / 2;
 
 	if (quant < 9)
-		return (int8_t)(2 * quant);
+		return 2 * quant;
 
 	if (quant < 25)
-		return (int8_t)(quant + 8);
+		return quant + 8;
 
 	if (lum)
-		return (int8_t)(2 * quant - 16);
+		return 2 * quant - 16;
 	else
-		return (int8_t)(quant - 6);
+		return quant - 6;
 }
 
-/* useful macros */
+// useful macros
 
 #define MIN(X, Y) ((X)<(Y)?(X):(Y))
 #define MAX(X, Y) ((X)>(Y)?(X):(Y))
 #define ABS(X)    (((X)>0)?(X):-(X))
 #define SIGN(X)   (((X)>0)?1:-1)
+#define CLIP(X,AMIN,AMAX)   (((X)<(AMIN)) ? (AMIN) : ((X)>(AMAX)) ? (AMAX) : (X))
+#define DIV_DIV(a,b)    (((a)>0) ? ((a)+((b)>>1))/(b) : ((a)-((b)>>1))/(b))
 
 
-#endif /* _GLOBAL_H_ */
+#endif							/* _GLOBAL_H_ */

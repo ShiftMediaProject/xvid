@@ -1,73 +1,63 @@
-/*****************************************************************************
- *
- *  XVID MPEG-4 VIDEO CODEC
- *  - Prediction functions -
- *
- *  Copyright(C) 2001-2002 - Michael Militzer <isibaar@xvid.org>
- *  Copyright(C) 2001-2002 - Peter Ross <pross@xvid.org>
- *
- *  This file is part of XviD, a free MPEG-4 video encoder/decoder
- *
- *  XviD is free software; you can redistribute it and/or modify it
- *  under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
- *
- *  Under section 8 of the GNU General Public License, the copyright
- *  holders of XVID explicitly forbid distribution in the following
- *  countries:
- *
- *    - Japan
- *    - United States of America
- *
- *  Linking XviD statically or dynamically with other modules is making a
- *  combined work based on XviD.  Thus, the terms and conditions of the
- *  GNU General Public License cover the whole combination.
- *
- *  As a special exception, the copyright holders of XviD give you
- *  permission to link XviD with independent modules that communicate with
- *  XviD solely through the VFW1.1 and DShow interfaces, regardless of the
- *  license terms of these independent modules, and to copy and distribute
- *  the resulting combined work under terms of your choice, provided that
- *  every copy of the combined work is accompanied by a complete copy of
- *  the source code of XviD (the version of XviD used to produce the
- *  combined work), being distributed under the terms of the GNU General
- *  Public License plus this exception.  An independent module is a module
- *  which is not derived from or based on XviD.
- *
- *  Note that people who make modified versions of XviD are not obligated
- *  to grant this special exception for their modified versions; it is
- *  their choice whether to do so.  The GNU General Public License gives
- *  permission to release a modified version without this exception; this
- *  exception also makes it possible to release a modified version which
- *  carries forward this exception.
- *
- * $Id: mbprediction.c,v 1.12 2002-12-15 01:21:12 edgomez Exp $
- *
- ****************************************************************************/
+ /******************************************************************************
+  *                                                                            *
+  *  This file is part of XviD, a free MPEG-4 video encoder/decoder            *
+  *                                                                            *
+  *  XviD is an implementation of a part of one or more MPEG-4 Video tools     *
+  *  as specified in ISO/IEC 14496-2 standard.  Those intending to use this    *
+  *  software module in hardware or software products are advised that its     *
+  *  use may infringe existing patents or copyrights, and any such use         *
+  *  would be at such party's own risk.  The original developer of this        *
+  *  software module and his/her company, and subsequent editors and their     *
+  *  companies, will have no liability for use of this software or             *
+  *  modifications or derivatives thereof.                                     *
+  *                                                                            *
+  *  XviD is free software; you can redistribute it and/or modify it           *
+  *  under the terms of the GNU General Public License as published by         *
+  *  the Free Software Foundation; either version 2 of the License, or         *
+  *  (at your option) any later version.                                       *
+  *                                                                            *
+  *  XviD is distributed in the hope that it will be useful, but               *
+  *  WITHOUT ANY WARRANTY; without even the implied warranty of                *
+  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+  *  GNU General Public License for more details.                              *
+  *                                                                            *
+  *  You should have received a copy of the GNU General Public License         *
+  *  along with this program; if not, write to the Free Software               *
+  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA  *
+  *                                                                            *
+  ******************************************************************************/
 
+ /******************************************************************************
+  *                                                                            *
+  *  mbprediction.c                                                            *
+  *                                                                            *
+  *  Copyright (C) 2001 - Michael Militzer <isibaar@xvid.org>                  *
+  *  Copyright (C) 2001 - Peter Ross <pross@cs.rmit.edu.au>                    *
+  *                                                                            *
+  *  For more information visit the XviD homepage: http://www.xvid.org         *
+  *                                                                            *
+  ******************************************************************************/
+
+ /******************************************************************************
+  *                                                                            *
+  *  Revision history:                                                         *
+  *                                                                            *
+  *  29.06.2002 predict_acdc() bounding                                        *
+  *  12.12.2001 improved calc_acdc_prediction; removed need for memcpy         *
+  *  15.12.2001 moved pmv displacement to motion estimation                    *
+  *  30.11.2001	mmx cbp support                                                *
+  *  17.11.2001 initial version                                                *
+  *                                                                            *
+  ******************************************************************************/
+
+#include "../global.h"
 #include "../encoder.h"
 #include "mbprediction.h"
 #include "../utils/mbfunctions.h"
 #include "../bitstream/cbp.h"
+#include "../bitstream/mbcoding.h"
+#include "../bitstream/zigzag.h"
 
-
-#define ABS(X) (((X)>0)?(X):-(X))
-#define DIV_DIV(A,B)    ( (A) > 0 ? ((A)+((B)>>1))/(B) : ((A)-((B)>>1))/(B) )
-
-
-/*****************************************************************************
- * Local inlined function
- ****************************************************************************/
 
 static int __inline
 rescale(int predict_quant,
@@ -79,20 +69,11 @@ rescale(int predict_quant,
 }
 
 
-/*****************************************************************************
- * Local data
- ****************************************************************************/
-
 static const int16_t default_acdc_values[15] = {
 	1024,
 	0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0
 };
-
-
-/*****************************************************************************
- * Functions
- ****************************************************************************/
 
 
 /*	get dc/ac prediction direction for a single block and place
@@ -123,15 +104,15 @@ predict_acdc(MACROBLOCK * pMBs,
 	const int16_t *pTop = default_acdc_values;
 	const int16_t *pDiag = default_acdc_values;
 
-	uint32_t index = x + y * mb_width;	/* current macroblock */
+	uint32_t index = x + y * mb_width;	// current macroblock
 	int *acpred_direction = &pMBs[index].acpred_directions[block];
 	uint32_t i;
 
 	left = top = diag = current = 0;
 
-	/* grab left,top and diag macroblocks */
+	// grab left,top and diag macroblocks
 
-	/* left macroblock  */
+	// left macroblock 
 
 	if (x && mbpos >= bound + 1  &&
 		(pMBs[index - 1].mode == MODE_INTRA ||
@@ -139,9 +120,9 @@ predict_acdc(MACROBLOCK * pMBs,
 
 		left = pMBs[index - 1].pred_values[0];
 		left_quant = pMBs[index - 1].quant;
-		/*DEBUGI("LEFT", *(left+MBPRED_SIZE)); */
+		//DEBUGI("LEFT", *(left+MBPRED_SIZE));
 	}
-	/* top macroblock */
+	// top macroblock
 
 	if (mbpos >= bound + (int)mb_width &&
 		(pMBs[index - mb_width].mode == MODE_INTRA ||
@@ -150,7 +131,7 @@ predict_acdc(MACROBLOCK * pMBs,
 		top = pMBs[index - mb_width].pred_values[0];
 		top_quant = pMBs[index - mb_width].quant;
 	}
-	/* diag macroblock  */
+	// diag macroblock 
 
 	if (x && mbpos >= bound + (int)mb_width + 1 &&
 		(pMBs[index - 1 - mb_width].mode == MODE_INTRA ||
@@ -161,7 +142,7 @@ predict_acdc(MACROBLOCK * pMBs,
 
 	current = pMBs[index].pred_values[0];
 
-	/* now grab pLeft, pTop, pDiag _blocks_  */
+	// now grab pLeft, pTop, pDiag _blocks_ 
 
 	switch (block) {
 
@@ -228,18 +209,18 @@ predict_acdc(MACROBLOCK * pMBs,
 		break;
 	}
 
-	/*  determine ac prediction direction & ac/dc predictor */
-	/*  place rescaled ac/dc predictions into predictors[] for later use */
+	//  determine ac prediction direction & ac/dc predictor
+	//  place rescaled ac/dc predictions into predictors[] for later use
 
 	if (ABS(pLeft[0] - pDiag[0]) < ABS(pDiag[0] - pTop[0])) {
-		*acpred_direction = 1;	/* vertical */
-		predictors[0] = (int16_t)(DIV_DIV(pTop[0], iDcScaler));
+		*acpred_direction = 1;	// vertical
+		predictors[0] = DIV_DIV(pTop[0], iDcScaler);
 		for (i = 1; i < 8; i++) {
 			predictors[i] = rescale(top_quant, current_quant, pTop[i]);
 		}
 	} else {
-		*acpred_direction = 2;	/* horizontal */
-		predictors[0] = (int16_t)(DIV_DIV(pLeft[0], iDcScaler));
+		*acpred_direction = 2;	// horizontal
+		predictors[0] = DIV_DIV(pLeft[0], iDcScaler);
 		for (i = 1; i < 8; i++) {
 			predictors[i] = rescale(left_quant, current_quant, pLeft[i + 7]);
 		}
@@ -265,8 +246,8 @@ add_acdc(MACROBLOCK * pMB,
 
 	DPRINTF(DPRINTF_COEFF,"predictor[0] %i", predictors[0]);
 
-	dct_codes[0] += predictors[0];	/* dc prediction */
-	pCurrent[0] = (int16_t)(dct_codes[0] * iDcScaler);
+	dct_codes[0] += predictors[0];	// dc prediction
+	pCurrent[0] = dct_codes[0] * iDcScaler;
 
 	if (acpred_direction == 1) {
 		for (i = 1; i < 8; i++) {
@@ -297,21 +278,19 @@ add_acdc(MACROBLOCK * pMB,
 
 
 
-/* ****************************************************************** */
-/* ****************************************************************** */
+// ******************************************************************
+// ******************************************************************
 
 /* encoder: subtract predictors from qcoeff[] and calculate S1/S2
 
-todo: perform [-127,127] clamping after prediction
-clamping must adjust the coeffs, so dequant is done correctly
-				   
-S1/S2 are used  to determine if its worth predicting for AC
+returns sum of coeefficients *saved* if prediction is enabled
+
 S1 = sum of all (qcoeff - prediction)
 S2 = sum of all qcoeff
 */
 
-uint32_t
-calc_acdc(MACROBLOCK * pMB,
+int
+calc_acdc_coeff(MACROBLOCK * pMB,
 		  uint32_t block,
 		  int16_t qcoeff[64],
 		  uint32_t iDcScaler,
@@ -319,12 +298,12 @@ calc_acdc(MACROBLOCK * pMB,
 {
 	int16_t *pCurrent = pMB->pred_values[block];
 	uint32_t i;
-	uint32_t S1 = 0, S2 = 0;
+	int S1 = 0, S2 = 0;
 
 
 	/* store current coeffs to pred_values[] for future prediction */
 
-	pCurrent[0] = (int16_t)(qcoeff[0] * iDcScaler);
+	pCurrent[0] = qcoeff[0] * iDcScaler;
 	for (i = 1; i < 8; i++) {
 		pCurrent[i] = qcoeff[i];
 		pCurrent[i + 7] = qcoeff[i * 8];
@@ -344,7 +323,7 @@ calc_acdc(MACROBLOCK * pMB,
 			S1 += ABS(level);
 			predictors[i] = level;
 		}
-	} else						/* acpred_direction == 2 */
+	} else						// acpred_direction == 2
 	{
 		for (i = 1; i < 8; i++) {
 			int16_t level;
@@ -363,6 +342,73 @@ calc_acdc(MACROBLOCK * pMB,
 }
 
 
+
+/* returns the bits *saved* if prediction is enabled */
+
+int
+calc_acdc_bits(MACROBLOCK * pMB,
+		  uint32_t block,
+		  int16_t qcoeff[64],
+		  uint32_t iDcScaler,
+		  int16_t predictors[8])
+{
+	const int direction = pMB->acpred_directions[block];
+	int16_t *pCurrent = pMB->pred_values[block];
+	int16_t tmp[8];
+	unsigned int i;
+	int Z1, Z2;
+
+	/* store current coeffs to pred_values[] for future prediction */
+	pCurrent[0] = qcoeff[0] * iDcScaler;
+	for (i = 1; i < 8; i++) {
+		pCurrent[i] = qcoeff[i];
+		pCurrent[i + 7] = qcoeff[i * 8];
+	}
+
+
+	/* dc prediction */
+	qcoeff[0] = qcoeff[0] - predictors[0];
+
+	/* calc cost before ac prediction */
+#ifdef BIGLUT
+	Z2 = CodeCoeff_CalcBits(qcoeff, intra_table, scan_tables[0], 1);
+#else
+	Z2 = CodeCoeffIntra_CalcBits(qcoeff, scan_tables[0]);
+#endif
+
+	/* apply ac prediction & calc cost*/
+	if (direction == 1) {
+		for (i = 1; i < 8; i++) {
+			tmp[i] = qcoeff[i];
+			qcoeff[i] -= predictors[i];
+			predictors[i] = qcoeff[i];
+		}
+	}else{						// acpred_direction == 2
+		for (i = 1; i < 8; i++) {
+			tmp[i] = qcoeff[i*8];
+			qcoeff[i*8] -= predictors[i];
+			predictors[i] = qcoeff[i*8];
+		}
+	}
+
+#ifdef BIGLUT
+	Z1 = CodeCoeff_CalcBits(qcoeff, intra_table, scan_tables[direction], 1);
+#else
+	Z1 = CodeCoeffIntra_CalcBits(qcoeff, scan_tables[direction]);
+#endif
+
+	/* undo prediction */
+	if (direction == 1) {
+		for (i = 1; i < 8; i++)	
+			qcoeff[i] = tmp[i];
+	}else{						// acpred_direction == 2
+		for (i = 1; i < 8; i++)	
+			qcoeff[i*8] = tmp[i];
+	}
+
+	return Z2-Z1;
+}
+
 /* apply predictors[] to qcoeff */
 
 void
@@ -371,16 +417,14 @@ apply_acdc(MACROBLOCK * pMB,
 		   int16_t qcoeff[64],
 		   int16_t predictors[8])
 {
-	uint32_t i;
+	unsigned int i;
 
 	if (pMB->acpred_directions[block] == 1) {
-		for (i = 1; i < 8; i++) {
+		for (i = 1; i < 8; i++)	
 			qcoeff[i] = predictors[i];
-		}
 	} else {
-		for (i = 1; i < 8; i++) {
+		for (i = 1; i < 8; i++)	
 			qcoeff[i * 8] = predictors[i];
-		}
 	}
 }
 
@@ -395,7 +439,7 @@ MBPrediction(FRAMEINFO * frame,
 
 	int32_t j;
 	int32_t iDcScaler, iQuant = frame->quant;
-	int32_t S = 0;
+	int S = 0;
 	int16_t predictors[6][8];
 
 	MACROBLOCK *pMB = &frame->mbs[x + y * mb_width];
@@ -403,25 +447,26 @@ MBPrediction(FRAMEINFO * frame,
 	if ((pMB->mode == MODE_INTRA) || (pMB->mode == MODE_INTRA_Q)) {
 
 		for (j = 0; j < 6; j++) {
-			iDcScaler = get_dc_scaler(iQuant, (j < 4) ? 1 : 0);
+			iDcScaler = get_dc_scaler(iQuant, j<4);
 
 			predict_acdc(frame->mbs, x, y, mb_width, j, &qcoeff[j * 64],
 						 iQuant, iDcScaler, predictors[j], 0);
 
-			S += calc_acdc(pMB, j, &qcoeff[j * 64], iDcScaler, predictors[j]);
+			if ((frame->global_flags & XVID_HQACPRED))
+				S += calc_acdc_bits(pMB, j, &qcoeff[j * 64], iDcScaler, predictors[j]);
+			else
+				S += calc_acdc_coeff(pMB, j, &qcoeff[j * 64], iDcScaler, predictors[j]);
 
 		}
 
-		if (S < 0)				/* dont predict */
-		{
-			for (j = 0; j < 6; j++) {
+		if (S<=0) {				// dont predict
+			for (j = 0; j < 6; j++)
 				pMB->acpred_directions[j] = 0;
-			}
-		} else {
-			for (j = 0; j < 6; j++) {
+		}else{
+			for (j = 0; j < 6; j++) 
 				apply_acdc(pMB, j, &qcoeff[j * 64], predictors[j]);
-			}
 		}
+		
 		pMB->cbp = calc_cbp(qcoeff);
 	}
 

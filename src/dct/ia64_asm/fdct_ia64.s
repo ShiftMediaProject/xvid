@@ -1,48 +1,48 @@
-// /****************************************************************************
-//  *
-//  *  XVID MPEG-4 VIDEO CODEC
-//  *  - ia64  fast discrete cosine transformation 
-//  *
-//  *  Copyright (C) 1999 Intel Corporation,                                     
-//  *  Copyright (C) 2002 - Stephan Krause, Ingo-Marc Weber, Daniel Kallfass     
-//  *
-//  *  This program is an implementation of a part of one or more MPEG-4
-//  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
-//  *  to use this software module in hardware or software products are
-//  *  advised that its use may infringe existing patents or copyrights, and
-//  *  any such use would be at such party's own risk.  The original
-//  *  developer of this software module and his/her company, and subsequent
-//  *  editors and their companies, will have no liability for use of this
-//  *  software or modifications or derivatives thereof.
-//  *
-//  *  This program is free software; you can redistribute it and/or modify
-//  *  it under the terms of the GNU General Public License as published by
-//  *  the Free Software Foundation; either version 2 of the License, or
-//  *  (at your option) any later version.
-//  *
-//  *  This program is distributed in the hope that it will be useful,
-//  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  *  GNU General Public License for more details.
-//  *
-//  *  You should have received a copy of the GNU General Public License
-//  *  along with this program; if not, write to the Free Software
-//  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-//  *
-//  ****************************************************************************/
+// ******************************************************************************
+// *                                                                            *
+// *  This file is part of XviD, a free MPEG-4 video encoder/decoder            *
+// *                                                                            *
+// *                                                                            *
+// *  XviD is free software; you can redistribute it and/or modify it           *
+// *  under the terms of the GNU General Public License as published by         *
+// *  the Free Software Foundation; either version 2 of the License, or         *
+// *  (at your option) any later version.                                       *
+// *                                                                            *
+// *  XviD is distributed in the hope that it will be useful, but               *
+// *  WITHOUT ANY WARRANTY; without even the implied warranty of                *
+// *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+// *  GNU General Public License for more details.                              *
+// *                                                                            *
+// *  You should have received a copy of the GNU General Public License         *
+// *  along with this program; if not, write to the Free Software               *
+// *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA  *
+// *                                                                            *
+// ******************************************************************************
 //
 // ******************************************************************************
 // *                                                                            *
 // *  fdct_ia64.s, IA-64 optimized forward DCT                                  *
 // *                                                                            *
-// *  Completed version provided by Intel at AppNote AP-922    					*
-// *  http://developer.intel.com/software/products/college/ia32/strmsimd/		*
+// *  Completed version provided by Intel at AppNote AP-922    			*
+// *  http://developer.intel.com/software/products/college/ia32/strmsimd/	*
 // *  Copyright (C) 1999 Intel Corporation,                                     *
 // *                                                                            *
-// *  This version was implemented during an IA-64 practical training at 		*
-// *  the University of Karlsruhe (http://i44w3.info.uni-karlsruhe.de/)			*
+// *  This version was implemented during an IA-64 practical training at 	*
+// *  the University of Karlsruhe (http://i44w3.info.uni-karlsruhe.de/)		*
+// *  Copyright (C) 2002 - Stephan Krause, Ingo-Marc Weber, Daniel Kallfass     *
+// *                                                                            *
+// *  For more information visit the XviD homepage: http://www.xvid.org         *
 // *                                                                            *
 // ******************************************************************************
+//
+// ******************************************************************************
+// *                                                                            *
+// *  Revision history:                                                         *
+// *                                                                            *
+// *  24.07.2002 Initial Version						*
+// *                                                                            *
+// ******************************************************************************
+
 
 // This is a fast precise implementation of 8x8 Discrete Cosine Transform
 // published in Intel Application Note 922 from 1999 and optimized for IA-64.

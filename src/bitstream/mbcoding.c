@@ -1,70 +1,64 @@
-/*****************************************************************************
- *
- *  XVID MPEG-4 VIDEO CODEC
- *  - Macro Block coding functions -
- *
- *  Copyright(C) 2002 Michael Militzer <isibaar@xvid.org>
- *
- *  This file is part of XviD, a free MPEG-4 video encoder/decoder
- *
- *  XviD is free software; you can redistribute it and/or modify it
- *  under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
- *
- *  Under section 8 of the GNU General Public License, the copyright
- *  holders of XVID explicitly forbid distribution in the following
- *  countries:
- *
- *    - Japan
- *    - United States of America
- *
- *  Linking XviD statically or dynamically with other modules is making a
- *  combined work based on XviD.  Thus, the terms and conditions of the
- *  GNU General Public License cover the whole combination.
- *
- *  As a special exception, the copyright holders of XviD give you
- *  permission to link XviD with independent modules that communicate with
- *  XviD solely through the VFW1.1 and DShow interfaces, regardless of the
- *  license terms of these independent modules, and to copy and distribute
- *  the resulting combined work under terms of your choice, provided that
- *  every copy of the combined work is accompanied by a complete copy of
- *  the source code of XviD (the version of XviD used to produce the
- *  combined work), being distributed under the terms of the GNU General
- *  Public License plus this exception.  An independent module is a module
- *  which is not derived from or based on XviD.
- *
- *  Note that people who make modified versions of XviD are not obligated
- *  to grant this special exception for their modified versions; it is
- *  their choice whether to do so.  The GNU General Public License gives
- *  permission to release a modified version without this exception; this
- *  exception also makes it possible to release a modified version which
- *  carries forward this exception.
- *
- * $Id: mbcoding.c,v 1.41 2003-02-13 17:31:33 edgomez Exp $
- *
- ****************************************************************************/
+ /******************************************************************************
+  *                                                                            *
+  *  This file is part of XviD, a free MPEG-4 video encoder/decoder            *
+  *                                                                            *
+  *  XviD is an implementation of a part of one or more MPEG-4 Video tools     *
+  *  as specified in ISO/IEC 14496-2 standard.  Those intending to use this    *
+  *  software module in hardware or software products are advised that its     *
+  *  use may infringe existing patents or copyrights, and any such use         *
+  *  would be at such party's own risk.  The original developer of this        *
+  *  software module and his/her company, and subsequent editors and their     *
+  *  companies, will have no liability for use of this software or             *
+  *  modifications or derivatives thereof.                                     *
+  *                                                                            *
+  *  XviD is free software; you can redistribute it and/or modify it           *
+  *  under the terms of the GNU General Public License as published by         *
+  *  the Free Software Foundation; either version 2 of the License, or         *
+  *  (at your option) any later version.                                       *
+  *                                                                            *
+  *  XviD is distributed in the hope that it will be useful, but               *
+  *  WITHOUT ANY WARRANTY; without even the implied warranty of                *
+  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
+  *  GNU General Public License for more details.                              *
+  *                                                                            *
+  *  You should have received a copy of the GNU General Public License         *
+  *  along with this program; if not, write to the Free Software               *
+  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA  *
+  *                                                                            *
+  ******************************************************************************/
 
+ /******************************************************************************
+  *                                                                            *
+  *  mbcoding.c                                                                *
+  *                                                                            *
+  *  Copyright (C) 2002 - Michael Militzer <isibaar@xvid.org>                  *
+  *                                                                            *
+  *  For more information visit the XviD homepage: http://www.xvid.org         *
+  *                                                                            *
+  ******************************************************************************/
+
+ /******************************************************************************
+  *																			   *	
+  *  Revision history:                                                         *
+  *                                                                            *
+  *  28.10.2002	GMC support - gruel											   *
+  *  28.06.2002 added check_resync_marker()                                    *
+  *  14.04.2002 bframe encoding												   *
+  *  08.03.2002 initial version; isibaar					                   *
+  *																			   *
+  ******************************************************************************/
+
+
+#include <stdio.h>
 #include <stdlib.h>
 #include "../portab.h"
+#include "../global.h"
 #include "bitstream.h"
 #include "zigzag.h"
 #include "vlc_codes.h"
 #include "mbcoding.h"
 
 #include "../utils/mbfunctions.h"
-
-#define ABS(X) (((X)>0)?(X):-(X))
-#define CLIP(X,A) (X > A) ? (A) : (X)
 
 /* #define BIGLUT */
 
@@ -74,31 +68,54 @@
 #define LEVELOFFSET 32
 #endif
 
-/*****************************************************************************
- * Local data
- ****************************************************************************/
-
 static REVERSE_EVENT DCT3D[2][4096];
 
 #ifdef BIGLUT
 static VLC coeff_VLC[2][2][4096][64];
-static VLC *intra_table, *inter_table; 
+VLC *intra_table;
+static VLC *inter_table; 
 #else
 static VLC coeff_VLC[2][2][64][64];
 #endif
 
-/*****************************************************************************
- * Vector Length Coding Initialization
- ****************************************************************************/
+/* not really MB related, but VLCs are only available here */
+void bs_put_spritetrajectory(Bitstream * bs, const int val)
+{
+	const int code = sprite_trajectory_code[val+16384].code;
+	const int len = sprite_trajectory_code[val+16384].len;
+	const int code2 = sprite_trajectory_len[len].code;
+	const int len2 = sprite_trajectory_len[len].len;
+
+//	printf("GMC=%d Code/Len  = %d / %d ",val, code,len);
+//	printf("Code2 / Len2 = %d / %d \n",code2,len2);
+
+	BitstreamPutBits(bs, code2, len2);
+	if (len) BitstreamPutBits(bs, code, len);
+}
+
+int bs_get_spritetrajectory(Bitstream * bs)
+{
+	int i;
+	for (i = 0; i < 12; i++)
+	{
+		if (BitstreamShowBits(bs, sprite_trajectory_len[i].len) == sprite_trajectory_len[i].code)
+		{
+			BitstreamSkip(bs, sprite_trajectory_len[i].len);
+			return i;
+		}
+	}
+	return -1;
+}
 
 void
 init_vlc_tables(void)
 {
-	uint32_t i, j, intra, last, run,  run_esc, level, level_esc, escape, escape_len, offset;
+	uint32_t i, j, k, intra, last, run,  run_esc, level, level_esc, escape, escape_len, offset;
+	int32_t l;
 
 #ifdef BIGLUT
-	intra_table = (VLC*)coeff_VLC[1];
-	inter_table = (VLC*)coeff_VLC[0]; 
+	intra_table = coeff_VLC[1];
+	inter_table = coeff_VLC[0]; 
 #endif
 
 
@@ -166,6 +183,10 @@ init_vlc_tables(void)
 #endif
                     level_esc = level - max_level[intra][last][run];
 					run_esc = run - 1 - max_run[intra][last][level];
+					/*use this test to use shorter esc2 codes when possible
+					if (level_esc <= max_level[intra][last][run] && run <= max_run[intra][last][level_esc]
+						&& !(coeff_VLC[intra][last][level_esc + offset][run].len + 7 + 1
+							 > coeff_VLC[intra][last][level + offset][run_esc].code + 7 + 2))*/
 
 					if (level_esc <= max_level[intra][last][run] && run <= max_run[intra][last][level_esc])
 					{
@@ -216,7 +237,7 @@ init_vlc_tables(void)
 				}
 
 #ifdef BIGLUT
-				for (level = (uint32_t)(32 << intra); level < 2048; level++)
+				for (level = 32 << intra; level < 2048; level++)
 				{
 					coeff_VLC[intra][last][level + offset][run].code
 						= (ESCAPE3 << 21) | (last << 20) | (run << 14) | (1 << 13) | ((level & 0xfff) << 1) | 1;
@@ -235,15 +256,28 @@ init_vlc_tables(void)
 				}
 #endif
 			}
+/* init sprite_trajectory tables */
+/* even if GMC is not specified (it might be used later...) */
 
-	/* Shut up the compiler -- gcc 3.3 pre release */
-	i = dc_threshold[0];
+	sprite_trajectory_code[0+16384].code = 0;
+	sprite_trajectory_code[0+16384].len = 0;
+	for (k=0;k<14;k++)
+	{
+		int limit = (1<<k);
 
+		for (l=-(2*limit-1); l <= -limit; l++)
+		{
+			sprite_trajectory_code[l+16384].code = (2*limit-1)+l;
+			sprite_trajectory_code[l+16384].len = k+1;
+		}
+
+		for (l=limit; l<= 2*limit-1; l++)
+		{
+			sprite_trajectory_code[l+16384].code = l; 
+			sprite_trajectory_code[l+16384].len = k+1;
+		}
+	}
 }
-
-/*****************************************************************************
- * Local inlined functions for MB coding
- ****************************************************************************/
 
 static __inline void
 CodeVector(Bitstream * bs,
@@ -340,6 +374,50 @@ CodeCoeff(Bitstream * bs,
 
 }
 
+
+
+/* returns the number of bits required to encode qcoeff */
+int
+CodeCoeff_CalcBits(const int16_t qcoeff[64],
+		  VLC * table,
+		  const uint16_t * zigzag,
+		  uint16_t intra)
+{
+	int bits = 0;
+	uint32_t j, last;
+	short v;
+	VLC *vlc;
+
+	j = intra;
+	last = intra;
+
+	while (j < 64 && (v = qcoeff[zigzag[j]]) == 0)
+		j++;
+
+	if (j >= 64) return 0;	/* empty block */
+
+	do {
+		vlc = table + 64 * 2048 + (v << 6) + j - last;
+		last = ++j;
+
+		/* count zeroes */
+		while (j < 64 && (v = qcoeff[zigzag[j]]) == 0)
+			j++;
+
+		/* write code */
+		if (j != 64) {
+			bits += vlc->len;
+		} else {
+			vlc += 64 * 4096;
+			bits += vlc->len;
+			break;
+		}
+	} while (1);
+
+	return bits;
+}
+
+
 #else
 
 static __inline void
@@ -409,7 +487,7 @@ CodeCoeffIntra(Bitstream * bs,
 	i	= 1;
 	run = 0;
 
-	while (!(level = qcoeff[zigzag[i++]]))
+	while (i<64 && !(level = qcoeff[zigzag[i++]]))
 		run++;
 
 	prev_level = level;
@@ -454,14 +532,103 @@ CodeCoeffIntra(Bitstream * bs,
 	BitstreamPutBits(bs, code, len);
 }
 
+
+
+/* returns the number of bits required to encode qcoeff */
+
+int 
+CodeCoeffIntra_CalcBits(const int16_t qcoeff[64], const uint16_t * zigzag)
+{
+	int bits = 0;
+	uint32_t i, abs_level, run, prev_run, len;
+	int32_t level, prev_level;
+
+	i	= 1;
+	run = 0;
+
+	while (i<64 && !(level = qcoeff[zigzag[i++]]))
+		run++;
+
+	if (i >= 64) return 0;	/* empty block */
+
+	prev_level = level;
+	prev_run   = run;
+	run = 0;
+
+	while (i < 64)
+	{
+		if ((level = qcoeff[zigzag[i++]]) != 0)
+		{
+			abs_level = ABS(prev_level);
+			abs_level = abs_level < 64 ? abs_level : 0;
+			len		  = coeff_VLC[1][0][abs_level][prev_run].len;
+			bits      += len!=128 ? len : 30;
+
+			prev_level = level;
+			prev_run   = run;
+			run = 0;
+		}
+		else
+			run++;
+	}
+
+	abs_level = ABS(prev_level);
+	abs_level = abs_level < 64 ? abs_level : 0;
+	len		  = coeff_VLC[1][1][abs_level][prev_run].len;
+	bits      += len!=128 ? len : 30;
+
+	return bits;
+}
+
+int
+CodeCoeffInter_CalcBits(const int16_t qcoeff[64], const uint16_t * zigzag)
+{
+	uint32_t i, run, prev_run, len;
+	int32_t level, prev_level, level_shifted;
+	int bits = 0;
+
+	i	= 0;
+	run = 0;
+
+	while (!(level = qcoeff[zigzag[i++]]))
+		run++;
+
+	prev_level = level;
+	prev_run   = run;
+	run = 0;
+
+	while (i < 64) {
+		if ((level = qcoeff[zigzag[i++]]) != 0) {
+			level_shifted = prev_level + 32;
+			if (!(level_shifted & -64))
+				len	 = coeff_VLC[0][0][level_shifted][prev_run].len;
+			else
+				len  = 30;
+
+			bits += len;
+			prev_level = level;
+			prev_run   = run;
+			run = 0;
+		}
+		else
+			run++;
+	}
+
+	level_shifted = prev_level + 32;
+	if (!(level_shifted & -64))
+		len	 = coeff_VLC[0][1][level_shifted][prev_run].len;
+	else
+		len  = 30;
+	bits += len;
+
+	return bits;
+}
+
+
 #endif
 
-/*****************************************************************************
- * Local functions
- ****************************************************************************/
-
-static void
-CodeBlockIntra(const FRAMEINFO * frame,
+static __inline void
+CodeBlockIntra(const FRAMEINFO * const frame,
 			   const MACROBLOCK * pMB,
 			   int16_t qcoeff[6 * 64],
 			   Bitstream * bs,
@@ -472,7 +639,7 @@ CodeBlockIntra(const FRAMEINFO * frame,
 
 	cbpy = pMB->cbp >> 2;
 
-	/* write mcbpc */
+	// write mcbpc
 	if (frame->coding_type == I_VOP) {
 		mcbpc = ((pMB->mode >> 1) & 3) | ((pMB->cbp & 3) << 2);
 		BitstreamPutBits(bs, mcbpc_intra_tab[mcbpc].code,
@@ -483,24 +650,24 @@ CodeBlockIntra(const FRAMEINFO * frame,
 						 mcbpc_inter_tab[mcbpc].len);
 	}
 
-	/* ac prediction flag */
+	// ac prediction flag
 	if (pMB->acpred_directions[0])
 		BitstreamPutBits(bs, 1, 1);
 	else
 		BitstreamPutBits(bs, 0, 1);
 
-	/* write cbpy */
+	// write cbpy
 	BitstreamPutBits(bs, cbpy_tab[cbpy].code, cbpy_tab[cbpy].len);
 
-	/* write dquant */
+	// write dquant
 	if (pMB->mode == MODE_INTRA_Q)
 		BitstreamPutBits(bs, pMB->dquant, 2);
 
-	/* write interlacing */
+	// write interlacing
 	if (frame->global_flags & XVID_INTERLACING) {
 		BitstreamPutBit(bs, pMB->field_dct);
 	}
-	/* code block coeffs */
+	// code block coeffs
 	for (i = 0; i < 6; i++) {
 		if (i < 4)
 			BitstreamPutBits(bs, dcy_tab[qcoeff[i * 64 + 0] + 255].code,
@@ -510,14 +677,18 @@ CodeBlockIntra(const FRAMEINFO * frame,
 							 dcc_tab[qcoeff[i * 64 + 0] + 255].len);
 
 		if (pMB->cbp & (1 << (5 - i))) {
+			const uint16_t *scan_table =
+				frame->global_flags & XVID_ALTERNATESCAN ?
+				scan_tables[2] : scan_tables[pMB->acpred_directions[i]];
+
 			bits = BitstreamPos(bs);
 
 #ifdef BIGLUT
-			CodeCoeff(bs, &qcoeff[i * 64], intra_table,
-					  scan_tables[pMB->acpred_directions[i]], 1);
+			CodeCoeff(bs, &qcoeff[i * 64], intra_table, scan_table, 1);
 #else
-			CodeCoeffIntra(bs, &qcoeff[i * 64], scan_tables[pMB->acpred_directions[i]]);
+			CodeCoeffIntra(bs, &qcoeff[i * 64], scan_table);
 #endif
+
 			bits = BitstreamPos(bs) - bits;
 			pStat->iTextBits += bits;
 		}
@@ -527,7 +698,7 @@ CodeBlockIntra(const FRAMEINFO * frame,
 
 
 static void
-CodeBlockInter(const FRAMEINFO * frame,
+CodeBlockInter(const FRAMEINFO * const frame,
 			   const MACROBLOCK * pMB,
 			   int16_t qcoeff[6 * 64],
 			   Bitstream * bs,
@@ -540,74 +711,78 @@ CodeBlockInter(const FRAMEINFO * frame,
 	mcbpc = (pMB->mode & 7) | ((pMB->cbp & 3) << 3);
 	cbpy = 15 - (pMB->cbp >> 2);
 
-	/* write mcbpc */
+	// write mcbpc
 	BitstreamPutBits(bs, mcbpc_inter_tab[mcbpc].code,
 					 mcbpc_inter_tab[mcbpc].len);
 
-	/* write cbpy */
+	if ( (frame->coding_type == S_VOP) && (pMB->mode == MODE_INTER || pMB->mode == MODE_INTER_Q) )
+		BitstreamPutBit(bs, pMB->mcsel);		// mcsel: '0'=local motion, '1'=GMC
+
+	// write cbpy
 	BitstreamPutBits(bs, cbpy_tab[cbpy].code, cbpy_tab[cbpy].len);
 
-	/* write dquant */
+	// write dquant
 	if (pMB->mode == MODE_INTER_Q)
 		BitstreamPutBits(bs, pMB->dquant, 2);
 
-	/* interlacing */
+	// interlacing
 	if (frame->global_flags & XVID_INTERLACING) {
 		if (pMB->cbp) {
 			BitstreamPutBit(bs, pMB->field_dct);
-			DPRINTF(DPRINTF_DEBUG, "codep: field_dct: %d", pMB->field_dct);
+			DPRINTF(DPRINTF_MB,"codep: field_dct: %i", pMB->field_dct);
 		}
 
-		/* if inter block, write field ME flag */
+		// if inter block, write field ME flag
 		if (pMB->mode == MODE_INTER || pMB->mode == MODE_INTER_Q) {
 			BitstreamPutBit(bs, pMB->field_pred);
-			DPRINTF(DPRINTF_DEBUG, "codep: field_pred: %d", pMB->field_pred);
+			DPRINTF(DPRINTF_MB,"codep: field_pred: %i", pMB->field_pred);
 
-			/* write field prediction references */
+			// write field prediction references
 			if (pMB->field_pred) {
 				BitstreamPutBit(bs, pMB->field_for_top);
 				BitstreamPutBit(bs, pMB->field_for_bot);
 			}
 		}
 	}
-	/* code motion vector(s) */
-	for (i = 0; i < (pMB->mode == MODE_INTER4V ? 4 : 1); i++) {
-		CodeVector(bs, pMB->pmvs[i].x, frame->fcode, pStat);
-		CodeVector(bs, pMB->pmvs[i].y, frame->fcode, pStat);
-	}
+	// code motion vector(s) if motion is local 
+	if (!pMB->mcsel)
+		for (i = 0; i < (pMB->mode == MODE_INTER4V ? 4 : 1); i++) {
+			CodeVector(bs, pMB->pmvs[i].x, frame->fcode, pStat);
+			CodeVector(bs, pMB->pmvs[i].y, frame->fcode, pStat);
+		}
 
 	bits = BitstreamPos(bs);
 
-	/* code block coeffs */
+	// code block coeffs
 	for (i = 0; i < 6; i++)
 		if (pMB->cbp & (1 << (5 - i)))
+		{
+			const uint16_t *scan_table =
+				frame->global_flags & XVID_ALTERNATESCAN ?
+				scan_tables[2] : scan_tables[0];
+
 #ifdef BIGLUT
-			CodeCoeff(bs, &qcoeff[i * 64], inter_table, scan_tables[0], 0);
+			CodeCoeff(bs, &qcoeff[i * 64], inter_table, scan_table, 0);
 #else
-			CodeCoeffInter(bs, &qcoeff[i * 64], scan_tables[0]);
+			CodeCoeffInter(bs, &qcoeff[i * 64], scan_table);
 #endif
+		}
 
 	bits = BitstreamPos(bs) - bits;
 	pStat->iTextBits += bits;
-
 }
 
-/*****************************************************************************
- * Macro Block bitstream encoding functions
- ****************************************************************************/
 
 void
-MBCoding(const FRAMEINFO * frame,
+MBCoding(const FRAMEINFO * const frame,
 		 MACROBLOCK * pMB,
 		 int16_t qcoeff[6 * 64],
 		 Bitstream * bs,
 		 Statistics * pStat)
 {
-
-	if (frame->coding_type == P_VOP) {
-			BitstreamPutBit(bs, 0);	/* coded */
-	}
-
+	if (frame->coding_type != I_VOP)  
+			BitstreamPutBit(bs, 0);	// not_coded
+			
 	if (pMB->mode == MODE_INTRA || pMB->mode == MODE_INTRA_Q)
 		CodeBlockIntra(frame, pMB, qcoeff, bs, pStat);
 	else
@@ -615,25 +790,155 @@ MBCoding(const FRAMEINFO * frame,
 
 }
 
-
+/*
+// moved to mbcoding.h so that in can be 'static __inline'
 void
 MBSkip(Bitstream * bs)
 {
-	BitstreamPutBit(bs, 1);	/* not coded */
-	return;
+	BitstreamPutBit(bs, 1);	// not coded
 }
+*/
 
-/*****************************************************************************
- * decoding stuff starts here
- ****************************************************************************/
+/***************************************************************
+ * bframe encoding start
+ ***************************************************************/
 
 /*
- * For IVOP addbits == 0
- * For PVOP addbits == fcode - 1
- * For BVOP addbits == max(fcode,bcode) - 1
- * returns true or false
- */
+	mbtype
+	0	1b		direct(h263)		mvdb
+	1	01b		interpolate mc+q	dbquant, mvdf, mvdb
+	2	001b	backward mc+q		dbquant, mvdb
+	3	0001b	forward mc+q		dbquant, mvdf
+*/
 
+static __inline void
+put_bvop_mbtype(Bitstream * bs,
+				int value)
+{
+	switch (value) {
+		case MODE_FORWARD:
+			BitstreamPutBit(bs, 0);
+		case MODE_BACKWARD:
+			BitstreamPutBit(bs, 0);
+		case MODE_INTERPOLATE:
+			BitstreamPutBit(bs, 0);
+		case MODE_DIRECT:
+			BitstreamPutBit(bs, 1);
+		default:
+			break;
+	}
+}
+
+/*
+	dbquant
+	-2	10b
+	0	0b
+	+2	11b
+*/
+
+static __inline void
+put_bvop_dbquant(Bitstream * bs,
+				 int value)
+{
+	switch (value) {
+	case 0:
+		BitstreamPutBit(bs, 0);
+		return;
+
+	case -2:
+		BitstreamPutBit(bs, 1);
+		BitstreamPutBit(bs, 0);
+		return;
+
+	case 2:
+		BitstreamPutBit(bs, 1);
+		BitstreamPutBit(bs, 1);
+		return;
+
+	default:;					// invalid
+	}
+}
+
+
+
+void
+MBCodingBVOP(const MACROBLOCK * mb,
+			 const int16_t qcoeff[6 * 64],
+			 const int32_t fcode,
+			 const int32_t bcode,
+			 Bitstream * bs,
+			 Statistics * pStat,
+			 int direction)
+{
+	int vcode = fcode;
+	unsigned int i;
+
+/*	------------------------------------------------------------------
+		when a block is skipped it is decoded DIRECT(0,0)
+		hence is interpolated from forward & backward frames
+	------------------------------------------------------------------ */
+
+	if (mb->mode == MODE_DIRECT_NONE_MV) {
+		BitstreamPutBit(bs, 1);	// skipped
+		return;
+	}
+
+	BitstreamPutBit(bs, 0);		// not skipped
+
+	if (mb->cbp == 0) {
+		BitstreamPutBit(bs, 1);	// cbp == 0
+	} else {
+		BitstreamPutBit(bs, 0);	// cbp == xxx
+	}
+
+	put_bvop_mbtype(bs, mb->mode);
+
+	if (mb->cbp) {
+		BitstreamPutBits(bs, mb->cbp, 6);
+	}
+
+	if (mb->mode != MODE_DIRECT && mb->cbp != 0) {
+		put_bvop_dbquant(bs, 0);	// todo: mb->dquant = 0
+	}
+
+	switch (mb->mode) {
+		case MODE_INTERPOLATE:
+			CodeVector(bs, mb->pmvs[1].x, vcode, pStat); //forward vector of interpolate mode
+			CodeVector(bs, mb->pmvs[1].y, vcode, pStat);
+		case MODE_BACKWARD:
+			vcode = bcode;
+		case MODE_FORWARD:
+			CodeVector(bs, mb->pmvs[0].x, vcode, pStat);
+			CodeVector(bs, mb->pmvs[0].y, vcode, pStat);
+			break;
+		case MODE_DIRECT:
+			CodeVector(bs, mb->pmvs[3].x, 1, pStat);	// fcode is always 1 for delta vector
+			CodeVector(bs, mb->pmvs[3].y, 1, pStat);	// prediction is always (0,0)
+		default: break;
+	}
+
+	for (i = 0; i < 6; i++) {
+		if (mb->cbp & (1 << (5 - i))) {
+#ifdef BIGLUT
+			CodeCoeff(bs, &qcoeff[i * 64], inter_table, scan_tables[0], 0);
+#else
+			CodeCoeffInter(bs, &qcoeff[i * 64], scan_tables[0]);
+#endif
+		}
+	}
+}
+
+
+
+/***************************************************************
+ * decoding stuff starts here                                  *
+ ***************************************************************/
+
+
+// for IVOP addbits == 0
+// for PVOP addbits == fcode - 1
+// for BVOP addbits == max(fcode,bcode) - 1
+// returns true or false
 int 
 check_resync_marker(Bitstream * bs, int addbits)
 {
@@ -675,7 +980,7 @@ get_mcbpc_inter(Bitstream * bs)
 
 	uint32_t index;
 	
-	index = CLIP(BitstreamShowBits(bs, 9), 256);
+	index = MIN(BitstreamShowBits(bs, 9), 256);
 
 	BitstreamSkip(bs, mcbpc_inter_table[index].len);
 
@@ -701,7 +1006,7 @@ get_cbpy(Bitstream * bs,
 
 }
 
-int
+static __inline int
 get_mv_data(Bitstream * bs)
 {
 
@@ -810,10 +1115,6 @@ get_dc_size_chrom(Bitstream * bs)
 
 }
 
-/*****************************************************************************
- * Local inlined function to "decode" written vlc codes
- ****************************************************************************/
-
 static __inline int
 get_coeff(Bitstream * bs,
 		  int *run,
@@ -895,10 +1196,6 @@ get_coeff(Bitstream * bs,
 	return 0;
 }
 
-/*****************************************************************************
- * MB reading functions
- ****************************************************************************/
-
 void
 get_intra_block(Bitstream * bs,
 				int16_t * block,
@@ -907,24 +1204,22 @@ get_intra_block(Bitstream * bs,
 {
 
 	const uint16_t *scan = scan_tables[direction];
-	int level;
-	int run;
-	int last;
+	int level, run, last;
 
 	do {
 		level = get_coeff(bs, &run, &last, 1, 0);
 		if (run == -1) {
-			DPRINTF(DPRINTF_DEBUG, "fatal: invalid run");
+			DPRINTF(DPRINTF_ERROR,"fatal: invalid run");
 			break;
 		}
 		coeff += run;
 		block[scan[coeff]] = level;
 
 		DPRINTF(DPRINTF_COEFF,"block[%i] %i", scan[coeff], level);
-		/*DPRINTF(DPRINTF_COEFF,"block[%i] %i %08x", scan[coeff], level, BitstreamShowBits(bs, 32)); */
+		//DPRINTF(DPRINTF_COEFF,"block[%i] %i %08x", scan[coeff], level, BitstreamShowBits(bs, 32));
 
 		if (level < -2047 || level > 2047) {
-			DPRINTF(DPRINTF_DEBUG, "warning: intra_overflow: %d", level);
+			DPRINTF(DPRINTF_ERROR,"warning: intra_overflow %i", level);
 		}
 		coeff++;
 	} while (!last);
@@ -933,10 +1228,11 @@ get_intra_block(Bitstream * bs,
 
 void
 get_inter_block(Bitstream * bs,
-				int16_t * block)
+				int16_t * block,
+				int direction)
 {
 
-	const uint16_t *scan = scan_tables[0];
+	const uint16_t *scan = scan_tables[direction];
 	int p;
 	int level;
 	int run;
@@ -946,7 +1242,7 @@ get_inter_block(Bitstream * bs,
 	do {
 		level = get_coeff(bs, &run, &last, 0, 0);
 		if (run == -1) {
-			DPRINTF(DPRINTF_ERROR, "fatal: invalid run");
+			DPRINTF(DPRINTF_ERROR,"fatal: invalid run");
 			break;
 		}
 		p += run;
@@ -954,9 +1250,10 @@ get_inter_block(Bitstream * bs,
 		block[scan[p]] = level;
 
 		DPRINTF(DPRINTF_COEFF,"block[%i] %i", scan[p], level);
+		// DPRINTF(DPRINTF_COEFF,"block[%i] %i %08x", scan[p], level, BitstreamShowBits(bs, 32));
 
 		if (level < -2047 || level > 2047) {
-			DPRINTF(DPRINTF_DEBUG, "warning: inter_overflow: %d", level);
+			DPRINTF(DPRINTF_ERROR,"warning: inter overflow %i", level);
 		}
 		p++;
 	} while (!last);
