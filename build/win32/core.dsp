@@ -25,7 +25,7 @@ CFG=core - Win32 Debug
 # PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
-CPP=xicl6.exe
+CPP=cl.exe
 RSC=rc.exe
 
 !IF  "$(CFG)" == "core - Win32 Release"
@@ -47,7 +47,7 @@ RSC=rc.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LIB32=xilink6.exe -lib
+LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
 # ADD LIB32 /nologo /out:"bin\core.lib"
 
@@ -70,7 +70,7 @@ LIB32=xilink6.exe -lib
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LIB32=xilink6.exe -lib
+LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
 # ADD LIB32 /nologo /out:"bin\core.lib"
 
@@ -132,6 +132,30 @@ InputName=cbp_mmx
 
 !ENDIF 
 
+# End Source File
+# End Group
+# Begin Group "bitstream_h"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\src\bitstream\bitstream.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\bitstream\cbp.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\bitstream\mbcoding.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\bitstream\vlc_codes.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\bitstream\zigzag.h
 # End Source File
 # End Group
 # Begin Source File
@@ -214,6 +238,18 @@ InputName=idct_mmx
 
 !ENDIF 
 
+# End Source File
+# End Group
+# Begin Group "dct_h"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\src\dct\fdct.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\dct\idct.h
 # End Source File
 # End Group
 # Begin Source File
@@ -449,6 +485,22 @@ InputName=yv12_to_yuyv_mmx
 
 # End Source File
 # End Group
+# Begin Group "image_h"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\src\image\colorspace.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\image\image.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\image\interpolate8x8.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\..\src\image\colorspace.c
@@ -500,6 +552,14 @@ InputName=sad_mmx
 
 # End Source File
 # End Group
+# Begin Group "motion_h"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\src\motion\sad.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\..\src\motion\motion_comp.c
@@ -519,6 +579,10 @@ SOURCE=..\..\src\motion\sad.c
 # Begin Source File
 
 SOURCE=..\..\src\prediction\mbprediction.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\prediction\mbprediction.h
 # End Source File
 # End Group
 # Begin Group "quant"
@@ -588,6 +652,26 @@ InputName=quantize_mmx
 
 !ENDIF 
 
+# End Source File
+# End Group
+# Begin Group "quant_h"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\src\quant\adapt_quant.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\quant\quant_h263.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\quant\quant_matrix.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\quant\quant_mpeg4.h
 # End Source File
 # End Group
 # Begin Source File
@@ -676,6 +760,34 @@ InputName=mem_transfer_mmx
 
 # End Source File
 # End Group
+# Begin Group "utils_h"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\src\utils\emms.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\utils\mbfunctions.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\utils\mem_align.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\utils\mem_transfer.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\utils\ratecontrol.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\utils\timer.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\..\src\utils\emms.c
@@ -699,6 +811,34 @@ SOURCE=..\..\src\utils\ratecontrol.c
 # Begin Source File
 
 SOURCE=..\..\src\utils\timer.c
+# End Source File
+# End Group
+# Begin Group "xvidcore_h"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\src\decoder.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\divx4.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\encoder.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\global.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\portab.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\xvid.h
 # End Source File
 # End Group
 # Begin Source File

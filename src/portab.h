@@ -32,7 +32,11 @@
 #define EMMS() __asm {emms}
 
 #define CACHE_LINE  16
+#if _MSC_VER <= 1200
+#define CACHE_ALIGN
+#else
 #define CACHE_ALIGN __declspec(align(CACHE_LINE))
+#endif
 
 // needed for bitstream.h
 #define BSWAP(a) __asm mov eax,a __asm bswap eax __asm mov a, eax
