@@ -52,7 +52,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: portab.h,v 1.41 2003-02-09 19:32:52 edgomez Exp $
+ * $Id: portab.h,v 1.42 2003-02-09 22:48:38 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -76,7 +76,7 @@
 /* debug level for this library */
 #define DPRINTF_LEVEL		0
 
-/* Buffer size for non C99 compliant compilers (msvc) */
+/* Buffer size for msvc implementation because it outputs to DebugOutput */
 #define DPRINTF_BUF_SZ  1024
 
 /*****************************************************************************
@@ -98,26 +98,14 @@
 #    define uint64_t unsigned __int64
 
 /*----------------------------------------------------------------------------
- | For GNU C compatible compilers
- *---------------------------------------------------------------------------*/
-
-#elif defined(__GNUC__) || defined(__ICC)
-
-#    define int8_t   char
-#    define uint8_t  unsigned char
-#    define int16_t  short
-#    define uint16_t unsigned short
-#    define int32_t  int
-#    define uint32_t unsigned int
-#    define int64_t  long long
-#    define uint64_t unsigned long long
-
-/*----------------------------------------------------------------------------
- | Ok, we don't know how to define these types... error
+ | For all other compilers, use the standard header file
+ | (compiler should be ISO C99 compatible, perhaps ISO C89 is enough)
  *---------------------------------------------------------------------------*/
 
 #else
-#    error Do not know how to define (u)int(size)_t types.
+
+#    include <inttypes.h>
+
 #endif
 
 /*****************************************************************************
@@ -262,7 +250,7 @@
             va_start(args, format);
             if(DPRINTF_LEVEL & level) {
                    vfprintf(stderr, format, args);
-					fprintf(stderr, "\n");
+                   fprintf(stderr, "\n");
 			}
 		}
 
@@ -375,7 +363,49 @@
  ****************************************************************************/
 #else /* Compiler test */
 
-#    error Compiler not supported
+      /*
+	   * Ok we know nothing about the compiler, so we fallback to ANSI C
+	   * features, so every compiler should be happy and compile the code.
+	   *
+	   * This is (mostly) equivalent to ARCH_IS_GENERIC.
+	   */
+
+#    ifdef _DEBUG
+
+        /* Needed for all debuf fprintf calls */
+#       include <stdio.h>
+#       include <stdarg.h>
+
+        static __inline void DPRINTF(int level, char *format, ...)
+        {
+            va_list args;
+            va_start(args, format);
+            if(DPRINTF_LEVEL & level) {
+                   vfprintf(stderr, format, args);
+                   fprintf(stderr, "\n");
+			}
+		}
+
+#    else /* _DEBUG */
+        static __inline void DPRINTF(int level, char *format, ...) {}
+#    endif /* _DEBUG */
+
+#    define BSWAP(a) \
+            ((a) = (((a) & 0xff) << 24)  | (((a) & 0xff00) << 8) | \
+                   (((a) >> 8) & 0xff00) | (((a) >> 24) & 0xff))
+
+#    define EMMS()
+
+#    ifdef _PROFILING_
+#       include <time.h>
+        static __inline int64_t read_counter(void)
+        {
+            return (int64_t)clock();
+        }
+#    endif
+
+#        define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
+                type name[(sizex)*(sizey)]
 
 #endif /* Compiler test */
 
