@@ -32,12 +32,14 @@
  *
  *  History:
  *
+ *  15.07.2002  fix a bug in B-frame decode at DIRECT mode
+ *              MinChen <chenm001@163.com>
  *  10.07.2002  added BFRAMES_DEC_DEBUG support
  *              Fix a little bug for low_delay flage
  *              MinChen <chenm001@163.com>
  *  28.06.2002  added basic resync support to iframe/pframe_decode()
  *  22.06.2002	added primative N_VOP support
- *		#define BFRAMES_DEC now enables Minchen's bframe decoder
+ *				#define BFRAMES_DEC now enables Minchen's bframe decoder
  *  08.05.2002  add low_delay support for B_VOP decode
  *              MinChen <chenm001@163.com>
  *  05.05.2002  fix some B-frame decode problem
@@ -53,7 +55,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: decoder.c,v 1.29 2002-07-15 00:26:38 chenm001 Exp $
+ *  $Id: decoder.c,v 1.30 2002-07-15 23:50:31 chenm001 Exp $
  *
  *************************************************************************/
 
@@ -478,6 +480,10 @@ decoder_iframe(DECODER * dec,
 				}
 			}
 			mb->quant = quant;
+			mb->mvs[0].x = mb->mvs[0].y =
+			mb->mvs[1].x = mb->mvs[1].y =
+			mb->mvs[2].x = mb->mvs[2].y =
+			mb->mvs[3].x = mb->mvs[3].y =0;
 
 			if (dec->interlacing) {
 				mb->field_dct = BitstreamGetBit(bs);
@@ -793,6 +799,7 @@ decoder_bf_mbinter(DECODER * dec,
 	pU_Cur = dec->cur.u + (y_pos << 3) * stride2 + (x_pos << 3);
 	pV_Cur = dec->cur.v + (y_pos << 3) * stride2 + (x_pos << 3);
 
+
 	if (!(pMB->mode == MODE_INTER || pMB->mode == MODE_INTER_Q)) {
 		uv_dx = pMB->mvs[0].x;
 		uv_dy = pMB->mvs[0].y;
@@ -886,7 +893,6 @@ decoder_bf_interpolate_mbinter(DECODER * dec,
 							   const MACROBLOCK * pMB,
 							   const uint32_t x_pos,
 							   const uint32_t y_pos,
-							   const uint32_t cbp,
 							   Bitstream * bs)
 {
 
@@ -901,10 +907,12 @@ decoder_bf_interpolate_mbinter(DECODER * dec,
 	int b_uv_dx, b_uv_dy;
 	uint32_t i;
 	uint8_t *pY_Cur, *pU_Cur, *pV_Cur;
+    const uint32_t cbp = pMB->cbp;
 
 	pY_Cur = dec->cur.y + (y_pos << 4) * stride + (x_pos << 4);
 	pU_Cur = dec->cur.u + (y_pos << 3) * stride2 + (x_pos << 3);
 	pV_Cur = dec->cur.v + (y_pos << 3) * stride2 + (x_pos << 3);
+
 
 	if ((pMB->mode == MODE_INTER || pMB->mode == MODE_INTER_Q)) {
 		uv_dx = pMB->mvs[0].x;
@@ -995,7 +1003,6 @@ decoder_bf_interpolate_mbinter(DECODER * dec,
 					 stride2);
 	interpolate8x8_c(dec->cur.v, dec->refn[2].v, 8 * x_pos, 8 * y_pos,
 					 stride2);
-
 	stop_comp_timer();
 
 	for (i = 0; i < 6; i++) {
@@ -1086,9 +1093,9 @@ decoder_bframe(DECODER * dec,
 			   int fcode_forward,
 			   int fcode_backward)
 {
-
 	uint32_t x, y;
-	VECTOR mv, zeromv;
+	VECTOR mv;
+	const VECTOR zeromv = {0,0};
 #ifdef BFRAMES_DEC_DEBUG
 	FILE *fp;
 	static char first=0;
@@ -1100,7 +1107,8 @@ decoder_bframe(DECODER * dec,
 	start_timer();
 	image_setedges(&dec->refn[0], dec->edged_width, dec->edged_height,
 				   dec->width, dec->height, dec->interlacing);
-	//image_setedges(&dec->refn[1], dec->edged_width, dec->edged_height, dec->width, dec->height, dec->interlacing);
+	image_setedges(&dec->refn[1], dec->edged_width, dec->edged_height,
+				   dec->width, dec->height, dec->interlacing);
 	stop_edges_timer();
 
 #ifdef BFRAMES_DEC_DEBUG
@@ -1111,12 +1119,14 @@ decoder_bframe(DECODER * dec,
 
 	for (y = 0; y < dec->mb_height; y++) {
 		// Initialize Pred Motion Vector
-		dec->p_fmv.x = dec->p_fmv.y = dec->p_bmv.x = dec->p_bmv.y = 0;
+		dec->p_fmv = dec->p_bmv = zeromv;
 		for (x = 0; x < dec->mb_width; x++) {
 			MACROBLOCK *mb = &dec->mbs[y * dec->mb_width + x];
 			MACROBLOCK *last_mb = &dec->last_mbs[y * dec->mb_width + x];
 
-			mb->mvs[0].x = mb->mvs[0].y = zeromv.x = zeromv.y = mv.x = mv.y = 0;
+			mv =
+			mb->b_mvs[0] = mb->b_mvs[1] = mb->b_mvs[2] = mb->b_mvs[3] =
+			mb->mvs[0] = mb->mvs[1] = mb->mvs[2] = mb->mvs[3] = zeromv;
 
 			// the last P_VOP is skip macroblock ?
 			if (last_mb->mode == MODE_NOT_CODED) {
@@ -1127,13 +1137,13 @@ decoder_bframe(DECODER * dec,
 	BFRAME_DEBUG
 #endif
 				mb->mb_type = MODE_FORWARD;
-				mb->mvs[1].x = mb->mvs[2].x = mb->mvs[3].x = mb->mvs[0].x;
-				mb->mvs[1].y = mb->mvs[2].y = mb->mvs[3].y = mb->mvs[0].y;
+				mb->quant = last_mb->quant;
+				//mb->mvs[1].x = mb->mvs[2].x = mb->mvs[3].x = mb->mvs[0].x;
+				//mb->mvs[1].y = mb->mvs[2].y = mb->mvs[3].y = mb->mvs[0].y;
 
-				decoder_bf_mbinter(dec, mb, x, y, mb->cbp, bs, quant, 1);
+				decoder_bf_mbinter(dec, mb, x, y, mb->cbp, bs, mb->quant, 1);
 				continue;
 			}
-			//t=BitstreamShowBits(bs,32);
 
 			if (!BitstreamGetBit(bs)) {	// modb=='0'
 				const uint8_t modb2 = BitstreamGetBit(bs);
@@ -1153,16 +1163,14 @@ decoder_bframe(DECODER * dec,
 					} else if (quant < 1) {
 						quant = 1;
 					}
-				} else {
-					quant = 8;
 				}
-				mb->quant = quant;
 			} else {
 				mb->mb_type = MODE_DIRECT_NONE_MV;
 				mb->cbp = 0;
 			}
 
-			mb->mode = MODE_INTER;
+			mb->quant = quant;
+			mb->mode = MODE_INTER4V;
 			//DEBUG1("Switch bm_type=",mb->mb_type);
 
 #ifdef BFRAMES_DEC_DEBUG
@@ -1170,67 +1178,54 @@ decoder_bframe(DECODER * dec,
 #endif
 			switch (mb->mb_type) {
 			case MODE_DIRECT:
-				get_b_motion_vector(dec, bs, x, y, &mb->mvs[0], 1, zeromv);
+				get_b_motion_vector(dec, bs, x, y, &mv, 1, zeromv);
 
 			case MODE_DIRECT_NONE_MV:
 				{				// Because this file is a C file not C++ so I use '{' to define var
-					const int64_t TRB = dec->time_pp - dec->time_bp, TRD =
-						dec->time_pp;
+					const int64_t TRB = dec->time_pp - dec->time_bp, TRD = dec->time_pp;
 					int i;
 
 					for (i = 0; i < 4; i++) {
-						mb->mvs[i].x =
-							(int32_t) ((TRB * last_mb->mvs[i].x) / TRD +
-									   mb->mvs[0].x);
-						mb->b_mvs[i].x =
-							(int32_t) ((mb->mvs[0].x ==
-										0) ? ((TRB -
-											   TRD) * last_mb->mvs[i].x) /
-									   TRD : mb->mvs[i].x - last_mb->mvs[i].x);
-						mb->mvs[i].y =
-							(int32_t) ((TRB * last_mb->mvs[i].y) / TRD +
-									   mb->mvs[0].y);
-						mb->b_mvs[i].y =
-							(int32_t) ((mb->mvs[0].y ==
-										0) ? ((TRB -
-											   TRD) * last_mb->mvs[i].y) /
-									   TRD : mb->mvs[i].y - last_mb->mvs[i].y);
+						mb->mvs[i].x = (int32_t) ((TRB * last_mb->mvs[i].x)
+							              / TRD + mv.x);
+						mb->b_mvs[i].x = (int32_t) ((mv.x == 0)
+										? ((TRB - TRD) * last_mb->mvs[i].x)
+										  / TRD
+										: mb->mvs[i].x - last_mb->mvs[i].x);
+						mb->mvs[i].y = (int32_t) ((TRB * last_mb->mvs[i].y)
+							              / TRD + mv.y);
+						mb->b_mvs[i].y = (int32_t) ((mv.y == 0)
+										? ((TRB - TRD) * last_mb->mvs[i].y)
+										  / TRD
+									    : mb->mvs[i].y - last_mb->mvs[i].y);
 					}
 					//DEBUG("B-frame Direct!\n");
 				}
-				mb->mode = MODE_INTER4V;
 				decoder_bf_interpolate_mbinter(dec, dec->refn[1], dec->refn[0],
-											   mb, x, y, mb->cbp, bs);
+											   mb, x, y, bs);
 				break;
 
 			case MODE_INTERPOLATE:
 				get_b_motion_vector(dec, bs, x, y, &mb->mvs[0], fcode_forward,
 									dec->p_fmv);
-				dec->p_fmv.x = mb->mvs[1].x = mb->mvs[2].x = mb->mvs[3].x =
-					mb->mvs[0].x;
-				dec->p_fmv.y = mb->mvs[1].y = mb->mvs[2].y = mb->mvs[3].y =
-					mb->mvs[0].y;
+				dec->p_fmv = mb->mvs[1] = mb->mvs[2] = mb->mvs[3] =	mb->mvs[0];
 
 				get_b_motion_vector(dec, bs, x, y, &mb->b_mvs[0],
 									fcode_backward, dec->p_bmv);
-				dec->p_bmv.x = mb->b_mvs[1].x = mb->b_mvs[2].x =
-					mb->b_mvs[3].x = mb->b_mvs[0].x;
-				dec->p_bmv.y = mb->b_mvs[1].y = mb->b_mvs[2].y =
-					mb->b_mvs[3].y = mb->b_mvs[0].y;
+				dec->p_bmv = mb->b_mvs[1] = mb->b_mvs[2] =
+					mb->b_mvs[3] = mb->b_mvs[0];
 
 				decoder_bf_interpolate_mbinter(dec, dec->refn[1], dec->refn[0],
-											   mb, x, y, mb->cbp, bs);
+											   mb, x, y, bs);
 				//DEBUG("B-frame Bidir!\n");
 				break;
 
 			case MODE_BACKWARD:
 				get_b_motion_vector(dec, bs, x, y, &mb->mvs[0], fcode_backward,
 									dec->p_bmv);
-				dec->p_bmv.x = mb->mvs[1].x = mb->mvs[2].x = mb->mvs[3].x =
-					mb->mvs[0].x;
-				dec->p_bmv.y = mb->mvs[1].y = mb->mvs[2].y = mb->mvs[3].y =
-					mb->mvs[0].y;
+				dec->p_bmv = mb->mvs[1] = mb->mvs[2] = mb->mvs[3] =	mb->mvs[0];
 
+				mb->mode = MODE_INTER;
 				decoder_bf_mbinter(dec, mb, x, y, mb->cbp, bs, quant, 0);
 				//DEBUG("B-frame Backward!\n");
 				break;
@@ -1238,11 +1233,9 @@ decoder_bframe(DECODER * dec,
 			case MODE_FORWARD:
 				get_b_motion_vector(dec, bs, x, y, &mb->mvs[0], fcode_forward,
 									dec->p_fmv);
-				dec->p_fmv.x = mb->mvs[1].x = mb->mvs[2].x = mb->mvs[3].x =
-					mb->mvs[0].x;
-				dec->p_fmv.y = mb->mvs[1].y = mb->mvs[2].y = mb->mvs[3].y =
-					mb->mvs[0].y;
+				dec->p_fmv = mb->mvs[1] = mb->mvs[2] = mb->mvs[3] =	mb->mvs[0];
 
+				mb->mode = MODE_INTER;
 				decoder_bf_mbinter(dec, mb, x, y, mb->cbp, bs, quant, 1);
 				//DEBUG("B-frame Forward!\n");
 				break;
