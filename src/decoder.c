@@ -55,7 +55,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: decoder.c,v 1.35 2002-07-24 23:09:28 chl Exp $
+ *  $Id: decoder.c,v 1.36 2002-08-03 05:36:18 chenm001 Exp $
  *
  *************************************************************************/
 
@@ -1377,14 +1377,14 @@ decoder_decode(DECODER * dec,
 
 #ifdef BFRAMES_DEC
 	// test if no B_VOP
-	if (dec->low_delay) {
+        if (dec->low_delay || dec->frames == 0) {
 #endif
 	image_output(&dec->cur, dec->width, dec->height, dec->edged_width,
 					 frame->image, frame->stride, frame->colorspace);
 
 #ifdef BFRAMES_DEC
 	} else {
-		if (dec->frames >= 0) {
+                if (dec->frames >= 1) {
 			start_timer();
 			if ((vop_type == I_VOP || vop_type == P_VOP)) {
 				image_output(&dec->refn[0], dec->width, dec->height,
