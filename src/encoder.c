@@ -39,7 +39,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.67 2002-07-30 12:14:37 chl Exp $
+ *  $Id: encoder.c,v 1.68 2002-07-31 18:19:49 chl Exp $
  *
  ****************************************************************************/
 
@@ -1536,6 +1536,11 @@ FrameCodeI(Encoder * pEnc,
 			stop_prediction_timer();
 
 			start_timer();
+			if (pEnc->current->global_flags & XVID_GREYSCALE)
+			{	pMB->cbp &= 0x3C;		/* keep only bits 5-2 */
+				qcoeff[4*64+0]=0;		/* zero, because for INTRA MBs DC value is saved */
+				qcoeff[5*64+0]=0;
+			}
 			MBCoding(pEnc->current, pMB, qcoeff, bs, &pEnc->sStat);
 			stop_coding_timer();
 		}
@@ -1572,7 +1577,6 @@ FrameCodeP(Encoder * pEnc,
 	DECLARE_ALIGNED_MATRIX(qcoeff, 6, 64, int16_t, CACHE_LINE);
 
 	int iLimit;
-	int k;
 	int x, y;
 	int iSearchRange;
 	int bIntra;
@@ -1725,19 +1729,28 @@ FrameCodeP(Encoder * pEnc,
 				}
 				if (!bSkip) 
 				{	
+					if (pEnc->current->global_flags & XVID_GREYSCALE)
+					{	pMB->cbp &= 0x3C;		/* keep only bits 5-2 */
+						qcoeff[4*64+0]=0;		/* zero, because DC for INTRA MBs DC value is saved */
+						qcoeff[5*64+0]=0;
+					}
 					MBCoding(pEnc->current, pMB, qcoeff, bs, &pEnc->sStat);
 					pMB->cbp = 0x80;		/* trick! so cbp!=0, but still nothing is written to bs */
 				}
 				else 
 					MBSkip(bs);
-				
 
 #else
 					MBSkip(bs);	/* without B-frames, no precautions are needed */
 
-#endif			
+#endif
 
 			} else {
+				if (pEnc->current->global_flags & XVID_GREYSCALE)
+				{	pMB->cbp &= 0x3C;		/* keep only bits 5-2 */
+					qcoeff[4*64+0]=0;		/* zero, because DC for INTRA MBs DC value is saved */
+					qcoeff[5*64+0]=0;
+				}
 				MBCoding(pEnc->current, pMB, qcoeff, bs, &pEnc->sStat);
 			}
 
