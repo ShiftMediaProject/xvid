@@ -4,6 +4,246 @@
 # relevant.
 
 
+2005-01-09 20:15:14 GMT	                                	patch-114
+
+    Summary:
+      Moved cartoon mode to zones in vfw.
+    Revision:
+      xvidcore--head--0.0--patch-114
+
+    From sysKin:
+     * Moved cartoon mode to zones in vfw frontend.
+
+    modified files:
+     vfw/src/codec.c vfw/src/config.c vfw/src/config.h
+     vfw/src/resource.rc
+
+
+2005-01-09 20:09:27 GMT	                                	patch-113
+
+    Summary:
+      
+    Revision:
+      xvidcore--head--0.0--patch-113
+
+    From algern0n (#xvid@freenode):
+     * Avoid infinite loop when updating audio size.
+
+    modified files:
+     vfw/src/config.c
+
+
+2005-01-09 11:32:41 GMT	                                	patch-112
+
+    Summary:
+      Long standing bug in 2pass2 code. Double overflow accumulation.
+    Revision:
+      xvidcore--head--0.0--patch-112
+
+    From pengvado (x264 developer, sorry i don't have your realname):
+     * rc_2pass2_after accumulates overflow twice, once in each I/PB subcase
+       and then in a common code path. The common path was just supposed to
+       store the stat struct entry error for statistics (even if they're unused)
+
+    modified files:
+     src/plugins/plugin_2pass2.c
+
+
+2005-01-06 23:42:12 GMT	                                	patch-111
+
+    Summary:
+      Merged amd64 branch fix
+    Revision:
+      xvidcore--head--0.0--patch-111
+
+    Merged amd64 branch fix
+    
+    Patches applied:
+    
+     * ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-12
+       Merged upstream
+    
+     * ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-13
+       Bug fix for qpel problem  from Andrew Dunstan
+    
+
+    modified files:
+     src/image/x86_64_asm/qpel_mmx.asm
+
+    new patches:
+     ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-12
+     ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-13
+
+
+2005-01-05 22:53:12 GMT	                                	patch-110
+
+    Summary:
+      Merged x86_64 Linux port
+    Revision:
+      xvidcore--head--0.0--patch-110
+
+    Merged x86_64 Linux port
+    
+    Patches applied:
+    
+     * ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--base-0
+       tag of ed.gomez@free.fr--2004-1/xvidcore--head--0.0--patch-96
+    
+     * ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-1
+       Merged mainline up to patch-101
+    
+     * ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-2
+       Merged mainline again for hotfixes
+    
+     * ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-3
+       Added x86_64 detection in configure system
+    
+     * ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-4
+       Added src/utils/x86_64_asm files
+    
+     * ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-5
+       Added /src/quant/x86_64_asm files
+    
+     * ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-6
+       Added src/motion/x86_64_asm files
+    
+     * ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-7
+       Added src/dct/x86_64_asm
+    
+     * ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-8
+       Added halfpel part of src/image/x86_64_asm files
+    
+     * ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-9
+       Merged mainline
+    
+     * ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-10
+       Ported the new mem transfer function
+    
+     * ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-11
+       Added src/image/x86_4 qpel code
+    
+
+    new files:
+     src/dct/x86_64_asm/.arch-ids/=id
+     src/dct/x86_64_asm/.arch-ids/fdct_mmx_skal.asm.id
+     src/dct/x86_64_asm/.arch-ids/idct_mmx.asm.id
+     src/dct/x86_64_asm/fdct_mmx_skal.asm
+     src/dct/x86_64_asm/idct_mmx.asm
+     src/image/x86_64_asm/.arch-ids/=id
+     src/image/x86_64_asm/.arch-ids/interpolate8x8_mmx.asm.id
+     src/image/x86_64_asm/.arch-ids/interpolate8x8_xmm.asm.id
+     src/image/x86_64_asm/.arch-ids/qpel_mmx.asm.id
+     src/image/x86_64_asm/interpolate8x8_mmx.asm
+     src/image/x86_64_asm/interpolate8x8_xmm.asm
+     src/image/x86_64_asm/qpel_mmx.asm
+     src/motion/x86_64_asm/.arch-ids/=id
+     src/motion/x86_64_asm/.arch-ids/sad_mmx.asm.id
+     src/motion/x86_64_asm/.arch-ids/sad_xmm.asm.id
+     src/motion/x86_64_asm/sad_mmx.asm
+     src/motion/x86_64_asm/sad_xmm.asm
+     src/quant/x86_64_asm/.arch-ids/=id
+     src/quant/x86_64_asm/.arch-ids/quantize_h263_mmx.asm.id
+     src/quant/x86_64_asm/.arch-ids/quantize_mpeg_xmm.asm.id
+     src/quant/x86_64_asm/quantize_h263_mmx.asm
+     src/quant/x86_64_asm/quantize_mpeg_xmm.asm
+     src/utils/x86_64_asm/.arch-ids/=id
+     src/utils/x86_64_asm/.arch-ids/cpuid.asm.id
+     src/utils/x86_64_asm/.arch-ids/interlacing_mmx.asm.id
+     src/utils/x86_64_asm/.arch-ids/mem_transfer_mmx.asm.id
+     src/utils/x86_64_asm/cpuid.asm
+     src/utils/x86_64_asm/interlacing_mmx.asm
+     src/utils/x86_64_asm/mem_transfer_mmx.asm
+
+    modified files:
+     build/generic/configure.in build/generic/sources.inc
+     examples/xvid_bench.c src/dct/fdct.h src/dct/idct.h
+     src/image/interpolate8x8.h src/image/qpel.c src/image/qpel.h
+     src/motion/sad.h src/portab.h src/quant/quant.h
+     src/utils/emms.h src/utils/mbfunctions.h
+     src/utils/mem_transfer.h src/xvid.c
+
+    new directories:
+     src/dct/x86_64_asm src/dct/x86_64_asm/.arch-ids
+     src/image/x86_64_asm src/image/x86_64_asm/.arch-ids
+     src/motion/x86_64_asm src/motion/x86_64_asm/.arch-ids
+     src/quant/x86_64_asm src/quant/x86_64_asm/.arch-ids
+     src/utils/x86_64_asm src/utils/x86_64_asm/.arch-ids
+
+    new patches:
+     ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--base-0
+     ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-1
+     ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-2
+     ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-3
+     ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-4
+     ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-5
+     ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-6
+     ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-7
+     ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-8
+     ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-9
+     ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-10
+     ed.gomez@free.fr--amd64/xvidcore--amd64work--0.0--patch-11
+
+
+2004-12-19 16:58:13 GMT	                                	patch-109
+
+    Summary:
+      bvhq speedup.
+    Revision:
+      xvidcore--head--0.0--patch-109
+
+    From sysKin:
+     * Add cbp cost as soon as possible, so it saves a few candidates
+       testing.
+
+    modified files:
+     src/motion/estimation_rd_based_bvop.c
+
+
+2004-12-19 16:55:47 GMT	                                	patch-108
+
+    Summary:
+      Added ia32 optimized code for new mem transfer operator.
+    Revision:
+      xvidcore--head--0.0--patch-108
+
+    From sysKin:
+     * Added ia32 (xmm) optimized code for new mem transfer operator.
+
+    modified files:
+     src/utils/mem_transfer.c src/utils/mem_transfer.h
+     src/utils/x86_asm/mem_transfer_mmx.asm src/xvid.c
+
+
+2004-12-19 13:39:58 GMT	                                	patch-107
+
+    Summary:
+      Added missing license header
+    Revision:
+      xvidcore--head--0.0--patch-107
+
+    From ed.gomez:
+     * The GPL header was missing
+    
+    
+
+    modified files:
+     src/motion/estimation_rd_based_bvop.c
+
+
+2004-12-19 12:41:02 GMT	                                	patch-106
+
+    Summary:
+      Updated ChangeLog
+    Revision:
+      xvidcore--head--0.0--patch-106
+
+    Updated ChangeLog
+    
+
+    modified files:
+     ChangeLog
+
+
 2004-12-19 12:38:15 GMT	                                	patch-105
 
     Summary:
