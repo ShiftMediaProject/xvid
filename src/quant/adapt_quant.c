@@ -65,7 +65,7 @@ adaptive_quantization(unsigned char *buf,
 {
 	int i, j, k, l;
 
-	static float *quant;
+	float *quant;
 	unsigned char *ptr;
 	float *val;
 	float global = 0.;
@@ -84,11 +84,11 @@ adaptive_quantization(unsigned char *buf,
 	const float LowerLimit = 25;
 
 
-	if (!quant)
-		if (!(quant = (float *) malloc(mb_width * mb_height * sizeof(float))))
-			return -1;
+	if (!(quant = (float *) malloc(mb_width * mb_height * sizeof(float))))
+		return(-1);
 
-	val = (float *) malloc(mb_width * mb_height * sizeof(float));
+	if(!(val = (float *) malloc(mb_width * mb_height * sizeof(float))))
+		return(-1);
 
 	for (k = 0; k < mb_height; k++) {
 		for (l = 0; l < mb_width; l++)	// do this for all macroblocks individually 
@@ -131,6 +131,7 @@ adaptive_quantization(unsigned char *buf,
 		}
 	}
 	free(val);
+	free(quant);
 	return normalize_quantizer_field(quant, intquant, mb_width * mb_height,
 									 min_quant, max_quant);
 }
