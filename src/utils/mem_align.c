@@ -66,6 +66,7 @@ void xvid_free(void *mem_ptr)
 {
 
 	/* *(mem_ptr - 1) give us the offset to the real malloc block */
-	free((uint8_t*)mem_ptr - *((uint8_t*)mem_ptr - 1));
+	if(mem_ptr)
+		free((uint8_t*)mem_ptr - *((uint8_t*)mem_ptr - 1));
 
 }
