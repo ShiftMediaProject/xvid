@@ -2,7 +2,8 @@
  *
  *  Modifications:
  *
- *	14.04.2002 added MotionEstimationBVOP()
+ *  22.04.2002 remove some compile warning by chenm001 <chenm001@163.com>
+ *  14.04.2002 added MotionEstimationBVOP()
  *  02.04.2002 add EPZS(^2) as ME algorithm, use PMV_USESQUARES to choose between 
  *             EPZS and EPZS^2
  *  08.02.2002 split up PMVfast into three routines: PMVFast, PMVFast_MainLoop
@@ -784,7 +785,7 @@ int32_t PMVfastSearch16(
 					VECTOR * const currMV,
 					VECTOR * const currPMV)
 {
-        const uint32_t iWcount = pParam->mb_width;
+    const uint32_t iWcount = pParam->mb_width;
 	const int32_t iFcode = pParam->fixed_code;
 	const int32_t iQuant = pParam->quant;
 	const int32_t iWidth = pParam->width;
@@ -906,7 +907,7 @@ int32_t PMVfastSearch16(
 			 iEdgedWidth, MV_MAX_ERROR);
   	iMinSAD += calc_delta_16(currMV->x-pmv[0].x, currMV->y-pmv[0].y, (uint8_t)iFcode) * iQuant;
 	
-	if ( (iMinSAD < 256 ) || ( (MVequal(*currMV,pMB->mvs[0])) && (iMinSAD < pMB->sad16) ) )
+	if ( (iMinSAD < 256 ) || ( (MVequal(*currMV,pMB->mvs[0])) && ((uint32_t)iMinSAD < pMB->sad16) ) )
 	{
 		
 		if (MotionFlags & PMV_QUICKSTOP16) 
@@ -949,7 +950,7 @@ int32_t PMVfastSearch16(
 		CHECK_MV16_CANDIDATE(pmv[2].x,pmv[2].y);
 	
 // top right neighbour, if allowed
-		if (x != (iWcount-1))
+		if ((uint32_t)x != (iWcount-1))
 		{
 			if (!(MotionFlags & PMV_HALFPEL16 ))
 			{	pmv[3].x = EVEN(pmv[3].x);
@@ -963,7 +964,7 @@ int32_t PMVfastSearch16(
    If Motion Vector equal to Previous frame motion vector and MinSAD<PrevFrmSAD goto Step 10. 
 */
 
-	if ( (iMinSAD <= threshA) || ( MVequal(*currMV,pMB->mvs[0]) && (iMinSAD < pMB->sad16) ) )
+	if ( (iMinSAD <= threshA) || ( MVequal(*currMV,pMB->mvs[0]) && ((uint32_t)iMinSAD < pMB->sad16) ) )
 	{	
 		if (MotionFlags & PMV_QUICKSTOP16) 
 			goto PMVfast16_Terminate_without_Refine;
@@ -1257,7 +1258,7 @@ int32_t PMVfastSearch8(
 			iEdgedWidth);
   	iMinSAD += calc_delta_8(currMV->x - pmv[0].x, currMV->y - pmv[0].y, (uint8_t)iFcode) * iQuant;
 	
-	if ( (iMinSAD < 256/4 ) || ( (MVequal(*currMV,pMB->mvs[iSubBlock])) && (iMinSAD < pMB->sad8[iSubBlock]) ) )
+	if ( (iMinSAD < 256/4 ) || ( (MVequal(*currMV,pMB->mvs[iSubBlock])) && ((uint32_t)iMinSAD < pMB->sad8[iSubBlock]) ) )
 	{
 		if (MotionFlags & PMV_QUICKSTOP16) 
 			goto PMVfast8_Terminate_without_Refine;
@@ -1316,7 +1317,7 @@ int32_t PMVfastSearch8(
    If Motion Vector equal to Previous frame motion vector and MinSAD<PrevFrmSAD goto Step 10. 
 */
 
-	if ( (iMinSAD <= threshA) || ( MVequal(*currMV,pMB->mvs[iSubBlock]) && (iMinSAD < pMB->sad8[iSubBlock]) ) )
+	if ( (iMinSAD <= threshA) || ( MVequal(*currMV,pMB->mvs[iSubBlock]) && ((uint32_t)iMinSAD < pMB->sad8[iSubBlock]) ) )
 	{	
 		if (MotionFlags & PMV_QUICKSTOP16) 
 			goto PMVfast8_Terminate_without_Refine;
@@ -1411,8 +1412,8 @@ int32_t EPZSSearch16(
 					VECTOR * const currMV,
 					VECTOR * const currPMV)
 {
-        const uint32_t iWcount = pParam->mb_width;
-        const uint32_t iHcount = pParam->mb_height;
+    const uint32_t iWcount = pParam->mb_width;
+    const uint32_t iHcount = pParam->mb_height;
 	const int32_t iFcode = pParam->fixed_code;
 	const int32_t iQuant = pParam->quant;
 
@@ -1497,7 +1498,7 @@ int32_t EPZSSearch16(
   	iMinSAD += calc_delta_16(currMV->x-pmv[0].x, currMV->y-pmv[0].y, (uint8_t)iFcode) * iQuant;
 	
 // thresh1 is fixed to 256 
-	if ( (iMinSAD < 256 ) || ( (MVequal(*currMV,pMB->mvs[0])) && (iMinSAD < pMB->sad16) ) )
+	if ( (iMinSAD < 256 ) || ( (MVequal(*currMV,pMB->mvs[0])) && ((uint32_t)iMinSAD < pMB->sad16) ) )
 		{
 			if (MotionFlags & PMV_QUICKSTOP16) 
 				goto EPZS16_Terminate_without_Refine;
@@ -1549,7 +1550,7 @@ int32_t EPZSSearch16(
 		CHECK_MV16_CANDIDATE(pmv[2].x,pmv[2].y);
 	
 // top right neighbour, if allowed
-		if (x != (iWcount-1))
+		if ((uint32_t)x != (iWcount-1))
 		{
 			if (!(MotionFlags & PMV_HALFPEL16 ))
 			{	pmv[3].x = EVEN(pmv[3].x);
@@ -1564,7 +1565,7 @@ int32_t EPZSSearch16(
 */
 
 	if ( (iMinSAD <= thresh2) 
-		|| ( MVequal(*currMV,pMB->mvs[0]) && (iMinSAD <= pMB->sad16) ) )
+		|| ( MVequal(*currMV,pMB->mvs[0]) && ((uint32_t)iMinSAD <= pMB->sad16) ) )
 		{	
 			if (MotionFlags & PMV_QUICKSTOP16) 
 				goto EPZS16_Terminate_without_Refine;
@@ -1590,11 +1591,11 @@ int32_t EPZSSearch16(
 
 // right neighbour, if allowed (this value is not written yet, so take it from   pMB->mvs 
 
-	if (x != iWcount-1)
+	if ((uint32_t)x != iWcount-1)
 		CHECK_MV16_CANDIDATE((pMB+1)->mvs[0].x,oldMB->mvs[0].y);		
 
 // bottom neighbour, dito
-	if (y != iHcount-1)
+	if ((uint32_t)y != iHcount-1)
 		CHECK_MV16_CANDIDATE((pMB+iWcount)->mvs[0].x,oldMB->mvs[0].y);		
 
 /* Terminate if MinSAD <= T_3 (here T_3 = T_2)  */
@@ -1695,7 +1696,7 @@ int32_t EPZSSearch8(
 					VECTOR * const currMV,
 					VECTOR * const currPMV)
 {
-        const uint32_t iWcount = pParam->mb_width;
+    const uint32_t iWcount = pParam->mb_width;
 	const int32_t iFcode = pParam->fixed_code;
 	const int32_t iQuant = pParam->quant;
 
