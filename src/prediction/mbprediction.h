@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the xvid_free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: mbprediction.h,v 1.5 2002-04-28 23:36:28 edgomez Exp $
+ *  $Id: mbprediction.h,v 1.6 2002-05-03 00:45:10 chenm001 Exp $
  *
  *************************************************************************/
 
@@ -274,7 +274,7 @@ static __inline int get_pmvdata(const MACROBLOCK * const pMBs,
 
 	if (xin1 < 0 || /* yin1 < 0  || */ xin1 >= (int32_t)x_dim)
 	{
-	    	pmv[1] = zeroMV;
+	    pmv[1] = zeroMV;
 		psad[1] = MV_MAX_ERROR;
 	}
 	else
