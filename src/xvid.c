@@ -3,15 +3,6 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Native API implementation  -
  *
- *  This program is an implementation of a part of one or more MPEG-4
- *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
- *  to use this software module in hardware or software products are
- *  advised that its use may infringe existing patents or copyrights, and
- *  any such use would be at such party's own risk.  The original
- *  developer of this software module and his/her company, and subsequent
- *  editors and their companies, will have no liability for use of this
- *  software or modifications or derivatives thereof.
- *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation ; either version 2 of the License, or
@@ -26,18 +17,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- ****************************************************************************/
-
-/*****************************************************************************
- *
- *  History
- *
- *	- 23.06.2002	added XVID_CPU_CHKONLY
- *  - 17.03.2002	Added interpolate8x8_halfpel_hv_xmm
- *  - 22.12.2001  API change: added xvid_init() - Isibaar
- *  - 16.12.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
- *
- *  $Id: xvid.c,v 1.42 2003-02-16 05:11:39 suxen_drol Exp $
+ * $Id: xvid.c,v 1.43 2003-02-19 21:13:00 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -84,12 +64,14 @@
 
 
 /*
-calls the funcptr, and returns whether SIGILL (illegal instruction) was signalled
-return values:
--1 : could not determine
-0  : SIGILL was *not* signalled
-1  : SIGILL was signalled
-*/
+ * Calls the funcptr, and returns whether SIGILL (illegal instruction) was
+ * signalled
+ *
+ * Return values:
+ *  -1 : could not determine
+ *   0 : SIGILL was *not* signalled
+ *   1 : SIGILL was signalled
+ */
 
 int
 sigill_check(void (*func)())
@@ -316,7 +298,7 @@ int xvid_init_init(XVID_INIT_PARAM * init_param)
 	dev16    = dev16_c;
 	sad16v	 = sad16v_c;
 	
-//	Halfpel8_Refine = Halfpel8_Refine_c;
+/*	Halfpel8_Refine = Halfpel8_Refine_c; */
 
 #if defined(ARCH_IS_IA32)
 
@@ -526,10 +508,10 @@ int xvid_init_init(XVID_INIT_PARAM * init_param)
 #endif
 
 #if defined(ARCH_IS_IA64)
-	if ((cpu_flags & XVID_CPU_ASM)) { //use assembler routines?
+	if ((cpu_flags & XVID_CPU_ASM)) { /* use assembler routines? */
 	  idct_ia64_init();
 	  fdct = fdct_ia64;
-	  idct = idct_ia64;   //not yet working, crashes
+	  idct = idct_ia64;   /*not yet working, crashes */
 	  interpolate8x8_halfpel_h = interpolate8x8_halfpel_h_ia64;
 	  interpolate8x8_halfpel_v = interpolate8x8_halfpel_v_ia64;
 	  interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_ia64;
@@ -537,7 +519,7 @@ int xvid_init_init(XVID_INIT_PARAM * init_param)
 	  sad16bi = sad16bi_ia64;
 	  sad8 = sad8_ia64;
 	  dev16 = dev16_ia64;
-//	  Halfpel8_Refine = Halfpel8_Refine_ia64;
+/*	  Halfpel8_Refine = Halfpel8_Refine_ia64; */
 	  quant_intra = quant_intra_ia64;
 	  dequant_intra = dequant_intra_ia64;
 	  quant_inter = quant_inter_ia64;
@@ -548,7 +530,7 @@ int xvid_init_init(XVID_INIT_PARAM * init_param)
 	  transfer_8to16sub2 = transfer_8to16sub2_ia64;
 	  transfer_16to8add = transfer_16to8add_ia64;
 	  transfer8x8_copy = transfer8x8_copy_ia64;
-	  DEBUG("Using IA-64 assembler routines.\n");
+	  DPRINTF(DPRINTF_DEBUG, "Using IA-64 assembler routines.");
 	}
 #endif 
 
@@ -578,7 +560,11 @@ int xvid_init_init(XVID_INIT_PARAM * init_param)
 static int
 xvid_init_convert(XVID_INIT_CONVERTINFO* convert)
 {
-	// const int flip1 = (convert->input.colorspace & XVID_CSP_VFLIP) ^ (convert->output.colorspace & XVID_CSP_VFLIP);
+/*
+	const int flip1 =
+		(convert->input.colorspace & XVID_CSP_VFLIP) ^
+		(convert->output.colorspace & XVID_CSP_VFLIP);
+*/
 	const int width = convert->width;
 	const int height = convert->height;
 	const int width2 = convert->width/2;
@@ -751,7 +737,7 @@ static int test_quant(void * funcA, void * funcB, const char * nameB,
 	int64_t timeSTART;
 	int64_t timeA = 0;
 	int64_t timeB = 0;
-	int retA, retB;
+	int retA = 0, retB = 0;
 	DECLARE_ALIGNED_MATRIX(arrayX, 1, 64, int16_t, CACHE_LINE);
 	DECLARE_ALIGNED_MATRIX(arrayA, 1, 64, int16_t, CACHE_LINE);
 	DECLARE_ALIGNED_MATRIX(arrayB, 1, 64, int16_t, CACHE_LINE);
