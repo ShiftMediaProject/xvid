@@ -93,10 +93,16 @@ static __inline int64_t read_counter() {
 
 #endif
 
-#define EMMS() __asm__("emms\n\t")
 
 // needed for bitstream.h
-#define BSWAP(a) __asm__ ( "bswapl %0\n" : "=r" (a) : "0" (a) )
+#ifdef ARCH_PPC
+	#define BSWAP(a) __asm__ ( "lwbrx %0,0,%1; eieio" : "=r" (a) : \
+		"r" (&(a)), "m" (a));
+	#define EMMS()
+#else
+	#define BSWAP(a) __asm__ ( "bswapl %0\n" : "=r" (a) : "0" (a) )
+	#define EMMS() __asm__("emms\n\t")
+#endif
 
 // needed for timer.c
 static __inline int64_t read_counter() {
