@@ -37,7 +37,7 @@
  *  - 22.12.2001  API change: added xvid_init() - Isibaar
  *  - 16.12.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: xvid.c,v 1.30 2002-07-16 11:15:15 ia64p Exp $
+ *  $Id: xvid.c,v 1.31 2002-07-18 13:47:46 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -57,6 +57,73 @@
 #include "utils/emms.h"
 #include "utils/timer.h"
 #include "bitstream/mbcoding.h"
+
+#if defined(ARCH_X86) && defined(EXPERIMENTAL_SSE2_CODE)
+
+#ifdef WIN32
+#include <windows.h>
+#else
+#include <signal.h>
+#include <setjmp.h>
+#endif
+
+
+#ifndef WIN32
+
+static jmp_buf mark;
+
+static void
+sigill_handler(int signal)
+{
+   longjmp(mark, 1);
+}
+#endif
+
+
+/*
+calls the funcptr, and returns whether SIGILL (illegal instruction) was signalled
+return values:
+-1 : could not determine
+0  : SIGILL was *not* signalled
+1  : SIGILL was signalled
+*/
+
+int
+sigill_check(void (*func)())
+{
+#ifdef WIN32
+	_try {
+		func();
+	}
+	_except(EXCEPTION_EXECUTE_HANDLER) {
+
+		if (_exception_code() == STATUS_ILLEGAL_INSTRUCTION)
+			return 1;
+	}
+	return 0;
+#else
+    void * old_handler;
+    int jmpret;
+
+
+    old_handler = signal(SIGILL, sigill_handler);
+    if (old_handler == SIG_ERR)
+    {
+        return -1;
+    }
+
+    jmpret = setjmp(mark);
+    if (jmpret == 0)
+    {
+        func();
+    }
+
+    signal(SIGILL, old_handler);
+
+    return jmpret;
+#endif
+}
+#endif
 
 /*****************************************************************************
  * XviD Init Entry point
@@ -89,20 +156,32 @@ xvid_init(void *handle,
 	/* Inform the client the core build - unused because we're still alpha */
 	init_param->core_build = 1000;
 
-	if ((init_param->cpu_flags & XVID_CPU_CHKONLY))
-	{
-		init_param->cpu_flags = check_cpu_features();
-		return XVID_ERR_OK;
-	}
-
 	/* Do we have to force CPU features  ? */
-	if ((init_param->cpu_flags & XVID_CPU_FORCE) > 0) {
+	if ((init_param->cpu_flags & XVID_CPU_FORCE)) {
+
 		cpu_flags = init_param->cpu_flags;
+
 	} else {
 
 		cpu_flags = check_cpu_features();
-		init_param->cpu_flags = cpu_flags;
+
+#if defined(ARCH_X86) && defined(EXPERIMENTAL_SSE2_CODE)
+		if ((cpu_flags & XVID_CPU_SSE) && sigill_check(sse_os_trigger))
+			cpu_flags &= ~XVID_CPU_SSE;
+
+		if ((cpu_flags & XVID_CPU_SSE2) && sigill_check(sse2_os_trigger))
+			cpu_flags &= ~XVID_CPU_SSE2;
+#endif
 	}
+
+	if ((init_param->cpu_flags & XVID_CPU_CHKONLY))
+	{
+		init_param->cpu_flags = cpu_flags;
+		return XVID_ERR_OK;
+	}
+
+	init_param->cpu_flags = cpu_flags;
+
 
 	/* Initialize the function pointers */
 	idct_int32_init();
