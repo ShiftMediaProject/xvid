@@ -4,6 +4,943 @@
 # relevant.
 
 
+2004-12-19 12:38:15 GMT	                                	patch-105
+
+    Summary:
+      Merged stable 1.0.3 release patches
+    Revision:
+      xvidcore--head--0.0--patch-105
+
+    Merged stable 1.0.3 release patches
+    
+    Patches applied:
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-63
+       Trellis overflow for quant<=2
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-64
+       Marking 1.0.3 release
+    
+
+    modified files:
+     ChangeLog-1.0 src/utils/mbtransquant.c src/xvid.h
+
+    new patches:
+     ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-63
+     ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-64
+
+
+2004-12-19 11:15:53 GMT	                                	patch-104
+
+    Summary:
+      Faster bvhq
+    Revision:
+      xvidcore--head--0.0--patch-104
+
+    From sysKin:
+     * Faster bvhq skipping Intra test if the rd optimized rate
+       is already < 24bits... some other things too
+
+    modified files:
+     src/motion/estimation.h src/motion/estimation_bvop.c
+     src/motion/estimation_rd_based.c
+     src/motion/estimation_rd_based_bvop.c
+
+
+2004-12-10 20:51:56 GMT	                                	patch-103
+
+    Summary:
+      Encoder cleanups.
+    Revision:
+      xvidcore--head--0.0--patch-103
+
+    From sysKin:
+     * Moved greyscale code to mbcoding.
+     * Moved the fcode code to its own function.
+     * Some other minor cleanups.
+     
+
+    modified files:
+     src/bitstream/mbcoding.c src/encoder.c
+
+
+2004-12-10 20:39:23 GMT	                                	patch-102
+
+    Summary:
+      Fixed patch-101
+    Revision:
+      xvidcore--head--0.0--patch-102
+
+    From sysKin:
+     * Add a cbp assigment that should not have disapeared in patch-101.
+
+    modified files:
+     src/encoder.c
+
+
+2004-12-09 22:53:20 GMT	                                	patch-101
+
+    Summary:
+      Speedup using RD results
+    Revision:
+      xvidcore--head--0.0--patch-101
+
+    From sysKin:
+     * Use cbp from RD to speedup things a bit.
+
+    modified files:
+     src/encoder.c
+
+
+2004-12-09 22:51:02 GMT	                                	patch-100
+
+    Summary:
+      Speedup RD a bit
+    Revision:
+      xvidcore--head--0.0--patch-100
+
+    From sysKin:
+     * Saves a few multiplies in RD code saving the quant*quant value
+       into the SearchData struct.
+
+    modified files:
+     src/motion/estimation.h src/motion/estimation_bvop.c
+     src/motion/estimation_rd_based.c
+
+
+2004-12-09 22:48:06 GMT	                                	patch-99
+
+    Summary:
+      Smarter fcode code
+    Revision:
+      xvidcore--head--0.0--patch-99
+
+    From sysKin:
+     * Replaced old fcode code with smarter one.
+
+    modified files:
+     src/bitstream/mbcoding.c src/encoder.c src/motion/estimation.h
+     src/motion/estimation_bvop.c src/motion/estimation_common.c
+     src/motion/estimation_pvop.c src/motion/motion_inlines.h
+
+
+2004-12-09 22:00:49 GMT	                                	patch-98
+
+    Summary:
+      Removed Reduced Resolution Vops support
+    Revision:
+      xvidcore--head--0.0--patch-98
+
+    From sysKin:
+     * it's now a long time we planned removing support for RRV as it
+       adds complexity to the ME, to the decoder and this feature fits
+       nowhere in any MPEG4 profile we plan to support.
+
+    modified files:
+     src/bitstream/bitstream.c src/bitstream/bitstream.h
+     src/decoder.c src/encoder.c src/image/image.c
+     src/motion/estimation.h src/motion/estimation_bvop.c
+     src/motion/estimation_gmc.c src/motion/estimation_pvop.c
+     src/motion/estimation_rd_based.c
+     src/motion/estimation_rd_based_bvop.c src/motion/motion.h
+     src/motion/motion_comp.c src/motion/motion_inlines.h
+     src/motion/vop_type_decision.c src/utils/mbtransquant.c
+     src/xvid.c
+
+
+2004-12-07 23:58:12 GMT	                                	patch-97
+
+    Summary:
+      Merged PowerPC fixes from christoph naegeli's branch
+    Revision:
+      xvidcore--head--0.0--patch-97
+
+    Merged PowerPC fixes from christoph naegeli's branch
+    
+    Patches applied:
+    
+     * chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-11
+       Star-merge with Edouards Branch
+    
+     * chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-12
+       debug alignment bugfixes
+    
+     * chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-13
+       bugfixes in altivec alignment assumptions
+    
+     * chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-14
+       linux gcc fixes
+    
+     * chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-15
+       linux ppc long fixes
+    
+     * chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-16
+       minor ppc linux enhancements...
+    
+
+    modified files:
+     src/image/ppc_asm/colorspace_altivec.c
+     src/image/ppc_asm/interpolate8x8_altivec.c
+     src/image/ppc_asm/qpel_altivec.c
+     src/motion/ppc_asm/sad_altivec.c
+     src/quant/ppc_asm/quant_h263_altivec.c
+     src/utils/ppc_asm/mem_transfer_altivec.c src/xvid.c
+
+    new patches:
+     chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-11
+     chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-12
+     chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-13
+     chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-14
+     chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-15
+     chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-16
+
+
+2004-11-24 22:10:17 GMT	                                	patch-96
+
+    Summary:
+      Forgotten bit of patch-94 (vbv code in vfw)
+    Revision:
+      xvidcore--head--0.0--patch-96
+
+    Forgotten bit of patch-94 (vbv code in vfw)
+    
+
+    modified files:
+     vfw/src/codec.c
+
+
+2004-11-24 21:50:45 GMT	                                	patch-95
+
+    Summary:
+      Changed default Brightness value in DShow frontend
+    Revision:
+      xvidcore--head--0.0--patch-95
+
+    Changed default Brightness value in DShow frontend
+    
+
+    modified files:
+     dshow/src/config.c
+
+
+2004-11-24 21:50:14 GMT	                                	patch-94
+
+    Summary:
+      Added support for VBV in frontend.
+    Revision:
+      xvidcore--head--0.0--patch-94
+
+    From sysKin:
+     * Added support code for VBV in VFW frontend.
+
+    modified files:
+     vfw/src/config.c vfw/src/resource.rc
+
+
+2004-11-24 21:48:35 GMT	                                	patch-93
+
+    Summary:
+      Added interlaced option parsing in xvid_encraw.
+    Revision:
+      xvidcore--head--0.0--patch-93
+
+    From christoph:
+     * Added support for interlaced option in xvid_encraw.
+
+    modified files:
+     examples/xvid_encraw.c
+
+
+2004-11-24 21:45:47 GMT	                                	patch-92
+
+    Summary:
+      Synced with stable tree
+    Revision:
+      xvidcore--head--0.0--patch-92
+
+    Synced with stable tree
+    
+    Patches applied:
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-60
+       Fixed DiamondSearch
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-61
+       Fixed stride in DShow decoder.
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-62
+       Fixed stride in vfw frontend.
+    
+
+    modified files:
+     dshow/src/CXvidDecoder.cpp src/motion/estimation_common.c
+     vfw/src/codec.c
+
+    new patches:
+     ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-60
+     ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-61
+     ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-62
+
+
+2004-10-17 10:13:02 GMT	                                	patch-91
+
+    Summary:
+      Syncing with Christoph Nageli branch
+    Revision:
+      xvidcore--head--0.0--patch-91
+
+    Syncing with Christoph Nageli branch
+    
+    Patches applied:
+    
+     * chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--base-0
+       tag of ed.gomez@free.fr--2004-1/xvidcore--head--0.0--patch-68
+    
+     * chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-1
+       interpolate8x8_haflpel add functions
+    
+     * chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-2
+       little enhancement
+    
+     * chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-3
+       Basic QPel pass_16 routines altivec codec
+    
+     * chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-4
+       Basic QPel pass_8 routines altivec code
+    
+     * chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-5
+       packed pass_16 routines in a macro
+    
+     * chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-6
+       packed pass_8 routines in a macro
+    
+     * chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-7
+       Enhancement of the qpel functions for P-frames
+    
+     * chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-8
+       QPel Pass_16 Add Functions
+    
+     * chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-9
+       Pass_8_Add Altivec functions
+    
+     * chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-10
+       Bugfix for Pass_8 Add routines
+    
+
+    new files:
+     src/image/ppc_asm/.arch-ids/qpel_altivec.c.id
+     src/image/ppc_asm/qpel_altivec.c
+
+    modified files:
+     build/generic/sources.inc src/image/interpolate8x8.h
+     src/image/ppc_asm/colorspace_altivec.c
+     src/image/ppc_asm/interpolate8x8_altivec.c src/image/qpel.c
+     src/image/qpel.h src/xvid.c
+
+    new patches:
+     chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--base-0
+     chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-1
+     chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-2
+     chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-3
+     chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-4
+     chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-5
+     chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-6
+     chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-7
+     chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-8
+     chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-9
+     chn@kbw.ch--2004-1/xvidcore--naegeli-head--0.0--patch-10
+
+
+2004-10-12 21:00:08 GMT	                                	patch-90
+
+    Summary:
+      Resynced with 1.0 tree
+    Revision:
+      xvidcore--head--0.0--patch-90
+
+    Resynced with 1.0 tree
+    
+    Patches applied:
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-59
+       Don't read too short streams.
+    
+
+    modified files:
+     src/bitstream/bitstream.c
+
+    new patches:
+     ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-59
+
+
+2004-10-12 20:54:47 GMT	                                	patch-89
+
+    Summary:
+      Credits to Christoph Nageli for his work on PPC port
+    Revision:
+      xvidcore--head--0.0--patch-89
+
+    Credits to Christoph Nageli for his work on PPC port
+    
+
+    modified files:
+     AUTHORS
+
+
+2004-10-12 20:51:24 GMT	                                	patch-88
+
+    Summary:
+      
+    Revision:
+      xvidcore--head--0.0--patch-88
+
+    Patches applied:
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-57
+       ME fix.
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-58
+       64bit fixes
+    
+    From ed.gomez:
+     * Resolved conflicts caused by the 64bit fixes, extended it for qpel.h
+       Note that 1.1 tree needs a new review for 64bit problems as lot
+       of ME code has changed.
+
+    modified files:
+     src/image/qpel.h src/motion/estimation_bvop.c
+     src/motion/estimation_common.c src/motion/motion_comp.c
+
+    new patches:
+     ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-57
+     ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-58
+
+
+2004-09-22 22:42:16 GMT	                                	patch-87
+
+    Summary:
+      DESTDIR support in Makefile
+    Revision:
+      xvidcore--head--0.0--patch-87
+
+    From Thomas Galliano (Gentoo bug #62190):
+     * Added DESTDIR prefix variable to all install commands destination
+       (ed.gomez: i think it's for packaging issues, so the install
+        process installs all files as if they were going to the real
+        location, as xvid doesn't use any path, i always thought this
+        was not required)
+
+    modified files:
+     build/generic/Makefile build/generic/platform.inc.in
+
+
+2004-09-04 15:10:33 GMT	                                	patch-86
+
+    Summary:
+      First bvop search must initalize best_sad
+    Revision:
+      xvidcore--head--0.0--patch-86
+
+    From sysKin:
+     * First bvop search must initalize best_sad
+
+    modified files:
+     src/motion/estimation_bvop.c
+
+
+2004-09-04 14:11:43 GMT	                                	patch-85
+
+    Summary:
+      Fixed function prototype/definition mismatch
+    Revision:
+      xvidcore--head--0.0--patch-85
+
+    From sysKin:
+     * Fixed function prototype/definition mismatch for some
+       interpolation C functions.
+
+    modified files:
+     src/image/interpolate8x8.c
+
+
+2004-09-04 14:08:13 GMT	                                	patch-84
+
+    Summary:
+      Fixed buffer termination logic in xvid_decraw.
+    Revision:
+      xvidcore--head--0.0--patch-84
+
+    From ed.gomez:
+     * Fixed main decoding loop condition to really match 
+       the empty buffer and end of stream condition.
+     * Removed the unwanted frame number limitation
+
+    modified files:
+     examples/xvid_decraw.c
+
+
+2004-09-04 14:04:48 GMT	                                	patch-83
+
+    Summary:
+      Uninitialized user data usage.
+    Revision:
+      xvidcore--head--0.0--patch-83
+
+    From ed.gomez:
+     - Fixed user data parsing uninitialized data.
+
+    modified files:
+     src/bitstream/bitstream.c
+
+
+2004-09-04 13:59:26 GMT	                                	patch-82
+
+    Summary:
+      Unitialized data in bvop ME
+    Revision:
+      xvidcore--head--0.0--patch-82
+
+    From ed.gomez:
+     * Fixed unitialized data usage during bvop ME.
+
+    modified files:
+     src/motion/estimation_bvop.c
+
+
+2004-09-03 00:13:31 GMT	                                	patch-81
+
+    Summary:
+      Add VOL header saving in xvid_decraw
+    Revision:
+      xvidcore--head--0.0--patch-81
+
+    From ed.gomez:
+     * Added VOL header saving in xvid_decraw
+    
+    The little story:
+       I was trying to cut some frames off of a big stream (150MB)
+       with "xvid_decraw -m", and cat'ing the single frame stream
+       files together. The reconstructed stream was rejected by all
+       mpeg4 decoders because the vol header wasn't present. Thus
+       the fix.
+
+    modified files:
+     examples/xvid_decraw.c
+
+
+2004-08-30 23:22:35 GMT	                                	patch-80
+
+    Summary:
+      Complete previous API numbering change
+    Revision:
+      xvidcore--head--0.0--patch-80
+
+    Complete previous API numbering change
+    
+
+    modified files:
+     src/xvid.h
+
+
+2004-08-29 11:53:05 GMT	                                	patch-79
+
+    Summary:
+      Merged stable tree
+    Revision:
+      xvidcore--head--0.0--patch-79
+
+    Merged stable tree
+    
+    Patches applied:
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-54
+       Marking 1.0.2
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-55
+       Merged one important forgotten bugfix from head
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-56
+       ChangeLog update
+    
+
+    modified files:
+     ChangeLog-1.0 src/xvid.h
+
+    new patches:
+     ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-54
+     ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-55
+     ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-56
+
+
+2004-08-29 09:56:34 GMT	                                	patch-78
+
+    Summary:
+      Write ia32 symbols' size to elf output.
+    Revision:
+      xvidcore--head--0.0--patch-78
+
+    From ed.gomez:
+     - write symbols size to elf output, so the asm objects look
+       really like any usual object file.
+
+    modified files:
+     src/bitstream/x86_asm/cbp_3dne.asm
+     src/bitstream/x86_asm/cbp_mmx.asm
+     src/bitstream/x86_asm/cbp_sse2.asm
+     src/dct/x86_asm/fdct_mmx_ffmpeg.asm
+     src/dct/x86_asm/fdct_mmx_skal.asm
+     src/dct/x86_asm/fdct_sse2_skal.asm
+     src/dct/x86_asm/idct_3dne.asm src/dct/x86_asm/idct_mmx.asm
+     src/dct/x86_asm/idct_sse2_dmitry.asm
+     src/dct/x86_asm/simple_idct_mmx.asm
+     src/image/x86_asm/colorspace_mmx.inc
+     src/image/x86_asm/colorspace_rgb_mmx.asm
+     src/image/x86_asm/colorspace_yuv_mmx.asm
+     src/image/x86_asm/colorspace_yuyv_mmx.asm
+     src/image/x86_asm/interpolate8x8_3dn.asm
+     src/image/x86_asm/interpolate8x8_3dne.asm
+     src/image/x86_asm/interpolate8x8_mmx.asm
+     src/image/x86_asm/interpolate8x8_xmm.asm
+     src/image/x86_asm/postprocessing_mmx.asm
+     src/image/x86_asm/postprocessing_sse2.asm
+     src/image/x86_asm/qpel_mmx.asm
+     src/image/x86_asm/reduced_mmx.asm
+     src/motion/x86_asm/sad_3dn.asm src/motion/x86_asm/sad_3dne.asm
+     src/motion/x86_asm/sad_mmx.asm src/motion/x86_asm/sad_sse2.asm
+     src/motion/x86_asm/sad_xmm.asm
+     src/quant/x86_asm/quantize_h263_3dne.asm
+     src/quant/x86_asm/quantize_h263_mmx.asm
+     src/quant/x86_asm/quantize_mpeg_mmx.asm
+     src/quant/x86_asm/quantize_mpeg_xmm.asm
+     src/utils/x86_asm/cpuid.asm
+     src/utils/x86_asm/interlacing_mmx.asm
+     src/utils/x86_asm/mem_transfer_3dne.asm
+     src/utils/x86_asm/mem_transfer_mmx.asm
+
+
+2004-08-28 13:00:56 GMT	                                	patch-77
+
+    Summary:
+      Thread safety problem in sse2 brightness control
+    Revision:
+      xvidcore--head--0.0--patch-77
+
+    From ed.gomez:
+     * CodingStyle for the sse2 image brightness file
+     * Fixed thread safety problem/big error. Writing to a RO
+       data segment is a no go ! and using global data segment
+       is a no go either (use stack instead) !
+
+    modified files:
+     src/image/x86_asm/postprocessing_sse2.asm
+
+
+2004-08-22 13:11:23 GMT	                                	patch-76
+
+    Summary:
+      Stable merge
+    Revision:
+      xvidcore--head--0.0--patch-76
+
+    Stable merge
+    
+    Patches applied:
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-53
+       Thread safety problem in idct C version
+    
+
+    modified files:
+     src/bitstream/mbcoding.c src/dct/idct.c
+
+    new patches:
+     ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-53
+
+
+2004-08-22 11:48:23 GMT	                                	patch-75
+
+    Summary:
+      This tree isn't API 4.0 anymore, mark it as 4.1
+    Revision:
+      xvidcore--head--0.0--patch-75
+
+    From ed.gomez:
+     * The fields added to some structs make this lib isn't
+       API 4.0 anymore, mark it as 4.1 because ABI compatibility
+       is conserved.
+
+    modified files:
+     build/generic/configure.in
+
+
+2004-08-22 11:41:22 GMT	                                	patch-74
+
+    Summary:
+      Functions qualified as such for elf format. 
+    Revision:
+      xvidcore--head--0.0--patch-74
+
+    From ed.gomez:
+     * Functions weren't marked as functions in ia32 asm files.
+       Added support for the function qualifier for elf.
+
+    modified files:
+     build/generic/configure.in src/bitstream/x86_asm/cbp_3dne.asm
+     src/bitstream/x86_asm/cbp_mmx.asm
+     src/bitstream/x86_asm/cbp_sse2.asm
+     src/dct/x86_asm/fdct_mmx_ffmpeg.asm
+     src/dct/x86_asm/fdct_mmx_skal.asm
+     src/dct/x86_asm/fdct_sse2_skal.asm
+     src/dct/x86_asm/idct_3dne.asm src/dct/x86_asm/idct_mmx.asm
+     src/dct/x86_asm/idct_sse2_dmitry.asm
+     src/dct/x86_asm/simple_idct_mmx.asm
+     src/image/x86_asm/colorspace_rgb_mmx.asm
+     src/image/x86_asm/colorspace_yuv_mmx.asm
+     src/image/x86_asm/colorspace_yuyv_mmx.asm
+     src/image/x86_asm/interpolate8x8_3dn.asm
+     src/image/x86_asm/interpolate8x8_3dne.asm
+     src/image/x86_asm/interpolate8x8_mmx.asm
+     src/image/x86_asm/interpolate8x8_xmm.asm
+     src/image/x86_asm/postprocessing_mmx.asm
+     src/image/x86_asm/postprocessing_sse2.asm
+     src/image/x86_asm/qpel_mmx.asm
+     src/image/x86_asm/reduced_mmx.asm
+     src/motion/x86_asm/sad_3dn.asm src/motion/x86_asm/sad_3dne.asm
+     src/motion/x86_asm/sad_mmx.asm src/motion/x86_asm/sad_sse2.asm
+     src/motion/x86_asm/sad_xmm.asm
+     src/quant/x86_asm/quantize_h263_3dne.asm
+     src/quant/x86_asm/quantize_h263_mmx.asm
+     src/quant/x86_asm/quantize_mpeg_mmx.asm
+     src/quant/x86_asm/quantize_mpeg_xmm.asm
+     src/utils/x86_asm/cpuid.asm
+     src/utils/x86_asm/interlacing_mmx.asm
+     src/utils/x86_asm/mem_transfer_3dne.asm
+     src/utils/x86_asm/mem_transfer_mmx.asm
+
+
+2004-08-21 17:04:57 GMT	                                	patch-73
+
+    Summary:
+      Added yasm support in configure.in
+    Revision:
+      xvidcore--head--0.0--patch-73
+
+    From ed.gomez:
+     * Added yasm configure.in support. It's my preferred ia32 assembly
+       because it allows debugging/profiling of assembly code with oprofile.
+
+    modified files:
+     build/generic/configure.in
+
+
+2004-08-21 11:47:31 GMT	                                	patch-72
+
+    Summary:
+      Merged fix from stable
+    Revision:
+      xvidcore--head--0.0--patch-72
+
+    Merged fix from stable
+    
+    Patches applied:
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-52
+       Stupid typo+error in fdct_xxx_skal macro generator.
+    
+
+    modified files:
+     src/dct/x86_asm/fdct_mmx_skal.asm
+
+    new patches:
+     ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-52
+
+
+2004-08-16 22:32:46 GMT	                                	patch-71
+
+    Summary:
+      Decoder optimization (fixing regression)
+    Revision:
+      xvidcore--head--0.0--patch-71
+
+    From ed.gomez:
+     * With newly introduced vector checking, decoder became noticeably
+       slower. This was caused by poorly written code (sorry sysKin :P)
+        + unrolled loop
+        + removed duplicated border computings
+        + marks the function as __inline
+
+    modified files:
+     src/decoder.c
+
+
+2004-08-15 11:42:20 GMT	                                	patch-70
+
+    Summary:
+      Out of bounds MVs clipping
+    Revision:
+      xvidcore--head--0.0--patch-70
+
+    From sysKin:
+     * Clip vectors that end up out of bounds.
+
+    modified files:
+     src/decoder.c
+
+
+2004-08-10 22:30:09 GMT	                                	patch-69
+
+    Summary:
+      Fixed CBR plugin.
+    Revision:
+      xvidcore--head--0.0--patch-69
+
+    From Foxer:
+     * Do not set the return quantizer to the frame's quantizer
+       (caused the crazy quant choices)
+     * Allow quant1 to influence the sequence quality
+     * Allow more than +- 1 quantizer variation if the desired
+       quantizer is much higher than the previous.
+     * Clamp the overflow influence to 1 unit of buffer, that
+       should help cases where still motion scenes are followed
+       by normal motion scenes... old code was reaching amazing
+       high bitrate, with this modification it should keep
+       smaller bitrate.
+
+    modified files:
+     src/plugins/plugin_single.c
+
+
+2004-08-01 15:23:49 GMT	                                	patch-68
+
+    Summary:
+      error in dshow par array indexing
+    Revision:
+      xvidcore--head--0.0--patch-68
+
+    error in dshow par array indexing
+    
+
+    modified files:
+     dshow/src/CXvidDecoder.cpp
+
+
+2004-08-01 13:38:36 GMT	                                	patch-67
+
+    Summary:
+      Faster bframe decoding (qpel this time)
+    Revision:
+      xvidcore--head--0.0--patch-67
+
+    From ed.gomez:
+     * Used the same trick as for halfpel bvops, merge backward
+       interpolation and dst averaging steps.
+    
+    NB: i'm currently not able to say if it's a real speedup or not
+        because my linux kernel uses a process scheduler gives great
+        variance to results... so far i'm sure this isn't a slowdown
+        neither for C nor ia32 SIMD.
+
+    modified files:
+     src/decoder.c src/image/qpel.c src/image/qpel.h
+
+
+2004-08-01 11:24:07 GMT	                                	patch-66
+
+    Summary:
+      Unified qpel code path for all platforms
+    Revision:
+      xvidcore--head--0.0--patch-66
+
+    From ed.gomez and skal:
+     * Unified qpel code path for all platforms. Next step is
+       to fully exploit this code path to speedup qpel bframe
+       decoding
+    
+    NB: this makes also ports life easier as they would not port
+        obsoleted function sets...
+
+    modified files:
+     src/decoder.c src/image/interpolate8x8.h src/image/qpel.c
+     src/image/qpel.h src/motion/motion_comp.c
+
+
+2004-07-31 15:08:19 GMT	                                	patch-65
+
+    Summary:
+      Faster bframe decoding.
+    Revision:
+      xvidcore--head--0.0--patch-65
+
+    From ed.gomez and skal:
+     * Faster direct/interpolated bvop blocks decoding for halfpel
+       sequences. The trick is to compute and average directly with
+       destination during one of the forward/backward interpolations.
+       At this moment, this patch covers only halfpel decoding, the
+       same trick is expected to be hacked for qpel.
+
+    modified files:
+     src/decoder.c src/image/interpolate8x8.c
+     src/image/interpolate8x8.h
+     src/image/x86_asm/interpolate8x8_mmx.asm
+     src/image/x86_asm/interpolate8x8_xmm.asm src/xvid.c
+
+
+2004-07-31 09:13:23 GMT	                                	patch-64
+
+    Summary:
+      Last bit for dshow gcc support
+    Revision:
+      xvidcore--head--0.0--patch-64
+
+    From pete:
+     * Last bits concerning gcc build support for dshow.
+
+    removed files:
+     dshow/dxpatch/.arch-ids/DXVCSDK-9.0-gcc.patch.id
+     dshow/dxpatch/.arch-ids/DXVCSDK-9.0-gcc.txt.id
+     dshow/dxpatch/DXVCSDK-9.0-gcc.patch
+     dshow/dxpatch/DXVCSDK-9.0-gcc.txt
+
+    modified files:
+     dshow/src/Configure.cpp
+
+
+2004-07-27 21:10:02 GMT	                                	patch-63
+
+    Summary:
+      Better cross compilation support for dshow.
+    Revision:
+      xvidcore--head--0.0--patch-63
+
+    From pete and ed.gomez:
+     * gcc 3.4.1 is even more pedantic, ::GUID was breaking it, use
+       struct _GUID instead.
+     * Some uppercase/lowercase mixing in MS headers.
+     * More documentation footage for the braves !
+    
+    NB: with all this, dshow should compile, but it is not guaranted
+        to work ! There's even a patch for Configure.cpp that could be
+        required... postponed to a later patch.
+
+    modified files:
+     dshow/dxpatch/dx90sdk-update-gcc.patch
+     dshow/dxpatch/dx90sdk-update-gcc.txt
+
+
+2004-07-26 20:25:52 GMT	                                	patch-62
+
+    Summary:
+      ChangeLog 1.1 update
+    Revision:
+      xvidcore--head--0.0--patch-62
+
+    ChangeLog 1.1 update
+    
+
+    modified files:
+     ChangeLog
+
+
 2004-07-26 20:22:38 GMT	                                	patch-61
 
     Summary:
