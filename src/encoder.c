@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.111 2004-12-08 12:43:48 syskin Exp $
+ * $Id: encoder.c,v 1.112 2004-12-09 04:20:44 syskin Exp $
  *
  ****************************************************************************/
 
@@ -1647,8 +1647,8 @@ FrameCodeP(Encoder * pEnc,
 
 				current->sStat.kblks++;
 
-				if (pEnc->current->vop_flags & XVID_VOP_GREYSCALE)
-				{	pMB->cbp &= 0x3C;		/* keep only bits 5-2 */
+				if (pEnc->current->vop_flags & XVID_VOP_GREYSCALE) {
+					pMB->cbp &= 0x3C;		/* keep only bits 5-2 */
 					qcoeff[4*64+0]=0;		/* zero, because for INTRA MBs DC value is saved */
 					qcoeff[5*64+0]=0;
 				}
@@ -1672,8 +1672,7 @@ FrameCodeP(Encoder * pEnc,
 
 			pMB->field_pred = 0;
 
-			if (pMB->mode != MODE_NOT_CODED)
-			{	pMB->cbp =
+			if (pMB->cbp != 0) {
 					MBTransQuantInter(&pEnc->mbParam, current, pMB, x, y,
 									  dct_codes, qcoeff);
 			}
@@ -1972,33 +1971,34 @@ FrameCodeB(Encoder * pEnc,
 					MBMotionCompensation(mb, x, y, f_ref, NULL, f_ref, NULL, NULL, &frame->image,
 											NULL, 0, 0, pEnc->mbParam.edged_width, 0, 0);
 				}
-
 				continue;
 			}
 
-			if (mb->mode != MODE_DIRECT_NONE_MV || pEnc->mbParam.plugin_flags & XVID_REQORIGINAL) {
+			mb->quant = frame->quant;
+
+			if (mb->cbp != 0 || pEnc->mbParam.plugin_flags & XVID_REQORIGINAL) {
+				/* we have to motion-compensate, transfer etc, 
+					because there might be blocks to code */
+
 				MBMotionCompensationBVOP(&pEnc->mbParam, mb, x, y, &frame->image,
-									 f_ref, &pEnc->f_refh, &pEnc->f_refv,
-									 &pEnc->f_refhv, b_ref, &pEnc->vInterH,
-									 &pEnc->vInterV, &pEnc->vInterHV,
-									 dct_codes);
+										 f_ref, &pEnc->f_refh, &pEnc->f_refv,
+										 &pEnc->f_refhv, b_ref, &pEnc->vInterH,
+										 &pEnc->vInterV, &pEnc->vInterHV,
+										 dct_codes);
 
-				if (mb->mode == MODE_DIRECT_NO4V) mb->mode = MODE_DIRECT;
-				mb->quant = frame->quant;
-
-				if (mb->mode != MODE_DIRECT_NONE_MV)
-					mb->cbp = MBTransQuantInterBVOP(&pEnc->mbParam, frame, mb, x, y,  dct_codes, qcoeff);
-
-				if ( (mb->mode == MODE_DIRECT) && (mb->cbp == 0)
-					&& (mb->pmvs[3].x == 0) && (mb->pmvs[3].y == 0) ) {
-					mb->mode = MODE_DIRECT_NONE_MV;	/* skipped */
-				}
+				mb->cbp = MBTransQuantInterBVOP(&pEnc->mbParam, frame, mb, x, y,  dct_codes, qcoeff);
 			}
+			
+			if (mb->mode == MODE_DIRECT_NO4V)
+				mb->mode = MODE_DIRECT;
+
+			if (mb->mode == MODE_DIRECT && (mb->cbp | mb->pmvs[3].x | mb->pmvs[3].y) == 0)
+				mb->mode = MODE_DIRECT_NONE_MV;	/* skipped */
 
 			/* keep only bits 5-2 -- Chroma blocks will just be skipped by the
 			 * coding function for BFrames, that's why we don't zero teh DC
 			 * coeffs */
-			if ((frame->vop_flags & XVID_VOP_GREYSCALE))
+			if (frame->vop_flags & XVID_VOP_GREYSCALE)
 				mb->cbp &= 0x3C;
 
 			start_timer();

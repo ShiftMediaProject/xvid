@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.18 2004-12-08 12:43:48 syskin Exp $
+ * $Id: estimation_bvop.c,v 1.19 2004-12-09 04:20:44 syskin Exp $
  *
  ****************************************************************************/
 
@@ -829,6 +829,7 @@ ModeDecision_BVOP_SAD(const SearchData * const Data_d,
 
 	pMB->sad16 = best_sad;
 	pMB->mode = mode;
+	pMB->cbp = 63;
 
 	switch (mode) {
 
@@ -1028,6 +1029,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 
 			if (pMB->mode == MODE_DIRECT_NONE_MV) {
 				pMB->sad16 = best_sad;
+				pMB->cbp = 0;
 				continue;
 			}
 
@@ -1066,6 +1068,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 				
 				if (pMB->mode == MODE_DIRECT_NONE_MV) { /* skipped? */
 					pMB->sad16 = skip_sad;
+					pMB->cbp = 0;
 					continue;
 				}
 			}
