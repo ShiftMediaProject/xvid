@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: mem_transfer.c,v 1.7 2002-11-17 00:51:11 edgomez Exp $
+ * $Id: mem_transfer.c,v 1.8 2002-11-26 23:44:11 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -197,7 +197,7 @@ transfer_8to16sub2_c(int16_t * const dct,
 			if (r > 255) {
 				r = 255;
 			}
-			//cur[j * stride + i] = r;
+			/*cur[j * stride + i] = r; */
 			dct[j * 8 + i] = (int16_t) c - (int16_t) r;
 		}
 	}

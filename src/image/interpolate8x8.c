@@ -51,20 +51,20 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: interpolate8x8.c,v 1.6 2002-11-17 00:20:30 edgomez Exp $
+ * $Id: interpolate8x8.c,v 1.7 2002-11-26 23:44:10 edgomez Exp $
  *
  ****************************************************************************/
 
 #include "../portab.h"
 #include "interpolate8x8.h"
 
-// function pointers
+/* function pointers */
 INTERPOLATE8X8_PTR interpolate8x8_halfpel_h;
 INTERPOLATE8X8_PTR interpolate8x8_halfpel_v;
 INTERPOLATE8X8_PTR interpolate8x8_halfpel_hv;
 
 
-// dst = interpolate(src)
+/* dst = interpolate(src) */
 
 void
 interpolate8x8_halfpel_h_c(uint8_t * const dst,
@@ -128,8 +128,8 @@ interpolate8x8_halfpel_hv_c(uint8_t * const dst,
 	}
 }
 
-// add by MinChen <chenm001@163.com>
-// interpolate8x8 two pred block
+/* add by MinChen <chenm001@163.com> */
+/* interpolate8x8 two pred block */
 void
 interpolate8x8_c(uint8_t * const dst,
 				 const uint8_t * const src,

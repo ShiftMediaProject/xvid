@@ -53,7 +53,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: mbtransquant.c,v 1.19 2002-11-17 00:51:10 edgomez Exp $
+ * $Id: mbtransquant.c,v 1.20 2002-11-26 23:44:11 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -462,7 +462,7 @@ MBQuantInter(const MBParam * pParam,
 			stop_quant_timer();
 		}
 
-		if (sum >= TOOSMALL_LIMIT) {	// skip block ?
+		if (sum >= TOOSMALL_LIMIT) {	/* skip block ? */
 			cbp |= 1 << (5 - i);
 		}
 	}
@@ -642,26 +642,26 @@ MBFrameToField(int16_t data[6 * 64])
 
 	/* left blocks */
 
-	// 1=2, 2=4, 4=8, 8=1
+	/* 1=2, 2=4, 4=8, 8=1 */
 	MOVLINE(tmp, LINE(0, 1));
 	MOVLINE(LINE(0, 1), LINE(0, 2));
 	MOVLINE(LINE(0, 2), LINE(0, 4));
 	MOVLINE(LINE(0, 4), LINE(2, 0));
 	MOVLINE(LINE(2, 0), tmp);
 
-	// 3=6, 6=12, 12=9, 9=3
+	/* 3=6, 6=12, 12=9, 9=3 */
 	MOVLINE(tmp, LINE(0, 3));
 	MOVLINE(LINE(0, 3), LINE(0, 6));
 	MOVLINE(LINE(0, 6), LINE(2, 4));
 	MOVLINE(LINE(2, 4), LINE(2, 1));
 	MOVLINE(LINE(2, 1), tmp);
 
-	// 5=10, 10=5
+	/* 5=10, 10=5 */
 	MOVLINE(tmp, LINE(0, 5));
 	MOVLINE(LINE(0, 5), LINE(2, 2));
 	MOVLINE(LINE(2, 2), tmp);
 
-	// 7=14, 14=13, 13=11, 11=7
+	/* 7=14, 14=13, 13=11, 11=7 */
 	MOVLINE(tmp, LINE(0, 7));
 	MOVLINE(LINE(0, 7), LINE(2, 6));
 	MOVLINE(LINE(2, 6), LINE(2, 5));
@@ -670,26 +670,26 @@ MBFrameToField(int16_t data[6 * 64])
 
 	/* right blocks */
 
-	// 1=2, 2=4, 4=8, 8=1
+	/* 1=2, 2=4, 4=8, 8=1 */
 	MOVLINE(tmp, LINE(1, 1));
 	MOVLINE(LINE(1, 1), LINE(1, 2));
 	MOVLINE(LINE(1, 2), LINE(1, 4));
 	MOVLINE(LINE(1, 4), LINE(3, 0));
 	MOVLINE(LINE(3, 0), tmp);
 
-	// 3=6, 6=12, 12=9, 9=3
+	/* 3=6, 6=12, 12=9, 9=3 */
 	MOVLINE(tmp, LINE(1, 3));
 	MOVLINE(LINE(1, 3), LINE(1, 6));
 	MOVLINE(LINE(1, 6), LINE(3, 4));
 	MOVLINE(LINE(3, 4), LINE(3, 1));
 	MOVLINE(LINE(3, 1), tmp);
 
-	// 5=10, 10=5
+	/* 5=10, 10=5 */
 	MOVLINE(tmp, LINE(1, 5));
 	MOVLINE(LINE(1, 5), LINE(3, 2));
 	MOVLINE(LINE(3, 2), tmp);
 
-	// 7=14, 14=13, 13=11, 11=7
+	/* 7=14, 14=13, 13=11, 11=7 */
 	MOVLINE(tmp, LINE(1, 7));
 	MOVLINE(LINE(1, 7), LINE(3, 6));
 	MOVLINE(LINE(3, 6), LINE(3, 5));

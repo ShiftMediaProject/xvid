@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: global.h,v 1.16 2002-11-16 23:38:16 edgomez Exp $
+ * $Id: global.h,v 1.17 2002-11-26 23:44:10 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -97,37 +97,37 @@ Bitstream;
 
 typedef struct
 {
-	// decoder/encoder 
+	/* decoder/encoder  */
 	VECTOR mvs[4];
 
 	short int pred_values[6][MBPRED_SIZE];
 	int acpred_directions[6];
 
 	int mode;
-	int quant;					// absolute quant
+	int quant;					/* absolute quant */
 
 	int field_dct;
 	int field_pred;
 	int field_for_top;
 	int field_for_bot;
 
-	// encoder specific
+	/* encoder specific */
 
 	VECTOR mv16;
 	VECTOR pmvs[4];
 
-	int32_t sad8[4];			// SAD values for inter4v-VECTORs
-	int32_t sad16;				// SAD value for inter-VECTOR
+	int32_t sad8[4];			/* SAD values for inter4v-VECTORs */
+	int32_t sad16;				/* SAD value for inter-VECTOR */
 
 	int dquant;
 	int cbp;
 
-	// bframe stuff
+	/* bframe stuff */
 
 	VECTOR b_mvs[4];
 	VECTOR b_pmvs[4];
 
-	// bframe direct mode
+	/* bframe direct mode */
 
 	VECTOR directmv[4];
 	VECTOR deltamv;
@@ -135,14 +135,14 @@ typedef struct
 	int mb_type;
 	int dbquant;
 
-	// stuff for block based ME (needed for Qpel ME)
-	// backup of last integer ME vectors/sad
+	/* stuff for block based ME (needed for Qpel ME) */
+	/* backup of last integer ME vectors/sad */
 	
 	VECTOR i_mv16;
 	VECTOR i_mvs[4];
 
-	int32_t i_sad8[4];	// SAD values for inter4v-VECTORs
-	int32_t i_sad16;	// SAD value for inter-VECTOR
+	int32_t i_sad8[4];	/* SAD values for inter4v-VECTORs */
+	int32_t i_sad16;	/* SAD value for inter-VECTOR */
 
 }
 MACROBLOCK;
@@ -169,7 +169,7 @@ get_dc_scaler(uint32_t quant,
 		return quant - 6;
 }
 
-// useful macros
+/* useful macros */
 
 #define MIN(X, Y) ((X)<(Y)?(X):(Y))
 #define MAX(X, Y) ((X)>(Y)?(X):(Y))

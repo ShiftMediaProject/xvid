@@ -50,16 +50,16 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: image.c,v 1.24 2002-11-17 00:20:30 edgomez Exp $
+ * $Id: image.c,v 1.25 2002-11-26 23:44:10 edgomez Exp $
  *
  ****************************************************************************/
 
 #include <stdlib.h>
-#include <string.h>				// memcpy, memset
+#include <string.h>				/* memcpy, memset */
 #include <math.h>
 
 #include "../portab.h"
-#include "../xvid.h"			// XVID_CSP_XXX's
+#include "../xvid.h"			/* XVID_CSP_XXX's */
 #include "image.h"
 #include "colorspace.h"
 #include "interpolate8x8.h"
@@ -203,7 +203,7 @@ image_setedges(IMAGE * image,
 	}
 
 
-//U
+/*U */
 	dst = image->u - (EDGE_SIZE2 + EDGE_SIZE2 * edged_width2);
 	src = image->u;
 
@@ -231,7 +231,7 @@ image_setedges(IMAGE * image,
 	}
 
 
-// V
+/* V */
 	dst = image->v - (EDGE_SIZE2 + EDGE_SIZE2 * edged_width2);
 	src = image->v;
 
@@ -259,7 +259,7 @@ image_setedges(IMAGE * image,
 	}
 }
 
-// bframe encoding requires image-based u,v interpolation
+/* bframe encoding requires image-based u,v interpolation */
 void
 image_interpolate(const IMAGE * refn,
 				  IMAGE * refh,
@@ -482,7 +482,7 @@ image_output(IMAGE * image,
 					edged_width / 2, width, height);
 		return 0;
 
-	case XVID_CSP_YV12:		// u,v swapped
+	case XVID_CSP_YV12:		/* u,v swapped */
 		yv12_to_yuv(dst, dst_stride, image->y, image->v, image->u, edged_width,
 					edged_width / 2, width, height);
 		return 0;
@@ -492,7 +492,7 @@ image_output(IMAGE * image,
 					 edged_width, edged_width / 2, width, height);
 		return 0;
 
-	case XVID_CSP_YVYU:		// u,v swapped
+	case XVID_CSP_YVYU:		/* u,v swapped */
 		yv12_to_yuyv(dst, dst_stride, image->y, image->v, image->u,
 					 edged_width, edged_width / 2, width, height);
 		return 0;
@@ -551,7 +551,7 @@ image_psnr(IMAGE * orig_image,
 	return psnr_y;
 }
 
-/*
+#if	0
 
 #include <stdio.h>
 #include <string.h>
@@ -575,7 +575,7 @@ int image_dump_pgm(uint8_t * bmp, uint32_t width, uint32_t height, char * filena
 }
 
 
-// dump image+edges to yuv pgm files 
+/* dump image+edges to yuv pgm files  */
 
 int image_dump(IMAGE * image, uint32_t edged_width, uint32_t edged_height, char * path, int number)
 {
@@ -598,7 +598,7 @@ int image_dump(IMAGE * image, uint32_t edged_width, uint32_t edged_height, char 
 
 	return 0;
 }
-*/
+#endif
 
 
 

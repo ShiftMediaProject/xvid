@@ -51,7 +51,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: idct.c,v 1.4 2002-11-16 23:51:58 edgomez Exp $
+ * $Id: idct.c,v 1.5 2002-11-26 23:44:10 edgomez Exp $
  *
  *************************************************************************/
 
@@ -80,16 +80,16 @@
 
 
 /* global declarations */
-//void init_idct_int32 (void);
-//void idct_int32 (short *block);
+/*void init_idct_int32 (void); */
+/*void idct_int32 (short *block); */
 
 /* private data */
 static short iclip[1024];		/* clipping table */
 static short *iclp;
 
 /* private prototypes */
-//static void idctrow _ANSI_ARGS_((short *blk));
-//static void idctcol _ANSI_ARGS_((short *blk));
+/*static void idctrow _ANSI_ARGS_((short *blk)); */
+/*static void idctcol _ANSI_ARGS_((short *blk)); */
 
 /* row (horizontal) IDCT
  *
@@ -101,13 +101,13 @@ static short *iclp;
  *        c[1..7] = 128*sqrt(2)
  */
 
-/*
+#if 0
 static void idctrow(blk)
 short *blk;
 {
   int X0, X1, X2, X3, X4, X5, X6, X7, X8;
 
-  // shortcut 
+  /* shortcut  */
   if (!((X1 = blk[4]<<11) | (X2 = blk[6]) | (X3 = blk[2]) |
         (X4 = blk[1]) | (X5 = blk[7]) | (X6 = blk[5]) | (X7 = blk[3])))
   {
@@ -115,9 +115,9 @@ short *blk;
     return;
   }
 
-  X0 = (blk[0]<<11) + 128; // for proper rounding in the fourth stage 
+  X0 = (blk[0]<<11) + 128; /* for proper rounding in the fourth stage  */
 
-  // first stage 
+  /* first stage  */
   X8 = W7*(X4+X5);
   X4 = X8 + (W1-W7)*X4;
   X5 = X8 - (W1+W7)*X5;
@@ -125,7 +125,7 @@ short *blk;
   X6 = X8 - (W3-W5)*X6;
   X7 = X8 - (W3+W5)*X7;
   
-  // second stage 
+  /* second stage  */
   X8 = X0 + X1;
   X0 -= X1;
   X1 = W6*(X3+X2);
@@ -136,7 +136,7 @@ short *blk;
   X6 = X5 + X7;
   X5 -= X7;
   
-  // third stage 
+  /* third stage  */
   X7 = X8 + X3;
   X8 -= X3;
   X3 = X0 + X2;
@@ -144,7 +144,7 @@ short *blk;
   X2 = (181*(X4+X5)+128)>>8;
   X4 = (181*(X4-X5)+128)>>8;
   
-  // fourth stage 
+  /* fourth stage  */
   blk[0] = (X7+X1)>>8;
   blk[1] = (X3+X2)>>8;
   blk[2] = (X0+X4)>>8;
@@ -153,7 +153,8 @@ short *blk;
   blk[5] = (X0-X4)>>8;
   blk[6] = (X3-X2)>>8;
   blk[7] = (X7-X1)>>8;
-}*/
+}
+#endif
 
 /* column (vertical) IDCT
  *
@@ -164,13 +165,13 @@ short *blk;
  * where: c[0]    = 1/1024
  *        c[1..7] = (1/1024)*sqrt(2)
  */
-/*
+#if	0
 static void idctcol(blk)
 short *blk;
 {
   int X0, X1, X2, X3, X4, X5, X6, X7, X8;
 
-  // shortcut 
+  /* shortcut  */
   if (!((X1 = (blk[8*4]<<8)) | (X2 = blk[8*6]) | (X3 = blk[8*2]) |
         (X4 = blk[8*1]) | (X5 = blk[8*7]) | (X6 = blk[8*5]) | (X7 = blk[8*3])))
   {
@@ -181,7 +182,7 @@ short *blk;
 
   X0 = (blk[8*0]<<8) + 8192;
 
-  // first stage 
+  /* first stage  */
   X8 = W7*(X4+X5) + 4;
   X4 = (X8+(W1-W7)*X4)>>3;
   X5 = (X8-(W1+W7)*X5)>>3;
@@ -189,7 +190,7 @@ short *blk;
   X6 = (X8-(W3-W5)*X6)>>3;
   X7 = (X8-(W3+W5)*X7)>>3;
   
-  // second stage
+  /* second stage */
   X8 = X0 + X1;
   X0 -= X1;
   X1 = W6*(X3+X2) + 4;
@@ -200,7 +201,7 @@ short *blk;
   X6 = X5 + X7;
   X5 -= X7;
   
-  // third stage 
+  /* third stage  */
   X7 = X8 + X3;
   X8 -= X3;
   X3 = X0 + X2;
@@ -208,7 +209,7 @@ short *blk;
   X2 = (181*(X4+X5)+128)>>8;
   X4 = (181*(X4-X5)+128)>>8;
   
-  // fourth stage
+  /* fourth stage */
   blk[8*0] = iclp[(X7+X1)>>14];
   blk[8*1] = iclp[(X3+X2)>>14];
   blk[8*2] = iclp[(X0+X4)>>14];
@@ -217,19 +218,20 @@ short *blk;
   blk[8*5] = iclp[(X0-X4)>>14];
   blk[8*6] = iclp[(X3-X2)>>14];
   blk[8*7] = iclp[(X7-X1)>>14];
-}*/
+}
+#endif
 
-// function pointer
+/* function pointer */
 idctFuncPtr idct;
 
 /* two dimensional inverse discrete cosine transform */
-//void j_rev_dct(block)
-//short *block;
+/*void j_rev_dct(block) */
+/*short *block; */
 void
 idct_int32(short *const block)
 {
 
-	// idct_int32_init() must be called before the first call to this function!
+	/* idct_int32_init() must be called before the first call to this function! */
 
 
 	/*int i;
@@ -245,7 +247,7 @@ idct_int32(short *const block)
 	static long X0, X1, X2, X3, X4, X5, X6, X7, X8;
 
 
-	for (i = 0; i < 8; i++)		// idct rows
+	for (i = 0; i < 8; i++)		/* idct rows */
 	{
 		blk = block + (i << 3);
 		if (!
@@ -257,9 +259,9 @@ idct_int32(short *const block)
 			continue;
 		}
 
-		X0 = (blk[0] << 11) + 128;	// for proper rounding in the fourth stage 
+		X0 = (blk[0] << 11) + 128;	/* for proper rounding in the fourth stage  */
 
-		// first stage 
+		/* first stage  */
 		X8 = W7 * (X4 + X5);
 		X4 = X8 + (W1 - W7) * X4;
 		X5 = X8 - (W1 + W7) * X5;
@@ -267,7 +269,7 @@ idct_int32(short *const block)
 		X6 = X8 - (W3 - W5) * X6;
 		X7 = X8 - (W3 + W5) * X7;
 
-		// second stage 
+		/* second stage  */
 		X8 = X0 + X1;
 		X0 -= X1;
 		X1 = W6 * (X3 + X2);
@@ -278,7 +280,7 @@ idct_int32(short *const block)
 		X6 = X5 + X7;
 		X5 -= X7;
 
-		// third stage 
+		/* third stage  */
 		X7 = X8 + X3;
 		X8 -= X3;
 		X3 = X0 + X2;
@@ -286,7 +288,7 @@ idct_int32(short *const block)
 		X2 = (181 * (X4 + X5) + 128) >> 8;
 		X4 = (181 * (X4 - X5) + 128) >> 8;
 
-		// fourth stage 
+		/* fourth stage  */
 
 		blk[0] = (short) ((X7 + X1) >> 8);
 		blk[1] = (short) ((X3 + X2) >> 8);
@@ -297,14 +299,14 @@ idct_int32(short *const block)
 		blk[6] = (short) ((X3 - X2) >> 8);
 		blk[7] = (short) ((X7 - X1) >> 8);
 
-	}							// end for ( i = 0; i < 8; ++i ) IDCT-rows
+	}							/* end for ( i = 0; i < 8; ++i ) IDCT-rows */
 
 
 
-	for (i = 0; i < 8; i++)		// idct columns
+	for (i = 0; i < 8; i++)		/* idct columns */
 	{
 		blk = block + i;
-		// shortcut 
+		/* shortcut  */
 		if (!
 			((X1 = (blk[8 * 4] << 8)) | (X2 = blk[8 * 6]) | (X3 =
 															 blk[8 *
@@ -320,7 +322,7 @@ idct_int32(short *const block)
 
 		X0 = (blk[8 * 0] << 8) + 8192;
 
-		// first stage 
+		/* first stage  */
 		X8 = W7 * (X4 + X5) + 4;
 		X4 = (X8 + (W1 - W7) * X4) >> 3;
 		X5 = (X8 - (W1 + W7) * X5) >> 3;
@@ -328,7 +330,7 @@ idct_int32(short *const block)
 		X6 = (X8 - (W3 - W5) * X6) >> 3;
 		X7 = (X8 - (W3 + W5) * X7) >> 3;
 
-		// second stage 
+		/* second stage  */
 		X8 = X0 + X1;
 		X0 -= X1;
 		X1 = W6 * (X3 + X2) + 4;
@@ -339,7 +341,7 @@ idct_int32(short *const block)
 		X6 = X5 + X7;
 		X5 -= X7;
 
-		// third stage 
+		/* third stage  */
 		X7 = X8 + X3;
 		X8 -= X3;
 		X3 = X0 + X2;
@@ -347,7 +349,7 @@ idct_int32(short *const block)
 		X2 = (181 * (X4 + X5) + 128) >> 8;
 		X4 = (181 * (X4 - X5) + 128) >> 8;
 
-		// fourth stage 
+		/* fourth stage  */
 		blk[8 * 0] = iclp[(X7 + X1) >> 14];
 		blk[8 * 1] = iclp[(X3 + X2) >> 14];
 		blk[8 * 2] = iclp[(X0 + X4) >> 14];
@@ -358,13 +360,13 @@ idct_int32(short *const block)
 		blk[8 * 7] = iclp[(X7 - X1) >> 14];
 	}
 
-}								// end function idct_int32(block)
+}								/* end function idct_int32(block) */
 
 
-//void
-//idct_int32_init()
+/*void */
+/*idct_int32_init() */
 void
-idct_int32_init()
+idct_int32_init(void)
 {
 	int i;
 

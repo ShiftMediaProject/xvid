@@ -51,7 +51,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: motion_est.c,v 1.53 2002-11-17 00:32:06 edgomez Exp $
+ * $Id: motion_est.c,v 1.54 2002-11-26 23:44:10 edgomez Exp $
  *
  *************************************************************************/
 
@@ -89,7 +89,7 @@ static int32_t *lambda_vec8 = lambda_vec16;	/* same table for INTER and INTER4V 
 
 
 
-// mv.length table
+/* mv.length table */
 static const uint32_t mvtab[33] = {
 	1, 2, 3, 4, 6, 7, 7, 7,
 	9, 9, 9, 10, 10, 10, 10, 10,
@@ -745,7 +745,7 @@ AdvDiamond16_MainSearch(const uint8_t * const pRef,
 
 		do {
 			iDirection = 0;
-			if (bDirection & 1)	//we only want to check left if we came from the right (our last motion was to the left, up-left or down-left)
+			if (bDirection & 1)	/*we only want to check left if we came from the right (our last motion was to the left, up-left or down-left) */
 				CHECK_MV16_CANDIDATE_DIR(start_x - iDiamondSize, start_y, 1);
 
 			if (bDirection & 2)
@@ -759,17 +759,17 @@ AdvDiamond16_MainSearch(const uint8_t * const pRef,
 
 			/* now we're doing diagonal checks near our candidate */
 
-			if (iDirection)		//checking if anything found
+			if (iDirection)		/*checking if anything found */
 			{
 				bDirection = iDirection;
 				iDirection = 0;
 				start_x = currMV->x;
 				start_y = currMV->y;
-				if (bDirection & 3)	//our candidate is left or right
+				if (bDirection & 3)	/*our candidate is left or right */
 				{
 					CHECK_MV16_CANDIDATE_DIR(start_x, start_y + iDiamondSize, 8);
 					CHECK_MV16_CANDIDATE_DIR(start_x, start_y - iDiamondSize, 4);
-				} else			// what remains here is up or down
+				} else			/* what remains here is up or down */
 				{
 					CHECK_MV16_CANDIDATE_DIR(start_x + iDiamondSize, start_y, 2);
 					CHECK_MV16_CANDIDATE_DIR(start_x - iDiamondSize, start_y, 1);
@@ -780,7 +780,7 @@ AdvDiamond16_MainSearch(const uint8_t * const pRef,
 					start_x = currMV->x;
 					start_y = currMV->y;
 				}
-			} else				//about to quit, eh? not so fast....
+			} else				/*about to quit, eh? not so fast.... */
 			{
 				switch (bDirection) {
 				case 2:
@@ -840,7 +840,7 @@ AdvDiamond16_MainSearch(const uint8_t * const pRef,
 					CHECK_MV16_CANDIDATE_DIR(start_x - iDiamondSize,
 											 start_y + iDiamondSize, 1 + 8);
 					break;
-				default:		//1+2+4+8 == we didn't find anything at all
+				default:		/*1+2+4+8 == we didn't find anything at all */
 					CHECK_MV16_CANDIDATE_DIR(start_x - iDiamondSize,
 											 start_y - iDiamondSize, 1 + 4);
 					CHECK_MV16_CANDIDATE_DIR(start_x - iDiamondSize,
@@ -852,7 +852,7 @@ AdvDiamond16_MainSearch(const uint8_t * const pRef,
 					break;
 				}
 				if (!iDirection)
-					break;		//ok, the end. really
+					break;		/*ok, the end. really */
 				else {
 					bDirection = iDirection;
 					start_x = currMV->x;
@@ -860,7 +860,7 @@ AdvDiamond16_MainSearch(const uint8_t * const pRef,
 				}
 			}
 		}
-		while (1);				//forever
+		while (1);				/*forever */
 	}
 
 	return iMinSAD;
@@ -906,7 +906,7 @@ AdvDiamond8_MainSearch(const uint8_t * const pRef,
 
 		do {
 			iDirection = 0;
-			if (bDirection & 1)	//we only want to check left if we came from the right (our last motion was to the left, up-left or down-left)
+			if (bDirection & 1)	/*we only want to check left if we came from the right (our last motion was to the left, up-left or down-left) */
 				CHECK_MV8_CANDIDATE_DIR(start_x - iDiamondSize, start_y, 1);
 
 			if (bDirection & 2)
@@ -920,17 +920,17 @@ AdvDiamond8_MainSearch(const uint8_t * const pRef,
 
 			/* now we're doing diagonal checks near our candidate */
 
-			if (iDirection)		//checking if anything found
+			if (iDirection)		/*checking if anything found */
 			{
 				bDirection = iDirection;
 				iDirection = 0;
 				start_x = currMV->x;
 				start_y = currMV->y;
-				if (bDirection & 3)	//our candidate is left or right
+				if (bDirection & 3)	/*our candidate is left or right */
 				{
 					CHECK_MV8_CANDIDATE_DIR(start_x, start_y + iDiamondSize, 8);
 					CHECK_MV8_CANDIDATE_DIR(start_x, start_y - iDiamondSize, 4);
-				} else			// what remains here is up or down
+				} else			/* what remains here is up or down */
 				{
 					CHECK_MV8_CANDIDATE_DIR(start_x + iDiamondSize, start_y, 2);
 					CHECK_MV8_CANDIDATE_DIR(start_x - iDiamondSize, start_y, 1);
@@ -941,7 +941,7 @@ AdvDiamond8_MainSearch(const uint8_t * const pRef,
 					start_x = currMV->x;
 					start_y = currMV->y;
 				}
-			} else				//about to quit, eh? not so fast....
+			} else				/*about to quit, eh? not so fast.... */
 			{
 				switch (bDirection) {
 				case 2:
@@ -1000,7 +1000,7 @@ AdvDiamond8_MainSearch(const uint8_t * const pRef,
 					CHECK_MV8_CANDIDATE_DIR(start_x - iDiamondSize,
 											start_y + iDiamondSize, 1 + 8);
 					break;
-				default:		//1+2+4+8 == we didn't find anything at all
+				default:		/*1+2+4+8 == we didn't find anything at all */
 					CHECK_MV8_CANDIDATE_DIR(start_x - iDiamondSize,
 											start_y - iDiamondSize, 1 + 4);
 					CHECK_MV8_CANDIDATE_DIR(start_x - iDiamondSize,
@@ -1012,7 +1012,7 @@ AdvDiamond8_MainSearch(const uint8_t * const pRef,
 					break;
 				}
 				if (!(iDirection))
-					break;		//ok, the end. really
+					break;		/*ok, the end. really */
 				else {
 					bDirection = iDirection;
 					start_x = currMV->x;
@@ -1020,7 +1020,7 @@ AdvDiamond8_MainSearch(const uint8_t * const pRef,
 				}
 			}
 		}
-		while (1);				//forever
+		while (1);				/*forever */
 	}
 	return iMinSAD;
 }
@@ -1229,11 +1229,11 @@ PMVfastSearch16(const uint8_t * const pRef,
 	if ((iMinSAD < 256) ||
 		((MVequal(*currMV, prevMB->mvs[0])) &&
 		 ((int32_t) iMinSAD < prevMB->sad16))) {
-		if (iMinSAD < (int)(2 * iQuant))	// high chances for SKIP-mode
+		if (iMinSAD < (int)(2 * iQuant))	/* high chances for SKIP-mode */
 		{
 			if (!MVzero(*currMV)) {
 				iMinSAD += MV16_00_BIAS;
-				CHECK_MV16_ZERO;	// (0,0) saves space for letterboxed pictures
+				CHECK_MV16_ZERO;	/* (0,0) saves space for letterboxed pictures */
 				iMinSAD -= MV16_00_BIAS;
 			}
 		}
@@ -1258,9 +1258,9 @@ PMVfastSearch16(const uint8_t * const pRef,
 */
 
 	if ((!MVzero(pmv[0])) || (threshB < 1536) || (bPredEq))
-		iDiamondSize = 1;		// halfpel!
+		iDiamondSize = 1;		/* halfpel! */
 	else
-		iDiamondSize = 2;		// halfpel!
+		iDiamondSize = 2;		/* halfpel! */
 
 	if (!(MotionFlags & PMV_HALFPELDIAMOND16))
 		iDiamondSize *= 2;
@@ -1272,18 +1272,18 @@ PMVfastSearch16(const uint8_t * const pRef,
    If MV is (0,0) subtract offset. 
 */
 
-// (0,0) is always possible
+/* (0,0) is always possible */
 
 	if (!MVzero(pmv[0]))
 		CHECK_MV16_ZERO;
 
-// previous frame MV is always possible
+/* previous frame MV is always possible */
 
 	if (!MVzero(prevMB->mvs[0]))
 		if (!MVequal(prevMB->mvs[0], pmv[0]))
 			CHECK_MV16_CANDIDATE(prevMB->mvs[0].x, prevMB->mvs[0].y);
 
-// left neighbour, if allowed
+/* left neighbour, if allowed */
 
 	if (!MVzero(pmv[1]))
 		if (!MVequal(pmv[1], prevMB->mvs[0]))
@@ -1295,7 +1295,7 @@ PMVfastSearch16(const uint8_t * const pRef,
 
 				CHECK_MV16_CANDIDATE(pmv[1].x, pmv[1].y);
 			}
-// top neighbour, if allowed
+/* top neighbour, if allowed */
 	if (!MVzero(pmv[2]))
 		if (!MVequal(pmv[2], prevMB->mvs[0]))
 			if (!MVequal(pmv[2], pmv[0]))
@@ -1306,7 +1306,7 @@ PMVfastSearch16(const uint8_t * const pRef,
 					}
 					CHECK_MV16_CANDIDATE(pmv[2].x, pmv[2].y);
 
-// top right neighbour, if allowed
+/* top right neighbour, if allowed */
 					if (!MVzero(pmv[3]))
 						if (!MVequal(pmv[3], prevMB->mvs[0]))
 							if (!MVequal(pmv[3], pmv[0]))
@@ -1409,7 +1409,7 @@ PMVfastSearch16(const uint8_t * const pRef,
 */
 
   PMVfast16_Terminate_with_Refine:
-	if (MotionFlags & PMV_HALFPELREFINE16)	// perform final half-pel step 
+	if (MotionFlags & PMV_HALFPELREFINE16)	/* perform final half-pel step  */
 		iMinSAD =
 			Halfpel16_Refine(pRef, pRefH, pRefV, pRefHV, cur, x, y, currMV,
 							 iMinSAD, center_x, center_y, min_dx, max_dx, min_dy, max_dy,
@@ -1470,7 +1470,7 @@ Diamond8_MainSearch(const uint8_t * const pRef,
 	if (iDirection)	{
 		while (!iFound) {
 			iFound = 1;
-			backupMV = *currMV;	// since iDirection!=0, this is well defined!
+			backupMV = *currMV;	/* since iDirection!=0, this is well defined! */
 			iDirectionBackup = iDirection;
 
 			if (iDirectionBackup != 2)
@@ -1759,7 +1759,7 @@ PMVfastSearch8(const uint8_t * const pRef,
 	VECTOR backupMV;
 	VECTOR startMV;
 
-//  const MACROBLOCK * const pMB = pMBs + (x>>1) + (y>>1) * iWcount;
+/*  const MACROBLOCK * const pMB = pMBs + (x>>1) + (y>>1) * iWcount; */
 	const MACROBLOCK *const prevMB = prevMBs + (x >> 1) + (y >> 1) * iWcount;
 
 	 int32_t threshA, threshB;
@@ -1813,7 +1813,7 @@ PMVfastSearch8(const uint8_t * const pRef,
 */
 
 
-// Prepare for main loop 
+/* Prepare for main loop  */
 
   if (MotionFlags & PMV_USESQUARES8)
       MainSearchPtr = Square8_MainSearch;
@@ -1857,9 +1857,9 @@ PMVfastSearch8(const uint8_t * const pRef,
 */
 
 	if ((!MVzero(pmv[0])) || (threshB < 1536 / 4) || (bPredEq))
-		iDiamondSize = 1;		// 1 halfpel!
+		iDiamondSize = 1;		/* 1 halfpel! */
 	else
-		iDiamondSize = 2;		// 2 halfpel = 1 full pixel!
+		iDiamondSize = 2;		/* 2 halfpel = 1 full pixel! */
 
 	if (!(MotionFlags & PMV_HALFPELDIAMOND8))
 		iDiamondSize *= 2;
@@ -1872,17 +1872,17 @@ PMVfastSearch8(const uint8_t * const pRef,
    If MV is (0,0) subtract offset. 
 */
 
-// the median prediction might be even better than mv16
+/* the median prediction might be even better than mv16 */
 
 	if (!MVequal(pmv[0], startMV))
 		CHECK_MV8_CANDIDATE(center_x, center_y);
 
-// (0,0) if needed
+/* (0,0) if needed */
 	if (!MVzero(pmv[0]))
 		if (!MVzero(startMV))
 			CHECK_MV8_ZERO;
 
-// previous frame MV if needed
+/* previous frame MV if needed */
 	if (!MVzero(prevMB->mvs[iSubBlock]))
 		if (!MVequal(prevMB->mvs[iSubBlock], startMV))
 			if (!MVequal(prevMB->mvs[iSubBlock], pmv[0]))
@@ -1898,7 +1898,7 @@ PMVfastSearch8(const uint8_t * const pRef,
 			goto PMVfast8_Terminate_with_Refine;
 	}
 
-// left neighbour, if allowed and needed
+/* left neighbour, if allowed and needed */
 	if (!MVzero(pmv[1]))
 		if (!MVequal(pmv[1], startMV))
 			if (!MVequal(pmv[1], prevMB->mvs[iSubBlock]))
@@ -1909,7 +1909,7 @@ PMVfastSearch8(const uint8_t * const pRef,
 					}
 					CHECK_MV8_CANDIDATE(pmv[1].x, pmv[1].y);
 				}
-// top neighbour, if allowed and needed
+/* top neighbour, if allowed and needed */
 	if (!MVzero(pmv[2]))
 		if (!MVequal(pmv[2], startMV))
 			if (!MVequal(pmv[2], prevMB->mvs[iSubBlock]))
@@ -1921,7 +1921,7 @@ PMVfastSearch8(const uint8_t * const pRef,
 						}
 						CHECK_MV8_CANDIDATE(pmv[2].x, pmv[2].y);
 
-// top right neighbour, if allowed and needed
+/* top right neighbour, if allowed and needed */
 						if (!MVzero(pmv[3]))
 							if (!MVequal(pmv[3], startMV))
 								if (!MVequal(pmv[3], prevMB->mvs[iSubBlock]))
@@ -2016,7 +2016,7 @@ PMVfastSearch8(const uint8_t * const pRef,
 */
 
   PMVfast8_Terminate_with_Refine:
-	if (MotionFlags & PMV_HALFPELREFINE8)	// perform final half-pel step 
+	if (MotionFlags & PMV_HALFPELREFINE8)	/* perform final half-pel step  */
 		iMinSAD =
 			Halfpel8_Refine(pRef, pRefH, pRefV, pRefHV, cur, x, y, currMV,
 							iMinSAD, center_x, center_y, min_dx, max_dx, min_dy, max_dy,
@@ -2073,7 +2073,7 @@ EPZSSearch16(const uint8_t * const pRef,
 
 	static MACROBLOCK *oldMBs = NULL;
 
-//  const MACROBLOCK * const pMB = pMBs + x + y * iWcount;
+/*  const MACROBLOCK * const pMB = pMBs + x + y * iWcount; */
 	const MACROBLOCK *const prevMB = prevMBs + x + y * iWcount;
 	MACROBLOCK *oldMB = NULL;
 
@@ -2085,7 +2085,7 @@ EPZSSearch16(const uint8_t * const pRef,
 
 	if (oldMBs == NULL) {
 		oldMBs = (MACROBLOCK *) calloc(iWcount * iHcount, sizeof(MACROBLOCK));
-//      fprintf(stderr,"allocated %d bytes for oldMBs\n",iWcount*iHcount*sizeof(MACROBLOCK));
+/*      fprintf(stderr,"allocated %d bytes for oldMBs\n",iWcount*iHcount*sizeof(MACROBLOCK)); */
 	}
 	oldMB = oldMBs + x + y * iWcount;
 
@@ -2109,7 +2109,7 @@ EPZSSearch16(const uint8_t * const pRef,
         If SAD<=256 goto Step 10. 
 */
 
-// Prepare for main loop 
+/* Prepare for main loop  */
 
 	currMV->x = start_x;		
 	currMV->y = start_y;		
@@ -2138,7 +2138,7 @@ EPZSSearch16(const uint8_t * const pRef,
 		calc_delta_16(currMV->x - center_x, currMV->y - center_y,
 					  (uint8_t) iFcode, iQuant);
 
-// thresh1 is fixed to 256 
+/* thresh1 is fixed to 256  */
 	if ((iMinSAD < 256) ||
 		((MVequal(*currMV, prevMB->mvs[0])) &&
 		 ((int32_t) iMinSAD < prevMB->sad16))) {
@@ -2150,11 +2150,11 @@ EPZSSearch16(const uint8_t * const pRef,
 
 /************** This is predictor SET B: (0,0), prev.frame MV, neighbours **************/
 
-// previous frame MV 
+/* previous frame MV  */
 	CHECK_MV16_CANDIDATE(prevMB->mvs[0].x, prevMB->mvs[0].y);
 
-// set threshhold based on Min of Prediction and SAD of collocated block
-// CHECK_MV16 always uses iSAD for the SAD of last vector to check, so now iSAD is what we want
+/* set threshhold based on Min of Prediction and SAD of collocated block */
+/* CHECK_MV16 always uses iSAD for the SAD of last vector to check, so now iSAD is what we want */
 
 	if ((x == 0) && (y == 0)) {
 		thresh2 = 512;
@@ -2164,12 +2164,12 @@ EPZSSearch16(const uint8_t * const pRef,
 		thresh2 = MIN(psad[0], iSAD) * 6 / 5 + 128;
 	}
 
-// MV=(0,0) is often a good choice
+/* MV=(0,0) is often a good choice */
 
 	CHECK_MV16_ZERO;
 
 
-// left neighbour, if allowed
+/* left neighbour, if allowed */
 	if (x != 0) {
 		if (!(MotionFlags & PMV_HALFPEL16)) {
 			pmv[1].x = EVEN(pmv[1].x);
@@ -2177,7 +2177,7 @@ EPZSSearch16(const uint8_t * const pRef,
 		}
 		CHECK_MV16_CANDIDATE(pmv[1].x, pmv[1].y);
 	}
-// top neighbour, if allowed
+/* top neighbour, if allowed */
 	if (y != 0) {
 		if (!(MotionFlags & PMV_HALFPEL16)) {
 			pmv[2].x = EVEN(pmv[2].x);
@@ -2185,7 +2185,7 @@ EPZSSearch16(const uint8_t * const pRef,
 		}
 		CHECK_MV16_CANDIDATE(pmv[2].x, pmv[2].y);
 
-// top right neighbour, if allowed
+/* top right neighbour, if allowed */
 		if ((uint32_t) x != (iWcount - 1)) {
 			if (!(MotionFlags & PMV_HALFPEL16)) {
 				pmv[3].x = EVEN(pmv[3].x);
@@ -2210,27 +2210,27 @@ EPZSSearch16(const uint8_t * const pRef,
 
 /***** predictor SET C: acceleration MV (new!), neighbours in prev. frame(new!) ****/
 
-	backupMV = prevMB->mvs[0];	// collocated MV
-	backupMV.x += (prevMB->mvs[0].x - oldMB->mvs[0].x);	// acceleration X
-	backupMV.y += (prevMB->mvs[0].y - oldMB->mvs[0].y);	// acceleration Y 
+	backupMV = prevMB->mvs[0];	/* collocated MV */
+	backupMV.x += (prevMB->mvs[0].x - oldMB->mvs[0].x);	/* acceleration X */
+	backupMV.y += (prevMB->mvs[0].y - oldMB->mvs[0].y);	/* acceleration Y  */
 
 	CHECK_MV16_CANDIDATE(backupMV.x, backupMV.y);
 
-// left neighbour
+/* left neighbour */
 	if (x != 0)
 		CHECK_MV16_CANDIDATE((prevMB - 1)->mvs[0].x, (prevMB - 1)->mvs[0].y);
 
-// top neighbour 
+/* top neighbour  */
 	if (y != 0)
 		CHECK_MV16_CANDIDATE((prevMB - iWcount)->mvs[0].x,
 							 (prevMB - iWcount)->mvs[0].y);
 
-// right neighbour, if allowed (this value is not written yet, so take it from   pMB->mvs 
+/* right neighbour, if allowed (this value is not written yet, so take it from   pMB->mvs  */
 
 	if ((uint32_t) x != iWcount - 1)
 		CHECK_MV16_CANDIDATE((prevMB + 1)->mvs[0].x, (prevMB + 1)->mvs[0].y);
 
-// bottom neighbour, dito
+/* bottom neighbour, dito */
 	if ((uint32_t) y != iHcount - 1)
 		CHECK_MV16_CANDIDATE((prevMB + iWcount)->mvs[0].x,
 							 (prevMB + iWcount)->mvs[0].y);
@@ -2300,7 +2300,7 @@ EPZSSearch16(const uint8_t * const pRef,
 /*************** 	Choose best MV found     **************/
 
   EPZS16_Terminate_with_Refine:
-	if (MotionFlags & PMV_HALFPELREFINE16)	// perform final half-pel step 
+	if (MotionFlags & PMV_HALFPELREFINE16)	/* perform final half-pel step  */
 		iMinSAD =
 			Halfpel16_Refine(pRef, pRefH, pRefV, pRefHV, cur, x, y, currMV,
 							 iMinSAD, center_x, center_y, min_dx, max_dx, min_dy, max_dy,
@@ -2361,7 +2361,7 @@ EPZSSearch8(const uint8_t * const pRef,
 
 	const int32_t iSubBlock = ((y & 1) << 1) + (x & 1);
 
-//  const MACROBLOCK * const pMB = pMBs + (x>>1) + (y>>1) * iWcount;
+/*  const MACROBLOCK * const pMB = pMBs + (x>>1) + (y>>1) * iWcount; */
 	const MACROBLOCK *const prevMB = prevMBs + (x >> 1) + (y >> 1) * iWcount;
 
 	int32_t bPredEq;
@@ -2384,7 +2384,6 @@ EPZSSearch8(const uint8_t * const pRef,
 	/* because we might use something like IF (dx>max_dx) THEN dx=max_dx; */
 	bPredEq = get_pmvdata2(pMBs, iWcount, 0, x >> 1, y >> 1, iSubBlock, pmv, psad);
 
-
 /* Step 4: Calculate SAD around the Median prediction. 
         MinSAD=SAD 
         If Motion Vector equal to Previous frame motion vector 
@@ -2392,7 +2391,7 @@ EPZSSearch8(const uint8_t * const pRef,
         If SAD<=256 goto Step 10. 
 */
 
-// Prepare for main loop 
+/* Prepare for main loop  */
 
 
 	if (!(MotionFlags & PMV_HALFPEL8)) {
@@ -2421,7 +2420,7 @@ EPZSSearch8(const uint8_t * const pRef,
 					 (uint8_t) iFcode, iQuant);
 
 
-// thresh1 is fixed to 256 
+/* thresh1 is fixed to 256  */
 	if (iMinSAD < 256 / 4) {
 		if (MotionFlags & PMV_QUICKSTOP8)
 			goto EPZS8_Terminate_without_Refine;
@@ -2432,13 +2431,13 @@ EPZSSearch8(const uint8_t * const pRef,
 /************** This is predictor SET B: (0,0), prev.frame MV, neighbours **************/
 
 
-// MV=(0,0) is often a good choice
+/* MV=(0,0) is often a good choice */
 	CHECK_MV8_ZERO;
 
-// previous frame MV 
+/* previous frame MV  */
 	CHECK_MV8_CANDIDATE(prevMB->mvs[iSubBlock].x, prevMB->mvs[iSubBlock].y);
 
-// left neighbour, if allowed
+/* left neighbour, if allowed */
 	if (psad[1] != MV_MAX_ERROR) {
 		if (!(MotionFlags & PMV_HALFPEL8)) {
 			pmv[1].x = EVEN(pmv[1].x);
@@ -2446,7 +2445,7 @@ EPZSSearch8(const uint8_t * const pRef,
 		}
 		CHECK_MV8_CANDIDATE(pmv[1].x, pmv[1].y);
 	}
-// top neighbour, if allowed
+/* top neighbour, if allowed */
 	if (psad[2] != MV_MAX_ERROR) {
 		if (!(MotionFlags & PMV_HALFPEL8)) {
 			pmv[2].x = EVEN(pmv[2].x);
@@ -2454,7 +2453,7 @@ EPZSSearch8(const uint8_t * const pRef,
 		}
 		CHECK_MV8_CANDIDATE(pmv[2].x, pmv[2].y);
 
-// top right neighbour, if allowed
+/* top right neighbour, if allowed */
 		if (psad[3] != MV_MAX_ERROR) {
 			if (!(MotionFlags & PMV_HALFPEL8)) {
 				pmv[3].x = EVEN(pmv[3].x);
@@ -2464,12 +2463,13 @@ EPZSSearch8(const uint8_t * const pRef,
 		}
 	}
 
-/*  // this bias is zero anyway, at the moment! 
+#if	0
+  /* this bias is zero anyway, at the moment!  */
 
-    	if ( (MVzero(*currMV)) && (!MVzero(pmv[0])) ) // && (iMinSAD <= iQuant * 96) 
+    	if ( (MVzero(*currMV)) && (!MVzero(pmv[0])) ) /* && (iMinSAD <= iQuant * 96)  */
 		iMinSAD -= MV8_00_BIAS;		
 
-*/
+#endif
 
 /* Terminate if MinSAD <= T_2 
    Terminate if MV[t] == MV[t-1] and MinSAD[t] <= MinSAD[t-1] 
@@ -2491,7 +2491,7 @@ EPZSSearch8(const uint8_t * const pRef,
 
 /* default: use best prediction as starting point for one call of EPZS_MainSearch */
 
-// there is no EPZS^2 for inter4v at the moment 
+/* there is no EPZS^2 for inter4v at the moment  */
 
   if (MotionFlags & PMV_USESQUARES8)
       MainSearchPtr = Square8_MainSearch;
@@ -2547,7 +2547,7 @@ EPZSSearch8(const uint8_t * const pRef,
 /*************** 	Choose best MV found     **************/
 
   EPZS8_Terminate_with_Refine:
-	if (MotionFlags & PMV_HALFPELREFINE8)	// perform final half-pel step 
+	if (MotionFlags & PMV_HALFPELREFINE8)	/* perform final half-pel step  */
 		iMinSAD =
 			Halfpel8_Refine(pRef, pRefH, pRefV, pRefHV, cur, x, y, currMV,
 							iMinSAD, center_x, center_y, min_dx, max_dx, min_dy, max_dy,

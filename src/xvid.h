@@ -48,7 +48,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: xvid.h,v 1.23 2002-11-16 23:38:16 edgomez Exp $
+ * $Id: xvid.h,v 1.24 2002-11-26 23:44:10 edgomez Exp $
  *
  *****************************************************************************/
 
@@ -358,7 +358,7 @@ extern "C" {
 	XVID_DEC_FRAME;
 
 
-	// This struct is used for per slice rendering
+	/* This struct is used for per slice rendering */
 	typedef struct 
 	{
 		void *y,*u,*v;

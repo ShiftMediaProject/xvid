@@ -48,7 +48,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: decoder.h,v 1.11 2002-11-16 23:38:16 edgomez Exp $
+ * $Id: decoder.h,v 1.12 2002-11-26 23:44:09 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -66,7 +66,7 @@
 
 typedef struct
 {
-	// bitstream
+	/* bitstream */
 
 	uint32_t shape;
 	uint32_t time_inc_bits;
@@ -78,7 +78,7 @@ typedef struct
 	uint32_t top_field_first;
 	uint32_t alternate_vertical_scan;
 
-	// image
+	/* image */
 
 	uint32_t width;
 	uint32_t height;
@@ -86,33 +86,33 @@ typedef struct
 	uint32_t edged_height;
 
 	IMAGE cur;
-	IMAGE refn[3];				// 0   -- last I or P VOP
-	// 1   -- first I or P
-	// 2   -- for interpolate mode B-frame
+	IMAGE refn[3];				/* 0   -- last I or P VOP */
+	/* 1   -- first I or P */
+	/* 2   -- for interpolate mode B-frame */
 	IMAGE refh;
 	IMAGE refv;
 	IMAGE refhv;
 
-	// macroblock
+	/* macroblock */
 
 	uint32_t mb_width;
 	uint32_t mb_height;
 	MACROBLOCK *mbs;
 
-	// for B-frame
-	int32_t frames;				// total frame number
+	/* for B-frame */
+	int32_t frames;				/* total frame number */
 	int8_t scalability;
-	VECTOR p_fmv, p_bmv;		// pred forward & backward motion vector
-	MACROBLOCK *last_mbs;		// last MB
-	int64_t time;				// for record time
+	VECTOR p_fmv, p_bmv;		/* pred forward & backward motion vector */
+	MACROBLOCK *last_mbs;		/* last MB */
+	int64_t time;				/* for record time */
 	int64_t time_base;
 	int64_t last_time_base;
 	int64_t last_non_b_time;
 	uint32_t time_pp;
 	uint32_t time_bp;
-	uint8_t low_delay;			// low_delay flage (1 means no B_VOP)
+	uint8_t low_delay;			/* low_delay flage (1 means no B_VOP) */
 
-	XVID_DEC_PICTURE* out_frm;                // This is used for slice rendering
+	XVID_DEC_PICTURE* out_frm;                /* This is used for slice rendering */
 }
 DECODER;
 

@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: mbcoding.c,v 1.33 2002-11-17 00:57:57 edgomez Exp $
+ * $Id: mbcoding.c,v 1.34 2002-11-26 23:44:10 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -107,21 +107,21 @@ init_vlc_tables(void)
 
 		coeff_ptr = coeff_vlc[last + 2 * intra];
 
-		for (k = -2047; k < 2048; k++) {	// level
+		for (k = -2047; k < 2048; k++) {	/* level */
 			int8_t const *max_level_ptr = max_level[last + 2 * intra];
 			int8_t const *max_run_ptr = max_run[last + 2 * intra];
 
-			for (l = 0; l < 64; l++) {	// run
+			for (l = 0; l < 64; l++) {	/* run */
 				int32_t level = k;
 				ptr_t run = l;
 
-				if ((abs(level) <= max_level_ptr[run]) && (run <= (uint32_t) max_run_ptr[abs(level)])) {	// level < max_level and run < max_run
+				if ((abs(level) <= max_level_ptr[run]) && (run <= (uint32_t) max_run_ptr[abs(level)])) {	/* level < max_level and run < max_run */
 
 					vlc[intra]->code = 0;
 					vlc[intra]->len = 0;
 					goto loop_end;
 				} else {
-					if (level > 0)	// correct level
+					if (level > 0)	/* correct level */
 						level -= max_level_ptr[run];
 					else
 						level += max_level_ptr[run];
@@ -134,12 +134,12 @@ init_vlc_tables(void)
 						goto loop_end;
 					}
 
-					if (level > 0)	// still here?
-						level += max_level_ptr[run];	// restore level
+					if (level > 0)	/* still here? */
+						level += max_level_ptr[run];	/* restore level */
 					else
 						level -= max_level_ptr[run];
 
-					run -= max_run_ptr[abs(level)] + 1;	// and change run
+					run -= max_run_ptr[abs(level)] + 1;	/* and change run */
 
 					if ((abs(level) <= max_level_ptr[run]) &&
 						(run <= (uint32_t) max_run_ptr[abs(level)])) {
@@ -283,11 +283,11 @@ CodeCoeff(Bitstream * bs,
 		vlc = table + 64 * 2047 + (v << 6) + j - last;
 		last = ++j;
 
-		// count zeroes
+		/* count zeroes */
 		while (j < 64 && (v = qcoeff[zigzag[j]]) == 0)
 			j++;
 
-		// write code
+		/* write code */
 		if (j != 64) {
 			BitstreamPutBits(bs, vlc->code, vlc->len);
 		} else {
@@ -315,7 +315,7 @@ CodeBlockIntra(const FRAMEINFO * frame,
 
 	cbpy = pMB->cbp >> 2;
 
-	// write mcbpc
+	/* write mcbpc */
 	if (frame->coding_type == I_VOP) {
 		mcbpc = ((pMB->mode >> 1) & 3) | ((pMB->cbp & 3) << 2);
 		BitstreamPutBits(bs, mcbpc_intra_tab[mcbpc].code,
@@ -326,24 +326,24 @@ CodeBlockIntra(const FRAMEINFO * frame,
 						 mcbpc_inter_tab[mcbpc].len);
 	}
 
-	// ac prediction flag
+	/* ac prediction flag */
 	if (pMB->acpred_directions[0])
 		BitstreamPutBits(bs, 1, 1);
 	else
 		BitstreamPutBits(bs, 0, 1);
 
-	// write cbpy
+	/* write cbpy */
 	BitstreamPutBits(bs, cbpy_tab[cbpy].code, cbpy_tab[cbpy].len);
 
-	// write dquant
+	/* write dquant */
 	if (pMB->mode == MODE_INTRA_Q)
 		BitstreamPutBits(bs, pMB->dquant, 2);
 
-	// write interlacing
+	/* write interlacing */
 	if (frame->global_flags & XVID_INTERLACING) {
 		BitstreamPutBit(bs, pMB->field_dct);
 	}
-	// code block coeffs
+	/* code block coeffs */
 	for (i = 0; i < 6; i++) {
 		if (i < 4)
 			BitstreamPutBits(bs, dcy_tab[qcoeff[i * 64 + 0] + 255].code,
@@ -380,37 +380,37 @@ CodeBlockInter(const FRAMEINFO * frame,
 	mcbpc = (pMB->mode & 7) | ((pMB->cbp & 3) << 3);
 	cbpy = 15 - (pMB->cbp >> 2);
 
-	// write mcbpc
+	/* write mcbpc */
 	BitstreamPutBits(bs, mcbpc_inter_tab[mcbpc].code,
 					 mcbpc_inter_tab[mcbpc].len);
 
-	// write cbpy
+	/* write cbpy */
 	BitstreamPutBits(bs, cbpy_tab[cbpy].code, cbpy_tab[cbpy].len);
 
-	// write dquant
+	/* write dquant */
 	if (pMB->mode == MODE_INTER_Q)
 		BitstreamPutBits(bs, pMB->dquant, 2);
 
-	// interlacing
+	/* interlacing */
 	if (frame->global_flags & XVID_INTERLACING) {
 		if (pMB->cbp) {
 			BitstreamPutBit(bs, pMB->field_dct);
 			DPRINTF(DPRINTF_DEBUG, "codep: field_dct: %d", pMB->field_dct);
 		}
 
-		// if inter block, write field ME flag
+		/* if inter block, write field ME flag */
 		if (pMB->mode == MODE_INTER || pMB->mode == MODE_INTER_Q) {
 			BitstreamPutBit(bs, pMB->field_pred);
 			DPRINTF(DPRINTF_DEBUG, "codep: field_pred: %d", pMB->field_pred);
 
-			// write field prediction references
+			/* write field prediction references */
 			if (pMB->field_pred) {
 				BitstreamPutBit(bs, pMB->field_for_top);
 				BitstreamPutBit(bs, pMB->field_for_bot);
 			}
 		}
 	}
-	// code motion vector(s)
+	/* code motion vector(s) */
 	for (i = 0; i < (pMB->mode == MODE_INTER4V ? 4 : 1); i++) {
 		CodeVector(bs, pMB->pmvs[i].x, frame->fcode, pStat);
 		CodeVector(bs, pMB->pmvs[i].y, frame->fcode, pStat);
@@ -418,7 +418,7 @@ CodeBlockInter(const FRAMEINFO * frame,
 
 	bits = BitstreamPos(bs);
 
-	// code block coeffs
+	/* code block coeffs */
 	for (i = 0; i < 6; i++)
 		if (pMB->cbp & (1 << (5 - i)))
 			CodeCoeff(bs, &qcoeff[i * 64], inter_table, scan_tables[0], 0);
@@ -441,7 +441,7 @@ MBCoding(const FRAMEINFO * frame,
 {
 
 	if (frame->coding_type == P_VOP) {
-			BitstreamPutBit(bs, 0);	// coded
+			BitstreamPutBit(bs, 0);	/* coded */
 	}
 
 	if (pMB->mode == MODE_INTRA || pMB->mode == MODE_INTRA_Q)
@@ -455,7 +455,7 @@ MBCoding(const FRAMEINFO * frame,
 void
 MBSkip(Bitstream * bs)
 {
-	BitstreamPutBit(bs, 1);	// not coded
+	BitstreamPutBit(bs, 1);	/* not coded */
 	return;
 }
 
@@ -662,7 +662,7 @@ get_coeff(Bitstream * bs,
 	const VLC *tab;
 	int32_t level;
 
-	if (short_video_header)		// inter-VLCs will be used for both intra and inter blocks
+	if (short_video_header)		/* inter-VLCs will be used for both intra and inter blocks */
 		intra = 0;
 
 	tab = &DCT3D[intra][BitstreamShowBits(bs, 12)];
@@ -686,7 +686,7 @@ get_coeff(Bitstream * bs,
 	}
 
 	if (short_video_header) {
-		// escape mode 4 - H.263 type, only used if short_video_header = 1 
+		/* escape mode 4 - H.263 type, only used if short_video_header = 1  */
 		*last = BitstreamGetBit(bs);
 		*run = BitstreamGetBits(bs, 6);
 		level = BitstreamGetBits(bs, 8);
@@ -718,20 +718,20 @@ get_coeff(Bitstream * bs,
 			*last = (tab->code >> 16) & 1;
 		}
 
-		if (mode < 2)			// first escape mode, level is offset
-			level += max_level[*last + (!intra << 1)][*run];	// need to add back the max level
-		else if (mode == 2)		// second escape mode, run is offset
+		if (mode < 2)			/* first escape mode, level is offset */
+			level += max_level[*last + (!intra << 1)][*run];	/* need to add back the max level */
+		else if (mode == 2)		/* second escape mode, run is offset */
 			*run += max_run[*last + (!intra << 1)][level] + 1;
 
 		return BitstreamGetBit(bs) ? -level : level;
 	}
-	// third escape mode - fixed length codes
+	/* third escape mode - fixed length codes */
 	BitstreamSkip(bs, 2);
 	*last = BitstreamGetBits(bs, 1);
 	*run = BitstreamGetBits(bs, 6);
-	BitstreamSkip(bs, 1);		// marker
+	BitstreamSkip(bs, 1);		/* marker */
 	level = BitstreamGetBits(bs, 12);
-	BitstreamSkip(bs, 1);		// marker
+	BitstreamSkip(bs, 1);		/* marker */
 
 	return (level & 0x800) ? (level | (-1 ^ 0xfff)) : level;
 
@@ -767,7 +767,7 @@ get_intra_block(Bitstream * bs,
 		block[scan[coeff]] = level;
 
 		DPRINTF(DPRINTF_COEFF,"block[%i] %i", scan[coeff], level);
-		//DPRINTF(DPRINTF_COEFF,"block[%i] %i %08x", scan[coeff], level, BitstreamShowBits(bs, 32));
+		/*DPRINTF(DPRINTF_COEFF,"block[%i] %i %08x", scan[coeff], level, BitstreamShowBits(bs, 32)); */
 
 		if (level < -127 || level > 127) {
 			DPRINTF(DPRINTF_DEBUG, "warning: intra_overflow: %d", level);

@@ -2,13 +2,13 @@
 #
 # XviD examples Makefile
 #
-# $Id: Makefile,v 1.1 2002-09-28 14:52:20 edgomez Exp $
+# $Id: Makefile,v 1.2 2002-11-26 23:44:09 edgomez Exp $
 #
 #############################################################################
 
 # CC=gcc
 
-HDIR    = -I ../sr
+HDIR    = -I ../src
 CFLAGS  = -Wall -Os
 LDFLAGS = -lxvidcore -lc -lm
 
@@ -18,20 +18,20 @@ TESTS=$(SOURCES:.c=)
 
 all: $(TESTS)
 
-xvid_stat: xvid_stat.o
-	$(CC) $(LDFLAGS) -o $@ $<
+xvid_stat: xvid_stat.o ../build/generic/libxvidcore.a
+	$(CC) $(LDFLAGS) -o $@ $< ../build/generic/libxvidcore.a
 
 xvid_stat.o: xvid_stat.c
 	$(CC) $(CFLAGS) $(HDIR) -c $<
 
-xvid_encraw: xvid_encraw.o
-	$(CC) $(LDFLAGS) -o $@ $<
+xvid_encraw: xvid_encraw.o ../build/generic/libxvidcore.a
+	$(CC) $(LDFLAGS) -o $@ $< ../build/generic/libxvidcore.a
 
 xvid_encraw.o: xvid_encraw.c
 	$(CC) $(CFLAGS) $(HDIR) -c $<
 
-xvid_decraw: xvid_decraw.o
-	$(CC) $(LDFLAGS) -o $@ $<
+xvid_decraw: xvid_decraw.o ../build/generic/libxvidcore.a
+	$(CC) $(LDFLAGS) -o $@ $< ../build/generic/libxvidcore.a
 
 xvid_decraw.o: xvid_decraw.c
 	$(CC) $(CFLAGS) $(HDIR) -c $<

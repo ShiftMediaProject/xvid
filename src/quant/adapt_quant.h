@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: adapt_quant.h,v 1.6 2002-11-17 00:41:19 edgomez Exp $
+ * $Id: adapt_quant.h,v 1.7 2002-11-26 23:44:11 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -68,6 +68,6 @@ int adaptive_quantization(unsigned char *buf,
 						  int min_quant,
 						  int max_quant,
 						  int mb_width,
-						  int mb_height);	// no stride because of normalization
+						  int mb_height);	/* no stride because of normalization */
 
 #endif /* _ADAPT_QUANT_H_ */

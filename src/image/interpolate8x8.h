@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: interpolate8x8.h,v 1.7 2002-11-17 00:20:30 edgomez Exp $
+ * $Id: interpolate8x8.h,v 1.8 2002-11-26 23:44:10 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -110,7 +110,7 @@ interpolate8x8_switch(uint8_t * const cur,
 {
 	int32_t ddx, ddy;
 
-	switch (((dx & 1) << 1) + (dy & 1))	// ((dx%2)?2:0)+((dy%2)?1:0)
+	switch (((dx & 1) << 1) + (dy & 1))	/* ((dx%2)?2:0)+((dy%2)?1:0) */
 	{
 	case 0:
 		ddx = dx / 2;

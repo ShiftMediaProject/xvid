@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: motion.h,v 1.17 2002-11-17 00:32:06 edgomez Exp $
+ * $Id: motion.h,v 1.18 2002-11-26 23:44:10 edgomez Exp $
  *
  ***************************************************************************/
 
@@ -62,16 +62,16 @@
 
 /* hard coded motion search parameters for motion_est */
 
-// very large value
+/* very large value */
 #define MV_MAX_ERROR	(4096 * 256)
 
-// stop search if sdelta < THRESHOLD
+/* stop search if sdelta < THRESHOLD */
 #define MV16_THRESHOLD	192
 #define MV8_THRESHOLD	56
 
 #define NEIGH_MOVE_THRESH 0	
-// how much a block's MV must differ from his neighbour 
-// to be search for INTER4V. The more, the faster...
+/* how much a block's MV must differ from his neighbour  */
+/* to be search for INTER4V. The more, the faster... */
 
 /* sad16(0,0) bias; mpeg4 spec suggests nb/2+1 */
 /* nb  = vop pixels * 2^(bpp-8) */
@@ -88,7 +88,7 @@
 #define NEIGH_TEND_16X16	2
 #define NEIGH_TEND_8X8		2
 
-// fast ((A)/2)*2
+/* fast ((A)/2)*2 */
 #define EVEN(A)		(((A)<0?(A)+1:(A)) & ~1)
 
 #define MVzero(A) ( ((A).x)==(0) && ((A).y)==(0) )
@@ -98,13 +98,13 @@
 
 #ifndef SEARCH16
 #define SEARCH16	PMVfastSearch16
-//#define SEARCH16  FullSearch16
-//#define SEARCH16  EPZSSearch16
+/*#define SEARCH16  FullSearch16 */
+/*#define SEARCH16  EPZSSearch16 */
 #endif
 
 #ifndef SEARCH8
 #define SEARCH8		PMVfastSearch8
-//#define SEARCH8   EPZSSearch8
+/*#define SEARCH8   EPZSSearch8 */
 #endif
 
 
