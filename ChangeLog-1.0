@@ -4,6 +4,96 @@
 # relevant.
 
 
+#########################################################################
+# 1.0.2 (Bitstream Version 36)
+#########################################################################
+
+2004-08-29 11:24:26 GMT	                                	patch-55
+
+    Summary:
+      Merged one important forgotten bugfix from head
+    Revision:
+      xvidcore--stable--1.0--patch-55
+
+    Merged one important forgotten bugfix from head
+    
+    Patches applied:
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--head--0.0--patch-70
+       Out of bounds MVs clipping
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--head--0.0--patch-71
+       Decoder optimization (fixing regression)
+    
+
+    modified files:
+     src/decoder.c
+
+    new patches:
+     ed.gomez@free.fr--2004-1/xvidcore--head--0.0--patch-70
+     ed.gomez@free.fr--2004-1/xvidcore--head--0.0--patch-71
+
+
+2004-08-29 10:51:58 GMT	                                	patch-54
+
+    Summary:
+      Marking 1.0.2
+    Revision:
+      xvidcore--stable--1.0--patch-54
+
+    From ed.gomez:
+     * Marking 1.0.2
+
+    modified files:
+     ChangeLog build/generic/configure.in src/xvid.c src/xvid.h
+
+
+2004-08-22 13:08:44 GMT	                                	patch-53
+
+    Summary:
+      Thread safety problem in idct C version
+    Revision:
+      xvidcore--stable--1.0--patch-53
+
+    From ed.gomez:
+     * Fixed a thread safety problem in C version of the
+       idct function. Added some comments on some static
+       data not marked as RO.
+
+    modified files:
+     src/bitstream/mbcoding.c src/dct/idct.c
+
+
+2004-08-21 11:45:55 GMT	                                	patch-52
+
+    Summary:
+      Stupid typo+error in fdct_xxx_skal macro generator.
+    Revision:
+      xvidcore--stable--1.0--patch-52
+
+    From Nicolas Boulay:
+     * Found a typo mistake (ecx->eax) and an error in the same line
+       But as we're lucky, the unrolled version was bugfree, and that
+       is that one which is used.
+
+    modified files:
+     src/dct/x86_asm/fdct_mmx_skal.asm
+
+
+2004-07-26 20:21:24 GMT	                                	patch-51
+
+    Summary:
+      ChangeLog Update
+    Revision:
+      xvidcore--stable--1.0--patch-51
+
+    ChangeLog Update
+    
+
+    modified files:
+     ChangeLog
+
+
 2004-07-24 11:33:57 GMT	                                	patch-50
 
     Summary:
@@ -2249,7 +2339,7 @@
        the bvop lag frame (black with error message).
     
     Fixing previous patch a bit:
-     * added $Id: ChangeLog-1.0,v 1.3 2004-07-26 20:29:27 edgomez Exp $ fields
+     * added $Id: ChangeLog-1.0,v 1.4 2004-08-29 11:57:35 edgomez Exp $ fields
      * Fixed copyright
 
     modified files:
