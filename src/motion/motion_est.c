@@ -3209,11 +3209,11 @@ MotionEstimationBVOP(MBParam * const pParam,
                 	                    : mb->mvs[k].y - mb->directmv[k].y);
 
 					d_sad16 += 
-						sad8bi(frame->image.y + 2*(i+(k&1))*8 + 2*(j+(k>>1))*8*edged_width,
+						sad8bi(frame->image.y + (2*i+(k&1))*8 + (2*j+(k>>1))*8*edged_width,
 						  get_ref_mv(f_ref->y, f_refH->y, f_refV->y, f_refHV->y,
-								2*(i+(k&1)), 2*(j+(k>>1)), 8, &mb->mvs[k], edged_width), 
+								(2*i+(k&1)), (2*j+(k>>1)), 8, &mb->mvs[k], edged_width), 
 						  get_ref_mv(b_ref->y, b_refH->y, b_refV->y, b_refHV->y,
-								2*(i+(k&1)), 2*(j+(k>>1)), 8, &mb->b_mvs[k], edged_width),
+								(2*i+(k&1)), (2*j+(k>>1)), 8, &mb->b_mvs[k], edged_width),
 						  edged_width);
 				}
 			}
