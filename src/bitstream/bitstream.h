@@ -113,7 +113,7 @@
 
 // header stuff
 int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding,
-						 uint32_t * quant, uint32_t * fcode, uint32_t * intra_dc_threshold);
+						 uint32_t * quant, uint32_t * fcode_forward, uint32_t * fcode_backward, uint32_t * intra_dc_threshold);
 
 
 void BitstreamWriteVolHeader(Bitstream * const bs,

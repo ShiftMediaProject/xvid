@@ -20,6 +20,7 @@
 #define MODE_INTERPOLATE	1
 #define MODE_BACKWARD		2
 #define MODE_FORWARD		3
+#define MODE_DIRECT_NONE_MV	4
 
 
 typedef struct
@@ -66,6 +67,9 @@ typedef struct
 
 	VECTOR b_mvs[4];
 	VECTOR b_pmvs[4];
+
+	int mb_type;
+	int dbquant;
 
 } MACROBLOCK;
 

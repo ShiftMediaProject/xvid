@@ -115,13 +115,15 @@ decode headers
 returns coding_type, or -1 if error
 */
 
-int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding, uint32_t * quant, uint32_t * fcode, uint32_t * intra_dc_threshold)
+int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding, uint32_t * quant, uint32_t * fcode_forward, uint32_t * fcode_backward, uint32_t * intra_dc_threshold)
 {
 	uint32_t vol_ver_id;
-	uint32_t time_inc_resolution;
+	static uint32_t time_increment_resolution;
 	uint32_t coding_type;
 	uint32_t start_code;
-	
+	uint32_t time_incr=0;
+	int32_t  time_increment;
+
 	do
 	{
 		BitstreamByteAlign(bs);
@@ -183,7 +185,7 @@ int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding, uin
 			// DEBUG("video_object_layer");
 			BitstreamSkip(bs, 32);					// video_object_layer_start_code
 
-			BitstreamSkip(bs, 1);									// random_accessible_vol
+			BitstreamSkip(bs, 1);					// random_accessible_vol
 
 			// video_object_type_indication
 			if (BitstreamShowBits(bs, 8) != VIDOBJLAY_TYPE_SIMPLE &&
@@ -216,7 +218,7 @@ int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding, uin
 				BitstreamSkip(bs, 8);						// par_height
 			}
 
-			if (BitstreamGetBit(bs))		// vol_control_parameters
+			if (BitstreamGetBit(bs))						// vol_control_parameters
 			{
 				DEBUG("+ vol_control_parameters");
 				BitstreamSkip(bs, 2);						// chroma_format
@@ -249,11 +251,13 @@ int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding, uin
 
 			READ_MARKER();
 
-			time_inc_resolution = BitstreamGetBits(bs, 16);	// vop_time_increment_resolution
-			time_inc_resolution--;
-			if (time_inc_resolution > 0)
+// *************************** for decode B-frame time ***********************
+			time_increment_resolution = BitstreamGetBits(bs, 16);	// vop_time_increment_resolution
+			time_increment_resolution--;
+			//DEBUG1("time_increment_resolution=",time_increment_resolution);
+			if (time_increment_resolution > 0)
 			{
-				dec->time_inc_bits = log2bin(time_inc_resolution);
+				dec->time_inc_bits = log2bin(time_increment_resolution);
 			}
 			else
 			{
@@ -417,7 +421,7 @@ int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding, uin
 					}
 				}
 				
-				if (BitstreamGetBit(bs))	// scalability
+				if ((dec->scalability=BitstreamGetBit(bs)))	// scalability
 				{
 					// TODO
 					DEBUG("TODO: scalability");
@@ -463,7 +467,9 @@ int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding, uin
 			coding_type = BitstreamGetBits(bs, 2);		// vop_coding_type
 			//DEBUG1("coding_type", coding_type);
 
-			while (BitstreamGetBit(bs) != 0) ;			// time_base
+// *************************** for decode B-frame time ***********************
+			while (BitstreamGetBit(bs) != 0)			// time_base
+				time_incr++;
 	
 			READ_MARKER();
 	 
@@ -471,8 +477,20 @@ int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding, uin
 			//DEBUG1("vop_time_incr", BitstreamShowBits(bs, dec->time_inc_bits));
 			if (dec->time_inc_bits)
 			{
-				BitstreamSkip(bs, dec->time_inc_bits);	// vop_time_increment
+				//BitstreamSkip(bs, dec->time_inc_bits);	// vop_time_increment
+				time_increment = (BitstreamGetBits(bs, dec->time_inc_bits));	// vop_time_increment
 			}
+			if(coding_type != B_VOP){
+			    dec->last_time_base = dec->time_base;
+				dec->time_base += time_incr;
+				dec->time = dec->time_base*time_increment_resolution + time_increment;
+				dec->time_pp= (uint32_t)(dec->time - dec->last_non_b_time);
+				dec->last_non_b_time= dec->time;
+			}else{
+				dec->time = (dec->last_time_base + time_incr)*time_increment_resolution + time_increment;
+				dec->time_bp= (uint32_t)(dec->last_non_b_time - dec->time);
+			}
+			//DEBUG1("time_increment=",time_increment);
 
 			READ_MARKER();
 
@@ -486,7 +504,8 @@ int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding, uin
 			}
 			*/
 
-			if (coding_type != I_VOP)
+			// fix a little bug by MinChen <chenm002@163.com>
+			if ((dec->shape != VIDOBJLAY_SHAPE_BINARY_ONLY) && (coding_type == P_VOP))
 			{
 				*rounding = BitstreamGetBit(bs);	// rounding_type
 				//DEBUG1("rounding", *rounding);
@@ -545,12 +564,17 @@ int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding, uin
 						
 			if (coding_type != I_VOP)
 			{
-				*fcode = BitstreamGetBits(bs, 3);			// fcode_forward
+				*fcode_forward = BitstreamGetBits(bs, 3);		// fcode_forward
 			}
 				
 			if (coding_type == B_VOP)
 			{
-				// *fcode_backward = BitstreamGetBits(bs, 3);		// fcode_backward
+				*fcode_backward = BitstreamGetBits(bs, 3);		// fcode_backward
+			}
+			if (!dec->scalability){
+				if ((dec->shape != VIDOBJLAY_SHAPE_RECTANGULAR) && (coding_type != I_VOP)){
+					BitstreamSkip(bs, 1);		// vop_shape_coding_type
+				}
 			}
 			return coding_type;
 		}

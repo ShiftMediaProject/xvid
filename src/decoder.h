@@ -30,7 +30,9 @@ typedef struct
 	uint32_t edged_height;
 	
 	IMAGE cur;
-	IMAGE refn[2];
+	IMAGE refn[3];	// 0   -- last I or P VOP
+					// 1   -- first I or P
+					// 2,3 -- for interpolate mode B-frame
 	IMAGE refh;
 	IMAGE refv;
 	IMAGE refhv;
@@ -41,7 +43,17 @@ typedef struct
 	uint32_t mb_height;
 	MACROBLOCK * mbs;
 
-	
+	// for B-frame
+	int32_t		frames;			// total frame number
+	int8_t		scalability;
+	VECTOR		p_fmv, p_bmv;	// pred forward & backward motion vector
+	MACROBLOCK	*last_mbs;	// last MB
+	int64_t		time;			// for record time
+	int64_t		time_base;
+	int64_t		last_time_base;
+	int64_t		last_non_b_time;
+	uint32_t	time_pp;
+	uint32_t	time_bp;
 } DECODER;
 
 void init_decoder(uint32_t cpu_flags);

@@ -65,3 +65,9 @@ static __inline void interpolate8x8_switch(uint8_t * const cur,
 		break;
     }
 }
+
+
+void interpolate8x8_c(uint8_t * const dst,
+					const uint8_t * const src,
+					const uint32_t x, const uint32_t y,
+					const uint32_t stride);
