@@ -36,7 +36,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.38 2002-06-07 10:36:08 edgomez Exp $
+ *  $Id: encoder.c,v 1.39 2002-06-09 13:16:26 edgomez Exp $
  *
  ***************************************************************************/
 
@@ -64,10 +64,22 @@
 #define ENC_CHECK(X) if(!(X)) return XVID_ERR_FORMAT
 #define SWAP(A,B)    { void * tmp = A; A = B; B = tmp; }
 
+static int FrameCodeI(Encoder * pEnc,
+		      Bitstream * bs,
+		      uint32_t *pBits);
 
-static int FrameCodeI(Encoder * pEnc, Bitstream * bs, uint32_t *pBits);
-static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool force_inter, bool vol_header);
-static void FrameCodeB(Encoder * pEnc, FRAMEINFO * frame, Bitstream * bs, uint32_t *pBits);
+static int FrameCodeP(Encoder * pEnc,
+		      Bitstream * bs,
+		      uint32_t *pBits,
+		      bool force_inter,
+		      bool vol_header);
+
+#ifdef BFRAMES
+static void FrameCodeB(Encoder * pEnc,
+		       FRAMEINFO * frame,
+		       Bitstream * bs,
+		       uint32_t *pBits);
+#endif
 
 static int DQtab[4] = 
 {
@@ -100,14 +112,18 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 	ENC_CHECK(!(pParam->width % 2));
 	ENC_CHECK(!(pParam->height % 2));
 
+	/* Fps */
+
 	if (pParam->fincr <= 0 || pParam->fbase <= 0)
 	{
 		pParam->fincr = 1;
 		pParam->fbase = 25;
 	}
 
-	// simplify the "fincr/fbase" fraction
-	// (neccessary, since windows supplies us with huge numbers)
+	/*
+	 * Simplify the "fincr/fbase" fraction
+	 * (neccessary, since windows supplies us with huge numbers)
+	 */
 
 	i = pParam->fincr;
 	while (i > 1)
@@ -129,6 +145,8 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 		pParam->fincr = (int)(pParam->fincr / div);
 	}
 
+	/* Bitrate allocator defaults */
+
 	if (pParam->rc_bitrate <= 0)
 		pParam->rc_bitrate = 900000;
 
@@ -141,19 +159,25 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 	if (pParam->rc_buffer <= 0)
 		pParam->rc_buffer = 100;
 
+	/* Max and min quantizers */
+
 	if ((pParam->min_quantizer <= 0) || (pParam->min_quantizer > 31))
 		pParam->min_quantizer = 1;
 
 	if ((pParam->max_quantizer <= 0) || (pParam->max_quantizer > 31))
 		pParam->max_quantizer = 31;
 
-	if (pParam->max_key_interval == 0)		/* 1 keyframe each 10 seconds */ 
-		pParam->max_key_interval = 10 * pParam->fincr / pParam->fbase;
-					
 	if (pParam->max_quantizer < pParam->min_quantizer)
 		pParam->max_quantizer = pParam->min_quantizer;
 
-	if ((pEnc = (Encoder *) xvid_malloc(sizeof(Encoder), CACHE_LINE)) == NULL)
+	/* 1 keyframe each 10 seconds */ 
+
+	if (pParam->max_key_interval == 0)
+		pParam->max_key_interval = 10 * pParam->fincr / pParam->fbase;
+					
+
+	pEnc = (Encoder *) xvid_malloc(sizeof(Encoder), CACHE_LINE);
+	if (pEnc == NULL)
 		return XVID_ERR_MEMORY;
 
 	/* Fill members of Encoder structure */
@@ -164,8 +188,8 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 	pEnc->mbParam.mb_width = (pEnc->mbParam.width + 15) / 16;
 	pEnc->mbParam.mb_height = (pEnc->mbParam.height + 15) / 16;
 
-	pEnc->mbParam.edged_width = 16 * pEnc->mbParam.mb_width + 2 * EDGE_SIZE;
-	pEnc->mbParam.edged_height = 16 * pEnc->mbParam.mb_height + 2 * EDGE_SIZE;
+	pEnc->mbParam.edged_width  = 16*pEnc->mbParam.mb_width  + 2*EDGE_SIZE;
+	pEnc->mbParam.edged_height = 16*pEnc->mbParam.mb_height + 2*EDGE_SIZE;
 
 	pEnc->mbParam.fbase = pParam->fbase;
 	pEnc->mbParam.fincr = pParam->fincr;
@@ -181,29 +205,25 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 
 	/* try to allocate frame memory */
 
-	pEnc->current = NULL;
-	pEnc->reference = NULL;
-	if ( (pEnc->current = xvid_malloc(sizeof(FRAMEINFO), CACHE_LINE)) == NULL ||
-		 (pEnc->reference = xvid_malloc(sizeof(FRAMEINFO), CACHE_LINE)) == NULL)
-	{
-		if (pEnc->current) xvid_free(pEnc->current);
-		xvid_free(pEnc);
-		return XVID_ERR_MEMORY;
-	}
+	pEnc->current = xvid_malloc(sizeof(FRAMEINFO), CACHE_LINE);
+	pEnc->reference = xvid_malloc(sizeof(FRAMEINFO), CACHE_LINE);
+
+	if ( pEnc->current == NULL || pEnc->reference == NULL)
+		goto xvid_err_memory1;
 
 	/* try to allocate mb memory */
 
-	pEnc->current->mbs = NULL;
-	pEnc->reference->mbs = NULL;
+	pEnc->current->mbs = xvid_malloc(sizeof(MACROBLOCK) * \
+					 pEnc->mbParam.mb_width * \
+					 pEnc->mbParam.mb_height,
+					 CACHE_LINE);
+	pEnc->reference->mbs = xvid_malloc(sizeof(MACROBLOCK) * \
+					   pEnc->mbParam.mb_width * \
+					   pEnc->mbParam.mb_height,
+					   CACHE_LINE);
 
-	if ((pEnc->current->mbs = xvid_malloc(sizeof(MACROBLOCK) * pEnc->mbParam.mb_width * pEnc->mbParam.mb_height, CACHE_LINE)) == NULL ||
-		(pEnc->reference->mbs = xvid_malloc(sizeof(MACROBLOCK) * pEnc->mbParam.mb_width * pEnc->mbParam.mb_height, CACHE_LINE)) == NULL)
-	{
-		if (pEnc->current->mbs) xvid_free(pEnc->current->mbs);
-		xvid_free(pEnc->current);
-		xvid_free(pEnc->reference);
-		xvid_free(pEnc);
-	}
+	if (pEnc->current->mbs == NULL || pEnc->reference->mbs == NULL)
+		goto xvid_err_memory2;
 
 	/* try to allocate image memory */
 
@@ -222,69 +242,106 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 	image_null(&pEnc->vInterVf);
 	image_null(&pEnc->vInterHV);
 	image_null(&pEnc->vInterHVf);
-	
-	if (
-#ifdef _DEBUG
-		image_create(&pEnc->sOriginal, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
-#endif
-#ifdef BFRAMES
-		image_create(&pEnc->f_refh, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
-		image_create(&pEnc->f_refv, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
-		image_create(&pEnc->f_refhv, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
-#endif
-		image_create(&pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
-		image_create(&pEnc->reference->image, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
-		image_create(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
-		image_create(&pEnc->vInterV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
-		image_create(&pEnc->vInterVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
-		image_create(&pEnc->vInterHV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
-		image_create(&pEnc->vInterHVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
-	{
-#ifdef _DEBUG
-		image_destroy(&pEnc->sOriginal, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-#endif
-#ifdef BFRAMES
-		image_destroy(&pEnc->f_refh, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		image_destroy(&pEnc->f_refv, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		image_destroy(&pEnc->f_refhv, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-#endif
-		image_destroy(&pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		image_destroy(&pEnc->reference->image, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		image_destroy(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		image_destroy(&pEnc->vInterV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		image_destroy(&pEnc->vInterVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		image_destroy(&pEnc->vInterHV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		image_destroy(&pEnc->vInterHVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 
-		xvid_free(pEnc->current);
-		xvid_free(pEnc->reference);
-		xvid_free(pEnc);
-		return XVID_ERR_MEMORY;
-	}
+#ifdef _DEBUG
+	if (image_create(&pEnc->sOriginal,
+			 pEnc->mbParam.edged_width,
+			 pEnc->mbParam.edged_height) < 0)
+		goto xvid_err_memory3;
+#endif
+#ifdef BFRAMES
+	if (image_create(&pEnc->f_refh,
+			 pEnc->mbParam.edged_width,
+			 pEnc->mbParam.edged_height) < 0)
+		goto xvid_err_memory3;
+	if (image_create(&pEnc->f_refv,
+			 pEnc->mbParam.edged_width,
+			 pEnc->mbParam.edged_height) < 0)
+		goto xvid_err_memory3;
+	if (image_create(&pEnc->f_refhv,
+			 pEnc->mbParam.edged_width,
+			 pEnc->mbParam.edged_height) < 0)
+		goto xvid_err_memory3;
+#endif
+	if (image_create(&pEnc->current->image,
+			 pEnc->mbParam.edged_width,
+			 pEnc->mbParam.edged_height) < 0)
+		goto xvid_err_memory3;
+	if (image_create(&pEnc->reference->image,
+			 pEnc->mbParam.edged_width,
+			 pEnc->mbParam.edged_height) < 0)
+		goto xvid_err_memory3;
+	if (image_create(&pEnc->vInterH,
+			 pEnc->mbParam.edged_width,
+			 pEnc->mbParam.edged_height) < 0)
+		goto xvid_err_memory3;
+	if (image_create(&pEnc->vInterV,
+			 pEnc->mbParam.edged_width,
+			 pEnc->mbParam.edged_height) < 0)
+		goto xvid_err_memory3;
+	if (image_create(&pEnc->vInterVf,
+			 pEnc->mbParam.edged_width,
+			 pEnc->mbParam.edged_height) < 0)
+		goto xvid_err_memory3;
+	if (image_create(&pEnc->vInterHV,
+			 pEnc->mbParam.edged_width,
+			 pEnc->mbParam.edged_height) < 0)
+		goto xvid_err_memory3;
+	if (image_create(&pEnc->vInterHVf,
+			 pEnc->mbParam.edged_width,
+			 pEnc->mbParam.edged_height) < 0)
+		goto xvid_err_memory3;
 
-// ==============================================================================
+
+
+	/* B Frames specific init */
 #ifdef BFRAMES
 	
-	// TODO: handle malloc() == NULL
 	pEnc->mbParam.max_bframes = pParam->max_bframes;
 	pEnc->bquant_ratio = pParam->bquant_ratio;
+	pEnc->bframes = NULL;
+
 	if (pEnc->mbParam.max_bframes > 0)
 	{
 		int n;
 
-		pEnc->bframes = malloc(pEnc->mbParam.max_bframes * sizeof(FRAMEINFO *));
+		pEnc->bframes = xvid_malloc(pEnc->mbParam.max_bframes * \
+					    sizeof(FRAMEINFO *),
+					    CACHE_LINE);
+
+		if (pEnc->bframes == NULL)
+			goto xvid_err_memory3;
+
+		for (n=0; n<pEnc->mbParam.max_bframes; n++)
+			pEnc->bframes[n] = NULL;
+			
 
 		for (n = 0; n < pEnc->mbParam.max_bframes; n++)
 		{
-			pEnc->bframes[n] = malloc(sizeof(FRAMEINFO));
-			pEnc->bframes[n]->mbs = malloc(sizeof(MACROBLOCK) * pEnc->mbParam.mb_width * pEnc->mbParam.mb_height);
+			pEnc->bframes[n] = xvid_malloc(sizeof(FRAMEINFO),
+						       CACHE_LINE);
 
-			if (image_create(&pEnc->bframes[n]->image, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
-			{
-				return XVID_ERR_MEMORY;
-			}
+			if (pEnc->bframes[n] == NULL)
+				goto xvid_err_memory4;
+
+			pEnc->bframes[n]->mbs = xvid_malloc(sizeof(MACROBLOCK) * \
+							    pEnc->mbParam.mb_width * \
+							    pEnc->mbParam.mb_height,
+							    CACHE_LINE);
+
+			if (pEnc->bframes[n]->mbs == NULL)
+				goto xvid_err_memory4;
+
+			image_null(&pEnc->bframes[n]->image);
+
+			if (image_create(&pEnc->bframes[n]->image,
+					 pEnc->mbParam.edged_width,
+					 pEnc->mbParam.edged_height) < 0)
+				goto xvid_err_memory4;
+
 		}
 	}
+
 	pEnc->bframenum_head = 0;
 	pEnc->bframenum_tail = 0;
 	pEnc->flush_bframes = 0;
@@ -292,10 +349,6 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 	pEnc->mbParam.m_seconds = 0;
 	pEnc->mbParam.m_ticks = 0;
 #endif
-
-
-// ==============================================================================
-
 
 	pParam->handle = (void *)pEnc;
 
@@ -314,44 +367,156 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 	init_timer();
 
 	return XVID_ERR_OK;
-}
 
+	/*
+	 * We handle all XVID_ERR_MEMORY here, this makes the code lighter
+	 *
+	 * ToDo?: We could avoid that piece of code if encoder_destroy could
+	 *        handle different destroy levels
+	 */
+#ifdef BFRAMES
+ xvid_err_memory4:
+	for (i=0; i<pEnc->mbParam.max_bframes; i++)
+	{
+
+		if (pEnc->bframes[i] == NULL) continue;
+
+		image_destroy(&pEnc->bframes[i]->image,
+			      pEnc->mbParam.edged_width,
+			      pEnc->mbParam.edged_height);
+
+		xvid_free(pEnc->bframes[i]->mbs);
+
+		xvid_free(pEnc->bframes[i]);
+
+	}
+
+	xvid_free(pEnc->bframes);
+
+#endif
+
+ xvid_err_memory3:
+#ifdef _DEBUG
+	image_destroy(&pEnc->sOriginal,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
+#endif
+
+#ifdef BFRAMES
+	image_destroy(&pEnc->f_refh,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->f_refv,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->f_refhv,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
+#endif
+
+	image_destroy(&pEnc->current->image,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->reference->image,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->vInterH,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->vInterV,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->vInterVf,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->vInterHV,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->vInterHVf,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
+
+ xvid_err_memory2:
+	xvid_free(pEnc->current->mbs);
+	xvid_free(pEnc->reference->mbs);
+
+ xvid_err_memory1:
+	xvid_free(pEnc->current);
+	xvid_free(pEnc->reference);
+	xvid_free(pEnc);
+
+	return XVID_ERR_MEMORY;
+}
 
 int encoder_destroy(Encoder * pEnc)
 {
 	ENC_CHECK(pEnc);
 
-// =================================================================
+	/* B Frames specific */
 #ifdef BFRAMES
-	if (pEnc->mbParam.max_bframes > 0)
-	{
-		int n;
-		for (n = 0; n < pEnc->mbParam.max_bframes; n++)
-		{
-			image_destroy(&pEnc->bframes[n]->image, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-			free(pEnc->bframes[n]->mbs);
-			free(pEnc->bframes[n]);
-		}
-		free(pEnc->bframes);
-	}
-#endif
-//====================================================================
+	int i;
 
-	image_destroy(&pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-	image_destroy(&pEnc->reference->image, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-	image_destroy(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-	image_destroy(&pEnc->vInterV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-	image_destroy(&pEnc->vInterVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-	image_destroy(&pEnc->vInterHV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-	image_destroy(&pEnc->vInterHVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+	for (i=0; i<pEnc->mbParam.max_bframes; i++)
+	{
+
+		if (pEnc->bframes[i] == NULL) continue;
+
+		image_destroy(&pEnc->bframes[i]->image,
+			      pEnc->mbParam.edged_width,
+			      pEnc->mbParam.edged_height);
+
+		xvid_free(pEnc->bframes[i]->mbs);
+
+		xvid_free(pEnc->bframes[i]);
+
+	}
+
+	xvid_free(pEnc->bframes);
+
+#endif
+
+	/* All images, reference, current etc ... */
+
+	image_destroy(&pEnc->current->image,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->reference->image,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->vInterH,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->vInterV,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->vInterVf,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->vInterHV,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->vInterHVf,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
 #ifdef BFRAMES
-	image_destroy(&pEnc->f_refh, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-	image_destroy(&pEnc->f_refv, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-	image_destroy(&pEnc->f_refhv, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->f_refh,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->f_refv,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->f_refhv,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
 #endif
 #ifdef _DEBUG
-		image_destroy(&pEnc->sOriginal, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+	image_destroy(&pEnc->sOriginal,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.edged_height);
 #endif
+
+	/* Encoder structure */
+	
 	xvid_free(pEnc->current->mbs);
 	xvid_free(pEnc->current);
 
@@ -359,6 +524,7 @@ int encoder_destroy(Encoder * pEnc)
 	xvid_free(pEnc->reference);
 
 	xvid_free(pEnc);
+
 	return XVID_ERR_OK;
 }
 
@@ -396,7 +562,7 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 		{
 			// we have reached end of stream without getting a future reference
 			// .. so encode last final frame a pframe
-			dprintf("--- PFRAME (final frame correction) --- ");
+			//dprintf("--- PFRAME (final frame correction) --- ");
 			pEnc->bframenum_tail--;
 			SWAP(pEnc->current, pEnc->reference);
 
@@ -411,7 +577,7 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 			return XVID_ERR_OK;
 		}
 
-		dprintf("--- BFRAME (flush) --- ");
+		//dprintf("--- BFRAME (flush) --- ");
 		FrameCodeB(pEnc, 
 			pEnc->bframes[pEnc->bframenum_head],
 			 &bs, &bits);
@@ -509,7 +675,7 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 		(pFrame->intra < 0 && (pEnc->iMaxKeyInterval > 0 && pEnc->iFrameNum >= pEnc->iMaxKeyInterval)) ||
 		image_mad(&pEnc->reference->image, &pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.width, pEnc->mbParam.height) > 30)
 	{
-		dprintf("--- IFRAME ---");
+		//dprintf("--- IFRAME ---");
 
 		FrameCodeI(pEnc, &bs, &bits);
 
@@ -521,7 +687,7 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	}
 	else if (pEnc->bframenum_tail >= pEnc->mbParam.max_bframes)
 	{
-		dprintf("--- PFRAME ---");
+		//dprintf("--- PFRAME ---");
 
 		FrameCodeP(pEnc, &bs, &bits, 1, 0);
 		pFrame->intra = 0;
@@ -529,7 +695,7 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	}
 	else
 	{
-		dprintf("--- BFRAME (store) ---  head=%i tail=%i", pEnc->bframenum_head, pEnc->bframenum_tail);
+		//dprintf("--- BFRAME (store) ---  head=%i tail=%i", pEnc->bframenum_head, pEnc->bframenum_tail);
 
 		if (pFrame->bquant < 1)
 		{
