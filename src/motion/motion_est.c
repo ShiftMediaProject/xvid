@@ -3297,14 +3297,31 @@ MotionEstimationBVOP(MBParam * const pParam,
 						f_predMV.x, f_predMV.y, b_predMV.x, b_predMV.y,
 						f_min_dx, f_max_dx, f_min_dy, f_max_dy,
 						b_min_dx, b_max_dx, b_min_dy, b_max_dy,
-						edged_width,  1, 
+						edged_width,  2, 
 						frame->fcode, frame->bcode,frame->quant,0);
+
+			i_sad16 = Diamond16_InterpolMainSearch(
+						f_ref->y, f_refH->y, f_refV->y, f_refHV->y,
+						frame->image.y + i * 16 + j * 16 * edged_width,
+						b_ref->y, b_refH->y, b_refV->y, b_refHV->y,
+						i, j, 
+				   		f_interpolMV.x, f_interpolMV.y,	
+						b_interpolMV.x, b_interpolMV.y,						
+						i_sad16,
+				   		&f_interpolMV, &b_interpolMV,
+						f_predMV.x, f_predMV.y, b_predMV.x, b_predMV.y,
+						f_min_dx, f_max_dx, f_min_dy, f_max_dy,
+						b_min_dx, b_max_dx, b_min_dy, b_max_dy,
+						edged_width,  1, 
+						frame->fcode, frame->bcode,frame->quant,0);		// equiv to halfpel refine
 
 
 /*  DIRECT MODE DELTA VECTOR SEARCH. 
     This has to be made more effective, but at the moment I'm happy it's running at all */
 
-/* range is taken without fcode restriction, just a hack instead of writing down the dimensions, of course */
+/* There are two range restrictions for direct mode: deltaMV is limited to [-32,31] in halfpel units, and 
+   absolute vector must not lie outside of image dimensions. Constraint one is dealt with by CHECK_MV16_DIRECT
+   and for constraint two we need distance to boundary. This is done by get_range very large fcode (hack!) */
 
 			get_range(&min_dx, &max_dx, &min_dy, &max_dy, i, j, 16, iWidth, iHeight, 19);
 
@@ -3317,9 +3334,22 @@ MotionEstimationBVOP(MBParam * const pParam,
 						0,0,
 						d_sad16,
 				   		&mb->deltamv, 
-						mb->directmv, // this has to be pre-initialized with b_mb->mvs[} 
+						mb->directmv, // this has to be pre-initialized with b_mb->mvs[] 
 				    	min_dx, max_dx, min_dy, max_dy, 
-						edged_width, 1, frame->quant, 0);
+						edged_width, 2, frame->quant, 0);
+
+			d_sad16 = Diamond16_DirectMainSearch(
+						f_ref->y, f_refH->y, f_refV->y, f_refHV->y,
+						frame->image.y + i*16 + j*16*edged_width,
+						b_ref->y, b_refH->y, b_refV->y, b_refHV->y,
+						i, j, 
+						TRB,TRD, 
+						mb->deltamv.x, mb->deltamv.y, 
+						d_sad16,
+				   		&mb->deltamv, 
+						mb->directmv, // this has to be pre-initialized with b_mb->mvs[] 
+				    	min_dx, max_dx, min_dy, max_dy, 
+						edged_width, 1, frame->quant, 0);		// equiv to halfpel refine
 
 
 //			i_sad16 = 65535;		/* remove the comment to disable any of the MODEs */
