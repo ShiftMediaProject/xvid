@@ -2,7 +2,7 @@
 |                         ToDo List for Stable Tree                          |
 |                                                                            |
 +----------------------------------------------------------------------------+
-$Id: todo.txt,v 1.5 2002-09-04 21:06:39 edgomez Exp $
+$Id: todo.txt,v 1.6 2002-09-05 20:46:51 edgomez Exp $
 
 
 
@@ -11,17 +11,19 @@ This ToDo list is not definitive :
 ++ Remove alpha code from stable tree
 
 * Find a co maintainer - [IN PROGRESS]
-* Remove all BFrames stuff - [TODO]
+* Remove all BFrames stuff - [IN PROGRESS]
 * Remove all SMP stuff - [TODO]
 * Remove all field-ME functions [TODO]
 
 
 ++ Fixes
 
-* Add all legal headers (same headers all over the sources) - [TODO]
+* Add all legal headers (same headers all over the sources) - [IN PROGRESS]
 * Sort out who has main copyrigths on files - [TODO]
 * Check core reentrancy - [TODO]
+* Check the small mem problems reported by valgrind [TODO]
 
 ++ ???
 
-* Add automatic ChangeLog Generator - [TODO]
+* Add automatic ChangeLog Generator - [DONE]
+  -> Thanks to rockbox' script http://rockbox.haxx.se/
