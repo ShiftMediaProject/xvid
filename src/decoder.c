@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.53 2004-04-10 04:30:07 suxen_drol Exp $
+ * $Id: decoder.c,v 1.54 2004-04-11 09:41:27 syskin Exp $
  *
  ****************************************************************************/
 
@@ -496,6 +496,33 @@ decoder_mbinter(DECODER * dec,
 			mv[i] = pMB->mvs[i];
 	}
 
+	for (i = 0; i < 4; i++) {
+		/* clip to valid range */
+		int border = (int)(dec->mb_width - x_pos) << (5 + dec->quarterpel);
+		if (mv[i].x > border) {
+			DPRINTF(XVID_DEBUG_MV, "mv.x > max -- %d > %d, MB %d, %d", mv[i].x, border, x_pos, y_pos);
+			mv[i].x = border;
+		} else {
+			border = (-(int)x_pos-1) << (5 + dec->quarterpel);
+			if (mv[i].x < border) {
+				DPRINTF(XVID_DEBUG_MV, "mv.x < min -- %d < %d, MB %d, %d", mv[i].x, border, x_pos, y_pos);
+				mv[i].x = border;
+			}
+		}
+
+		border = (int)(dec->mb_height - y_pos) << (5 + dec->quarterpel);
+		if (mv[i].y >  border) {
+			DPRINTF(XVID_DEBUG_MV, "mv.y > max -- %d > %d, MB %d, %d", mv[i].y, border, x_pos, y_pos);
+			mv[i].y = border;
+		} else {
+			border = (-(int)y_pos-1) << (5 + dec->quarterpel);
+			if (mv[i].y < border) {
+				DPRINTF(XVID_DEBUG_MV, "mv.y < min -- %d < %d, MB %d, %d", mv[i].y, border, x_pos, y_pos);
+				mv[i].y = border;
+			}
+		}
+	}
+
 	start_timer();
 
 	if (pMB->mode != MODE_INTER4V) { /* INTER, INTER_Q, NOT_CODED, FORWARD, BACKWARD */
@@ -761,20 +788,6 @@ get_motion_vector(DECODER * dec,
 		mv.y -= range;
 	}
 
-	/* clip to valid range */
-
-	if (mv.x > ((int)(dec->mb_width - x) << (5 + dec->quarterpel)) )
-		mv.x = (int)(dec->mb_width - x) << (5 + dec->quarterpel);
-	
-	else if (mv.x < (int)(-x-1) << (5 + dec->quarterpel))
-		mv.x = (int)(-x-1) << (5 + dec->quarterpel);
-
-	if (mv.y > ((int)(dec->mb_height - y) << (5 + dec->quarterpel)) )
-		mv.y = (int)(dec->mb_height - y) << (5 + dec->quarterpel);
-
-	else if (mv.y < ((int)(-y-1)) << (5 + dec->quarterpel) )
-		mv.y = (int)(-y-1) << (5 + dec->quarterpel);
-
 	ret_mv->x = mv.x;
 	ret_mv->y = mv.y;
 }
@@ -985,20 +998,6 @@ get_b_motion_vector(Bitstream * bs,
 		mv_y += range;
 	else if (mv_y > high)
 		mv_y -= range;
-
-
-	/* clip to valid range */
-	if (mv_x > ((int)(dec->mb_width - x) << (5 + dec->quarterpel)) )
-		mv_x = (int)(dec->mb_width - x) << (5 + dec->quarterpel);
-	
-	else if (mv_x < (int)(-x-1) << (5 + dec->quarterpel))
-		mv_x = (int)(-x-1) << (5 + dec->quarterpel);
-
-	if (mv_y > ((int)(dec->mb_height - y) << (5 + dec->quarterpel)) )
-		mv_y = (int)(dec->mb_height - y) << (5 + dec->quarterpel);
-
-	else if (mv_y < ((int)(-y-1)) << (5 + dec->quarterpel) )
-		mv_y = (int)(-y-1) << (5 + dec->quarterpel);
 
 	mv->x = mv_x;
 	mv->y = mv_y;
@@ -1453,7 +1452,6 @@ decoder_decode(DECODER * dec,
 
 	success = 0;
 	output = 0;
-	if (stats) stats->type = XVID_TYPE_NOTHING;
 	seen_something = 0;
 
 repeat:
