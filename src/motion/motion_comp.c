@@ -7,6 +7,8 @@
 #include "../utils/timer.h"
 #include "motion.h"
 
+#undef BFRAMES
+
 #define ABS(X) (((X)>0)?(X):-(X))
 #define SIGN(X) (((X)>0)?1:-1)
 

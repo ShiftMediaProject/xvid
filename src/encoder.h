@@ -36,7 +36,7 @@
  *               support for EXTENDED API
  *  - 22.08.2001 fixed bug in iDQtab
  *
- *  $Id: encoder.h,v 1.10 2002-06-13 21:45:24 edgomez Exp $
+ *  $Id: encoder.h,v 1.11 2002-06-20 14:05:57 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -167,7 +167,7 @@ typedef struct
 	FRAMEINFO *current;
 	FRAMEINFO *reference;
 
-#ifdef _DEBUG
+#ifdef _DEBUG_PSNR
 	IMAGE sOriginal;
 #endif
 	IMAGE vInterH;
@@ -178,8 +178,16 @@ typedef struct
 
 #ifdef BFRAMES
 	/* constants */
+	int packed;
 	int bquant_ratio;
-	/* vars */
+
+	/* image queue */
+	int queue_head;
+	int queue_tail;
+	int queue_size;
+	IMAGE *queue;
+
+	/* bframe buffer */
 	int bframenum_head;
 	int bframenum_tail;
 	int flush_bframes;
@@ -189,6 +197,7 @@ typedef struct
 	IMAGE f_refv;
 	IMAGE f_refhv;
 #endif
+
 	Statistics sStat;
 	RateControl rate_control;
 }
@@ -236,6 +245,10 @@ void init_encoder(uint32_t cpu_flags);
 int encoder_create(XVID_ENC_PARAM * pParam);
 int encoder_destroy(Encoder * pEnc);
 int encoder_encode(Encoder * pEnc,
+				   XVID_ENC_FRAME * pFrame,
+				   XVID_ENC_STATS * pResult);
+
+int encoder_encode_bframes(Encoder * pEnc,
 				   XVID_ENC_FRAME * pFrame,
 				   XVID_ENC_STATS * pResult);
 

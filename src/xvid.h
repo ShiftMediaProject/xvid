@@ -28,7 +28,7 @@
 *               ToDo ? : when BFRAMES is defined, the API_VERSION should not
 *                        be the same (3.0 ?)
 *
-*  $Id: xvid.h,v 1.11 2002-06-14 13:27:47 Isibaar Exp $
+*  $Id: xvid.h,v 1.12 2002-06-20 14:05:57 suxen_drol Exp $
 *
 *****************************************************************************/
 
@@ -37,7 +37,7 @@
 #define _XVID_H_
 
 #ifdef __cplusplus
-*  $Id: xvid.h,v 1.11 2002-06-14 13:27:47 Isibaar Exp $
+*  $Id: xvid.h,v 1.12 2002-06-20 14:05:57 suxen_drol Exp $
 #endif
 
 /*****************************************************************************
@@ -240,6 +240,7 @@
 								 * used only when bquant < 1
 								 * eg. 200 = x2 multiplier
 #endif
+		int packed;				/* enable packed mode */
 	}
 	XVID_ENC_PARAM;
 
@@ -303,7 +304,6 @@
 	typedef struct
 	{
 		int quant;				/* [out] frame quantizer */
-		int input_consumed;		/* [out] */
 		int hlength;			/* [out] header length (bytes) */
 		int kblks, mblks, ublks;	/* [out] */
 
