@@ -226,7 +226,7 @@ void decoder_mbintra(DECODER * dec,
 		stop_idct_timer();
 	}
 
-	if (pMB->field_dct)
+	if (dec->interlacing && pMB->field_dct)
 	{
 		next_block = stride;
 		stride *= 2;
@@ -334,7 +334,7 @@ void decoder_mbinter(DECODER * dec,
 		}
 	}
 
-	if (pMB->field_dct)
+	if (dec->interlacing && pMB->field_dct)
 	{
 		next_block = stride;
 		stride *= 2;
