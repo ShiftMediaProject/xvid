@@ -1,43 +1,79 @@
-/****************************************************************************
-*
-* mem_transfer.c optimized for ia-64 by Sebastian Felis and Max Stengel,
-* University of Karlsruhe, Germany, 03.06.2002, during the laboratory
-* "IA-64 Video Codec Assember Parktikum" at IPD Goos.
-*
-* Annotations:
-* ===========
-*
-* - All functions work on 8x8-matrices. While the C-code-functions treat each
-*   element seperatly, the functions in this assembler-code treat a whole line
-*   simultaneously. So one loop is saved.
-*   The remaining loop is relized by using softwarepipelining with rotating
-*   rregisters.
-* - Register renaming is used for better readability
-* - To load 8 bytes of missaligned data, two 8-byte-blocks are loaded, both
-*   parts are shifted and joined together with an "OR"-Instruction.
-* - First parameter is stored in GR 32, next in GR 33, and so on. They must be 
-*   saved, as these GRs are used for register-rotation.
-* - Some of the orininal, German comments used during development are left in
-*   in the code. They shouldn't bother anyone.
-*
-* Anmerkungen:
-* ============
-*
-* - Alle Funtionen arbeiten mit 8x8-Matrizen. Während die Funktionen im C-Code
-*   jedes Element einzeln bearbeiten, bearbeiten die Funtionen dieses Assembler-
-*   Codes eine Zeile gleichzeitig. Dadurch kann eine Schleife eingespart werden.
-*   Die verbleibende Schleife wird unter Benutzung von Softwarepipelining mit
-*   rotierenden Registern realisiert.
-* - Umbenennung der Register zwecks besserer Lesbarkeit wird verwendet.
-* - Um 8 Bytes falsch ausgerichtete Daten zu laden, werden zwei 8-Byte-Blöcke
-*   geladen, beide Teile mit "shift"-Operationen zurechterückt und mit einem
-*   logischen Oder zusammenkopiert.
-* - Die Parameter werden in den Registern ab GR 32 übergeben. Sie müssen ge-
-*   sichert werden, da die Register für die register-Rotation benötigt werden.
-* - Einige der ursprünglichen, deutschen Kommentare aus der Entwicklungsphase
-*   sind im Code verblieben. Sie sollten niemanden stören.
-*
-****************************************************************************/
+///////////////////////////////////////////////////////////////////////////////
+//
+// mem_transfer.c optimized for ia-64 by Sebastian Felis and Max Stengel,
+// University of Karlsruhe, Germany, 03.06.2002, during the laboratory
+// "IA-64 Video Codec Assember Parktikum" at IPD Goos.
+//
+//
+///// legal header taken from original C-file ///////////////////////////////////////
+//
+// XVID MPEG-4 VIDEO CODEC
+// - 8bit<->16bit transfer  -
+//
+// This program is an implementation of a part of one or more MPEG-4
+// Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
+// to use this software module in hardware or software products are
+// advised that its use may infringe existing patents or copyrights, and
+// any such use would be at such party's own risk.  The original
+// developer of this software module and his/her company, and subsequent
+// editors and their companies, will have no liability for use of this
+// software or modifications or derivatives thereof.
+//
+// This program is free software ; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation ; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY ; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program ; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
+///// History /////////////////////////////////////////////////////////////////
+//
+// - 16.07.2002: several minor changes for ecc-conformity
+// - 03.06.2002: initial version
+//
+///////////////////////////////////////////////////////////////////////////////
+//
+// Annotations:
+// ===========
+//
+// - All functions work on 8x8-matrices. While the C-code-functions treat each
+//   element seperatly, the functions in this assembler-code treat a whole line
+//   simultaneously. So one loop is saved.
+//   The remaining loop is relized by using softwarepipelining with rotating
+//   rregisters.
+// - Register renaming is used for better readability
+// - To load 8 bytes of missaligned data, two 8-byte-blocks are loaded, both
+//   parts are shifted and joined together with an "OR"-Instruction.
+// - First parameter is stored in GR 32, next in GR 33, and so on. They must be 
+//   saved, as these GRs are used for register-rotation.
+// - Some of the orininal, German comments used during development are left in
+//   in the code. They shouldn't bother anyone.
+//
+// Anmerkungen:
+// ============
+//
+// - Alle Funtionen arbeiten mit 8x8-Matrizen. Während die Funktionen im C-Code
+//   jedes Element einzeln bearbeiten, bearbeiten die Funtionen dieses Assembler-
+//   Codes eine Zeile gleichzeitig. Dadurch kann eine Schleife eingespart werden.
+//   Die verbleibende Schleife wird unter Benutzung von Softwarepipelining mit
+//   rotierenden Registern realisiert.
+// - Umbenennung der Register zwecks besserer Lesbarkeit wird verwendet.
+// - Um 8 Bytes falsch ausgerichtete Daten zu laden, werden zwei 8-Byte-Blöcke
+//   geladen, beide Teile mit "shift"-Operationen zurechterückt und mit einem
+//   logischen Oder zusammenkopiert.
+// - Die Parameter werden in den Registern ab GR 32 übergeben. Sie müssen ge-
+//   sichert werden, da die Register für die register-Rotation benötigt werden.
+// - Einige der ursprünglichen, deutschen Kommentare aus der Entwicklungsphase
+//   sind im Code verblieben. Sie sollten niemanden stören.
+//
+///////////////////////////////////////////////////////////////////////////////
 
 
 //	***	define Latencies for software pipilines ***
@@ -55,14 +91,14 @@
 	.text	
 	
 
-/****************************************************************************
-*
-* transfer8x8_copy_ia64
-*
-* SRC is missaligned, to align the source load two 8-bytes-words, shift it,
-* join them and store the aligned source into the destination address.
-*
-****************************************************************************/
+///////////////////////////////////////////////////////////////////////////////
+//
+// transfer8x8_copy_ia64
+//
+// SRC is missaligned, to align the source load two 8-bytes-words, shift it,
+// join them and store the aligned source into the destination address.
+//
+///////////////////////////////////////////////////////////////////////////////
 
 	.align 16
 	.global transfer8x8_copy_ia64#
@@ -85,14 +121,13 @@ transfer8x8_copy_ia64:
 	offset = r18 // shift right offset
 	aoffset = r19 // shift left offset
 	
-
-	.body
-
 //	*** Saving old Loop-Counter (LC) and Predicate Registers (PR) ***
 	.save ar.lc, oldLC
 	mov oldLC = ar.lc
 	mov oldPR = pr
-	
+
+	.body
+
 //	*** Allocating new stackframe, initialize LC, Epilogue-Counter and PR ***
 	alloc r9 = ar.pfs, 3, 29, 0, 32
 
@@ -117,12 +152,15 @@ transfer8x8_copy_ia64:
 	// src_v1 = source value 1, shd_r = shifted right, shd_l = shifted left
 	.rotr src_v1[LL+1], src_v2[LL+1], shd_r[SHL+1], shd_l[SHL+1], value[OL+1]
 	.rotp ld_stage[LL], sh_stage[SHL], or_stage[OL], st_stage[1]
-	
-/* Software pipelined loop:
-* Stage 1: Load two 2 bytes from SRC_1, SRC_2 into SRC_v1 and SRC_v2
-* Stage 2: Shift both values of source to SHD_R and SHD_L
-* Stage 3: Join both parts together with OR
-* Stage 4: Store aligned date to destination and add stride to destination address */
+
+
+//	Software pipelined loop:
+//	Stage 1: Load two 2 bytes from SRC_1, SRC_2 into SRC_v1 and SRC_v2
+//	Stage 2: Shift both values of source to SHD_R and SHD_L
+//	Stage 3: Join both parts together with OR
+//	Stage 4: Store aligned date to destination and add stride to destination address 
+
+
 .Loop_8x8copy:
 	{.mii
 		(ld_stage[0]) ld8 src_v1[0] = [src_1], stride	
@@ -151,16 +189,16 @@ transfer8x8_copy_ia64:
 
 
 
-/*****************************************************************************
-*
-* transfer_8to16copy_ia64
-*
-* SRC is aligned. To convert 8 bit unsigned values to 16 bit signed values,
-* UNPACK is used. So 8 bytes are loaded from source, unpacked to two 
-* 4 x 16 bit values and stored to the destination. Destination is a continuous 
-* array of 64 x 16 bit signed data. To store the next line, only 16 must be
-* added to the destination address.
-*****************************************************************************/
+///////////////////////////////////////////////////////////////////////////////
+//
+// transfer_8to16copy_ia64
+//
+// SRC is aligned. To convert 8 bit unsigned values to 16 bit signed values,
+// UNPACK is used. So 8 bytes are loaded from source, unpacked to two 
+// 4 x 16 bit values and stored to the destination. Destination is a continuous 
+// array of 64 x 16 bit signed data. To store the next line, only 16 must be
+// added to the destination address.
+///////////////////////////////////////////////////////////////////////////////
 
 	.align 16
 	.global transfer_8to16copy_ia64#
@@ -181,13 +219,13 @@ transfer_8to16copy_ia64:
 	src = r16
 	stride = r17
 
-
-	.body
-
 //	*** Saving old Loop-Counter (LC) and Predicate Registers (PR) ***
 	.save ar.lc, oldLC
 	mov oldLC = ar.lc
 	mov oldPR = pr
+
+
+	.body
 
 //	*** Allocating new stackframe, define rotating registers ***
 	alloc r9 = ar.pfs, 4, 92, 0, 96
@@ -208,11 +246,14 @@ transfer_8to16copy_ia64:
 	// src_v = source value, dst_v1 = destination value 1
 	.rotr src_v[LL+1], dst_v1[UL+1], dst_v2[UL+1]
 	.rotp ld_stage[LL], upack_stage[UL], st_stage[1]
+	
 
-/* Software pipelined loop:
-* Stage 1: Load value of SRC
-* Stage 2: Unpack the SRC_V to two 4 x 16 bit signed data
-* Stage 3: Store both 8 byte of 16 bit data */
+//	Software pipelined loop:
+//	Stage 1: Load value of SRC
+//	Stage 2: Unpack the SRC_V to two 4 x 16 bit signed data
+//	Stage 3: Store both 8 byte of 16 bit data
+
+
 .Loop_8to16copy:
 	{.mii
 		(ld_stage[0]) ld8 src_v[0] = [src], stride
@@ -236,15 +277,15 @@ transfer_8to16copy_ia64:
 
 	
 
-/*****************************************************************************
-*
-* transfer_16to8copy_ia64
-*
-* src is a 64 x 16 bit signed continuous array. To convert the 16 bit 
-* values to 8 bit unsigned data, PACK is used. So two 8-bytes-words of 
-* 4 x 16 bit signed data are loaded, packed together and stored a 8-byte-word
-* of 8 x 8 unsigned data to the destination.
-****************************************************************************/
+///////////////////////////////////////////////////////////////////////////////
+//
+// transfer_16to8copy_ia64
+//
+// src is a 64 x 16 bit signed continuous array. To convert the 16 bit 
+// values to 8 bit unsigned data, PACK is used. So two 8-bytes-words of 
+// 4 x 16 bit signed data are loaded, packed together and stored a 8-byte-word
+// of 8 x 8 unsigned data to the destination.
+///////////////////////////////////////////////////////////////////////////////
 
 	.align 16
 	.global transfer_16to8copy_ia64#
@@ -258,14 +299,14 @@ transfer_16to8copy_ia64:
 	src_2 = r17
 	stride = r16
 
-
-	.body
-
 //	*** Saving old Loop-Counter (LC) and Predicate Registers (PR) ***
 	.save ar.lc, oldLC
 	mov oldLC = ar.lc
 	mov oldPR = pr
 	
+
+	.body
+
 //	*** Allocating new stackframe, define rotating registers ***
 	alloc r9 = ar.pfs, 4, 92, 0, 96
 	
@@ -287,11 +328,13 @@ transfer_16to8copy_ia64:
 	.rotp ld_stage[LL], pack_stage[PL], st_stage[1]
 	
 	
-/* Software pipelined loop:
-* Stage 1: Load two 8-byte-words of 4 x 16 bit signed source data
-* Stage 2: Pack them together to one 8 byte 8 x 8 bit unsigned data
-* Stage 3: Store the 8 byte to the destination address and add stride to
-*          destination address (to get the next 8 byte line of destination)*/
+//	Software pipelined loop:
+//	Stage 1: Load two 8-byte-words of 4 x 16 bit signed source data
+//	Stage 2: Pack them together to one 8 byte 8 x 8 bit unsigned data
+//	Stage 3: Store the 8 byte to the destination address and add stride to
+//	         destination address (to get the next 8 byte line of destination)
+
+
 .Loop_16to8copy:
 	{.mmi	
 		(ld_stage[0]) ld8 src_v1[0] = [src_1], 16
@@ -314,16 +357,16 @@ transfer_16to8copy_ia64:
 
 
 
-/*****************************************************************************
-*
-* transfer_16to8add_ia64
-*
-* The 8-Bit-values of dst are "unpacked" into two 8-byte-blocks containing 16-
-* bit-values. These are "parallel-added" to the values of src. The result is
-* converted into 8-bit-values using "PACK" and stored at the adress of dst. 
-* We assume that there is no misalignment.
-*
-*****************************************************************************/
+///////////////////////////////////////////////////////////////////////////////
+//
+// transfer_16to8add_ia64
+//
+// The 8-Bit-values of dst are "unpacked" into two 8-byte-blocks containing 16-
+// bit-values. These are "parallel-added" to the values of src. The result is
+// converted into 8-bit-values using "PACK" and stored at the adress of dst. 
+// We assume that there is no misalignment.
+//
+///////////////////////////////////////////////////////////////////////////////
 
 	.align 16
 	.global transfer_16to8add_ia64#
@@ -339,13 +382,13 @@ transfer_16to8add_ia64:
 	
 	_src = r17
 
-
-	.body
-
 //	*** Saving old Loop-Counter (LC) and Predicate Registers (PR) ***
 	.save ar.lc, r2
 	mov oldLC = ar.lc
 	mov oldPR = pr
+
+
+	.body
 
 //	*** Allocating new stackframe, initialize LC, Epilogue-Counter and PR ***
 	alloc r9 = ar.pfs, 4, 92, 0, 96
@@ -367,13 +410,13 @@ transfer_16to8add_ia64:
 	.rotp s1_p[LL], s2_p[UL], s3_p[PAL], s4_p[PL], s5_p[1]
 	
 	
-/*	Software pipelined loop:
- *	s1_p: The values of src and dst are loaded
- *	s2_p: The dst-values are converted to 16-bit-values
- *	s3_p: The values of src and dst are added
- * 	s4_p: The Results are packed into 8-bit-values
- *	s5_p: The 8-bit-values are stored at the dst-adresses
- */
+//	Software pipelined loop:
+//	s1_p: The values of src and dst are loaded
+//	s2_p: The dst-values are converted to 16-bit-values
+//	s3_p: The values of src and dst are added
+// 	s4_p: The Results are packed into 8-bit-values
+//	s5_p: The 8-bit-values are stored at the dst-adresses
+
 
 .Loop_16to8add:
 	{.mii	
@@ -407,18 +450,18 @@ transfer_16to8add_ia64:
 
 
 
-/*****************************************************************************
-*
-* transfer_8to16sub_ia64
-*
-* The 8-bit-values of ref and cur are loaded. cur is converted to 16-bit. The
-* Difference of cur and ref ist stored at the dct-adresses and cur is copied
-* into the ref-array.
-*
-* You must assume, that the data adressed by 'ref' are misaligned in memory.
-* But you can assume, that the other data are aligned (at least I hope so).
-*	
-****************************************************************************/
+///////////////////////////////////////////////////////////////////////////////
+//
+// transfer_8to16sub_ia64
+//
+// The 8-bit-values of ref and cur are loaded. cur is converted to 16-bit. The
+// Difference of cur and ref ist stored at the dct-adresses and cur is copied
+// into the ref-array.
+//
+// You must assume, that the data adressed by 'ref' are misaligned in memory.
+// But you can assume, that the other data are aligned (at least I hope so).
+//	
+///////////////////////////////////////////////////////////////////////////////
 
 	.align 16
 	.global transfer_8to16sub_ia64#
@@ -447,14 +490,14 @@ transfer_8to16sub_ia64:
 	
 	_dct = r21 // Register für die Zieladressen des 2. dct-Blocks
 
-
-	.body
-
 //	*** Saving old Loop-Counter (LC) and Predicate Registers (PR) ***
 	.save ar.lc, r2
 	mov oldLC = ar.lc
 	mov oldPR = pr
 	
+
+	.body
+
 //	*** Allocating new stackframe, define rotating registers ***
 	alloc r9 = ar.pfs, 4, 92, 0, 96
 	
@@ -482,16 +525,16 @@ transfer_8to16sub_ia64:
 	.rotp s1_p[LL], s2_p[SHL], s3_p[OL], s4_p[UL], s5_p[PSL], s6_p[1]
 	
 
-/*	Software pipelined loop:
- *	s1_p: The values of ref and cur ale loaded, a copy of cur is made.
- *	s2_p: cur is converted to 16-bit and thehe misaligned values of ref are
- * 	      shifted...
- *	s3_p: ... and copied together.
- *	s4_p: This ref-value is converted to 16-bit. The values of cur are stored
- *	      at the ref-adresses.
- *	s5_p: the ref- abd cur-values are substracted...
- *	s6_p: ...and the result is stored at the dct-adresses.
- */
+//	Software pipelined loop:
+//	s1_p: The values of ref and cur ale loaded, a copy of cur is made.
+//	s2_p: cur is converted to 16-bit and thehe misaligned values of ref are
+// 	      shifted...
+//	s3_p: ... and copied together.
+//	s4_p: This ref-value is converted to 16-bit. The values of cur are stored
+//	      at the ref-adresses.
+//	s5_p: the ref- abd cur-values are substracted...
+//	s6_p: ...and the result is stored at the dct-adresses.
+
  
 loop_8to16sub:
 	{.mii
@@ -537,20 +580,20 @@ loop_8to16sub:
 
 
 
-/*****************************************************************************
-*
-* transfer_8to16sub2_ia64
-*
-* At the time, this function was written, it was not yet in use.
-* We assume that the values of ref1/2 are misaligned.
-* 
-* The values of ref1/2 and cur are loaded, the ref-values need misalignment-
-* treatment. The values are converted to 16-bit using unpack. The average of
-* ref1 and ref2 is computed with pavg and substacted from cur. The results are
-* stored at the dct-adresses.
-* pavg1.raz is used to get the same results as the C-code-function. 
-* 
-*****************************************************************************/	
+///////////////////////////////////////////////////////////////////////////////
+//
+// transfer_8to16sub2_ia64
+//
+// At the time, this function was written, it was not yet in use.
+// We assume that the values of ref1/2 are misaligned.
+// 
+// The values of ref1/2 and cur are loaded, the ref-values need misalignment-
+// treatment. The values are converted to 16-bit using unpack. The average of
+// ref1 and ref2 is computed with pavg and substacted from cur. The results are
+// stored at the dct-adresses.
+// pavg1.raz is used to get the same results as the C-code-function. 
+// 
+///////////////////////////////////////////////////////////////////////////////	
 
 	.text
 	.align 16
@@ -582,13 +625,13 @@ transfer_8to16sub2_ia64:
 	aoffset_1 = r24
 	aoffset_2 = r25
 
-
-	.body		
-
 //	*** Saving old Loop-Counter (LC) and Predicate Registers (PR) ***
 	.save ar.lc, r2
 	mov oldLC = ar.lc
 	mov oldPR = pr
+
+
+	.body		
 
 //	*** Saving Paramters ***
 //	*** (as inputregisters r32 + are needed for register-rotation) ***
@@ -623,16 +666,17 @@ transfer_8to16sub2_ia64:
 //	*** define register arrays and predicate array for software pipeline ***
 	.rotr ref1_vl[LL+1], ref1_vh[LL+1], ref2_vl[LL+1], ref2_vh[LL+1], c[LL+SHL+OL+PAVGL+1], ref1_l[SHL+1], ref1_h[SHL+1], ref2_l[SHL+1], ref2_h[SHL+1], ref1_aligned[OL+1], ref2_aligned[OL+1], r[PAVGL+1], r16_l[UL+1], r16_r[UL+1], c16_l[UL+1], c16_r[UL+1], dct16_l[PSL+1], dct16_r[PSL+1]
 	.rotp ld_stage[LL], sh_stage[SHL], or_stage[OL], pavg_stage[PAVGL], up_stage[UL], psub_stage[PSL], st_stage[1]
+
  
-/*	software pipelined loop:
- *	ld_stage:   The values of ref1, ref2, cur are loaded
- *	sh_stage:   The misaligned values of ref1/2 are shifted...
- *	or_stage:   ...and copied together. 
- *	pavg_stage: The average of ref1 and ref2 is computed.
- *	up_stage:   The result and the cur-values are converted to 16-bit.
- *	psub_stage: Those values are substracted...
- *	st_stage:   ...and stored at the dct-adresses.
- */
+//	software pipelined loop:
+//	ld_stage:   The values of ref1, ref2, cur are loaded
+//	sh_stage:   The misaligned values of ref1/2 are shifted...
+//	or_stage:   ...and copied together. 
+//	pavg_stage: The average of ref1 and ref2 is computed.
+//	up_stage:   The result and the cur-values are converted to 16-bit.
+//	psub_stage: Those values are substracted...
+//	st_stage:   ...and stored at the dct-adresses.
+
  
 .Loop_8to16sub2:
 	{.mii
