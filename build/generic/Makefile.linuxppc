@@ -4,7 +4,7 @@
 # 
 # Edit this file to enable/disable optimizations
 #
-# $Id: Makefile.linuxppc,v 1.7 2002-09-22 12:13:21 edgomez Exp $
+# $Id: Makefile.linuxppc,v 1.8 2002-09-24 22:27:32 edgomez Exp $
 # 
 #############################################################################
 
@@ -41,7 +41,7 @@ CFLAGS += -DARCH_IS_BIG_ENDIAN
 # CFLAGS += -D_DEBUG_PSNR
 
 # Enable BFrame decoding (still beta)
-# CFLAGS += -DBRAMES_DEC
+# CFLAGS += -DBFRAMES_DEC
 
 LIBDIR = /usr/local/lib
 
