@@ -9,6 +9,10 @@ dnl ==========================================================================
 AC_INIT([XviD], [1.0.0 cvs-snapshot], [xvid-devel@xvid.org])
 AC_CONFIG_SRCDIR(configure.in)
 
+dnl Do not forget to increase that when needed.
+API_MAJOR="3"
+API_MINOR="0"
+
 dnl NASM version requirement
 minimum_nasm_patch_version=34
 nasm_prog="nasm"
@@ -222,8 +226,8 @@ case "$target_os" in
 	OBJECT_EXTENSION="o"
 	;;
      [[cC]][[yY]][[gG]][[wW]][[iI]][[nN]]|mingw32|mks)
-	AC_MSG_RESULT([.dll .lib .obj])
-	STATIC_EXTENSION="lib"
+	AC_MSG_RESULT([.dll .a .obj])
+	STATIC_EXTENSION="a"
 	SHARED_EXTENSION="dll"
 	OBJECT_EXTENSION="obj"
 	;;
@@ -246,27 +250,37 @@ SPECIFIC_LDFLAGS=""
 SPECIFIC_CFLAGS=""
 case "$target_os" in
      *bsd*|linux*|irix*|solaris*)
-	AC_MSG_RESULT([-shared -lc -lm])
-	SPECIFIC_LDFLAGS="-shared -lc -lm"
+	AC_MSG_RESULT([-Wl,-soname,libxvidcore.so -shared -lc -lm])
+	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
+	SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR).\$(API_MINOR)"
+	SPECIFIC_LDFLAGS="-Wl,-soname,libxvidcore.\$(SHARED_EXTENSION) -shared -lc -lm"
 	SPECIFIC_CFLAGS="-fPIC"
 	;;
      [[cC]][[yY]][[gG]][[wW]][[iI]][[nN]]|mingw32|mks)
 	AC_MSG_RESULT([-shared -Wl,--dll,--out-implib,\$@.a])
-	SPECIFIC_LDFLAGS="-shared -Wl,--dll,--out-implib,\$@.a libxvidcore.def"
+	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
+	SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION)"
+	SPECIFIC_LDFLAGS="-mno-cygwin -shared -Wl,--dll,--out-implib,\$@.a libxvidcore.def"
 	SPECIFIC_CFLAGS="-mno-cygwin"
 	;;
      darwin*|raphsody*)
 	AC_MSG_RESULT([-dynamiclib -flat_namespace])
+	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
+	SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION)"
 	SPECIFIC_LDFLAGS="-dynamiclib -flat_namespace"
-	SPECIFIC_CFLAGS="-fPIC -fno-common"
+	SPECIFIC_CFLAGS="-fPIC -fno-common -no-cpp-precomp"
 	;;
      beos)
+	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
+	SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION)"
 	AC_MSG_RESULT([-nostart])
 	SPECIFIC_LDFLAGS="-nostart"
 	SPECIFIC_CFLAGS="-fPIC"
 	;;
      *)
         AC_MSG_RESULT([Unknown OS - -shared -lc -lm])
+	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
+	SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION)"
 	SPECIFIC_LDFLAGS=""
 	SPECIFIC_CFLAGS=""
 	;;
@@ -438,6 +452,10 @@ AC_SUBST(DCT_IA64_SOURCES)
 AC_SUBST(DIVX4_ENCORE)
 AC_SUBST(DIVX4_DECORE)
 AC_SUBST(RANLIB)
+AC_SUBST(API_MAJOR)
+AC_SUBST(API_MINOR)
+AC_SUBST(STATIC_LIB)
+AC_SUBST(SHARED_LIB)
 
 dnl ==========================================================================
 dnl
