@@ -60,7 +60,7 @@
 #define MV8_00_BIAS	(0)
 
 /* INTER bias for INTER/INTRA decision; mpeg4 spec suggests 2*nb */
-#define INTER_BIAS	512
+#define MV16_INTER_BIAS	512
 
 /* Parameters which control inter/inter4v decision */
 #define IMV16X16			5
@@ -69,10 +69,11 @@
 #define NEIGH_TEND_16X16	2
 #define NEIGH_TEND_8X8		2
 
-
 // fast ((A)/2)*2
 #define EVEN(A)		(((A)<0?(A)+1:(A)) & ~1)
 
+#define MVzero(A) ( ((A).x)==(0) && ((A).y)==(0) )
+#define MVequal(A,B) ( ((A).x)==((B).x) && ((A).y)==((B).y) )
 
 int32_t PMVfastSearch16(
 					const uint8_t * const pRef,
@@ -271,132 +272,121 @@ bool MotionEstimation(
 {
 	const uint32_t iWcount = pParam->mb_width;
 	const uint32_t iHcount = pParam->mb_height;
-	MACROBLOCK * pMBs = current->mbs;
-	IMAGE * pCurrent = &current->image;
+	MACROBLOCK * const pMBs = current->mbs;
+	MACROBLOCK * const prevMBs = reference->mbs;	// previous frame
 
-	MACROBLOCK * prevMBs = reference->mbs;	// previous frame
-	IMAGE * pRef = &reference->image;
+	const IMAGE * const pCurrent = &current->image;
+	const IMAGE * const pRef = &reference->image;
 
+	const VECTOR zeroMV = {0,0};
  
-	uint32_t i, j, iIntra = 0;
-
-	VECTOR mv16;
-	VECTOR pmv16;
-
-	int32_t sad8 = 0;
-	int32_t sad16;
-	int32_t deviation;
-
+	int32_t x, y;
+	int32_t iIntra = 0;
+	VECTOR pmv;
+	
 	if (sadInit)
 		(*sadInit)();
 
-	// note: i==horizontal, j==vertical
-	for (i = 0; i < iHcount; i++)
-		for (j = 0; j < iWcount; j++)
+	for (y = 0; y < iHcount; y++)
+		for (x = 0; x < iWcount; x++)
 		{
-			MACROBLOCK *pMB = &pMBs[j + i * iWcount];
-			MACROBLOCK *prevMB = &prevMBs[j + i * iWcount];
+			MACROBLOCK* const pMB = &pMBs[x + y * iWcount];
 
-			sad16 = SEARCH16(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
-					 j, i, current->motion_flags, current->quant, current->fcode,
-					 pParam, pMBs, prevMBs, &mv16, &pmv16); 
-			pMB->sad16=sad16;
+			pMB->sad16 = SEARCH16(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
+					 x, y, current->motion_flags, current->quant, current->fcode,
+					 pParam, pMBs, prevMBs, &pMB->mv16, &pMB->pmvs[0]); 
+		}
 
+	for (y = 0; y < iHcount; y++)
+		for (x = 0; x < iWcount; x++)
+		{
+			MACROBLOCK* const pMB = &pMBs[x + y * iWcount];
 
-			/* decide: MODE_INTER or MODE_INTRA 
-			   if (dev_intra < sad_inter - 2 * nb) use_intra
-			*/
-
-			deviation = dev16(pCurrent->y + j*16 + i*16*pParam->edged_width, pParam->edged_width);
-	
-			if (deviation < (sad16 - INTER_BIAS))
+			if (0 < (pMB->sad16 - MV16_INTER_BIAS))
 			{
-				pMB->mode = MODE_INTRA;
-				pMB->mvs[0].x = pMB->mvs[1].x = pMB->mvs[2].x = pMB->mvs[3].x = 0;
-				pMB->mvs[0].y = pMB->mvs[1].y = pMB->mvs[2].y = pMB->mvs[3].y = 0;
+				int32_t deviation;
+				deviation = dev16(pCurrent->y + x*16 + y*16*pParam->edged_width,
+							 pParam->edged_width);
+	
+				if (deviation < (pMB->sad16 - MV16_INTER_BIAS))
+				{
+					pMB->mode = MODE_INTRA;
+					pMB->mv16 = pMB->mvs[0] = pMB->mvs[1] 
+								 = pMB->mvs[2] = pMB->mvs[3] = zeroMV;
+					pMB->sad16 = pMB->sad8[0] = pMB->sad8[1] 
+							     = pMB->sad8[2] = pMB->sad8[3] = 0;
 
-				pMB->sad8[0] = pMB->sad8[1] = pMB->sad8[2] = pMB->sad8[3] = 0;
+					iIntra++;
+					if (iIntra >= iLimit)
+						return 1;
 
-				iIntra++;
-				if(iIntra >= iLimit)	
-					return 1;
-
-				continue;
+					continue;
+				}
 			}
 
-			if (current->global_flags & XVID_INTER4V)
+			if ( (current->global_flags & XVID_INTER4V)
+				&& (!(current->global_flags & XVID_LUMIMASKING) 
+					|| pMB->dquant == NO_CHANGE) )
 			{
-				pMB->sad8[0] = SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
-						       2 * j, 2 * i, mv16.x, mv16.y, 
+				int32_t sad8 = 129; //IMV16X16 * current->quant;
+
+				if (sad8 < pMB->sad16)
+				sad8 += pMB->sad8[0] 
+					= SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
+						       2*x, 2*y, pMB->mv16.x, pMB->mv16.y, 
 							   current->motion_flags, current->quant, current->fcode,
 						       pParam, pMBs, prevMBs, &pMB->mvs[0], &pMB->pmvs[0]);
 
-				pMB->sad8[1] = SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
-						       2 * j + 1, 2 * i, mv16.x, mv16.y, 
-							   current->motion_flags, current->quant, current->fcode,
-						       pParam, pMBs, prevMBs, &pMB->mvs[1], &pMB->pmvs[1]); 
+				if (sad8 < pMB->sad16)
+				sad8 += pMB->sad8[1] 
+					= SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
+			       2*x+1, 2*y, pMB->mv16.x, pMB->mv16.y, 
+						current->motion_flags, current->quant, current->fcode,
+						pParam, pMBs, prevMBs, &pMB->mvs[1], &pMB->pmvs[1]); 
 
-				pMB->sad8[2] = SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
-						       2 * j, 2 * i + 1, mv16.x, mv16.y, 
-							   current->motion_flags, current->quant, current->fcode,
-						       pParam, pMBs, prevMBs, &pMB->mvs[2], &pMB->pmvs[2]); 
+				if (sad8 < pMB->sad16)
+				sad8 += pMB->sad8[2] 
+					= SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
+						2*x, 2*y+1, pMB->mv16.x, pMB->mv16.y, 
+						current->motion_flags, current->quant, current->fcode,
+						pParam, pMBs, prevMBs, &pMB->mvs[2], &pMB->pmvs[2]); 
 			
-				pMB->sad8[3] = SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
-						       2 * j + 1, 2 * i + 1, mv16.x, mv16.y, 
-							   current->motion_flags, current->quant, current->fcode,
-						       pParam, pMBs, prevMBs, &pMB->mvs[3], &pMB->pmvs[3]); 
-
-				sad8 = pMB->sad8[0] + pMB->sad8[1] + pMB->sad8[2] + pMB->sad8[3];
-			}
-
+				if (sad8 < pMB->sad16)
+				sad8 += pMB->sad8[3] 
+					= SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
+						2*x+1, 2*y+1, pMB->mv16.x, pMB->mv16.y, 
+						current->motion_flags, current->quant, current->fcode,
+						pParam, pMBs, prevMBs, &pMB->mvs[3], &pMB->pmvs[3]); 
     
 			/* decide: MODE_INTER or MODE_INTER4V 
-			   mpeg4:   if (sad8 < sad16 - nb/2+1) use_inter4v
+			   mpeg4:   if (sad8 < pMB->sad16 - nb/2+1) use_inter4v
 			*/
 
-			if (!(current->global_flags & XVID_LUMIMASKING) || pMB->dquant == NO_CHANGE) 
-			{
-				if (((current->global_flags & XVID_INTER4V)==0) || 
-				    (sad16 < (sad8 + (int32_t)(IMV16X16 * current->quant)))) 
-				{ 
-			
-					sad8 = sad16;
-					pMB->mode = MODE_INTER;
-					pMB->mvs[0].x = pMB->mvs[1].x = pMB->mvs[2].x = pMB->mvs[3].x = mv16.x;
-					pMB->mvs[0].y = pMB->mvs[1].y = pMB->mvs[2].y = pMB->mvs[3].y = mv16.y;
-					pMB->sad8[0] = pMB->sad8[1] = pMB->sad8[2] = pMB->sad8[3] = sad16;
-					pMB->pmvs[0].x = pmv16.x;
-					pMB->pmvs[0].y = pmv16.y;
-				}
-				else
+				if (sad8 < pMB->sad16) 
 				{
 					pMB->mode = MODE_INTER4V;
-                                        pMB->sad8[0] *= 4;
+               pMB->sad8[0] *= 4;
 					pMB->sad8[1] *= 4;
 					pMB->sad8[2] *= 4;
 					pMB->sad8[3] *= 4;
+					continue;
 				}
 			}
-			else 
-			{
-				sad8 = sad16;
-				pMB->mode = MODE_INTER;
-				pMB->mvs[0].x = pMB->mvs[1].x = pMB->mvs[2].x = pMB->mvs[3].x = mv16.x;
-				pMB->mvs[0].y = pMB->mvs[1].y = pMB->mvs[2].y = pMB->mvs[3].y = mv16.y;
-                                pMB->sad8[0] = pMB->sad8[1] = pMB->sad8[2] = pMB->sad8[3] = sad16;
 
-				pMB->pmvs[0].x = pmv16.x;
-				pMB->pmvs[0].y = pmv16.y;
+			pMB->mode = MODE_INTER;
+			pMB->mvs[0] = pMB->mvs[1] = pMB->mvs[2] = pMB->mvs[3] = pMB->mv16;
+         pMB->sad8[0] = pMB->sad8[1] = pMB->sad8[2] = pMB->sad8[3] = pMB->sad16;
+
+			if (current->global_flags & XVID_INTER4V)
+			{	pmv = get_pmv(pMBs, x, y, pParam->mb_width, 0);  
+				// get_pmv has to be called again. inter4v changes predictors
+				
+				pMB->pmvs[0].x = pMB->mv16.x - pmv.x;
+				pMB->pmvs[0].y = pMB->mv16.y - pmv.y;
 			}
 		}
-
 	return 0;
 }
-
-#define MVzero(A) ( ((A).x)==(0) && ((A).y)==(0) )
-
-#define MVequal(A,B) ( ((A).x)==((B).x) && ((A).y)==((B).y) )
-
 
 #define CHECK_MV16_ZERO {\
   if ( (0 <= max_dx) && (0 >= min_dx) \
@@ -861,7 +851,7 @@ int32_t PMVfastSearch16(
 	VECTOR pmv[4];
 	int32_t psad[4];
 	
-	const MACROBLOCK * const pMB = pMBs + x + y * iWcount;
+//	const MACROBLOCK * const pMB = pMBs + x + y * iWcount;
 	const MACROBLOCK * const prevMB = prevMBs + x + y * iWcount;
 
 	static int32_t threshA,threshB;
@@ -1259,7 +1249,7 @@ int32_t PMVfastSearch8(
 	VECTOR backupMV;
 	VECTOR startMV;
 	
-	const MACROBLOCK * const pMB = pMBs + (x>>1) + (y>>1) * iWcount;
+//	const MACROBLOCK * const pMB = pMBs + (x>>1) + (y>>1) * iWcount;
 	const MACROBLOCK * const prevMB = prevMBs + (x>>1) + (y>>1) * iWcount;
 
 	static int32_t threshA,threshB;
@@ -1551,7 +1541,7 @@ int32_t EPZSSearch16(
 	int32_t psad[8];
 	
 	static MACROBLOCK * oldMBs = NULL; 
-	const MACROBLOCK * const pMB = pMBs + x + y * iWcount;
+//	const MACROBLOCK * const pMB = pMBs + x + y * iWcount;
 	const MACROBLOCK * const prevMB = prevMBs + x + y * iWcount;
 	MACROBLOCK * oldMB = NULL;
 
@@ -1838,7 +1828,7 @@ int32_t EPZSSearch8(
 
 	const	int32_t iSubBlock = ((y&1)<<1) + (x&1);
 	
-	const MACROBLOCK * const pMB = pMBs + (x>>1) + (y>>1) * iWcount;
+//	const MACROBLOCK * const pMB = pMBs + (x>>1) + (y>>1) * iWcount;
 	const MACROBLOCK * const prevMB = prevMBs + (x>>1) + (y>>1) * iWcount;
 
     	int32_t bPredEq;
