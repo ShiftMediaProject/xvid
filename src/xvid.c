@@ -27,6 +27,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
  ****************************************************************************/
+
 /*****************************************************************************
  *
  *  History
@@ -36,7 +37,7 @@
  *  - 22.12.2001  API change: added xvid_init() - Isibaar
  *  - 16.12.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: xvid.c,v 1.23 2002-06-26 15:59:51 ia64p Exp $
+ *  $Id: xvid.c,v 1.24 2002-07-07 09:38:13 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -242,6 +243,7 @@ xvid_init(void *handle,
 
 		/* ME functions */
 		sad16 = sad16_xmm;
+		sad16bi = sad16bi_xmm;
 		sad8  = sad8_xmm;
 		dev16 = dev16_xmm;
 
@@ -258,6 +260,8 @@ xvid_init(void *handle,
 	if ((cpu_flags & XVID_CPU_SSE2) > 0) {
 #ifdef EXPERIMENTAL_SSE2_CODE
 
+		calc_cbp = calc_cbp_sse2;
+
 		/* Quantization */
 		quant_intra   = quant_intra_sse2;
 		dequant_intra = dequant_intra_sse2;
@@ -265,7 +269,6 @@ xvid_init(void *handle,
 		dequant_inter = dequant_inter_sse2;
 
 		/* ME */
-		calc_cbp = calc_cbp_sse2;
 		sad16    = sad16_sse2;
 		dev16    = dev16_sse2;
 
