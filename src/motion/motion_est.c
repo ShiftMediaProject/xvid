@@ -1395,7 +1395,6 @@ PMVfastSearch16(const uint8_t * const pRef,
 	}
 
 	/* because we might use something like IF (dx>max_dx) THEN dx=max_dx; */
-	//bPredEq = get_pmvdata(pMBs, x, y, iWcount, 0, pmv, psad);
 	bPredEq = get_pmvdata2(pMBs, iWcount, 0, x, y, 0, pmv, psad);
 
 	if ((x == 0) && (y == 0)) {
@@ -2010,7 +2009,6 @@ PMVfastSearch8(const uint8_t * const pRef,
 	}
 
 	/* because we might use IF (dx>max_dx) THEN dx=max_dx; */
-	//bPredEq = get_pmvdata(pMBs, (x >> 1), (y >> 1), iWcount, iSubBlock, pmv, psad);
 	bPredEq = get_pmvdata2(pMBs, iWcount, 0, (x >> 1), (y >> 1), iSubBlock, pmv, psad);
 
 	if ((x == 0) && (y == 0)) {
@@ -2325,7 +2323,6 @@ EPZSSearch16(const uint8_t * const pRef,
 		max_dy = EVEN(max_dy);
 	}
 	/* because we might use something like IF (dx>max_dx) THEN dx=max_dx; */
-	//bPredEq = get_pmvdata(pMBs, x, y, iWcount, 0, pmv, psad);
 	bPredEq = get_pmvdata2(pMBs, iWcount, 0, x, y, 0, pmv, psad);
 
 /* Step 4: Calculate SAD around the Median prediction. 
@@ -2608,7 +2605,6 @@ EPZSSearch8(const uint8_t * const pRef,
 		max_dy = EVEN(max_dy);
 	}
 	/* because we might use something like IF (dx>max_dx) THEN dx=max_dx; */
-	//bPredEq = get_pmvdata(pMBs, x >> 1, y >> 1, iWcount, iSubBlock, pmv[0].x, pmv[0].y, psad);
 	bPredEq = get_pmvdata2(pMBs, iWcount, 0, x >> 1, y >> 1, iSubBlock, pmv, psad);
 
 
