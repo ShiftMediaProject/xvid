@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_stat.c,v 1.10 2002-09-21 09:38:17 edgomez Exp $
+ * $Id: xvid_stat.c,v 1.11 2002-09-21 11:55:53 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -502,7 +502,7 @@ int main(int argc, char *argv[])
 	printf("size %6d ",totalsize);
 	printf("( %4d kbps ",(int)(totalsize*8*ARG_FRAMERATE/1000));
 	printf("/ %.2f bpp) ",(double)totalsize*8/XDIM/YDIM);
-	printf("enc: %6.1f fps, dec: %6.1f fps \n",1/totalenctime, 1/totaldectime);
+	printf("enc: %6.1f fps, dec: %6.1f fps \n",CLOCKS_PER_SEC/(totalenctime*1000), CLOCKS_PER_SEC/(totaldectime*1000));
 	printf("PSNR P(%d): %5.2f ( %5.2f , %5.2f ; %5.4f ) ",Pframes,Ppsnr,Pminpsnr,Pmaxpsnr,sqrt(Pvarpsnr/filenr));
 	printf("I(%d): %5.2f ( %5.2f , %5.2f ; %5.4f ) ",Iframes,Ipsnr,Iminpsnr,Imaxpsnr,sqrt(Ivarpsnr/filenr));
 	printf("\n");
