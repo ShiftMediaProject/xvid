@@ -714,21 +714,18 @@ BitstreamWriteVolHeader(Bitstream * const bs,
 	BitstreamPutBit(bs, 0);		// is_object_layer_identified (0=not given)
 	BitstreamPutBits(bs, 1, 4);	// aspect_ratio_info (1=1:1)
 
+	BitstreamPutBit(bs, 1);	// vol_control_parameters
+	BitstreamPutBits(bs, 1, 2);	// chroma_format 1="4:2:0"
+
 #ifdef BFRAMES
 	if (pParam->max_bframes > 0) {
-		BitstreamPutBit(bs, 1);	// vol_control_parameters
-		BitstreamPutBits(bs, 1, 2);	// chroma_format 1="4:2:0"
 		BitstreamPutBit(bs, 0);	// low_delay
-		BitstreamPutBit(bs, 0);	// vbv_parameters (0=not given)
 	} else
 #endif
 	{
-		BitstreamPutBit(bs, 1);	// vol_control_parameters
-		BitstreamPutBits(bs, 1, 2);	// chroma_format 1="4:2:0"
 		BitstreamPutBit(bs, 1);	// low_delay
-		BitstreamPutBit(bs, 0);	// vbv_parameters (0=not given)
 	}
-
+	BitstreamPutBit(bs, 0);	// vbv_parameters (0=not given)
 
 	BitstreamPutBits(bs, 0, 2);	// video_object_layer_shape (0=rectangular)
 
@@ -742,7 +739,7 @@ BitstreamWriteVolHeader(Bitstream * const bs,
 #ifdef BFRAMES
 	BitstreamPutBits(bs, pParam->fbase, 16);
 #else
-	BitstreamPutBits(bs, 2, 16);
+	BitstreamPutBits(bs, pParam->fbase, 16);
 #endif
 
 	WRITE_MARKER();
@@ -751,7 +748,8 @@ BitstreamWriteVolHeader(Bitstream * const bs,
 	BitstreamPutBit(bs, 1);		// fixed_vop_rate = 1
 	BitstreamPutBits(bs, pParam->fincr, log2bin(pParam->fbase));	// fixed_vop_time_increment
 #else
-	BitstreamPutBit(bs, 0);		// fixed_vop_rate = 0
+	BitstreamPutBit(bs, 1);		// fixed_vop_rate = 1
+	BitstreamPutBits(bs, pParam->fincr, log2bin(pParam->fbase));	// fixed_vop_time_increment
 #endif
 
 	WRITE_MARKER();
@@ -802,9 +800,8 @@ BitstreamWriteVopHeader(Bitstream * const bs,
 						const FRAMEINFO * frame,
 						int vop_coded)
 {
-#ifdef BFRAMES
 	uint32_t i;
-#endif
+
 	BitstreamPad(bs);
 	BitstreamPutBits(bs, VOP_START_CODE, 32);
 
@@ -817,7 +814,11 @@ BitstreamWriteVopHeader(Bitstream * const bs,
 	}
 	BitstreamPutBit(bs, 0);
 #else
-	BitstreamPutBits(bs, 0, 1);
+	for (i = 0; i < frame->seconds; i++) {
+		BitstreamPutBit(bs, 1);
+	}
+	BitstreamPutBit(bs, 0);
+//	BitstreamPutBits(bs, 0, 1);
 #endif
 
 	WRITE_MARKER();
@@ -829,7 +830,8 @@ BitstreamWriteVopHeader(Bitstream * const bs,
 			frame->coding_type == I_VOP ? 'I' : frame->coding_type ==
 			P_VOP ? 'P' : 'B');*/
 #else
-	BitstreamPutBits(bs, 1, 1);
+	BitstreamPutBits(bs, frame->ticks, log2bin(pParam->fbase));
+//	BitstreamPutBits(bs, 1, 1);
 #endif
 
 	WRITE_MARKER();

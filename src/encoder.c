@@ -39,7 +39,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.75 2002-08-19 19:19:40 chl Exp $
+ *  $Id: encoder.c,v 1.76 2002-09-03 17:25:18 chl Exp $
  *
  ****************************************************************************/
 
@@ -621,18 +621,12 @@ encoder_destroy(Encoder * pEnc)
 }
 
 
-#ifdef BFRAMES
 void inc_frame_num(Encoder * pEnc)
 {
 	pEnc->mbParam.m_ticks += pEnc->mbParam.fincr;
 
+#ifdef BFRAMES
 	pEnc->mbParam.m_ticks = pEnc->mbParam.m_ticks % pEnc->mbParam.fbase;
-
-/*	fprintf(stderr, "ENC %c %i:%i %i\n", 
-		pEnc->current->coding_type == I_VOP ? 'I' : pEnc->current->coding_type == P_VOP ? 'P' : 'B',
-		pEnc->mbParam.m_seconds, pEnc->mbParam.m_ticks,pEnc->last_sync);
-*/
-
 	if (pEnc->mbParam.m_ticks < pEnc->last_sync) 
 		pEnc->mbParam.m_seconds = 1;		// more than 1 second since last I or P is not supported. 
 	else
@@ -640,9 +634,14 @@ void inc_frame_num(Encoder * pEnc)
 
 	if (pEnc->current->coding_type != B_VOP)
 		pEnc->last_sync = pEnc->mbParam.m_ticks;
+#else
+
+	pEnc->mbParam.m_seconds = pEnc->mbParam.m_ticks / pEnc->mbParam.fbase;
+	pEnc->mbParam.m_ticks = pEnc->mbParam.m_ticks % pEnc->mbParam.fbase;
+	
+#endif
 
 }
-#endif
 
 
 #ifdef BFRAMES
@@ -1133,10 +1132,8 @@ encoder_encode(Encoder * pEnc,
 
 	pEnc->current->global_flags = pFrame->general;
 	pEnc->current->motion_flags = pFrame->motion;
-#ifdef BFRAMES
 	pEnc->current->seconds = pEnc->mbParam.m_seconds;
 	pEnc->current->ticks = pEnc->mbParam.m_ticks;
-#endif
 	pEnc->mbParam.hint = &pFrame->hint;
 
 	start_timer();
@@ -1266,9 +1263,7 @@ encoder_encode(Encoder * pEnc,
 	DEBUG(temp);
 #endif
 
-#ifdef BFRAMES
 	inc_frame_num(pEnc);
-#endif
 	pEnc->iFrameNum++;
 
 	stop_global_timer();
