@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_rd_based.c,v 1.7 2004-07-18 11:48:08 syskin Exp $
+ * $Id: estimation_rd_based.c,v 1.8 2004-07-18 12:23:45 syskin Exp $
  *
  ****************************************************************************/
 
@@ -735,6 +735,11 @@ xvid_me_ModeDecision_Fast(SearchData * const Data,
 						scan_tables[2] : scan_tables[0];
 
 	pMB->mcsel = 0;
+
+	for (i = 0; i < 6; i++) {
+		/* HVS models, anyone ? */
+		Data->lambda[i] = LAMBDA;
+	}
 
 	/* INTER <-> INTER4V decision */
 	if ((Data->iMinSAD[0] + 75 < Data->iMinSAD[1] +
