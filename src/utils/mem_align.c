@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Aligned memory allocator -
  *
- *  Copyright(C) 2002 Michael Militzer
+ *  Copyright(C) 2002 Michael Militzer <isibaar@xvid.org>
  *               2002 Edouard Gomez
  *
  *  This program is an implementation of a part of one or more MPEG-4
@@ -29,7 +29,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mem_align.c,v 1.9 2002-09-05 21:32:30 edgomez Exp $
+ * $Id: mem_align.c,v 1.10 2002-10-19 11:41:11 edgomez Exp $
  *
  ****************************************************************************/
 

@@ -3,7 +3,7 @@
 ; *  XVID MPEG-4 VIDEO CODEC
 ; *  sse2 sum of absolute difference
 ; *
-; *  Copyright(C) 2002 Michael Militzer
+; *  Copyright(C) 2002 Michael Militzer <isibaar@xvid.org>
 ; *  Copyright(C) 2002 Dmitry Rozhdestvensky
 ; *
 ; *  This program is an implementation of a part of one or more MPEG-4

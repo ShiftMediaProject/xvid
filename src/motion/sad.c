@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - SAD calculation module (C part) -
  *
- *  Copyright(C) 2002 Michael Militzer
+ *  Copyright(C) 2002 Michael Militzer <isibaar@xvid.org>
  *  Copyright(C) 2002 Pete Ross 
  *
  *  This program is an implementation of a part of one or more MPEG-4

@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - h263 quantization header -
  *
- *  Copyright(C) 2002 Michael Militzer
+ *  Copyright(C) 2002 Michael Militzer <isibaar@xvid.org>
  *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
@@ -28,7 +28,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: quant_h263.h,v 1.7 2002-09-07 10:26:10 edgomez Exp $
+ *  $Id: quant_h263.h,v 1.8 2002-10-19 11:41:11 edgomez Exp $
  *
  ****************************************************************************/
 
