@@ -171,7 +171,7 @@ MotionEstimation(MBParam * const pParam,
 	const IMAGE *const pCurrent = &current->image;
 	const IMAGE *const pRef = &reference->image;
 
-	const VECTOR zeroMV = { 0, 0 };
+	static const VECTOR zeroMV = { 0, 0 };
 
 	int32_t x, y;
 	int32_t iIntra = 0;
@@ -2643,7 +2643,8 @@ PMVfastInt16_Terminate_without_Refine:
 void
 MotionEstimationBVOP(MBParam * const pParam,
 					 FRAMEINFO * const frame,
-				//	 const float scalefactor,
+					 const int32_t time_bp,
+					 const int32_t time_pp,
 					 // forward (past) reference 
 					 const MACROBLOCK * const f_mbs,
 					 const IMAGE * const f_ref,
@@ -2661,10 +2662,9 @@ MotionEstimationBVOP(MBParam * const pParam,
 	const int mb_height = pParam->mb_height;
 	const int edged_width = pParam->edged_width;
 
-	const float scalefactor=0.666;
-	int i, j;
+	int i, j, k;
 
-//	static const VECTOR zeroMV={0,0};
+	static const VECTOR zeroMV={0,0};
 	
 	int f_sad16;	/* forward (as usual) search */
 	int b_sad16;	/* backward (only in b-frames) search */
@@ -2681,7 +2681,10 @@ MotionEstimationBVOP(MBParam * const pParam,
 	int d_count=0;
 	int dnv_count=0;
 	int s_count=0;
-	
+	const int64_t TRB = (int32_t)time_pp - (int32_t)time_bp;
+    	const int64_t TRD = (int32_t)time_pp;
+
+	fprintf(stderr,"TRB = %lld  TRD = %lld  time_bp =%d time_pp =%d\n\n",TRB,TRD,time_bp,time_pp);
 	// note: i==horizontal, j==vertical
 	for (j = 0; j < mb_height; j++) {
 		for (i = 0; i < mb_width; i++) {
@@ -2689,8 +2692,9 @@ MotionEstimationBVOP(MBParam * const pParam,
 			const MACROBLOCK *f_mb = &f_mbs[i + j * mb_width];
 			const MACROBLOCK *b_mb = &b_mbs[i + j * mb_width];
 
-			VECTOR directMV=b_mb->mvs[0];		/* direct mode: presume linear motion */
-			
+			VECTOR directMV;
+			VECTOR deltaMV=zeroMV;
+
 /* special case, if collocated block is SKIPed: encoding is forward(0,0)  */
 
 			if (b_mb->mode == MODE_INTER && b_mb->cbp == 0 &&
@@ -2703,20 +2707,21 @@ MotionEstimationBVOP(MBParam * const pParam,
 				continue;
 			}
 
-			/* candidates for best MV assumes linear motion */
-			/* next vector is linearly scaled (factor depends on distance to that frame) */
-			
-			mb->mvs[0].x = (int)(directMV.x * scalefactor + 0.75);		
-			mb->mvs[0].y = (int)(directMV.y * scalefactor + 0.75);
-			
-			mb->b_mvs[0].x = (int)(directMV.x * (scalefactor-1.) + 0.75); /* opposite direction! */
-			mb->b_mvs[0].y = (int)(directMV.y * (scalefactor-1.) + 0.75);
+			/* same method of scaling as in decoder.c, so we copy 1:1 from there */
 
-			DEBUG2("last: ",f_mb->mvs[0].x,f_mb->mvs[0].y);
-			DEBUG2("next: ",b_mb->mvs[0].x,b_mb->mvs[0].y);
-			DEBUG2("directF: ",mb->mvs[0].x,mb->mvs[0].y);
-			DEBUG2("directB: ",mb->b_mvs[0].x,mb->b_mvs[0].y);
-	
+            for (k = 0; k < 4; k++) {
+				directMV = b_mb->mvs[k];
+				
+				mb->mvs[k].x = (int32_t) ((TRB * directMV.x) / TRD + deltaMV.x);
+                mb->b_mvs[k].x = (int32_t) ((deltaMV.x == 0) 
+									? ((TRB - TRD) * directMV.x) / TRD
+                                    : mb->mvs[k].x - directMV.x);
+                mb->mvs[k].y = (int32_t) ((TRB * directMV.y) / TRD + deltaMV.y);
+                mb->b_mvs[k].y = (int32_t) ((deltaMV.y == 0) 
+									? ((TRB - TRD) * directMV.y) / TRD
+                                    : mb->mvs[k].y - directMV.y);
+            }
+
 			d_sad16 =
 				sad16bi(frame->image.y + i * 16 + j * 16 * edged_width,
 						  get_ref_mv(f_ref->y, f_refH->y, f_refV->y, f_refHV->y,
