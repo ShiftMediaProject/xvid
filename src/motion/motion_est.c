@@ -2256,7 +2256,7 @@ MEanalysis(	const IMAGE * const pRef,
 	sSAD /= blocks;
 	s = (10*s) / blocks;
 
-	if (s > 4) sSAD += (s - 2) * (160 - 2*b_thresh); //static block - looks bad when in bframe...
+	if (s > 4) sSAD += (s - 2) * (60 - 2*b_thresh); //static block - looks bad when in bframe...
 
 	if (sSAD > InterThresh ) return P_VOP;
 	emms();
