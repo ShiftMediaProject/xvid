@@ -4,8 +4,9 @@
 #include "../encoder.h"
 #include "../portab.h"
 
-void RateControlInit(uint32_t target_rate, uint32_t reaction_delay_factor, int framerate,
-					 int max_quant, int min_quant);
+void RateControlInit(uint32_t target_rate, uint32_t reaction_delay_factor,
+					 uint32_t averaging_period, uint32_t buffer, 
+					 int framerate, int max_quant, int min_quant);
 
 int RateControlGetQ(int keyframe);
 
