@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.4 2004-04-22 13:39:33 syskin Exp $
+ * $Id: estimation_bvop.c,v 1.5 2004-05-26 09:15:02 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -611,7 +611,6 @@ SearchDirect(const IMAGE * const f_Ref,
 			return *Data->iMinSAD; /* skipped */
 	}
 
-	*Data->iMinSAD += Data->lambda16;
 	skip_sad = 4*MAX(MAX(Data->iMinSAD[1],Data->iMinSAD[2]), MAX(Data->iMinSAD[3],Data->iMinSAD[4]));
 	if (Data->chroma) skip_sad += Data->chromaSAD;
 
@@ -627,6 +626,7 @@ SearchDirect(const IMAGE * const f_Ref,
 		xvid_me_SubpelRefine(Data, CheckCandidate, 0);
 	}
 
+	*Data->iMinSAD += Data->lambda16;
 	*best_sad = *Data->iMinSAD;
 
 	if (Data->qpel || b_mb->mode == MODE_INTER4V) pMB->mode = MODE_DIRECT;
