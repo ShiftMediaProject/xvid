@@ -15,12 +15,12 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 #
-#    $Id: cbp_ppc.s,v 1.3 2002-03-22 11:32:47 canard Exp $
+#    $Id: cbp_ppc.s,v 1.4 2002-03-22 12:24:07 canard Exp $
 #    $Source: /home/xvid/cvs_copy/cvs-server-root/xvid/xvidcore/src/bitstream/ppc_asm/cbp_ppc.s,v $
-#    $Date: 2002-03-22 11:32:47 $
+#    $Date: 2002-03-22 12:24:07 $
 #    $Author: canard $
 #
-#    This is my first PPC ASM program. So I might do nasty things.
+#    This is the PPC ASM code I write. So I might do nasty things.
 #    Please send any comments to guillaume@morinfr.org
 
 
@@ -55,12 +55,12 @@
 calc_cbp_ppc:
 	# r9 will contain coeffs addr
 	mr 9,3
-	# r8 is the loop counter
+	# r8 is the loop counter (rows)
 	li 8,5
 	# r3 contains the result, therefore we set it to 0
 	xor 3,3,3
 .loop:
-	# r7 is the loop2 counter, FIXME: use CTR
+	# r7 is the loop2 counter (columns), FIXME: use CTR
 	li 7,14
 	# r6 is coeff pointer for this line
 	mr 6,9
@@ -95,11 +95,9 @@ calc_cbp_ppc:
 	li 4,1
 	slw 4,4,8
 	or 3,3,4
-	b .newline
 .newline:
 	addi 9,9,128
 	# updates CR0, blabla
 	subic. 8,8,1
 	bf 0,.loop
-.end:
 	blr
