@@ -33,7 +33,7 @@
  *
  *  - Mon Jun 17 00:16:13 2002 Added legal header
  *
- *  $Id: emms.h,v 1.6 2002-06-29 11:47:17 ia64p Exp $
+ *  $Id: emms.h,v 1.7 2002-07-18 13:45:14 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -64,6 +64,8 @@ emmsFunc emms_mmx;
 
 #ifdef ARCH_X86
 extern int check_cpu_features(void);
+extern void sse_os_trigger(void);
+extern void sse2_os_trigger(void);
 #else
 #ifdef ARCH_IA64
 static int check_cpu_features(void) { return XVID_CPU_IA64; }
