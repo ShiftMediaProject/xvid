@@ -2868,19 +2868,18 @@ MotionEstimationBVOP(MBParam * const pParam,
 	int b_sad16;	/* backward (only in b-frames) search */
 	int i_sad16;	/* interpolated (both direction, b-frames only) */
 	int d_sad16;	/* direct mode (assume linear motion) */
-	int dnv_sad16;	/* direct mode (assume linear motion) without correction vector */
 
 	int best_sad;
 
-	VECTOR f_predMV, b_predMV;	/* there is no direct prediction */
+	VECTOR f_predMV, b_predMV;	/* there is no prediction for direct mode*/
 	VECTOR pmv_dontcare;
 
 	int f_count=0;
 	int b_count=0;
 	int i_count=0;
 	int d_count=0;
-	int dnv_count=0;
 	int s_count=0;
+
 	const int64_t TRB = (int32_t)time_pp - (int32_t)time_bp;
     const int64_t TRD = (int32_t)time_pp;
 
@@ -2896,8 +2895,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 			const MACROBLOCK *f_mb = &f_mbs[i + j * mb_width];
 			const MACROBLOCK *b_mb = &b_mbs[i + j * mb_width];
 
-			VECTOR directMV;
-			VECTOR deltaMV=zeroMV;
+			mb->deltamv=zeroMV;
 
 /* special case, if collocated block is SKIPed: encoding is forward(0,0)  */
 
@@ -2913,7 +2911,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 			}
 #endif
 
-			dnv_sad16 = DIRECT_PENALTY;
+			d_sad16 = DIRECT_PENALTY;
 
 			if (b_mb->mode == MODE_INTER4V)
 			{
@@ -2921,18 +2919,19 @@ MotionEstimationBVOP(MBParam * const pParam,
 			/* same method of scaling as in decoder.c, so we copy from there */
 	            for (k = 0; k < 4; k++) {
 		
-					directMV = b_mb->mvs[k];
+					mb->directmv[k] = b_mb->mvs[k];
 
-					mb->mvs[k].x = (int32_t) ((TRB * directMV.x) / TRD + deltaMV.x);
-            	    mb->b_mvs[k].x = (int32_t) ((deltaMV.x == 0) 
-										? ((TRB - TRD) * directMV.x) / TRD
-	                                    : mb->mvs[k].x - directMV.x);
-    	            mb->mvs[k].y = (int32_t) ((TRB * directMV.y) / TRD + deltaMV.y);
-        	        mb->b_mvs[k].y = (int32_t) ((deltaMV.y == 0) 
-										? ((TRB - TRD) * directMV.y) / TRD
-                	                    : mb->mvs[k].y - directMV.y);
+					mb->mvs[k].x = (int32_t) ((TRB * mb->directmv[k].x) / TRD + mb->deltamv.x);
+            	    mb->b_mvs[k].x = (int32_t) ((mb->deltamv.x == 0) 
+										? ((TRB - TRD) * mb->directmv[k].x) / TRD
+	                                    : mb->mvs[k].x - mb->directmv[k].x);
 
-					dnv_sad16 += 
+    	            mb->mvs[k].y = (int32_t) ((TRB * mb->directmv[k].y) / TRD + mb->deltamv.y);
+        	        mb->b_mvs[k].y = (int32_t) ((mb->directmv[k].y == 0) 
+										? ((TRB - TRD) * mb->directmv[k].y) / TRD
+                	                    : mb->mvs[k].y - mb->directmv[k].y);
+
+					d_sad16 += 
 						sad8bi(frame->image.y + 2*(i+(k&1))*8 + 2*(j+(k>>1))*8*edged_width,
 						  get_ref_mv(f_ref->y, f_refH->y, f_refV->y, f_refHV->y,
 								2*(i+(k&1)), 2*(j+(k>>1)), 8, &mb->mvs[k], edged_width), 
@@ -2943,34 +2942,35 @@ MotionEstimationBVOP(MBParam * const pParam,
 			}
 			else
 			{
-				directMV = b_mb->mvs[0];
+				mb->directmv[3] = mb->directmv[2] = mb->directmv[1] = 
+				mb->directmv[0] = b_mb->mvs[0];
 
-				mb->mvs[0].x = (int32_t) ((TRB * directMV.x) / TRD + deltaMV.x);
-            	mb->b_mvs[0].x = (int32_t) ((deltaMV.x == 0) 
-								? ((TRB - TRD) * directMV.x) / TRD
-	                            : mb->mvs[0].x - directMV.x);
-    	        mb->mvs[0].y = (int32_t) ((TRB * directMV.y) / TRD + deltaMV.y);
-        	    mb->b_mvs[0].y = (int32_t) ((deltaMV.y == 0) 
-								? ((TRB - TRD) * directMV.y) / TRD
-                                : mb->mvs[0].y - directMV.y);
+				mb->mvs[0].x = (int32_t) ((TRB * mb->directmv[0].x) / TRD + mb->deltamv.x);
+           	    mb->b_mvs[0].x = (int32_t) ((mb->deltamv.x == 0) 
+									? ((TRB - TRD) * mb->directmv[0].x) / TRD
+                                    : mb->mvs[0].x - mb->directmv[0].x);
 
-				dnv_sad16 = DIRECT_PENALTY + 
-					sad16bi(frame->image.y + i * 16 + j * 16 * edged_width,
+   	            mb->mvs[0].y = (int32_t) ((TRB * mb->directmv[0].y) / TRD + mb->deltamv.y);
+       	        mb->b_mvs[0].y = (int32_t) ((mb->directmv[0].y == 0) 
+									? ((TRB - TRD) * mb->directmv[0].y) / TRD
+               	                    : mb->mvs[0].y - mb->directmv[0].y);
+
+				d_sad16 += sad16bi(frame->image.y + i * 16 + j * 16 * edged_width,
 						  get_ref_mv(f_ref->y, f_refH->y, f_refV->y, f_refHV->y,
 								i, j, 16, &mb->mvs[0], edged_width), 
 						  get_ref_mv(b_ref->y, b_refH->y, b_refV->y, b_refHV->y,
 								i, j, 16, &mb->b_mvs[0], edged_width),
 						  edged_width);
 
-
             }
+		    d_sad16 += calc_delta_16(mb->deltamv.x, mb->deltamv.y, 1, frame->quant);
 
 			// forward search
 			f_sad16 = SEARCH16(f_ref->y, f_refH->y, f_refV->y, f_refHV->y,
 						&frame->image, i, j, 
 						mb->mvs[0].x, mb->mvs[0].y,			/* start point f_directMV */
 						f_predMV.x, f_predMV.y, 			/* center is f-prediction */
-						frame->motion_flags & (~(PMV_EARLYSTOP16|PMV_QUICKSTOP16)),
+						frame->motion_flags,
 						frame->quant, frame->fcode, pParam, 
 						f_mbs, f_mbs, 
 						&mb->mvs[0], &pmv_dontcare);
@@ -2981,7 +2981,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 						&frame->image, i, j, 
 						mb->b_mvs[0].x, mb->b_mvs[0].y,		/* start point b_directMV */
 						b_predMV.x, b_predMV.y, 			/* center is b-prediction */
-						frame->motion_flags & (~(PMV_EARLYSTOP16|PMV_QUICKSTOP16)),
+						frame->motion_flags,
 						frame->quant, frame->bcode, pParam, 
 						b_mbs, b_mbs,	
 						&mb->b_mvs[0], &pmv_dontcare);
@@ -2995,15 +2995,16 @@ MotionEstimationBVOP(MBParam * const pParam,
 						  edged_width);
 		    i_sad16 += calc_delta_16(mb->mvs[0].x-f_predMV.x, mb->mvs[0].y-f_predMV.y, 
 								frame->fcode, frame->quant);
-		    i_sad16 += calc_delta_16(mb->b_mvs[0].y-b_predMV.y, mb->b_mvs[0].y-b_predMV.y, 
+		    i_sad16 += calc_delta_16(mb->b_mvs[0].x-b_predMV.x, mb->b_mvs[0].y-b_predMV.y, 
 								frame->bcode, frame->quant);
 
 			// TODO: direct search
 			// predictor + delta vector in range [-32,32] (fcode=1)
 			
-//			i_sad16 = 65535;
-//			f_sad16 = 65535;
-//			b_sad16 = 65535;
+			i_sad16 = 65535;
+			f_sad16 = 65535;
+			b_sad16 = 65535;
+//			d_sad16 = 65535;
 
 			if (f_sad16 < b_sad16) {
 				best_sad = f_sad16;
@@ -3018,56 +3019,46 @@ MotionEstimationBVOP(MBParam * const pParam,
 				mb->mode = MODE_INTERPOLATE;
 			}
 
-			if (dnv_sad16 < best_sad) {
+			if (d_sad16 < best_sad) {
 
-				if (dnv_sad16 > DIRECT_UPPERLIMIT)
-				{	
-					/* if SAD value is too large, try same vector with MODE_INTERPOLATE 
-					   instead (interpolate has residue encoding, direct mode without MV 
-					   doesn't) 
-					   
-						This has to be replaced later by "real" direct mode, including delta 
-						vector and (if needed) residue encoding 
-					   
-				 	*/
-				
-					directMV = b_mb->mvs[0];
+				if (b_mb->mode == MODE_INTER4V)
+				{
 
-					mb->mvs[0].x = (int32_t) ((TRB * directMV.x) / TRD + deltaMV.x);
-    	            mb->b_mvs[0].x = (int32_t) ((deltaMV.x == 0) 
-										? ((TRB - TRD) * directMV.x) / TRD
-            	                        : mb->mvs[0].x - directMV.x);
-                	mb->mvs[0].y = (int32_t) ((TRB * directMV.y) / TRD + deltaMV.y);
-	                mb->b_mvs[0].y = (int32_t) ((deltaMV.y == 0) 
-										? ((TRB - TRD) * directMV.y) / TRD
-        	                            : mb->mvs[0].y - directMV.y);
-
-					dnv_sad16 =
-						sad16bi(frame->image.y + i * 16 + j * 16 * edged_width,
-						  get_ref_mv(f_ref->y, f_refH->y, f_refV->y, f_refHV->y,
-								i, j, 16, &mb->mvs[0], edged_width), 
-						  get_ref_mv(b_ref->y, b_refH->y, b_refV->y, b_refHV->y,
-								i, j, 16, &mb->b_mvs[0], edged_width),
-						  edged_width);
-		    		dnv_sad16 += calc_delta_16(mb->mvs[0].x-f_predMV.x, mb->mvs[0].y-f_predMV.y, 
-								frame->fcode, frame->quant);
-				    dnv_sad16 += calc_delta_16(mb->b_mvs[0].y-b_predMV.y, mb->b_mvs[0].y-b_predMV.y, 
-								frame->bcode, frame->quant);
+				/* same method of scaling as in decoder.c, so we copy from there */
+		            for (k = 0; k < 4; k++) {
 	
-					if (dnv_sad16 < best_sad)
-					{
-						best_sad = dnv_sad16;
-						mb->mode = MODE_INTERPOLATE;
+						mb->mvs[k].x = (int32_t) ((TRB * mb->directmv[k].x) / TRD + mb->deltamv.x);
+                	    mb->b_mvs[k].x = (int32_t) ((mb->deltamv.x == 0)
+											? ((TRB - TRD) * mb->directmv[k].x) / TRD
+		                                    : mb->mvs[k].x - mb->directmv[k].x);
 
-/*						fprintf(stderr,"f_sad16 = %d, b_sad16 = %d, i_sad16 = %d, dnv_sad16 = %d\n",
-							f_sad16,b_sad16,i_sad16,dnv_sad16); 
-*/					}
+        	            mb->mvs[k].y = (int32_t) ((TRB * mb->directmv[k].y) / TRD + mb->deltamv.y);
+            	        mb->b_mvs[k].y = (int32_t) ((mb->directmv[k].y == 0)
+											? ((TRB - TRD) * mb->directmv[k].y) / TRD
+                    	                    : mb->mvs[k].y - mb->directmv[k].y);
+					}
 				}
 				else
 				{
-					best_sad = dnv_sad16;
-					mb->mode = MODE_DIRECT_NONE_MV;
-				}
+					mb->mvs[0].x = (int32_t) ((TRB * mb->directmv[0].x) / TRD + mb->deltamv.x);
+
+               	    mb->b_mvs[0].x = (int32_t) ((mb->deltamv.x == 0)
+										? ((TRB - TRD) * mb->directmv[0].x) / TRD
+                                        : mb->mvs[0].x - mb->directmv[0].x);
+
+   	   	            mb->mvs[0].y = (int32_t) ((TRB * mb->directmv[0].y) / TRD + mb->deltamv.y);
+
+           	        mb->b_mvs[0].y = (int32_t) ((mb->directmv[0].y == 0)
+										? ((TRB - TRD) * mb->directmv[0].y) / TRD
+                   	                    : mb->mvs[0].y - mb->directmv[0].y);
+										
+					mb->mvs[3] = mb->mvs[2] = mb->mvs[1] = mb->mvs[0];
+					mb->b_mvs[3] = mb->b_mvs[2] = mb->b_mvs[1] = mb->b_mvs[0];
+                }
+	
+				best_sad = d_sad16;
+				mb->mode = MODE_DIRECT;
+				mb->mode = MODE_INTERPOLATE;		// direct mode still broken :-(
 			}
 
 			switch (mb->mode)
@@ -3087,19 +3078,19 @@ MotionEstimationBVOP(MBParam * const pParam,
 					b_predMV = mb->b_mvs[0];
 					break;
 				case MODE_DIRECT:
-					d_count++; break;
-				case MODE_DIRECT_NONE_MV:
-					dnv_count++; break;
+					d_count++; 
+					break;
 				default:
-					s_count++; break;
+					s_count++; 		// ???
+					break;
 			}
 			
 		}
 	}
 	
 #ifdef _DEBUG_BFRAME_STAT
-	fprintf(stderr,"B-Stat: F: %04d   B: %04d   I: %04d  D0: %04d   D: %04d   S: %04d\n",
-				f_count,b_count,i_count,dnv_count,d_count,s_count);
+	fprintf(stderr,"B-Stat: F: %04d   B: %04d   I: %04d  D: %04d   S: %04d\n",
+				f_count,b_count,i_count,d_count,s_count);
 #endif
 
 }
