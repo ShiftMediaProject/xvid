@@ -28,7 +28,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: portab.h,v 1.29 2002-09-22 17:25:13 edgomez Exp $
+ * $Id: portab.h,v 1.30 2002-09-22 17:59:13 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -300,7 +300,7 @@
  *---------------------------------------------------------------------------*/
 #    elif defined(ARCH_SPARC)
 #        define BSWAP(a) \
-                ((a) = (((a) & 0xff) << 24)  | (((a) & 0xff00) << 8) |
+                ((a) = (((a) & 0xff) << 24)  | (((a) & 0xff00) << 8) | \
                        (((a) >> 8) & 0xff00) | (((a) >> 24) & 0xff))
 #        define EMMS()
 
@@ -314,7 +314,7 @@
  *---------------------------------------------------------------------------*/
 #    elif defined(ARCH_MIPS)
 #        define BSWAP(a) \
-                ((a) = (((a) & 0xff) << 24)  | (((a) & 0xff00) << 8) |
+                ((a) = (((a) & 0xff) << 24)  | (((a) & 0xff00) << 8) | \
                        (((a) >> 8) & 0xff00) | (((a) >> 24) & 0xff))
 #        define EMMS()
 
