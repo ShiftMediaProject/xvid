@@ -161,7 +161,7 @@ void SMP_MotionEstimationWorker(jobdata *arg)
 		pCurrent = &current->image;
 		pRef = &reference->image;
 
-//		time = read_tsc();
+//		time = read_counter();
 
 		for (y = miny; y < maxy; y++)	{
 		for (x = minx; x < maxx; x++)	{
@@ -259,7 +259,7 @@ void SMP_MotionEstimationWorker(jobdata *arg)
 			}
 		}	/* end of x/y loop */
 		
-//		fprintf(stderr,"[%d,%d] Full ME %lld ticks \n",arg->id,run,read_tsc()-time);
+//		fprintf(stderr,"[%d,%d] Full ME %lld ticks \n",arg->id,run,read_counter()-time);
 
 		pthread_mutex_lock(&me_mutex);
 
@@ -279,7 +279,7 @@ void SMP_MotionEstimationWorker(jobdata *arg)
 
 //		fprintf(stderr,"[%d,%d] wait corrqueue %d done\n",arg->id,run,me_corrqueue);
 
-//		time = read_tsc();
+//		time = read_counter();
 
 //		if (me_iIntra <= iLimit) 
 //		{
@@ -303,7 +303,7 @@ void SMP_MotionEstimationWorker(jobdata *arg)
 //			pthread_mutex_lock(&me_mutex);
 //		}
 
-//		fprintf(stderr,"[%d,%d] Full CORR %lld ticks \n",arg->id,run,read_tsc()-time);
+//		fprintf(stderr,"[%d,%d] Full CORR %lld ticks \n",arg->id,run,read_counter()-time);
 
 		me_outqueue--;		
 
