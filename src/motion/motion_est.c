@@ -2034,10 +2034,10 @@ EPZSSearch16(const uint8_t * const pRef,
 
 	backupMV = *currMV;			/* save best prediction, actually only for EXTSEARCH */
 
-	if (MotionFlags & PMV_USESQUARES8)
+	if (MotionFlags & PMV_USESQUARES16)
 		MainSearchPtr = Square16_MainSearch;
 	else
-	 if (MotionFlags & PMV_ADVANCEDDIAMOND8)
+	 if (MotionFlags & PMV_ADVANCEDDIAMOND16)
 		MainSearchPtr = AdvDiamond16_MainSearch;
 	else
 		MainSearchPtr = Diamond16_MainSearch;
