@@ -53,6 +53,7 @@
 #include "motion/sad.h"
 #include "utils/emms.h"
 #include "utils/timer.h"
+#include "bitstream/mbcoding.h"
 
 int xvid_init(void *handle, int opt, void *param1, void *param2)
 {
@@ -76,7 +77,8 @@ int xvid_init(void *handle, int opt, void *param1, void *param2)
 
 	// initialize the function pointers
 	idct_int32_init();
-	
+	init_vlc_tables();
+
 	fdct = fdct_int32;
 	idct = idct_int32;
 

@@ -170,7 +170,6 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 				pParam->max_quantizer, pParam->min_quantizer);
 	}
 
-	create_vlc_tables();
 	init_timer();
 
 	return XVID_ERR_OK;
@@ -192,8 +191,6 @@ int encoder_destroy(Encoder * pEnc)
 	image_destroy(&pEnc->vInterHV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 	image_destroy(&pEnc->vInterHVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 	xvid_free(pEnc);
-
-	destroy_vlc_tables();
 
 	return XVID_ERR_OK;
 }

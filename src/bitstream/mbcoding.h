@@ -3,9 +3,9 @@
 
 #include "../portab.h"
 #include "../global.h"
+#include "bitstream.h"
 
-void create_vlc_tables(void);
-void destroy_vlc_tables(void);
+void init_vlc_tables(void);
 
 int get_mcbpc_intra(Bitstream * bs);
 int get_mcbpc_inter(Bitstream * bs);

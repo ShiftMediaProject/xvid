@@ -1,22 +1,26 @@
+#include <stdlib.h>
 #include "../portab.h"
 #include "bitstream.h"
 #include "zigzag.h"
 #include "vlc_codes.h"
+#include "mbcoding.h"
 
 #include "../utils/mbfunctions.h"
-
-#include <stdlib.h> /* malloc, free */
 
 #define ESCAPE 7167
 #define ABS(X) (((X)>0)?(X):-(X))
 #define CLIP(X,A) (X > A) ? (A) : (X)
 
+VLC DCT3Dintra[4096];
+VLC DCT3Dinter[4096];
 static VLC *DCT3D[2];
 
-VLC *intra_table, *inter_table;
+VLC intra_table[65536]; 
+VLC inter_table[65536];
+
 static short clip_table[4096];
 
-void create_vlc_tables(void)
+void init_vlc_tables(void)
 {
 
 	int32_t k, l, i, intra, last;
@@ -24,17 +28,11 @@ void create_vlc_tables(void)
 	VLC **coeff_ptr;
 	VLC *vlc1, *vlc2;
 
-	VLC *DCT3Dintra;
-	VLC *DCT3Dinter;
-
-	DCT3Dintra = (VLC *) malloc(sizeof(VLC) * 4096);
-	DCT3Dinter = (VLC *) malloc(sizeof(VLC) * 4096);
-
 	vlc1 = DCT3Dintra;
 	vlc2 = DCT3Dinter;
 	
-	vlc[0] = intra_table = (VLC *) malloc(128 * 511 * sizeof(VLC));
-	vlc[1] = inter_table = (VLC *) malloc(128 * 511 * sizeof(VLC));
+	vlc[0] = intra_table;
+	vlc[1] = inter_table;
 	
 	// initialize the clipping table
 	for(i = -2048; i < 2048; i++) {
@@ -45,103 +43,80 @@ void create_vlc_tables(void)
 			clip_table[i + 2048] = 255;
 	}
 	
-	// generate intra/inter vlc lookup table
+	// generate encoding vlc lookup tables
 	for(i = 0; i < 4; i++) {
 		intra = i % 2;
-		last = i >> 1;
+		last = i / 2;
 
-		coeff_ptr = coeff_vlc[last + (intra << 1)];
+		coeff_ptr = coeff_vlc[last + 2 * intra];
 			
 		for(k = -255; k < 256; k++) { // level
-			char *max_level_ptr = max_level[last + (intra << 1)];
-			char *max_run_ptr = max_run[last + (intra << 1)];
+			int8_t *max_level_ptr = max_level[last + 2 * intra];
+			int8_t *max_run_ptr = max_run[last + 2 * intra];
 	
 			for(l = 0; l < 64; l++) { // run
 				int32_t level = k;
 				uint32_t run = l;
-	
-				if(abs(level) <= max_level_ptr[run] && run <= max_run_ptr[abs(level)]) {
-
-					if(level > 0) {
-						vlc[intra]->code = (coeff_ptr[run][level - 1].code) << 1;
-						vlc[intra]->len = coeff_ptr[run][level - 1].len + 1;
-					}
-					else if(level < 0) {
-						vlc[intra]->code = ((coeff_ptr[run][-level - 1].code) << 1) + 1;
-						vlc[intra]->len = coeff_ptr[run][-level - 1].len + 1;
-					}
-					else {
+			
+				if((abs(level) <= max_level_ptr[run]) &&
+				   (run <= max_run_ptr[abs(level)])) { // level < max_level and run < max_run
+													   
 						vlc[intra]->code = 0;
 						vlc[intra]->len = 0;
-					}
-				} else {
-					if(level > 0)
+						goto loop_end;
+				}
+				else {
+					if(level > 0)					     // correct level
 						level -= max_level_ptr[run];
 					else
 						level += max_level_ptr[run];
-					
-					if(abs(level) <= max_level_ptr[run] &&
-						run <= max_run_ptr[abs(level)]) {
-							
-						if(level > 0) {
-							vlc[intra]->code = (0x06 << (coeff_ptr[run][level - 1].len + 1)) |
-								(coeff_ptr[run][level - 1].code << 1);
-							vlc[intra]->len = (coeff_ptr[run][level - 1].len + 1) + 8;
-						}
-						else if(level < 0) {
-							vlc[intra]->code = (0x06 << (coeff_ptr[run][-level - 1].len + 1)) |
-								((coeff_ptr[run][-level - 1].code << 1) + 1);
-							vlc[intra]->len = (coeff_ptr[run][-level - 1].len + 1) + 8;
-						}
-						else {
-							vlc[intra]->code = 0x06;
-							vlc[intra]->len = 8;
-						}
-					} else {
-						if(level > 0)
-							level += max_level_ptr[run];
-						else
-							level -= max_level_ptr[run];
 
-						run -= max_run_ptr[abs(level)] + 1;
+					if((abs(level) <= max_level_ptr[run]) &&
+					   (run <= max_run_ptr[abs(level)])) {
 						
-						if(abs(level) <= max_level_ptr[run] &&
-							run <= max_run_ptr[abs(level)]) {
-						
-							if(level > 0) {
-								vlc[intra]->code = (0x0e << (coeff_ptr[run][level - 1].len + 1)) |
-									(coeff_ptr[run][level - 1].code << 1);
-								vlc[intra]->len = (coeff_ptr[run][level - 1].len + 1) + 9;
-							}
-							else if(level < 0) {
-								vlc[intra]->code = (0x0e << (coeff_ptr[run][-level - 1].len + 1)) |
-									((coeff_ptr[run][-level - 1].code << 1) + 1);
-								vlc[intra]->len = (coeff_ptr[run][-level - 1].len + 1) + 9;
-							}
-							else {
-								vlc[intra]->code = 0x0e;
-								vlc[intra]->len = 9;
-							}
-						} else {
-							if(level != 0)
-								run += max_run_ptr[abs(level)] + 1;
-							else
-								run++;
-
-							vlc[intra]->code = (uint32_t) ((0x1e + last) << 20) |
-										(l << 14) | (1 << 13) | ((k & 0xfff) << 1) | 1;
-								
-							vlc[intra]->len = 30;
-						}
+						vlc[intra]->code = 0x06;
+						vlc[intra]->len = 8;
+						goto loop_end;
 					}
+
+					if(level > 0)					    // still here?
+						level += max_level_ptr[run];    // restore level
+					else
+						level -= max_level_ptr[run];
+
+					run -= max_run_ptr[abs(level)] + 1; // and change run
+
+					if((abs(level) <= max_level_ptr[run]) &&
+					   (run <= max_run_ptr[abs(level)])) {
+						
+						vlc[intra]->code = 0x0e;
+						vlc[intra]->len = 9;
+						goto loop_end;
+					}
+					run += max_run_ptr[abs(level)] + 1;
 				}
+
+				vlc[intra]->code = (uint32_t) ((l << 14) | (0x1e + last) << 20) |
+											  (1 << 13) | ((k & 0xfff) << 1) | 1;
+
+				vlc[intra]->len = 30;
+				vlc[intra]++;
+				continue;
+
+loop_end:
+				if(level != 0) {
+					vlc[intra]->code = (vlc[intra]->code << (coeff_ptr[run][abs(level) - 1].len + 1)) |
+									   (coeff_ptr[run][abs(level) - 1].code << 1);
+					vlc[intra]->len = (coeff_ptr[run][abs(level) - 1].len + 1) + vlc[intra]->len;
+
+					if(level < 0)
+						vlc[intra]->code += 1;
+				}
+
 				vlc[intra]++;
 			}
 		}
 	}
-
-	intra_table += 64*255; // center vlc tables
-	inter_table += 64*255; // center vlc tables
 
 	for(i = 0; i < 4096; i++) {
 		if(i >= 512) {
@@ -166,23 +141,6 @@ void create_vlc_tables(void)
 	}
 	DCT3D[0] = DCT3Dinter;
 	DCT3D[1] = DCT3Dintra;
-
-}
-
-void destroy_vlc_tables(void) {
-
-	if(intra_table != NULL && inter_table != NULL) {
-		intra_table -= 64*255; // uncenter vlc tables
-		inter_table -= 64*255; // uncenter vlc tables
-
-		free(intra_table);
-		free(inter_table);
-	}
-
-	if(DCT3D[0] != NULL && DCT3D[1] != NULL) {
-		free(DCT3D[0]);
-		free(DCT3D[1]);
-	}
 
 }
 
@@ -257,7 +215,7 @@ static __inline void CodeCoeff(Bitstream *bs,
     
 	do {
 		// count zeroes
-		vlc = table + (clip_table[2048+v] << 6) + j - last;
+		vlc = table + 64*255 + (clip_table[2048+v] << 6) + j - last;
 		last = j + 1;
 		while(j < 64 && (v = qcoeff[zigzag[j++]]) == 0);
 				
