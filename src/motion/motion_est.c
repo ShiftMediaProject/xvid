@@ -458,6 +458,7 @@ Diamond16_MainSearch(const uint8_t * const pRef,
 /* Do a diamond search around given starting point, return SAD of best */
 
 	int32_t iDirection = 0;
+	int32_t iDirectionBackup;
 	int32_t iSAD;
 	VECTOR backupMV;
 
@@ -471,23 +472,25 @@ Diamond16_MainSearch(const uint8_t * const pRef,
 	CHECK_MV16_CANDIDATE_DIR(backupMV.x, backupMV.y - iDiamondSize, 3);
 	CHECK_MV16_CANDIDATE_DIR(backupMV.x, backupMV.y + iDiamondSize, 4);
 
-	if (iDirection)
+	if (iDirection)	{	
 		while (!iFound) {
 			iFound = 1;
 			backupMV = *currMV;
+			iDirectionBackup = iDirection;
 
-			if (iDirection != 2)
+			if (iDirectionBackup != 2)
 				CHECK_MV16_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
 										   backupMV.y, 1);
-			if (iDirection != 1)
+			if (iDirectionBackup != 1)
 				CHECK_MV16_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
 										   backupMV.y, 2);
-			if (iDirection != 4)
+			if (iDirectionBackup != 4)
 				CHECK_MV16_CANDIDATE_FOUND(backupMV.x,
 										   backupMV.y - iDiamondSize, 3);
-			if (iDirection != 3)
+			if (iDirectionBackup != 3)
 				CHECK_MV16_CANDIDATE_FOUND(backupMV.x,
 										   backupMV.y + iDiamondSize, 4);
+		}
 	} else {
 		currMV->x = start_x;
 		currMV->y = start_y;
@@ -1613,6 +1616,7 @@ Diamond8_MainSearch(const uint8_t * const pRef,
 /* Do a diamond search around given starting point, return SAD of best */
 
 	int32_t iDirection = 0;
+	int32_t iDirectionBackup;
 	int32_t iSAD;
 	VECTOR backupMV;
 
@@ -1626,23 +1630,25 @@ Diamond8_MainSearch(const uint8_t * const pRef,
 	CHECK_MV8_CANDIDATE_DIR(backupMV.x, backupMV.y - iDiamondSize, 3);
 	CHECK_MV8_CANDIDATE_DIR(backupMV.x, backupMV.y + iDiamondSize, 4);
 
-	if (iDirection)
+	if (iDirection)	{
 		while (!iFound) {
 			iFound = 1;
 			backupMV = *currMV;	// since iDirection!=0, this is well defined!
+			iDirectionBackup = iDirection;
 
-			if (iDirection != 2)
+			if (iDirectionBackup != 2)
 				CHECK_MV8_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
 										  backupMV.y, 1);
-			if (iDirection != 1)
+			if (iDirectionBackup != 1)
 				CHECK_MV8_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
 										  backupMV.y, 2);
-			if (iDirection != 4)
+			if (iDirectionBackup != 4)
 				CHECK_MV8_CANDIDATE_FOUND(backupMV.x,
 										  backupMV.y - iDiamondSize, 3);
-			if (iDirection != 3)
+			if (iDirectionBackup != 3)
 				CHECK_MV8_CANDIDATE_FOUND(backupMV.x,
 										  backupMV.y + iDiamondSize, 4);
+		}
 	} else {
 		currMV->x = start_x;
 		currMV->y = start_y;
