@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.h,v 1.3 2004-04-14 03:25:41 syskin Exp $
+ * $Id: CXvidDecoder.h,v 1.4 2004-07-16 15:38:01 syskin Exp $
  *
  ****************************************************************************/
 
@@ -90,8 +90,19 @@ private :
 	int (*xvid_global_func)(void *handle, int opt, void *param1, void *param2);
 	int (*xvid_decore_func)(void *handle, int opt, void *param1, void *param2);
 	int ar_x, ar_y;
+	bool forced_ar;
 
 	int rgb_flip;
+
+};
+
+static const int PARS[][2] = {
+	{1, 1},
+	{12, 11},
+	{10, 11},
+	{16, 11},
+	{40, 33},
+	{0, 0},
 };
 
 

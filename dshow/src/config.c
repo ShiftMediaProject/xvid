@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: config.c,v 1.5 2004-07-11 10:22:47 syskin Exp $
+ * $Id: config.c,v 1.6 2004-07-16 15:38:01 syskin Exp $
  *
  ****************************************************************************/
 
@@ -141,7 +141,8 @@ BOOL CALLBACK adv_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SendMessage(hBrightness, TBM_SETPOS, (WPARAM)TRUE, (LPARAM) g_config.nBrightness);
 
 		// Load Aspect Ratio Box
-		SendMessage(GetDlgItem(hwnd, IDC_USE_AR), CB_ADDSTRING, 0, (LPARAM)"Auto"); 
+		SendMessage(GetDlgItem(hwnd, IDC_USE_AR), CB_ADDSTRING, 0, (LPARAM)"Auto (mpeg-4 first)"); 
+		SendMessage(GetDlgItem(hwnd, IDC_USE_AR), CB_ADDSTRING, 0, (LPARAM)"Auto (external first)"); 
 		SendMessage(GetDlgItem(hwnd, IDC_USE_AR), CB_ADDSTRING, 0, (LPARAM)"4:3"); 
 		SendMessage(GetDlgItem(hwnd, IDC_USE_AR), CB_ADDSTRING, 0, (LPARAM)"16:9"); 
 		SendMessage(GetDlgItem(hwnd, IDC_USE_AR), CB_ADDSTRING, 0, (LPARAM)"2.35:1"); 
@@ -167,6 +168,7 @@ BOOL CALLBACK adv_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		EnableWindow(GetDlgItem(hwnd,IDC_DERINGY),g_config.nDeblock_Y);
 		EnableWindow(GetDlgItem(hwnd,IDC_DERINGUV),g_config.nDeblock_UV);
 
+		EnableWindow(GetDlgItem(hwnd, IDC_USE_AR), !g_config.videoinfo_compat);
 
 		// Set Date & Time of Compilation
 		DPRINTF("(%s %s)", __DATE__, __TIME__);
@@ -226,6 +228,9 @@ BOOL CALLBACK adv_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		EnableWindow(GetDlgItem(hwnd,IDC_DERINGY),g_config.nDeblock_Y);
 		EnableWindow(GetDlgItem(hwnd,IDC_DERINGUV),g_config.nDeblock_UV);
+
+		EnableWindow(GetDlgItem(hwnd, IDC_USE_AR), !g_config.videoinfo_compat);
+
 		SaveRegistryInfo();
 		
 
