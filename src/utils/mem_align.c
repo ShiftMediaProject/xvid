@@ -3,6 +3,9 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Aligned memory allocator -
  *
+ *  Copyright(C) 2002 Michael Militzer
+ *               2002 Edouard Gomez
+ *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
  *  to use this software module in hardware or software products are
@@ -26,17 +29,9 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- ****************************************************************************/
-/*****************************************************************************
- *
- *  History
- *
- *  - Thu Jun 13 23:50:07 2002 Added legal header
- *
- *  $Id: mem_align.c,v 1.8 2002-06-14 13:27:28 Isibaar Exp $
+ * $Id: mem_align.c,v 1.9 2002-09-05 21:32:30 edgomez Exp $
  *
  ****************************************************************************/
-
 
 #include <stdlib.h>
 #include <stdio.h>
