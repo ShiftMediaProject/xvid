@@ -7,17 +7,14 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#ifdef _MSC_VER
-#include "afxres.h"
-#else
 #include <windows.h>
 #ifndef IDC_STATIC
 #define IDC_STATIC (-1)
 #endif
-#endif
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
+
 
 /////////////////////////////////////////////////////////////////////////////
 // Neutral resources
@@ -498,9 +495,10 @@ BEGIN
     CONTROL         "IDB_LOGO",IDC_STATIC,"Static",SS_BITMAP,24,56,15,13
     CTEXT           "XviD MPEG4 video codec",IDC_STATIC,8,16,176,12
     GROUPBOX        "About",IDC_STATIC,4,4,184,132
-    DEFPUSHBUTTON   "OK",IDOK,56,144,80,12
+    DEFPUSHBUTTON   "OK",IDOK,102,144,80,14
     CTEXT           "CORE",IDC_CORE,8,40,176,8,SS_CENTERIMAGE
     CTEXT           "( SPECIAL BUILD )",IDC_SPECIAL_BUILD,5,102,181,8
+    PUSHBUTTON      "View License...",IDC_LICENSE,10,144,80,14
 END
 
 IDD_RC_CBR DIALOG DISCARDABLE  0, 0, 212, 212
@@ -854,6 +852,16 @@ BEGIN
                     SS_CENTERIMAGE
 END
 
+IDD_LICENSE DIALOG DISCARDABLE  0, 0, 430, 234
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "GNU General Public License"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Dismiss",IDOK,172,218,84,14
+    EDITTEXT        IDC_LICENSE_TEXT,2,2,426,212,ES_MULTILINE | 
+                    ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -870,6 +878,14 @@ IDB_LOGO                BITMAP  DISCARDABLE     "XviD_logo.bmp"
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_ICON                ICON    DISCARDABLE     "xvid.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXT
+//
+
+IDR_GPL                 TEXT    DISCARDABLE     "..\\..\\LICENSE"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1014,18 +1030,7 @@ BEGIN
     IDC_ZONE_FORCEIVOP      "Force a keyframe at the beginnig of the zone"
 END
 
-#endif    // Neutral resources
-/////////////////////////////////////////////////////////////////////////////
 
-
-/////////////////////////////////////////////////////////////////////////////
-// English (Australia) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENA)
-#ifdef _WIN32
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_AUS
-#pragma code_page(1252)
-#endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -1038,9 +1043,12 @@ BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE DISCARDABLE
 BEGIN
-    "#include ""afxres.h""\r\n"
+    "#include <windows.h>\r\n"
+    "#ifndef IDC_STATIC\r\n"
+    "#define IDC_STATIC (-1)\r\n"
+    "#endif\r\n"
     "\0"
 END
 
@@ -1052,9 +1060,8 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // English (Australia) resources
+#endif    // Neutral resources
 /////////////////////////////////////////////////////////////////////////////
-
 
 
 #ifndef APSTUDIO_INVOKED

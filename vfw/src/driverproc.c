@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: driverproc.c,v 1.6 2004-07-15 11:53:46 suxen_drol Exp $
+ * $Id: driverproc.c,v 1.7 2004-07-25 02:26:57 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -310,7 +310,11 @@ void WINAPI Configure(HWND hwnd, HINSTANCE hinst, LPTSTR lpCmdLine, int nCmdShow
 	dwDriverId = DriverProc(0, 0, DRV_OPEN, 0, 0);
 	if (dwDriverId != (DWORD)NULL)
 	{
-		DriverProc(dwDriverId, 0, ICM_CONFIGURE, (LPARAM)GetDesktopWindow(), 0);
+		if (lstrcmpi(lpCmdLine, "about")==0) {
+			DriverProc(dwDriverId, 0, ICM_ABOUT, (LPARAM)GetDesktopWindow(), 0);
+		}else{
+			DriverProc(dwDriverId, 0, ICM_CONFIGURE, (LPARAM)GetDesktopWindow(), 0);
+		}
 		DriverProc(dwDriverId, 0, DRV_CLOSE, 0, 0);
 	}
 }

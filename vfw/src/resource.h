@@ -2,6 +2,7 @@
 // Microsoft Developer Studio generated include file.
 // Used by resource.rc
 //
+#define IDC_LICENSE                     3
 #define IDD_MAIN                        100
 #define IDD_GLOBAL                      101
 #define IDD_QUANT                       102
@@ -26,6 +27,8 @@
 #define IDD_STATUS                      125
 #define IDD_AR                          126
 #define IDD_BITRATE                     127
+#define IDD_LICENSE                     129
+#define IDR_GPL                         131
 #define WIZ_CYDLG                       140
 #define PROP_MIN_CYDLG                  144
 #define PROP_SM_CYDLG                   188
@@ -414,14 +417,15 @@
 #define IDC_DEC_BRIGHTNESS              1393
 #define IDC_TFF                         1394
 #define IDC_VHQ_BFRAME                  1395
+#define IDC_LICENSE_TEXT                1396
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        129
+#define _APS_NEXT_RESOURCE_VALUE        132
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1396
+#define _APS_NEXT_CONTROL_VALUE         1397
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
