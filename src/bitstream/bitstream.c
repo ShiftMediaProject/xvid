@@ -28,7 +28,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.c,v 1.30 2002-09-12 19:06:37 edgomez Exp $
+ * $Id: bitstream.c,v 1.31 2002-09-19 19:25:06 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -688,40 +688,27 @@ BitstreamWriteVolHeader(Bitstream * const bs,
 	BitstreamPutBit(bs, 1);	// vol_control_parameters
 	BitstreamPutBits(bs, 1, 2);	// chroma_format 1="4:2:0"
 
-#ifdef BFRAMES
-	if (pParam->max_bframes > 0) {
-		BitstreamPutBit(bs, 0);	// low_delay
-	} else
-#endif
-	{
-		BitstreamPutBit(bs, 1);	// low_delay
-	}
+	BitstreamPutBit(bs, 1);	// low_delay
+
 	BitstreamPutBit(bs, 0);	// vbv_parameters (0=not given)
 
 	BitstreamPutBits(bs, 0, 2);	// video_object_layer_shape (0=rectangular)
 
 	WRITE_MARKER();
 
-	/* time_increment_resolution; ignored by current decore versions
-	   eg. 2fps     res=2       inc=1
-	   25fps        res=25      inc=1
-	   29.97fps res=30000   inc=1001
+	/*
+	 * time_increment_resolution; ignored by current decore versions
+	 *  eg. 2fps     res=2       inc=1
+	 *      25fps    res=25      inc=1
+	 *      29.97fps res=30000   inc=1001
 	 */
-#ifdef BFRAMES
 	BitstreamPutBits(bs, pParam->fbase, 16);
-#else
-	BitstreamPutBits(bs, pParam->fbase, 16);
-#endif
+
 
 	WRITE_MARKER();
 
-#ifdef BFRAMES
 	BitstreamPutBit(bs, 1);		// fixed_vop_rate = 1
 	BitstreamPutBits(bs, pParam->fincr, log2bin(pParam->fbase));	// fixed_vop_time_increment
-#else
-	BitstreamPutBit(bs, 1);		// fixed_vop_rate = 1
-	BitstreamPutBits(bs, pParam->fincr, log2bin(pParam->fbase));	// fixed_vop_time_increment
-#endif
 
 	WRITE_MARKER();
 	BitstreamPutBits(bs, pParam->width, 13);	// width
@@ -779,31 +766,15 @@ BitstreamWriteVopHeader(Bitstream * const bs,
 	BitstreamPutBits(bs, frame->coding_type, 2);
 
 	// time_base = 0  write n x PutBit(1), PutBit(0)
-#ifdef BFRAMES
 	for (i = 0; i < frame->seconds; i++) {
 		BitstreamPutBit(bs, 1);
 	}
 	BitstreamPutBit(bs, 0);
-#else
-	for (i = 0; i < frame->seconds; i++) {
-		BitstreamPutBit(bs, 1);
-	}
-	BitstreamPutBit(bs, 0);
-//	BitstreamPutBits(bs, 0, 1);
-#endif
 
 	WRITE_MARKER();
 
 	// time_increment: value=nth_of_sec, nbits = log2(resolution)
-#ifdef BFRAMES
 	BitstreamPutBits(bs, frame->ticks, log2bin(pParam->fbase));
-	/*DPRINTF("[%i:%i] %c\n", frame->seconds, frame->ticks,
-			frame->coding_type == I_VOP ? 'I' : frame->coding_type ==
-			P_VOP ? 'P' : 'B');*/
-#else
-	BitstreamPutBits(bs, frame->ticks, log2bin(pParam->fbase));
-//	BitstreamPutBits(bs, 1, 1);
-#endif
 
 	WRITE_MARKER();
 
