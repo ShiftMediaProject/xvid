@@ -17,8 +17,6 @@
 #include "../bitstream/vlc_codes.h"
 #include "../dct/fdct.h"
 #include "motion_inlines.h"
-#include "../plugins/HVS_base.h"
-
 
 /* rd = BITS_MULT*bits + LAMBDA*distortion */
 #define LAMBDA		( (int)(BITS_MULT*1.0) )
@@ -516,6 +514,7 @@ ModeDecision_BVOP_RD(SearchData * const Data_d,
 		case MODE_BACKWARD:
 			rd = b_rd = SearchBF_RD(x, y, MotionFlags, pParam, &best_rd, Data_b);
 			break;
+		default:
 		case MODE_INTERPOLATE:
 			rd = i_rd = SearchInterpolate_RD(x, y, MotionFlags, pParam, &best_rd, Data_i);
 			break;
