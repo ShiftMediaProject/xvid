@@ -27,6 +27,9 @@ CFLAGS += -fstrict-aliasing -fomit-frame-pointer
 #CFLAGS += -Wall -g
 
 AS = as
+# if GNU as choke on Altivec instructions, try to comment the previous
+# line, and uncomment the next one.
+# AS = as -mvec
 
 %.o: %.s
 	$(AS) $< -o $@
