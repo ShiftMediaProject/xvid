@@ -1,6 +1,0 @@
-EXPORTS
-	xvid_decore; 
-	xvid_encore; 
-	xvid_init; 
-	@DIVX4_ENCORE@
-	@DIVX4_DECORE@
