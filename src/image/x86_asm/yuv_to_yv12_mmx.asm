@@ -33,7 +33,7 @@
 ;  24.11.2001 initial version  (Isibaar)
 ;  23.07.2002 thread safe (edgomez)
 ; 
-;  $Id: yuv_to_yv12_mmx.asm,v 1.4 2002-07-23 12:32:22 edgomez Exp $ 
+;  $Id: yuv_to_yv12_mmx.asm,v 1.5 2002-07-23 15:38:18 edgomez Exp $ 
 ;
 ;------------------------------------------------------------------------------ 
 
@@ -42,7 +42,7 @@ BITS 32
 %macro cglobal 1 
 %ifdef PREFIX
 	global _%1 
-;  $Id: yuv_to_yv12_mmx.asm,v 1.4 2002-07-23 12:32:22 edgomez Exp $ 
+		%define %1 _%1
 	%else
 		global %1
 	%endif
@@ -86,7 +86,7 @@ yuv_to_yv12_xmm:
 	mov esi, [esp + 32 + localsize] 	; src -> esi 
 	mov edi, [esp + 20 + localsize] 	; y_out -> edi 
 	mov ecx, [esp + 36 + localsize] 	; width -> ecx
-%define remainder esp + 4
+
 	sub ebx, ecx			; stride - width -> ebx
 	
 	mov edx, ecx
@@ -336,7 +336,7 @@ yuv_to_yv12_mmx:
 	mov ebx, [esp + 44 + localsize]	; stride -> ebx
 	mov esi, [esp + 32 + localsize] ; src -> esi 
 	mov edi, [esp + 20 + localsize] ; y_out -> edi 
-%define remainder esp + 4
+	mov ecx, [esp + 36 + localsize] ; width -> ecx
 
 	sub ebx, ecx		; stride - width -> ebx
 
