@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation.h,v 1.5 2004-07-08 07:12:54 syskin Exp $
+ * $Id: estimation.h,v 1.6 2004-07-18 11:48:08 syskin Exp $
  *
  ****************************************************************************/
 
@@ -113,9 +113,10 @@ typedef struct
 	int16_t * dctSpace;			/* temporary space for dct */
 	uint32_t iQuant;			/* current quant */
 	uint32_t quant_type;		/* current quant type */
-	unsigned int cbp[2];					/* CBP of the best vector found so far + cbp for inter4v search */
+	unsigned int cbp[2];		/* CBP of the best vector found so far + cbp for inter4v search */
 	const uint16_t * scan_table; /* current scan table */
 	const uint16_t * mpeg_quant_matrices;			/* current MPEG quantization matrices */
+	int lambda[6];				/* R-D lambdas for all 6 blocks */
 
 } SearchData;
 
@@ -181,6 +182,19 @@ xvid_me_ModeDecision_Fast(SearchData * const Data,
 		const IMAGE * const pRef,
 		const IMAGE * const vGMC,
 		const int coding_type);
+
+void 
+ModeDecision_BVOP_RD(SearchData * const Data_d,
+					 SearchData * const Data_b,
+					 SearchData * const Data_f,
+					 SearchData * const Data_i,
+					 MACROBLOCK * const pMB,
+					 const MACROBLOCK * const b_mb,
+					 VECTOR * f_predMV,
+					 VECTOR * b_predMV,
+					 const uint32_t MotionFlags,
+					 const MBParam * const pParam,
+					 int x, int y);
 
 
 #endif							/* _ESTIMATION_H_ */

@@ -22,6 +22,7 @@ SRC_GENERIC = \
 	motion/estimation_gmc.c \
 	motion/estimation_pvop.c \
 	motion/estimation_rd_based.c \
+	motion/estimation_rd_based_bvop.c \
 	motion/gmc.c \
 	motion/motion_comp.c \
 	motion/vop_type_decision.c \
