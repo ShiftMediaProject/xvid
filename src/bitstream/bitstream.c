@@ -41,6 +41,8 @@
   *																			   *	
   *  Revision history:                                                         *
   *																			   *	
+  *  08.05.2002  add low_delay support for B_VOP decode						   *
+  *              MinChen <chenm001@163.com>                                    *
   *  06.05.2002 low_delay                                                      *
   *  06.05.2002 fixed fincr/fbase error                                        *
   *  01.05.2002 added BVOP support to BitstreamWriteVopHeader                  *
@@ -224,7 +226,7 @@ int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding, uin
 			{
 				DEBUG("+ vol_control_parameters");
 				BitstreamSkip(bs, 2);						// chroma_format
-				BitstreamSkip(bs, 1);						// low_delay
+				dec->low_delay=BitstreamGetBit(bs);			// low_delay
 				if (BitstreamGetBit(bs))					// vbv_parameters
 				{
 					DEBUG("+ vbv_parameters");
