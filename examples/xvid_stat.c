@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_stat.c,v 1.17 2002-12-18 20:48:25 edgomez Exp $
+ * $Id: xvid_stat.c,v 1.18 2002-12-18 21:48:46 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -204,12 +204,12 @@ int main(int argc, char *argv[])
 	double totalenctime=0.;
 	double totaldectime=0.;
   
-	long totalsize=0;
-	long hints_size;
+	long totalsize = 0;
+	long hints_size = 0;
 	int status;
-	int bigendian;
+	int bigendian = 0;
 
-	long m4v_size;
+	long m4v_size = 0;
 	long frame_type[ABS_MAXFRAMENR];
 	int Iframes=0, Pframes=0, use_assembler=0;
 	double framepsnr[ABS_MAXFRAMENR];
@@ -413,6 +413,7 @@ int main(int argc, char *argv[])
 		bigendian = 1;
 	else
 		bigendian = 0;
+	totalsize = 0;
 
 /*****************************************************************************
  *                            Main loop
