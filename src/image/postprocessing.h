@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: postprocessing.h,v 1.5 2004-04-18 07:55:11 syskin Exp $
+ * $Id: postprocessing.h,v 1.6 2004-07-15 10:08:22 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -75,5 +75,6 @@ extern IMAGEBRIGHTNESS_PTR image_brightness;
 
 IMAGEBRIGHTNESS image_brightness_c;
 IMAGEBRIGHTNESS image_brightness_mmx;
+IMAGEBRIGHTNESS image_brightness_sse2;
 
 #endif

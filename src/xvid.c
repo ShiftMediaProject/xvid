@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.53 2004-04-15 12:05:19 suxen_drol Exp $
+ * $Id: xvid.c,v 1.54 2004-07-15 10:08:21 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -520,6 +520,9 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 		/* DCT operators
 		 * no iDCT because it's not "Walken matching" */
 		fdct = fdct_sse2_skal;
+
+		/* postprocessing */
+		image_brightness = image_brightness_sse2;
 	}
 #endif /* ARCH_IS_IA32 */
 
