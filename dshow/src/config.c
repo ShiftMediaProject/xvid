@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: config.c,v 1.6 2004-07-16 15:38:01 syskin Exp $
+ * $Id: config.c,v 1.7 2004-11-22 05:47:26 syskin Exp $
  *
  ****************************************************************************/
 
@@ -43,7 +43,7 @@ void LoadRegistryInfo()
 	RegOpenKeyEx(XVID_REG_KEY, XVID_REG_SUBKEY, 0, KEY_READ, &hKey);
 
 	// Set the default post-processing settings
-	REG_GET_N("Brightness", g_config.nBrightness, 25)
+	REG_GET_N("Brightness", g_config.nBrightness, 0)
 	REG_GET_N("Deblock_Y",  g_config.nDeblock_Y, 0)
 	REG_GET_N("Deblock_UV", g_config.nDeblock_UV, 0)
 	REG_GET_N("Dering_Y",  g_config.nDering_Y, 0)
