@@ -28,7 +28,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: quant_matrix.c,v 1.8 2002-09-08 17:28:22 edgomez Exp $
+ *  $Id: quant_matrix.c,v 1.9 2002-09-22 18:33:31 h Exp $
  *
  ****************************************************************************/
 
@@ -178,7 +178,7 @@ set_intra_matrix(uint8_t * matrix)
 		intra_matrix[i] = (int16_t) matrix[i];
 		intra_matrix_fix[i] = FIX(intra_matrix[i]);
 	}
-	return custom_intra_matrix | change;
+	return /*custom_intra_matrix |*/ change;
 }
 
 
@@ -198,5 +198,5 @@ set_inter_matrix(uint8_t * matrix)
 		inter_matrix[i] = (int16_t) matrix[i];
 		inter_matrix_fix[i] = FIX(inter_matrix[i]);
 	}
-	return custom_inter_matrix | change;
+	return /*custom_inter_matrix |*/ change;
 }
