@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: qpel_altivec.c,v 1.1 2004-10-17 10:20:15 edgomez Exp $
+ * $Id: qpel_altivec.c,v 1.2 2004-12-09 23:02:54 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -206,8 +206,10 @@ static const vector signed short FIR_Tab_8[9] = {
 	mask = vec_lvsr(0,Dst);\
 	tmp = vec_perm(tmp,tmp,mask);\
 	mask = vec_perm(oxFF, ox00, mask);\
-	vec_st( vec_sel(tmp, vec_ld(0,Dst), mask), 0, Dst);\
-	vec_st( vec_sel(vec_ld(16,Dst), tmp, mask), 16, Dst)
+	tmp1 = vec_sel(tmp, vec_ld(0,Dst), mask);\
+	vec_st(tmp1, 0, Dst);\
+	tmp1 = vec_sel(vec_ld(16,Dst), tmp, mask);\
+	vec_st(tmp1, 16, Dst)
 
 #define STORE_V_16() \
 	for(j = 0; j < 16; j++)\
@@ -229,7 +231,8 @@ static const vector signed short FIR_Tab_8[9] = {
 /* Additional variable declaration/initialization macros */
 
 #define VARS_H_16()\
-	register vector unsigned char mask
+	register vector unsigned char mask;\
+	register vector unsigned char tmp1
 
 
 #define VARS_V()\

@@ -17,7 +17,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-    $Id: sad_altivec.c,v 1.10 2004-04-12 14:05:08 edgomez Exp $
+    $Id: sad_altivec.c,v 1.11 2004-12-09 23:02:54 edgomez Exp $
 */
 
 #ifdef HAVE_ALTIVEC_H
@@ -46,33 +46,34 @@ cur += stride; ref += stride;
 /*
  * This function assumes cur and stride are 16 bytes aligned and ref is unaligned
  */
-unsigned long
-sad16_altivec_c(const vector unsigned char *cur,
-			  const vector unsigned char *ref,
-			  unsigned long stride,
-			  const unsigned long best_sad)
+
+uint32_t
+sad16_altivec_c(vector unsigned char *cur,
+			  vector unsigned char *ref,
+			  uint32_t stride,
+			  const uint32_t best_sad)
 {
 	vector unsigned char perm;
 	vector unsigned char t1, t2;
 	vector unsigned int sad;
 	vector unsigned int sumdiffs;
-        vector unsigned int best_vec;
-	unsigned long result;
+	vector unsigned int best_vec;
+	uint32_t result;
 
         
 #ifdef DEBUG
         /* print alignment errors if DEBUG is on */
 	if (((unsigned long) cur) & 0xf)
-		fprintf(stderr, "sad16_altivec:incorrect align, cur: %x\n", cur);
+		fprintf(stderr, "sad16_altivec:incorrect align, cur: %lx\n", (long)cur);
 	if (stride & 0xf)
-		fprintf(stderr, "sad16_altivec:incorrect align, stride: %x\n", stride);
+		fprintf(stderr, "sad16_altivec:incorrect align, stride: %lu\n", stride);
 #endif
 	/* initialization */
-        sad = vec_splat_u32(0);
-        sumdiffs = sad;
+	sad = vec_splat_u32(0);
+	sumdiffs = sad;
 	stride >>= 4;
 	perm = vec_lvsl(0, (unsigned char *) ref);
-	*((unsigned long *) &best_vec) = best_sad;
+	*((uint32_t*)&best_vec) = best_sad;
 	best_vec = vec_splat(best_vec, 0);
 
 	/* perform sum of differences between current and previous */
@@ -99,69 +100,58 @@ sad16_altivec_c(const vector unsigned char *cur,
   bail:
 	/* copy vector sum into unaligned result */
 	sumdiffs = vec_splat(sumdiffs, 3);
-	vec_ste(sumdiffs, 0, (unsigned long *) &result);
+	vec_ste(sumdiffs, 0, (uint32_t*) &result);
 	return result;
 }
 
 
 #define SAD8() \
-t1  = vec_perm(cur[0], cur[stride], perm_cur);  /* align current vector  */ \
-t2  = vec_perm(ref[0], ref[1], perm_ref1);  /* align current vector  */ \
-tp  = vec_perm(ref[stride], ref[stride+1], perm_ref1);  /* align current vector  */ \
-t2  = vec_perm(t2,tp,perm_ref2); \
-tp  = vec_max(t1, t2);  	        /* find largest of two           */ \
-t1  = vec_min(t1, t2);	        	 /* find smaller of two           */ \
-tp  = vec_sub(tp, t1);                   /* find absolute difference      */ \
-sad = vec_sum4s(tp, sad);                /* accumulate sum of differences */ \
-cur += stride<<1; ref += stride<<1;
+	c = vec_perm(vec_ld(0,cur),vec_ld(16,cur),vec_lvsl(0,cur));\
+	r = vec_perm(vec_ld(0,ref),vec_ld(16,ref),vec_lvsl(0,ref));\
+	c = vec_sub(vec_max(c,r),vec_min(c,r));\
+	sad = vec_sum4s(c,sad);\
+	cur += stride;\
+	ref += stride
 
 /*
- * This function assumes cur is 8 bytes aligned, stride is 16 bytes
- * aligned and ref is unaligned
+ * This function assumes nothing
  */
-unsigned long
-sad8_altivec_c(const vector unsigned char *cur,
-			 const vector unsigned char *ref,
-			 unsigned long stride)
+ 
+uint32_t
+sad8_altivec_c(const uint8_t * cur,
+	   const uint8_t *ref,
+	   const uint32_t stride)
 {
-	vector unsigned char t1, t2, tp;
-	vector unsigned int sad;
-	vector unsigned int sumdiffs;
-	vector unsigned char perm_cur;
-	vector unsigned char perm_ref1, perm_ref2;
-	unsigned long result;
-
-#ifdef DEBUG
-        /* print alignment errors if DEBUG is on */
-	if (((unsigned long) cur) & 0x7)
-		fprintf(stderr, "sad8_altivec:incorrect align, cur: %x\n", cur);
-	if (stride & 0xf)
-		fprintf(stderr, "sad8_altivec:incorrect align, stride: %x\n", stride);
-#endif
-        
-        /* check if cur is 8 or 16 bytes aligned an create the perm_cur vector */
-        perm_ref1 = vec_lvsl(0, (unsigned char*)ref);
-        perm_ref2 = vec_add(vec_lvsl(0, (unsigned char*)NULL), vec_pack(vec_splat_u16(0), vec_splat_u16(8)));
-        perm_cur = vec_add(perm_ref2, vec_splat(vec_lvsl(0, (unsigned char*)cur), 0));
-        
-	/* initialization */
+	uint32_t result = 0;
+	
+	register vector unsigned int sad;
+	register vector unsigned char c;
+	register vector unsigned char r;
+	
+	/* initialize */
 	sad = vec_splat_u32(0);
-	stride >>= 4;
-
-	/* perform sum of differences between current and previous */
+	
+	/* Perform sad operations */
 	SAD8();
 	SAD8();
 	SAD8();
 	SAD8();
-
-	/* sum all parts of difference into one 32 bit quantity */
-	sumdiffs = (vector unsigned int)vec_sums((vector signed int) sad, vec_splat_s32(0));
-
-	/* copy vector sum into unaligned result */
-	sumdiffs = vec_splat(sumdiffs, 3);
-	vec_ste(sumdiffs, 0, (unsigned int *) &result);
+	
+	SAD8();
+	SAD8();
+	SAD8();
+	SAD8();
+	
+	/* finish addition, add the first 2 together */
+	sad = vec_and(sad, (vector unsigned int)vec_pack(vec_splat_u16(-1),vec_splat_u16(0)));
+	sad = (vector unsigned int)vec_sums((vector signed int)sad, vec_splat_s32(0));
+	sad = vec_splat(sad,3);
+	vec_ste(sad, 0, &result);
+		
 	return result;
 }
+
+
 
 
 #define MEAN16() \
@@ -179,29 +169,30 @@ ptr += stride
  * This function assumes cur is 16 bytes aligned and stride is 16 bytes
  * aligned
 */
-unsigned long
-dev16_altivec_c(const vector unsigned char *cur,
-			  unsigned long stride)
+
+uint32_t
+dev16_altivec_c(vector unsigned char *cur,
+			  uint32_t stride)
 {
 	vector unsigned char t2, t3, mn;
 	vector unsigned int mean, dev;
 	vector unsigned int sumdiffs;
-        const vector unsigned char *ptr;
-	unsigned long result;
+	vector unsigned char *ptr;
+	uint32_t result;
 
 #ifdef DEBUG
         /* print alignment errors if DEBUG is on */
         if(((unsigned long)cur) & 0x7)
-            fprintf(stderr, "dev16_altivec:incorrect align, cur: %x\n", cur);
+            fprintf(stderr, "dev16_altivec:incorrect align, cur: %lx\n", (long)cur);
         if(stride & 0xf)
-            fprintf(stderr, "dev16_altivec:incorrect align, stride: %ld\n", stride);
+            fprintf(stderr, "dev16_altivec:incorrect align, stride: %lu\n", stride);
 #endif
 
 	dev = mean = vec_splat_u32(0);
 	stride >>= 4;
         
-        /* set pointer to iterate through cur */
-        ptr = cur;
+	/* set pointer to iterate through cur */
+	ptr = cur;
         
 	MEAN16();
 	MEAN16();
@@ -250,7 +241,7 @@ dev16_altivec_c(const vector unsigned char *cur,
 
 	/* copy vector sum into unaligned result */
 	sumdiffs = vec_splat(sumdiffs, 3);
-	vec_ste(sumdiffs, 0, (unsigned int *) &result);
+	vec_ste(sumdiffs, 0, (uint32_t*) &result);
 	return result;
 }
 
@@ -270,24 +261,25 @@ dev16_altivec_c(const vector unsigned char *cur,
  * This function assumes cur is 16 bytes aligned, stride is 16 bytes
  * aligned and ref1 and ref2 is unaligned
 */
-unsigned long
+
+uint32_t
 sad16bi_altivec_c(vector unsigned char *cur,
                         vector unsigned char *ref1,
                         vector unsigned char *ref2,
-                        unsigned long stride)
+                        uint32_t stride)
 {
     vector unsigned char t1, t2;
     vector unsigned char mask1, mask2;
     vector unsigned char sad;
     vector unsigned int sum;
-    unsigned long result;
+    uint32_t result;
     
 #ifdef DEBUG
     /* print alignment errors if this is on */
-    if(cur & 0xf)
-        fprintf(stderr, "sad16bi_altivec:incorrect align, cur: %x\n", cur);
+    if((long)cur & 0xf)
+        fprintf(stderr, "sad16bi_altivec:incorrect align, cur: %lx\n", (long)cur);
     if(stride & 0xf)
-        fprintf(stderr, "sad16bi_altivec:incorrect align, cur: %ld\n", stride);
+        fprintf(stderr, "sad16bi_altivec:incorrect align, cur: %lu\n", stride);
 #endif
     
     /* Initialisation stuff */
@@ -319,7 +311,7 @@ sad16bi_altivec_c(vector unsigned char *cur,
     
     sum = (vector unsigned int)vec_sums((vector signed int)sum, vec_splat_s32(0));
     sum = vec_splat(sum, 3);
-    vec_ste(sum, 0, (unsigned int*)&result);
+    vec_ste(sum, 0, (uint32_t*)&result);
     
     return result;
 }

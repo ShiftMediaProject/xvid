@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.57 2004-12-05 13:56:13 syskin Exp $
+ * $Id: xvid.c,v 1.58 2004-12-09 23:02:54 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -568,7 +568,7 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
           interpolate8x8_halfpel_h = interpolate8x8_halfpel_h_altivec_c;
           interpolate8x8_halfpel_v = interpolate8x8_halfpel_v_altivec_c;
           interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_altivec_c;
-          
+		  
           interpolate8x8_avg2 = interpolate8x8_avg2_altivec_c;
           interpolate8x8_avg4 = interpolate8x8_avg4_altivec_c;
 		  

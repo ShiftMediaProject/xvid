@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: quant_h263_altivec.c,v 1.1 2004-04-05 20:36:37 edgomez Exp $
+ * $Id: quant_h263_altivec.c,v 1.2 2004-12-09 23:02:54 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -115,7 +115,7 @@ quant_h263_intra_altivec_c(int16_t *coeff,
 
 #ifdef DEBUG
     if(((unsigned)coeff) & 15)
-        fprintf(stderr, "quant_h263_intra_altivec_c:incorrect align, coeff: %x\n", coeff);
+        fprintf(stderr, "quant_h263_intra_altivec_c:incorrect align, coeff: %lx\n", (long)coeff);
 #endif
     
     zerovec = vec_splat_u8(0);
@@ -198,7 +198,7 @@ quant_h263_inter_altivec_c(int16_t *coeff,
 
 #ifdef DEBUG
     if(((unsigned)coeff) & 0x15)
-        fprintf(stderr, "quant_h263_inter_altivec_c:incorrect align, coeff: %x\n", coeff);
+        fprintf(stderr, "quant_h263_inter_altivec_c:incorrect align, coeff: %lx\n", (long)coeff);
 #endif
     
     /* initialisation stuff */
@@ -304,7 +304,7 @@ dequant_h263_intra_altivec_c(int16_t *data,
 
 #ifdef DEBUG
     if(((unsigned)data) & 0x15)
-        fprintf(stderr, "dequant_h263_intra_altivec_c:incorrect align, data: %x\n", data);
+        fprintf(stderr, "dequant_h263_intra_altivec_c:incorrect align, data: %lx\n", (long)data);
 #endif
 
     /* initialize */
@@ -407,7 +407,7 @@ dequant_h263_inter_altivec_c(int16_t *data,
 #ifdef DEBUG
     /* print alignment errors if this is on */
     if(((unsigned)data) & 0x15)
-        fprintf(stderr, "dequant_h263_inter_altivec_c:incorrect align, data: %x\n", data);
+        fprintf(stderr, "dequant_h263_inter_altivec_c:incorrect align, data: %lx\n", (long)data);
 #endif
     
     /* initialize */

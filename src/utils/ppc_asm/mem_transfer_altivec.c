@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mem_transfer_altivec.c,v 1.1 2004-04-05 20:36:37 edgomez Exp $
+ * $Id: mem_transfer_altivec.c,v 1.2 2004-12-09 23:02:54 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -35,47 +35,42 @@
 
 #include <stdio.h>
 
-/*
- * This Function assumes dst is 16 byte aligned src is unaligned and stride is
- * a multiple of 16.
+/* This function assumes:
+ *	dst: 16 byte aligned
  */
 
 #define COPY8TO16() \
-s = vec_perm(vec_ld(0, src), vec_ld(16, src), perm); /* load the next 8 bytes */ \
-*dst++ = (vector signed short)vec_mergeh(zerovec, s); /* convert and save */ \
-src += stride
+s = vec_perm(vec_ld(0,src),vec_ld(16,src),vec_lvsl(0,src));\
+vec_st((vector signed short)vec_mergeh(zerovec,s),0,dst);\
+src += stride;\
+dst += 8
 
 void
-transfer_8to16copy_altivec_c(vector signed short *dst,
+transfer_8to16copy_altivec_c(int16_t *dst,
                             uint8_t * src,
                             uint32_t stride)
 {
-    register vector unsigned char perm;
-    register vector unsigned char s;
-    register vector unsigned char zerovec;
-    
+	register vector unsigned char s;
+	register vector unsigned char zerovec;
+		
 #ifdef DEBUG
-    /* check the alignment */
-    if(((unsigned long)dst) & 0xf)
-        fprintf(stderr, "transfer_8to16copy_altivec:incorrect align, dst: %x\n", dst);
-    if(stride & 0xf)
-        fprintf(stderr, "transfer_8to16copy_altivec:incorrect align, stride: %u\n", stride);
+	/* Check the alignment */
+	if((long)dst & 0xf)
+		fprintf(stderr, "transfer_8to16copy_altivec_c:incorrect align, dst: %lx\n", (long)dst);
 #endif
-    
-    /* initialisation */
-    perm = vec_lvsl(0, src);
-    zerovec = vec_splat_u8(0);
-    
-    /* to the actual copy */
-    COPY8TO16();
-    COPY8TO16();
-    COPY8TO16();
-    COPY8TO16();
-    
-    COPY8TO16();
-    COPY8TO16();
-    COPY8TO16();
-    COPY8TO16();
+	
+	/* initialization */
+	zerovec = vec_splat_u8(0);
+	
+	COPY8TO16();
+	COPY8TO16();
+	COPY8TO16();
+	COPY8TO16();
+	
+	COPY8TO16();
+	COPY8TO16();
+	COPY8TO16();
+	COPY8TO16();
 }
 
 
@@ -107,7 +102,7 @@ void transfer_16to8copy_altivec_c(uint8_t *dst,
 #ifdef DEBUG
     /* if this is on, print alignment errors */
     if(((unsigned long) dst) & 0x7)
-        fprintf(stderr, "transfer_16to8copy_altivec:incorrect align, dst %x\n", dst);
+        fprintf(stderr, "transfer_16to8copy_altivec:incorrect align, dst %lx\n", (long)dst);
     if(stride & 0x7)
         fprintf(stderr, "transfer_16to8copy_altivec:incorrect align, stride %u\n", stride);
 #endif
@@ -135,9 +130,11 @@ void transfer_16to8copy_altivec_c(uint8_t *dst,
 
 #define COPY8TO8() \
 tmp = vec_perm(vec_ld(0, src), vec_ld(16, src), vec_lvsl(0, src)); \
-tmp = vec_sel(vec_perm(tmp, tmp, vec_lvsl(0, dst)), vec_ld(0, dst), vec_perm(mask, mask, vec_lvsl(0, dst))); \
-vec_st(tmp, 0, dst); \
-dst += stride; \
+t0 = vec_perm(tmp, tmp, vec_lvsl(0, dst));\
+t1 = vec_perm(mask, mask, vec_lvsl(0, dst));\
+tmp = vec_sel(t0, vec_ld(0, dst), t1);\
+vec_st(tmp, 0, dst);\
+dst += stride;\
 src += stride
 
 void
@@ -147,12 +144,13 @@ transfer8x8_copy_altivec_c( uint8_t * dst,
 {
     register vector unsigned char tmp;
     register vector unsigned char mask;
+	register vector unsigned char t0, t1;
     
 #ifdef DEBUG
     if(((unsigned long)dst) & 0x7)
-        fprintf("transfer8x8_copy_altivec:incorrect align, dst: %x\n", dst);
+        fprintf(stderr, "transfer8x8_copy_altivec:incorrect align, dst: %lx\n", (long)dst);
     if(stride & 0x7)
-        fprintf("transfer8x8_copy_altivec:incorrect stride, stride: %u\n", stride);
+        fprintf(stderr, "transfer8x8_copy_altivec:incorrect stride, stride: %u\n", stride);
 #endif
     mask = vec_pack(vec_splat_u16(0), vec_splat_u16(-1));
     
@@ -167,113 +165,112 @@ transfer8x8_copy_altivec_c( uint8_t * dst,
     COPY8TO8();
 }
 
-
-/*
- * This function assumes dct is 16 bytes aligned, cur and ref are 8 bytes
- * aligned and stride is a multiple of 8
- */
 
 #define SUB8TO16() \
-c = vec_perm(vec_ld(0, cur), vec_ld(16, cur), vec_lvsl(0, cur)); \
-r = vec_perm(vec_ld(0, ref), vec_ld(16, ref), vec_lvsl(0, ref)); \
-t = vec_sel(vec_perm(r, r, vec_lvsl(0, cur)), vec_ld(0, cur), vec_perm(mask, mask, vec_lvsl(0, cur))); \
-vec_st(t, 0, cur); \
-t = vec_splat_u8(0); \
-cs = (vector signed short)vec_mergeh(t, c); \
-rs = (vector signed short)vec_mergeh(t, r); \
-*dct++ = vec_sub(cs, rs); \
-cur += stride; \
-ref += stride
+	c = vec_perm(vec_ld(0,cur),vec_ld(16,cur),vec_lvsl(0,cur));\
+	r = vec_perm(vec_ld(0,ref),vec_ld(16,ref),vec_lvsl(0,ref));\
+	cs = (vector signed short)vec_mergeh(ox00,c);\
+	rs = (vector signed short)vec_mergeh(ox00,r);\
+	\
+	c = vec_lvsr(0,cur);\
+	mask = vec_perm(mask_00ff, mask_00ff, c);\
+	r = vec_perm(r, r, c);\
+	r = vec_sel(r, vec_ld(0,cur), mask);\
+	vec_st(r,0,cur);\
+	vec_st( vec_sub(cs,rs), 0, dct );\
+	\
+	dct += 8;\
+	cur += stride;\
+	ref += stride
+
+
+/* This function assumes:
+ *	dct: 16 Byte aligned
+ *	cur:  8 Byte aligned
+ *	stride: multiple of 8
+ */
 
 void
-transfer_8to16sub_altivec_c(vector signed short *dct,
-                    uint8_t *cur,
-                    uint8_t *ref,
-                    uint32_t stride)
+transfer_8to16sub_altivec_c(int16_t * dct,
+							uint8_t * cur,
+							uint8_t * ref,
+							const uint32_t stride)
 {
-    vector unsigned char c;
-    vector unsigned char r;
-    vector unsigned char t;
-    vector unsigned char mask;
-    vector signed short cs;
-    vector signed short rs;
-
+	register vector unsigned char c,r;
+	register vector unsigned char ox00;
+	register vector unsigned char mask_00ff;
+	register vector unsigned char mask;
+	register vector signed short cs,rs;
+	
 #ifdef DEBUG
-    if(((unsigned long)dct) & 0xf)
-        fprintf(stderr, "transfer_8to16sub_altivec:incorrect align, dct: %x\n", dct);
-    if(((unsigned long)cur) & 0x7)
-        fprintf(stderr, "transfer_8to16sub_altivec:incorrect align, cur: %x\n", cur);
-    if(((unsigned long)ref) & 0x7)
-        fprintf(stderr, "transfer_8to16sub_altivec:incorrect align, ref: %x\n", ref);
-    if(stride & 0x7)
-        fprintf(stderr, "transfer_8to16sub_altivec:incorrect align, stride: %u\n", stride);
+	if((long)dct & 0xf)
+		fprintf(stderr, "transfer_8to16sub_altivec_c:incorrect align, dct: %lx\n", (long)dct);
+	if((long)cur & 0x7)
+		fprintf(stderr, "transfer_8to16sub_altivec_c:incorrect align, cur: %lx\n", (long)cur);
+	if(stride & 0x7)
+		fprintf(stderr, "transfer_8to16sub_altivec_c:incorrect stride, stride: %lu\n", (long)stride);
 #endif
-    
-    /* Initialisation */
-    mask = vec_pack(vec_splat_u16(0), vec_splat_u16(-1));
-    
-    SUB8TO16();
-    SUB8TO16();
-    SUB8TO16();
-    SUB8TO16();
-    
-    SUB8TO16();
-    SUB8TO16();
-    SUB8TO16();
-    SUB8TO16();
+	/* initialize */
+	ox00 = vec_splat_u8(0);
+	mask_00ff = vec_pack((vector unsigned short)ox00,vec_splat_u16(-1));
+	
+	SUB8TO16();
+	SUB8TO16();
+	SUB8TO16();
+	SUB8TO16();
+	
+	SUB8TO16();
+	SUB8TO16();
+	SUB8TO16();
+	SUB8TO16();
 }
 
-/*
-  * This function assumes that dct is 16 bytes aligned, cur and ref is 8 bytes aligned
-  * and stride is a multiple of 8
-*/
 
 #define SUBRO8TO16() \
-c = vec_perm(vec_ld(0, cur), vec_ld(16, cur), vec_lvsl(0, cur)); \
-r = vec_perm(vec_ld(0, ref), vec_ld(16, ref), vec_lvsl(0, ref)); \
-cs = (vector signed short)vec_mergeh(z, c); \
-rs = (vector signed short)vec_mergeh(z, r); \
-*dct++ = vec_sub(cs, rs); \
-cur += stride; \
-ref += stride
+	c = vec_perm(vec_ld(0,cur),vec_ld(16,cur),vec_lvsl(0,cur));\
+	r = vec_perm(vec_ld(0,ref),vec_ld(16,ref),vec_lvsl(0,ref));\
+	cs = (vector signed short)vec_mergeh(z,c);\
+	rs = (vector signed short)vec_mergeh(z,r);\
+	vec_st( vec_sub(cs,rs), 0, dct );\
+	dct += 8;\
+	cur += stride;\
+	ref += stride
+
+
+/* This function assumes:
+ *	dct: 16 Byte aligned
+ */
 
 void
-transfer_8to16subro_altivec_c(vector signed short *dct,
-                      uint8_t *cur,
-                      uint8_t *ref,
-                      uint32_t stride)
+transfer_8to16subro_altivec_c(int16_t * dct,
+					const uint8_t * cur,
+					const uint8_t * ref,
+					const uint32_t stride)
 {
-    register vector unsigned char c;
-    register vector unsigned char r;
-    register vector unsigned char z;
-    register vector signed short cs;
-    register vector signed short rs;
-
+	register vector unsigned char c;
+	register vector unsigned char r;
+	register vector unsigned char z;
+	register vector signed short cs;
+	register vector signed short rs;
+	
 #ifdef DEBUG
-    /* if this is on, print alignment errors */
-    if(((unsigned long)dct) & 0xf)
-        fprintf(stderr, "transfer_8to16subro_altivec_c:incorrect align, dct: %x\n", dct);
-    if(((unsigned long)cur) & 0x7)
-        fprintf(stderr, "transfer_8to16subro_altivec_c:incorrect align, cur: %x\n", cur);
-    if(((unsigned long)ref) & 0x7)
-        fprintf(stderr, "transfer_8to16subro_altivec_c:incorrect align, ref: %x\n", ref);
-    if(stride & 0x7)
-        fprintf(stderr, "transfer_8to16subro_altivec_c:incorrect align, stride: %u\n", stride);
+	/* Check the alignment assumptions if this is on */
+	if((long)dct & 0xf)
+		fprintf(stderr, "transfer_8to16subro_altivec_c:incorrect align, dct: %lx\n", (long)dct);
 #endif
-
-    z = vec_splat_u8(0);
-    
-    SUBRO8TO16();
-    SUBRO8TO16();
-    SUBRO8TO16();
-    SUBRO8TO16();
-    
-    SUBRO8TO16();
-    SUBRO8TO16();
-    SUBRO8TO16();
-    SUBRO8TO16();
+	/* initialize */
+	z = vec_splat_u8(0);
+	
+	SUBRO8TO16();
+	SUBRO8TO16();
+	SUBRO8TO16();
+	SUBRO8TO16();
+	
+	SUBRO8TO16();
+	SUBRO8TO16();
+	SUBRO8TO16();
+	SUBRO8TO16();
 }
-
 
 /*
  * This function assumes:
@@ -289,9 +286,11 @@ r1 = vec_perm(vec_ld(0, ref1), vec_ld(16, ref1), vec_lvsl(0, ref1)); \
 r2 = vec_perm(vec_ld(0, ref2), vec_ld(16, ref2), vec_lvsl(0, ref2)); \
 c = vec_perm(vec_ld(0, cur), vec_ld(16, cur), vec_lvsl(0, cur)); \
 r = vec_avg(r1, r2); \
-vec_st(vec_sel(r, vec_ld(0, cur), vec_perm(mask, mask, vec_lvsl(0, cur))), 0, cur); \
 cs = (vector signed short)vec_mergeh(vec_splat_u8(0), c); \
 rs = (vector signed short)vec_mergeh(vec_splat_u8(0), r); \
+c = vec_perm(mask, mask, vec_lvsl(0, cur));\
+r = vec_sel(r, vec_ld(0, cur), c);\
+vec_st(r, 0, cur); \
 *dct++ = vec_sub(cs, rs); \
 cur += stride; \
 ref1 += stride; \
@@ -315,9 +314,9 @@ transfer_8to16sub2_altivec_c(vector signed short *dct,
 #ifdef DEBUG
     /* Dump alignment erros if DEBUG is set */
     if(((unsigned long)dct) & 0xf)
-        fprintf(stderr, "transfer_8to16sub2_altivec_c:incorrect align, dct: %x\n", dct);
+        fprintf(stderr, "transfer_8to16sub2_altivec_c:incorrect align, dct: %lx\n", (long)dct);
     if(((unsigned long)cur) & 0x7)
-        fprintf(stderr, "transfer_8to16sub2_altivec_c:incorrect align, cur: %x\n", cur);
+        fprintf(stderr, "transfer_8to16sub2_altivec_c:incorrect align, cur: %lx\n", (long)cur);
     if(stride & 0x7)
         fprintf(stderr, "transfer_8to16sub2_altivec_c:incorrect align, dct: %u\n", stride);
 #endif
@@ -373,7 +372,7 @@ transfer_16to8add_altivec_c(uint8_t *dst,
 #ifdef DEBUG
     /* if this is set, dump alignment errors */
     if(((unsigned long)dst) & 0x7)
-        fprintf(stderr, "transfer_16to8add_altivec_c:incorrect align, dst: %x\n", dst);
+        fprintf(stderr, "transfer_16to8add_altivec_c:incorrect align, dst: %lx\n", (long)dst);
     if(stride & 0x7)
         fprintf(stderr, "transfer_16to8add_altivec_c:incorrect align, dst: %u\n", stride);
 #endif
