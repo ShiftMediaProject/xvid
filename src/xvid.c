@@ -17,7 +17,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.44 2003-02-20 22:46:18 edgomez Exp $
+ * $Id: xvid.c,v 1.45 2003-02-21 00:00:57 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -811,9 +811,9 @@ static int test_quant(void * funcA, void * funcB, const char * nameB,
 
 int xvid_init_test(int flags)
 {
-	int cpu_flags = 0;
-
-	srand(time(0));
+#if defined(ARCH_IS_IA32)
+	int cpu_flags;
+#endif
 
 	printf("XviD tests\n\n");
 
@@ -823,6 +823,8 @@ int xvid_init_test(int flags)
 
 	idct_int32_init();
 	emms();
+
+	srand(time(0));
 
 	/* fDCT test */
 	printf("--- fdct ---\n");
