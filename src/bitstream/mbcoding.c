@@ -29,7 +29,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbcoding.c,v 1.30 2002-09-10 22:52:12 edgomez Exp $
+ * $Id: mbcoding.c,v 1.31 2002-09-21 02:26:12 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -49,8 +49,9 @@
  * Local data
  ****************************************************************************/
 
-static VLC intra_table[524032];
-static VLC inter_table[524032];
+/* msvc sp5+pp gets confused if they globals are made static */
+VLC intra_table[524032];
+VLC inter_table[524032];
 
 static VLC DCT3Dintra[4096];
 static VLC DCT3Dinter[4096];
