@@ -3,6 +3,8 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Encoder header -
  *
+ *  Copyright(C) 2002 Michael Militzer
+ *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
  *  to use this software module in hardware or software products are
@@ -25,18 +27,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
- *
- ****************************************************************************/
-/*****************************************************************************
- *
- *  History
- *
- *  - 13.06.2002 Added legal header
- *  - 22.08.2001 Added support for EXT_MODE encoding mode
- *               support for EXTENDED API
- *  - 22.08.2001 fixed bug in iDQtab
- *
- *  $Id: encoder.h,v 1.18 2002-09-03 17:24:26 chl Exp $
  *
  ****************************************************************************/
 
