@@ -16,6 +16,7 @@
 #include "bitstream/mbcoding.h"
 #include "quant/adapt_quant.h"
 #include "quant/quant_matrix.h"
+#include "utils/mem_align.h"
 
 #define ENC_CHECK(X) if(!(X)) return XVID_ERR_FORMAT
 
@@ -95,7 +96,7 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 	if (pParam->max_quantizer < pParam->min_quantizer)
 		pParam->max_quantizer = pParam->min_quantizer;
 
-	if ((pEnc = (Encoder *) malloc(sizeof(Encoder))) == NULL)
+	if ((pEnc = (Encoder *) xvid_malloc(sizeof(Encoder), 16)) == NULL)
 		return XVID_ERR_MEMORY;
 
 	/* Fill members of Encoder structure */
@@ -122,14 +123,14 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 
 	if (image_create(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
 	{
-		free(pEnc);
+		xvid_free(pEnc);
 		return XVID_ERR_MEMORY;
 	}
 
 	if (image_create(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
 	{
 		image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		free(pEnc);
+		xvid_free(pEnc);
 		return XVID_ERR_MEMORY;
 	}
 
@@ -137,7 +138,7 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 	{
 		image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		free(pEnc);
+		xvid_free(pEnc);
 		return XVID_ERR_MEMORY;
 	}
 
@@ -146,7 +147,7 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 		image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		free(pEnc);
+		xvid_free(pEnc);
 		return XVID_ERR_MEMORY;
 	}
 
@@ -156,11 +157,11 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 		image_destroy(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->vInterV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		free(pEnc);
+		xvid_free(pEnc);
 		return XVID_ERR_MEMORY;
 	}
 
-	pEnc->pMBs = malloc(sizeof(MACROBLOCK) * pEnc->mbParam.mb_width * pEnc->mbParam.mb_height);
+	pEnc->pMBs = xvid_malloc(sizeof(MACROBLOCK) * pEnc->mbParam.mb_width * pEnc->mbParam.mb_height, 16);
 	if (pEnc->pMBs == NULL)
 	{
 		image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
@@ -168,7 +169,7 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 		image_destroy(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->vInterV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->vInterHV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		free(pEnc);
+		xvid_free(pEnc);
 		return XVID_ERR_MEMORY;
 	}
 
@@ -199,13 +200,13 @@ int encoder_destroy(Encoder * pEnc)
 	ENC_CHECK(pEnc->sCurrent.y);
 	ENC_CHECK(pEnc->sReference.y);
 
-	free(pEnc->pMBs);
+	xvid_free(pEnc->pMBs);
 	image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 	image_destroy(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 	image_destroy(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 	image_destroy(&pEnc->vInterV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 	image_destroy(&pEnc->vInterHV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-	free(pEnc);
+	xvid_free(pEnc);
 
 	destroy_vlc_tables();
 
@@ -237,6 +238,8 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	}
 	stop_conv_timer();
 
+	EMMS();
+
 	BitstreamInit(&bs, pFrame->bitstream, 0);
 
 	if (pFrame->quant == 0)
@@ -250,7 +253,7 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 
 	if ((pEnc->mbParam.global_flags & XVID_LUMIMASKING) > 0)
 	{
-		int * temp_dquants = (int *) malloc(pEnc->mbParam.mb_width * pEnc->mbParam.mb_height * sizeof(int));
+		int * temp_dquants = (int *) xvid_malloc(pEnc->mbParam.mb_width * pEnc->mbParam.mb_height * sizeof(int), 16);
 		
 		pEnc->mbParam.quant = adaptive_quantization(pEnc->sCurrent.y, pEnc->mbParam.width,
 							    temp_dquants, pFrame->quant, pFrame->quant,
@@ -262,7 +265,7 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 				MACROBLOCK *pMB = &pEnc->pMBs[x + y * pEnc->mbParam.mb_width];
 				pMB->dquant = iDQtab[(temp_dquants[y * pEnc->mbParam.mb_width + x] + 2)];
 			}
-		free(temp_dquants);
+		xvid_free(temp_dquants);
 	}
 
 	if(pEnc->mbParam.global_flags & XVID_H263QUANT) {
@@ -323,6 +326,8 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 		pResult->ublks = pEnc->sStat.ublks;
 	}
    
+	EMMS();
+
 	if (pFrame->quant == 0)
 	{
 		RateControlUpdate(pEnc->mbParam.quant, pFrame->length, pFrame->intra);
