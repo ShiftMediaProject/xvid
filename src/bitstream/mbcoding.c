@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbcoding.c,v 1.49 2004-12-08 12:43:48 syskin Exp $
+ * $Id: mbcoding.c,v 1.50 2004-12-10 04:10:12 syskin Exp $
  *
  ****************************************************************************/
 
@@ -606,6 +606,12 @@ MBCoding(const FRAMEINFO * const frame,
 	if (frame->coding_type != I_VOP)
 			BitstreamPutBit(bs, 0);	/* not_coded */
 
+	if (frame->vop_flags & XVID_VOP_GREYSCALE) {
+		pMB->cbp &= 0x3C;		/* keep only bits 5-2 */
+		qcoeff[4*64+0]=0;		/* for INTRA DC value is saved */
+		qcoeff[5*64+0]=0;
+	}
+
 	if (pMB->mode == MODE_INTRA || pMB->mode == MODE_INTRA_Q)
 		CodeBlockIntra(frame, pMB, qcoeff, bs, pStat);
 	else
@@ -691,7 +697,6 @@ MBCodingBVOP(const FRAMEINFO * const frame,
 		frame->vop_flags & XVID_VOP_ALTERNATESCAN ?
 		scan_tables[2] : scan_tables[0];
 	int bits;
-
 
 /*	------------------------------------------------------------------
 		when a block is skipped it is decoded DIRECT(0,0)

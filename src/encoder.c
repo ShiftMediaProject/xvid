@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.114 2004-12-10 03:45:18 syskin Exp $
+ * $Id: encoder.c,v 1.115 2004-12-10 04:10:12 syskin Exp $
  *
  ****************************************************************************/
 
@@ -1479,11 +1479,6 @@ FrameCodeI(Encoder * pEnc,
 			stop_prediction_timer();
 
 			start_timer();
-			if (pEnc->current->vop_flags & XVID_VOP_GREYSCALE)
-			{	pMB->cbp &= 0x3C;		/* keep only bits 5-2 */
-				qcoeff[4*64+0]=0;		/* zero, because for INTRA MBs DC value is saved */
-				qcoeff[5*64+0]=0;
-			}
 			MBCoding(pEnc->current, pMB, qcoeff, bs, &pEnc->current->sStat);
 			stop_coding_timer();
 		}
@@ -1651,9 +1646,7 @@ FrameCodeP(Encoder * pEnc,
 			MACROBLOCK *pMB =
 				&current->mbs[x + y * pParam->mb_width];
 
-			int bIntra = (pMB->mode == MODE_INTRA) || (pMB->mode == MODE_INTRA_Q);
-
-			if (bIntra) {
+			if (pMB->mode == MODE_INTRA || pMB->mode == MODE_INTRA_Q) {
 				CodeIntraMB(pEnc, pMB);
 				MBTransQuantIntra(&pEnc->mbParam, current, pMB, x, y,
 								  dct_codes, qcoeff);
@@ -1664,11 +1657,6 @@ FrameCodeP(Encoder * pEnc,
 
 				current->sStat.kblks++;
 
-				if (pEnc->current->vop_flags & XVID_VOP_GREYSCALE) {
-					pMB->cbp &= 0x3C;		/* keep only bits 5-2 */
-					qcoeff[4*64+0]=0;		/* zero, because for INTRA MBs DC value is saved */
-					qcoeff[5*64+0]=0;
-				}
 				MBCoding(current, pMB, qcoeff, bs, &current->sStat);
 				stop_coding_timer();
 				continue;
@@ -1769,12 +1757,6 @@ FrameCodeP(Encoder * pEnc,
 				continue;	/* next MB */
 			}
 			/* ordinary case: normal coded INTER/INTER4V block */
-
-			if ((current->vop_flags & XVID_VOP_GREYSCALE))
-			{	pMB->cbp &= 0x3C;		/* keep only bits 5-2 */
-				qcoeff[4*64+0]=0;		/* zero, because DC for INTRA MBs DC value is saved */
-				qcoeff[5*64+0]=0;
-			}
 
 			if((pParam->vol_flags & XVID_VOL_QUARTERPEL)) {
 				VECTOR predMV = get_qpmv2(current->mbs, pParam->mb_width, 0, x, y, 0);
@@ -1995,12 +1977,10 @@ FrameCodeB(Encoder * pEnc,
 
 			if (mb->mode == MODE_DIRECT && (mb->cbp | mb->pmvs[3].x | mb->pmvs[3].y) == 0)
 				mb->mode = MODE_DIRECT_NONE_MV;	/* skipped */
-
-			/* keep only bits 5-2 -- Chroma blocks will just be skipped by the
-			 * coding function for BFrames, that's why we don't zero teh DC
-			 * coeffs */
-			if (frame->vop_flags & XVID_VOP_GREYSCALE)
-				mb->cbp &= 0x3C;
+			else 
+				if (frame->vop_flags & XVID_VOP_GREYSCALE)
+					/* keep only bits 5-2 -- Chroma blocks will just be skipped by MBCodingBVOP */
+					mb->cbp &= 0x3C;
 
 			start_timer();
 			MBCodingBVOP(frame, mb, qcoeff, frame->fcode, frame->bcode, bs,
@@ -2010,8 +1990,6 @@ FrameCodeB(Encoder * pEnc,
 	}
 
 	emms();
-
-	/* TODO: dynamic fcode/bcode ??? */
 
 	BitstreamPadAlways(bs); /* next_start_code() at the end of VideoObjectPlane() */
 	frame->length = (BitstreamPos(bs) - bits) / 8;
