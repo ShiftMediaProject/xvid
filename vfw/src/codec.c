@@ -588,6 +588,7 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 		return ICERR_UNSUPPORTED;
 	}
 
+	free(create.zones);
 	codec->ehandle = create.handle;
 	codec->framenum = 0;
 	codec->keyspacing = 0;
