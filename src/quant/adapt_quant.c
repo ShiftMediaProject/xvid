@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Adaptive quantization functions -
  *
- *  Copyright(C) 2002 Peter Ross
+ *  Copyright(C) 2002 Peter Ross <pross@xvid.org>
  *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
@@ -28,7 +28,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: adapt_quant.c,v 1.9 2002-09-20 20:17:22 edgomez Exp $
+ *  $Id: adapt_quant.c,v 1.10 2002-09-21 03:07:56 suxen_drol Exp $
  *
  ****************************************************************************/
 

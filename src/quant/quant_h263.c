@@ -36,7 +36,7 @@
  *	22.12.2001	clamp dequant output to [-2048,2047]
  *  19.11.2001  quant_inter now returns sum of abs. coefficient values
  *	02.11.2001	added const to function args <pross@cs.rmit.edu.au>
- *	28.10.2001	total rewrite <pross@cs.rmit.edu.au>
+ *	28.10.2001	total rewrite (c)2001 peter ross <pross@xvid.org>
  *
  *************************************************************************/
 

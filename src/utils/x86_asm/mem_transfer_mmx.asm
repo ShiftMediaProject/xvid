@@ -35,7 +35,7 @@
 ; * 04.06.2002  speed enhancement (unroll+overlap). -Skal-
 ; *             + added transfer_8to16sub2_mmx/xmm
 ; * 07.01.2002	merge functions from compensate_mmx; rename functions
-; *	07.11.2001	initial version; (c)2001 peter ross <pross@cs.rmit.edu.au>
+; *	07.11.2001	initial version; (c)2001 peter ross <pross@xvid.org>
 ; *
 ; *************************************************************************/
 
@@ -151,7 +151,7 @@ transfer_16to8copy_mmx:
 ; * 02.12.2001  loop unrolled, code runs 10% faster now (Isibaar)
 ; * 30.11.2001  16 pixels are processed per iteration (Isibaar)
 ; * 30.11.2001	.text missing
-; *	06.11.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
+; *	06.11.2001	inital version; (c)2001 peter ross <pross@xvid.org>
 ; *
 ; *************************************************************************/
 

@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Bitstream reader/writer inlined functions and constants-
  *
- *  Copyright (C) 2001-2002 - Peter Ross <pross@cs.rmit.edu.au>
+ *  Copyright (C) 2001-2002 - Peter Ross <pross@xvid.org>
  *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
@@ -28,7 +28,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.h,v 1.12 2002-09-10 22:52:12 edgomez Exp $
+ * $Id: bitstream.h,v 1.13 2002-09-21 03:07:56 suxen_drol Exp $
  *
  ****************************************************************************/
 

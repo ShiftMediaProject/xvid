@@ -29,7 +29,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
  *  Copyright(C) 2002 Michael Militzer
- *  Copyright(C) 2002 Peter Ross
+ *  Copyright(C) 2002 Peter Ross <pross@xvid.org>
  *
  ****************************************************************************/
 

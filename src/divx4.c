@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - OpenDivx API wrapper -
  *
- *  Copyright(C) 2001-2002 Peter Ross <pross@cs.rmit.edu.au>
+ *  Copyright(C) 2001-2002 Peter Ross <pross@xvid.org>
  *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
