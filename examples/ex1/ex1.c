@@ -1,24 +1,29 @@
 /*******************************************************************************
 * This file is a example for how to use the xvid core to compress YUV file
 *
+* 0.02    11.07.2002    chenm001<chenm001@163.com>
+*                       add the decode examples
 * 0.01b   28.05.2002    chenm001<chenm001@163.com>
 *                       fix a little bug for encode only codec I frame
 * 0.01a   27.05.2002    chenm001<chenm001@163.com>
 *                       fix a little bug for BFRAMES define locate
 * 0.01    23.05.2002    chenm001<chenm001@163.com>
+*                       Initialize version only support encode examples
 *                       the BFRAME option must be match to core compile option
 *******************************************************************************/
 
-//#define BFRAMES 
+#define BFRAMES
+#define BFRAMES_DEC
 #include "ex1.h"
 
 int Encode(char *, int, int, char *);
-int Decode(char *, int, int, char *);
+int Decode(char *, char *);
 
 int main(int argc, char *argv[])
 {
-	if (argc<6){
-		printf("Usage:\n\t%s {Encode|Decode}  infile  width  heigh  outfile\n",argv[0]);
+	if (argc<4){
+		printf("Usage:\n\t%s Encode  infile  width  heigh  outfile\n",argv[0]);
+		printf("\t%s Decode  infile  outfile\n",argv[0]);
 		return(ERR_NO_OPT);
 	}
 	switch(toupper(argv[1][0])){
@@ -26,7 +31,7 @@ int main(int argc, char *argv[])
 		Encode(argv[2], atoi(argv[3]), atoi(argv[4]), argv[5]);
 		break;
 	case 'D':
-		Decode(argv[2], atoi(argv[3]), atoi(argv[4]), argv[5]);
+		Decode(argv[2], argv[3]);
 		break;
 	default:
 		printf("Error option: %c",argv[1][0]);
@@ -142,8 +147,23 @@ int Encode(char *in, int width, int height, char *out)
 	return(ERR_OK);
 }
 
-int Decode(char *in, int width, int height, char *out)
+void set_dec_param(XVID_DEC_PARAM *param)
 {
+	// set to 0 will auto set width & height from encoded bitstream
+	param->height = param->width = 0;
+}
+
+int Decode(char *in, char *out)
+{
+	int				width, height,i=0;
+	uint32_t		temp;
+	long			readed;
+	XVID_DEC_PARAM	param;
+	XVID_INIT_PARAM init_param;
+	DECODER			*dec;
+	XVID_DEC_FRAME	frame;
+	Bitstream		bs;
+
 	FILE *fpi=fopen(in,"rb"),
 		 *fpo=fopen(out,"wb");
     if (fpi == NULL || fpo==NULL){
@@ -153,6 +173,59 @@ int Decode(char *in, int width, int height, char *out)
 			fclose(fpo);
 		return(ERR_FILE);
 	}
+
+
+	init_param.cpu_flags = 0;
+	xvid_init(0, 0, &init_param, NULL);
+	// Check API Version is 2.1?
+	if (init_param.api_version != ((2<<16)|(1)))
+		return(ERR_VERSION);
+	
+	set_dec_param(&param);
+
+	temp = xvid_decore(0, XVID_DEC_CREATE, &param, NULL);
+	dec = param.handle;
+
+	if (dec != NULL){
+		// to Get Video width & height
+		readed = fread(inBuf, 1, MAX_FRAME_SIZE, fpi);
+		BitstreamInit(&bs, inBuf, readed);
+		BitstreamReadHeaders(&bs, dec, &temp, &temp, &temp, &temp, &temp);
+		width  = dec->width;
+		height = dec->height;
+		xvid_decore(dec, XVID_DEC_DESTROY, NULL, NULL);
+
+		// recreate new decoder because width & height changed!
+		param.width  = width;
+		param.height = height;
+		temp = xvid_decore(0, XVID_DEC_CREATE, &param, NULL);
+		dec = param.handle;
+		
+		// because START_CODE must be 32bit
+		while(readed >= 4){
+			printf("Decode Frame %d\n",i++);
+			frame.bitstream = inBuf;
+			frame.length = readed;
+			frame.image = outBuf;
+			frame.stride = width;
+			frame.colorspace = XVID_CSP_YV12;	// for input video clip color space
+
+			temp = xvid_decore(dec, XVID_DEC_DECODE, &frame, NULL);
+
+			// undo unused byte
+			fseek(fpi, frame.length - readed - 2, SEEK_CUR);
+
+			// Write decoded YUV image, size = width * height * 3 / 2 because in I420 CSP
+			fwrite(outBuf, 1, width * height * 3 / 2, fpo);
+
+			// read next frame data
+			readed = fread(inBuf, 1, MAX_FRAME_SIZE, fpi);
+		}
+
+		// free decoder
+		xvid_decore(dec, XVID_DEC_DESTROY, NULL, NULL);
+	}
+
 	fclose(fpi);
 	fclose(fpo);
 	return(ERR_OK);
