@@ -65,7 +65,7 @@
 #include <math.h>		// needed for log10
 #include <sys/time.h>		// only needed for gettimeofday
 
-#include "..\src\xvid.h"		/* comes with XviD */
+#include "../src/xvid.h"		/* comes with XviD */
 
 int motion_presets[7] = {
 	0,                                                              // Q 0
