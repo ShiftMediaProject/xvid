@@ -1,53 +1,154 @@
-#/**************************************************************************
-# *
-# * cygwin makefile (only static library)
-# *
-# * nasm args:
-# * -f fmt		elf (linux), coff (djgpp), win32 (cygwin)
-# * -DPREFIX	add '_' prefix to symbol names
-# *
-# *
-# *************************************************************************/
-
+#############################################################################
+#
+# GNU/Linux Makefile
+# 
+# Edit this file to enable/disable optimizations
+#
+# $Id: Makefile.cygwin,v 1.2 2002-09-19 19:54:03 edgomez Exp $
+# 
+#############################################################################
 
 include Makefile.inc
 
-CC = gcc
-#CC = /usr/local/gcc-3.0.4/bin/gcc
+# You can set/add options to CC and CFLAGS without editing this Makefile
+# You have just to export an environment CC/CFLAGS variable before running
+# make.
+#
+# Examples :
+# $ export CC='gcc-3.1'
+# $ export CFLAGS='-maccumulate-outgoing-args'
+# $ make
+# ...
 
-CFLAGS = -DARCH_X86 -DLINUX -UWIN32
-LIBDIR = /usr/local/lib
+# You can choose a specific compiler here removing the sharp symbol
+#   - Default is 'cc' which is a symlink to your default distro gcc
 
-CFLAGS += -O3 -funroll-loops -ffast-math -fstrict-aliasing -fomit-frame-pointer
-# CFLAGS += -m486
-# CFLAGS += -march=pentium -mcpu=pentium
-CFLAGS += -march=pentiumpro -mcpu=pentiumpro
-# CFLAGS += -march=athlon -mcpu=athlon
-CFLAGS += -mno-cygwin
 
+# CC = gcc
+# CC = gcc-3.1
+# CC = icc
+
+# Assembler
 AS = nasm
 AFLAGS = -f win32 -DPREFIX
+
+# Constants which should not be modified
+CFLAGS += -DARCH_X86
+CFLAGS += -DLINUX
+CFLAGS += -UWIN32
+CFLAGS += -mno-cygwin
+
+# Enable some experimental/debugging code
+#   (Use only if you know what you're doing !)
+    # PSNR during encoding
+# CFLAGS += -D_DEBUG_PSNR
+
+LIBDIR = /usr/local/lib
+
+  # Warning level options
+      # Shows all warnings
+  CFLAGS += -Wall
+      # To detect non ANSI C code (xvid is not ANSI C (yet?))
+  # CFLAGS += -pedantic
+
+
+  # General Optimization options
+      # Optimize code for size (implies -O2)
+  CFLAGS += -Os
+      # Unroll loops code, this might speed up loops
+  CFLAGS += -funroll-loops
+      # Generates FPU math code
+  CFLAGS += -ffast-math
+      # ??? (man gcc)
+  CFLAGS += -fstrict-aliasing
+      # Omit the x86 push ebp; mov ebp, esp function
+      # header and its corresponding function tailer
+  CFLAGS += -fomit-frame-pointer
+      # Generates Position Independant Code depending on your nasm version,
+      # this could generate shared libraries that segfault because of a nasm
+      # bug (win32 produces PIC all the time)
+  # CFLAGS += -fPIC 
+
+  # Debugging and Profiling options
+     # Writes debugging symbols in object files
+  # CFLAGS += -g
+     # Includes profiling code in generated code, don't forget to disable
+     # -fomit-frame-pointer as these 2 options are exclusive.
+     # Try a first run with -fprofile-arcs only then build the lib again
+     # with add branch and coverage... this will allow you to profile
+     # the lib line a line.
+  # CFLAGS += -pg -fprofile-arcs -fbranch-probabilities -ftest-coverage
+
+
+  # Architecture options : Valid for every gcc version
+  # Uncomment the one which you want to compile for
+
+  # CFLAGS += -march=i386 -mcpu=i386
+  # CFLAGS += -march=i486 -mcpu=i486
+  # CFLAGS += -march=i586 -mcpu=i586
+  # CFLAGS += -march=i686 -mcpu=i686
+  # CFLAGS += -march=pentium -mcpu=pentium
+  # CFLAGS += -march=pentiumpro -mcpu=pentiumpro
+
+  # Architecture options : Valid for every gcc >= 3.1
+  # Uncomment the one which you want to compile for
+
+  # CFLAGS += -march=pentium-mmx -mcpu=pentium-mmx
+  # CFLAGS += -march=pentium3 -mcpu=pentium3
+  # CFLAGS += -march=pentium4 -mcpu=pentium4
+  # CFLAGS += -march=athlon -mcpu=athlon
+  # CFLAGS += -march=k6 -mcpu=k6
+  # CFLAGS += -march=k6-2 -mcpu=k6-2
+  # CFLAGS += -march=k6-3 -mcpu=k6-3
+  # CFLAGS += -march=athlon-tbird -mcpu=athlon-tbird
+  # CFLAGS += -march=athlon-xp -mcpu=athlon-xp
+  # CFLAGS += -march=athlon-mp -mcpu=athlon-mp
+
+  # x86 specific optimization for every gcc
+      # Aligns the stack to 2^4=16bytes boundaries in each function
+      # Local variables should be aligned and make the code faster
+      # some gcc versions (3.0.4) have problems with this option
+      # we can't really trust gcc output :-( You're warned.
+  CFLAGS += -mpreferred-stack-boundary=4
+
+  # Architecture specific optimization available in gcc >= 3.1
+      # generates floating point sse code (for >= pentium 3)
+  # CFLAGS += -mfpmath=sse
+      # generates both floating point sse and 387 code, this double the amount
+      # of fp registers and could make the code faster
+      # (Still experimental in gcc 3.1.0)
+  # CFLAGS += -mfpmath=sse,387
+
+endif
+
+#############################################################################
+#
+# Makefile rules
+#
+#############################################################################
 
 %.o: %.asm
 	$(AS) $(AFLAGS) $< -o $@
 
 RM = rm -rf
 
-all: $(LIB) 
+
+all: $(LIB) $(LIBSO:.so=.dll)
+
 
 $(LIB): $(SRC:.c=.o) $(SRC_INTEL:.asm=.o)
 	ar rcs $@ $^
 
+$(LIBSO:.so=.dll): $(SRC:.c=.o) $(SRC_INTEL:.asm=.o)
+	$(CC) $(CFLAGS) -shared -Wl,--dll,--out-implib,$@.a -o $@ $^ libxvidcore.def
+
 clean:	
 	$(RM) `find $(SRCDIR) -name "*.o"`
-
-remove-all:
-	$(RM) $(DIRS)
-	$(RM) $(DIRS_INTEL)
 	$(RM) $(LIB)
+	$(RM) $(LIBSO:.so=.dll)
 
-install: $(LIB)
-	cp $(LIB) $(LIBDIR)/libxvidcore.a			
-
-install-test: $(LIB)				# if you don't want to overwrite previous compile
-	cp $(LIB) $(LIBDIR)/libtestcore.a
+install: $(LIBSO:.so=.dll) $(LIBSO:.so=.dll) $(LIB)
+	cp $(LIBSO:.so=.dll) $(LIBDIR)			# you have to bee root for this
+	cp $(LIBSO:.so=.dll.a) $(LIBDIR)
+	cp $(LIB) $(LIBDIR)
+	/sbin/ldconfig 
