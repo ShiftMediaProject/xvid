@@ -39,7 +39,7 @@
 	type * name = (type *) (((int32_t) name##_storage+(alignment - 1)) & ~((int32_t)(alignment)-1))
 #else
 #define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
-	__declspec(align(CACHE_LINE)) type name[(sizex)*(sizey)]
+	__declspec(align(alignment)) type name[(sizex)*(sizey)]
 #endif
 
 // needed for bitstream.h
