@@ -105,7 +105,7 @@ read_counter()
 	return ts;
 }
 
-#elif defined(LINUX) || defined(DJGPP) || defined(FREEBSD)
+#elif defined(LINUX) || defined(DJGPP) || defined(FREEBSD) || defined(BEOS)
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -143,9 +143,13 @@ DPRINTF(int level, char *fmt,
 #define DEBUGCBR(A,B,C)
 #endif
 
-#if defined(LINUX)
+#if defined(LINUX) || defined(BEOS)
 
+#if defined(BEOS)
+#include <inttypes.h>
+#else
 #include <stdint.h>
+#endif
 
 #define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
 	type name##_storage[(sizex)*(sizey)+(alignment)-1]; \
