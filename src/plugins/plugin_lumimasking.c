@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: plugin_lumimasking.c,v 1.2 2004-03-22 22:36:24 edgomez Exp $
+ * $Id: plugin_lumimasking.c,v 1.3 2004-04-02 22:20:31 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -203,8 +203,8 @@ lumi_plg_frame(lumi_data_t *handle, xvid_plg_data_t *data)
 	/* Normalize the global luminance accumulator */
 	global /= data->mb_width*data->mb_height;
 
-	DarkThres = DarkThres*global/127.0;
-	BrightThres = BrightThres*global/127.0;
+	DarkThres = DarkThres*global/127.0f;
+	BrightThres = BrightThres*global/127.0f;
 
 
 	/* Apply luminance masking only to frames where the global luminance is
