@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.61 2005-01-16 10:34:52 edgomez Exp $
+ * $Id: xvid.c,v 1.62 2005-04-04 23:49:37 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -596,6 +596,9 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
           quant_h263_inter = quant_h263_inter_altivec_c;
           dequant_h263_intra = dequant_h263_intra_altivec_c;
           dequant_h263_inter = dequant_h263_inter_altivec_c;
+
+		  dequant_mpeg_intra = dequant_mpeg_intra_altivec_c;
+		  dequant_mpeg_inter = dequant_mpeg_inter_altivec_c;
 		  
 		  /* Qpel stuff */
 		  xvid_QP_Funcs = &xvid_QP_Funcs_Altivec_C;
@@ -686,7 +689,7 @@ xvid_gbl_info(xvid_gbl_info_t * info)
 		return XVID_ERR_VERSION;
 
 	info->actual_version = XVID_VERSION;
-	info->build = "xvid-1.1.0-beta1";
+	info->build = "xvid-1.1.0-beta2";
 	info->cpu_flags = detect_cpu_flags();
 
 #if defined(_SMP) && defined(WIN32)
