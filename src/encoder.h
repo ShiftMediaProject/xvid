@@ -86,10 +86,6 @@ typedef struct
 	int num_threads;
 #endif
 
-#ifdef BFRAMES
-	int max_bframes;
-#endif
-
 	/* rounding type; alternate 0-1 after each interframe */
 	/* 1 <= fixed_code <= 4
 	   automatically adjusted using motion vector statistics inside
@@ -165,35 +161,6 @@ typedef struct
 	IMAGE vInterVf;
 	IMAGE vInterHV;
 	IMAGE vInterHVf;
-
-#ifdef BFRAMES
-	/* constants */
-	int global;
-	int bquant_ratio;
-	int frame_drop_ratio;
-
-	/* image queue */
-	int queue_head;
-	int queue_tail;
-	int queue_size;
-	IMAGE *queue;
-
-	/* bframe buffer */
-	int bframenum_head;
-	int bframenum_tail;
-	int flush_bframes;
-
-	FRAMEINFO **bframes;
-	IMAGE f_refh;
-	IMAGE f_refv;
-	IMAGE f_refhv;
-	int bframenum_dx50bvop;
-
-	int last_pframe; 	
-	int last_sync; 	
-	int time_pp;
-	int m_framenum; /* debug frame num counter; unlike iFrameNum, does not reset at ivop */
-#endif
 
 	Statistics sStat;
 	RateControl rate_control;
