@@ -72,24 +72,26 @@ int motion_presets[7] = {
 	PMV_EARLYSTOP16,                                                // Q 1
 	PMV_EARLYSTOP16,						// Q 2
 	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16,				// Q 3
-	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 | PMV_EARLYSTOP8, 	// Q 4
-	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 | PMV_EARLYSTOP8  	// Q 5
- 			| PMV_HALFPELREFINE8,			
+	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16,				// Q 4
+	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 | PMV_EARLYSTOP8	 	// Q 5
+ 			| PMV_HALFPELREFINE8, 	
 	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 | PMV_EXTSEARCH16 	// Q 6
 			| PMV_USESQUARES16 | PMV_EARLYSTOP8 | PMV_HALFPELREFINE8
 	};
 
 int general_presets[7] = {
 	XVID_H263QUANT,	/* or use XVID_MPEGQUANT */		// Q 0
-	XVID_H263QUANT, 					// Q 1
-	XVID_H263QUANT, 			                // Q 2
+	XVID_MPEGQUANT, 					// Q 1
+	XVID_H263QUANT, 			       // Q 2
 	XVID_H263QUANT | XVID_HALFPEL,				// Q 3
 	XVID_H263QUANT | XVID_HALFPEL | XVID_INTER4V,		// Q 4
 	XVID_H263QUANT | XVID_HALFPEL | XVID_INTER4V,		// Q 5
-	XVID_H263QUANT  |XVID_HALFPEL | XVID_INTER4V };		// Q 6
+	XVID_H263QUANT | XVID_HALFPEL | XVID_INTER4V };		// Q 6
 		
 
 /* my default values for encoding */
+
+#define ABS_MAXFRAMENR 9999               // max number of frames
 
 int ARG_BITRATE=900;
 int ARG_QUANTI=0;
@@ -98,6 +100,8 @@ int ARG_QUALITY =6;
 int ARG_MINQUANT=1;
 int ARG_MAXQUANT=31;
 float ARG_FRAMERATE=25.00;
+
+int ARG_MAXFRAMENR=ABS_MAXFRAMENR;
 
 
 #define MAX(A,B) ( ((A)>(B)) ? (A) : (B) )
@@ -116,8 +120,6 @@ int save_ref_flag = 0;		//
 
 int pgmflag = 0;		// a flag, if input is in PGM format, overwritten in init-phase
 char filepath[256] = "./";	// the path where to save output 
-
-#define MAXFILENR 9999		// max number of frames (this should be made into an option!)
 
 void *enc_handle = NULL;		// internal structures (handles) for encoding
 void *dec_handle = NULL;		// and decoding
@@ -282,11 +284,14 @@ int enc_init()
 	        xparam.fincr = FRAMERATE_INCR;
 	        xparam.fbase = (int)(FRAMERATE_INCR * ARG_FRAMERATE);
 	}
-	xparam.bitrate = ARG_BITRATE*1000; 
+	xparam.rc_reaction_delay_factor = 16;
+        xparam.rc_averaging_period = 100;
+        xparam.rc_buffer = 10;
+	xparam.rc_bitrate = ARG_BITRATE*1000; 
 	xparam.min_quantizer = 1;
 	xparam.max_quantizer = 31;
 	xparam.max_key_interval = (int)ARG_FRAMERATE*10;
-	xparam.rc_buffersize	= 2;		
+
 		/* I use a small value here, since will not encode whole movies, but short clips */
 
 	xerr = xvid_encore(NULL, XVID_ENC_CREATE, &xparam, NULL);
@@ -407,9 +412,9 @@ int main(int argc, char *argv[])
   int status;
   
   int m4v_size;
-  int frame_type[MAXFILENR];
+  int frame_type[ABS_MAXFRAMENR];
   int Iframes=0, Pframes=0, Bframes=0;
-  double framepsnr[MAXFILENR];
+  double framepsnr[ABS_MAXFRAMENR];
   
   double Ipsnr=0.,Imaxpsnr=0.,Iminpsnr=999.,Ivarpsnr=0.;
   double Ppsnr=0.,Pmaxpsnr=0.,Pminpsnr=999.,Pvarpsnr=0.;
@@ -470,6 +475,13 @@ int main(int argc, char *argv[])
                 { fprintf(stderr,"Wrong Fraterate %s \n",argv[5]); return -1; }
         printf("Framerate %6.3f fps\n",ARG_FRAMERATE);
   } 
+
+  if (argc>=7)
+  {	ARG_MAXFRAMENR = atoi(argv[6]);
+	if ( (ARG_MAXFRAMENR <= 0) )
+	 { fprintf(stderr,"Wrong number of frames\n"); return -1; }
+	printf("max. Framenr. %d\n",ARG_MAXFRAMENR);
+  }
 
 /* now we know the sizes, so allocate memory */
 
@@ -588,7 +600,7 @@ int main(int argc, char *argv[])
 
 	filenr++;
 
-   } while ( (!status) && (filenr<MAXFILENR) );
+   } while ( (!status) && (filenr<ARG_MAXFRAMENR) );
 
 	
       
@@ -658,9 +670,9 @@ int main(int argc, char *argv[])
 	
 	printf("Avg. Q%1d %2s ",ARG_QUALITY, (ARG_QUANTI ? " q" : "br"));
 	printf("%04d ",MAX(ARG_QUANTI,ARG_BITRATE));
-	printf("(%.2f bpp) ", (double)ARG_BITRATE*1000/XDIM/YDIM/ARG_FRAMERATE);
+	printf("( %.2f bpp) ", (double)ARG_BITRATE*1000/XDIM/YDIM/ARG_FRAMERATE);
 	printf("size %6d ",totalsize);
-	printf("(%4d kbps ",(int)(totalsize*8*ARG_FRAMERATE/1000));
+	printf("( %4d kbps ",(int)(totalsize*8*ARG_FRAMERATE/1000));
 	printf("/ %.2f bpp) ",(double)totalsize*8/XDIM/YDIM);
 	printf("enc: %6.1f fps, dec: %6.1f fps \n",1/totalenctime, 1/totaldectime);
 	printf("PSNR P(%d): %5.2f ( %5.2f , %5.2f ; %5.4f ) ",Pframes,Ppsnr,Pminpsnr,Pmaxpsnr,sqrt(Pvarpsnr/filenr));
