@@ -65,7 +65,7 @@
 #include <math.h>		// needed for log10
 #include <sys/time.h>		// only needed for gettimeofday
 
-#include "xvid.h"		/* comes with XviD */
+#include "..\src\xvid.h"		/* comes with XviD */
 
 int motion_presets[7] = {
 	0,                                                              // Q 0
@@ -262,14 +262,24 @@ int write_pgm(char *filename, unsigned char *image)
 #define FRAMERATE_INCR 1001
 
 
-int enc_init()
+int enc_init(int use_assembler)
 {	/* initialize encoder for first use, pass all needed parameters to the codec */
 	int xerr;
 	
 	XVID_INIT_PARAM xinit;
 	XVID_ENC_PARAM xparam;
 
-	xinit.cpu_flags = XVID_CPU_FORCE;
+	if(use_assembler)
+
+#ifdef ARCH_IA64
+		xinit.cpu_flags = XVID_CPU_FORCE | XVID_CPU_IA64;
+#else
+		xinit.cpu_flags = 0;
+#endif
+
+	else
+		xinit.cpu_flags = XVID_CPU_FORCE;
+
 	xvid_init(NULL, 0, &xinit, NULL);
 
 	xparam.width = XDIM;
@@ -350,14 +360,24 @@ int  enc_main(unsigned char* image, unsigned char* bitstream, int *streamlength,
 /* Routines for decoding: init encoder, frame step, release encoder  */
 /*********************************************************************/
 
-int dec_init()	/* init decoder before first run */
+int dec_init(int use_assembler)	/* init decoder before first run */
 {
         int xerr;
 
         XVID_INIT_PARAM xinit;
         XVID_DEC_PARAM xparam;
 
-        xinit.cpu_flags = 0;
+		if(use_assembler)
+
+#ifdef ARCH_IA64
+			xinit.cpu_flags = XVID_CPU_FORCE | XVID_CPU_IA64;
+#else
+			xinit.cpu_flags = 0;
+#endif
+
+		else
+			xinit.cpu_flags = XVID_CPU_FORCE;
+
         xvid_init(NULL, 0, &xinit, NULL);
         xparam.width = XDIM;
         xparam.height = YDIM;
@@ -413,7 +433,7 @@ int main(int argc, char *argv[])
   
   int m4v_size;
   int frame_type[ABS_MAXFRAMENR];
-  int Iframes=0, Pframes=0, Bframes=0;
+  int Iframes=0, Pframes=0, Bframes=0, use_assembler=0;
   double framepsnr[ABS_MAXFRAMENR];
   
   double Ipsnr=0.,Imaxpsnr=0.,Iminpsnr=999.,Ivarpsnr=0.;
@@ -429,6 +449,8 @@ int main(int argc, char *argv[])
   {	
 	pgmflag = 1;
 
+	if (argc==2 && !strcmp(argv[1],"-asm")) 
+	  use_assembler = 1;
   	if (argc>=3)
 	{	XDIM = atoi(argv[1]);
 	  	YDIM = atoi(argv[2]);
@@ -505,14 +527,14 @@ int main(int argc, char *argv[])
 /*********************************************************************/
 
 
-	status = enc_init();
+  status = enc_init(use_assembler);
 	if (status)    
 	{ 
 		printf("Encore INIT problem, return value %d\n", status);
 		goto release_all;
 	}
 
-	status = dec_init();
+	status = dec_init(use_assembler);
 	if (status) 
 	{
 		printf("Decore INIT problem, return value %d\n", status);

@@ -95,7 +95,7 @@ init_vlc_tables(void)
 
 			for (l = 0; l < 64; l++) {	// run
 				int32_t level = k;
-				uint32_t run = l;
+				ptr_t run = l;
 
 				if ((abs(level) <= max_level_ptr[run]) && (run <= (uint32_t) max_run_ptr[abs(level)])) {	// level < max_level and run < max_run
 

@@ -26,6 +26,10 @@ INTERPOLATE8X8 interpolate8x8_halfpel_h_3dn;
 INTERPOLATE8X8 interpolate8x8_halfpel_v_3dn;
 INTERPOLATE8X8 interpolate8x8_halfpel_hv_3dn;
 
+INTERPOLATE8X8 interpolate8x8_halfpel_h_ia64;
+INTERPOLATE8X8 interpolate8x8_halfpel_v_ia64;
+INTERPOLATE8X8 interpolate8x8_halfpel_hv_ia64;
+
 static __inline void
 interpolate8x8_switch(uint8_t * const cur,
 					  const uint8_t * const refn,
@@ -44,14 +48,14 @@ interpolate8x8_switch(uint8_t * const cur,
 		ddx = dx / 2;
 		ddy = dy / 2;
 		transfer8x8_copy(cur + y * stride + x,
-						 refn + (y + ddy) * stride + x + ddx, stride);
+						 refn + (int)((y + ddy) * stride + x + ddx), stride);
 		break;
 
 	case 1:
 		ddx = dx / 2;
 		ddy = (dy - 1) / 2;
 		interpolate8x8_halfpel_v(cur + y * stride + x,
-								 refn + (y + ddy) * stride + x + ddx, stride,
+								 refn + (int)((y + ddy) * stride + x + ddx), stride,
 								 rounding);
 		break;
 
@@ -59,7 +63,7 @@ interpolate8x8_switch(uint8_t * const cur,
 		ddx = (dx - 1) / 2;
 		ddy = dy / 2;
 		interpolate8x8_halfpel_h(cur + y * stride + x,
-								 refn + (y + ddy) * stride + x + ddx, stride,
+								 refn + (int)((y + ddy) * stride + x + ddx), stride,
 								 rounding);
 		break;
 
@@ -67,7 +71,7 @@ interpolate8x8_switch(uint8_t * const cur,
 		ddx = (dx - 1) / 2;
 		ddy = (dy - 1) / 2;
 		interpolate8x8_halfpel_hv(cur + y * stride + x,
-								  refn + (y + ddy) * stride + x + ddx, stride,
+								 refn + (int)((y + ddy) * stride + x + ddx), stride,
 								  rounding);
 		break;
 	}

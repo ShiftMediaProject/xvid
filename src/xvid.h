@@ -28,7 +28,7 @@
 *               ToDo ? : when BFRAMES is defined, the API_VERSION should not
 *                        be the same (3.0 ?)
 *
-*  $Id: xvid.h,v 1.10 2002-06-13 12:42:18 edgomez Exp $
+*  $Id: xvid.h,v 1.11 2002-06-14 13:27:47 Isibaar Exp $
 *
 *****************************************************************************/
 
@@ -37,7 +37,7 @@
 #define _XVID_H_
 
 #ifdef __cplusplus
-*  $Id: xvid.h,v 1.10 2002-06-13 12:42:18 edgomez Exp $
+*  $Id: xvid.h,v 1.11 2002-06-14 13:27:47 Isibaar Exp $
 #endif
 
 /*****************************************************************************
@@ -85,13 +85,18 @@
 #define XVID_CPU_3DNOWEXT	0x00000020
 
 #define XVID_CPU_TSC		0x00000040
+
 #define XVID_CPU_IA64		0x00000080
 
 #define XVID_CPU_CHKONLY	0x40000000		/* check cpu only; dont init globals */
 #define XVID_CPU_FORCE		0x80000000
 
 
+/*****************************************************************************
  *  Initialization structures
+ ****************************************************************************/
+
+	typedef struct
 		int cpu_flags;
 		int api_version;
 		int core_build;

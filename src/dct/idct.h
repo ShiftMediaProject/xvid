@@ -2,6 +2,7 @@
 #define _IDCT_H_
 
 void idct_int32_init();
+void idct_ia64_init();
 
 typedef void (idctFunc) (short *const block);
 typedef idctFunc *idctFuncPtr;
@@ -15,5 +16,6 @@ idctFunc idct_xmm;
 idctFunc idct_sse2;
 
 idctFunc idct_altivec;
+idctFunc idct_ia64;
 
 #endif							/* _IDCT_H_ */

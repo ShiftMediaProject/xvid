@@ -31,28 +31,28 @@ compensate8x8_halfpel(int16_t * const dct_codes,
 		ddx = dx / 2;
 		ddy = dy / 2;
 		transfer_8to16sub(dct_codes, cur + y * stride + x,
-						  ref + (y + ddy) * stride + x + ddx, stride);
+						  ref + (int) ((y + ddy) * stride + x + ddx), stride);
 		break;
 
 	case 1:
 		ddx = dx / 2;
 		ddy = (dy - 1) / 2;
 		transfer_8to16sub(dct_codes, cur + y * stride + x,
-						  refv + (y + ddy) * stride + x + ddx, stride);
+						  refv + (int) ((y + ddy) * stride + x + ddx), stride);
 		break;
 
 	case 2:
 		ddx = (dx - 1) / 2;
 		ddy = dy / 2;
 		transfer_8to16sub(dct_codes, cur + y * stride + x,
-						  refh + (y + ddy) * stride + x + ddx, stride);
+						  refh + (int) ((y + ddy) * stride + x + ddx), stride);
 		break;
 
 	default:					// case 3:
 		ddx = (dx - 1) / 2;
 		ddy = (dy - 1) / 2;
 		transfer_8to16sub(dct_codes, cur + y * stride + x,
-						  refhv + (y + ddy) * stride + x + ddx, stride);
+						  refhv + (int) ((y + ddy) * stride + x + ddx), stride);
 		break;
 	}
 }

@@ -12,5 +12,6 @@ fdctFunc fdct_mmx;
 fdctFunc fdct_sse2;
 
 fdctFunc fdct_altivec;
+fdctFunc fdct_ia64;
 
 #endif							/* _FDCT_H_ */
