@@ -751,7 +751,7 @@ output_slice(IMAGE * cur, int std, int width, XVID_DEC_PICTURE* out_frm, int mbx
   if(w > width)
     w = width;
   w2 = w >> 1;
-void __inline
+
   dY = (uint8_t*)out_frm->y + (mby << 4) * out_frm->stride_y + (mbx << 4);
   dU = (uint8_t*)out_frm->u + (mby << 3) * out_frm->stride_u + (mbx << 3);
   dV = (uint8_t*)out_frm->v + (mby << 3) * out_frm->stride_v + (mbx << 3);
@@ -761,9 +761,9 @@ void __inline
 
   for(i = 0 ; i < 16 ; i++) {
     memcpy(dY,sY,w);
-  dY = out_frm->y + (mby << 4) * out_frm->stride_y + (mbx << 4);
-  dU = out_frm->u + (mby << 3) * out_frm->stride_u + (mbx << 3);
-  dV = out_frm->v + (mby << 3) * out_frm->stride_v + (mbx << 3);
+    dY += out_frm->stride_y;
+    sY += std;
+  }
   for(i = 0 ; i < 8 ; i++) {
     memcpy(dU,sU,w2);
     dU += out_frm->stride_u;
