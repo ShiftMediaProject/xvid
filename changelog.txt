@@ -2,6 +2,19 @@
 # tag: automatic-ChangeLog--ed.gomez@free.fr--main/xvidcore--stable--1.0
 #
 
+2003-02-15 18:40:33 GMT	Edouard Gomez <ed.gomez@free.fr>	patch-3
+
+    Summary:
+      Added latest Pete's chroma optimization code.
+    Revision:
+      xvidcore--stable--1.0--patch-3
+
+    During merge, i forgot that small piece of code.
+
+    modified files:
+     src/encoder.c src/xvid.h
+
+
 2003-02-15 14:48:12 GMT	Edouard Gomez <ed.gomez@free.fr>	patch-2
 
     Summary:

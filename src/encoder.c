@@ -39,7 +39,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.91 2003-02-15 15:22:17 edgomez Exp $
+ *  $Id: encoder.c,v 1.92 2003-02-15 18:48:15 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -631,6 +631,11 @@ queue_image(Encoder * pEnc, XVID_ENC_FRAME * pFrame)
 		return;
 	stop_conv_timer();
 
+	if ((pFrame->general & XVID_CHROMAOPT)) {
+		image_chroma_optimize(&pEnc->queue[pEnc->queue_tail], 
+			pEnc->mbParam.width, pEnc->mbParam.height, pEnc->mbParam.edged_width);
+	}
+
 	pEnc->queue_size++;
 	pEnc->queue_tail =  (pEnc->queue_tail + 1) % pEnc->mbParam.max_bframes;
 }
@@ -849,6 +854,11 @@ bvop_loop:
 			return XVID_ERR_FORMAT;
 		}
 		stop_conv_timer();
+
+		if ((pFrame->general & XVID_CHROMAOPT)) {
+			image_chroma_optimize(&pEnc->current->image, 
+				pEnc->mbParam.width, pEnc->mbParam.height, pEnc->mbParam.edged_width);
+		}
 
 		// queue input frame, and dequue next image
 		if (pEnc->queue_size > 0)
@@ -1237,6 +1247,11 @@ encoder_encode(Encoder * pEnc,
 		 pEnc->mbParam.edged_width, pFrame->image, pFrame->stride, pFrame->colorspace, pFrame->general & XVID_INTERLACING) < 0)
 		return XVID_ERR_FORMAT;
 	stop_conv_timer();
+
+	if ((pFrame->general & XVID_CHROMAOPT)) {
+		image_chroma_optimize(&pEnc->current->image, 
+			pEnc->mbParam.width, pEnc->mbParam.height, pEnc->mbParam.edged_width);
+	}
 
 	if (pFrame->general & XVID_EXTRASTATS)
 	{	image_copy(&pEnc->sOriginal, &pEnc->current->image,
