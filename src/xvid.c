@@ -186,6 +186,7 @@ int xvid_init(void *handle, int opt, void *param1, void *param2)
 	if((cpu_flags & XVID_CPU_3DNOW) > 0) {
 		interpolate8x8_halfpel_h = interpolate8x8_halfpel_h_3dn;
 		interpolate8x8_halfpel_v = interpolate8x8_halfpel_v_3dn;
+		interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_3dn;
 	}
 
 #endif
