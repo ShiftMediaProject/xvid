@@ -554,7 +554,7 @@ Square16_MainSearch(const uint8_t * const pRef,
 							 backupMV.y + iDiamondSize, 8);
 
 
-	if (iDirection)
+	if (iDirection)	{
 		while (!iFound) {
 			iFound = 1;
 			backupMV = *currMV;
@@ -563,62 +563,62 @@ Square16_MainSearch(const uint8_t * const pRef,
 			case 1:
 				CHECK_MV16_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
 										   backupMV.y, 1);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x - iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
 										 backupMV.y - iDiamondSize, 5);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x + iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
 										 backupMV.y - iDiamondSize, 7);
 				break;
 			case 2:
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x + iDiamondSize, backupMV.y,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x + iDiamondSize, backupMV.y,
 										 2);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x - iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
 										 backupMV.y + iDiamondSize, 6);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x + iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
 										 backupMV.y + iDiamondSize, 8);
 				break;
 
 			case 3:
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x, backupMV.y + iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x, backupMV.y + iDiamondSize,
 										 4);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x + iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
 										 backupMV.y - iDiamondSize, 7);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x + iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
 										 backupMV.y + iDiamondSize, 8);
 				break;
 
 			case 4:
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x, backupMV.y - iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x, backupMV.y - iDiamondSize,
 										 3);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x - iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
 										 backupMV.y - iDiamondSize, 5);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x - iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
 										 backupMV.y + iDiamondSize, 6);
 				break;
 
 			case 5:
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x - iDiamondSize, backupMV.y,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x - iDiamondSize, backupMV.y,
 										 1);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x, backupMV.y - iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x, backupMV.y - iDiamondSize,
 										 3);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x - iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
 										 backupMV.y - iDiamondSize, 5);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x - iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
 										 backupMV.y + iDiamondSize, 6);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x + iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
 										 backupMV.y - iDiamondSize, 7);
 				break;
 
 			case 6:
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x + iDiamondSize, backupMV.y,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x + iDiamondSize, backupMV.y,
 										 2);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x, backupMV.y - iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x, backupMV.y - iDiamondSize,
 										 3);
 
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x - iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
 										 backupMV.y - iDiamondSize, 5);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x - iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
 										 backupMV.y + iDiamondSize, 6);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x + iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
 										 backupMV.y + iDiamondSize, 8);
 
 				break;
@@ -626,48 +626,49 @@ Square16_MainSearch(const uint8_t * const pRef,
 			case 7:
 				CHECK_MV16_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
 										   backupMV.y, 1);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x, backupMV.y + iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x, backupMV.y + iDiamondSize,
 										 4);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x - iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
 										 backupMV.y - iDiamondSize, 5);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x + iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
 										 backupMV.y - iDiamondSize, 7);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x + iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
 										 backupMV.y + iDiamondSize, 8);
 				break;
 
 			case 8:
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x + iDiamondSize, backupMV.y,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x + iDiamondSize, backupMV.y,
 										 2);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x, backupMV.y + iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x, backupMV.y + iDiamondSize,
 										 4);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x - iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
 										 backupMV.y + iDiamondSize, 6);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x + iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
 										 backupMV.y - iDiamondSize, 7);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x + iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
 										 backupMV.y + iDiamondSize, 8);
 				break;
 			default:
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x - iDiamondSize, backupMV.y,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x - iDiamondSize, backupMV.y,
 										 1);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x + iDiamondSize, backupMV.y,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x + iDiamondSize, backupMV.y,
 										 2);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x, backupMV.y - iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x, backupMV.y - iDiamondSize,
 										 3);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x, backupMV.y + iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x, backupMV.y + iDiamondSize,
 										 4);
 
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x - iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
 										 backupMV.y - iDiamondSize, 5);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x - iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
 										 backupMV.y + iDiamondSize, 6);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x + iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
 										 backupMV.y - iDiamondSize, 7);
-				CHECK_MV16_CANDIDATE_DIR(backupMV.x + iDiamondSize,
+				CHECK_MV16_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
 										 backupMV.y + iDiamondSize, 8);
 				break;
 			}
+		}
 	} else {
 		currMV->x = start_x;
 		currMV->y = start_y;
@@ -1656,6 +1657,191 @@ Diamond8_MainSearch(const uint8_t * const pRef,
 	return iMinSAD;
 }
 
+
+
+
+int32_t
+Square8_MainSearch(const uint8_t * const pRef,
+					const uint8_t * const pRefH,
+					const uint8_t * const pRefV,
+					const uint8_t * const pRefHV,
+					const uint8_t * const cur,
+					const int x,
+					const int y,
+					int32_t start_x,
+					int32_t start_y,
+					int32_t iMinSAD,
+					VECTOR * const currMV,
+				   const int center_x,
+				   const int center_y,
+					const int32_t min_dx,
+					const int32_t max_dx,
+					const int32_t min_dy,
+					const int32_t max_dy,
+					const int32_t iEdgedWidth,
+					const int32_t iDiamondSize,
+					const int32_t iFcode,
+					const int32_t iQuant,
+					int iFound)
+{
+/* Do a square search around given starting point, return SAD of best */
+
+	int32_t iDirection = 0;
+	int32_t iSAD;
+	VECTOR backupMV;
+
+	backupMV.x = start_x;
+	backupMV.y = start_y;
+
+/* It's one search with full square pattern, and new parts for all following diamonds */
+
+/*   new direction are extra, so 1-4 is normal diamond
+      537
+      1*2
+      648  
+*/
+
+	CHECK_MV8_CANDIDATE_DIR(backupMV.x - iDiamondSize, backupMV.y, 1);
+	CHECK_MV8_CANDIDATE_DIR(backupMV.x + iDiamondSize, backupMV.y, 2);
+	CHECK_MV8_CANDIDATE_DIR(backupMV.x, backupMV.y - iDiamondSize, 3);
+	CHECK_MV8_CANDIDATE_DIR(backupMV.x, backupMV.y + iDiamondSize, 4);
+
+	CHECK_MV8_CANDIDATE_DIR(backupMV.x - iDiamondSize,
+							 backupMV.y - iDiamondSize, 5);
+	CHECK_MV8_CANDIDATE_DIR(backupMV.x - iDiamondSize,
+							 backupMV.y + iDiamondSize, 6);
+	CHECK_MV8_CANDIDATE_DIR(backupMV.x + iDiamondSize,
+							 backupMV.y - iDiamondSize, 7);
+	CHECK_MV8_CANDIDATE_DIR(backupMV.x + iDiamondSize,
+							 backupMV.y + iDiamondSize, 8);
+
+
+	if (iDirection)	{
+		while (!iFound) {
+			iFound = 1;
+			backupMV = *currMV;
+
+			switch (iDirection) {
+			case 1:
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
+										   backupMV.y, 1);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
+										 backupMV.y - iDiamondSize, 5);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
+										 backupMV.y - iDiamondSize, 7);
+				break;
+			case 2:
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x + iDiamondSize, backupMV.y,
+										 2);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
+										 backupMV.y + iDiamondSize, 6);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
+										 backupMV.y + iDiamondSize, 8);
+				break;
+
+			case 3:
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x, backupMV.y + iDiamondSize,
+										 4);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
+										 backupMV.y - iDiamondSize, 7);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
+										 backupMV.y + iDiamondSize, 8);
+				break;
+
+			case 4:
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x, backupMV.y - iDiamondSize,
+										 3);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
+										 backupMV.y - iDiamondSize, 5);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
+										 backupMV.y + iDiamondSize, 6);
+				break;
+
+			case 5:
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x - iDiamondSize, backupMV.y,
+										 1);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x, backupMV.y - iDiamondSize,
+										 3);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
+										 backupMV.y - iDiamondSize, 5);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
+										 backupMV.y + iDiamondSize, 6);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
+										 backupMV.y - iDiamondSize, 7);
+				break;
+
+			case 6:
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x + iDiamondSize, backupMV.y,
+										 2);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x, backupMV.y - iDiamondSize,
+										 3);
+
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
+										 backupMV.y - iDiamondSize, 5);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
+										 backupMV.y + iDiamondSize, 6);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
+										 backupMV.y + iDiamondSize, 8);
+
+				break;
+
+			case 7:
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
+										   backupMV.y, 1);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x, backupMV.y + iDiamondSize,
+										 4);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
+										 backupMV.y - iDiamondSize, 5);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
+										 backupMV.y - iDiamondSize, 7);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
+										 backupMV.y + iDiamondSize, 8);
+				break;
+
+			case 8:
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x + iDiamondSize, backupMV.y,
+										 2);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x, backupMV.y + iDiamondSize,
+										 4);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
+										 backupMV.y + iDiamondSize, 6);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
+										 backupMV.y - iDiamondSize, 7);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
+										 backupMV.y + iDiamondSize, 8);
+				break;
+			default:
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x - iDiamondSize, backupMV.y,
+										 1);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x + iDiamondSize, backupMV.y,
+										 2);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x, backupMV.y - iDiamondSize,
+										 3);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x, backupMV.y + iDiamondSize,
+										 4);
+
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
+										 backupMV.y - iDiamondSize, 5);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
+										 backupMV.y + iDiamondSize, 6);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
+										 backupMV.y - iDiamondSize, 7);
+				CHECK_MV8_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
+										 backupMV.y + iDiamondSize, 8);
+				break;
+			}
+		}
+	} else {
+		currMV->x = start_x;
+		currMV->y = start_y;
+	}
+	return iMinSAD;
+}
+
+
+
+
+
 int32_t
 Halfpel8_Refine_c(const uint8_t * const pRef,
 				const uint8_t * const pRefH,
@@ -1794,9 +1980,9 @@ PMVfastSearch8(const uint8_t * const pRef,
 
 // Prepare for main loop 
 
-//  if (MotionFlags & PMV_USESQUARES8)
-//      MainSearchPtr = Square8_MainSearch;
-//  else
+  if (MotionFlags & PMV_USESQUARES8)
+      MainSearchPtr = Square8_MainSearch;
+  else
 
 	if (MotionFlags & PMV_ADVANCEDDIAMOND8)
 		MainSearchPtr = AdvDiamond8_MainSearch;
@@ -2474,9 +2660,9 @@ EPZSSearch8(const uint8_t * const pRef,
 
 // there is no EPZS^2 for inter4v at the moment 
 
-//  if (MotionFlags & PMV_USESQUARES8)
-//      MainSearchPtr = Square8_MainSearch;
-//  else
+  if (MotionFlags & PMV_USESQUARES8)
+      MainSearchPtr = Square8_MainSearch;
+  else
 
 	if (MotionFlags & PMV_ADVANCEDDIAMOND8)
 		MainSearchPtr = AdvDiamond8_MainSearch;
