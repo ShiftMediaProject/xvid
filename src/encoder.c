@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: encoder.c,v 1.99 2003-04-09 12:02:26 syskin Exp $
+ *  $Id: encoder.c,v 1.100 2003-05-28 16:51:08 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -183,7 +183,7 @@ encoder_create(XVID_ENC_PARAM * pParam)
 	/* 1 keyframe each 10 seconds */
 
 	if (pParam->max_key_interval <= 0)
-		pParam->max_key_interval = 10 * pParam->fincr / pParam->fbase;
+		pParam->max_key_interval = 10 * pParam->fbase / pParam->fincr;
 
 	pEnc = (Encoder *) xvid_malloc(sizeof(Encoder), CACHE_LINE);
 	if (pEnc == NULL)
