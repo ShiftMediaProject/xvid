@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_pvop.c,v 1.16 2005-03-14 00:47:08 Isibaar Exp $
+ * $Id: estimation_pvop.c,v 1.17 2005-03-31 22:14:20 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -910,8 +910,16 @@ MotionEstimation(MBParam * const pParam,
 					}
 				}
 				else if (sad00 < stat_thresh) {
+					VECTOR predMV;
+					if (current->vol_flags & XVID_VOL_QUARTERPEL)
+						predMV = get_qpmv2(current->mbs, mb_width, 0, x, y, 0);
+					else
+						predMV = get_pmv2(current->mbs, mb_width, 0, x, y, 0);
+
 					ZeroMacroblockP(pMB, sad00);
 					pMB->cbp = 0x3f;
+					pMB->pmvs[0].x = - predMV.x;
+					pMB->pmvs[0].y = - predMV.y;
 					continue;
 				}
 			}
