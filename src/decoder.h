@@ -1,12 +1,53 @@
+/*****************************************************************************
+ *
+ *  XVID MPEG-4 VIDEO CODEC
+ *  - Decoder header -
+ *
+ *  This program is an implementation of a part of one or more MPEG-4
+ *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
+ *  to use this software module in hardware or software products are
+ *  advised that its use may infringe existing patents or copyrights, and
+ *  any such use would be at such party's own risk.  The original
+ *  developer of this software module and his/her company, and subsequent
+ *  editors and their companies, will have no liability for use of this
+ *  software or modifications or derivatives thereof.
+ *
+ *  This program is free software ; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation ; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY ; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program ; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ *
+ ****************************************************************************/
+/*****************************************************************************
+ *
+ *  History
+ *
+ *  - 13.06.2002 Added legal header - Cosmetic
+ *
+ *  $Id: decoder.h,v 1.7 2002-06-13 21:53:08 edgomez Exp $
+ *
+ ****************************************************************************/
+
 #ifndef _DECODER_H_
 #define _DECODER_H_
 
 #include "xvid.h"
-
 #include "portab.h"
 #include "global.h"
 #include "image/image.h"
 
+/*****************************************************************************
+ * Structures
+ ****************************************************************************/
 
 typedef struct
 {
@@ -58,6 +99,10 @@ typedef struct
 }
 DECODER;
 
+/*****************************************************************************
+ * Decoder prototypes
+ ****************************************************************************/
+
 void init_decoder(uint32_t cpu_flags);
 
 int decoder_create(XVID_DEC_PARAM * param);
@@ -66,4 +111,4 @@ int decoder_decode(DECODER * dec,
 				   XVID_DEC_FRAME * frame);
 
 
-#endif							/* _DECODER_H_ */
+#endif
