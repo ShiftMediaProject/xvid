@@ -1,3 +1,28 @@
+/*****************************************************************************
+ *
+ *  XVID MPEG-4 VIDEO CODEC
+ *  - Image related header  -
+ *
+ *  Copyright(C) 2001-2003 Peter Ross <pross@xvid.org>
+ *
+ *  This program is free software ; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation ; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY ; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program ; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ *
+ * $Id: image.h,v 1.12 2004-03-22 22:36:23 edgomez Exp $
+ *
+ ****************************************************************************/
+
 #ifndef _IMAGE_H_
 #define _IMAGE_H_
 
@@ -28,18 +53,19 @@ void image_destroy(IMAGE * image,
 
 void image_swap(IMAGE * image1,
 				IMAGE * image2);
-				
+
 void image_copy(IMAGE * image1,
 				IMAGE * image2,
 				uint32_t edged_width,
 				uint32_t height);
-				
+
 void image_setedges(IMAGE * image,
 					uint32_t edged_width,
 					uint32_t edged_height,
 					uint32_t width,
-					uint32_t height);
-					
+					uint32_t height,
+					int bs_version);
+
 void image_interpolate(const IMAGE * refn,
 					   IMAGE * refh,
 					   IMAGE * refv,
@@ -72,8 +98,8 @@ int image_input(IMAGE * image,
 				uint32_t width,
 				int height,
 				uint32_t edged_width,
-				uint8_t * src,
-				int src_stride,
+				uint8_t * src[4],
+				int src_stride[4],
 				int csp,
 				int interlaced);
 
@@ -81,8 +107,8 @@ int image_output(IMAGE * image,
 				 uint32_t width,
 				 int height,
 				 uint32_t edged_width,
-				 uint8_t * dst,
-				 uint32_t dst_stride,
+				 uint8_t * dst[4],
+				 uint32_t dst_stride[4],
 				 int csp,
 				 int interlaced);
 
@@ -101,7 +127,7 @@ float image_mad(const IMAGE * img1,
 				uint32_t height);
 
 void
-output_slice(IMAGE * cur, int edged_width, int width, XVID_DEC_PICTURE* out_frm, int mbx, int mby,int mbl);
+output_slice(IMAGE * cur, int edged_width, int width, xvid_image_t* out_frm, int mbx, int mby,int mbl);
 
 
 void

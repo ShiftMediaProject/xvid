@@ -1,54 +1,30 @@
- /******************************************************************************
-  *                                                                            *
-  *  This file is part of XviD, a free MPEG-4 video encoder/decoder            *
-  *                                                                            *
-  *  XviD is an implementation of a part of one or more MPEG-4 Video tools     *
-  *  as specified in ISO/IEC 14496-2 standard.  Those intending to use this    *
-  *  software module in hardware or software products are advised that its     *
-  *  use may infringe existing patents or copyrights, and any such use         *
-  *  would be at such party's own risk.  The original developer of this        *
-  *  software module and his/her company, and subsequent editors and their     *
-  *  companies, will have no liability for use of this software or             *
-  *  modifications or derivatives thereof.                                     *
-  *                                                                            *
-  *  XviD is free software; you can redistribute it and/or modify it           *
-  *  under the terms of the GNU General Public License as published by         *
-  *  the Free Software Foundation; either version 2 of the License, or         *
-  *  (at your option) any later version.                                       *
-  *                                                                            *
-  *  XviD is distributed in the hope that it will be useful, but               *
-  *  WITHOUT ANY WARRANTY; without even the implied warranty of                *
-  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
-  *  GNU General Public License for more details.                              *
-  *                                                                            *
-  *  You should have received a copy of the GNU General Public License         *
-  *  along with this program; if not, write to the Free Software               *
-  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA  *
-  *                                                                            *
-  ******************************************************************************/
+/*****************************************************************************
+ *
+ *  XVID MPEG-4 VIDEO CODEC
+ *  - Prediction module -
+ *
+ *  Copyright (C) 2001-2003 Michael Militzer <isibaar@xvid.org>
+ *                2001-2003 Peter Ross <pross@xvid.org>
+ *
+ *  This program is free software ; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation ; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY ; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program ; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ *
+ * $Id: mbprediction.c,v 1.14 2004-03-22 22:36:24 edgomez Exp $
+ *
+ ****************************************************************************/
 
- /******************************************************************************
-  *                                                                            *
-  *  mbprediction.c                                                            *
-  *                                                                            *
-  *  Copyright (C) 2001 - Michael Militzer <isibaar@xvid.org>                  *
-  *  Copyright (C) 2001 - Peter Ross <pross@cs.rmit.edu.au>                    *
-  *                                                                            *
-  *  For more information visit the XviD homepage: http://www.xvid.org         *
-  *                                                                            *
-  ******************************************************************************/
-
- /******************************************************************************
-  *                                                                            *
-  *  Revision history:                                                         *
-  *                                                                            *
-  *  29.06.2002 predict_acdc() bounding                                        *
-  *  12.12.2001 improved calc_acdc_prediction; removed need for memcpy         *
-  *  15.12.2001 moved pmv displacement to motion estimation                    *
-  *  30.11.2001	mmx cbp support                                                *
-  *  17.11.2001 initial version                                                *
-  *                                                                            *
-  ******************************************************************************/
+#include <stdlib.h>
 
 #include "../global.h"
 #include "../encoder.h"
@@ -104,15 +80,15 @@ predict_acdc(MACROBLOCK * pMBs,
 	const int16_t *pTop = default_acdc_values;
 	const int16_t *pDiag = default_acdc_values;
 
-	uint32_t index = x + y * mb_width;	// current macroblock
+	uint32_t index = x + y * mb_width;	/* current macroblock */
 	int *acpred_direction = &pMBs[index].acpred_directions[block];
 	uint32_t i;
 
 	left = top = diag = current = 0;
 
-	// grab left,top and diag macroblocks
+	/* grab left,top and diag macroblocks */
 
-	// left macroblock 
+	/* left macroblock */
 
 	if (x && mbpos >= bound + 1  &&
 		(pMBs[index - 1].mode == MODE_INTRA ||
@@ -120,9 +96,8 @@ predict_acdc(MACROBLOCK * pMBs,
 
 		left = pMBs[index - 1].pred_values[0];
 		left_quant = pMBs[index - 1].quant;
-		//DEBUGI("LEFT", *(left+MBPRED_SIZE));
 	}
-	// top macroblock
+	/* top macroblock */
 
 	if (mbpos >= bound + (int)mb_width &&
 		(pMBs[index - mb_width].mode == MODE_INTRA ||
@@ -131,7 +106,7 @@ predict_acdc(MACROBLOCK * pMBs,
 		top = pMBs[index - mb_width].pred_values[0];
 		top_quant = pMBs[index - mb_width].quant;
 	}
-	// diag macroblock 
+	/* diag macroblock */
 
 	if (x && mbpos >= bound + (int)mb_width + 1 &&
 		(pMBs[index - 1 - mb_width].mode == MODE_INTRA ||
@@ -142,7 +117,7 @@ predict_acdc(MACROBLOCK * pMBs,
 
 	current = pMBs[index].pred_values[0];
 
-	// now grab pLeft, pTop, pDiag _blocks_ 
+	/* now grab pLeft, pTop, pDiag _blocks_ */
 
 	switch (block) {
 
@@ -209,17 +184,19 @@ predict_acdc(MACROBLOCK * pMBs,
 		break;
 	}
 
-	//  determine ac prediction direction & ac/dc predictor
-	//  place rescaled ac/dc predictions into predictors[] for later use
+	/*
+	 * determine ac prediction direction & ac/dc predictor place rescaled ac/dc
+	 * predictions into predictors[] for later use
+	 */
 
-	if (ABS(pLeft[0] - pDiag[0]) < ABS(pDiag[0] - pTop[0])) {
-		*acpred_direction = 1;	// vertical
+	if (abs(pLeft[0] - pDiag[0]) < abs(pDiag[0] - pTop[0])) {
+		*acpred_direction = 1;	/* vertical */
 		predictors[0] = DIV_DIV(pTop[0], iDcScaler);
 		for (i = 1; i < 8; i++) {
 			predictors[i] = rescale(top_quant, current_quant, pTop[i]);
 		}
 	} else {
-		*acpred_direction = 2;	// horizontal
+		*acpred_direction = 2;	/* horizontal */
 		predictors[0] = DIV_DIV(pLeft[0], iDcScaler);
 		for (i = 1; i < 8; i++) {
 			predictors[i] = rescale(left_quant, current_quant, pLeft[i + 7]);
@@ -229,7 +206,7 @@ predict_acdc(MACROBLOCK * pMBs,
 
 
 /* decoder: add predictors to dct_codes[] and
-   store current coeffs to pred_values[] for future prediction 
+   store current coeffs to pred_values[] for future prediction
 */
 
 
@@ -244,16 +221,16 @@ add_acdc(MACROBLOCK * pMB,
 	int16_t *pCurrent = pMB->pred_values[block];
 	uint32_t i;
 
-	DPRINTF(DPRINTF_COEFF,"predictor[0] %i", predictors[0]);
+	DPRINTF(XVID_DEBUG_COEFF,"predictor[0] %i\n", predictors[0]);
 
-	dct_codes[0] += predictors[0];	// dc prediction
+	dct_codes[0] += predictors[0];	/* dc prediction */
 	pCurrent[0] = dct_codes[0] * iDcScaler;
 
 	if (acpred_direction == 1) {
 		for (i = 1; i < 8; i++) {
 			int level = dct_codes[i] + predictors[i];
 
-			DPRINTF(DPRINTF_COEFF,"predictor[%i] %i",i, predictors[i]);
+			DPRINTF(XVID_DEBUG_COEFF,"predictor[%i] %i\n",i, predictors[i]);
 
 			dct_codes[i] = level;
 			pCurrent[i] = level;
@@ -262,7 +239,7 @@ add_acdc(MACROBLOCK * pMB,
 	} else if (acpred_direction == 2) {
 		for (i = 1; i < 8; i++) {
 			int level = dct_codes[i * 8] + predictors[i];
-			DPRINTF(DPRINTF_COEFF,"predictor[%i] %i",i*8, predictors[i]);
+			DPRINTF(XVID_DEBUG_COEFF,"predictor[%i] %i\n",i*8, predictors[i]);
 
 			dct_codes[i * 8] = level;
 			pCurrent[i + 7] = level;
@@ -278,8 +255,8 @@ add_acdc(MACROBLOCK * pMB,
 
 
 
-// ******************************************************************
-// ******************************************************************
+/*****************************************************************************
+ ****************************************************************************/
 
 /* encoder: subtract predictors from qcoeff[] and calculate S1/S2
 
@@ -318,20 +295,20 @@ calc_acdc_coeff(MACROBLOCK * pMB,
 			int16_t level;
 
 			level = qcoeff[i];
-			S2 += ABS(level);
+			S2 += abs(level);
 			level -= predictors[i];
-			S1 += ABS(level);
+			S1 += abs(level);
 			predictors[i] = level;
 		}
-	} else						// acpred_direction == 2
+	} else						/* acpred_direction == 2 */
 	{
 		for (i = 1; i < 8; i++) {
 			int16_t level;
 
 			level = qcoeff[i * 8];
-			S2 += ABS(level);
+			S2 += abs(level);
 			level -= predictors[i];
-			S1 += ABS(level);
+			S1 += abs(level);
 			predictors[i] = level;
 		}
 
@@ -370,11 +347,7 @@ calc_acdc_bits(MACROBLOCK * pMB,
 	qcoeff[0] = qcoeff[0] - predictors[0];
 
 	/* calc cost before ac prediction */
-#ifdef BIGLUT
-	Z2 = CodeCoeff_CalcBits(qcoeff, intra_table, scan_tables[0], 1);
-#else
 	Z2 = CodeCoeffIntra_CalcBits(qcoeff, scan_tables[0]);
-#endif
 
 	/* apply ac prediction & calc cost*/
 	if (direction == 1) {
@@ -383,7 +356,7 @@ calc_acdc_bits(MACROBLOCK * pMB,
 			qcoeff[i] -= predictors[i];
 			predictors[i] = qcoeff[i];
 		}
-	}else{						// acpred_direction == 2
+	}else{						/* acpred_direction == 2 */
 		for (i = 1; i < 8; i++) {
 			tmp[i] = qcoeff[i*8];
 			qcoeff[i*8] -= predictors[i];
@@ -391,18 +364,14 @@ calc_acdc_bits(MACROBLOCK * pMB,
 		}
 	}
 
-#ifdef BIGLUT
-	Z1 = CodeCoeff_CalcBits(qcoeff, intra_table, scan_tables[direction], 1);
-#else
 	Z1 = CodeCoeffIntra_CalcBits(qcoeff, scan_tables[direction]);
-#endif
 
 	/* undo prediction */
 	if (direction == 1) {
-		for (i = 1; i < 8; i++)	
+		for (i = 1; i < 8; i++)
 			qcoeff[i] = tmp[i];
-	}else{						// acpred_direction == 2
-		for (i = 1; i < 8; i++)	
+	}else{						/* acpred_direction == 2 */
+		for (i = 1; i < 8; i++)
 			qcoeff[i*8] = tmp[i];
 	}
 
@@ -420,10 +389,10 @@ apply_acdc(MACROBLOCK * pMB,
 	unsigned int i;
 
 	if (pMB->acpred_directions[block] == 1) {
-		for (i = 1; i < 8; i++)	
+		for (i = 1; i < 8; i++)
 			qcoeff[i] = predictors[i];
 	} else {
-		for (i = 1; i < 8; i++)	
+		for (i = 1; i < 8; i++)
 			qcoeff[i * 8] = predictors[i];
 	}
 }
@@ -438,11 +407,12 @@ MBPrediction(FRAMEINFO * frame,
 {
 
 	int32_t j;
-	int32_t iDcScaler, iQuant = frame->quant;
+	int32_t iDcScaler, iQuant;
 	int S = 0;
 	int16_t predictors[6][8];
 
 	MACROBLOCK *pMB = &frame->mbs[x + y * mb_width];
+    iQuant = pMB->quant;
 
 	if ((pMB->mode == MODE_INTRA) || (pMB->mode == MODE_INTRA_Q)) {
 
@@ -452,22 +422,173 @@ MBPrediction(FRAMEINFO * frame,
 			predict_acdc(frame->mbs, x, y, mb_width, j, &qcoeff[j * 64],
 						 iQuant, iDcScaler, predictors[j], 0);
 
-			if ((frame->global_flags & XVID_HQACPRED))
+			if ((frame->vop_flags & XVID_VOP_HQACPRED))
 				S += calc_acdc_bits(pMB, j, &qcoeff[j * 64], iDcScaler, predictors[j]);
 			else
 				S += calc_acdc_coeff(pMB, j, &qcoeff[j * 64], iDcScaler, predictors[j]);
 
 		}
 
-		if (S<=0) {				// dont predict
+		if (S<=0) {				/* dont predict */
 			for (j = 0; j < 6; j++)
 				pMB->acpred_directions[j] = 0;
 		}else{
-			for (j = 0; j < 6; j++) 
+			for (j = 0; j < 6; j++)
 				apply_acdc(pMB, j, &qcoeff[j * 64], predictors[j]);
 		}
-		
+
 		pMB->cbp = calc_cbp(qcoeff);
 	}
+}
 
+static const VECTOR zeroMV = { 0, 0 };
+
+VECTOR
+get_pmv2(const MACROBLOCK * const mbs,
+		const int mb_width,
+		const int bound,
+		const int x,
+		const int y,
+		const int block)
+{
+	int lx, ly, lz;		/* left */
+	int tx, ty, tz;		/* top */
+	int rx, ry, rz;		/* top-right */
+	int lpos, tpos, rpos;
+	int num_cand = 0, last_cand = 1;
+
+	VECTOR pmv[4];	/* left neighbour, top neighbour, top-right neighbour */
+
+	switch (block) {
+	case 0:
+		lx = x - 1;	ly = y;		lz = 1;
+		tx = x;		ty = y - 1;	tz = 2;
+		rx = x + 1;	ry = y - 1;	rz = 2;
+		break;
+	case 1:
+		lx = x;		ly = y;		lz = 0;
+		tx = x;		ty = y - 1;	tz = 3;
+		rx = x + 1;	ry = y - 1;	rz = 2;
+		break;
+	case 2:
+		lx = x - 1;	ly = y;		lz = 3;
+		tx = x;		ty = y;		tz = 0;
+		rx = x;		ry = y;		rz = 1;
+		break;
+	default:
+		lx = x;		ly = y;		lz = 2;
+		tx = x;		ty = y;		tz = 0;
+		rx = x;		ry = y;		rz = 1;
+	}
+
+	lpos = lx + ly * mb_width;
+	rpos = rx + ry * mb_width;
+	tpos = tx + ty * mb_width;
+
+	if (lpos >= bound && lx >= 0) {
+		num_cand++;
+		pmv[1] = mbs[lpos].mvs[lz];
+	} else pmv[1] = zeroMV;
+
+	if (tpos >= bound) {
+		num_cand++;
+		last_cand = 2;
+		pmv[2] = mbs[tpos].mvs[tz];
+	} else pmv[2] = zeroMV;
+
+	if (rpos >= bound && rx < mb_width) {
+		num_cand++;
+		last_cand = 3;
+		pmv[3] = mbs[rpos].mvs[rz];
+	} else pmv[3] = zeroMV;
+
+	/* If there're more than one candidate, we return the median vector */
+
+	if (num_cand > 1) {
+		/* set median */
+		pmv[0].x =
+			MIN(MAX(pmv[1].x, pmv[2].x),
+				MIN(MAX(pmv[2].x, pmv[3].x), MAX(pmv[1].x, pmv[3].x)));
+		pmv[0].y =
+			MIN(MAX(pmv[1].y, pmv[2].y),
+				MIN(MAX(pmv[2].y, pmv[3].y), MAX(pmv[1].y, pmv[3].y)));
+		return pmv[0];
+	}
+
+	return pmv[last_cand];	/* no point calculating median mv */
+}
+
+VECTOR
+get_qpmv2(const MACROBLOCK * const mbs,
+		const int mb_width,
+		const int bound,
+		const int x,
+		const int y,
+		const int block)
+{
+	int lx, ly, lz;		/* left */
+	int tx, ty, tz;		/* top */
+	int rx, ry, rz;		/* top-right */
+	int lpos, tpos, rpos;
+	int num_cand = 0, last_cand = 1;
+
+	VECTOR pmv[4];	/* left neighbour, top neighbour, top-right neighbour */
+
+	switch (block) {
+	case 0:
+		lx = x - 1;	ly = y;		lz = 1;
+		tx = x;		ty = y - 1;	tz = 2;
+		rx = x + 1;	ry = y - 1;	rz = 2;
+		break;
+	case 1:
+		lx = x;		ly = y;		lz = 0;
+		tx = x;		ty = y - 1;	tz = 3;
+		rx = x + 1;	ry = y - 1;	rz = 2;
+		break;
+	case 2:
+		lx = x - 1;	ly = y;		lz = 3;
+		tx = x;		ty = y;		tz = 0;
+		rx = x;		ry = y;		rz = 1;
+		break;
+	default:
+		lx = x;		ly = y;		lz = 2;
+		tx = x;		ty = y;		tz = 0;
+		rx = x;		ry = y;		rz = 1;
+	}
+
+	lpos = lx + ly * mb_width;
+	rpos = rx + ry * mb_width;
+	tpos = tx + ty * mb_width;
+
+	if (lpos >= bound && lx >= 0) {
+		num_cand++;
+		pmv[1] = mbs[lpos].qmvs[lz];
+	} else pmv[1] = zeroMV;
+
+	if (tpos >= bound) {
+		num_cand++;
+		last_cand = 2;
+		pmv[2] = mbs[tpos].qmvs[tz];
+	} else pmv[2] = zeroMV;
+
+	if (rpos >= bound && rx < mb_width) {
+		num_cand++;
+		last_cand = 3;
+		pmv[3] = mbs[rpos].qmvs[rz];
+	} else pmv[3] = zeroMV;
+
+	/* If there're more than one candidate, we return the median vector */
+
+	if (num_cand > 1) {
+		/* set median */
+		pmv[0].x =
+			MIN(MAX(pmv[1].x, pmv[2].x),
+				MIN(MAX(pmv[2].x, pmv[3].x), MAX(pmv[1].x, pmv[3].x)));
+		pmv[0].y =
+			MIN(MAX(pmv[1].y, pmv[2].y),
+				MIN(MAX(pmv[2].y, pmv[3].y), MAX(pmv[1].y, pmv[3].y)));
+		return pmv[0];
+	}
+
+	return pmv[last_cand];	/* no point calculating median mv */
 }

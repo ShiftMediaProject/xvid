@@ -1,40 +1,33 @@
-/**************************************************************************
+/*****************************************************************************
  *
  *	XVID MPEG-4 VIDEO CODEC
- *	8x8 block-based halfpel interpolation
+ *	- 8x8 block-based halfpel interpolation -
  *
- *	This program is free software; you can redistribute it and/or modify
- *	it under the terms of the GNU General Public License as published by
- *	the Free Software Foundation; either version 2 of the License, or
- *	(at your option) any later version.
+ *  Copyright(C) 2001-2003 Peter Ross <pross@xvid.org>
  *
- *	This program is distributed in the hope that it will be useful,
- *	but WITHOUT ANY WARRANTY; without even the implied warranty of
- *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *	GNU General Public License for more details.
+ *  This program is free software ; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation ; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *	You should have received a copy of the GNU General Public License
- *	along with this program; if not, write to the Free Software
- *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY ; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *************************************************************************/
-
-/**************************************************************************
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program ; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *	History:
+ * $Id: interpolate8x8.c,v 1.12 2004-03-22 22:36:23 edgomez Exp $
  *
- *  05.10.2002	new bilinear and qpel interpolation code - Isibaar
- *	27.12.2001	modified "compensate_halfpel"
- *	05.11.2001	initial version; (c)2001 peter ross <pross@cs.rmit.edu.au>
- *
- *************************************************************************/
-
+ ****************************************************************************/
 
 #include "../portab.h"
 #include "../global.h"
 #include "interpolate8x8.h"
 
-// function pointers
+/* function pointers */
 INTERPOLATE8X8_PTR interpolate8x8_halfpel_h;
 INTERPOLATE8X8_PTR interpolate8x8_halfpel_v;
 INTERPOLATE8X8_PTR interpolate8x8_halfpel_hv;
@@ -91,7 +84,7 @@ void interpolate8x8_avg4_c(uint8_t *dst, const uint8_t *src1, const uint8_t *src
         dst[5] = (src1[5] + src2[5] + src3[5] + src4[5] + round) >> 2;
         dst[6] = (src1[6] + src2[6] + src3[6] + src4[6] + round) >> 2;
         dst[7] = (src1[7] + src2[7] + src3[7] + src4[7] + round) >> 2;
-        
+
 		dst += stride;
         src1 += stride;
         src2 += stride;
@@ -100,7 +93,7 @@ void interpolate8x8_avg4_c(uint8_t *dst, const uint8_t *src1, const uint8_t *src
     }
 }
 
-// dst = interpolate(src)
+/* dst = interpolate(src) */
 
 void
 interpolate8x8_halfpel_h_c(uint8_t * const dst,
@@ -108,10 +101,10 @@ interpolate8x8_halfpel_h_c(uint8_t * const dst,
 						   const uint32_t stride,
 						   const uint32_t rounding)
 {
-	intptr_t j;
-	
+	uintptr_t j;
+
 	if (rounding)
-		for (j = 7*stride; j >= 0; j-=stride)
+		for (j = 0; j < 8*stride; j+=stride)
 		{
 				dst[j + 0] = (uint8_t)((src[j + 0] + src[j + 1] )>>1);
 				dst[j + 1] = (uint8_t)((src[j + 1] + src[j + 2] )>>1);
@@ -144,8 +137,8 @@ interpolate8x8_halfpel_v_c(uint8_t * const dst,
 						   const uint32_t stride,
 						   const uint32_t rounding)
 {
-	intptr_t j;
-//	const uint8_t * const src2 = src+stride;		/* using a second pointer is _not_ faster here */
+	uintptr_t j;
+
 
 	if (rounding)
 		for (j = 0; j < 8*stride; j+=stride)		/* forward is better. Some automatic prefetch perhaps. */
@@ -180,10 +173,10 @@ interpolate8x8_halfpel_hv_c(uint8_t * const dst,
 							const uint32_t stride,
 							const uint32_t rounding)
 {
-	intptr_t j;
+	uintptr_t j;
 
 	if (rounding)
-		for (j = 7*stride; j >= 0; j-=stride)
+		for (j = 0; j < 8*stride; j+=stride)
 		{
 				dst[j + 0] = (uint8_t)((src[j+0] + src[j+1] + src[j+stride+0] + src[j+stride+1] +1)>>2);
 				dst[j + 1] = (uint8_t)((src[j+1] + src[j+2] + src[j+stride+1] + src[j+stride+2] +1)>>2);
@@ -195,7 +188,7 @@ interpolate8x8_halfpel_hv_c(uint8_t * const dst,
 				dst[j + 7] = (uint8_t)((src[j+7] + src[j+8] + src[j+stride+7] + src[j+stride+8] +1)>>2);
 		}
 	else
-		for (j = 7*stride; j >= 0; j-=stride)
+		for (j = 0; j < 8*stride; j+=stride)
 		{
 				dst[j + 0] = (uint8_t)((src[j+0] + src[j+1] + src[j+stride+0] + src[j+stride+1] +2)>>2);
 				dst[j + 1] = (uint8_t)((src[j+1] + src[j+2] + src[j+stride+1] + src[j+stride+2] +2)>>2);
@@ -207,9 +200,6 @@ interpolate8x8_halfpel_hv_c(uint8_t * const dst,
 				dst[j + 7] = (uint8_t)((src[j+7] + src[j+8] + src[j+stride+7] + src[j+stride+8] +2)>>2);
 		}
 }
-
-
-
 
 /*************************************************************
  * QPEL STUFF STARTS HERE                                    *
@@ -351,7 +341,7 @@ void interpolate16x16_lowpass_v_c(uint8_t *dst, uint8_t *src, int32_t stride, in
         int32_t src15 = src[15 * stride];
         int32_t src16 = src[16 * stride];
 
-        
+
         dst[0] = CLIP(((7 * ((src0<<1) - src2) +  23 * src1 + 3 * src3 - src4 + round_add) >> 5), 0, 255);
         dst[stride] = CLIP(((19 * src1 + 20 * src2 - src5 + 3 * (src4 - src0 - (src3<<1)) + round_add) >> 5), 0, 255);
         dst[2*stride] = CLIP(((20 * (src2 + src3) + (src0<<1) + 3 * (src5 - ((src1 + src4)<<1)) - src6 + round_add) >> 5), 0, 255);
@@ -392,7 +382,7 @@ void interpolate8x8_lowpass_v_c(uint8_t *dst, uint8_t *src, int32_t stride, int3
         int32_t src6 = src[6 * stride];
         int32_t src7 = src[7 * stride];
         int32_t src8 = src[8 * stride];
-        
+
         dst[0]			= CLIP(((7 * ((src0<<1) - src2) + 23 * src1 + 3 * src3 - src4 + round_add) >> 5), 0, 255);
         dst[stride]		= CLIP(((19 * src1 + 20 * src2 - src5 + 3 * (src4 - src0 - (src3 << 1)) + round_add) >> 5), 0, 255);
         dst[2 * stride] = CLIP(((20 * (src2 + src3) + (src0<<1) + 3 * (src5 - ((src1 + src4) <<1 )) - src6 + round_add) >> 5), 0, 255);

@@ -7,15 +7,35 @@
 #
 # Description:
 #  This Makefile allows building XviD sources to obtain a shared library
-#  and a static library. This Makefie uses variables defined in the
+#  and a static library. This Makefile uses variables defined in the
 #  platform.inc file. This platform.inc file is usually created by the
 #  ./configure script whenever a unix shell is available.
 #
-# Nota Bene for mingw32/djgpp users:
-#   However if you provide a platform.inc file adapted to your OS, then
-#   change the include platform.inc to include yourfile.inc and it should
-#   work too.
+# Makefile functionnal dependencies:
+#  - echo
+#  - rm (with option -r and -f)
+#  - cd
+#  - make VPATH support (eg: GNU make, solaris 8 make)
 #
+# Building output:
+#  - C means "_C_ompiling"
+#  - A means "_A_ssembling"
+#  - I means "_I_nstalling"
+#  - D means "creating _D_irectory"
+#  - Cl means "_Cl_eaning"
+#
+# NB: (for mingw32/djgpp users)
+#   These 2 environments do not provide a shell by default. So it's impossible
+#   to use the configure script to generate a platform.inc file suitable for
+#   your machine. You have two choices:
+#    - install minsys from the mingw project or install cygwin and then use
+#      the configure script as on a unix system.
+#    - write a platform.inc file by hand.
+#
+# PS: default build directory is "=build", it fits naming conventions that
+#     make the arch/tla revision control program ignore files contained in
+#     this directory during commits operations. This choice is completly
+#     arbitrary, but try not to change it.
 #
 ##############################################################################
 
@@ -31,10 +51,14 @@ RM = rm -rf
 ##############################################################################
 
 # Their Objects
-OBJECTS=$(GENERIC_OBJECTS)
-OBJECTS+=$(DIVX4COMPAT_OBJECTS)
-OBJECTS+=$(ASSEMBLY_OBJECTS)
-OBJECTS+=$(DCT_IA64_OBJECTS)
+OBJECTS  = $(GENERIC_OBJECTS)
+OBJECTS += $(ASSEMBLY_OBJECTS)
+OBJECTS += $(DCT_IA64_OBJECTS)
+
+# The VPATH mecanism could use a "per target" build directory
+# To keep it simple at the moment, the directory is fixed to "build"
+BUILD_DIR = =build
+VPATH     = $(SRC_DIR):$(BUILD_DIR)
 
 #-----------------------------------------------------------------------------
 # The default rule
@@ -42,109 +66,126 @@ OBJECTS+=$(DCT_IA64_OBJECTS)
 
 .SUFFIXES: .$(OBJECT_EXTENSION) .$(ASSEMBLY_EXTENSION) .c
 
-all: platform.inc $(STATIC_LIB) $(SHARED_LIB)
+all: $(STATIC_LIB) $(SHARED_LIB)
 	@echo
 	@echo "---------------------------------------------------------------"
-	@echo " XviD has been built, you can now run \"# make install\" as root."
+	@echo " XviD has been successfully built."
+	@echo
+	@echo " * Binaries are currently located in the '$(BUILD_DIR)' directory"
+	@echo " * To install them on your system, you can run '# make install'"
+	@echo "   as root."
 	@echo "---------------------------------------------------------------"
 	@echo
+
+$(OBJECTS): platform.inc
+
+$(BUILD_DIR):
+	@echo "  D: $(BUILD_DIR)"
+	@$(INSTALL) -d $(BUILD_DIR)
 
 #-----------------------------------------------------------------------------
 # Generic assembly rule
 #-----------------------------------------------------------------------------
 
 .$(ASSEMBLY_EXTENSION).$(OBJECT_EXTENSION):
-	@echo -n "Assembling $< ... "
-	@$(AS) $(AFLAGS) $< -o $@
-	@echo "Done"
+	@echo "  A: $(@D)/$(<F)"
+	@$(INSTALL) -d $(BUILD_DIR)/$(@D)
+	@$(AS) $(AFLAGS) $< -o $(BUILD_DIR)/$@
 
 #-----------------------------------------------------------------------------
 # Generic C rule
 #-----------------------------------------------------------------------------
 
 .c.$(OBJECT_EXTENSION):
-	@echo -n "Compiling $< ... "
-	@$(CC) -c $(ARCHITECTURE) $(BUS) $(ENDIANNESS) $(FEATURES) $(SPECIFIC_CFLAGS) $(CFLAGS) $< -o $@
-	@echo "Done"
+	@echo "  C: $(@D)/$(<F)"
+	@$(INSTALL) -d $(BUILD_DIR)/$(@D)
+	@$(CC) -c $(ARCHITECTURE) $(BUS) $(ENDIANNESS) $(FEATURES) $(SPECIFIC_CFLAGS) $(CFLAGS) $< -o $(BUILD_DIR)/$@
 
 #-----------------------------------------------------------------------------
 # Static Library
 #-----------------------------------------------------------------------------
 
-$(STATIC_LIB): $(OBJECTS)
-	@echo
-	@echo -n "Linking the static library... "
-	@ar rc $(STATIC_LIB) $(OBJECTS)
-	@echo "Done"
-	@echo -n "Generating static library's index... "
-	@$(RANLIB) $(STATIC_LIB)
-	@echo "Done"
+$(STATIC_LIB): $(BUILD_DIR) $(OBJECTS)
+	@echo "  L: $(@F)"
+	@cd $(BUILD_DIR) && ar rc $(@F) $(OBJECTS) && $(RANLIB) $(@F)
 
 #-----------------------------------------------------------------------------
 # Shared Library
+#
+# NB: This rule is used a nasty way by the MacOSX module build process
+#     In this only case, it uses the SPECIFIC_LDFLAGS to append an additionnal
+#     linking step:
+#      1/ it links a pre shared lib (libxvidcore.so-temp.4)
+#      2/ it links that pre shared lib outputing the real shared lib (module)
+#     In all other cases this rule is straight forward and simple.
+#     PRE_SHARED_LIB == SHARED_LIB and no nasty command appending.
+#
+# NB': we copy the def file for the win32 target, the file is unused on other
+#      platforms
 #-----------------------------------------------------------------------------
 
-$(SHARED_LIB): $(OBJECTS)
-	@echo
-	@echo -n "Linking the shared library... "
-	@$(CC) $(LDFLAGS) $(OBJECTS) -o $(SHARED_LIB) $(SPECIFIC_LDFLAGS)
-	@echo "Done"
+$(SHARED_LIB): $(BUILD_DIR) $(OBJECTS)
+	@echo "  L: $(@F)"
+	@$(INSTALL) -m 644 libxvidcore.def $(BUILD_DIR)/libxvidcore.def
+	@cd $(BUILD_DIR) && $(CC) $(LDFLAGS) $(OBJECTS) -o $(PRE_SHARED_LIB) $(SPECIFIC_LDFLAGS)
 
 #-----------------------------------------------------------------------------
 # Installation
 #-----------------------------------------------------------------------------
 
-install: all
-	@echo
-	@echo "+---------- Installing XviD libraries in $(libdir) ----------+"
-	@echo
-	$(INSTALL) -d $(libdir)
-	$(INSTALL) -m 755 $(SHARED_LIB) $(libdir)/$(SHARED_LIB)
-	$(INSTALL) -m 755 $(STATIC_LIB) $(libdir)/$(STATIC_LIB)
-	@echo
-	@echo "+---------- Installing XviD header in $(includedir) ----------+"
-	@echo
-	$(INSTALL) -d $(includedir)
-	$(INSTALL) -m 644 $(SRCDIR)/xvid.h $(includedir)/xvid.h
-	@echo
+install: $(BUILD_DIR)/$(STATIC_LIB) $(BUILD_DIR)/$(SHARED_LIB)
+	@echo "  D: $(libdir)"
+	@$(INSTALL) -d $(libdir)
+	@echo "  I: $(libdir)/$(SHARED_LIB)"
+	@$(INSTALL) -m 755 $(BUILD_DIR)/$(SHARED_LIB) $(libdir)/$(SHARED_LIB)
+	@echo "  I: $(libdir)/$(STATIC_LIB)"
+	@$(INSTALL) -m 755 $(BUILD_DIR)/$(STATIC_LIB) $(libdir)/$(STATIC_LIB)
+	@echo "  D: $(includedir)"
+	@$(INSTALL) -d $(includedir)
+	@echo "  I: $(includedir)/xvid.h"
+	@$(INSTALL) -m 644 $(SRC_DIR)/xvid.h $(includedir)/xvid.h
 
 #-----------------------------------------------------------------------------
-# Platorm specific file -- dumb rule for people executing make before
-# ./configure
+# Platorm specific file -- dumb rules for people executing make before
+# ./configure or even ./bootstrap.sh
 #-----------------------------------------------------------------------------
 
-platform.inc: platform.inc.in
+platform.inc: configure platform.inc.in
 	./configure
+
+configure:
+	./bootstrap.sh
 
 #-----------------------------------------------------------------------------
 # .PHONY targets
 #-----------------------------------------------------------------------------
 
-.PHONY: distclean clean info list-objects list-targets list-install-path list-cflags
+.PHONY: mrproper distclean clean info \
+	list-objects list-targets list-install-path list-cflags
 
 clean:
-	@echo -n "Cleaning objects... "
-	@$(RM) $(OBJECTS)
-	@echo "Done"
-	@echo -n "Cleaning static library... "
-	@$(RM) $(STATIC_LIB)
-	@echo "Done"
-	@echo -n "Cleaning shared library... "
-	@$(RM) $(SHARED_LIB)
-	@echo "Done"
-
+	@echo "  Cl: Build directory"
+	@$(RM) $(BUILD_DIR)
 
 distclean: clean
-	@echo -n "Cleaning generated files... "
-	@$(RM) libxvidcore.def
+	@echo "  Cl: Generated build files"
 	@$(RM) platform.inc
 	@$(RM) config.log
 	@$(RM) config.status
 	@$(RM) autom4te.cache
-	@echo "Done"
+
+mrproper: distclean
+	@echo "  Cl: Boostrapped build files"
+	@$(RM) configure
+	@$(RM) install-sh
+	@$(RM) missing
+	@$(RM) config.guess
+	@$(RM) mkinstalldirs
+	@$(RM) config.sub
 
 list-objects:
 	@echo
+	@echo "---------------------------------------------------------------"
 	@echo "Object files used for this build"
 	@echo "---------------------------------------------------------------"
 	@echo
@@ -153,6 +194,7 @@ list-objects:
 
 list-targets:
 	@echo
+	@echo "---------------------------------------------------------------"
 	@echo "Target Libraries"
 	@echo "---------------------------------------------------------------"
 	@echo
@@ -162,15 +204,17 @@ list-targets:
 
 list-install-path:
 	@echo
+	@echo "---------------------------------------------------------------"
 	@echo "Install Paths"
 	@echo "---------------------------------------------------------------"
 	@echo
-	@echo Include: $(includedir)
-	@echo Library: $(libdir)
+	@echo Include Directory: $(includedir)
+	@echo Library Directory: $(libdir)
 	@echo
 
 list-cflags:
 	@echo
+	@echo "---------------------------------------------------------------"
 	@echo "Using CFLAGS"
 	@echo "---------------------------------------------------------------"
 	@echo

@@ -1,26 +1,36 @@
-/*
- * Simple IDCT
+/*****************************************************************************
  *
- * Copyright (c) 2001 Michael Niedermayer <michaelni@gmx.at>
+ *  XVID MPEG-4 VIDEO CODEC
+ *  - Inverse DCT (More precise version)  -
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ *  Copyright (c) 2001 Michael Niedermayer <michaelni@gmx.at>
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ *  Originally distributed under the GNU LGPL License (ffmpeg).
+ *  It is licensed under the GNU GPL for the XviD tree.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+ *  This program is free software ; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation ; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY ; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program ; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ *
+ * $Id: simple_idct.c,v 1.4 2004-03-22 22:36:23 edgomez Exp $
+ *
+ ****************************************************************************/
+
 /*
   based upon some outcommented c code from mpeg2dec (idct_mmx.c
-  written by Aaron Holtzman <aholtzma@ess.engr.uvic.ca>) 
+  written by Aaron Holtzman <aholtzma@ess.engr.uvic.ca>)
  */
+
 #include "../portab.h"
 #include "idct.h"
 
@@ -35,15 +45,15 @@
 #define ROW_SHIFT 8
 #define COL_SHIFT 17
 #else
-#define W1  22725  //cos(i*M_PI/16)*sqrt(2)*(1<<14) + 0.5
-#define W2  21407  //cos(i*M_PI/16)*sqrt(2)*(1<<14) + 0.5
-#define W3  19266  //cos(i*M_PI/16)*sqrt(2)*(1<<14) + 0.5
-#define W4  16383  //cos(i*M_PI/16)*sqrt(2)*(1<<14) + 0.5
-#define W5  12873  //cos(i*M_PI/16)*sqrt(2)*(1<<14) + 0.5
-#define W6  8867   //cos(i*M_PI/16)*sqrt(2)*(1<<14) + 0.5
-#define W7  4520   //cos(i*M_PI/16)*sqrt(2)*(1<<14) + 0.5
+#define W1  22725  /* cos(i*M_PI/16)*sqrt(2)*(1<<14) + 0.5 */
+#define W2  21407  /* cos(i*M_PI/16)*sqrt(2)*(1<<14) + 0.5 */
+#define W3  19266  /* cos(i*M_PI/16)*sqrt(2)*(1<<14) + 0.5 */
+#define W4  16383  /* cos(i*M_PI/16)*sqrt(2)*(1<<14) + 0.5 */
+#define W5  12873  /* cos(i*M_PI/16)*sqrt(2)*(1<<14) + 0.5 */
+#define W6  8867   /* cos(i*M_PI/16)*sqrt(2)*(1<<14) + 0.5 */
+#define W7  4520   /* cos(i*M_PI/16)*sqrt(2)*(1<<14) + 0.5 */
 #define ROW_SHIFT 11
-#define COL_SHIFT 20 // 6
+#define COL_SHIFT 20 /* 6 */
 #endif
 
 #if defined(ARCH_IS_PPC)
@@ -81,7 +91,7 @@ static __inline void idctRowCondDC (int16_t * const row)
 #else
 #define ROW0_MASK 0xffffLL
 #endif
-	if ( ((((uint64_t *)row)[0] & ~ROW0_MASK) | 
+	if ( ((((uint64_t *)row)[0] & ~ROW0_MASK) |
               ((uint64_t *)row)[1]) == 0) {
             temp = (row[0] << 3) & 0xffff;
             temp += temp << 16;
@@ -93,7 +103,7 @@ static __inline void idctRowCondDC (int16_t * const row)
 #else
 	if (!(((uint32_t*)row)[1] |
               ((uint32_t*)row)[2] |
-              ((uint32_t*)row)[3] | 
+              ((uint32_t*)row)[3] |
               row[1])) {
             temp = (row[0] << 3) & 0xffff;
             temp += temp << 16;
@@ -136,13 +146,13 @@ static __inline void idctRowCondDC (int16_t * const row)
 
             MAC16(b0, W5, row[5]);
             MAC16(b0, W7, row[7]);
-            
+
             MAC16(b1, -W1, row[5]);
             MAC16(b1, -W5, row[7]);
-            
+
             MAC16(b2, W7, row[5]);
             MAC16(b2, W3, row[7]);
-            
+
             MAC16(b3, W3, row[5]);
             MAC16(b3, -W1, row[7]);
 	}
@@ -226,7 +236,7 @@ void simple_idct_c(int16_t * const block)
     int i;
     for(i=0; i<8; i++)
         idctRowCondDC(block + i*8);
-    
+
     for(i=0; i<8; i++)
         idctSparseCol(block + i);
 }

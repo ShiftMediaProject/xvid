@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: reduced.c,v 1.2 2003-02-15 15:22:18 edgomez Exp $
+ * $Id: reduced.c,v 1.3 2004-03-22 22:36:24 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -58,7 +58,7 @@
 #include "../global.h"
 #include "reduced.h"
 
-// function pointers
+/* function pointers */
 COPY_UPSAMPLED_8X8_16TO8 * copy_upsampled_8x8_16to8;
 ADD_UPSAMPLED_8X8_16TO8 * add_upsampled_8x8_16to8;
 VFILTER_31 * vfilter_31;
@@ -66,8 +66,9 @@ HFILTER_31 * hfilter_31;
 FILTER_18X18_TO_8X8 * filter_18x18_to_8x8;
 FILTER_DIFF_18X18_TO_8X8 * filter_diff_18x18_to_8x8;
 
-//////////////////////////////////////////////////////////
-// Upsampling (1/3/3/1) filter
+/*----------------------------------------------------------------------------
+ * Upsampling (1/3/3/1) filter
+ *--------------------------------------------------------------------------*/
 
 #define ADD(dst,src)  (dst) = CLIP((dst)+(src), 0, 255)
 
@@ -109,7 +110,7 @@ void xvid_Copy_Upsampled_8x8_16To8_C(uint8_t *Dst, const int16_t *Src, const int
     for(x=0; x<7; ++x)
       Filter_9331(Dst+2*x+1, Dst2+2*x+1, Src+x, Src+x+8);
     Filter_31(Dst+15, Dst2+15, Src+7, Src+7+8);
-    Src += 8; 
+    Src += 8;
     Dst += 2*BpS;
   }
   Dst[0] = CLIP(Src[0], 0, 255);
@@ -154,7 +155,7 @@ void xvid_Add_Upsampled_8x8_16To8_C(uint8_t *Dst, const int16_t *Src, const int 
     for(x=0; x<7; ++x)
       Filter_Add_9331(Dst+2*x+1, Dst2+2*x+1, Src+x, Src+x+8);
     Filter_Add_31(Dst+15, Dst2+15, Src+7, Src+7+8);
-    Src += 8; 
+    Src += 8;
     Dst += 2*BpS;
   }
   ADD(Dst[0], Src[0]);
@@ -163,8 +164,9 @@ void xvid_Add_Upsampled_8x8_16To8_C(uint8_t *Dst, const int16_t *Src, const int 
 }
 #undef ADD
 
-//////////////////////////////////////////////////////////
-// horizontal and vertical deblocking
+/*----------------------------------------------------------------------------
+ * horizontal and vertical deblocking
+ *--------------------------------------------------------------------------*/
 
 void xvid_HFilter_31_C(uint8_t *Src1, uint8_t *Src2, int Nb_Blks)
 {
@@ -190,12 +192,11 @@ void xvid_VFilter_31_C(uint8_t *Src1, uint8_t *Src2, const int BpS, int Nb_Blks)
   }
 }
 
-//////////////////////////////////////////////////////////
-// 16x16 -> 8x8  (1/3/3/1) downsampling
-//
-// Warning! These read 1 pixel outside of the input 16x16 block!
-//
-//////////////////////////////////////////////////////////
+/*----------------------------------------------------------------------------
+ * 16x16 -> 8x8  (1/3/3/1) downsampling
+ *
+ * Warning! These read 1 pixel outside of the input 16x16 block!
+ *--------------------------------------------------------------------------*/
 
 void xvid_Filter_18x18_To_8x8_C(int16_t *Dst, const uint8_t *Src, const int BpS)
 {
@@ -240,5 +241,3 @@ void xvid_Filter_Diff_18x18_To_8x8_C(int16_t *Dst, const uint8_t *Src, const int
     T += 16;
   }
 }
-
-//////////////////////////////////////////////////////////

@@ -3,6 +3,8 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - 8bit<->16bit transfer  -
  *
+ *  Copyright(C) 2001-2003 Peter Ross <pross@xvid.org>
+ *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation ; either version 2 of the License, or
@@ -17,18 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- ****************************************************************************/
-/*****************************************************************************
- *
- *  History
- *
- *  - 14.06.2002 Changed legal header with the new FSF address
- *	- 14.04.2002 added transfer_8to16sub2
- *	- 07.01.2002 merge functions from compensate; rename functions
- *	- 22.12.2001 transfer_8to8add16 limit fix
- *	- 07.11.2001 initial version; (c)2001 peter ross <pross@cs.rmit.edu.au>
- *
- *  $Id: mem_transfer.c,v 1.9 2003-02-15 15:22:19 edgomez Exp $
+ * $Id: mem_transfer.c,v 1.10 2004-03-22 22:36:24 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -175,8 +166,9 @@ transfer_8to16subro_c(int16_t * const dct,
  *
  *    R1  (8bit) = R1
  *    R2  (8bit) = R2
- *    C   (8bit) = C
- *    DCT (16bit)= C - min((R1 + R2)/2, 255)
+ *    R   (temp) = min((R1 + R2)/2, 255)
+ *    DCT (16bit)= C - R
+ *    C   (8bit) = R
  */
 void
 transfer_8to16sub2_c(int16_t * const dct,
@@ -195,7 +187,7 @@ transfer_8to16sub2_c(int16_t * const dct,
 			if (r > 255) {
 				r = 255;
 			}
-			//cur[j * stride + i] = r;
+			cur[j * stride + i] = r;
 			dct[j * 8 + i] = (int16_t) c - (int16_t) r;
 		}
 	}

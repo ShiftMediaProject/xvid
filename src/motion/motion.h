@@ -1,7 +1,7 @@
 /**************************************************************************
  *
  *  XVID MPEG-4 VIDEO CODEC
- *  -  Motion sad header  -
+ *  -  Motion header  -
  *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: motion.h,v 1.21 2003-03-04 11:00:53 syskin Exp $
+ *  $Id: motion.h,v 1.22 2004-03-22 22:36:24 edgomez Exp $
  *
  ***************************************************************************/
 
@@ -36,14 +36,8 @@
 #include "../portab.h"
 #include "../global.h"
 
-// fast ((A)/2)*2
-#define EVEN(A)		(((A)<0?(A)+1:(A)) & ~1)
-
-#define MVzero(A) ( ((A).x)==(0) && ((A).y)==(0) )
-#define MVequal(A,B) ( ((A).x)==((B).x) && ((A).y)==((B).y) )
-
 /*****************************************************************************
- * Modified rounding tables -- defined in motion_est.c
+ * Modified rounding tables -- defined in estimation_common.c
  * Original tables see ISO spec tables 7-6 -> 7-9
  ****************************************************************************/
 
@@ -55,39 +49,21 @@ extern const uint32_t roundtab_78[8];
 /* K = 1 */
 extern const uint32_t roundtab_79[4];
 
-/*
- * getref: calculate reference image pointer
- * the decision to use interpolation h/v/hv or the normal image is
- * based on dx & dy.
- */
 
-static __inline const uint8_t *
-get_ref(const uint8_t * const refn,
-		const uint8_t * const refh,
-		const uint8_t * const refv,
-		const uint8_t * const refhv,
-		const uint32_t x,
-		const uint32_t y,
-		const uint32_t block,	/* block dimension, 8 or 16 */
-		const int32_t dx,
-		const int32_t dy,
-		const int32_t stride)
-{
-	switch (((dx & 1) << 1) + (dy & 1)) {	/* ((dx%2)?2:0)+((dy%2)?1:0) */
-	case 0:
-		return refn + (int) ((x * block + dx / 2) + (y * block + dy / 2) * stride);
-	case 1:
-		return refv + (int) ((x * block + dx / 2) + (y * block + (dy - 1) / 2) * stride);
-	case 2:
-		return refh + (int) ((x * block + (dx - 1) / 2) + (y * block + dy / 2) * stride);
-	default:
-		return refhv + (int) ((x * block + (dx - 1) / 2) + (y * block + (dy - 1) / 2) * stride);
-	}
-}
+/** MotionEstimation **/
 
-void MotionEstimationBVOP(MBParam * const pParam,
+bool MotionEstimation(MBParam * const pParam,
+					FRAMEINFO * const current,
+					FRAMEINFO * const reference,
+					const IMAGE * const pRefH,
+					const IMAGE * const pRefV,
+					const IMAGE * const pRefHV,
+					const IMAGE * const pGMC,
+					const uint32_t iLimit);
+
+void
+MotionEstimationBVOP(MBParam * const pParam,
 						FRAMEINFO * const frame,
-						// forward (past) reference
 						const int32_t time_bp,
 						const int32_t time_pp,
 						const MACROBLOCK * const f_mbs,
@@ -95,14 +71,84 @@ void MotionEstimationBVOP(MBParam * const pParam,
 						const IMAGE * const f_refH,
 						const IMAGE * const f_refV,
 						const IMAGE * const f_refHV,
-						// backward (future) reference
 						const FRAMEINFO * const b_reference,
 						const IMAGE * const b_ref,
 						const IMAGE * const b_refH,
 						const IMAGE * const b_refV,
 						const IMAGE * const b_refHV);
 
-void MBMotionCompensationBVOP(MBParam * pParam,
+void
+GMEanalysis(const MBParam * const pParam,
+			const FRAMEINFO * const current,
+			const FRAMEINFO * const reference,
+			const IMAGE * const pRefH,
+			const IMAGE * const pRefV,
+			const IMAGE * const pRefHV);
+
+WARPPOINTS
+GlobalMotionEst(MACROBLOCK * const pMBs,
+				const MBParam * const pParam,
+				const FRAMEINFO * const current,
+				const FRAMEINFO * const reference,
+				const IMAGE * const pRefH,
+				const IMAGE * const pRefV,
+				const IMAGE * const pRefHV);
+
+int
+GlobalMotionEstRefine(
+				WARPPOINTS *const startwp,
+				MACROBLOCK * const pMBs,
+				const MBParam * const pParam,
+				const FRAMEINFO * const current,
+				const FRAMEINFO * const reference,
+				const IMAGE * const pCurr,
+				const IMAGE * const pRef,
+				const IMAGE * const pRefH,
+				const IMAGE * const pRefV,
+				const IMAGE * const pRefHV);
+
+int
+globalSAD(const WARPPOINTS *const wp,
+		  const MBParam * const pParam,
+		  const MACROBLOCK * const pMBs,
+		  const FRAMEINFO * const current,
+		  const IMAGE * const pRef,
+		  const IMAGE * const pCurr,
+		  uint8_t *const GMCblock);
+
+
+int
+MEanalysis(	const IMAGE * const pRef,
+			const FRAMEINFO * const Current,
+			const MBParam * const pParam,
+			const int maxIntra,
+			const int intraCount,
+			const int bCount,
+			const int b_thresh,
+			const MACROBLOCK * const prev_mbs);
+
+/** MotionCompensation **/
+
+void
+MBMotionCompensation(MACROBLOCK * const mb,
+					const uint32_t i,
+					const uint32_t j,
+					const IMAGE * const ref,
+					const IMAGE * const refh,
+					const IMAGE * const refv,
+					const IMAGE * const refhv,
+					const IMAGE * const refGMC,
+					IMAGE * const cur,
+					int16_t * dct_codes,
+					const uint32_t width,
+					const uint32_t height,
+					const uint32_t edged_width,
+					const int32_t quarterpel,
+					const int reduced_resolution,
+					const int32_t rounding);
+
+void
+MBMotionCompensationBVOP(MBParam * pParam,
 							MACROBLOCK * const mb,
 							const uint32_t i,
 							const uint32_t j,
@@ -116,47 +162,5 @@ void MBMotionCompensationBVOP(MBParam * pParam,
 							const IMAGE * const b_refv,
 							const IMAGE * const b_refhv,
 							int16_t * dct_codes);
-
-
-/* GMC stuff. Maybe better put it into a separate file */
-
-void
-generate_GMCparameters(	const int num_wp,				// [input]: number of warppoints
-						const int res, 					// [input]: resolution
-						const WARPPOINTS *const warp, 	// [input]: warp points
-						const int width, const int height, 	// [input]: without edges!
-						GMC_DATA *const gmc); 		// [output] precalculated parameters
-
-void
-generate_GMCimage(	const GMC_DATA *const gmc_data, 	// [input] precalculated data
-					const IMAGE *const pRef,			// [input]
-					const int mb_width,
-					const int mb_height,
-					const int stride,
-					const int stride2,
-					const int fcode, 					// [input] some parameters...
-					const int32_t quarterpel,			// [input] for rounding avgMV
-					const int reduced_resolution,		// [input] ignored
-					const int32_t rounding,			// [input] for rounding image data
-					MACROBLOCK *const pMBs, 	// [output] average motion vectors
-					IMAGE *const pGMC);			// [output] full warped image
-
-VECTOR generate_GMCimageMB(	const GMC_DATA *const gmc_data, 	/* [input] all precalc data */
-							const IMAGE *const pRef,			// [input]
-							const int mi, const int mj, 		/* [input] MB position */
-							const int stride,					/* [input] Lumi stride */
-							const int stride2,					/* [input] chroma stride */
-							const int quarterpel, 				/* [input] for rounding of AvgMV */
-							const int rounding,
-							IMAGE *const pGMC);					/* [outut] generate image */
-
-int
-MEanalysis(	const IMAGE * const pRef,
-			const FRAMEINFO * const Current,
-			const MBParam * const pParam,
-			const int maxIntra,
-			const int intraCount,
-			const int bCount,
-			const int b_thresh);
 
 #endif							/* _MOTION_H_ */

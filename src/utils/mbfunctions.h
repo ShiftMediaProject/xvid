@@ -1,16 +1,27 @@
-/**************************************************************************
+/*****************************************************************************
  *
- *  Modifications:
+ *  XVID MPEG-4 VIDEO CODEC
+ *  - MB related header  -
  *
- *  29.03.2002 removed MBFieldToFrame - no longer used (transfers instead)
- *  26.03.2002 interlacing support
- *  02.12.2001 motion estimation/compensation split
- *  16.11.2001 const/uint32_t changes to MBMotionEstComp()
- *  26.08.2001 added inter4v_mode parameter to MBMotionEstComp()
+ *  Copyright(C) 2001 Michael Militzer <isibaar@xvid.org>
  *
- *  Michael Militzer <isibaar@videocoding.de>
+ *  This program is free software ; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation ; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- **************************************************************************/
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY ; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program ; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ *
+ * $Id: mbfunctions.h,v 1.19 2004-03-22 22:36:24 edgomez Exp $
+ *
+ ****************************************************************************/
 
 #ifndef _ENCORE_BLOCK_H
 #define _ENCORE_BLOCK_H
@@ -18,41 +29,12 @@
 #include "../encoder.h"
 #include "../bitstream/bitstream.h"
 
-/** MotionEstimation **/
-
-bool MotionEstimation(MBParam * const pParam,
-					FRAMEINFO * const current,
-					FRAMEINFO * const reference,
-					const IMAGE * const pRefH,
-					const IMAGE * const pRefV,
-					const IMAGE * const pRefHV,
-					const uint32_t iLimit);
-
-/** MBMotionCompensation **/
-
-void
-MBMotionCompensation(MACROBLOCK * const mb,
-					const uint32_t i,
-					const uint32_t j,
-					const IMAGE * const ref,
-					const IMAGE * const refh,
-					const IMAGE * const refv,
-					const IMAGE * const refhv,
-					const IMAGE * const refGMC,
-					IMAGE * const cur,
-					int16_t * dct_codes,
-					const uint32_t width,
-					const uint32_t height,
-					const uint32_t edged_width,
-					const int32_t quarterpel,
-					const int reduced_resolution,
-					const int32_t rounding);
 
 /** MBTransQuant.c **/
 
 
 void MBTransQuantIntra(const MBParam * const pParam,
-					FRAMEINFO * const frame,
+					const FRAMEINFO * const frame,
 					MACROBLOCK * const pMB,
 					const uint32_t x_pos,	/* <-- The x position of the MB to be searched */
 					const uint32_t y_pos,	/* <-- The y position of the MB to be searched */
@@ -60,7 +42,7 @@ void MBTransQuantIntra(const MBParam * const pParam,
 					int16_t qcoeff[6 * 64]);	/* <-> the quantized DCT coefficients */
 
 uint8_t MBTransQuantInter(const MBParam * const pParam,
-						FRAMEINFO * const frame,
+						const FRAMEINFO * const frame,
 						MACROBLOCK * const pMB,
 						const uint32_t x_pos,
 						const uint32_t y_pos,
@@ -68,15 +50,13 @@ uint8_t MBTransQuantInter(const MBParam * const pParam,
 						int16_t qcoeff[6 * 64]);
 
 uint8_t MBTransQuantInterBVOP(const MBParam * pParam,
-						FRAMEINFO * frame,
-						MACROBLOCK * pMB,
-						int16_t data[6 * 64],
-						int16_t qcoeff[6 * 64]);
+						  FRAMEINFO * frame,
+						  MACROBLOCK * pMB,
+						  const uint32_t x_pos,
+						  const uint32_t y_pos,
+						  int16_t data[6 * 64],
+						  int16_t qcoeff[6 * 64]);
 
-/** interlacing **/
-
-uint32_t MBDecideFieldDCT(int16_t data[6 * 64]);	/* <- decide whether to use field-based DCT
-														for interlacing */
 
 typedef uint32_t (MBFIELDTEST) (int16_t data[6 * 64]);	/* function pointer for field test */
 typedef MBFIELDTEST *MBFIELDTEST_PTR;
