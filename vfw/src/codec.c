@@ -742,6 +742,9 @@ LRESULT compress(CODEC * codec, ICCOMPRESS * icc)
 
 	frame.motion |= pmvfast_presets[codec->config.motion_search];
 
+	if (codec->config.vhq_bframe) frame.vop_flags |= XVID_VOP_RD_BVOP;
+
+
 	switch (codec->config.vhq_mode)
 	{
 	case VHQ_MODE_DECISION :
