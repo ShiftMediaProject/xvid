@@ -384,7 +384,6 @@ transfer_8to16sub2_xmm
 
 		pxor mm7, mm7	; mm7 = 0
 		shl eax, 1      ; eax = stride<<1
-		add eax, 16
 
 		; Row processing
 		; One row at a time
