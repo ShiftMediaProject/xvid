@@ -52,7 +52,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: portab.h,v 1.36 2002-11-23 18:11:58 chl Exp $
+ * $Id: portab.h,v 1.37 2002-11-23 22:00:43 chl Exp $
  *
  ****************************************************************************/
 
@@ -110,7 +110,7 @@
  | Fallback when using gcc
  *---------------------------------------------------------------------------*/
 
-#elif defined(__GNUC__) || defined(__ICC__)
+#elif defined(__GNUC__) || defined(__ICC)
 
 #    define int8_t   char
 #    define uint8_t  unsigned char
@@ -220,7 +220,7 @@
  *  GNU CC compiler stuff
  ****************************************************************************/
 
-#elif defined(__GNUC__) || defined(__ICC__) /* Compiler test */
+#elif defined(__GNUC__) || defined(__ICC) /* Compiler test */
 
 /*----------------------------------------------------------------------------
  | Common gcc stuff
