@@ -141,8 +141,8 @@ MotionEstimation(MBParam * const pParam,
 	static const VECTOR zeroMV = { 0, 0 };
 	VECTOR predMV;
 
-	int32_t x, y;
-	int32_t iIntra = 0;
+	uint32_t x, y;
+	uint32_t iIntra = 0;
 	VECTOR pmv;
 
 	if (sadInit)
@@ -409,12 +409,12 @@ Diamond16_MainSearch(const uint8_t * const pRef,
 					 const uint8_t * const cur,
 					 const int x,
 					 const int y,
-				   const int start_x,
-				   const int start_y,
-				   int iMinSAD,
-				   VECTOR * const currMV,
-				   const int center_x,
-				   const int center_y,
+					 const int start_x,
+					 const int start_y,
+					 int iMinSAD,
+					 VECTOR * const currMV,
+					 const int center_x,
+					 const int center_y,
 					 const int32_t min_dx,
 					 const int32_t max_dx,
 					 const int32_t min_dy,
@@ -476,12 +476,12 @@ Square16_MainSearch(const uint8_t * const pRef,
 					const uint8_t * const cur,
 					const int x,
 					const int y,
-				   const int start_x,
-				   const int start_y,
-				   int iMinSAD,
-				   VECTOR * const currMV,
-				   const int center_x,
-				   const int center_y,
+					const int start_x,
+					const int start_y,
+					int iMinSAD,
+					VECTOR * const currMV,
+					const int center_x,
+					const int center_y,
 					const int32_t min_dx,
 					const int32_t max_dx,
 					const int32_t min_dy,
@@ -655,12 +655,12 @@ Full16_MainSearch(const uint8_t * const pRef,
 				  const uint8_t * const cur,
 				  const int x,
 				  const int y,
-				   const int start_x,
-				   const int start_y,
-				   int iMinSAD,
-				   VECTOR * const currMV,
-				   const int center_x,
-				   const int center_y,
+				  const int start_x,
+				  const int start_y,
+				  int iMinSAD,
+				  VECTOR * const currMV,
+				  const int center_x,
+				  const int center_y,
 				  const int32_t min_dx,
 				  const int32_t max_dx,
 				  const int32_t min_dy,
@@ -693,12 +693,12 @@ AdvDiamond16_MainSearch(const uint8_t * const pRef,
 						const uint8_t * const cur,
 						const int x,
 						const int y,
-					   int start_x,
-					   int start_y,
-					   int iMinSAD,
-					   VECTOR * const currMV,
-					   const int center_x,
-					   const int center_y,
+						const int start_xi,
+						const int start_yi,
+						int iMinSAD,
+						VECTOR * const currMV,
+						const int center_x,
+						const int center_y,
 						const int32_t min_dx,
 						const int32_t max_dx,
 						const int32_t min_dy,
@@ -711,6 +711,7 @@ AdvDiamond16_MainSearch(const uint8_t * const pRef,
 {
 
 	int32_t iSAD;
+	int start_x = start_xi, start_y = start_yi;
 
 /* directions: 1 - left (x-1); 2 - right (x+1), 4 - up (y-1); 8 - down (y+1) */
 
@@ -901,54 +902,53 @@ AdvDiamond16_MainSearch(const uint8_t * const pRef,
 }
 
 int32_t
-Diamond16_InterpolMainSearch(
-					const uint8_t * const f_pRef,
-					 const uint8_t * const f_pRefH,
-					 const uint8_t * const f_pRefV,
-					 const uint8_t * const f_pRefHV,
+Diamond16_InterpolMainSearch(const uint8_t * const f_pRef,
+							 const uint8_t * const f_pRefH,
+							 const uint8_t * const f_pRefV,
+							 const uint8_t * const f_pRefHV,
 
-					 const uint8_t * const cur,
+							 const uint8_t * const cur,
 
-					const uint8_t * const b_pRef,
-					 const uint8_t * const b_pRefH,
-					 const uint8_t * const b_pRefV,
-					 const uint8_t * const b_pRefHV,
+							 const uint8_t * const b_pRef,
+							 const uint8_t * const b_pRefH,
+							 const uint8_t * const b_pRefV,
+							 const uint8_t * const b_pRefHV,
 
-					 const int x,
-					 const int y,
+							 const int x,
+							 const int y,
 
-				   const int f_start_x,
-				   const int f_start_y,
-				   const int b_start_x,
-				   const int b_start_y,
+							 const int f_start_x,
+							 const int f_start_y,
+							 const int b_start_x,
+							 const int b_start_y,
 
-				   int iMinSAD,
-				   VECTOR * const f_currMV,
-				   VECTOR * const b_currMV,
+							 int iMinSAD,
+							 VECTOR * const f_currMV,
+							 VECTOR * const b_currMV,
 
-				   const int f_center_x,
-				   const int f_center_y,
-				   const int b_center_x,
-				   const int b_center_y,
+							 const int f_center_x,
+							 const int f_center_y,
+							 const int b_center_x,
+							 const int b_center_y,
 
-				    const int32_t f_min_dx,
-					const int32_t f_max_dx,
-					const int32_t f_min_dy,
-					const int32_t f_max_dy,
+							 const int32_t f_min_dx,
+							 const int32_t f_max_dx,
+							 const int32_t f_min_dy,
+							 const int32_t f_max_dy,
 
-				    const int32_t b_min_dx,
-					const int32_t b_max_dx,
-					const int32_t b_min_dy,
-					const int32_t b_max_dy,
+							 const int32_t b_min_dx,
+							 const int32_t b_max_dx,
+							 const int32_t b_min_dy,
+							 const int32_t b_max_dy,
 
-					const int32_t iEdgedWidth,
-					const int32_t iDiamondSize,
+							 const int32_t iEdgedWidth,
+							 const int32_t iDiamondSize,
 
-					const int32_t f_iFcode,
-					const int32_t b_iFcode,
+							 const int32_t f_iFcode,
+							 const int32_t b_iFcode,
 
-					const int32_t iQuant,
-					int iFound)
+							 const int32_t iQuant,
+							 int iFound)
 {
 /* Do a diamond search around given starting point, return SAD of best */
 
@@ -1098,8 +1098,8 @@ AdvDiamond8_MainSearch(const uint8_t * const pRef,
 					   const uint8_t * const cur,
 					   const int x,
 					   const int y,
-					   int start_x,
-					   int start_y,
+					   const int start_xi,
+					   const int start_yi,
 					   int iMinSAD,
 					   VECTOR * const currMV,
 					   const int center_x,
@@ -1116,6 +1116,7 @@ AdvDiamond8_MainSearch(const uint8_t * const pRef,
 {
 
 	int32_t iSAD;
+	int start_x = start_xi, start_y = start_yi;
 
 /* directions: 1 - left (x-1); 2 - right (x+1), 4 - up (y-1); 8 - down (y+1) */
 
@@ -1452,7 +1453,7 @@ PMVfastSearch16(const uint8_t * const pRef,
 	if ((iMinSAD < 256) ||
 		((MVequal(*currMV, prevMB->mvs[0])) &&
 		 ((int32_t) iMinSAD < prevMB->sad16))) {
-		if (iMinSAD < 2 * iQuant)	// high chances for SKIP-mode
+		if (iMinSAD < (int)(2 * iQuant))	// high chances for SKIP-mode
 		{
 			if (!MVzero(*currMV)) {
 				iMinSAD += MV16_00_BIAS;
@@ -1657,12 +1658,12 @@ Diamond8_MainSearch(const uint8_t * const pRef,
 					const uint8_t * const cur,
 					const int x,
 					const int y,
-					int32_t start_x,
-					int32_t start_y,
+					const int32_t start_x,
+					const int32_t start_y,
 					int32_t iMinSAD,
 					VECTOR * const currMV,
-				   const int center_x,
-				   const int center_y,
+					const int center_x,
+					const int center_y,
 					const int32_t min_dx,
 					const int32_t max_dx,
 					const int32_t min_dy,
@@ -1721,27 +1722,27 @@ Diamond8_MainSearch(const uint8_t * const pRef,
 
 int32_t
 Square8_MainSearch(const uint8_t * const pRef,
-					const uint8_t * const pRefH,
-					const uint8_t * const pRefV,
-					const uint8_t * const pRefHV,
-					const uint8_t * const cur,
-					const int x,
-					const int y,
-					int32_t start_x,
-					int32_t start_y,
-					int32_t iMinSAD,
-					VECTOR * const currMV,
+				   const uint8_t * const pRefH,
+				   const uint8_t * const pRefV,
+				   const uint8_t * const pRefHV,
+				   const uint8_t * const cur,
+				   const int x,
+				   const int y,
+				   const int32_t start_x,
+				   const int32_t start_y,
+				   int32_t iMinSAD,
+				   VECTOR * const currMV,
 				   const int center_x,
 				   const int center_y,
-					const int32_t min_dx,
-					const int32_t max_dx,
-					const int32_t min_dy,
-					const int32_t max_dy,
-					const int32_t iEdgedWidth,
-					const int32_t iDiamondSize,
-					const int32_t iFcode,
-					const int32_t iQuant,
-					int iFound)
+				   const int32_t min_dx,
+				   const int32_t max_dx,
+				   const int32_t min_dy,
+				   const int32_t max_dy,
+				   const int32_t iEdgedWidth,
+				   const int32_t iDiamondSize,
+				   const int32_t iFcode,
+				   const int32_t iQuant,
+				   int iFound)
 {
 /* Do a square search around given starting point, return SAD of best */
 
@@ -1903,23 +1904,23 @@ Square8_MainSearch(const uint8_t * const pRef,
 
 int32_t
 Halfpel8_Refine_c(const uint8_t * const pRef,
-				const uint8_t * const pRefH,
-				const uint8_t * const pRefV,
-				const uint8_t * const pRefHV,
-				const uint8_t * const cur,
-				const int x,
-				const int y,
-				VECTOR * const currMV,
-				int32_t iMinSAD,
-			   const int center_x,
-			   const int center_y,
-				const int32_t min_dx,
-				const int32_t max_dx,
-				const int32_t min_dy,
-				const int32_t max_dy,
-				const int32_t iFcode,
-				const int32_t iQuant,
-				const int32_t iEdgedWidth)
+				  const uint8_t * const pRefH,
+				  const uint8_t * const pRefV,
+				  const uint8_t * const pRefHV,
+				  const uint8_t * const cur,
+				  const int x,
+				  const int y,
+				  VECTOR * const currMV,
+				  int32_t iMinSAD,
+				  const int center_x,
+				  const int center_y,
+				  const int32_t min_dx,
+				  const int32_t max_dx,
+				  const int32_t min_dy,
+				  const int32_t max_dy,
+				  const int32_t iFcode,
+				  const int32_t iQuant,
+				  const int32_t iEdgedWidth)
 {
 /* Do a half-pel refinement (or rather a "smallest possible amount" refinement) */
 
@@ -2831,8 +2832,8 @@ PMVfastIntSearch16(const uint8_t * const pRef,
 
 	MainSearch16FuncPtr MainSearchPtr;
 
-	const MACROBLOCK *const prevMB = prevMBs + x + y * iWcount;
-	MACROBLOCK *const pMB = pMBs + x + y * iWcount;
+	MACROBLOCK *const prevMB = (MACROBLOCK *const)prevMBs + x + y * iWcount;
+	MACROBLOCK *const pMB = (MACROBLOCK *const)(pMBs + x + y * iWcount);
 
 	int32_t threshA, threshB;
 	int32_t bPredEq;
@@ -2902,7 +2903,7 @@ PMVfastIntSearch16(const uint8_t * const pRef,
 	if ((iMinSAD < 256) ||
 		((MVequal(*currMV, prevMB->i_mvs[0])) &&
 		 ((int32_t) iMinSAD < prevMB->i_sad16))) {
-		if (iMinSAD < 2 * iQuant)	// high chances for SKIP-mode
+		if (iMinSAD < (int)(2 * iQuant))	// high chances for SKIP-mode
 		{
 			if (!MVzero(*currMV)) {
 				iMinSAD += MV16_00_BIAS;
@@ -3071,7 +3072,6 @@ PMVfastInt16_Terminate_with_Refine:
 
   	pmv[0] = get_pmv2(pMBs, pParam->mb_width, 0, x, y, 0);  	// get _REAL_ prediction (halfpel possible)
 
-PMVfastInt16_Terminate_without_Refine:
 	currPMV->x = currMV->x - center_x;
 	currPMV->y = currMV->y - center_y;
 	return iMinSAD;
