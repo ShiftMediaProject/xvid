@@ -22,6 +22,7 @@ sad16Func sad16_mmx;
 sad16Func sad16_xmm;
 sad16Func sad16_sse2;
 sad16Func sad16_altivec;
+sad16Func sad16_ia64;
 
 sad16Func mrsad16_c;
 
@@ -33,6 +34,7 @@ typedef uint32_t(sad16biFunc) (const uint8_t * const cur,
 typedef sad16biFunc *sad16biFuncPtr;
 extern sad16biFuncPtr sad16bi;
 sad16biFunc sad16bi_c;
+sad16biFunc sad16bi_ia64;
 
 //sad16biFunc sad16bi_mmx;
 //sad16biFunc sad16bi_xmm;
@@ -47,6 +49,8 @@ sad8Func sad8_c;
 sad8Func sad8_mmx;
 sad8Func sad8_xmm;
 sad8Func sad8_altivec;
+sad8Func sad8_ia64;
+
 
 
 typedef uint32_t(dev16Func) (const uint8_t * const cur,
@@ -58,6 +62,7 @@ dev16Func dev16_mmx;
 dev16Func dev16_xmm;
 dev16Func dev16_sse2;
 dev16Func dev16_altivec;
+dev16Func dev16_ia64;
 
 /* plain c */
 /*

@@ -35,7 +35,7 @@
  *  - 22.12.2001  API change: added xvid_init() - Isibaar
  *  - 16.12.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: xvid.c,v 1.17 2002-06-13 21:35:01 edgomez Exp $
+ *  $Id: xvid.c,v 1.18 2002-06-14 13:27:52 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -262,6 +262,32 @@ xvid_init(void *handle,
 	}
 
 #endif
+
+#ifdef ARCH_IA64
+	if ((cpu_flags & XVID_CPU_IA64) > 0) { //use assembler routines?
+	  idct_ia64_init();
+	  fdct = fdct_ia64;
+	  idct = idct_ia64;   //not yet working, crashes
+	  interpolate8x8_halfpel_h = interpolate8x8_halfpel_h_ia64;
+	  interpolate8x8_halfpel_v = interpolate8x8_halfpel_v_ia64;
+	  interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_ia64;
+	  sad16 = sad16_ia64;
+	  sad16bi = sad16bi_ia64;
+	  sad8 = sad8_ia64;
+	  dev16 = dev16_ia64;
+	  quant_intra = quant_intra_ia64;
+	  dequant_intra = dequant_intra_ia64;
+	  quant_inter = quant_inter_ia64;
+	  dequant_inter = dequant_inter_ia64;
+	  transfer_8to16copy = transfer_8to16copy_ia64;
+	  transfer_16to8copy = transfer_16to8copy_ia64;
+	  transfer_8to16sub = transfer_8to16sub_ia64;
+	  transfer_8to16sub2 = transfer_8to16sub2_ia64;
+	  transfer_16to8add = transfer_16to8add_ia64;
+	  transfer8x8_copy = transfer8x8_copy_ia64;
+	  DEBUG("Using IA-64 assembler routines.\n");
+	}
+#endif 
 
 #ifdef ARCH_PPC
 #ifdef ARCH_PPC_ALTIVEC

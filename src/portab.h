@@ -49,6 +49,7 @@ dprintf(char *fmt,
 #define uint32_t unsigned int
 #define int64_t __int64
 #define uint64_t unsigned __int64
+#define ptr_t uint32_t
 
 #define EMMS() __asm {emms}
 
@@ -74,8 +75,8 @@ read_counter()
 	uint32_t ts1, ts2;
 
 	__asm {
-		rdtsc 
-		mov ts1, eax 
+		rdtsc
+		mov ts1, eax
 		mov ts2, edx
 	}
 
@@ -105,15 +106,13 @@ read_counter()
 #define DEBUGCBR(A,B,C)
 #endif
 
-#define CACHE_LINE  16
-
 #if defined(LINUX)
 
 #include <stdint.h>
 
 #define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
 	type name##_storage[(sizex)*(sizey)+(alignment)-1]; \
-	type * name = (type *) (((int32_t) name##_storage+(alignment - 1)) & ~((int32_t)(alignment)-1))
+	type * name = (type *) (((ptr_t) name##_storage+(alignment - 1)) & ~((ptr_t)(alignment)-1))
 
 #else
 
@@ -165,6 +164,29 @@ read_counter()
 	} while (tb != get_tbl());
 	return (((int64_t) tu) << 32) | (int64_t) tb;
 }
+
+#define ptr_t   uint32_t
+
+#define CACHE_LINE 16
+
+#elif defined(ARCH_IA64)
+
+#define ptr_t   uint64_t
+
+#define CACHE_LINE 32
+
+#define EMMS()
+
+// needed for bitstream.h
+#define BSWAP(a) \
+	 ((a) = ( ((a)&0xff)<<24) | (((a)&0xff00)<<8) | (((a)>>8)&0xff00) | (((a)>>24)&0xff))
+
+// rdtsc command most likely not supported,
+// so just dummy code here
+static __inline int64_t read_counter() {
+	return 0;
+}
+
 #else
 #define BSWAP(a) __asm__ ( "bswapl %0\n" : "=r" (a) : "0" (a) )
 #define EMMS() __asm__("emms\n\t")
@@ -184,6 +206,10 @@ read_counter()
 
 	return ts;
 }
+
+#define ptr_t   uint32_t
+
+#define CACHE_LINE 16
 
 #endif
 
@@ -212,10 +238,10 @@ read_counter()
 	return 0;
 }
 
+#define ptr_t uint32_t
+
 #define CACHE_LINE  16
 #define CACHE_ALIGN
-#define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
-	type name[(sizex)*(sizey)]
 
 #endif
 

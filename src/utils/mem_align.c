@@ -33,7 +33,7 @@
  *
  *  - Thu Jun 13 23:50:07 2002 Added legal header
  *
- *  $Id: mem_align.c,v 1.7 2002-06-13 22:05:09 edgomez Exp $
+ *  $Id: mem_align.c,v 1.8 2002-06-14 13:27:28 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -90,8 +90,8 @@ xvid_malloc(size_t size,
 
 			/* Align the tmp pointer */
 			mem_ptr =
-				(uint8_t *) ((uint32_t) (tmp + alignment - 1) &
-							 (~(uint32_t) (alignment - 1)));
+				(uint8_t *) ((ptr_t) (tmp + alignment - 1) &
+							 (~(ptr_t) (alignment - 1)));
 
 			/*
 			 * Special case where malloc have already satisfied the alignment
