@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: codec.h,v 1.2 2004-03-22 22:36:25 edgomez Exp $
+ * $Id: codec.h,v 1.3 2004-04-01 11:11:28 suxen_drol Exp $
  *
  ****************************************************************************/
 #ifndef _CODEC_H_
@@ -95,6 +95,6 @@ extern xvid_plugin_func *xvid_plugin_single_func,
 				*xvid_plugin_lumimasking_func,
 				*xvid_plugin_psnr_func;
 
-extern int pp_dy, pp_duv, pp_dr, pp_fe; /* decoder options */
+extern int pp_brightness, pp_dy, pp_duv, pp_dr, pp_fe; /* decoder options */
 
 #endif /* _CODEC_H_ */

@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: postprocessing.h,v 1.2 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: postprocessing.h,v 1.3 2004-04-01 11:11:28 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -50,7 +50,7 @@ typedef struct {
 void
 image_postproc(XVID_POSTPROC *tbls, IMAGE * img, int edged_width,
 				const MACROBLOCK * mbs, int mb_width, int mb_height, int mb_stride,
-				int flags, int frame_num, int bvop);
+				int flags, int brightness, int frame_num, int bvop);
 
 void deblock8x8_h(XVID_POSTPROC *tbls, uint8_t *img, int stride, int quant);
 void deblock8x8_v(XVID_POSTPROC *tbls, uint8_t *img, int stride, int quant);
@@ -59,6 +59,20 @@ void init_postproc(XVID_POSTPROC *tbls);
 void init_noise(XVID_POSTPROC *tbls);
 void init_deblock(XVID_POSTPROC *tbls);
 
+
 void add_noise(XVID_POSTPROC * tbls, uint8_t *dst, uint8_t *src, int stride, int width, int height, int shiftptr, int quant);
+
+
+typedef void (IMAGEBRIGHTNESS) (uint8_t * dst,
+						int stride,
+						int width, 
+						int height, 
+						int offset);
+typedef IMAGEBRIGHTNESS *IMAGEBRIGHTNESS_PTR;
+
+extern IMAGEBRIGHTNESS_PTR image_brightness;
+
+IMAGEBRIGHTNESS image_brightness_c;
+IMAGEBRIGHTNESS image_brightness_mmx;
 
 #endif

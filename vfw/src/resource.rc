@@ -7,14 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#ifdef _MSC_VER
 #include "afxres.h"
-#else
-#include <windows.h>
-#ifndef IDC_STATIC
-#define IDC_STATIC (-1)
-#endif
-#endif
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -619,13 +612,17 @@ CAPTION "Decoder Options"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "Deblocking Y",IDC_DEC_DY,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,21,25,63,13
+                    WS_TABSTOP,22,64,63,13
     CONTROL         "Deblocking UV",IDC_DEC_DUV,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,21,42,79,13
+                    WS_TABSTOP,22,81,79,13
     CONTROL         "Deringing",IDC_DEC_DR,"Button",BS_AUTOCHECKBOX | 
-                    WS_DISABLED | WS_TABSTOP,115,25,60,13
+                    WS_DISABLED | WS_TABSTOP,116,64,60,13
     CONTROL         "Film Effect",IDC_DEC_FE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,115,42,60,13
+                    WS_TABSTOP,116,81,60,13
+    GROUPBOX        "Brightness",IDC_STATIC,5,6,202,41
+    CONTROL         "Slider1",IDC_DEC_BRIGHTNESS,"msctls_trackbar32",
+                    TBS_AUTOTICKS | TBS_BOTH | WS_TABSTOP,18,18,181,24
+    GROUPBOX        "Postprocessing",IDC_STATIC,5,52,202,46
 END
 
 IDD_STATUS DIALOGEX 0, 0, 325, 220

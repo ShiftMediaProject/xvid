@@ -3,7 +3,7 @@
  * XVID MPEG-4 VIDEO CODEC
  * - XviD Main header file -
  *
- *  Copyright(C) 2001-2003 Peter Ross <pross@xvid.org>
+ *  Copyright(C) 2001-2004 Peter Ross <pross@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.33 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: xvid.h,v 1.34 2004-04-01 11:11:28 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -57,7 +57,7 @@ extern "C" {
 #define XVID_API_MAJOR(a)        (((a)>>16) & 0xff)
 #define XVID_API_MINOR(a)        (((a)>> 0) & 0xff)
 
-#define XVID_VERSION             XVID_MAKE_VERSION(1,0,-124)
+#define XVID_VERSION             XVID_MAKE_VERSION(1,0,-123)
 #define XVID_API                 XVID_MAKE_API(4, 0)
 
 #define XVID_UNSTABLE
@@ -258,6 +258,7 @@ typedef struct {
 	void *bitstream;     /* [in]     bitstream (read from)*/
 	int length;          /* [in]     bitstream length */
 	xvid_image_t output; /* [in]     output image (written to) */
+	int brightness;		 /* [in]	 brightness offset (0=none) */
 } xvid_dec_frame_t;
 
 

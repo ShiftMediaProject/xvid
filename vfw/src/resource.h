@@ -38,6 +38,7 @@
 #define IDC_MODE                        1000
 #define IDC_SLIDER                      1001
 #define IDC_VALUE                       1002
+#define IDC_DEC_BRIGHTNESS              1002
 #define IDC_SLIDER_STATIC               1003
 #define IDC_VALUE_STATIC                1004
 #define IDC_ADVANCED                    1005

@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: config.c,v 1.2 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: config.c,v 1.3 2004-04-01 11:11:28 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -123,8 +123,9 @@ BOOL CALLBACK adv_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SendMessage(GetDlgItem(hwnd, IDC_COLORSPACE), CB_SETCURSEL, g_config.nForceColorspace, 0); 
 
 		hBrightness = GetDlgItem(hwnd, IDC_BRIGHTNESS);
-		SendMessage(hBrightness, TBM_SETRANGE, (WPARAM) (BOOL) TRUE, (LPARAM) MAKELONG(0, 50));
-		SendMessage(hBrightness, TBM_SETPOS, (WPARAM) (BOOL) TRUE, (LPARAM) g_config.nBrightness);
+		SendMessage(hBrightness, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(-96, 96));
+		SendMessage(hBrightness, TBM_SETTICFREQ, (WPARAM)16, (LPARAM)0);
+		SendMessage(hBrightness, TBM_SETPOS, (WPARAM)TRUE, (LPARAM) g_config.nBrightness);
 
 		// Load Buttons
 		SendMessage(GetDlgItem(hwnd, IDC_DEBLOCK_Y), BM_SETCHECK, g_config.nDeblock_Y, 0);
@@ -148,9 +149,8 @@ BOOL CALLBACK adv_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 		case IDC_RESET:
 			ZeroMemory(&g_config, sizeof(CONFIG));
-			g_config.nBrightness = 25;
 			hBrightness = GetDlgItem(hwnd, IDC_BRIGHTNESS);
-			SendMessage(hBrightness, TBM_SETPOS, (WPARAM) (BOOL) TRUE, (LPARAM) g_config.nBrightness);
+			SendMessage(hBrightness, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) g_config.nBrightness);
 			// Load Buttons
 			SendMessage(GetDlgItem(hwnd, IDC_DEBLOCK_Y), BM_SETCHECK, g_config.nDeblock_Y, 0);
 			SendMessage(GetDlgItem(hwnd, IDC_DEBLOCK_UV), BM_SETCHECK, g_config.nDeblock_UV, 0);

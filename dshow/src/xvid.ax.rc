@@ -99,8 +99,7 @@ BEGIN
                     SS_CENTERIMAGE | SS_SUNKEN
     GROUPBOX        "Brightness",IDC_STATIC,7,54,202,39
     CONTROL         "Slider1",IDC_BRIGHTNESS,"msctls_trackbar32",
-                    TBS_AUTOTICKS | TBS_BOTH | WS_DISABLED | WS_TABSTOP,17,
-                    64,181,24
+                    TBS_AUTOTICKS | TBS_BOTH | WS_TABSTOP,17,64,181,24
     GROUPBOX        "Postprocessing",IDC_STATIC,7,96,202,42
     CONTROL         "Deblocking (Y)",IDC_DEBLOCK_Y,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,23,109,63,10
