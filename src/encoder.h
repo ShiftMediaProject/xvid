@@ -1,32 +1,70 @@
-/**************************************************************************
+/*****************************************************************************
  *
- *  Modifications:
+ *  XVID MPEG-4 VIDEO CODEC
+ *  - Encoder header -
  *
- *  22.08.2001 added support for EXT_MODE encoding mode
- *             support for EXTENDED API
- *  22.08.2001 fixed bug in iDQtab
+ *  This program is an implementation of a part of one or more MPEG-4
+ *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
+ *  to use this software module in hardware or software products are
+ *  advised that its use may infringe existing patents or copyrights, and
+ *  any such use would be at such party's own risk.  The original
+ *  developer of this software module and his/her company, and subsequent
+ *  editors and their companies, will have no liability for use of this
+ *  software or modifications or derivatives thereof.
  *
- *  Michael Militzer <isibaar@videocoding.de>
+ *  This program is free software ; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation ; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- **************************************************************************/
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY ; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program ; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ *
+ ****************************************************************************/
+/*****************************************************************************
+ *
+ *  History
+ *
+ *  - 13.06.2002 Added legal header
+ *  - 22.08.2001 Added support for EXT_MODE encoding mode
+ *               support for EXTENDED API
+ *  - 22.08.2001 fixed bug in iDQtab
+ *
+ *  $Id: encoder.h,v 1.10 2002-06-13 21:45:24 edgomez Exp $
+ *
+ ****************************************************************************/
 
 #ifndef _ENCODER_H_
 #define _ENCODER_H_
 
-
 #include "xvid.h"
-
 #include "portab.h"
 #include "global.h"
 #include "image/image.h"
 #include "utils/ratecontrol.h"
 
+/*****************************************************************************
+ * Constants
+ ****************************************************************************/
+
+/* Quatization type */
 #define H263_QUANT	0
 #define MPEG4_QUANT	1
 
+/* Indicates no quantizer changes in INTRA_Q/INTER_Q modes */
+#define NO_CHANGE 64
 
-typedef uint32_t bool;
+/*****************************************************************************
+ * Types
+ ****************************************************************************/
 
+typedef int bool;
 
 typedef enum
 {
@@ -36,11 +74,9 @@ typedef enum
 }
 VOP_TYPE;
 
-/***********************************
-
-       Encoding Parameters
-
-************************************/
+/*****************************************************************************
+ * Structures
+ ****************************************************************************/
 
 typedef struct
 {
@@ -158,17 +194,9 @@ typedef struct
 }
 Encoder;
 
-
-// indicates no quantizer changes in INTRA_Q/INTER_Q modes
-#define NO_CHANGE 64
-
-void init_encoder(uint32_t cpu_flags);
-
-int encoder_create(XVID_ENC_PARAM * pParam);
-int encoder_destroy(Encoder * pEnc);
-int encoder_encode(Encoder * pEnc,
-				   XVID_ENC_FRAME * pFrame,
-				   XVID_ENC_STATS * pResult);
+/*****************************************************************************
+ * Inline functions
+ ****************************************************************************/
 
 static __inline uint8_t
 get_fcode(uint16_t sr)
@@ -198,4 +226,17 @@ get_fcode(uint16_t sr)
 		return 0;
 }
 
-#endif							/* _ENCODER_H_ */
+
+/*****************************************************************************
+ * Prototypes
+ ****************************************************************************/
+
+void init_encoder(uint32_t cpu_flags);
+
+int encoder_create(XVID_ENC_PARAM * pParam);
+int encoder_destroy(Encoder * pEnc);
+int encoder_encode(Encoder * pEnc,
+				   XVID_ENC_FRAME * pFrame,
+				   XVID_ENC_STATS * pResult);
+
+#endif
