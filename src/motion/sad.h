@@ -4,6 +4,11 @@
 
 #include "../portab.h"
 
+typedef void (sadInitFunc)(void);
+typedef sadInitFunc* sadInitFuncPtr;
+
+extern sadInitFuncPtr sadInit;
+sadInitFunc sadInit_altivec;
 
 typedef uint32_t (sad16Func)(const uint8_t * const cur,
 						 const uint8_t * const ref,

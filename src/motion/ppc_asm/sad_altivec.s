@@ -1,5 +1,18 @@
 	.file	"sad_altivec.c"
 gcc2_compiled.:
+	.section	".rodata"
+	.align 4
+	.type	 perms,@object
+	.size	 perms,32
+perms:
+	.long 66051
+	.long 67438087
+	.long 269554195
+	.long 336926231
+	.long 134810123
+	.long 202182159
+	.long 404298267
+	.long 471670303
 	.section	".text"
 	.align 2
 	.globl sad16_altivec
@@ -8,7 +21,6 @@ sad16_altivec:
 	stwu %r1,-48(%r1)
 	addi %r9,%r4,16
 	lvx %v13,0,%r4
-	vxor %v15,%v15,%v15
 	lvx %v0,0,%r9
 	rlwinm %r5,%r5,0,0,27
 	lvx %v1,0,%r3
@@ -36,7 +48,7 @@ sad16_altivec:
 	vminub %v18,%v19,%v0
 	lvx %v12,0,%r9
 	add %r3,%r3,%r5
-	vsum4ubs %v17,%v2,%v15
+	vsum4ubs %v17,%v2,%v31
 	lvx %v1,0,%r3
 	addi %r9,%r1,16
 	vmaxub %v2,%v19,%v0
@@ -58,9 +70,9 @@ sad16_altivec:
 	vmaxub %v2,%v19,%v1
 	vsububm %v2,%v2,%v18
 	vsum4ubs %v17,%v2,%v17
-	vsumsws %v0,%v17,%v15
+	vsumsws %v0,%v17,%v31
 	vcmpgtsw. %v1,%v7,%v0
-	bc 12,26,.L19
+	bc 12,26,.L23
 	addi %r9,%r4,16
 	lvx %v1,0,%r4
 	lvx %v0,0,%r9
@@ -105,9 +117,9 @@ sad16_altivec:
 	vmaxub %v2,%v19,%v0
 	vsububm %v2,%v2,%v18
 	vsum4ubs %v17,%v2,%v17
-	vsumsws %v0,%v17,%v15
+	vsumsws %v0,%v17,%v31
 	vcmpgtsw. %v7,%v7,%v0
-	bc 12,26,.L19
+	bc 12,26,.L23
 	addi %r9,%r4,16
 	lvx %v1,0,%r4
 	lvx %v0,0,%r9
@@ -193,8 +205,8 @@ sad16_altivec:
 	vmaxub %v2,%v19,%v0
 	vsububm %v2,%v2,%v18
 	vsum4ubs %v17,%v2,%v17
-	vsumsws %v0,%v17,%v15
-.L19:
+	vsumsws %v0,%v17,%v31
+.L23:
 	vspltw %v0,%v0,3
 	addi %r0,%r1,32
 	stvewx %v0,0,%r0
@@ -203,113 +215,99 @@ sad16_altivec:
 	blr
 .Lfe1:
 	.size	 sad16_altivec,.Lfe1-sad16_altivec
-	.section	".rodata"
-	.align 4
-	.type	 perms,@object
-	.size	 perms,32
-perms:
-	.long 66051
-	.long 67438087
-	.long 269554195
-	.long 336926231
-	.long 134810123
-	.long 202182159
-	.long 404298267
-	.long 471670303
-	.section	".text"
 	.align 2
 	.globl sad8_altivec
 	.type	 sad8_altivec,@function
 sad8_altivec:
 	stwu %r1,-16(%r1)
+	andi. %r0,%r3,8
+	vsldoi %v16,%v30,%v30,0
+	bc 4,2,.L26
+	vsldoi %v16,%v29,%v29,0
+.L26:
 	srwi %r5,%r5,4
-	lvx %v6,0,%r4
-	vxor %v2,%v2,%v2
-	slwi %r8,%r5,4
-	lvx %v10,0,%r3
-	add %r9,%r8,%r4
-	lvx %v12,%r8,%r4
-	addi %r9,%r9,16
-	lvx %v11,%r8,%r3
-	addi %r10,%r4,16
-	lvx %v0,0,%r9
-	lvx %v13,0,%r10
-	lis %r11,perms@ha
-	la %r11,perms@l(%r11)
-	rlwinm %r9,%r3,1,27,27
-	lvx %v7,0,%r11
-	lvsl %v1,0,%r4
-	lvx %v8,%r11,%r9
-	slwi %r5,%r5,5
-	add %r4,%r4,%r5
-	vperm %v16,%v12,%v0,%v1
-	vperm %v19,%v6,%v13,%v1
-	add %r9,%r8,%r4
-	lvx %v9,0,%r4
+	lvx %v8,0,%r4
+	vsldoi %v6,%v29,%v29,0
+	slwi %r10,%r5,4
+	lvx %v11,0,%r3
+	add %r9,%r10,%r4
+	lvx %v10,%r10,%r4
 	addi %r11,%r4,16
-	vperm %v18,%v10,%v11,%v8
-	lvx %v12,%r8,%r4
+	lvx %v0,%r10,%r3
 	addi %r9,%r9,16
-	vperm %v19,%v19,%v16,%v7
+	lvx %v12,0,%r11
+	lvx %v13,0,%r9
+	lvsl %v1,0,%r4
+	slwi %r0,%r5,5
+	add %r4,%r4,%r0
+	vperm %v18,%v11,%v0,%v16
+	add %r9,%r10,%r4
+	vperm %v3,%v8,%v12,%v1
+	lvx %v9,0,%r4
+	vperm %v17,%v10,%v13,%v1
+	addi %r11,%r4,16
+	lvx %v12,%r10,%r4
+	addi %r9,%r9,16
 	lvx %v13,0,%r11
 	lvx %v0,0,%r9
-	add %r3,%r3,%r5
-	vminub %v17,%v18,%v19
+	vperm %v3,%v3,%v17,%v6
+	add %r3,%r3,%r0
+	add %r4,%r4,%r0
 	lvx %v10,0,%r3
-	add %r4,%r4,%r5
-	lvx %v11,%r8,%r3
-	vmaxub %v18,%v18,%v19
-	add %r9,%r8,%r4
-	vperm %v19,%v9,%v13,%v1
+	lvx %v11,%r10,%r3
+	vminub %v19,%v18,%v3
+	add %r9,%r10,%r4
+	vmaxub %v2,%v18,%v3
 	addi %r11,%r4,16
-	vperm %v16,%v12,%v0,%v1
-	vsububm %v17,%v18,%v17
+	vperm %v17,%v12,%v0,%v1
 	addi %r9,%r9,16
+	lvx %v4,0,%r11
+	vperm %v3,%v9,%v13,%v1
+	vsububm %v2,%v2,%v19
+	lvx %v5,0,%r9
 	lvx %v9,0,%r4
-	add %r3,%r3,%r5
-	vperm %v18,%v10,%v11,%v8
-	lvx %v13,%r8,%r4
-	vsum4ubs %v0,%v17,%v2
-	vperm %v19,%v19,%v16,%v7
-	lvx %v4,0,%r9
-	add %r4,%r4,%r5
-	lvx %v3,0,%r11
-	add %r9,%r8,%r4
-	vminub %v17,%v18,%v19
-	lvx %v12,%r8,%r3
+	vperm %v18,%v10,%v11,%v16
+	add %r3,%r3,%r0
+	lvx %v13,%r10,%r4
+	vperm %v3,%v3,%v17,%v6
+	vsum4ubs %v0,%v2,%v31
+	add %r4,%r4,%r0
+	lvx %v12,%r10,%r3
+	lvx %v8,0,%r3
+	vminub %v19,%v18,%v3
+	add %r9,%r10,%r4
+	vmaxub %v2,%v18,%v3
 	addi %r9,%r9,16
-	lvx %v6,0,%r3
-	vmaxub %v18,%v18,%v19
+	lvx %v7,%r10,%r4
+	vperm %v17,%v13,%v5,%v1
 	addi %r11,%r4,16
-	vperm %v16,%v13,%v4,%v1
-	lvx %v5,%r8,%r4
-	add %r3,%r3,%r5
-	vperm %v19,%v9,%v3,%v1
-	vsububm %v17,%v18,%v17
 	lvx %v10,0,%r9
-	lvx %v9,0,%r11
-	addi %r0,%r1,8
-	vperm %v18,%v6,%v12,%v8
+	vperm %v3,%v9,%v4,%v1
+	vsububm %v2,%v2,%v19
 	lvx %v11,0,%r4
-	vsum4ubs %v0,%v17,%v0
-	vperm %v19,%v19,%v16,%v7
-	lvx %v12,%r8,%r3
+	lvx %v9,0,%r11
+	vperm %v18,%v8,%v12,%v16
+	add %r3,%r3,%r0
+	vperm %v3,%v3,%v17,%v6
+	vsum4ubs %v0,%v2,%v0
+	lvx %v12,%r10,%r3
 	lvx %v13,0,%r3
-	vperm %v16,%v5,%v10,%v1
-	vminub %v17,%v18,%v19
-	vmaxub %v18,%v18,%v19
-	vperm %v19,%v11,%v9,%v1
-	vsububm %v17,%v18,%v17
-	vperm %v18,%v13,%v12,%v8
-	vperm %v19,%v19,%v16,%v7
-	vsum4ubs %v0,%v17,%v0
-	vminub %v17,%v18,%v19
-	vmaxub %v18,%v18,%v19
-	vsububm %v17,%v18,%v17
-	vsum4ubs %v0,%v17,%v0
-	vsumsws %v0,%v0,%v2
+	vperm %v17,%v7,%v10,%v1
+	addi %r8,%r1,8
+	vminub %v19,%v18,%v3
+	vmaxub %v2,%v18,%v3
+	vperm %v3,%v11,%v9,%v1
+	vsububm %v2,%v2,%v19
+	vperm %v18,%v13,%v12,%v16
+	vperm %v3,%v3,%v17,%v6
+	vsum4ubs %v0,%v2,%v0
+	vminub %v19,%v18,%v3
+	vmaxub %v2,%v18,%v3
+	vsububm %v2,%v2,%v19
+	vsum4ubs %v0,%v2,%v0
+	vsumsws %v0,%v0,%v31
 	vspltw %v0,%v0,3
-	stvewx %v0,0,%r0
+	stvewx %v0,0,%r8
 	lwz %r3,8(%r1)
 	la %r1,16(%r1)
 	blr
@@ -321,14 +319,13 @@ sad8_altivec:
 dev16_altivec:
 	stwu %r1,-16(%r1)
 	lvx %v13,0,%r3
-	vxor %v15,%v15,%v15
 	rlwinm %r4,%r4,0,0,27
-	add %r3,%r3,%r4
 	vspltisb %v1,14
+	add %r3,%r3,%r4
 	lvx %v12,0,%r3
 	addi %r0,%r1,8
 	add %r3,%r3,%r4
-	vsum4ubs %v0,%v13,%v15
+	vsum4ubs %v0,%v13,%v31
 	lvx %v11,0,%r3
 	add %r3,%r3,%r4
 	lvx %v10,0,%r3
@@ -370,73 +367,73 @@ dev16_altivec:
 	vsum4ubs %v0,%v18,%v0
 	vsum4ubs %v0,%v17,%v0
 	vsum4ubs %v0,%v16,%v0
-	vsumsws %v0,%v0,%v15
+	vsumsws %v0,%v0,%v31
 	vperm %v1,%v0,%v0,%v1
-	vminub %v14,%v13,%v1
+	vminub %v15,%v13,%v1
 	vmaxub %v13,%v13,%v1
-	vsububm %v13,%v13,%v14
-	vminub %v14,%v12,%v1
-	vsum4ubs %v0,%v13,%v15
+	vsububm %v13,%v13,%v15
+	vminub %v15,%v12,%v1
+	vsum4ubs %v0,%v13,%v31
 	vmaxub %v13,%v12,%v1
-	vsububm %v13,%v13,%v14
-	vminub %v14,%v11,%v1
+	vsububm %v13,%v13,%v15
+	vminub %v15,%v11,%v1
 	vsum4ubs %v0,%v13,%v0
 	vmaxub %v13,%v11,%v1
-	vsububm %v13,%v13,%v14
-	vminub %v14,%v10,%v1
+	vsububm %v13,%v13,%v15
+	vminub %v15,%v10,%v1
 	vsum4ubs %v0,%v13,%v0
 	vmaxub %v13,%v10,%v1
-	vsububm %v13,%v13,%v14
-	vminub %v14,%v9,%v1
+	vsububm %v13,%v13,%v15
+	vminub %v15,%v9,%v1
 	vsum4ubs %v0,%v13,%v0
 	vmaxub %v13,%v9,%v1
-	vsububm %v13,%v13,%v14
-	vminub %v14,%v8,%v1
+	vsububm %v13,%v13,%v15
+	vminub %v15,%v8,%v1
 	vsum4ubs %v0,%v13,%v0
 	vmaxub %v13,%v8,%v1
-	vsububm %v13,%v13,%v14
-	vminub %v14,%v7,%v1
+	vsububm %v13,%v13,%v15
+	vminub %v15,%v7,%v1
 	vsum4ubs %v0,%v13,%v0
 	vmaxub %v13,%v7,%v1
-	vsububm %v13,%v13,%v14
-	vminub %v14,%v6,%v1
+	vsububm %v13,%v13,%v15
+	vminub %v15,%v6,%v1
 	vsum4ubs %v0,%v13,%v0
 	vmaxub %v13,%v6,%v1
-	vsububm %v13,%v13,%v14
-	vminub %v14,%v5,%v1
+	vsububm %v13,%v13,%v15
+	vminub %v15,%v5,%v1
 	vsum4ubs %v0,%v13,%v0
 	vmaxub %v13,%v5,%v1
-	vsububm %v13,%v13,%v14
-	vminub %v14,%v4,%v1
+	vsububm %v13,%v13,%v15
+	vminub %v15,%v4,%v1
 	vsum4ubs %v0,%v13,%v0
 	vmaxub %v13,%v4,%v1
-	vsububm %v13,%v13,%v14
-	vminub %v14,%v3,%v1
+	vsububm %v13,%v13,%v15
+	vminub %v15,%v3,%v1
 	vsum4ubs %v0,%v13,%v0
 	vmaxub %v13,%v3,%v1
-	vsububm %v13,%v13,%v14
-	vminub %v14,%v2,%v1
+	vsububm %v13,%v13,%v15
+	vminub %v15,%v2,%v1
 	vsum4ubs %v0,%v13,%v0
 	vmaxub %v13,%v2,%v1
-	vsububm %v13,%v13,%v14
-	vminub %v14,%v19,%v1
+	vsububm %v13,%v13,%v15
+	vminub %v15,%v19,%v1
 	vsum4ubs %v0,%v13,%v0
 	vmaxub %v13,%v19,%v1
-	vsububm %v13,%v13,%v14
-	vminub %v14,%v18,%v1
+	vsububm %v13,%v13,%v15
+	vminub %v15,%v18,%v1
 	vsum4ubs %v0,%v13,%v0
 	vmaxub %v13,%v18,%v1
-	vsububm %v13,%v13,%v14
-	vminub %v14,%v17,%v1
+	vsububm %v13,%v13,%v15
+	vminub %v15,%v17,%v1
 	vsum4ubs %v0,%v13,%v0
 	vmaxub %v13,%v17,%v1
-	vsububm %v13,%v13,%v14
-	vminub %v14,%v16,%v1
+	vsububm %v13,%v13,%v15
+	vminub %v15,%v16,%v1
 	vsum4ubs %v0,%v13,%v0
 	vmaxub %v13,%v16,%v1
-	vsububm %v13,%v13,%v14
+	vsububm %v13,%v13,%v15
 	vsum4ubs %v0,%v13,%v0
-	vsumsws %v0,%v0,%v15
+	vsumsws %v0,%v0,%v31
 	vspltw %v0,%v0,3
 	stvewx %v0,0,%r0
 	lwz %r3,8(%r1)
@@ -444,4 +441,17 @@ dev16_altivec:
 	blr
 .Lfe3:
 	.size	 dev16_altivec,.Lfe3-dev16_altivec
+	.align 2
+	.globl sadInit_altivec
+	.type	 sadInit_altivec,@function
+sadInit_altivec:
+	lis %r9,perms@ha
+	vspltisw %v31,0
+	la %r9,perms@l(%r9)
+	addi %r11,%r9,16
+	lvx %v29,0,%r9
+	lvx %v30,0,%r11
+	blr
+.Lfe4:
+	.size	 sadInit_altivec,.Lfe4-sadInit_altivec
 	.ident	"GCC: (GNU) 2.95.3 20010111 (BLL/AltiVec prerelease/franzo/20010111)"
