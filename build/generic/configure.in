@@ -6,7 +6,7 @@ dnl Copyright(C) 2003 Edouard Gomez <ed.gomez@free.fr>
 dnl
 dnl ==========================================================================
 
-AC_INIT([XviD], [0.9.1 RC1], [xvid-devel@xvid.org])
+AC_INIT([XviD], [0.9.1], [xvid-devel@xvid.org])
 AC_CONFIG_SRCDIR(configure.in)
 
 dnl NASM version requirement

@@ -31,7 +31,7 @@ OBJECT_EXTENSION=@OBJECT_EXTENSION@
 
 CC=@CC@
 SPECIFIC_CFLAGS=@SPECIFIC_CFLAGS@
-CFLAGS=$(ARCHITECTURE) $(BUS) $(ENDIANNESS) $(FEATURES) $(SPECIFIC_CFLAGS) @CFLAGS@
+CFLAGS=@CFLAGS@
 
 # ============================================================================
 # Assembler
