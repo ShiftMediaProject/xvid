@@ -29,7 +29,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbcoding.c,v 1.28 2002-09-08 15:40:02 edgomez Exp $
+ * $Id: mbcoding.c,v 1.29 2002-09-10 21:29:03 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -65,7 +65,7 @@ init_vlc_tables(void)
 
 	int32_t k, l, i, intra, last;
 	VLC *vlc[2];
-	VLC **coeff_ptr;
+	VLC const **coeff_ptr;
 	VLC *vlc1, *vlc2;
 
 	vlc1 = DCT3Dintra;
@@ -86,8 +86,8 @@ init_vlc_tables(void)
 		coeff_ptr = coeff_vlc[last + 2 * intra];
 
 		for (k = -2047; k < 2048; k++) {	// level
-			int8_t *max_level_ptr = max_level[last + 2 * intra];
-			int8_t *max_run_ptr = max_run[last + 2 * intra];
+			int8_t const *max_level_ptr = max_level[last + 2 * intra];
+			int8_t const *max_run_ptr = max_run[last + 2 * intra];
 
 			for (l = 0; l < 64; l++) {	// run
 				int32_t level = k;
