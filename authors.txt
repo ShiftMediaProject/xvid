@@ -32,4 +32,5 @@ Daniel Smith <danielsmith@astroboymail.com>
 Dirk Knop <dknop@gwdg.de>
 Edouard Gomez <ed.gomez@wanadoo.fr>
 Guillaume Morin <guillaume@morinfr.org>
+MinChen <chenm001@163.com>
 Pascal Massimino <skal@planet-d.net>
