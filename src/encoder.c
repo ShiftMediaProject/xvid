@@ -28,7 +28,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.82 2002-09-08 16:38:03 edgomez Exp $
+ * $Id: encoder.c,v 1.83 2002-09-12 18:53:35 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -560,7 +560,7 @@ encoder_encode(Encoder * pEnc,
 	emms();
 
 	if (pFrame->quant == 0) {
-		RateControlUpdate(&pEnc->rate_control, pEnc->current->quant,
+		RateControlUpdate(&pEnc->rate_control, (int16_t)pEnc->current->quant,
 						  pFrame->length, pFrame->intra);
 	}
 #ifdef _DEBUG_PSNR
@@ -889,7 +889,7 @@ FrameCodeP(Encoder * pEnc,
 	DECLARE_ALIGNED_MATRIX(qcoeff, 6, 64, int16_t, CACHE_LINE);
 
 	int iLimit;
-	int x, y;
+	unsigned int x, y;
 	int iSearchRange;
 	int bIntra;
 	
