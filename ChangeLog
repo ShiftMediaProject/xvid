@@ -4,6 +4,440 @@
 # relevant.
 
 
+2004-07-26 20:22:38 GMT	                                	patch-61
+
+    Summary:
+      Update from stable
+    Revision:
+      xvidcore--head--0.0--patch-61
+
+    Update from stable
+    
+    Patches applied:
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-51
+       ChangeLog Update
+    
+
+    modified files:
+     ChangeLog-1.0
+
+    new patches:
+     ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-51
+
+
+2004-07-26 19:26:24 GMT	                                	patch-60
+
+    Summary:
+      Another missing memset in xvid_decraw
+    Revision:
+      xvidcore--head--0.0--patch-60
+
+    Another missing memset in xvid_decraw
+    
+
+    modified files:
+     examples/xvid_decraw.c
+
+
+2004-07-26 19:14:45 GMT	                                	patch-59
+
+    Summary:
+      DShow updates for gcc toolchain.
+    Revision:
+      xvidcore--head--0.0--patch-59
+
+    From pete:
+     * More work on the gcc toolchain.
+
+    new files:
+     dshow/dxpatch/.arch-ids/dx90sdk-update-gcc.patch.id
+     dshow/dxpatch/.arch-ids/dx90sdk-update-gcc.txt.id
+     dshow/dxpatch/dx90sdk-update-gcc.patch
+     dshow/dxpatch/dx90sdk-update-gcc.txt
+
+    modified files:
+     dshow/Makefile dshow/dshow.dsp dshow/src/CXvidDecoder.cpp
+
+
+2004-07-25 21:31:41 GMT	                                	patch-58
+
+    Summary:
+      Added GPL to vfw frontend
+    Revision:
+      xvidcore--head--0.0--patch-58
+
+    From pete:
+     * Added GPL to VFW ressources.
+
+    modified files:
+     vfw/src/config.c vfw/src/driverproc.c vfw/src/resource.h
+     vfw/src/resource.rc
+
+
+2004-07-25 19:31:32 GMT	                                	patch-57
+
+    Summary:
+      decoder_mb_decode cleanup
+    Revision:
+      xvidcore--head--0.0--patch-57
+
+    From ed.gomez:
+     * Try to cleanup the decoder_mb_decode function. A bit more
+       computing required, less branches, more readable code.
+
+    modified files:
+     src/decoder.c
+
+
+2004-07-24 11:39:57 GMT	                                	patch-56
+
+    Summary:
+      Important bugfix from stable
+    Revision:
+      xvidcore--head--0.0--patch-56
+
+    Important bugfix from stable
+    
+    Patches applied:
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-50
+       BVOP direct/interpolated ref block rounding fix.
+    
+
+    modified files:
+     src/decoder.c
+
+    new patches:
+     ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-50
+
+
+2004-07-23 20:40:08 GMT	                                	patch-55
+
+    Summary:
+      
+    Revision:
+      xvidcore--head--0.0--patch-55
+
+    From ed.gomez:
+     * Extended stable patch pplying same change to new nasm files
+    
+    Patches applied:
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-49
+       Removed data qualifer in .rodata
+    
+
+    modified files:
+     src/bitstream/x86_asm/cbp_mmx.asm
+     src/bitstream/x86_asm/cbp_sse2.asm
+     src/dct/x86_asm/fdct_mmx_ffmpeg.asm
+     src/dct/x86_asm/fdct_mmx_skal.asm
+     src/dct/x86_asm/fdct_sse2_skal.asm
+     src/dct/x86_asm/idct_3dne.asm src/dct/x86_asm/idct_mmx.asm
+     src/dct/x86_asm/idct_sse2_dmitry.asm
+     src/dct/x86_asm/simple_idct_mmx.asm
+     src/image/x86_asm/colorspace_rgb_mmx.asm
+     src/image/x86_asm/colorspace_yuyv_mmx.asm
+     src/image/x86_asm/interpolate8x8_3dn.asm
+     src/image/x86_asm/interpolate8x8_3dne.asm
+     src/image/x86_asm/interpolate8x8_mmx.asm
+     src/image/x86_asm/interpolate8x8_xmm.asm
+     src/image/x86_asm/postprocessing_mmx.asm
+     src/image/x86_asm/postprocessing_sse2.asm
+     src/image/x86_asm/qpel_mmx.asm
+     src/image/x86_asm/reduced_mmx.asm
+     src/motion/x86_asm/sad_3dn.asm src/motion/x86_asm/sad_3dne.asm
+     src/motion/x86_asm/sad_mmx.asm src/motion/x86_asm/sad_sse2.asm
+     src/motion/x86_asm/sad_xmm.asm
+     src/quant/x86_asm/quantize_h263_3dne.asm
+     src/quant/x86_asm/quantize_h263_mmx.asm
+     src/quant/x86_asm/quantize_mpeg_mmx.asm
+     src/quant/x86_asm/quantize_mpeg_xmm.asm
+     src/utils/x86_asm/cpuid.asm
+     src/utils/x86_asm/interlacing_mmx.asm
+     src/utils/x86_asm/mem_transfer_3dne.asm
+     src/utils/x86_asm/mem_transfer_mmx.asm
+
+    new patches:
+     ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-49
+
+
+2004-07-21 19:36:46 GMT	                                	patch-54
+
+    Summary:
+      Bframe fixes, still not back to 1.0.1 level
+    Revision:
+      xvidcore--head--0.0--patch-54
+
+    Bframe fixes, still not back to 1.0.1 level
+    
+
+    modified files:
+     src/motion/estimation_bvop.c
+     src/motion/estimation_rd_based_bvop.c
+
+
+2004-07-19 18:46:09 GMT	                                	patch-53
+
+    Summary:
+      Stable merge
+    Revision:
+      xvidcore--head--0.0--patch-53
+
+    Stable merge
+    
+    Patches applied:
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-47
+       ISO C99'ism fix
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-48
+       Complete previous xvid_decraw patch
+    
+
+    modified files:
+     examples/xvid_decraw.c src/encoder.c
+
+    new patches:
+     ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-47
+     ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-48
+
+
+2004-07-18 15:19:58 GMT	                                	patch-52
+
+    Summary:
+      Added dshow mingw build process
+    Revision:
+      xvidcore--head--0.0--patch-52
+
+    From pete:
+     - Added mingw build process to dshow frontend.
+
+    new files:
+     dshow/.arch-ids/Makefile.id dshow/.arch-ids/sources.inc.id
+     dshow/Makefile dshow/dxpatch/.arch-ids/=id
+     dshow/dxpatch/.arch-ids/DXVCSDK-9.0-gcc.patch.id
+     dshow/dxpatch/.arch-ids/DXVCSDK-9.0-gcc.txt.id
+     dshow/dxpatch/DXVCSDK-9.0-gcc.patch
+     dshow/dxpatch/DXVCSDK-9.0-gcc.txt dshow/sources.inc
+
+    modified files:
+     dshow/dshow.dsp dshow/src/CXvidDecoder.cpp
+     dshow/src/Configure.cpp dshow/src/config.h dshow/src/debug.h
+     dshow/src/xvid.ax.rc
+
+    new directories:
+     dshow/dxpatch dshow/dxpatch/.arch-ids
+
+
+2004-07-18 15:01:02 GMT	                                	patch-51
+
+    Summary:
+      Added RD optimized block mode decision in bvops
+    Revision:
+      xvidcore--head--0.0--patch-51
+
+    From sysKin:
+     *  Added RD optimized block mode decision in bvops.
+
+    new files:
+     src/motion/.arch-ids/estimation_rd_based_bvop.c.id
+     src/motion/estimation_rd_based_bvop.c
+
+    modified files:
+     build/generic/sources.inc build/win32/libxvidcore.dsp
+     build/win32/libxvidcore_static.dsp src/motion/estimation.h
+     src/motion/estimation_bvop.c src/motion/estimation_rd_based.c
+     src/plugins/plugin_2pass1.c src/xvid.h vfw/src/codec.c
+     vfw/src/config.c vfw/src/config.h vfw/src/resource.h
+     vfw/src/resource.rc
+
+
+2004-07-17 11:37:21 GMT	                                	patch-50
+
+    Summary:
+      Stable merges
+    Revision:
+      xvidcore--head--0.0--patch-50
+
+    Stable merges
+    
+    Patches applied:
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-45
+       Future version interoperability
+    
+     * ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-46
+       Make sure time incr is never larger than 16bit.
+    
+
+    modified files:
+     examples/xvid_decraw.c src/encoder.c
+
+    new patches:
+     ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-45
+     ed.gomez@free.fr--2004-1/xvidcore--stable--1.0--patch-46
+
+
+2004-07-16 19:53:27 GMT	                                	patch-49
+
+    Summary:
+      AR support in DShow
+    Revision:
+      xvidcore--head--0.0--patch-49
+
+    From koepi/minolta:
+     * Added AR support to dshow frontend.
+
+    modified files:
+     dshow/src/CXvidDecoder.cpp dshow/src/CXvidDecoder.h
+     dshow/src/config.c
+
+
+2004-07-16 19:49:25 GMT	                                	patch-48
+
+    Summary:
+      VFW update and fixes
+    Revision:
+      xvidcore--head--0.0--patch-48
+
+    From makc on our forums:
+     * Use non deprecated defines
+     * Fixed frame size formula.
+
+    modified files:
+     TODO vfw/src/codec.c vfw/src/driverproc.c
+
+
+2004-07-16 19:29:58 GMT	                                	patch-47
+
+    Summary:
+      SSE2 brightness postproc.
+    Revision:
+      xvidcore--head--0.0--patch-47
+
+    From Decoder:
+     * Added SS2 brightness postproc code.
+
+    new files:
+     src/image/x86_asm/.arch-ids/postprocessing_sse2.asm.id
+     src/image/x86_asm/postprocessing_sse2.asm
+
+    modified files:
+     build/generic/sources.inc build/win32/libxvidcore.dsp
+     build/win32/libxvidcore_static.dsp src/image/postprocessing.h
+     src/xvid.c src/xvid.h
+
+
+2004-07-14 23:27:14 GMT	                                	patch-46
+
+    Summary:
+      More audio for VFW bitcalc
+    Revision:
+      xvidcore--head--0.0--patch-46
+
+    From ???:
+     * added more audio formats to bitcalc
+     * replaced old ogm overhead formula with more precise one
+
+    modified files:
+     TODO vfw/src/config.c vfw/src/resource.rc
+
+
+2004-07-14 13:01:57 GMT	                                	patch-45
+
+    Summary:
+      Enable MMX qpel in decoder.
+    Revision:
+      xvidcore--head--0.0--patch-45
+
+    From ed.gomez:
+     * It seems we're not that smart. We had mmx qpel code for more than
+       a year, it is used in encoder but wasn't in decoder :\
+
+    modified files:
+     src/decoder.c
+
+
+2004-07-14 10:27:43 GMT	                                	patch-44
+
+    Summary:
+      Speedup block transfer C functionKeywords: 
+    Revision:
+      xvidcore--head--0.0--patch-44
+
+    From ed.gomez:
+     * Not that a useful patch for most of users, but transfer8x8 was
+       really too slow. Simple optimizations did great, all 32bit
+       platforms using the C code should benefit from this speedup.
+
+    modified files:
+     src/utils/mem_transfer.c
+
+
+2004-07-11 12:53:19 GMT	                                	patch-43
+
+    Summary:
+      Manual AR setting for dshow.
+    Revision:
+      xvidcore--head--0.0--patch-43
+
+    From koepi:
+     * added manual AR setting in dshow.
+
+    modified files:
+     dshow/src/CXvidDecoder.cpp dshow/src/config.c
+     dshow/src/config.h dshow/src/resource.h dshow/src/xvid.ax.rc
+
+
+2004-07-11 10:34:56 GMT	                                	patch-42
+
+    Summary:
+      Added top field control to vfw.
+    Revision:
+      xvidcore--head--0.0--patch-42
+
+    From koepi:
+     * added top field first flag to vfw.
+
+    modified files:
+     vfw/src/codec.c vfw/src/config.c vfw/src/config.h
+     vfw/src/resource.h vfw/src/resource.rc
+
+
+2004-07-10 17:47:01 GMT	                                	patch-41
+
+    Summary:
+      Decoder work.
+    Revision:
+      xvidcore--head--0.0--patch-41
+
+    From ed.gomez:
+     * Faster get coeff (now gcc can even inline it)
+     * On the fly coeff dequant for inter blocks
+       (intra don't get this, because there are lot more non
+        zero coeffs, and i doubt it'd get faster with this)
+
+    modified files:
+     src/bitstream/mbcoding.c src/bitstream/mbcoding.h
+     src/decoder.c
+
+
+2004-07-10 17:34:19 GMT	                                	patch-40
+
+    Summary:
+      ChangeLog update + removed my email
+    Revision:
+      xvidcore--head--0.0--patch-40
+
+    ChangeLog update + removed my email
+    
+
+    modified files:
+     ChangeLog
+
+
 2004-07-10 17:31:36 GMT	                                	patch-39
 
     Summary:
