@@ -43,8 +43,8 @@ typedef struct
 {
 	// decoder/encoder 
 	VECTOR mvs[4];
-	uint32_t sad8[4];		// SAD values for inter4v-VECTORs
-	uint32_t sad16;			// SAD value for inter-VECTOR
+	int32_t sad8[4];		// (signed!) SAD values for inter4v-VECTORs
+	int32_t sad16;			// (signed!) SAD value for inter-VECTOR
 
     short int pred_values[6][MBPRED_SIZE];
     int acpred_directions[6];
