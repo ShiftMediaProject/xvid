@@ -962,6 +962,7 @@ LRESULT decompress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpb
 	memset(&init, 0, sizeof(init));
 	init.version = XVID_VERSION;
 	init.cpu_flags = codec->config.cpu;
+  init.debug = codec->config.debug;
 	codec->xvid_global_func(0, XVID_GBL_INIT, &init, NULL);
 
 	memset(&create, 0, sizeof(create));
