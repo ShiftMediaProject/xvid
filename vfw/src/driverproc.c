@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: driverproc.c,v 1.3 2004-04-02 21:29:21 edgomez Exp $
+ * $Id: driverproc.c,v 1.4 2004-04-05 20:36:37 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -33,6 +33,7 @@
 #include "status.h"
 #include "resource.h"
 
+static int clean_dll_bindings(CODEC* codec);
 
 BOOL WINAPI DllMain(
 	HANDLE hModule, 
@@ -112,6 +113,7 @@ BOOL WINAPI DllMain(
 		/* compress_end/decompress_end don't always get called */
 		compress_end(codec);
 		decompress_end(codec);
+		clean_dll_bindings(codec);
         status_destroy_always(&codec->status);
 		free(codec);
 		return DRV_OK;
@@ -295,7 +297,6 @@ BOOL WINAPI DllMain(
 	}
 }
 
-
 void WINAPI Configure(HWND hwnd, HINSTANCE hinst, LPTSTR lpCmdLine, int nCmdShow)
 {
 	DWORD dwDriverId;
@@ -306,4 +307,22 @@ void WINAPI Configure(HWND hwnd, HINSTANCE hinst, LPTSTR lpCmdLine, int nCmdShow
 		DriverProc(dwDriverId, 0, ICM_CONFIGURE, (LPARAM)GetDesktopWindow(), 0);
 		DriverProc(dwDriverId, 0, DRV_CLOSE, 0, 0);
 	}
+}
+
+static int clean_dll_bindings(CODEC* codec)
+{
+	if(codec->m_hdll)
+	{
+		FreeLibrary(codec->m_hdll);
+		codec->m_hdll = NULL;
+		codec->xvid_global_func = NULL;
+		codec->xvid_encore_func = NULL;
+		codec->xvid_decore_func = NULL;
+		codec->xvid_plugin_single_func = NULL;
+		codec->xvid_plugin_2pass1_func = NULL;
+		codec->xvid_plugin_2pass2_func = NULL;
+		codec->xvid_plugin_lumimasking_func = NULL;
+		codec->xvid_plugin_psnr_func = NULL;
+	}
+	return 0;
 }

@@ -348,24 +348,6 @@ static int init_dll(CODEC* codec)
 	return 0;
 }
 
-static int exit_dll(CODEC* codec)
-{
-	if(codec->m_hdll)
-	{
-		FreeLibrary(codec->m_hdll);
-		codec->m_hdll = NULL;
-		codec->xvid_global_func = NULL;
-		codec->xvid_encore_func = NULL;
-		codec->xvid_decore_func = NULL;
-		codec->xvid_plugin_single_func = NULL;
-		codec->xvid_plugin_2pass1_func = NULL;
-		codec->xvid_plugin_2pass2_func = NULL;
-		codec->xvid_plugin_lumimasking_func = NULL;
-		codec->xvid_plugin_psnr_func = NULL;
-	}
-	return 0;
-}
-
 /* constant-quant zones for fixed quant encoding */
 static void
 prepare_cquant_zones(CONFIG * config) {
@@ -626,7 +608,6 @@ LRESULT compress_end(CODEC * codec)
 			codec->xvid_encore_func(codec->ehandle, XVID_ENC_DESTROY, NULL, NULL);
 			codec->ehandle = NULL;
 		}
-		exit_dll(codec);
 	}
 
 	if (codec->config.display_status)
@@ -1016,7 +997,6 @@ LRESULT decompress_end(CODEC * codec)
 			codec->xvid_decore_func(codec->dhandle, XVID_DEC_DESTROY, NULL, NULL);
 			codec->dhandle = NULL;
 		}
-		exit_dll(codec);
 	}
 
 	return ICERR_OK;

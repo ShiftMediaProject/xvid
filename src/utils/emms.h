@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: emms.h,v 1.14 2004-03-22 22:36:24 edgomez Exp $
+ * $Id: emms.h,v 1.15 2004-04-05 20:36:37 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -57,5 +57,8 @@ extern void sse_os_trigger(void);
 extern void sse2_os_trigger(void);
 #endif
 
+#ifdef ARCH_IS_PPC
+extern void altivec_trigger(void);
+#endif
 
 #endif
