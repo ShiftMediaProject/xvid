@@ -1707,7 +1707,7 @@ static void main_insert_zone(HWND hDlg, zone_t * s, int i, BOOL insert)
 	if (s->chroma_opt)
 		strcat(tmp, "O ");
 
-	if (s->chroma_opt)
+	if (s->cartoon_mode)
 		strcat(tmp, "C ");
 
 	ListView_SetItemText(hDlg, i, 2, tmp);
