@@ -23,6 +23,8 @@ sad16Func sad16_xmm;
 sad16Func sad16_sse2;
 sad16Func sad16_altivec;
 
+sad16Func mrsad16_c;
+
 
 typedef uint32_t (sad16biFunc)(const uint8_t * const cur,
 						 const uint8_t * const ref1,
