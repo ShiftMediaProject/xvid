@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.45 2004-08-29 11:57:35 edgomez Exp $
+ * $Id: xvid.h,v 1.46 2004-08-31 22:23:38 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -58,7 +58,7 @@ extern "C" {
 #define XVID_API_MINOR(a)        (((a)>> 0) & 0xff)
 
 #define XVID_VERSION             XVID_MAKE_VERSION(1,1,-127)
-#define XVID_API                 XVID_MAKE_API(4, 0)
+#define XVID_API                 XVID_MAKE_API(4, 1)
 
 #define XVID_UNSTABLE
 
