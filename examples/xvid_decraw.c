@@ -20,7 +20,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.16 2004-07-17 11:42:46 edgomez Exp $
+ * $Id: xvid_decraw.c,v 1.17 2004-07-20 07:31:38 chl Exp $
  *
  ****************************************************************************/
 
@@ -129,6 +129,8 @@ int main(int argc, char *argv[])
 
 	printf("xvid_decraw - raw mpeg4 bitstream decoder ");
 	printf("written by Christoph Lampert 2002-2003\n\n");
+
+	memset(&xvid_dec_stats, 0x00, sizeof(xvid_dec_stats));
 
 /*****************************************************************************
  * Command line parsing
@@ -693,6 +695,7 @@ dec_main(unsigned char *istream,
 	int ret;
 
 	xvid_dec_frame_t xvid_dec_frame;
+	memset(&xvid_dec_frame,0x00,sizeof(xvid_dec_frame));
 
 	/* Set version */
 	xvid_dec_frame.version = XVID_VERSION;
