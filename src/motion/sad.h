@@ -53,6 +53,7 @@ extern dev16FuncPtr dev16;
 dev16Func dev16_c;
 dev16Func dev16_mmx;
 dev16Func dev16_xmm;
+dev16Func dev16_sse2;
 dev16Func dev16_altivec;
 
 /* plain c */
