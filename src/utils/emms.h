@@ -1,7 +1,7 @@
 int check_cpu_features(void);
 
-typedef void (emmsFunc)();
-typedef emmsFunc* emmsFuncPtr;	
+typedef void (emmsFunc) ();
+typedef emmsFunc *emmsFuncPtr;
 
 extern emmsFuncPtr emms;
 

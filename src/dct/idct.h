@@ -3,8 +3,8 @@
 
 void idct_int32_init();
 
-typedef void (idctFunc)(short * const block);
-typedef idctFunc* idctFuncPtr;	
+typedef void (idctFunc) (short *const block);
+typedef idctFunc *idctFuncPtr;
 
 extern idctFuncPtr idct;
 
@@ -16,4 +16,4 @@ idctFunc idct_sse2;
 
 idctFunc idct_altivec;
 
-#endif /* _IDCT_H_ */
+#endif							/* _IDCT_H_ */

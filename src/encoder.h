@@ -40,7 +40,7 @@ VOP_TYPE;
 
        Encoding Parameters
 
-************************************/ 
+************************************/
 
 typedef struct
 {
@@ -63,27 +63,28 @@ typedef struct
 	/* rounding type; alternate 0-1 after each interframe */
 	/* 1 <= fixed_code <= 4
 	   automatically adjusted using motion vector statistics inside
-	*/
+	 */
 
 	/* vars that not "quite" frame independant */
 	uint32_t m_quant_type;
 	uint32_t m_rounding_type;
 	uint32_t m_fcode;
 
-	HINTINFO * hint;
+	HINTINFO *hint;
 
 #ifdef BFRAMES
 	uint32_t m_seconds;
 	uint32_t m_ticks;
 #endif
 
-} MBParam;
+}
+MBParam;
 
 
 typedef struct
 {
 	uint32_t quant;
-	uint32_t motion_flags;	
+	uint32_t motion_flags;
 	uint32_t global_flags;
 
 	VOP_TYPE coding_type;
@@ -98,9 +99,10 @@ typedef struct
 
 	IMAGE image;
 
-	MACROBLOCK * mbs;
+	MACROBLOCK *mbs;
 
-} FRAMEINFO;
+}
+FRAMEINFO;
 
 typedef struct
 {
@@ -126,8 +128,8 @@ typedef struct
 
 	// images
 
-	FRAMEINFO * current;
-	FRAMEINFO * reference;
+	FRAMEINFO *current;
+	FRAMEINFO *reference;
 
 #ifdef _DEBUG
 	IMAGE sOriginal;
@@ -146,7 +148,7 @@ typedef struct
 	int bframenum_tail;
 	int flush_bframes;
 
-	FRAMEINFO ** bframes;
+	FRAMEINFO **bframes;
 	IMAGE f_refh;
 	IMAGE f_refv;
 	IMAGE f_refhv;
@@ -164,14 +166,17 @@ void init_encoder(uint32_t cpu_flags);
 
 int encoder_create(XVID_ENC_PARAM * pParam);
 int encoder_destroy(Encoder * pEnc);
-int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pResult);
-		
-static __inline uint8_t get_fcode(uint16_t sr)
+int encoder_encode(Encoder * pEnc,
+				   XVID_ENC_FRAME * pFrame,
+				   XVID_ENC_STATS * pResult);
+
+static __inline uint8_t
+get_fcode(uint16_t sr)
 {
 	if (sr <= 16)
 		return 1;
 
-	else if (sr <= 32) 
+	else if (sr <= 32)
 		return 2;
 
 	else if (sr <= 64)
@@ -193,4 +198,4 @@ static __inline uint8_t get_fcode(uint16_t sr)
 		return 0;
 }
 
-#endif /* _ENCODER_H_ */
+#endif							/* _ENCODER_H_ */

@@ -55,7 +55,11 @@
 #include "utils/timer.h"
 #include "bitstream/mbcoding.h"
 
-int xvid_init(void *handle, int opt, void *param1, void *param2)
+int
+xvid_init(void *handle,
+		  int opt,
+		  void *param1,
+		  void *param2)
 {
 	int cpu_flags;
 	XVID_INIT_PARAM *init_param;
@@ -63,7 +67,7 @@ int xvid_init(void *handle, int opt, void *param1, void *param2)
 	init_param = (XVID_INIT_PARAM *) param1;
 
 	// force specific cpu settings?
-	if((init_param->cpu_flags & XVID_CPU_FORCE) > 0)
+	if ((init_param->cpu_flags & XVID_CPU_FORCE) > 0)
 		cpu_flags = init_param->cpu_flags;
 	else {
 
@@ -83,7 +87,7 @@ int xvid_init(void *handle, int opt, void *param1, void *param2)
 	idct = idct_int32;
 
 	sadInit = 0;
-	
+
 	emms = emms_c;
 
 	quant_intra = quant_intra_c;
@@ -132,7 +136,7 @@ int xvid_init(void *handle, int opt, void *param1, void *param2)
 	dev16 = dev16_c;
 
 #ifdef ARCH_X86
-	if((cpu_flags & XVID_CPU_MMX) > 0) {
+	if ((cpu_flags & XVID_CPU_MMX) > 0) {
 		fdct = fdct_mmx;
 		idct = idct_mmx;
 
@@ -176,7 +180,7 @@ int xvid_init(void *handle, int opt, void *param1, void *param2)
 
 	}
 
-	if((cpu_flags & XVID_CPU_MMXEXT) > 0) {
+	if ((cpu_flags & XVID_CPU_MMXEXT) > 0) {
 		idct = idct_xmm;
 		interpolate8x8_halfpel_h = interpolate8x8_halfpel_h_xmm;
 		interpolate8x8_halfpel_v = interpolate8x8_halfpel_v_xmm;
@@ -189,13 +193,13 @@ int xvid_init(void *handle, int opt, void *param1, void *param2)
 
 	}
 
-	if((cpu_flags & XVID_CPU_3DNOW) > 0) {
+	if ((cpu_flags & XVID_CPU_3DNOW) > 0) {
 		interpolate8x8_halfpel_h = interpolate8x8_halfpel_h_3dn;
 		interpolate8x8_halfpel_v = interpolate8x8_halfpel_v_3dn;
 		interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_3dn;
 	}
 
-	if((cpu_flags & XVID_CPU_SSE2) > 0) {
+	if ((cpu_flags & XVID_CPU_SSE2) > 0) {
 #ifdef EXPERIMENTAL_SSE2_CODE
 		quant_intra = quant_intra_sse2;
 		dequant_intra = dequant_intra_sse2;
@@ -209,7 +213,6 @@ int xvid_init(void *handle, int opt, void *param1, void *param2)
 		fdct = fdct_sse2;
 #endif
 	}
-
 #endif
 #ifdef ARCH_PPC
 #ifdef ARCH_PPC_ALTIVEC
@@ -224,7 +227,7 @@ int xvid_init(void *handle, int opt, void *param1, void *param2)
 	calc_cbp = calc_cbp_ppc;
 #endif
 #endif
-	
+
 	// API version
 	init_param->api_version = API_VERSION;
 
@@ -234,39 +237,46 @@ int xvid_init(void *handle, int opt, void *param1, void *param2)
 	return XVID_ERR_OK;
 }
 
-int xvid_decore(void * handle, int opt, void * param1, void * param2)
+int
+xvid_decore(void *handle,
+			int opt,
+			void *param1,
+			void *param2)
 {
-	switch (opt)
-	{
-	case XVID_DEC_DECODE :
-	return decoder_decode((DECODER *) handle, (XVID_DEC_FRAME *) param1);
+	switch (opt) {
+	case XVID_DEC_DECODE:
+		return decoder_decode((DECODER *) handle, (XVID_DEC_FRAME *) param1);
 
-	case XVID_DEC_CREATE :
-	return decoder_create((XVID_DEC_PARAM *) param1);
-	
-	case XVID_DEC_DESTROY :
-	return decoder_destroy((DECODER *) handle);
+	case XVID_DEC_CREATE:
+		return decoder_create((XVID_DEC_PARAM *) param1);
+
+	case XVID_DEC_DESTROY:
+		return decoder_destroy((DECODER *) handle);
 
 	default:
-	return XVID_ERR_FAIL;
-    }
+		return XVID_ERR_FAIL;
+	}
 }
 
 
-int xvid_encore(void * handle, int opt, void * param1, void * param2)
+int
+xvid_encore(void *handle,
+			int opt,
+			void *param1,
+			void *param2)
 {
-	switch (opt)
-	{
-	case XVID_ENC_ENCODE :
-	return encoder_encode((Encoder *) handle, (XVID_ENC_FRAME *) param1, (XVID_ENC_STATS *) param2);
+	switch (opt) {
+	case XVID_ENC_ENCODE:
+		return encoder_encode((Encoder *) handle, (XVID_ENC_FRAME *) param1,
+							  (XVID_ENC_STATS *) param2);
 
-	case XVID_ENC_CREATE :
-	return encoder_create((XVID_ENC_PARAM *) param1);
-	
-	case XVID_ENC_DESTROY :
-	return encoder_destroy((Encoder *) handle);
+	case XVID_ENC_CREATE:
+		return encoder_create((XVID_ENC_PARAM *) param1);
+
+	case XVID_ENC_DESTROY:
+		return encoder_destroy((Encoder *) handle);
 
 	default:
-	return XVID_ERR_FAIL;
-    }
+		return XVID_ERR_FAIL;
+	}
 }

@@ -1,8 +1,8 @@
 #ifndef _FDCT_H_
 #define _FDCT_H_
 
-typedef void (fdctFunc)(short * const block);
-typedef fdctFunc* fdctFuncPtr;	
+typedef void (fdctFunc) (short *const block);
+typedef fdctFunc *fdctFuncPtr;
 
 extern fdctFuncPtr fdct;
 
@@ -13,4 +13,4 @@ fdctFunc fdct_sse2;
 
 fdctFunc fdct_altivec;
 
-#endif /* _FDCT_H_ */
+#endif							/* _FDCT_H_ */

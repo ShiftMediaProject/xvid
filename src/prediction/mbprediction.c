@@ -59,13 +59,17 @@
 #define DIV_DIV(A,B)    ( (A) > 0 ? ((A)+((B)>>1))/(B) : ((A)-((B)>>1))/(B) )
 
 
-static int __inline rescale(int predict_quant, int current_quant, int coeff)
+static int __inline
+rescale(int predict_quant,
+		int current_quant,
+		int coeff)
 {
-	return (coeff != 0) ? DIV_DIV((coeff) * (predict_quant), (current_quant)) : 0;
+	return (coeff != 0) ? DIV_DIV((coeff) * (predict_quant),
+								  (current_quant)) : 0;
 }
 
 
-static const int16_t default_acdc_values[15] = { 
+static const int16_t default_acdc_values[15] = {
 	1024,
 	0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0
@@ -77,13 +81,16 @@ static const int16_t default_acdc_values[15] = {
 */
 
 
-void predict_acdc(MACROBLOCK *pMBs,
-		  uint32_t x, uint32_t y,	uint32_t mb_width, 
-		  uint32_t block, 
-		  int16_t qcoeff[64],
-		  uint32_t current_quant,
-		  int32_t iDcScaler,
-		  int16_t predictors[8])
+void
+predict_acdc(MACROBLOCK * pMBs,
+			 uint32_t x,
+			 uint32_t y,
+			 uint32_t mb_width,
+			 uint32_t block,
+			 int16_t qcoeff[64],
+			 uint32_t current_quant,
+			 int32_t iDcScaler,
+			 int16_t predictors[8])
 {
 	int16_t *left, *top, *diag, *current;
 
@@ -94,8 +101,8 @@ void predict_acdc(MACROBLOCK *pMBs,
 	const int16_t *pTop = default_acdc_values;
 	const int16_t *pDiag = default_acdc_values;
 
-	uint32_t index = x + y * mb_width;		// current macroblock
-	int * acpred_direction = &pMBs[index].acpred_directions[block];
+	uint32_t index = x + y * mb_width;	// current macroblock
+	int *acpred_direction = &pMBs[index].acpred_directions[block];
 	uint32_t i;
 
 	left = top = diag = current = 0;
@@ -104,27 +111,28 @@ void predict_acdc(MACROBLOCK *pMBs,
 
 	// left macroblock 
 
-	if(x && (pMBs[index - 1].mode == MODE_INTRA 
-		 || pMBs[index - 1].mode == MODE_INTRA_Q)) {
+	if (x &&
+		(pMBs[index - 1].mode == MODE_INTRA ||
+		 pMBs[index - 1].mode == MODE_INTRA_Q)) {
 
 		left = pMBs[index - 1].pred_values[0];
 		left_quant = pMBs[index - 1].quant;
 		//DEBUGI("LEFT", *(left+MBPRED_SIZE));
 	}
-    
 	// top macroblock
-	
-	if(y && (pMBs[index - mb_width].mode == MODE_INTRA 
-		 || pMBs[index - mb_width].mode == MODE_INTRA_Q)) {
+
+	if (y &&
+		(pMBs[index - mb_width].mode == MODE_INTRA ||
+		 pMBs[index - mb_width].mode == MODE_INTRA_Q)) {
 
 		top = pMBs[index - mb_width].pred_values[0];
 		top_quant = pMBs[index - mb_width].quant;
 	}
-    
 	// diag macroblock 
-	
-	if(x && y && (pMBs[index - 1 - mb_width].mode == MODE_INTRA 
-		      || pMBs[index - 1 - mb_width].mode == MODE_INTRA_Q)) {
+
+	if (x && y &&
+		(pMBs[index - 1 - mb_width].mode == MODE_INTRA ||
+		 pMBs[index - 1 - mb_width].mode == MODE_INTRA_Q)) {
 
 		diag = pMBs[index - 1 - mb_width].pred_values[0];
 	}
@@ -132,89 +140,85 @@ void predict_acdc(MACROBLOCK *pMBs,
 	current = pMBs[index].pred_values[0];
 
 	// now grab pLeft, pTop, pDiag _blocks_ 
-	
+
 	switch (block) {
-	
-	case 0: 
-		if(left)
+
+	case 0:
+		if (left)
 			pLeft = left + MBPRED_SIZE;
-		
-		if(top)
+
+		if (top)
 			pTop = top + (MBPRED_SIZE << 1);
-		
-		if(diag)
+
+		if (diag)
 			pDiag = diag + 3 * MBPRED_SIZE;
-		
+
 		break;
-	
+
 	case 1:
 		pLeft = current;
 		left_quant = current_quant;
-	
-		if(top) {
+
+		if (top) {
 			pTop = top + 3 * MBPRED_SIZE;
 			pDiag = top + (MBPRED_SIZE << 1);
 		}
 		break;
-	
+
 	case 2:
-		if(left) {
+		if (left) {
 			pLeft = left + 3 * MBPRED_SIZE;
 			pDiag = left + MBPRED_SIZE;
 		}
-		
+
 		pTop = current;
 		top_quant = current_quant;
 
 		break;
-	
+
 	case 3:
 		pLeft = current + (MBPRED_SIZE << 1);
 		left_quant = current_quant;
-		
+
 		pTop = current + MBPRED_SIZE;
 		top_quant = current_quant;
-		
+
 		pDiag = current;
-		
+
 		break;
-	
+
 	case 4:
-		if(left)
+		if (left)
 			pLeft = left + (MBPRED_SIZE << 2);
-		if(top)
+		if (top)
 			pTop = top + (MBPRED_SIZE << 2);
-		if(diag)
+		if (diag)
 			pDiag = diag + (MBPRED_SIZE << 2);
 		break;
-	
+
 	case 5:
-		if(left)
+		if (left)
 			pLeft = left + 5 * MBPRED_SIZE;
-		if(top)
+		if (top)
 			pTop = top + 5 * MBPRED_SIZE;
-		if(diag)
+		if (diag)
 			pDiag = diag + 5 * MBPRED_SIZE;
 		break;
 	}
 
-	//	determine ac prediction direction & ac/dc predictor
-	//	place rescaled ac/dc predictions into predictors[] for later use
+	//  determine ac prediction direction & ac/dc predictor
+	//  place rescaled ac/dc predictions into predictors[] for later use
 
-	if(ABS(pLeft[0] - pDiag[0]) < ABS(pDiag[0] - pTop[0])) {
-		*acpred_direction = 1;             // vertical
+	if (ABS(pLeft[0] - pDiag[0]) < ABS(pDiag[0] - pTop[0])) {
+		*acpred_direction = 1;	// vertical
 		predictors[0] = DIV_DIV(pTop[0], iDcScaler);
-		for (i = 1; i < 8; i++)
-		{
+		for (i = 1; i < 8; i++) {
 			predictors[i] = rescale(top_quant, current_quant, pTop[i]);
 		}
-	}
-	else 
-	{
-		*acpred_direction = 2;             // horizontal
+	} else {
+		*acpred_direction = 2;	// horizontal
 		predictors[0] = DIV_DIV(pLeft[0], iDcScaler);
-		for (i = 1; i < 8; i++)
-		{
+		for (i = 1; i < 8; i++) {
 			predictors[i] = rescale(left_quant, current_quant, pLeft[i + 7]);
 		}
 	}
@@ -226,45 +230,40 @@ void predict_acdc(MACROBLOCK *pMBs,
 */
 
 
-void add_acdc(MACROBLOCK *pMB,
-	      uint32_t block, 
-	      int16_t dct_codes[64],
-	      uint32_t iDcScaler,
-	      int16_t predictors[8])
+void
+add_acdc(MACROBLOCK * pMB,
+		 uint32_t block,
+		 int16_t dct_codes[64],
+		 uint32_t iDcScaler,
+		 int16_t predictors[8])
 {
 	uint8_t acpred_direction = pMB->acpred_directions[block];
-	int16_t * pCurrent = pMB->pred_values[block];
+	int16_t *pCurrent = pMB->pred_values[block];
 	uint32_t i;
 
 	dct_codes[0] += predictors[0];	// dc prediction
 	pCurrent[0] = dct_codes[0] * iDcScaler;
 
-	if (acpred_direction == 1)
-	{
-		for (i = 1; i < 8; i++)
-		{
+	if (acpred_direction == 1) {
+		for (i = 1; i < 8; i++) {
 			int level = dct_codes[i] + predictors[i];
+
 			dct_codes[i] = level;
 			pCurrent[i] = level;
-			pCurrent[i+7] = dct_codes[i*8];
+			pCurrent[i + 7] = dct_codes[i * 8];
 		}
-	}
-	else if (acpred_direction == 2)
-	{
-		for (i = 1; i < 8; i++)
-		{
-			int level = dct_codes[i*8] + predictors[i];
-			dct_codes[i*8] = level;
-			pCurrent[i+7] = level;
+	} else if (acpred_direction == 2) {
+		for (i = 1; i < 8; i++) {
+			int level = dct_codes[i * 8] + predictors[i];
+
+			dct_codes[i * 8] = level;
+			pCurrent[i + 7] = level;
 			pCurrent[i] = dct_codes[i];
 		}
-	}
-	else
-	{
-		for (i = 1; i < 8; i++)
-		{
+	} else {
+		for (i = 1; i < 8; i++) {
 			pCurrent[i] = dct_codes[i];
-			pCurrent[i+7] = dct_codes[i*8];
+			pCurrent[i + 7] = dct_codes[i * 8];
 		}
 	}
 }
@@ -284,13 +283,14 @@ S1 = sum of all (qcoeff - prediction)
 S2 = sum of all qcoeff
 */
 
-uint32_t calc_acdc(MACROBLOCK *pMB,
-		   uint32_t block, 
-		   int16_t qcoeff[64],
-		   uint32_t iDcScaler,
-		   int16_t predictors[8])
+uint32_t
+calc_acdc(MACROBLOCK * pMB,
+		  uint32_t block,
+		  int16_t qcoeff[64],
+		  uint32_t iDcScaler,
+		  int16_t predictors[8])
 {
-	int16_t * pCurrent = pMB->pred_values[block];
+	int16_t *pCurrent = pMB->pred_values[block];
 	uint32_t i;
 	uint32_t S1 = 0, S2 = 0;
 
@@ -298,7 +298,7 @@ uint32_t calc_acdc(MACROBLOCK *pMB,
 	/* store current coeffs to pred_values[] for future prediction */
 
 	pCurrent[0] = qcoeff[0] * iDcScaler;
-	for(i = 1; i < 8; i++) {
+	for (i = 1; i < 8; i++) {
 		pCurrent[i] = qcoeff[i];
 		pCurrent[i + 7] = qcoeff[i * 8];
 	}
@@ -307,9 +307,8 @@ uint32_t calc_acdc(MACROBLOCK *pMB,
 
 	qcoeff[0] = qcoeff[0] - predictors[0];
 
-	if (pMB->acpred_directions[block] == 1) 
-	{
-		for(i = 1; i < 8; i++) {
+	if (pMB->acpred_directions[block] == 1) {
+		for (i = 1; i < 8; i++) {
 			int16_t level;
 
 			level = qcoeff[i];
@@ -318,13 +317,12 @@ uint32_t calc_acdc(MACROBLOCK *pMB,
 			S1 += ABS(level);
 			predictors[i] = level;
 		}
-	}
-	else // acpred_direction == 2
+	} else						// acpred_direction == 2
 	{
-		for(i = 1; i < 8; i++) {
+		for (i = 1; i < 8; i++) {
 			int16_t level;
 
-			level = qcoeff[i*8];
+			level = qcoeff[i * 8];
 			S2 += ABS(level);
 			level -= predictors[i];
 			S1 += ABS(level);
@@ -333,42 +331,39 @@ uint32_t calc_acdc(MACROBLOCK *pMB,
 
 	}
 
-    
+
 	return S2 - S1;
 }
 
 
 /* apply predictors[] to qcoeff */
 
-void apply_acdc(MACROBLOCK *pMB,
-		uint32_t block, 
-		int16_t qcoeff[64],
-		int16_t predictors[8])
+void
+apply_acdc(MACROBLOCK * pMB,
+		   uint32_t block,
+		   int16_t qcoeff[64],
+		   int16_t predictors[8])
 {
 	uint32_t i;
 
-	if (pMB->acpred_directions[block] == 1) 
-	{
-		for(i = 1; i < 8; i++) 
-		{
+	if (pMB->acpred_directions[block] == 1) {
+		for (i = 1; i < 8; i++) {
 			qcoeff[i] = predictors[i];
 		}
-	}
-	else 
-	{
-		for(i = 1; i < 8; i++) 
-		{
-			qcoeff[i*8] = predictors[i];
+	} else {
+		for (i = 1; i < 8; i++) {
+			qcoeff[i * 8] = predictors[i];
 		}
 	}
 }
 
 
-void MBPrediction(FRAMEINFO *frame,
-		  uint32_t x,
-		  uint32_t y,
-		  uint32_t mb_width,
-		  int16_t qcoeff[6*64])
+void
+MBPrediction(FRAMEINFO * frame,
+			 uint32_t x,
+			 uint32_t y,
+			 uint32_t mb_width,
+			 int16_t qcoeff[6 * 64])
 {
 
 	int32_t j;
@@ -379,41 +374,25 @@ void MBPrediction(FRAMEINFO *frame,
 	MACROBLOCK *pMB = &frame->mbs[x + y * mb_width];
 
 	if ((pMB->mode == MODE_INTRA) || (pMB->mode == MODE_INTRA_Q)) {
-		
-		for(j = 0; j < 6; j++) 
-		{
+
+		for (j = 0; j < 6; j++) {
 			iDcScaler = get_dc_scaler(iQuant, (j < 4) ? 1 : 0);
 
-			predict_acdc(frame->mbs,
-				     x,
-				     y,
-				     mb_width,
-				     j,
-				     &qcoeff[j*64],
-				     iQuant,
-				     iDcScaler,
-				     predictors[j]);
+			predict_acdc(frame->mbs, x, y, mb_width, j, &qcoeff[j * 64],
+						 iQuant, iDcScaler, predictors[j]);
 
-			S += calc_acdc(pMB,
-				       j,
-				       &qcoeff[j*64],
-				       iDcScaler,
-				       predictors[j]);
+			S += calc_acdc(pMB, j, &qcoeff[j * 64], iDcScaler, predictors[j]);
 
 		}
 
-		if (S < 0)		// dont predict
-		{			
-			for(j = 0; j < 6; j++) 
-			{
+		if (S < 0)				// dont predict
+		{
+			for (j = 0; j < 6; j++) {
 				pMB->acpred_directions[j] = 0;
 			}
-		}
-		else
-		{
-			for(j = 0; j < 6; j++) 
-			{
-				apply_acdc(pMB, j, &qcoeff[j*64], predictors[j]);
+		} else {
+			for (j = 0; j < 6; j++) {
+				apply_acdc(pMB, j, &qcoeff[j * 64], predictors[j]);
 			}
 		}
 		pMB->cbp = calc_cbp(qcoeff);

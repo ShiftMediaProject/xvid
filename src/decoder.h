@@ -28,11 +28,11 @@ typedef struct
 	uint32_t height;
 	uint32_t edged_width;
 	uint32_t edged_height;
-	
+
 	IMAGE cur;
-	IMAGE refn[3];	// 0   -- last I or P VOP
-					// 1   -- first I or P
-					// 2   -- for interpolate mode B-frame
+	IMAGE refn[3];				// 0   -- last I or P VOP
+	// 1   -- first I or P
+	// 2   -- for interpolate mode B-frame
 	IMAGE refh;
 	IMAGE refv;
 	IMAGE refhv;
@@ -41,27 +41,29 @@ typedef struct
 
 	uint32_t mb_width;
 	uint32_t mb_height;
-	MACROBLOCK * mbs;
+	MACROBLOCK *mbs;
 
 	// for B-frame
-	int32_t		frames;			// total frame number
-	int8_t		scalability;
-	VECTOR		p_fmv, p_bmv;	// pred forward & backward motion vector
-	MACROBLOCK	*last_mbs;		// last MB
-	int64_t		time;			// for record time
-	int64_t		time_base;
-	int64_t		last_time_base;
-	int64_t		last_non_b_time;
-	uint32_t	time_pp;
-	uint32_t	time_bp;
-	uint8_t		low_delay;		// low_delay flage (1 means no B_VOP)
-} DECODER;
+	int32_t frames;				// total frame number
+	int8_t scalability;
+	VECTOR p_fmv, p_bmv;		// pred forward & backward motion vector
+	MACROBLOCK *last_mbs;		// last MB
+	int64_t time;				// for record time
+	int64_t time_base;
+	int64_t last_time_base;
+	int64_t last_non_b_time;
+	uint32_t time_pp;
+	uint32_t time_bp;
+	uint8_t low_delay;			// low_delay flage (1 means no B_VOP)
+}
+DECODER;
 
 void init_decoder(uint32_t cpu_flags);
 
 int decoder_create(XVID_DEC_PARAM * param);
 int decoder_destroy(DECODER * dec);
-int decoder_decode(DECODER * dec, XVID_DEC_FRAME * frame);
+int decoder_decode(DECODER * dec,
+				   XVID_DEC_FRAME * frame);
 
 
-#endif /* _DECODER_H_ */
+#endif							/* _DECODER_H_ */

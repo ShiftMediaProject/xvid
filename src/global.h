@@ -32,7 +32,7 @@ typedef struct
 	uint32_t *tail;
 	uint32_t *start;
 	uint32_t length;
-} 
+}
 Bitstream;
 
 
@@ -46,9 +46,9 @@ typedef struct
 
 	short int pred_values[6][MBPRED_SIZE];
 	int acpred_directions[6];
-    
+
 	int mode;
-	int quant;		// absolute quant
+	int quant;					// absolute quant
 
 	int field_dct;
 	int field_pred;
@@ -60,8 +60,8 @@ typedef struct
 	VECTOR mv16;
 	VECTOR pmvs[4];
 
-        int32_t sad8[4];                // SAD values for inter4v-VECTORs
-        int32_t sad16;                  // SAD value for inter-VECTOR
+	int32_t sad8[4];			// SAD values for inter4v-VECTORs
+	int32_t sad16;				// SAD value for inter-VECTOR
 
 	int dquant;
 	int cbp;
@@ -74,26 +74,29 @@ typedef struct
 	int mb_type;
 	int dbquant;
 
-} MACROBLOCK;
+}
+MACROBLOCK;
 
-static __inline int8_t get_dc_scaler(uint32_t quant, uint32_t lum)
+static __inline int8_t
+get_dc_scaler(uint32_t quant,
+			  uint32_t lum)
 {
-	if(quant < 5)
-        return 8;
+	if (quant < 5)
+		return 8;
 
-	if(quant < 25 && !lum)
-        return (quant + 13) / 2;
+	if (quant < 25 && !lum)
+		return (quant + 13) / 2;
 
-	if(quant < 9)
-        return 2 * quant;
+	if (quant < 9)
+		return 2 * quant;
 
-    if(quant < 25)
-        return quant + 8;
+	if (quant < 25)
+		return quant + 8;
 
-	if(lum)
+	if (lum)
 		return 2 * quant - 16;
 	else
-        return quant - 6;
+		return quant - 6;
 }
 
 // useful macros
@@ -104,4 +107,4 @@ static __inline int8_t get_dc_scaler(uint32_t quant, uint32_t lum)
 #define SIGN(X)   (((X)>0)?1:-1)
 
 
-#endif /* _GLOBAL_H_ */
+#endif							/* _GLOBAL_H_ */
