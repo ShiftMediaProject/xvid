@@ -28,6 +28,8 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
+ * $Id: xvid.c,v 1.36 2002-09-04 22:08:45 edgomez Exp $
+ *
  ****************************************************************************/
 
 #include "xvid.h"
