@@ -291,6 +291,12 @@ static void CodeBlockIntra(const MBParam * pParam, const MACROBLOCK *pMB,
     if(pMB->mode == MODE_INTRA_Q)
 		BitstreamPutBits(bs, pMB->dquant, 2);
 
+	// write interlacing
+	if (pParam->global_flags & XVID_INTERLACING)
+	{
+		BitstreamPutBit(bs, pMB->field_dct);
+	}
+
 	// code block coeffs
 	for(i = 0; i < 6; i++)
 	{
@@ -333,6 +339,27 @@ static void CodeBlockInter(const MBParam * pParam, const MACROBLOCK *pMB,
     if(pMB->mode == MODE_INTER_Q)
 		BitstreamPutBits(bs, pMB->dquant, 2);
     
+	// interlacing
+	if (pParam->global_flags & XVID_INTERLACING)
+	{
+		BitstreamPutBit(bs, pMB->field_dct);
+		DEBUG1("codep: field_dct: ", pMB->field_dct);
+
+		// if inter block, write field ME flag
+		if (pMB->mode == MODE_INTER || pMB->mode == MODE_INTER_Q)
+		{
+			BitstreamPutBit(bs, pMB->field_pred);
+			DEBUG1("codep: field_pred: ", pMB->field_pred);
+
+			// write field prediction references
+			if (pMB->field_pred)
+			{
+				BitstreamPutBit(bs, pMB->field_for_top);
+				BitstreamPutBit(bs, pMB->field_for_bot);
+			}
+		}
+	}
+
 	// code motion vector(s)
 	for(i = 0; i < (pMB->mode == MODE_INTER4V ? 4 : 1); i++)
 	{

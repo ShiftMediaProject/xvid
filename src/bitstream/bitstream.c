@@ -41,6 +41,7 @@
   *																			   *	
   *  Revision history:                                                         *
   *                                                                            *
+  *  26.03.2002 interlacing support
   *  03.03.2002 qmatrix writing												   *
   *  03.03.2002 merged BITREADER and BITWRITER								   *
   *	 30.02.2002	intra_dc_threshold support									   *
@@ -282,12 +283,10 @@ int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding, uin
 					}
 
 				}
-			
-				if (BitstreamGetBit(bs))				// interlaced
+
+				if (dec->interlacing = BitstreamGetBit(bs))
 				{
-					DEBUG("TODO: interlaced");
-					// TODO
-					return -1;
+					DEBUG("vol: interlacing");
 				}
 
 				if (!BitstreamGetBit(bs))				// obmc_disable
@@ -517,11 +516,17 @@ int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding, uin
 				// intra_dc_vlc_threshold
 				*intra_dc_threshold = intra_dc_threshold_table[ BitstreamGetBits(bs,3) ];
 
-				/* if (interlaced)
+				if (dec->interlacing)
+				{
+					if (dec->top_field_first = BitstreamGetBit(bs))
 					{
-						BitstreamSkip(bs, 1);		// top_field_first
-						BitstreamSkip(bs, 1);		// alternative_vertical_scan_flag
-				*/
+						DEBUG("vop: top_field_first");
+					}
+					if (dec->alternate_vertical_scan = BitstreamGetBit(bs))
+					{
+						DEBUG("vop: alternate_vertical_scan");
+					}
+				}
 			}
 						
 			*quant = BitstreamGetBits(bs, dec->quant_bits);		// vop_quant
@@ -584,9 +589,7 @@ static void bs_put_matrix(Bitstream * bs, const int16_t *matrix)
 	write vol header
 */
 void BitstreamWriteVolHeader(Bitstream * const bs,
-						const int width,
-						const int height,
-						const int quant_type)
+						const MBParam * pParam)
 {
 	// video object_start_code & vo_id
     BitstreamPad(bs);
@@ -622,20 +625,20 @@ void BitstreamWriteVolHeader(Bitstream * const bs,
 	// BitstreamPutBits(bs, 0, 15);
 
 	WRITE_MARKER();
-	BitstreamPutBits(bs, width, 13);		// width
+	BitstreamPutBits(bs, pParam->width, 13);		// width
 	WRITE_MARKER();
-	BitstreamPutBits(bs, height, 13);		// height
+	BitstreamPutBits(bs, pParam->height, 13);		// height
 	WRITE_MARKER();
 	
-	BitstreamPutBit(bs, 0);		// interlace
+	BitstreamPutBit(bs, pParam->global_flags & XVID_INTERLACING);		// interlace
 	BitstreamPutBit(bs, 1);		// obmc_disable (overlapped block motion compensation)
 	BitstreamPutBit(bs, 0);		// sprite_enable
 	BitstreamPutBit(bs, 0);		// not_in_bit
 
 	// quant_type   0=h.263  1=mpeg4(quantizer tables)
-	BitstreamPutBit(bs, quant_type);
+	BitstreamPutBit(bs, pParam->quant_type);
 	
-	if (quant_type)
+	if (pParam->quant_type)
 	{
 		BitstreamPutBit(bs, get_intra_matrix_status());	// load_intra_quant_mat
 		if (get_intra_matrix_status())
@@ -667,15 +670,12 @@ void BitstreamWriteVolHeader(Bitstream * const bs,
   (decoder uses these values to determine precise time since last resync)
 */
 void BitstreamWriteVopHeader(Bitstream * const bs,
-			  VOP_TYPE prediction_type,
-			  const int rounding_type,
-			  const uint32_t quant,
-			  const uint32_t fcode)
+						const MBParam * pParam)
 {
     BitstreamPad(bs);
     BitstreamPutBits(bs, VOP_START_CODE, 32);
 
-    BitstreamPutBits(bs, prediction_type, 2);
+    BitstreamPutBits(bs, pParam->coding_type, 2);
     
 	// time_base = 0  write n x PutBit(1), PutBit(0)
 	BitstreamPutBits(bs, 0, 1);
@@ -689,13 +689,19 @@ void BitstreamWriteVopHeader(Bitstream * const bs,
 
 	BitstreamPutBits(bs, 1, 1);				// vop_coded
 
-	if (prediction_type != I_VOP)
-		BitstreamPutBits(bs, rounding_type, 1);
+	if (pParam->coding_type != I_VOP)
+		BitstreamPutBits(bs, pParam->rounding_type, 1);
     
 	BitstreamPutBits(bs, 0, 3);				// intra_dc_vlc_threshold
 
- 	BitstreamPutBits(bs, quant, 5);			// quantizer
+	if (pParam->global_flags & XVID_INTERLACING)
+	{
+		BitstreamPutBit(bs, 1);		// top field first
+		BitstreamPutBit(bs, 0);		// alternate vertical scan
+	}
+
+ 	BitstreamPutBits(bs, pParam->quant, 5);			// quantizer
 	
-	if (prediction_type != I_VOP)
-		BitstreamPutBits(bs, fcode, 3);		// fixed_code = [1,4]
+	if (pParam->coding_type != I_VOP)
+		BitstreamPutBits(bs, pParam->fixed_code, 3);		// fixed_code = [1,4]
 }

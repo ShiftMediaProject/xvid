@@ -36,6 +36,11 @@ typedef struct
 	int mode;
 	int quant;		// absolute quant
 
+	int field_dct;
+	int field_pred;
+	int field_for_top;
+	int field_for_bot;
+
 	// encoder specific
 
 	VECTOR pmvs[4];

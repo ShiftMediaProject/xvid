@@ -18,6 +18,10 @@ typedef struct
 	uint32_t quant_type;
 	uint32_t quarterpel;
 
+	uint32_t interlacing;
+	uint32_t top_field_first;
+	uint32_t alternate_vertical_scan;
+
 	// image
 
 	uint32_t width;

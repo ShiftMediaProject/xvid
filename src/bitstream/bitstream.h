@@ -41,6 +41,7 @@
   *																			   *	
   *  Revision history:                                                         *
   *                                                                            *
+  *  26.03.2002 interlacing support - modified putvol/vopheaders paramters
   *  04.03.2002 putbits speedup (Isibaar)                                      *
   *  03.03.2002 merged BITREADER and BITWRITER (Isibaar)                       *
   *	 16.12.2001	inital version                                           	   *
@@ -129,16 +130,11 @@ int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding,
 
 
 void BitstreamWriteVolHeader(Bitstream * const bs,
-						const int width,
-						const int height,
-						const int quant_type);
+						const MBParam * pParam);
 
 
 void BitstreamWriteVopHeader(Bitstream * const bs,
-			  VOP_TYPE prediction_type,
-			  const int rounding_type,
-			  const uint32_t quant,
-			  const uint32_t fcode);
+						const MBParam * pParam);
 
 
 /* initialise bitstream structure */

@@ -21,6 +21,7 @@ extern void stop_conv_timer();
 extern void stop_transfer_timer();
 extern void stop_coding_timer();
 extern void stop_prediction_timer();
+extern void stop_interlacing_timer();
 extern void stop_global_timer();
 extern void init_timer();
 extern void write_timer();
@@ -42,6 +43,7 @@ static __inline void stop_transfer_timer() {}
 static __inline void init_timer() {}
 static __inline void write_timer() {}
 static __inline void stop_coding_timer() {}
+static __inline void stop_interlacing_timer() {}
 static __inline void stop_prediction_timer() {}
 static __inline void stop_global_timer() {}
 

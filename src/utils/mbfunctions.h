@@ -2,6 +2,7 @@
  *
  *  Modifications:
  *
+ *  26.03.2002 interlacing support
  *  02.12.2001 motion estimation/compensation split
  *  16.11.2001 const/uint32_t changes to MBMotionEstComp()
  *  26.08.2001 added inter4v_mode parameter to MBMotionEstComp()
@@ -52,6 +53,7 @@ void MBMotionCompensation(
 
 
 void MBTransQuantIntra(const MBParam *pParam,	 
+			   MACROBLOCK * pMB,
 		       const uint32_t x_pos, 		 /* <-- The x position of the MB to be searched */ 
 		       const uint32_t y_pos, 		 /* <-- The y position of the MB to be searched */ 
 		       int16_t data[][64],	 /* <-> the data of the MB to be coded */ 
@@ -63,6 +65,7 @@ void MBTransQuantIntra(const MBParam *pParam,
 
 uint8_t MBTransQuantInter(const MBParam *pParam, /* <-- the parameter for DCT transformation 
 						 						   and Quantization */ 
+			   MACROBLOCK * pMB,
 			   const uint32_t x_pos, 	 /* <-- The x position of the MB to be searched */ 
 			   const uint32_t y_pos,	 /* <-- The y position of the MB to be searched */
 			   int16_t data[][64], 	 /* <-> the data of the MB to be coded */ 
@@ -70,6 +73,16 @@ uint8_t MBTransQuantInter(const MBParam *pParam, /* <-- the parameter for DCT tr
 			   IMAGE * const pCurrent		 /* <-> the reconstructed image ( function will
 								    update one MB in it with data from data[] ) */
 );
+
+
+/** interlacing **/
+
+uint32_t MBDecideFieldDCT(int16_t data[][64]);	/* <- decide whether to use field-based DCT
+													for interlacing */
+
+void MBFrameToField(int16_t data[][64]);	/* de-interlace vertical Y blocks */
+
+void MBFieldToFrame(int16_t data[][64]);	/* re-interlace vertical Y blocks */
 
 
 /** MBCoding.c **/
