@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: encoder.c,v 1.96 2003-03-04 10:55:21 syskin Exp $
+ *  $Id: encoder.c,v 1.97 2003-04-04 03:15:59 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -752,6 +752,13 @@ ipvop_loop:
 			pResult->ublks = pEnc->current->sStat.ublks;
 		}
 
+		emms();
+
+		if (pFrame->quant == 0) {
+			RateControlUpdate(&pEnc->rate_control, pEnc->current->quant,
+							  pFrame->length, pFrame->intra);
+		}
+
 		if (input_valid)
 			queue_image(pEnc, pFrame);
 
@@ -792,6 +799,13 @@ ipvop_loop:
 				pResult->kblks = pEnc->current->sStat.kblks;
 				pResult->mblks = pEnc->current->sStat.mblks;
 				pResult->ublks = pEnc->current->sStat.ublks;
+			}
+
+			emms();
+
+			if (pFrame->quant == 0) {
+				RateControlUpdate(&pEnc->rate_control, pEnc->current->quant,
+								  pFrame->length, pFrame->intra);
 			}
 
 			if (input_valid)
