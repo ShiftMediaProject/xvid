@@ -28,7 +28,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: portab.h,v 1.28 2002-09-22 16:59:57 edgomez Exp $
+ * $Id: portab.h,v 1.29 2002-09-22 17:25:13 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -227,14 +227,10 @@
 #    endif /* _DEBUG */
 
 
-#    ifdef _DEBUG
-#        define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
-                type name##_storage[(sizex)*(sizey)+(alignment)-1]; \
-                type * name = (type *) (((ptr_t) name##_storage+(alignment - 1)) & ~((ptr_t)(alignment)-1))
-#    else
-#        define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
-                __attribute__ ((__aligned__(CACHE_LINE))) type name[(sizex)*(sizey)]
-#    endif
+
+#    define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
+            type name##_storage[(sizex)*(sizey)+(alignment)-1]; \
+            type * name = (type *) (((ptr_t) name##_storage+(alignment - 1)) & ~((ptr_t)(alignment)-1))
 
 /*----------------------------------------------------------------------------
  | gcc x86 specific macros/functions
