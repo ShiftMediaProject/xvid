@@ -56,6 +56,7 @@
 /* sad16(0,0) bias; mpeg4 spec suggests nb/2+1 */
 /* nb  = vop pixels * 2^(bpp-8) */
 #define MV16_00_BIAS	(128+1)
+#define MV8_00_BIAS	(0)
 
 /* INTER bias for INTER/INTRA decision; mpeg4 spec suggests 2*nb */
 #define INTER_BIAS	512
@@ -279,7 +280,7 @@ bool MotionEstimation(
 	/* eventhough we have a seperate prevMBs,
 	   pmvfast/epsz does something "funny" with the previous frames data */
 
-	for (i = 0; i < iHcount; i++)
+/*	for (i = 0; i < iHcount; i++)
 		for (j = 0; j < iWcount; j++)
 		{
 			pMBs[j + i * iWcount].mvs[0] = prevMBs[j + i * iWcount].mvs[0];
@@ -287,7 +288,7 @@ bool MotionEstimation(
 			pMBs[j + i * iWcount].mvs[2] = prevMBs[j + i * iWcount].mvs[2];
 			pMBs[j + i * iWcount].mvs[3] = prevMBs[j + i * iWcount].mvs[3];
 		}
-
+*/
 	/*dprintf("*** BEFORE ***");
 	for (i = 0; i < iHcount; i++)
 		for (j = 0; j < iWcount; j++)
@@ -431,8 +432,6 @@ bool MotionEstimation(
   { \
     iSAD = sad16( cur, get_ref(pRef, pRefH, pRefV, pRefHV, x, y, 16, 0, 0 , iEdgedWidth), iEdgedWidth, MV_MAX_ERROR); \
     iSAD += calc_delta_16(-pmv[0].x, -pmv[0].y, (uint8_t)iFcode) * iQuant;\
-    if (iSAD <= iQuant * 96)	\
-   	iSAD -= MV16_00_BIAS; \
     if (iSAD < iMinSAD) \
     {  iMinSAD=iSAD; currMV->x=0; currMV->y=0; }  }	\
 }
@@ -1002,7 +1001,7 @@ int32_t PMVfastSearch16(
    Step 5: Calculate SAD for motion vectors taken from left block, top, top-right, and Previous frame block. 
    Also calculate (0,0) but do not subtract offset. 
    Let MinSAD be the smallest SAD up to this point. 
-   If MV is (0,0) subtract offset. ******** WHAT'S THIS 'OFFSET' ??? ***********
+   If MV is (0,0) subtract offset. 
 */
 
 // (0,0) is always possible
@@ -1041,7 +1040,11 @@ int32_t PMVfastSearch16(
 			CHECK_MV16_CANDIDATE(pmv[3].x,pmv[3].y);
 		}
 	}
+	
+    	if ( (MVzero(*currMV)) && (!MVzero(pmv[0])) && (iSAD <= iQuant * 96) )
+		iMinSAD -= MV16_00_BIAS;
 
+	
 /* Step 6: If MinSAD <= thresa goto Step 10. 
    If Motion Vector equal to Previous frame motion vector and MinSAD<PrevFrmSAD goto Step 10. 
 */
@@ -1274,8 +1277,6 @@ int32_t PMVfastSearch8(
 	get_range(&min_dx, &max_dx, &min_dy, &max_dy,
 		  x, y, 8, iWidth, iHeight, iFcode);
 
-/* we work with abs. MVs, not relative to prediction, so range is relative to 0,0 */
-
 	if (!(MotionFlags & PMV_HALFPELDIAMOND8 ))
 	{ min_dx = EVEN(min_dx);
 	max_dx = EVEN(max_dx);
@@ -1308,7 +1309,7 @@ int32_t PMVfastSearch8(
    If PredEq=1 and MVpredicted = Previous Frame MV, set Found=2  
 */
 
-        if ((bPredEq) && (MVequal(pmv[0],pMB->mvs[iSubBlock]) ) )
+        if ((bPredEq) && (MVequal(pmv[0],prevMB->mvs[iSubBlock]) ) )
 		iFound=2;
 
 /* Step 3: If Distance>0 or thresb<1536 or PredEq=1 Select small Diamond Search. 
@@ -1341,7 +1342,7 @@ int32_t PMVfastSearch8(
 			iEdgedWidth);
   	iMinSAD += calc_delta_8(currMV->x - pmv[0].x, currMV->y - pmv[0].y, (uint8_t)iFcode) * iQuant;
 	
-	if ( (iMinSAD < 256/4 ) || ( (MVequal(*currMV,pMB->mvs[iSubBlock])) && ((uint32_t)iMinSAD < prevMB->sad8[iSubBlock]) ) )
+	if ( (iMinSAD < 256/4 ) || ( (MVequal(*currMV,prevMB->mvs[iSubBlock])) && ((uint32_t)iMinSAD < prevMB->sad8[iSubBlock]) ) )
 	{
 		if (MotionFlags & PMV_QUICKSTOP16) 
 			goto PMVfast8_Terminate_without_Refine;
@@ -1354,7 +1355,7 @@ int32_t PMVfastSearch8(
    Step 5: Calculate SAD for motion vectors taken from left block, top, top-right, and Previous frame block. 
    Also calculate (0,0) but do not subtract offset. 
    Let MinSAD be the smallest SAD up to this point. 
-   If MV is (0,0) subtract offset. ******** WHAT'S THIS 'OFFSET' ??? ***********
+   If MV is (0,0) subtract offset. 
 */
 
 // the prediction might be even better than mv16
@@ -1364,7 +1365,7 @@ int32_t PMVfastSearch8(
 	CHECK_MV8_ZERO;
 
 // previous frame MV is always possible
-	CHECK_MV8_CANDIDATE(pMB->mvs[iSubBlock].x,pMB->mvs[iSubBlock].y);
+	CHECK_MV8_CANDIDATE(prevMB->mvs[iSubBlock].x,prevMB->mvs[iSubBlock].y);
 	
 // left neighbour, if allowed
 	if (psad[1] != MV_MAX_ERROR) 
@@ -1396,11 +1397,15 @@ int32_t PMVfastSearch8(
 		}
 	}
 
+    	if ( (MVzero(*currMV)) && (!MVzero(pmv[0])) && (iSAD <= iQuant * 96) )
+		iMinSAD -= MV8_00_BIAS;
+
+
 /* Step 6: If MinSAD <= thresa goto Step 10. 
    If Motion Vector equal to Previous frame motion vector and MinSAD<PrevFrmSAD goto Step 10. 
 */
 
-	if ( (iMinSAD <= threshA) || ( MVequal(*currMV,pMB->mvs[iSubBlock]) && ((uint32_t)iMinSAD < prevMB->sad8[iSubBlock]) ) )
+	if ( (iMinSAD <= threshA) || ( MVequal(*currMV,prevMB->mvs[iSubBlock]) && ((uint32_t)iMinSAD < prevMB->sad8[iSubBlock]) ) )
 	{	
 		if (MotionFlags & PMV_QUICKSTOP16) 
 			goto PMVfast8_Terminate_without_Refine;
@@ -1531,15 +1536,13 @@ int32_t EPZSSearch16(
 
 	if (oldMBs == NULL)
 	{	oldMBs = (MACROBLOCK*) calloc(1,iWcount*iHcount*sizeof(MACROBLOCK));
-		fprintf(stderr,"allocated %d bytes for oldMBs\n",iWcount*iHcount*sizeof(MACROBLOCK));
+//		fprintf(stderr,"allocated %d bytes for oldMBs\n",iWcount*iHcount*sizeof(MACROBLOCK));
 	}
 	oldMB = oldMBs + x + y * iWcount;
 
 /* Get maximum range */
 	get_range(&min_dx, &max_dx, &min_dy, &max_dy,
 			x, y, 16, iWidth, iHeight, iFcode);
-
-/* we work with abs. MVs, not relative to prediction, so get_range is called relative to 0,0 */
 
 	if (!(MotionFlags & PMV_HALFPEL16 ))
 	{ min_dx = EVEN(min_dx);
