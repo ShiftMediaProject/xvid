@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.107 2004-07-18 12:02:46 edgomez Exp $
+ * $Id: encoder.c,v 1.108 2004-07-18 15:24:05 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -104,7 +104,7 @@ simplify_time(int *inc, int *base)
 		int *biggest;
 		int *other;
 		float div;
-		
+
 		if (*base > *inc) {
 			biggest = base;
 			other = inc;

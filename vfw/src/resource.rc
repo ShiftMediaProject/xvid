@@ -1019,7 +1019,7 @@ END
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Englisch (Australien) resources
+// English (Australia) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENA)
 #ifdef _WIN32
@@ -1052,7 +1052,7 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // Englisch (Australien) resources
+#endif    // English (Australia) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
