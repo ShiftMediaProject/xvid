@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.11 2004-07-21 12:50:30 syskin Exp $
+ * $Id: estimation_bvop.c,v 1.12 2004-07-21 14:52:22 syskin Exp $
  *
  ****************************************************************************/
 
@@ -625,8 +625,10 @@ SearchDirect_initial(const int x, const int y,
 			return *Data->iMinSAD; /* skipped */
 	}
 
-	skip_sad = 4*MAX(MAX(Data->iMinSAD[1],Data->iMinSAD[2]), MAX(Data->iMinSAD[3],Data->iMinSAD[4]));
-	if (Data->chroma) skip_sad += Data->chromaSAD;
+	if (Data->chroma && Data->chromaSAD >= MAX_CHROMA_SAD_FOR_SKIP * (int)Data->iQuant) /* chroma doesn't allow skip */
+		skip_sad = 256*4096;
+	else
+		skip_sad = 4*MAX(MAX(Data->iMinSAD[1],Data->iMinSAD[2]), MAX(Data->iMinSAD[3],Data->iMinSAD[4]));
 
 	Data->currentMV[1].x = Data->directmvF[0].x + Data->currentMV->x; /* hints for forward and backward searches */
 	Data->currentMV[1].y = Data->directmvF[0].y + Data->currentMV->y;
@@ -1025,14 +1027,19 @@ MotionEstimationBVOP(MBParam * const pParam,
 			if ((Data_d.iMinSAD[0] <= 2*best_sad) && (!frame->motion_flags&XVID_ME_SKIP_DELTASEARCH))
 				SearchDirect_final(frame->motion_flags, b_mb, &best_sad, &Data_d);
 
-
 			/* final skip decision */
-			if ( (skip_sad < Data_d.iQuant * MAX_SAD00_FOR_SKIP )
+			if ( (skip_sad < 2 * Data_d.iQuant * MAX_SAD00_FOR_SKIP )
 				&& ((100*best_sad)/(skip_sad+1) > FINAL_SKIP_THRESH) ) {
 
-				SkipDecisionB(pMB, &Data_d);
-				if (pMB->mode == MODE_DIRECT_NONE_MV) { /* skipped? */
-					pMB->sad16 = best_sad;
+				if (!Data_d.chroma) { /* we still need to check chroma */
+					SkipDecisionB(pMB, &Data_d);
+					if (pMB->mode == MODE_DIRECT_NONE_MV) { /* skipped? */
+						pMB->sad16 = skip_sad;
+						continue;
+					}	
+				} else { /* just SKIP */
+					pMB->mode = MODE_DIRECT_NONE_MV;
+					pMB->sad16 = skip_sad;
 					continue;
 				}
 			}
