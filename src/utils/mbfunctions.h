@@ -28,7 +28,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbfunctions.h,v 1.12 2002-09-05 22:44:00 edgomez Exp $
+ * $Id: mbfunctions.h,v 1.13 2002-10-07 08:11:06 chl Exp $
  *
  ****************************************************************************/
 
@@ -152,8 +152,8 @@ void MBQuantDeQuantIntra(const MBParam * pParam,
 void MBQuantIntra(const MBParam * pParam,
 				  FRAMEINFO * frame,
 				  MACROBLOCK *pMB,
-				  int16_t qcoeff[6 * 64],
-				  int16_t data[6*64]);
+				  int16_t data[6*64],
+				  int16_t qcoeff[6 * 64]);
 
 void MBDeQuantIntra(const MBParam * pParam,
 			   		const int iQuant,
