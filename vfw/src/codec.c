@@ -1079,7 +1079,7 @@ LRESULT decompress(CODEC * codec, ICDECOMPRESS * icd)
 		frame.output.plane[0] = icd->lpOutput;
 		frame.output.stride[0] = CALC_BI_STRIDE(icd->lpbiOutput->biWidth, icd->lpbiOutput->biBitCount);
 		if (frame.output.csp == XVID_CSP_I420 || frame.output.csp == XVID_CSP_YV12)
-			frame.output.stride[0] = (frame.output.stride[0]*2)/3;
+			frame.output.stride[0] = CALC_BI_STRIDE(icd->lpbiOutput->biWidth, 8);
 	}
 	else
 	{
