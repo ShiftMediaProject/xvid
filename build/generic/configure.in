@@ -253,7 +253,7 @@ case "$target_os" in
 	AC_MSG_RESULT([-Wl,-soname,libxvidcore.so -shared -lc -lm])
 	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
 	SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR).\$(API_MINOR)"
-	SPECIFIC_LDFLAGS="-Wl,-soname,libxvidcore.\$(SHARED_EXTENSION) -shared -lc -lm"
+	SPECIFIC_LDFLAGS="-Wl,-soname,libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR) -shared -lc -lm"
 	SPECIFIC_CFLAGS="-fPIC"
 	;;
      [[cC]][[yY]][[gG]][[wW]][[iI]][[nN]]|mingw32|mks)
