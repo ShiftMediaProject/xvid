@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: interpolate8x8_altivec.c,v 1.2 2004-10-17 10:20:15 edgomez Exp $
+ * $Id: interpolate8x8_altivec.c,v 1.3 2004-12-09 23:02:54 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -81,7 +81,7 @@ interpolate8x8_halfpel_h_altivec_c( uint8_t *dst,
 #ifdef DEBUG
     /* Dump alignment errors if DEBUG is defined */
     if(((unsigned long)dst) & 0x7)
-        fprintf(stderr, "interpolate8x8_halfpel_h_altivec_c:incorrect align, dst: %x\n", dst);
+        fprintf(stderr, "interpolate8x8_halfpel_h_altivec_c:incorrect align, dst: %lx\n", (long)dst);
     if(stride & 0x7)
         fprintf(stderr, "interpolate8x8_halfpel_h_altivec_c:incorrect stride, stride: %u\n", stride);
 #endif
@@ -145,7 +145,7 @@ interpolate8x8_halfpel_v_altivec_c( uint8_t *dst,
 #ifdef DEBUG
     /* if this is on, print alignment errors */
     if(((unsigned long)dst) & 0x7)
-        fprintf(stderr, "interpolate8x8_halfpel_v_altivec_c:incorrect align, dst: %x\n", dst);
+        fprintf(stderr, "interpolate8x8_halfpel_v_altivec_c:incorrect align, dst: %lx\n", (long)dst);
     if(stride & 0x7)
         fprintf(stderr, "interpolate8x8_halfpel_v_altivec_c:incorrect stride, stride: %u\n", stride);
 #endif
@@ -186,7 +186,9 @@ t = vec_perm(vec_ld(0, src + stride), vec_ld(16, src + stride), vec_lvsl(0, src 
 s3 = (vector unsigned short)vec_mergeh(zerovec, t); \
 t = vec_perm(vec_ld(1, src + stride), vec_ld(17, src + stride), vec_lvsl(1, src + stride)); \
 s4 = (vector unsigned short)vec_mergeh(zerovec, t); \
-s1 = vec_add(s1, vec_add(s2, vec_add(s3, s4))); \
+s1 = vec_add(s1,s2);\
+s3 = vec_add(s3,s4);\
+s1 = vec_add(s1,s3);\
 s1 = vec_add(s1, adding); \
 s1 = vec_sr(s1, two); \
 t = vec_pack(s1, s1); \
@@ -268,7 +270,7 @@ interpolate8x8_avg2_altivec_c(  uint8_t *dst,
 #ifdef DEBUG
     /* If this is on, print alignment errors */
     if(((unsigned long)dst) & 0x7)
-        fprintf(stderr, "interpolate8x8_avg2_altivec_c:incorrect align, dst: %x\n", dst);
+        fprintf(stderr, "interpolate8x8_avg2_altivec_c:incorrect align, dst: %lx\n", (long)dst);
     if(stride & 0x7)
         fprintf(stderr, "interpolate8x8_avg2_altivec_c:incorrect stride, stride: %u\n", stride);
     if(rounding > (32767 + 2))
@@ -363,7 +365,7 @@ interpolate8x8_avg4_altivec_c(uint8_t *dst,
 #ifdef DEBUG
     /* if debug is set, print alignment errors */
     if(((unsigned)dst) & 0x7)
-        fprintf(stderr, "interpolate8x8_avg4_altivec_c:incorrect align, dst: %x\n", dst);
+        fprintf(stderr, "interpolate8x8_avg4_altivec_c:incorrect align, dst: %lx\n", (long)dst);
     if(stride & 0x7)
         fprintf(stderr, "interpolate8x8_avg4_altivec_c:incorrect stride, stride: %u\n", stride);
 #endif
@@ -405,9 +407,10 @@ interpolate8x8_halfpel_add_altivec_c(uint8_t *dst, const uint8_t *src, const uin
 	s1 = vec_perm(vec_ld(0,src),vec_ld(16,src),vec_lvsl(0,src));	\
 	d = vec_perm(vec_ld(0,dst),vec_ld(16,dst),mask_dst);		\
 	\
-	s2 = vec_perm(s1,s1,rot1);	\
-	tmp = vec_avg(s1,s2);								\
-	s1 = vec_sub(tmp,vec_and(vec_xor(s1,s2),one)); \
+	s2 = vec_perm(s1,s1,rot1);\
+	tmp = vec_avg(s1,s2);\
+	s1 = vec_xor(s1,s2);\
+	s1 = vec_sub(tmp,vec_and(s1,one));\
 	\
 	d = vec_avg(s1,d);\
 	\
@@ -456,8 +459,8 @@ interpolate8x8_halfpel_h_add_altivec_c(uint8_t *dst, uint8_t *src, const uint32_
 	register vector unsigned char mask;
 	
 #ifdef DEBUG
-	if(((unsigned)dst) & 0x7);
-		fprintf(stderr, "interpolate8x8_halfpel_h_add_altivec_c:incorrect align, dst: %x\n", dst);
+	if(((unsigned)dst) & 0x7)
+		fprintf(stderr, "interpolate8x8_halfpel_h_add_altivec_c:incorrect align, dst: %lx\n", (long)dst);
 	if(stride & 0x7)
 		fprintf(stderr, "interpolate8x8_halfpel_h_add_altivec_c:incorrect stride, stride: %u\n", stride);
 #endif
@@ -502,7 +505,8 @@ interpolate8x8_halfpel_h_add_altivec_c(uint8_t *dst, uint8_t *src, const uint32_
 	d = vec_perm(vec_ld(0,dst),vec_ld(16,dst),mask_dst);\
 	\
 	tmp = vec_avg(s1,s2);\
-	s1 = vec_sub(tmp,vec_and(vec_xor(s1,s2),vec_splat_u8(1)));\
+	s1 = vec_xor(s1,s2);\
+	s1 = vec_sub(tmp,vec_and(s1,vec_splat_u8(1)));\
 	d = vec_avg(s1,d);\
 	\
 	mask = vec_perm(mask_stencil,mask_stencil,mask_dst);\
@@ -551,7 +555,7 @@ interpolate8x8_halfpel_v_add_altivec_c(uint8_t *dst, uint8_t *src, const uint32_
 	
 #ifdef DEBUG
 	if(((unsigned)dst) & 0x7)
-		fprintf(stderr, "interpolate8x8_halfpel_v_add_altivec_c:incorrect align, dst: %x\n", dst);
+		fprintf(stderr, "interpolate8x8_halfpel_v_add_altivec_c:incorrect align, dst: %lx\n", (long)dst);
 	if(stride & 0x7)
 		fprintf(stderr, "interpolate8x8_halfpel_v_add_altivec_c:incorrect align, dst: %u\n", stride);
 #endif
@@ -678,7 +682,7 @@ interpolate8x8_halfpel_hv_add_altivec_c(uint8_t *dst, uint8_t *src, const uint32
 	
 #ifdef DEBUG
 	if(((unsigned)dst) & 0x7)
-		fprintf(stderr, "interpolate8x8_halfpel_hv_add_altivec_c:incorrect align, dst: %x\n",dst);
+		fprintf(stderr, "interpolate8x8_halfpel_hv_add_altivec_c:incorrect align, dst: %lx\n", (long)dst);
 	if(stride & 0x7)
 		fprintf(stderr, "interpolate8x8_halfpel_hv_add_altivec_c:incorrect stride, stride: %u\n", stride);
 #endif

@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: colorspace_altivec.c,v 1.2 2004-10-17 10:20:15 edgomez Exp $
+ * $Id: colorspace_altivec.c,v 1.3 2004-12-09 23:02:54 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -171,7 +171,7 @@ NAME(uint8_t *x_ptr, int x_stride,  \
     vector unsigned char y_vec;         \
     vector unsigned char u_vec;         \
     vector unsigned char v_vec;         \
-    vector unsigned char p0, p1;        \
+    vector unsigned char p0, p1, ptmp;  \
     vector unsigned char mask;          \
     vector unsigned char mask_stencil;  \
     vector unsigned char t;             \
@@ -449,28 +449,33 @@ MAKE_COLORSPACE_ALTIVEC_FROM_YUV(uyvy_to_yv12_altivec_c, 2, 16, 2, YUYV_TO_YV12_
     mask = vec_perm(mask_stencil, mask_stencil, vec_lvsr(C1, (unsigned char*)0));           \
     \
     p0 = vec_sel(p0, vec_perm(t, t, m4), mask);                   \
-    p1 = vec_sel(p1, vec_perm(t, t, vec_add(m4, vec4)), mask);    \
+	ptmp = vec_perm(t,t, vec_add(m4, vec4));\
+    p1 = vec_sel(p1, ptmp, mask);    \
     \
     /* C3 */ \
-    t = vec_perm(y_vec, y_vec, vec_add(vec_sl(vec_lvsl(0, (unsigned char*)0), vec_splat_u8(1)), vec_splat_u8(1))); \
+	ptmp = vec_add(vec_sl(vec_lvsl(0, (unsigned char*)0), vec_splat_u8(1)), vec_splat_u8(1));	\
+    t = vec_perm(y_vec, y_vec, ptmp); \
     mask = vec_perm(mask_stencil, mask_stencil, vec_lvsr(C3, (unsigned char*)0));                                   \
     \
     p0 = vec_sel(p0, vec_perm(t, t, m4), mask);                   \
-    p1 = vec_sel(p1, vec_perm(t, t, vec_add(m4, vec4)), mask);    \
+	ptmp = vec_perm(t, t, vec_add(m4, vec4));	\
+    p1 = vec_sel(p1, ptmp, mask);    \
     \
     /* C2 */ \
     u_vec = vec_perm(vec_ld(0,u_ptr), vec_ld(16, u_ptr), vec_lvsl(0, u_ptr));       \
     mask = vec_perm(mask_stencil, mask_stencil, vec_lvsr(C2, (unsigned char*)0));   \
     \
     p0 = vec_sel(p0, vec_perm(u_vec, u_vec, m4), mask);                 \
-    p1 = vec_sel(p1, vec_perm(u_vec, u_vec, vec_add(m4, vec4)), mask);  \
+	ptmp = vec_perm(u_vec, u_vec, vec_add(m4, vec4)); \
+    p1 = vec_sel(p1, ptmp, mask);  \
     \
     /* C4 */ \
     v_vec = vec_perm(vec_ld(0, v_ptr), vec_ld(16, v_ptr), vec_lvsl(0, v_ptr));      \
     mask = vec_perm(mask_stencil, mask_stencil, vec_lvsr(C4, (unsigned char*)0));   \
     \
     p0 = vec_sel(p0, vec_perm(v_vec, v_vec, m4), mask);                 \
-    p1 = vec_sel(p1, vec_perm(v_vec, v_vec, vec_add(m4, vec4)), mask);  \
+	ptmp = vec_perm(v_vec, v_vec, vec_add(m4, vec4));	\
+    p1 = vec_sel(p1, ptmp, mask);  \
     \
     vec_st(p0, 0, x_ptr + (ROW)*x_stride);   \
     vec_st(p1, 16, x_ptr + (ROW)*x_stride)
