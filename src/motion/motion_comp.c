@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: motion_comp.c,v 1.20 2004-03-22 22:36:24 edgomez Exp $
+ * $Id: motion_comp.c,v 1.21 2004-08-10 21:58:55 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -119,15 +119,9 @@ compensate16x16_interpolate(int16_t * const dct_codes,
 
 		if(quarterpel) {
 			if ((dx&3) | (dy&3)) {
-#if defined(ARCH_IS_IA32) /* new_interpolate is only faster on x86 (MMX) machines */
-				new_interpolate16x16_quarterpel(tmp - y * stride - x,
-											(uint8_t *) ref, tmp + 32,
-											tmp + 64, tmp + 96, x, y, dx, dy, stride, rounding);
-#else
 				interpolate16x16_quarterpel(tmp - y * stride - x,
 											(uint8_t *) ref, tmp + 32,
 											tmp + 64, tmp + 96, x, y, dx, dy, stride, rounding);
-#endif
 				ptr = tmp;
 			} else ptr =  ref + (y + dy/4)*stride + x + dx/4; /* fullpixel position */
 
@@ -187,15 +181,9 @@ compensate8x8_interpolate(	int16_t * const dct_codes,
 
 		if(quarterpel) {
 			if ((dx&3) | (dy&3)) {
-#if defined(ARCH_IS_IA32) /* new_interpolate is only faster on x86 (MMX) machines */
-				new_interpolate8x8_quarterpel(tmp - y*stride - x,
-										(uint8_t *) ref, tmp + 32,
-										tmp + 64, tmp + 96, x, y, dx, dy, stride, rounding);
-#else
 				interpolate8x8_quarterpel(tmp - y*stride - x,
 										(uint8_t *) ref, tmp + 32,
 										tmp + 64, tmp + 96, x, y, dx, dy, stride, rounding);
-#endif
 				ptr = tmp;
 			} else ptr = ref + (y + dy/4)*stride + x + dx/4; /* fullpixel position */
 		} else ptr = get_ref(ref, refh, refv, refhv, x, y, 1, dx, dy, stride);

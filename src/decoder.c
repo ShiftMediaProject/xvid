@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.64 2004-07-26 19:32:28 edgomez Exp $
+ * $Id: decoder.c,v 1.65 2004-08-10 21:58:55 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -61,11 +61,6 @@
 #include "image/colorspace.h"
 #include "image/postprocessing.h"
 #include "utils/mem_align.h"
-
-#ifdef ARCH_IS_IA32
-#define interpolate16x16_quarterpel new_interpolate16x16_quarterpel
-#define interpolate8x8_quarterpel new_interpolate8x8_quarterpel
-#endif 
 
 static int
 decoder_resize(DECODER * dec)
@@ -1115,68 +1110,38 @@ decoder_bf_interpolate_mbinter(DECODER * dec,
 
 	if(dec->quarterpel) {
 		if(!direct) {
-			interpolate16x16_quarterpel(dec->tmp.y, backward.y, dec->qtmp.y, dec->qtmp.y + 64,
- 										dec->qtmp.y + 128, 16*x_pos, 16*y_pos,
-										pMB->b_mvs[0].x, pMB->b_mvs[0].y, stride, 0);
+			interpolate16x16_add_quarterpel(dec->cur.y, backward.y, dec->qtmp.y, dec->qtmp.y + 64,
+					dec->qtmp.y + 128, 16*x_pos, 16*y_pos,
+					pMB->b_mvs[0].x, pMB->b_mvs[0].y, stride, 0);
 		} else {
-			interpolate8x8_quarterpel(dec->tmp.y, backward.y, dec->qtmp.y, dec->qtmp.y + 64,
- 										dec->qtmp.y + 128, 16*x_pos, 16*y_pos,
-										pMB->b_mvs[0].x, pMB->b_mvs[0].y, stride, 0);
-			interpolate8x8_quarterpel(dec->tmp.y, backward.y, dec->qtmp.y, dec->qtmp.y + 64,
- 										dec->qtmp.y + 128, 16*x_pos + 8, 16*y_pos,
-										pMB->b_mvs[1].x, pMB->b_mvs[1].y, stride, 0);
-			interpolate8x8_quarterpel(dec->tmp.y, backward.y, dec->qtmp.y, dec->qtmp.y + 64,
- 										dec->qtmp.y + 128, 16*x_pos, 16*y_pos + 8,
-										pMB->b_mvs[2].x, pMB->b_mvs[2].y, stride, 0);
-			interpolate8x8_quarterpel(dec->tmp.y, backward.y, dec->qtmp.y, dec->qtmp.y + 64,
- 										dec->qtmp.y + 128, 16*x_pos + 8, 16*y_pos + 8,
-										pMB->b_mvs[3].x, pMB->b_mvs[3].y, stride, 0);
+			interpolate8x8_add_quarterpel(dec->cur.y, backward.y, dec->qtmp.y, dec->qtmp.y + 64,
+					dec->qtmp.y + 128, 16*x_pos, 16*y_pos,
+					pMB->b_mvs[0].x, pMB->b_mvs[0].y, stride, 0);
+			interpolate8x8_add_quarterpel(dec->cur.y, backward.y, dec->qtmp.y, dec->qtmp.y + 64,
+					dec->qtmp.y + 128, 16*x_pos + 8, 16*y_pos,
+					pMB->b_mvs[1].x, pMB->b_mvs[1].y, stride, 0);
+			interpolate8x8_add_quarterpel(dec->cur.y, backward.y, dec->qtmp.y, dec->qtmp.y + 64,
+					dec->qtmp.y + 128, 16*x_pos, 16*y_pos + 8,
+					pMB->b_mvs[2].x, pMB->b_mvs[2].y, stride, 0);
+			interpolate8x8_add_quarterpel(dec->cur.y, backward.y, dec->qtmp.y, dec->qtmp.y + 64,
+					dec->qtmp.y + 128, 16*x_pos + 8, 16*y_pos + 8,
+					pMB->b_mvs[3].x, pMB->b_mvs[3].y, stride, 0);
 		}
 	} else {
-		interpolate8x8_switch(dec->tmp.y, backward.y, 16 * x_pos, 16 * y_pos,
-							pMB->b_mvs[0].x, pMB->b_mvs[0].y, stride, 0);
-		interpolate8x8_switch(dec->tmp.y, backward.y, 16 * x_pos + 8,
-							16 * y_pos, pMB->b_mvs[1].x, pMB->b_mvs[1].y, stride, 0);
-		interpolate8x8_switch(dec->tmp.y, backward.y, 16 * x_pos,
-							16 * y_pos + 8, pMB->b_mvs[2].x, pMB->b_mvs[2].y, stride, 0);
-		interpolate8x8_switch(dec->tmp.y, backward.y, 16 * x_pos + 8,
-							16 * y_pos + 8, pMB->b_mvs[3].x, pMB->b_mvs[3].y, stride, 0);
+		interpolate8x8_add_switch(dec->cur.y, backward.y, 16 * x_pos, 16 * y_pos,
+				pMB->b_mvs[0].x, pMB->b_mvs[0].y, stride, 0);
+		interpolate8x8_add_switch(dec->cur.y, backward.y, 16 * x_pos + 8,
+				16 * y_pos, pMB->b_mvs[1].x, pMB->b_mvs[1].y, stride, 0);
+		interpolate8x8_add_switch(dec->cur.y, backward.y, 16 * x_pos,
+				16 * y_pos + 8, pMB->b_mvs[2].x, pMB->b_mvs[2].y, stride, 0);
+		interpolate8x8_add_switch(dec->cur.y, backward.y, 16 * x_pos + 8,
+				16 * y_pos + 8, pMB->b_mvs[3].x, pMB->b_mvs[3].y, stride, 0);
 	}
 
-	interpolate8x8_switch(dec->tmp.u, backward.u, 8 * x_pos, 8 * y_pos,
-						b_uv_dx, b_uv_dy, stride2, 0);
-	interpolate8x8_switch(dec->tmp.v, backward.v, 8 * x_pos, 8 * y_pos,
-						b_uv_dx, b_uv_dy, stride2, 0);
-
-	interpolate8x8_avg2(dec->cur.y + (16 * y_pos * stride) + 16 * x_pos,
-						dec->cur.y + (16 * y_pos * stride) + 16 * x_pos,
-						dec->tmp.y + (16 * y_pos * stride) + 16 * x_pos,
-						stride, 0, 8);
-
-	interpolate8x8_avg2(dec->cur.y + (16 * y_pos * stride) + 16 * x_pos + 8,
-						dec->cur.y + (16 * y_pos * stride) + 16 * x_pos + 8,
-						dec->tmp.y + (16 * y_pos * stride) + 16 * x_pos + 8,
-						stride, 0, 8);
-
-	interpolate8x8_avg2(dec->cur.y + ((16 * y_pos + 8) * stride) + 16 * x_pos,
-						dec->cur.y + ((16 * y_pos + 8) * stride) + 16 * x_pos,
-						dec->tmp.y + ((16 * y_pos + 8) * stride) + 16 * x_pos,
-						stride, 0, 8);
-
-	interpolate8x8_avg2(dec->cur.y + ((16 * y_pos + 8) * stride) + 16 * x_pos + 8,
-						dec->cur.y + ((16 * y_pos + 8) * stride) + 16 * x_pos + 8,
-						dec->tmp.y + ((16 * y_pos + 8) * stride) + 16 * x_pos + 8,
-						stride, 0, 8);
-
-	interpolate8x8_avg2(dec->cur.u + (8 * y_pos * stride2) + 8 * x_pos,
-						dec->cur.u + (8 * y_pos * stride2) + 8 * x_pos,
-						dec->tmp.u + (8 * y_pos * stride2) + 8 * x_pos,
-						stride2, 0, 8);
-
-	interpolate8x8_avg2(dec->cur.v + (8 * y_pos * stride2) + 8 * x_pos,
-						dec->cur.v + (8 * y_pos * stride2) + 8 * x_pos,
-						dec->tmp.v + (8 * y_pos * stride2) + 8 * x_pos,
-						stride2, 0, 8);
+	interpolate8x8_add_switch(dec->cur.u, backward.u, 8 * x_pos, 8 * y_pos,
+			b_uv_dx, b_uv_dy, stride2, 0);
+	interpolate8x8_add_switch(dec->cur.v, backward.v, 8 * x_pos, 8 * y_pos,
+			b_uv_dx, b_uv_dy, stride2, 0);
 
 	stop_comp_timer();
 
