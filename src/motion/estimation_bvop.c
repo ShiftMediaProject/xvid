@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.13 2004-07-21 15:47:51 syskin Exp $
+ * $Id: estimation_bvop.c,v 1.14 2004-09-04 14:16:24 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -937,7 +937,8 @@ MotionEstimationBVOP(MBParam * const pParam,
 					 const IMAGE * const b_refHV)
 {
 	uint32_t i, j;
-	int32_t best_sad, sad2;
+	int32_t best_sad = 256*4096;
+	int32_t sad2;
 	uint32_t skip_sad;
 
 	const MACROBLOCK * const b_mbs = b_reference->mbs;
