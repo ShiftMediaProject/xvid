@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: encoder.c,v 1.93 2003-02-17 23:45:21 edgomez Exp $
+ *  $Id: encoder.c,v 1.94 2003-02-19 10:08:20 chl Exp $
  *
  ****************************************************************************/
 
@@ -1207,7 +1207,7 @@ encoder_encode(Encoder * pEnc,
 	uint16_t write_vol_header = 0;
 
 	float psnr;
-	uint8_t temp[128];
+	char temp[128];
 
 	start_global_timer();
 
