@@ -3,6 +3,8 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Native API implementation  -
  *
+ *  Copyright(C) 2001-2002 Peter Ross <pross@cs.rmit.edu.au>
+ *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
  *  to use this software module in hardware or software products are
@@ -25,19 +27,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
- *
- ****************************************************************************/
-
-/*****************************************************************************
- *
- *  History
- *
- *	- 23.06.2002	added XVID_CPU_CHKONLY
- *  - 17.03.2002	Added interpolate8x8_halfpel_hv_xmm
- *  - 22.12.2001  API change: added xvid_init() - Isibaar
- *  - 16.12.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
- *
- *  $Id: xvid.c,v 1.33 2002-07-23 12:59:57 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -81,12 +70,12 @@ sigill_handler(int signal)
 
 
 /*
-calls the funcptr, and returns whether SIGILL (illegal instruction) was signalled
-return values:
--1 : could not determine
-0  : SIGILL was *not* signalled
-1  : SIGILL was signalled
-*/
+ * Calls the funcptr, and returns whether SIGILL (illegal instruction) was signalled
+ * Return values:
+ * -1 : could not determine
+ * 0  : SIGILL was *not* signalled
+ * 1  : SIGILL was signalled
+ */
 
 int
 sigill_check(void (*func)())
