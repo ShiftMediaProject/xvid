@@ -2180,7 +2180,7 @@ MEanalyzeMB (	const uint8_t * const pRef,
 	}
 }
 
-#define INTRA_THRESH	2050
+#define INTRA_THRESH	1800
 #define INTER_THRESH	1200
 
 int
@@ -2210,10 +2210,10 @@ MEanalysis(	const IMAGE * const pRef,
 	CheckCandidate = CheckCandidate32I;
 
 	if (intraCount != 0 && intraCount < 10) // we're right after an I frame
-		IntraThresh += 8 * (intraCount - 10) * (intraCount - 10);
+		IntraThresh += 15 * (intraCount - 10) * (intraCount - 10);
 	else
 		if ( 5*(maxIntra - intraCount) < maxIntra) // we're close to maximum. 2 sec when max is 10 sec
-			IntraThresh -= (IntraThresh * (maxIntra - 5*(maxIntra - intraCount)))/maxIntra;
+			IntraThresh -= (IntraThresh * (maxIntra - 8*(maxIntra - intraCount)))/maxIntra;
 
 	InterThresh -= (350 - 8*b_thresh) * bCount;
 	if (InterThresh < 300 + 5*b_thresh) InterThresh = 300 + 5*b_thresh;
