@@ -2,14 +2,18 @@
 #define _VLC_CODES_H_
 
 #include "../portab.h"
+#include "mbcoding.h"
 
 #define VLC_ERROR	(-1)
+#define ESCAPE 7167
 
 typedef struct
 {
 	uint32_t code;
 	int8_t len;
 } VLC;
+
+static VLC *DCT3D[2];
 
 
 /******************************************************************
@@ -1222,5 +1226,99 @@ static const VLC dc_lum_tab[] = {
 	{4, 3}, {3, 3}, {0, 3},
 	{2, 2}, {2, 2}, {1, 2}, {1, 2},
 };
+
+static __inline int get_coeff(Bitstream * bs, int *run, int *last,
+							  int intra, int short_video_header) 
+{
+
+	uint32_t mode;
+	const VLC *tab;
+	int32_t level;
+
+	if(short_video_header) // inter-VLCs will be used for both intra and inter blocks
+		intra = 0;
+	
+	tab = &DCT3D[intra][BitstreamShowBits(bs, 12)];
+	
+	if(tab->code == -1)
+		goto error;
+
+	BitstreamSkip(bs, tab->len);
+
+	if(tab->code != ESCAPE) {
+		if(!intra) 
+		{
+			*run = (tab->code >> 4) & 255;
+			level = tab->code & 15;
+			*last = (tab->code >> 12) & 1;
+		}
+		else 
+		{
+			*run = (tab->code >> 8) & 255;
+			level = tab->code & 255;
+			*last = (tab->code >> 16) & 1;
+		}
+		return BitstreamGetBit(bs) ? -level : level;
+	}
+
+	if(short_video_header)
+	{
+		// escape mode 4 - H.263 type, only used if short_video_header = 1 
+		*last = BitstreamGetBit(bs);
+		*run = BitstreamGetBits(bs, 6);
+		level = BitstreamGetBits(bs, 8);
+
+		if (level == 0 || level == 128) 
+			DEBUG1("Illegal LEVEL for ESCAPE mode 4:", level);
+
+		return (level >= 128 ? -(256 - level) : level);
+	}
+	
+	mode = BitstreamShowBits(bs, 2);
+
+	if(mode < 3) {
+		BitstreamSkip(bs, (mode == 2) ? 2 : 1);
+
+		tab = &DCT3D[intra][BitstreamShowBits(bs, 12)];
+		if (tab->code == -1)
+			goto error;
+
+		BitstreamSkip(bs, tab->len);
+
+		if (!intra) {		
+			*run = (tab->code >> 4) & 255;
+			level = tab->code & 15;
+			*last = (tab->code >> 12) & 1;
+		}
+		else 
+		{
+			*run = (tab->code >> 8) & 255;
+			level = tab->code & 255;
+			*last = (tab->code >> 16) & 1;
+		}      
+
+		if(mode < 2) // first escape mode, level is offset
+			level += max_level[*last + (!intra<<1)][*run]; // need to add back the max level
+		else if(mode == 2)  // second escape mode, run is offset
+			*run += max_run[*last + (!intra<<1)][level] + 1;
+		
+		return BitstreamGetBit(bs) ? -level : level;
+	} 
+
+	// third escape mode - fixed length codes
+	BitstreamSkip(bs, 2);
+	*last = BitstreamGetBits(bs, 1);
+	*run = BitstreamGetBits(bs, 6);			
+	BitstreamSkip(bs, 1);				// marker
+	level = BitstreamGetBits(bs, 12);		
+	BitstreamSkip(bs, 1);				// marker
+
+	return (level & 0x800) ? (level | (-1 ^ 0xfff)) : level;
+
+ error:
+	*run = VLC_ERROR;
+	return 0;
+
+}
 
 #endif /* _VLC_CODES_H */
