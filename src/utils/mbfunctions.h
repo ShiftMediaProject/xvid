@@ -18,160 +18,65 @@
 #include "../encoder.h"
 #include "../bitstream/bitstream.h"
 
-
-
 /** MotionEstimation **/
 
 bool MotionEstimation(MBParam * const pParam,
-					  FRAMEINFO * const current,
-					  FRAMEINFO * const reference,
-					  const IMAGE * const pRefH,
-					  const IMAGE * const pRefV,
-					  const IMAGE * const pRefHV,
-					  const uint32_t iLimit);
-
-
-bool SMP_MotionEstimation(MBParam * const pParam,
-                                          FRAMEINFO * const current,
-                                          FRAMEINFO * const reference,
-                                          const IMAGE * const pRefH,
-                                          const IMAGE * const pRefV,
-                                          const IMAGE * const pRefHV,
-                                          const uint32_t iLimit);
-
-
+					FRAMEINFO * const current,
+					FRAMEINFO * const reference,
+					const IMAGE * const pRefH,
+					const IMAGE * const pRefV,
+					const IMAGE * const pRefHV,
+					const uint32_t iLimit);
 
 /** MBMotionCompensation **/
 
 void
 MBMotionCompensation(MACROBLOCK * const mb,
-					 const uint32_t i,
-					 const uint32_t j,
-					 const IMAGE * const ref,
-					 const IMAGE * const refh,
-					 const IMAGE * const refv,
-					 const IMAGE * const refhv,
-					 const IMAGE * const refGMC,
-					 IMAGE * const cur,
-					 int16_t * dct_codes,
-					 const uint32_t width,
-					 const uint32_t height,
-					 const uint32_t edged_width,
-					 const int32_t quarterpel,
-					 const int reduced_resolution,
-					 const int32_t rounding);
+					const uint32_t i,
+					const uint32_t j,
+					const IMAGE * const ref,
+					const IMAGE * const refh,
+					const IMAGE * const refv,
+					const IMAGE * const refhv,
+					const IMAGE * const refGMC,
+					IMAGE * const cur,
+					int16_t * dct_codes,
+					const uint32_t width,
+					const uint32_t height,
+					const uint32_t edged_width,
+					const int32_t quarterpel,
+					const int reduced_resolution,
+					const int32_t rounding);
 
 /** MBTransQuant.c **/
 
 
-void MBTransQuantIntra(const MBParam * pParam,
-					   FRAMEINFO * frame,
-					   MACROBLOCK * pMB,
-					   const uint32_t x_pos,	/* <-- The x position of the MB to be searched */
+void MBTransQuantIntra(const MBParam * const pParam,
+					FRAMEINFO * const frame,
+					MACROBLOCK * const pMB,
+					const uint32_t x_pos,	/* <-- The x position of the MB to be searched */
+					const uint32_t y_pos,	/* <-- The y position of the MB to be searched */
+					int16_t data[6 * 64],	/* <-> the data of the MB to be coded */
+					int16_t qcoeff[6 * 64]);	/* <-> the quantized DCT coefficients */
 
-					   const uint32_t y_pos,	/* <-- The y position of the MB to be searched */
-
-					   int16_t data[6 * 64],	/* <-> the data of the MB to be coded */
-
-					   int16_t qcoeff[6 * 64]	/* <-> the quantized DCT coefficients */
-	);
-
-
-void MBTransQuantIntra2(const MBParam * pParam,
-					   FRAMEINFO * frame,
-					   MACROBLOCK * pMB,
-					   const uint32_t x_pos,	/* <-- The x position of the MB to be searched */
-
-					   const uint32_t y_pos,	/* <-- The y position of the MB to be searched */
-
-					   int16_t data[6 * 64],	/* <-> the data of the MB to be coded */
-
-					   int16_t qcoeff[6 * 64]	/* <-> the quantized DCT coefficients */
-	);
-
-
-uint8_t MBTransQuantInter(const MBParam * pParam,
-						  FRAMEINFO * frame,
-						  MACROBLOCK * pMB,
-						  const uint32_t x_pos,
-						  const uint32_t y_pos,
-						  int16_t data[6 * 64],
-						  int16_t qcoeff[6 * 64]);
-
-
-uint8_t MBTransQuantInter2(const MBParam * pParam,
-						  FRAMEINFO * frame,
-						  MACROBLOCK * pMB,
-						  const uint32_t x_pos,
-						  const uint32_t y_pos,	
-						  int16_t data[6 * 64],
-						  int16_t qcoeff[6 * 64]);
+uint8_t MBTransQuantInter(const MBParam * const pParam,
+						FRAMEINFO * const frame,
+						MACROBLOCK * const pMB,
+						const uint32_t x_pos,
+						const uint32_t y_pos,
+						int16_t data[6 * 64],
+						int16_t qcoeff[6 * 64]);
 
 uint8_t MBTransQuantInterBVOP(const MBParam * pParam,
-						  FRAMEINFO * frame,
-						  MACROBLOCK * pMB,
-						  int16_t data[6 * 64],
-						  int16_t qcoeff[6 * 64]);
-
-void MBTrans(const MBParam * pParam,
-						  FRAMEINFO * frame,
-						  MACROBLOCK * pMB,
-						  const uint32_t x_pos,
-						  const uint32_t y_pos,
-						  int16_t data[6 * 64]);
-
-void MBfDCT(const MBParam * pParam,
-			FRAMEINFO * frame,
-			MACROBLOCK * pMB,
-			int16_t data[6 * 64]);
-
-uint8_t MBQuantInter(	 const MBParam * pParam,
-						 const int iQuant,
-						 int16_t data[6 * 64],
-						 int16_t qcoeff[6 * 64]);
-
-void MBQuantDeQuantIntra(const MBParam * pParam,
-					  	 FRAMEINFO * frame,
-						 MACROBLOCK *pMB,
-				  		 int16_t qcoeff[6 * 64],
-  				  		 int16_t data[6*64]);
-
-void MBQuantIntra(		 const MBParam * pParam,
-					  	 FRAMEINFO * frame,
-						 MACROBLOCK *pMB,
-				  		 int16_t qcoeff[6 * 64],
-				  		 int16_t data[6*64]);
-
-void MBDeQuantIntra(const MBParam * pParam,
-			   		const int iQuant,
-				  	int16_t qcoeff[6 * 64],
-				  	int16_t data[6*64]);
-
-void MBDeQuantInter(const MBParam * pParam,
-					const int iQuant,
-					int16_t data[6 * 64],
-					int16_t qcoeff[6 * 64],
-				  	const uint8_t cbp);
-
-
-void MBiDCT(		int16_t data[6 * 64], 
-					const uint8_t cbp);
-
-
-void MBTransAdd(	const MBParam * pParam,
-					FRAMEINFO * frame,
-					MACROBLOCK * pMB,
-					const uint32_t x_pos,
-					const uint32_t y_pos,
-					int16_t data[6 * 64],
-					const uint8_t cbp);
-
-
+						FRAMEINFO * frame,
+						MACROBLOCK * pMB,
+						int16_t data[6 * 64],
+						int16_t qcoeff[6 * 64]);
 
 /** interlacing **/
 
 uint32_t MBDecideFieldDCT(int16_t data[6 * 64]);	/* <- decide whether to use field-based DCT
-													   for interlacing */
+														for interlacing */
 
 typedef uint32_t (MBFIELDTEST) (int16_t data[6 * 64]);	/* function pointer for field test */
 typedef MBFIELDTEST *MBFIELDTEST_PTR;
@@ -188,18 +93,10 @@ void MBFrameToField(int16_t data[6 * 64]);	/* de-interlace vertical Y blocks */
 
 /** MBCoding.c **/
 
-/* void MBSkip(Bitstream * bs);  just the bitstream. Since MB is skipped, no info is needed */
-
-
 void MBCoding(const FRAMEINFO * const frame,	/* <-- the parameter for coding of the bitstream */
-
-			  MACROBLOCK * pMB,	/* <-- Info of the MB to be coded */
-
-			  int16_t qcoeff[6 * 64],	/* <-- the quantized DCT coefficients */
-
-			  Bitstream * bs,	/* <-> the bitstream */
-
-			  Statistics * pStat	/* <-> statistical data collected for current frame */
-	);
+			MACROBLOCK * pMB,	/* <-- Info of the MB to be coded */
+			int16_t qcoeff[6 * 64],	/* <-- the quantized DCT coefficients */
+			Bitstream * bs,	/* <-> the bitstream */
+			Statistics * pStat);	/* <-> statistical data collected for current frame */
 
 #endif
