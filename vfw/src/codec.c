@@ -643,6 +643,8 @@ static void apply_zone_modifiers(xvid_enc_frame_t * frame, CONFIG * config, int 
 }
 
 
+#define CALC_BI_STRIDE(width,bitcount)  ((((width * bitcount) + 31) & ~31) >> 3)
+
 LRESULT compress(CODEC * codec, ICCOMPRESS * icc)
 {
 	BITMAPINFOHEADER * inhdr = icc->lpbiInput;
@@ -776,7 +778,7 @@ LRESULT compress(CODEC * codec, ICCOMPRESS * icc)
 	}
 
 	frame.input.plane[0] = icc->lpInput;
-	frame.input.stride[0] = (((icc->lpbiInput->biWidth * icc->lpbiInput->biBitCount) + 31) & ~31) >> 3;
+	frame.input.stride[0] = CALC_BI_STRIDE(icc->lpbiInput->biWidth, icc->lpbiInput->biBitCount);
 
 	if ((frame.input.csp = get_colorspace(inhdr)) == XVID_CSP_NULL)
 		return ICERR_BADFORMAT;
@@ -929,7 +931,8 @@ LRESULT decompress_get_format(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO 
 	outhdr->biPlanes = 1;
 	outhdr->biBitCount = 24;
 	outhdr->biCompression = BI_RGB;	/* sonic foundry vegas video v3 only supports BI_RGB */
-	outhdr->biSizeImage = outhdr->biWidth * outhdr->biHeight * outhdr->biBitCount / 8;
+	outhdr->biSizeImage = outhdr->biHeight * CALC_BI_STRIDE(outhdr->biWidth, outhdr->biBitCount);
+
 	outhdr->biXPelsPerMeter = 0;
 	outhdr->biYPelsPerMeter = 0;
 	outhdr->biClrUsed = 0;
@@ -1035,13 +1038,13 @@ LRESULT decompress(CODEC * codec, ICDECOMPRESS * icd)
 
 		convert.input.csp = get_colorspace(icd->lpbiInput);
 		convert.input.plane[0] = icd->lpInput;
-		convert.input.stride[0] = (((icd->lpbiInput->biWidth *icd->lpbiInput->biBitCount) + 31) & ~31) >> 3;  
+		convert.input.stride[0] = CALC_BI_STRIDE(icd->lpbiInput->biWidth, icd->lpbiInput->biBitCount);
 		if (convert.input.csp == XVID_CSP_I420 || convert.input.csp == XVID_CSP_YV12)
 			convert.input.stride[0] = (convert.input.stride[0]*2)/3;
 
 		convert.output.csp = get_colorspace(icd->lpbiOutput);
 		convert.output.plane[0] = icd->lpOutput;
-		convert.output.stride[0] = (((icd->lpbiOutput->biWidth *icd->lpbiOutput->biBitCount) + 31) & ~31) >> 3;
+		convert.output.stride[0] = CALC_BI_STRIDE(icd->lpbiOutput->biWidth, icd->lpbiOutput->biBitCount);
 		if (convert.output.csp == XVID_CSP_I420 || convert.output.csp == XVID_CSP_YV12)
 			convert.output.stride[0] = (convert.output.stride[0]*2)/3;
 
@@ -1071,7 +1074,7 @@ LRESULT decompress(CODEC * codec, ICDECOMPRESS * icd)
 			return ICERR_BADFORMAT;
 		}
 		frame.output.plane[0] = icd->lpOutput;
-		frame.output.stride[0] = (((icd->lpbiOutput->biWidth * icd->lpbiOutput->biBitCount) + 31) & ~31) >> 3;
+		frame.output.stride[0] = CALC_BI_STRIDE(icd->lpbiOutput->biWidth, icd->lpbiOutput->biBitCount);
 		if (frame.output.csp == XVID_CSP_I420 || frame.output.csp == XVID_CSP_YV12)
 			frame.output.stride[0] = (frame.output.stride[0]*2)/3;
 	}
