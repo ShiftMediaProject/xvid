@@ -44,7 +44,7 @@ interpolate8x8_halfpel_h_ia64:
 	.rotp aldp[LL], sh1p[SL], or1p[OL], addp[AL], pavg1p[AVL],stp[STL]
 
 
-loop_interpolate:
+.Lloop_interpolate:
 	(aldp[0]) ld8 ald1[0] = [r14],r16		// load aligned src
 	(aldp[0]) ld8 ald2[0] = [r18],r16		// and aligned src+8
 
@@ -66,7 +66,7 @@ loop_interpolate:
 
 
 
-	br.ctop.sptk.few loop_interpolate
+	br.ctop.sptk.few .Lloop_interpolate
 	;;
 	mov ar.lc = r20
 	mov pr = r21,-1
@@ -116,7 +116,7 @@ interpolate8x8_halfpel_v_ia64:
 	.rotp aldp[LL], sh1p[SL], or1p[OL], addp[AL], pavg1p[AVL],stp[STL]
 
 
-loop_interpolate2:
+.Lloop_interpolate2:
 	(aldp[0]) ld8 ald1[0] = [r14],r16
 	(aldp[0]) ld8 ald2[0] = [r18],r16
 	(aldp[0]) ld8 ald3[0] = [r19],r16
@@ -140,7 +140,7 @@ loop_interpolate2:
 
 
 
-	br.ctop.sptk.few loop_interpolate2
+	br.ctop.sptk.few .Lloop_interpolate2
 	;;
 	mov ar.lc = r20
 	mov pr = r21,-1
@@ -192,7 +192,7 @@ interpolate8x8_halfpel_hv_ia64:
 	.rotp aldp[LL], sh1p[SL], or1p[OL], addp[AL],pavg1p[AVL],pavg2p[AVL],stp[STL]
 
 
-loop_interpolate3:
+.Lloop_interpolate3:
 	(aldp[0]) ld8 ald1[0] = [r14],r16
 	(aldp[0]) ld8 ald2[0] = [r18],r16
 	(aldp[0]) ld8 ald3[0] = [r19],r16
@@ -226,7 +226,7 @@ loop_interpolate3:
 
 
 
-	br.ctop.sptk.few loop_interpolate3
+	br.ctop.sptk.few .Lloop_interpolate3
 	;;
 	mov ar.lc = r20
 	mov pr = r21,-1
