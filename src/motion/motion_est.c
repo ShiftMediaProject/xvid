@@ -356,8 +356,8 @@ MotionEstimation(MBParam * const pParam,
     {  iMinSAD=iSAD; currMV->x=(X); currMV->y=(Y); iDirection=(D); iFound=0; } } \
 }
 
+#if 0
 /* too slow and not fully functional at the moment */
-/*
 int32_t ZeroSearch16(
 					const uint8_t * const pRef,
 					const uint8_t * const pRefH,
@@ -396,7 +396,7 @@ int32_t ZeroSearch16(
 	return iSAD;
 
 }
-*/
+#endif /* 0 */
 
 int32_t
 Diamond16_MainSearch(const uint8_t * const pRef,
@@ -839,8 +839,12 @@ AdvDiamond16_MainSearch(const uint8_t * const pRef,
 		}
 		while (1);				//forever
 	}
+
 	return iMinSAD;
 }
+
+/* Disabled bframe specific code */
+#if 0
 
 #define CHECK_MV16_F_INTERPOL(X,Y) { \
   if ( ((X) <= f_max_dx) && ((X) >= f_min_dx) \
@@ -897,6 +901,7 @@ AdvDiamond16_MainSearch(const uint8_t * const pRef,
     if (iSAD < iMinSAD) \
     {  iMinSAD=iSAD; b_currMV->x=(X); b_currMV->y=(Y); iFound=0;} } \
 }
+
 
 int32_t
 Diamond16_InterpolMainSearch(const uint8_t * const f_pRef,
@@ -1086,6 +1091,7 @@ Diamond16_DirectMainSearch(
 	return iMinSAD;
 }
 
+#endif /* 0 */
 
 int32_t
 AdvDiamond8_MainSearch(const uint8_t * const pRef,
@@ -2782,7 +2788,8 @@ EPZSSearch8(const uint8_t * const pRef,
 }
 
 
-
+/* Disabled bframe specific code */
+# if 0
 int32_t
 PMVfastIntSearch16(const uint8_t * const pRef,
 				const uint8_t * const pRefH,
@@ -3073,4 +3080,4 @@ PMVfastInt16_Terminate_with_Refine:
 	currPMV->y = currMV->y - center_y;
 	return iMinSAD;
 }
-
+#endif /* 0 */
