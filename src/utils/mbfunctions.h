@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: mbfunctions.h,v 1.15 2002-11-17 00:51:10 edgomez Exp $
+ * $Id: mbfunctions.h,v 1.16 2002-11-28 07:27:37 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -76,13 +76,6 @@ bool MotionEstimation(MBParam * const pParam,
 					  const uint32_t iLimit);
 
 
-bool SMP_MotionEstimation(MBParam * const pParam,
-						  FRAMEINFO * const current,
-						  FRAMEINFO * const reference,
-						  const IMAGE * const pRefH,
-						  const IMAGE * const pRefV,
-						  const IMAGE * const pRefHV,
-						  const uint32_t iLimit);
 
 
 

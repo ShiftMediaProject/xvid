@@ -52,7 +52,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: encoder.c,v 1.88 2002-11-26 23:44:09 edgomez Exp $
+ * $Id: encoder.c,v 1.89 2002-11-28 07:27:37 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -78,9 +78,6 @@
 #include "quant/quant_matrix.h"
 #include "utils/mem_align.h"
 
-#ifdef _SMP
-#include "motion/smp_motion_est.h"
-#endif 
 /*****************************************************************************
  * Local macros
  ****************************************************************************/
@@ -238,10 +235,6 @@ encoder_create(XVID_ENC_PARAM * pParam)
 	pEnc->mbParam.fincr = pParam->fincr;
 
 	pEnc->mbParam.m_quant_type = H263_QUANT;
-
-#ifdef _SMP
-	pEnc->mbParam.num_threads = MIN(pParam->num_threads, MAXNUMTHREADS);
-#endif
 
 	pEnc->sStat.fMvPrevSigma = -1;
 
@@ -932,14 +925,6 @@ FrameCodeP(Encoder * pEnc,
 		HintedMESet(pEnc, &bIntra);
 	} else {
 
-#ifdef _SMP
-	if (pEnc->mbParam.num_threads > 1)
-		bIntra =
-			SMP_MotionEstimation(&pEnc->mbParam, pEnc->current, pEnc->reference,
-						 &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV,
-						 iLimit);
-	else
-#endif
 		bIntra =
 			MotionEstimation(&pEnc->mbParam, pEnc->current, pEnc->reference,
                          &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV,
