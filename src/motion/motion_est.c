@@ -271,159 +271,104 @@ bool MotionEstimation(
 	const IMAGE * const pRefH,
 	const IMAGE * const pRefV,
 	const IMAGE * const pRefHV,
-	const uint32_t iLimit)
-
+	const uint32_t iLimit) 
 {
 	const uint32_t iWcount = pParam->mb_width;
 	const uint32_t iHcount = pParam->mb_height;
-	MACROBLOCK * const pMBs = current->mbs;
-	MACROBLOCK * const prevMBs = reference->mbs;	// previous frame
-
+	MACROBLOCK * const pMBs = current->mbs;	
+	MACROBLOCK * const prevMBs = reference->mbs;
 	const IMAGE * const pCurrent = &current->image;
-	const IMAGE * const pRef = &reference->image;
+	const IMAGE * const pRef = &reference->image; 
 
-	const VECTOR zeroMV = {0,0};
- 
+	const VECTOR zeroMV = {0,0}; 
+
 	int32_t x, y;
 	int32_t iIntra = 0;
 	VECTOR pmv;
-	
-	if (sadInit)
-		(*sadInit)();
 
+	if (sadInit)
+		(*sadInit)(); 
+		
 	for (y = 0; y < iHcount; y++)
 		for (x = 0; x < iWcount; x++)
 		{
 			MACROBLOCK* const pMB = &pMBs[x + y * iWcount];
-			
-			pMB->sad16 = SEARCH16(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
-					 x, y, current->motion_flags, current->quant, current->fcode,
-					 pParam, pMBs, prevMBs, &pMB->mv16, &pMB->pmvs[0]); 
-					 
+
+			pMB->sad16 = SEARCH16(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent,
+						 x, y, current->motion_flags, current->quant, current->fcode,
+						 pParam, pMBs, prevMBs, &pMB->mv16, &pMB->pmvs[0]);
 
 			if (0 < (pMB->sad16 - MV16_INTER_BIAS))
 			{
 				int32_t deviation;
-				deviation = dev16(pCurrent->y + x*16 + y*16*pParam->edged_width,
-							 pParam->edged_width);
-	
+				deviation = dev16(pCurrent->y + x*16 + y*16*pParam->edged_width, pParam->edged_width);
+
 				if (deviation < (pMB->sad16 - MV16_INTER_BIAS))
 				{
 					pMB->mode = MODE_INTRA;
-					pMB->mv16 = pMB->mvs[0] = pMB->mvs[1] 
-								 = pMB->mvs[2] = pMB->mvs[3] = zeroMV;
-					pMB->sad16 = pMB->sad8[0] = pMB->sad8[1] 
-							     = pMB->sad8[2] = pMB->sad8[3] = 0;
-
+					pMB->mv16 = pMB->mvs[0] = pMB->mvs[1] = pMB->mvs[2] = pMB->mvs[3] = zeroMV;
+					pMB->sad16 = pMB->sad8[0] = pMB->sad8[1] = pMB->sad8[2] = pMB->sad8[3] = 0; 
+					
 					iIntra++;
 					if (iIntra >= iLimit)
-						return 1;
-
+						return 1; 
+						
 					continue;
 				}
-			}
-			pMB->mode = MODE_INTER;
-			pMB->mvs[0] = pMB->mvs[1] = pMB->mvs[2] = pMB->mvs[3] = pMB->mv16;
-     	   pMB->sad8[0] = pMB->sad8[1] = pMB->sad8[2] = pMB->sad8[3] = pMB->sad16;
-		}
-
-	// we try to do as few INTER4V-searches as possible. So we split ME in two parts, normal 
-	// SEARCH16 and only for special blocks SEARCH8. May this should be modified for quality 
-	// levels.
-		
-		
-		
-	if (current->global_flags & XVID_INTER4V)
-		for (y = 0; y < iHcount; y++)
-			for (x = 0; x < iWcount; x++)
-			{
-				MACROBLOCK* const pMB = &pMBs[x + y * iWcount];
-
-				if (pMB->mode == MODE_INTRA)
-					continue;
+			} 
 			
-			
+			pmv = pMB->pmvs[0];
+			if (current->global_flags & XVID_INTER4V)
 				if ( (!(current->global_flags & XVID_LUMIMASKING) || pMB->dquant == NO_CHANGE) )
 				{
-				int32_t neigh=0;
+					int32_t sad8 = IMV16X16 * current->quant; if (sad8 < pMB->sad16)
+					
+					sad8 += pMB->sad8[0]		= SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent,
+															2*x, 2*y, pMB->mv16.x, pMB->mv16.y,
+															current->motion_flags, current->quant, current->fcode,
+															pParam, pMBs, prevMBs, &pMB->mvs[0], &pMB->pmvs[0]); 
+					
+					if (sad8 < pMB->sad16)
+						sad8 += pMB->sad8[1]	= SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent,
+															2*x+1, 2*y, pMB->mv16.x, pMB->mv16.y,
+															current->motion_flags, current->quant, current->fcode,
+															pParam, pMBs, prevMBs, &pMB->mvs[1], &pMB->pmvs[1]); 
+															
+					if (sad8 < pMB->sad16)
+						sad8 += pMB->sad8[2] = SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent,
+															2*x, 2*y+1, pMB->mv16.x, pMB->mv16.y,
+															current->motion_flags, current->quant, current->fcode,
+															pParam, pMBs, prevMBs, &pMB->mvs[2], &pMB->pmvs[2]); 
 
-				if (x>0)
-				{	neigh += abs((pMB->mv16.x)-((pMB-1)->mv16.x));
-					neigh += abs((pMB->mv16.y)-((pMB-1)->mv16.y));
-				}
-				if (y>0)
-				{	neigh += abs((pMB->mv16.x)-((pMB-iWcount)->mv16.x));
-					neigh += abs((pMB->mv16.y)-((pMB-iWcount)->mv16.y));
-				}
-				if (x<(iWcount-1))
-				{	neigh += abs((pMB->mv16.x)-((pMB+1)->mv16.x));
-					neigh += abs((pMB->mv16.y)-((pMB+1)->mv16.y));
-				}
-				if (y<(iHcount-1))
-				{	neigh += abs((pMB->mv16.x)-((pMB+iHcount)->mv16.x));
-					neigh += abs((pMB->mv16.y)-((pMB+iHcount)->mv16.y));
-				}				
+					if (sad8 < pMB->sad16)
+						sad8 += pMB->sad8[3]	= SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent,
+															2*x+1, 2*y+1, pMB->mv16.x, pMB->mv16.y,
+															current->motion_flags, current->quant, current->fcode,
+															pParam, pMBs, prevMBs, &pMB->mvs[3], &pMB->pmvs[3]); 
+															
+					/* decide: MODE_INTER or MODE_INTER4V
+						mpeg4:   if (sad8 < pMB->sad16 - nb/2+1) use_inter4v
+					*/ 
 				
-				if (neigh > NEIGH_MOVE_THRESH)
-				{
-					int32_t sad8 = IMV16X16 * current->quant;	
-				
 					if (sad8 < pMB->sad16)
-					sad8 += pMB->sad8[0] 
-						= SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
-							       2*x, 2*y, pMB->mv16.x, pMB->mv16.y, 
-								   current->motion_flags, current->quant, current->fcode,
-							       pParam, pMBs, prevMBs, &pMB->mvs[0], &pMB->pmvs[0]);
-
-					if (sad8 < pMB->sad16)
-					sad8 += pMB->sad8[1] 
-						= SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
-				       2*x+1, 2*y, pMB->mv16.x, pMB->mv16.y, 
-							current->motion_flags, current->quant, current->fcode,
-							pParam, pMBs, prevMBs, &pMB->mvs[1], &pMB->pmvs[1]); 
-
-					if (sad8 < pMB->sad16)
-					sad8 += pMB->sad8[2] 
-						= SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
-							2*x, 2*y+1, pMB->mv16.x, pMB->mv16.y, 
-							current->motion_flags, current->quant, current->fcode,
-							pParam, pMBs, prevMBs, &pMB->mvs[2], &pMB->pmvs[2]); 
-			
-					if (sad8 < pMB->sad16)
-					sad8 += pMB->sad8[3] 
-						= SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
-							2*x+1, 2*y+1, pMB->mv16.x, pMB->mv16.y, 
-							current->motion_flags, current->quant, current->fcode,
-							pParam, pMBs, prevMBs, &pMB->mvs[3], &pMB->pmvs[3]); 
-    
-			/* decide: MODE_INTER or MODE_INTER4V 
-			   mpeg4:   if (sad8 < pMB->sad16 - nb/2+1) use_inter4v
-			*/
-
-					if (sad8 < pMB->sad16) 
 					{
 						pMB->mode = MODE_INTER4V;
-         	      pMB->sad8[0] *= 4;
+		            pMB->sad8[0] *= 4;
 						pMB->sad8[1] *= 4;
 						pMB->sad8[2] *= 4;
 						pMB->sad8[3] *= 4;
 						continue;
 					}
+			
+				} 
+				
+				pMB->mode = MODE_INTER;
+				pMB->pmvs[0] = pmv; /* pMB->pmvs[1] = pMB->pmvs[2] = pMB->pmvs[3]  are not needed for INTER */
+				pMB->mvs[0] = pMB->mvs[1] = pMB->mvs[2] = pMB->mvs[3] = pMB->mv16;
+				pMB->sad8[0] = pMB->sad8[1] = pMB->sad8[2] = pMB->sad8[3] = pMB->sad16;
 
-					pMB->mvs[0] = pMB->mvs[1] = pMB->mvs[2] = pMB->mvs[3] = pMB->mv16;
-				}
-
-				}
-
-		// get_pmv has to be called again, because inter4v changes predictors
-
-			pmv = get_pmv(pMBs, x, y, pParam->mb_width, 0);  
-			pMB->pmvs[0].x = pMB->mv16.x - pmv.x;	/* the other pmvs are only needed in INTER4V-mode */
-			pMB->pmvs[0].y = pMB->mv16.y - pmv.y;
-
-			}
-
-	return 0;
+		}
+		return 0;
 }
 
 #define CHECK_MV16_ZERO {\
@@ -2039,6 +1984,15 @@ int32_t EPZSSearch16(
 
 	backupMV = *currMV; /* save best prediction, actually only for EXTSEARCH */
 
+	if (MotionFlags & PMV_USESQUARES8)
+		MainSearchPtr = Square16_MainSearch;
+	else
+
+	if (MotionFlags & PMV_ADVANCEDDIAMOND8)
+		MainSearchPtr = AdvDiamond16_MainSearch;
+	else
+		MainSearchPtr = Diamond16_MainSearch;
+
 /* default: use best prediction as starting point for one call of PMVfast_MainSearch */
 
 	iSAD = (*MainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
@@ -2280,12 +2234,7 @@ int32_t EPZSSearch8(
 		
 /* default: use best prediction as starting point for one call of EPZS_MainSearch */
 
-/* // there is no EPZS^2 for inter4v at the moment
-
-	if (MotionFlags & PMV_USESQUARES8)
-		MainSearchPtr = Square8_MainSearch;
-	else
-*/
+// there is no EPZS^2 for inter4v at the moment 
 
 //	if (MotionFlags & PMV_USESQUARES8)
 //		MainSearchPtr = Square8_MainSearch;
