@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: qpel.h,v 1.3 2004-08-10 21:58:55 edgomez Exp $
+ * $Id: qpel.h,v 1.4 2004-10-12 21:08:41 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -120,8 +120,8 @@ interpolate16x16_quarterpel(uint8_t * const cur,
 
 	int32_t x_int, y_int;
 
-	const int32_t xRef = x*4 + dx;
-	const int32_t yRef = y*4 + dy;
+	const int32_t xRef = (int)x*4 + dx;
+	const int32_t yRef = (int)y*4 + dy;
 
 	Ops = xvid_QP_Funcs;
 	quads = (dx&3) | ((dy&3)<<2);
@@ -135,7 +135,7 @@ interpolate16x16_quarterpel(uint8_t * const cur,
 		y_int--;
 
 	dst = cur + y * stride + x;
-	src = refn + y_int * stride + x_int;
+	src = refn + y_int * (int)stride + x_int;
 
 	tmp = refh; /* we need at least a 16 x stride scratch block */
 
@@ -223,8 +223,8 @@ interpolate16x16_add_quarterpel(uint8_t * const cur,
 
 	int32_t x_int, y_int;
 
-	const int32_t xRef = x*4 + dx;
-	const int32_t yRef = y*4 + dy;
+	const int32_t xRef = (int)x*4 + dx;
+	const int32_t yRef = (int)y*4 + dy;
 
 	Ops = xvid_QP_Add_Funcs;
 	Ops_Copy = xvid_QP_Funcs;
@@ -239,7 +239,7 @@ interpolate16x16_add_quarterpel(uint8_t * const cur,
 		y_int--;
 
 	dst = cur + y * stride + x;
-	src = refn + y_int * stride + x_int;
+	src = refn + y_int * (int)stride + x_int;
 
 	tmp = refh; /* we need at least a 16 x stride scratch block */
 
@@ -328,8 +328,8 @@ interpolate16x8_quarterpel(uint8_t * const cur,
 
 	int32_t x_int, y_int;
 
-	const int32_t xRef = x*4 + dx;
-	const int32_t yRef = y*4 + dy;
+	const int32_t xRef = (int)x*4 + dx;
+	const int32_t yRef = (int)y*4 + dy;
 
 	Ops = xvid_QP_Funcs;
 	quads = (dx&3) | ((dy&3)<<2);
@@ -343,7 +343,7 @@ interpolate16x8_quarterpel(uint8_t * const cur,
 		y_int--;
 
 	dst = cur + y * stride + x;
-	src = refn + y_int * stride + x_int;
+	src = refn + y_int * (int)stride + x_int;
 
 	tmp = refh; /* we need at least a 16 x stride scratch block */
 
@@ -428,8 +428,8 @@ interpolate8x8_quarterpel(uint8_t * const cur,
 
 	int32_t x_int, y_int;
 
-	const int32_t xRef = x*4 + dx;
-	const int32_t yRef = y*4 + dy;
+	const int32_t xRef = (int)x*4 + dx;
+	const int32_t yRef = (int)y*4 + dy;
 
 	Ops = xvid_QP_Funcs;
 	quads = (dx&3) | ((dy&3)<<2);
@@ -443,7 +443,7 @@ interpolate8x8_quarterpel(uint8_t * const cur,
 		y_int--;
 
 	dst = cur + y * stride + x;
-	src = refn + y_int * stride + x_int;
+	src = refn + y_int * (int)stride + x_int;
 
 	tmp = refh; /* we need at least a 16 x stride scratch block */
 
@@ -528,8 +528,8 @@ interpolate8x8_add_quarterpel(uint8_t * const cur,
 
 	int32_t x_int, y_int;
 
-	const int32_t xRef = x*4 + dx;
-	const int32_t yRef = y*4 + dy;
+	const int32_t xRef = (int)x*4 + dx;
+	const int32_t yRef = (int)y*4 + dy;
 
 	Ops = xvid_QP_Add_Funcs;
 	Ops_Copy = xvid_QP_Funcs;
@@ -544,7 +544,7 @@ interpolate8x8_add_quarterpel(uint8_t * const cur,
 		y_int--;
 
 	dst = cur + y * stride + x;
-	src = refn + y_int * stride + x_int;
+	src = refn + y_int * (int)stride + x_int;
 
 	tmp = refh; /* we need at least a 16 x stride scratch block */
 

@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.15 2004-09-04 15:07:45 syskin Exp $
+ * $Id: estimation_bvop.c,v 1.16 2004-10-12 21:08:41 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -541,15 +541,15 @@ SkipDecisionB(MACROBLOCK * const pMB, const SearchData * const Data)
 		b_dx = (b_dx >> 3) + roundtab_76[b_dx & 0xf];
 
 		sum = sad8bi(Data->CurU,
-						Data->RefP[4] + (dy/2) * stride + dx/2,
-						Data->b_RefP[4] + (b_dy/2) * stride + b_dx/2,
+						Data->RefP[4] + (dy/2) * (int)stride + dx/2,
+						Data->b_RefP[4] + (b_dy/2) * (int)stride + b_dx/2,
 						stride);
 
 		if (sum >= MAX_CHROMA_SAD_FOR_SKIP * (int)Data->iQuant) return; /* no skip */
 
 		sum += sad8bi(Data->CurV,
-						Data->RefP[5] + (dy/2) * stride + dx/2,
-						Data->b_RefP[5] + (b_dy/2) * stride + b_dx/2,
+						Data->RefP[5] + (dy/2) * (int)stride + dx/2,
+						Data->b_RefP[5] + (b_dy/2) * (int)stride + b_dx/2,
 						stride);
 
 		if (sum >= MAX_CHROMA_SAD_FOR_SKIP * (int)Data->iQuant) return; /* no skip */
