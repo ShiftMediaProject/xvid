@@ -2901,6 +2901,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 
 /* special case, if collocated block is SKIPed: encoding is forward(0,0)  */
 
+#ifndef _DISABLE_SKIP
 			if (b_mb->mode == MODE_INTER && b_mb->cbp == 0 &&
 				b_mb->mvs[0].x == 0 && b_mb->mvs[0].y == 0) {	
 				mb->mode = MODE_NOT_CODED;
@@ -2910,6 +2911,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 				mb->b_mvs[0].y = 0;
 				continue;
 			}
+#endif
 
 			dnv_sad16 = DIRECT_PENALTY;
 
