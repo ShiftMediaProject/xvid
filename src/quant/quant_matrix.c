@@ -28,7 +28,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: quant_matrix.c,v 1.7 2002-09-07 14:16:13 edgomez Exp $
+ *  $Id: quant_matrix.c,v 1.8 2002-09-08 17:28:22 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -44,7 +44,7 @@
 uint8_t custom_intra_matrix = 0;
 uint8_t custom_inter_matrix = 0;
 
-uint8_t const default_intra_matrix[64] = {
+uint8_t default_intra_matrix[64] = {
 	8, 17, 18, 19, 21, 23, 25, 27,
 	17, 18, 19, 21, 23, 25, 27, 28,
 	20, 21, 22, 23, 24, 26, 28, 30,
@@ -77,7 +77,7 @@ int16_t intra_matrix_fix[64] = {
 	FIX(27), FIX(28), FIX(30), FIX(32), FIX(35), FIX(38), FIX(41), FIX(45)
 };
 
-uint8_t const default_inter_matrix[64] = {
+uint8_t default_inter_matrix[64] = {
 	16, 17, 18, 19, 20, 21, 22, 23,
 	17, 18, 19, 20, 21, 22, 23, 24,
 	18, 19, 20, 21, 22, 23, 24, 25,
