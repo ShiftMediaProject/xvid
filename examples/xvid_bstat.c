@@ -74,6 +74,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>		// needed for log10
 #include <sys/time.h>		// only needed for gettimeofday
 
@@ -351,7 +352,7 @@ int  enc_main(unsigned char* image, unsigned char* bitstream, int *streamlength,
 
 	xframe.image = image;
 	xframe.stride = XDIM;
-        xframe.colorspace = XVID_CSP_YV12;	// defined in <xvid.h>
+        xframe.colorspace = XVID_CSP_I420;	// defined in <xvid.h>
 
 	xframe.intra = -1; // let the codec decide between I-frame (1) and P-frame (0)
 
@@ -424,7 +425,7 @@ int dec_main(unsigned char *m4v_buffer, unsigned char *out_buffer, int *m4v_size
         xframe.length = 1234; // *m4v_size;
         xframe.image = out_buffer;
         xframe.stride = XDIM;
-        xframe.colorspace = XVID_CSP_YV12;             // XVID_CSP_USER is fastest (no memcopy involved)
+        xframe.colorspace = XVID_CSP_I420;             // XVID_CSP_USER is fastest (no memcopy involved)
 
         xerr = xvid_decore(dec_handle, XVID_DEC_DECODE, &xframe, NULL);
 		

@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.11 2003-02-16 05:11:39 suxen_drol Exp $
+ * $Id: xvid_encraw.c,v 1.12 2003-02-22 21:36:27 chl Exp $
  *
  ****************************************************************************/
 
@@ -727,7 +727,7 @@ static int enc_main(unsigned char* image, unsigned char* bitstream,
 	xframe.length = -1; 	/* this is written by the routine */
 
 	xframe.image = image;
-	xframe.colorspace = XVID_CSP_YV12;	/* defined in <xvid.h> */
+	xframe.colorspace = XVID_CSP_I420;	/* defined in <xvid.h> */
 
 	xframe.intra = -1; /* let the codec decide between I-frame (1) and P-frame (0) */
 
