@@ -63,7 +63,7 @@ static __inline int64_t read_counter() {
 	return ts;
 }
 
-#elif defined(LINUX) || defined(DJGPP)
+#elif defined(LINUX) || defined(DJGPP) || defined(FREEBSD)
 
 #ifdef _DEBUG
 
@@ -96,7 +96,7 @@ static __inline int64_t read_counter() {
 
 #else
 
-#define #define #define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
+#define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
 	__attribute__ ((__aligned__(CACHE_LINE))) type name[(sizex)*(sizey)]
 
 #define int8_t   char

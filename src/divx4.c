@@ -39,8 +39,11 @@
  *
  *************************************************************************/
 
-
+#ifndef FREEBSD
 #include <malloc.h>
+#else
+#include <stdlib.h>
+#endif
 #include <string.h>     // memset
 
 #include "xvid.h"
