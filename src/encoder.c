@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.115 2004-12-10 04:10:12 syskin Exp $
+ * $Id: encoder.c,v 1.116 2004-12-10 05:37:11 syskin Exp $
  *
  ****************************************************************************/
 
@@ -1535,7 +1535,6 @@ FrameCodeP(Encoder * pEnc,
 	DECLARE_ALIGNED_MATRIX(qcoeff, 6, 64, int16_t, CACHE_LINE);
 
 	int x, y, k;
-	int skip_possible;
 	FRAMEINFO *const current = pEnc->current;
 	FRAMEINFO *const reference = pEnc->reference;
 	MBParam * const pParam = &pEnc->mbParam;
@@ -1643,8 +1642,8 @@ FrameCodeP(Encoder * pEnc,
 
 	for (y = 0; y < mb_height; y++) {
 		for (x = 0; x < mb_width; x++) {
-			MACROBLOCK *pMB =
-				&current->mbs[x + y * pParam->mb_width];
+			MACROBLOCK *pMB = &current->mbs[x + y * pParam->mb_width];
+			int skip_possible;
 
 			if (pMB->mode == MODE_INTRA || pMB->mode == MODE_INTRA_Q) {
 				CodeIntraMB(pEnc, pMB);
@@ -1698,101 +1697,57 @@ FrameCodeP(Encoder * pEnc,
 
 			/* Finished processing the MB, now check if to CODE or SKIP */
 
-			skip_possible = (pMB->cbp == 0) && (pMB->mode == MODE_INTER) &&
-							(pMB->dquant == 0);
+			skip_possible = (pMB->cbp == 0) && (pMB->mode == MODE_INTER);
 
 			if (current->coding_type == S_VOP)
 				skip_possible &= (pMB->mcsel == 1);
-			else if (current->coding_type == P_VOP) {
-				if ((pParam->vol_flags & XVID_VOL_QUARTERPEL))
-					skip_possible &= ( (pMB->qmvs[0].x == 0) && (pMB->qmvs[0].y == 0) );
-				else
-					skip_possible &= ( (pMB->mvs[0].x == 0) && (pMB->mvs[0].y == 0) );
+			else { /* PVOP */
+				const VECTOR * const mv = (pParam->vol_flags & XVID_VOL_QUARTERPEL) ?
+										pMB->qmvs : pMB->mvs;
+				skip_possible &= ((mv->x|mv->y) == 0);
 			}
 
-			if ( (pMB->mode == MODE_NOT_CODED) || (skip_possible)) {
+			if ((pMB->mode == MODE_NOT_CODED) || (skip_possible)) {
+				/* This is a candidate for SKIPping, but for P-VOPs check intermediate B-frames first */
+				int bSkip = 1;
 
-/* This is a candidate for SKIPping, but for P-VOPs check intermediate B-frames first */
+				if (current->coding_type == P_VOP) {	/* special rule for P-VOP's SKIP */
 
-				if (current->coding_type == P_VOP)	/* special rule for P-VOP's SKIP */
-				{
-					int bSkip = 1;
-
-					for (k=pEnc->bframenum_head; k< pEnc->bframenum_tail; k++)
-					{
+					for (k = pEnc->bframenum_head; k < pEnc->bframenum_tail; k++) {
 						int iSAD;
 						iSAD = sad16(reference->image.y + 16*y*pParam->edged_width + 16*x,
-									pEnc->bframes[k]->image.y + 16*y*pParam->edged_width + 16*x,
-								pParam->edged_width,BFRAME_SKIP_THRESHHOLD);
-						if (iSAD >= BFRAME_SKIP_THRESHHOLD * pMB->quant)
-						{	bSkip = 0;
+										pEnc->bframes[k]->image.y + 16*y*pParam->edged_width + 16*x,
+										pParam->edged_width, BFRAME_SKIP_THRESHHOLD * pMB->quant);
+						if (iSAD >= BFRAME_SKIP_THRESHHOLD * pMB->quant) {
+							bSkip = 0; /* could not SKIP */
+							if (pParam->vol_flags & XVID_VOL_QUARTERPEL) {
+								VECTOR predMV = get_qpmv2(current->mbs, pParam->mb_width, 0, x, y, 0);
+								pMB->pmvs[0].x = - predMV.x;
+								pMB->pmvs[0].y = - predMV.y;
+							} else {
+								VECTOR predMV = get_pmv2(current->mbs, pParam->mb_width, 0, x, y, 0);
+								pMB->pmvs[0].x = - predMV.x;
+								pMB->pmvs[0].y = - predMV.y;
+							}
+							pMB->mode = MODE_INTER;
+							pMB->cbp = 0;
 							break;
 						}
 					}
-
-					if (!bSkip) {	/* no SKIP, but trivial block */
-						if((pParam->vol_flags & XVID_VOL_QUARTERPEL)) {
-							VECTOR predMV = get_qpmv2(current->mbs, pParam->mb_width, 0, x, y, 0);
-							pMB->pmvs[0].x = - predMV.x;
-							pMB->pmvs[0].y = - predMV.y;
-						}
-						else {
-							VECTOR predMV = get_pmv2(current->mbs, pParam->mb_width, 0, x, y, 0);
-							pMB->pmvs[0].x = - predMV.x;
-							pMB->pmvs[0].y = - predMV.y;
-						}
-						pMB->mode = MODE_INTER;
-						pMB->cbp = 0;
-						MBCoding(current, pMB, qcoeff, bs, &current->sStat);
-						stop_coding_timer();
-
-						continue;	/* next MB */
-					}
 				}
-				/* do SKIP */
 
-				pMB->mode = MODE_NOT_CODED;
-				MBSkip(bs);
-				stop_coding_timer();
-				continue;	/* next MB */
+				if (bSkip) {
+					/* do SKIP */
+					pMB->mode = MODE_NOT_CODED;
+					MBSkip(bs);
+					stop_coding_timer();
+					continue;	/* next MB */
+				}
 			}
+
 			/* ordinary case: normal coded INTER/INTER4V block */
-
-			if((pParam->vol_flags & XVID_VOL_QUARTERPEL)) {
-				VECTOR predMV = get_qpmv2(current->mbs, pParam->mb_width, 0, x, y, 0);
-				pMB->pmvs[0].x = pMB->qmvs[0].x - predMV.x;
-				pMB->pmvs[0].y = pMB->qmvs[0].y - predMV.y;
-				DPRINTF(XVID_DEBUG_MV,"mv_diff (%i,%i) pred (%i,%i) result (%i,%i)\n", pMB->pmvs[0].x, pMB->pmvs[0].y, predMV.x, predMV.y, pMB->mvs[0].x, pMB->mvs[0].y);
-			} else {
-				VECTOR predMV = get_pmv2(current->mbs, pParam->mb_width, 0, x, y, 0);
-				pMB->pmvs[0].x = pMB->mvs[0].x - predMV.x;
-				pMB->pmvs[0].y = pMB->mvs[0].y - predMV.y;
-				DPRINTF(XVID_DEBUG_MV,"mv_diff (%i,%i) pred (%i,%i) result (%i,%i)\n", pMB->pmvs[0].x, pMB->pmvs[0].y, predMV.x, predMV.y, pMB->mvs[0].x, pMB->mvs[0].y);
-			}
-
-
-			if (pMB->mode == MODE_INTER4V)
-			{	int k;
-				for (k=1;k<4;k++)
-				{
-					if((pParam->vol_flags & XVID_VOL_QUARTERPEL)) {
-						VECTOR predMV = get_qpmv2(current->mbs, pParam->mb_width, 0, x, y, k);
-						pMB->pmvs[k].x = pMB->qmvs[k].x - predMV.x;
-						pMB->pmvs[k].y = pMB->qmvs[k].y - predMV.y;
-				DPRINTF(XVID_DEBUG_MV,"mv_diff (%i,%i) pred (%i,%i) result (%i,%i)\n", pMB->pmvs[k].x, pMB->pmvs[k].y, predMV.x, predMV.y, pMB->mvs[k].x, pMB->mvs[k].y);
-					} else {
-						VECTOR predMV = get_pmv2(current->mbs, pParam->mb_width, 0, x, y, k);
-						pMB->pmvs[k].x = pMB->mvs[k].x - predMV.x;
-						pMB->pmvs[k].y = pMB->mvs[k].y - predMV.y;
-				DPRINTF(XVID_DEBUG_MV,"mv_diff (%i,%i) pred (%i,%i) result (%i,%i)\n", pMB->pmvs[k].x, pMB->pmvs[k].y, predMV.x, predMV.y, pMB->mvs[k].x, pMB->mvs[k].y);
-					}
-
-				}
-			}
-
 			MBCoding(current, pMB, qcoeff, bs, &pEnc->current->sStat);
 			stop_coding_timer();
-
 		}
 	}
 
