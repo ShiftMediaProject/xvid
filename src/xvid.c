@@ -27,6 +27,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
  ****************************************************************************/
+
 /*****************************************************************************
  *
  *  History
@@ -36,7 +37,7 @@
  *  - 22.12.2001  API change: added xvid_init() - Isibaar
  *  - 16.12.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: xvid.c,v 1.28 2002-07-09 01:44:44 chenm001 Exp $
+ *  $Id: xvid.c,v 1.29 2002-07-09 01:48:49 chenm001 Exp $
  *
  ****************************************************************************/
 
@@ -87,11 +88,9 @@ xvid_init(void *handle,
 	/* Inform the client the core build - unused because we're still alpha */
 	init_param->core_build = 1000;
 
-	printf("init_param->cpu_flags %x\n",init_param->cpu_flags);//NIC
-
 	if ((init_param->cpu_flags & XVID_CPU_CHKONLY))
 	{
-		//init_param->cpu_flags = check_cpu_features();//nic
+		init_param->cpu_flags = check_cpu_features();
 		return XVID_ERR_OK;
 	}
 
@@ -100,7 +99,7 @@ xvid_init(void *handle,
 		cpu_flags = init_param->cpu_flags;
 	} else {
 
-		//cpu_flags = check_cpu_features();//nic
+		cpu_flags = check_cpu_features();
 		init_param->cpu_flags = cpu_flags;
 	}
 
@@ -236,6 +235,10 @@ xvid_init(void *handle,
 		interpolate8x8_halfpel_v  = interpolate8x8_halfpel_v_xmm;
 		interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_xmm;
 
+		/* Quantization */
+		dequant_intra = dequant_intra_xmm;
+		dequant_inter = dequant_inter_xmm;
+
 		/* Buffer transfer */
 		transfer_8to16sub2 = transfer_8to16sub2_xmm;
 
@@ -244,6 +247,7 @@ xvid_init(void *handle,
 
 		/* ME functions */
 		sad16 = sad16_xmm;
+		sad16bi = sad16bi_xmm;
 		sad8  = sad8_xmm;
 		dev16 = dev16_xmm;
 
@@ -260,6 +264,8 @@ xvid_init(void *handle,
 	if ((cpu_flags & XVID_CPU_SSE2) > 0) {
 #ifdef EXPERIMENTAL_SSE2_CODE
 
+		calc_cbp = calc_cbp_sse2;
+
 		/* Quantization */
 		quant_intra   = quant_intra_sse2;
 		dequant_intra = dequant_intra_sse2;
@@ -267,7 +273,6 @@ xvid_init(void *handle,
 		dequant_inter = dequant_inter_sse2;
 
 		/* ME */
-		calc_cbp = calc_cbp_sse2;
 		sad16    = sad16_sse2;
 		dev16    = dev16_sse2;
 
@@ -343,14 +348,7 @@ xvid_decore(void *handle,
 		return decoder_decode((DECODER *) handle, (XVID_DEC_FRAME *) param1);
 
 	case XVID_DEC_CREATE:
-		/* ***************************************************************************
-		NIC uso il secondo parametro 'param2' ma in realta` non so bene per cosa e` 
-		stato pensato ..... e quindi in futuro potrebbe essere un problema
-		*************************************************************************** */
-		if(param2!=NULL)
-			return IM1_decoder_create((XVID_DEC_PARAM *) param1,(XVID_DEC_FRAME *) param2);
-		else
-			return decoder_create((XVID_DEC_PARAM *) param1); //NIC commentata
+		return decoder_create((XVID_DEC_PARAM *) param1);
 
 	case XVID_DEC_DESTROY:
 		return decoder_destroy((DECODER *) handle);
