@@ -1,36 +1,36 @@
 /**************************************************************************
  *
- *	XVID MPEG-4 VIDEO CODEC
- *	decoder main
+ *  XVID MPEG-4 VIDEO CODEC
+ *  -  Decoder main module  -
  *
- *	This program is an implementation of a part of one or more MPEG-4
- *	Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
- *	to use this software module in hardware or software products are
- *	advised that its use may infringe existing patents or copyrights, and
- *	any such use would be at such party's own risk.  The original
- *	developer of this software module and his/her company, and subsequent
- *	editors and their companies, will have no liability for use of this
- *	software or modifications or derivatives thereof.
+ *  This program is an implementation of a part of one or more MPEG-4
+ *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
+ *  to use this software module in hardware or software products are
+ *  advised that its use may infringe existing patents or copyrights, and
+ *  any such use would be at such party's own risk.  The original
+ *  developer of this software module and his/her company, and subsequent
+ *  editors and their companies, will have no liability for use of this
+ *  software or modifications or derivatives thereof.
  *
- *	This program is xvid_free software; you can redistribute it and/or modify
- *	it under the terms of the GNU General Public License as published by
- *	the xvid_free Software Foundation; either version 2 of the License, or
- *	(at your option) any later version.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *	This program is distributed in the hope that it will be useful,
- *	but WITHOUT ANY WARRANTY; without even the implied warranty of
- *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *	GNU General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *	You should have received a copy of the GNU General Public License
- *	along with this program; if not, write to the xvid_free Software
- *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
  *************************************************************************/
 
 /**************************************************************************
  *
- *	History:
+ *  History:
  *
  *  22.04.2002  add some B-frame decode support;  chenm001 <chenm001@163.com>
  *  29.03.2002  interlacing fix - compensated block wasn't being used when
@@ -38,14 +38,16 @@
  *              interlacing speedup - used transfers to re-interlace
  *              interlaced decoding should be as fast as progressive now
  *  26.03.2002  interlacing support - moved transfers outside decode loop
- *	26.12.2001	decoder_mbinter: dequant/idct moved within if(coded) block
- *	22.12.2001	block based interpolation
- *	01.12.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
+ *  26.12.2001  decoder_mbinter: dequant/idct moved within if(coded) block
+ *  22.12.2001  lock based interpolation
+ *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
+ *
+ *  $Id: decoder.c,v 1.12 2002-04-28 22:12:45 edgomez Exp $
  *
  *************************************************************************/
 
 #include <stdlib.h>
-#include <string.h>  // memset
+#include <string.h>
 
 #include "xvid.h"
 #include "portab.h"
