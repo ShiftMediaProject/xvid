@@ -29,7 +29,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbcoding.c,v 1.27 2002-09-08 15:39:01 edgomez Exp $
+ * $Id: mbcoding.c,v 1.28 2002-09-08 15:40:02 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -437,7 +437,7 @@ MBSkip(Bitstream * bs)
 	return;
 }
 
-
+#if 0
 /***************************************************************
  * bframe encoding start
  ***************************************************************/
@@ -513,7 +513,6 @@ put_bvop_dbquant(Bitstream * bs,
 	}
 }
 
-#if 0
 void
 MBCodingBVOP(const MACROBLOCK * mb,
 			 const int16_t qcoeff[6 * 64],
