@@ -26,6 +26,9 @@ void image_interpolate(const IMAGE * refn,
 					   IMAGE * refh, IMAGE * refv,	IMAGE * refhv, 
 					   uint32_t edged_width, uint32_t edged_height, uint32_t rounding);
 
+float image_psnr(IMAGE *orig_image, IMAGE *recon_image,
+              uint16_t stride, uint16_t width, uint16_t height);
+
 int image_input(IMAGE * image, uint32_t width, int height, uint32_t edged_width,
 			uint8_t * src, int csp);
 
