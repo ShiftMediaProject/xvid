@@ -68,7 +68,8 @@ SRC_INTEL = \
 	$(SRCDIR)/motion/x86_asm/sad_xmm.asm \
 	$(SRCDIR)/motion/x86_asm/sad_sse2.asm \
 	\
-	$(SRCDIR)/image/x86_asm/interpolate8x8_3dn.asm
+	$(SRCDIR)/image/x86_asm/interpolate8x8_3dn.asm \
+	$(SRCDIR)/motion/x86_asm/sad_3dn.asm 
 	
 DIRS_INTEL = \
 	$(SRCDIR)/bitstream/x86_asm/*.o \
