@@ -1,4 +1,4 @@
-/**************************************************************************
+/*****************************************************************************
  *
  *  XVID MPEG-4 VIDEO CODEC
  *  -  Encoder main module  -
@@ -26,9 +26,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- ***************************************************************************/
+ ****************************************************************************/
 
-/****************************************************************************
+/*****************************************************************************
  * 
  *  History
  *
@@ -36,9 +36,9 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.39 2002-06-09 13:16:26 edgomez Exp $
+ *  $Id: encoder.c,v 1.40 2002-06-09 23:30:50 edgomez Exp $
  *
- ***************************************************************************/
+ ****************************************************************************/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -61,8 +61,16 @@
 #include "quant/quant_matrix.h"
 #include "utils/mem_align.h"
 
+/*****************************************************************************
+ * Local macros
+ ****************************************************************************/
+
 #define ENC_CHECK(X) if(!(X)) return XVID_ERR_FORMAT
 #define SWAP(A,B)    { void * tmp = A; A = B; B = tmp; }
+
+/*****************************************************************************
+ * Local function prototypes
+ ****************************************************************************/
 
 static int FrameCodeI(Encoder * pEnc,
 		      Bitstream * bs,
@@ -81,24 +89,47 @@ static void FrameCodeB(Encoder * pEnc,
 		       uint32_t *pBits);
 #endif
 
-static int DQtab[4] = 
+/*****************************************************************************
+ * Local data
+ ****************************************************************************/
+
+static int DQtab[4] =
 {
 	-1, -2, 1, 2
 };
 
-static int iDQtab[5] = 
+static int iDQtab[5] =
 {
 	1, 0, NO_CHANGE, 2, 3
 };
 
 
-void static image_null(IMAGE * image)
+static void __inline image_null(IMAGE * image)
 {
 	image->y = image->u = image->v = NULL;
 }
 
 
-int encoder_create(XVID_ENC_PARAM * pParam)
+/*****************************************************************************
+ * Encoder creation
+ *
+ * This function creates an Encoder instance, it allocates all necessary
+ * image buffers (reference, current and bframes) and initialize the internal
+ * xvid encoder paremeters according to the XVID_ENC_PARAM input parameter.
+ *
+ * The code seems to be very long but is very basic, mainly memory allocation
+ * and cleaning code.
+ *
+ * Returned values :
+ *    - XVID_ERR_OK     - no errors
+ *    - XVID_ERR_MEMORY - the libc could not allocate memory, the function
+ *                        cleans the structure before exiting.
+ *                        pParam->handle is also set to NULL.
+ *
+ ****************************************************************************/
+
+int
+encoder_create(XVID_ENC_PARAM * pParam)
 {
 	Encoder *pEnc;
 	uint32_t i;
@@ -370,9 +401,6 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 
 	/*
 	 * We handle all XVID_ERR_MEMORY here, this makes the code lighter
-	 *
-	 * ToDo?: We could avoid that piece of code if encoder_destroy could
-	 *        handle different destroy levels
 	 */
 #ifdef BFRAMES
  xvid_err_memory4:
@@ -445,10 +473,24 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 	xvid_free(pEnc->reference);
 	xvid_free(pEnc);
 
+	pParam->handle = NULL;
+
 	return XVID_ERR_MEMORY;
 }
 
-int encoder_destroy(Encoder * pEnc)
+/*****************************************************************************
+ * Encoder destruction
+ *
+ * This function destroy the entire encoder structure created by a previous
+ * successful encoder_create call.
+ *
+ * Returned values (for now only one returned value) :
+ *    - XVID_ERR_OK     - no errors
+ *
+ ****************************************************************************/
+
+int
+encoder_destroy(Encoder * pEnc)
 {
 	ENC_CHECK(pEnc);
 
@@ -528,11 +570,27 @@ int encoder_destroy(Encoder * pEnc)
 	return XVID_ERR_OK;
 }
 
+/*****************************************************************************
+ * Frame encoder entry point
+ *
+ * At this moment 2 versions coexist : one for IPB compatible encoder,
+ *                                     another one for the old IP encoder.
+ *
+ * Returned values :
+ *    - XVID_ERR_OK     - no errors
+ *    - XVID_ERR_FORMAT - the image subsystem reported the image had a wrong
+ *                        format
+ ****************************************************************************/
 
 
-// ==================================================================
 #ifdef BFRAMES
-int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pResult)
+/*****************************************************************************
+ * Frame encoder entry point for IPB capable encoder
+ ****************************************************************************/
+int
+encoder_encode(Encoder * pEnc,
+	       XVID_ENC_FRAME * pFrame,
+	       XVID_ENC_STATS * pResult)
 {
 	uint16_t x, y;
 	Bitstream bs;
@@ -550,23 +608,31 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	
 	BitstreamInit(&bs, pFrame->bitstream, 0);
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// bframe "flush" code
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-	if ((pFrame->image == NULL || pEnc->flush_bframes) && 
-		pEnc->bframenum_head < pEnc->bframenum_tail)
+	/*
+	 * bframe "flush" code
+	 */
+   
+	if ( (pFrame->image == NULL || pEnc->flush_bframes) && 
+	     (pEnc->bframenum_head < pEnc->bframenum_tail))
 	{
 
 		if (pEnc->flush_bframes == 0)	
 		{
-			// we have reached end of stream without getting a future reference
-			// .. so encode last final frame a pframe
-			//dprintf("--- PFRAME (final frame correction) --- ");
+			/*
+			 * we have reached the end of stream without getting
+			 * a future reference frame... so encode last final
+			 * frame as a pframe
+			 */
+
+			/* ToDo : remove dprintf calls */
+			/*
+			  dprintf("--- PFRAME (final frame correction) --- ");
+			*/
 			pEnc->bframenum_tail--;
 			SWAP(pEnc->current, pEnc->reference);
 
-			SWAP(pEnc->current, pEnc->bframes[pEnc->bframenum_tail]);
+			SWAP(pEnc->current,
+			     pEnc->bframes[pEnc->bframenum_tail]);
 
 			FrameCodeP(pEnc, &bs, &bits, 1, 0);
 
@@ -574,13 +640,18 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 			pFrame->length = BitstreamLength(&bs);
 			pFrame->input_consumed = 0;
 			pFrame->intra = 0;
+
 			return XVID_ERR_OK;
 		}
 
-		//dprintf("--- BFRAME (flush) --- ");
+		/* ToDo : remove dprintf calls */
+		/*
+		  dprintf("--- BFRAME (flush) --- ");
+		*/
 		FrameCodeB(pEnc, 
-			pEnc->bframes[pEnc->bframenum_head],
-			 &bs, &bits);
+			   pEnc->bframes[pEnc->bframenum_head],
+			   &bs,
+			   &bits);
 		pEnc->bframenum_head++;
 
 
@@ -588,6 +659,7 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 		pFrame->length = BitstreamLength(&bs);
 		pFrame->input_consumed = 0;
 		pFrame->intra = 0;
+
 		return XVID_ERR_OK;
 	}
 
@@ -596,6 +668,7 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 		pFrame->length = 0;
 		pFrame->input_consumed = 1;
 		pFrame->intra = 0;
+
 		return XVID_ERR_OK;
 	}
 
@@ -606,12 +679,20 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 
 	pEnc->flush_bframes = 0;
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%	
+	/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	 * Well there was a separation here so i put it in ANSI C
+	 * comment style :-)
+	 * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
 	SWAP(pEnc->current, pEnc->reference);
 
-	pEnc->current->quant = (pFrame->quant == 0) ? RateControlGetQ(&pEnc->rate_control, 0) : pFrame->quant;
-	
+	EMMS();
+
+	if (pFrame->quant == 0)
+		pEnc->current->quant = RateControlGetQ(&pEnc->rate_control, 0);
+	else
+		pEnc->current->quant = pFrame->quant;
+
 	if(pEnc->current->quant < 1)
 		pEnc->current->quant = 1;
 	
@@ -622,72 +703,118 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	pEnc->current->motion_flags = pFrame->motion;
 	pEnc->current->seconds = pEnc->mbParam.m_seconds;
 	pEnc->current->ticks = pEnc->mbParam.m_ticks;
-	//@@@ TODO: dyanmic fcode (in both directions)
+	/* ToDo : dynamic fcode (in both directions) */
 	pEnc->current->fcode = pEnc->mbParam.m_fcode;
 	pEnc->current->bcode = pEnc->mbParam.m_fcode; 
 
 	start_timer();
-	if (image_input(&pEnc->current->image, pEnc->mbParam.width, pEnc->mbParam.height, pEnc->mbParam.edged_width,
-			pFrame->image, pFrame->colorspace))
-	{
+	if (image_input(&pEnc->current->image,
+			pEnc->mbParam.width,
+			pEnc->mbParam.height,
+			pEnc->mbParam.edged_width,
+			pFrame->image,
+			pFrame->colorspace))
 		return XVID_ERR_FORMAT;
-	}
 	stop_conv_timer();
 
 #ifdef _DEBUG
-	image_copy(&pEnc->sOriginal, &pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.height);
+	image_copy(&pEnc->sOriginal,
+		   &pEnc->current->image,
+		   pEnc->mbParam.edged_width,
+		   pEnc->mbParam.height);
 #endif
 
+	EMMS();
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// lumi masking
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	 * Luminance masking
+	 * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
 	if ((pEnc->current->global_flags & XVID_LUMIMASKING))
 	{
-		int * temp_dquants = (int *) xvid_malloc(pEnc->mbParam.mb_width * pEnc->mbParam.mb_height * sizeof(int), CACHE_LINE);
+		int *temp_dquants = 
+			(int *) xvid_malloc(pEnc->mbParam.mb_width * \
+					    pEnc->mbParam.mb_height * \
+					    sizeof(int),
+					    CACHE_LINE);
 		
-		pEnc->current->quant = adaptive_quantization(pEnc->current->image.y,
-							    pEnc->mbParam.edged_width,	// stride
-							    temp_dquants,
-							    pEnc->current->quant,
-							    pEnc->current->quant,	// min_quant
-							    2*pEnc->current->quant,	// max_quant
-							    pEnc->mbParam.mb_width,
-							    pEnc->mbParam.mb_height);
+		pEnc->current->quant =
+			adaptive_quantization(pEnc->current->image.y,
+					      pEnc->mbParam.edged_width,
+					      temp_dquants,
+					      pEnc->current->quant,
+					      pEnc->current->quant,
+					      2*pEnc->current->quant,
+					      pEnc->mbParam.mb_width,
+					      pEnc->mbParam.mb_height);
 			
 		for (y = 0; y < pEnc->mbParam.mb_height; y++)
+		{
+
+			#define OFFSET(x,y) ((x) + (y)*pEnc->mbParam.mb_width)
+
 			for (x = 0; x < pEnc->mbParam.mb_width; x++)
 			{
-				MACROBLOCK *pMB = &pEnc->current->mbs[x + y * pEnc->mbParam.mb_width];
-				pMB->dquant = iDQtab[(temp_dquants[y * pEnc->mbParam.mb_width + x] + 2)];
+				MACROBLOCK *pMB =
+					&pEnc->current->mbs[OFFSET(x,y)];
+				pMB->dquant =
+					iDQtab[temp_dquants[OFFSET(x,y)] + 2];
 			}
+
+			#undef OFFSET
+
+		}
+
 		xvid_free(temp_dquants);
 	}
 
+	/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	 * ivop/pvop/bvop selection
+	 * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// ivop/pvop/bvop selection
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 	if (pEnc->iFrameNum == 0 || 
-		pFrame->intra == 1 ||
-		(pFrame->intra < 0 && (pEnc->iMaxKeyInterval > 0 && pEnc->iFrameNum >= pEnc->iMaxKeyInterval)) ||
-		image_mad(&pEnc->reference->image, &pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.width, pEnc->mbParam.height) > 30)
+	    pFrame->intra   == 1 ||
+
+	    (pFrame->intra < 0  &&
+	     pEnc->iMaxKeyInterval > 0 &&
+	     pEnc->iFrameNum >= pEnc->iMaxKeyInterval) ||
+
+	    image_mad(&pEnc->reference->image,
+		      &pEnc->current->image,
+		      pEnc->mbParam.edged_width,
+		      pEnc->mbParam.width,
+		      pEnc->mbParam.height) > 30)
 	{
-		//dprintf("--- IFRAME ---");
+		/*
+		 * This will be coded as an Intra Frame
+		 */
+
+		/* ToDo : Remove dprintf calls */
+		/*
+		  dprintf("--- IFRAME ---");
+		*/
 
 		FrameCodeI(pEnc, &bs, &bits);
 
 		pFrame->intra = 1;
 		pEnc->flush_bframes = 1;
 
-		/* note: sequences like "IIBB" decode fine with msfdam but,
-		   go screwy with divx5.00 */
+		/*
+		 * NB : sequences like "IIBB" decode fine with msfdam but,
+		 *      go screwy with divx 5.00
+		 */
 	}
 	else if (pEnc->bframenum_tail >= pEnc->mbParam.max_bframes)
 	{
-		//dprintf("--- PFRAME ---");
+		/*
+		 * This will be coded as a Predicted Frame
+		 */
+
+		/* ToDo : Remove dprintf calls */
+		/*
+		  dprintf("--- PFRAME ---");
+		*/
 
 		FrameCodeP(pEnc, &bs, &bits, 1, 0);
 		pFrame->intra = 0;
@@ -695,18 +822,29 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	}
 	else
 	{
-		//dprintf("--- BFRAME (store) ---  head=%i tail=%i", pEnc->bframenum_head, pEnc->bframenum_tail);
+		/*
+		 * This will be coded as a Bidirectional Frame
+		 */
+
+		/* ToDo : Remove dprintf calls */
+		/*
+		  dprintf("--- BFRAME (store) ---  head=%i tail=%i",
+		  pEnc->bframenum_head,
+		  pEnc->bframenum_tail);
+		*/
 
 		if (pFrame->bquant < 1)
 		{
-			pEnc->current->quant = ((pEnc->reference->quant + pEnc->current->quant) * pEnc->bquant_ratio) / 200;
+			pEnc->current->quant =
+				((pEnc->reference->quant+pEnc->current->quant)*\
+				 pEnc->bquant_ratio) / 200;
 		}
 		else
 		{
 			pEnc->current->quant = pFrame->bquant;
 		}
 		
-		// store frame into bframe buffer & swap ref back to current
+		/* store frame into bframe buffer & swap ref back to current */
 		SWAP(pEnc->current, pEnc->bframes[pEnc->bframenum_tail]);
 		SWAP(pEnc->current, pEnc->reference);
 
@@ -722,6 +860,7 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 			pEnc->mbParam.m_seconds++;
 			pEnc->mbParam.m_ticks = 0;
 		}
+
 		return XVID_ERR_OK;
 	}
 
@@ -731,17 +870,22 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	if (pResult)
 	{
 		pResult->quant = pEnc->current->quant;
-		pResult->hlength = pFrame->length - (pEnc->sStat.iTextBits / 8);
+		pResult->hlength = pFrame->length - (pEnc->sStat.iTextBits/8);
 		pResult->kblks = pEnc->sStat.kblks;
 		pResult->mblks = pEnc->sStat.mblks;
 		pResult->ublks = pEnc->sStat.ublks;
 	}
 
-#ifdef _DEBUG
-	psnr = image_psnr(&pEnc->sOriginal, &pEnc->current->image, pEnc->mbParam.edged_width,
-				pEnc->mbParam.width, pEnc->mbParam.height);
+	EMMS();
 
-	sprintf(temp, "PSNR: %f\n", psnr);
+#ifdef _DEBUG
+	psnr = image_psnr(&pEnc->sOriginal,
+			  &pEnc->current->image,
+			  pEnc->mbParam.edged_width,
+			  pEnc->mbParam.width,
+			  pEnc->mbParam.height);
+
+	snprintf(temp, 127, "PSNR: %f\n", psnr);
 	DEBUG(temp);
 #endif
 
@@ -767,9 +911,14 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 
 	return XVID_ERR_OK;
 }
-// ==================================================================
 #else
-int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pResult)
+/*****************************************************************************
+ * Frame encoder entry point for IP capable encoder
+ ****************************************************************************/
+int
+encoder_encode(Encoder * pEnc,
+	       XVID_ENC_FRAME * pFrame,
+	       XVID_ENC_STATS * pResult)
 {
 	uint16_t x, y;
 	Bitstream bs;
@@ -777,7 +926,7 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	uint16_t write_vol_header = 0;
 #ifdef _DEBUG
 	float psnr;
-	uint8_t temp[100];
+	uint8_t temp[128];
 #endif
 
 	start_global_timer();
@@ -794,15 +943,20 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	pEnc->mbParam.hint = &pFrame->hint;
 
 	start_timer();
-	if (image_input(&pEnc->current->image, pEnc->mbParam.width, pEnc->mbParam.height, pEnc->mbParam.edged_width,
-			pFrame->image, pFrame->colorspace))
-	{
+	if (image_input(&pEnc->current->image,
+			pEnc->mbParam.width,
+			pEnc->mbParam.height,
+			pEnc->mbParam.edged_width,
+			pFrame->image,
+			pFrame->colorspace) < 0)
 		return XVID_ERR_FORMAT;
-	}
 	stop_conv_timer();
 
 #ifdef _DEBUG
-        image_copy(&pEnc->sOriginal, &pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.height);
+        image_copy(&pEnc->sOriginal,
+		   &pEnc->current->image,
+		   pEnc->mbParam.edged_width,
+		   pEnc->mbParam.height);
 #endif
 
 	EMMS();
@@ -820,35 +974,54 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 
 	if ((pEnc->current->global_flags & XVID_LUMIMASKING))
 	{
-		int * temp_dquants = (int *) xvid_malloc(pEnc->mbParam.mb_width * pEnc->mbParam.mb_height * sizeof(int), CACHE_LINE);
+		int * temp_dquants = (int *)
+			xvid_malloc(pEnc->mbParam.mb_width * \
+				    pEnc->mbParam.mb_height * \
+				    sizeof(int),
+				    CACHE_LINE);
 		
-		pEnc->current->quant = adaptive_quantization(pEnc->current->image.y,
-							    pEnc->mbParam.edged_width,	// stride
-							    temp_dquants,
-							    pEnc->current->quant,
-							    pEnc->current->quant,	// min_quant
-							    2*pEnc->current->quant,	// max_quant
-							    pEnc->mbParam.mb_width,
-							    pEnc->mbParam.mb_height);
+		pEnc->current->quant =
+			adaptive_quantization(pEnc->current->image.y,
+					      pEnc->mbParam.edged_width,
+					      temp_dquants,
+					      pEnc->current->quant,
+					      pEnc->current->quant,
+					      2*pEnc->current->quant,
+					      pEnc->mbParam.mb_width,
+					      pEnc->mbParam.mb_height);
 			
 		for (y = 0; y < pEnc->mbParam.mb_height; y++)
+		{
+
+			#define OFFSET(x,y) ((x) + (y)*pEnc->mbParam.mb_width)
+
 			for (x = 0; x < pEnc->mbParam.mb_width; x++)
 			{
-				MACROBLOCK *pMB = &pEnc->current->mbs[x + y * pEnc->mbParam.mb_width];
-				pMB->dquant = iDQtab[(temp_dquants[y * pEnc->mbParam.mb_width + x] + 2)];
+
+
+				MACROBLOCK *pMB =
+					&pEnc->current->mbs[OFFSET(x,y)];
+				pMB->dquant =
+					iDQtab[temp_dquants[OFFSET(x,y)] + 2];
 			}
+
+			#undef OFFSET
+		}
+
 		xvid_free(temp_dquants);
 	}
 
-	if (pEnc->current->global_flags & XVID_H263QUANT) {
+	if (pEnc->current->global_flags & XVID_H263QUANT)
+	{
 		if(pEnc->mbParam.m_quant_type != H263_QUANT)
 			write_vol_header = 1;
 		pEnc->mbParam.m_quant_type = H263_QUANT;
 	}
-	else if(pEnc->current->global_flags & XVID_MPEGQUANT) {
-		int ret1, ret2;
+	else if (pEnc->current->global_flags & XVID_MPEGQUANT)
+	{
+		int matrix1_changed, matrix2_changed;
 
-		ret1 = ret2 = 0;
+		matrix1_changed = matrix2_changed = 0;
 
 		if(pEnc->mbParam.m_quant_type != MPEG4_QUANT)
 			write_vol_header = 1;
@@ -857,33 +1030,57 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 		
 		if ((pEnc->current->global_flags & XVID_CUSTOM_QMATRIX) > 0) {
 			if(pFrame->quant_intra_matrix != NULL)
-				ret1 = set_intra_matrix(pFrame->quant_intra_matrix);
+				matrix1_changed =
+					set_intra_matrix(pFrame->quant_intra_matrix);
 			if(pFrame->quant_inter_matrix != NULL)
-				ret2 = set_inter_matrix(pFrame->quant_inter_matrix);
+				matrix2_changed
+					= set_inter_matrix(pFrame->quant_inter_matrix);
 		}
 		else {
-			ret1 = set_intra_matrix(get_default_intra_matrix());
-			ret2 = set_inter_matrix(get_default_inter_matrix());
+			matrix1_changed = set_intra_matrix(get_default_intra_matrix());
+			matrix2_changed = set_inter_matrix(get_default_inter_matrix());
 		}
 		if(write_vol_header == 0)
-			write_vol_header = ret1 | ret2;
+			write_vol_header = matrix1_changed | matrix2_changed;
 	}
 
 	if (pFrame->intra < 0)
 	{
-		if ((pEnc->iFrameNum == 0) || ((pEnc->iMaxKeyInterval > 0) 
-					       && (pEnc->iFrameNum >= pEnc->iMaxKeyInterval)))
+		if ((pEnc->iFrameNum == 0) ||
 
-			pFrame->intra = FrameCodeI(pEnc, &bs, &bits);
+		    ((pEnc->iMaxKeyInterval > 0) &&
+		     (pEnc->iFrameNum >= pEnc->iMaxKeyInterval)))
+		{
+			pFrame->intra = FrameCodeI(pEnc,
+						   &bs,
+						   &bits);
+		}
 		else
-			pFrame->intra = FrameCodeP(pEnc, &bs, &bits, 0, write_vol_header);
+		{
+			pFrame->intra =	FrameCodeP(pEnc,
+						   &bs,
+						   &bits,
+						   0,
+						   write_vol_header);
+		}
 	}
 	else
 	{
 		if (pFrame->intra == 1)
-			pFrame->intra = FrameCodeI(pEnc, &bs, &bits);
+		{
+			pFrame->intra = FrameCodeI(pEnc,
+						   &bs,
+						   &bits);
+		}
 		else
-			pFrame->intra = FrameCodeP(pEnc, &bs, &bits, 1, write_vol_header);
+		{
+			pFrame->intra = FrameCodeP(pEnc,
+						   &bs,
+						   &bits,
+						   1,
+						   write_vol_header);
+		}
+
 	}
 
 	BitstreamPutBits(&bs, 0xFFFF, 16);
@@ -911,10 +1108,13 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	}
 
 #ifdef _DEBUG
-	psnr = image_psnr(&pEnc->sOriginal, &pEnc->current->image, pEnc->mbParam.edged_width,
-				pEnc->mbParam.width, pEnc->mbParam.height);
+	psnr = image_psnr(&pEnc->sOriginal,
+			  &pEnc->current->image,
+			  pEnc->mbParam.edged_width,
+			  pEnc->mbParam.width,
+			  pEnc->mbParam.height);
 
-	sprintf(temp, "PSNR: %f\n", psnr);
+	snprintf(temp, 127, "PSNR: %f\n", psnr);
 	DEBUG(temp);
 #endif
 
