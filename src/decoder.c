@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.63 2004-07-24 11:46:08 edgomez Exp $
+ * $Id: decoder.c,v 1.64 2004-07-26 19:32:28 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -396,14 +396,13 @@ decoder_mb_decode(DECODER * dec,
 				uint8_t * pY_Cur,
 				uint8_t * pU_Cur,
 				uint8_t * pV_Cur,
-				const int reduced_resolution,
+				int reduced_resolution,
 				const MACROBLOCK * pMB)
 {
-	DECLARE_ALIGNED_MATRIX(data, 6, 64, int16_t, CACHE_LINE);
+	DECLARE_ALIGNED_MATRIX(data, 1, 64, int16_t, CACHE_LINE);
 
 	int stride = dec->edged_width;
 	int next_block = stride * (reduced_resolution ? 16 : 8);
-	const int stride2 = stride/2;
 	int i;
 	const uint32_t iQuant = pMB->quant;
 	const int direction = dec->alternate_vertical_scan ? 2 : 0;
@@ -413,63 +412,62 @@ decoder_mb_decode(DECODER * dec,
 			int direction,
 			const int quant,
 			const uint16_t *matrix);
+	typedef void (*add_residual_function_t)(
+			uint8_t *predicted_block,
+			const int16_t *residual,
+			int stride);
 
 	const get_inter_block_function_t get_inter_block = (dec->quant_type == 0)
-		? get_inter_block_h263
-		: get_inter_block_mpeg;
+		? (get_inter_block_function_t)get_inter_block_h263
+		: (get_inter_block_function_t)get_inter_block_mpeg;
+
+	const add_residual_function_t add_residual = (reduced_resolution)
+		? (add_residual_function_t)add_upsampled_8x8_16to8
+		: (add_residual_function_t)transfer_16to8add;
+
+	uint8_t *dst[6];
+	int strides[6];
 	
-	memset(&data[0], 0, 6*64*sizeof(int16_t));	/* clear */
-
-	for (i = 0; i < 6; i++) {
-
-		if (cbp & (1 << (5 - i))) {	/* coded */
-
-
-			/* Decode coeffs and dequantize on the fly */
-			start_timer();
-			get_inter_block(bs, &data[i*64], direction, iQuant, get_inter_matrix(dec->mpeg_quant_matrices));
-			stop_coding_timer();
-
-			start_timer();
-			idct(&data[i * 64]);
-			stop_idct_timer();
-		}
-	}
 
 	if (dec->interlacing && pMB->field_dct) {
 		next_block = stride;
 		stride *= 2;
 	}
 
-	start_timer();
-	if (reduced_resolution) {
-		if (cbp & 32)
-			add_upsampled_8x8_16to8(pY_Cur, &data[0 * 64], stride);
-		if (cbp & 16)
-			add_upsampled_8x8_16to8(pY_Cur + 16, &data[1 * 64], stride);
-		if (cbp & 8)
-			add_upsampled_8x8_16to8(pY_Cur + next_block, &data[2 * 64], stride);
-		if (cbp & 4)
-			add_upsampled_8x8_16to8(pY_Cur + 16 + next_block, &data[3 * 64], stride);
-		if (cbp & 2)
-			add_upsampled_8x8_16to8(pU_Cur, &data[4 * 64], stride2);
-		if (cbp & 1)
-			add_upsampled_8x8_16to8(pV_Cur, &data[5 * 64], stride2);
-	} else {
-		if (cbp & 32)
-			transfer_16to8add(pY_Cur, &data[0 * 64], stride);
-		if (cbp & 16)
-			transfer_16to8add(pY_Cur + 8, &data[1 * 64], stride);
-		if (cbp & 8)
-			transfer_16to8add(pY_Cur + next_block, &data[2 * 64], stride);
-		if (cbp & 4)
-			transfer_16to8add(pY_Cur + 8 + next_block, &data[3 * 64], stride);
-		if (cbp & 2)
-			transfer_16to8add(pU_Cur, &data[4 * 64], stride2);
-		if (cbp & 1)
-			transfer_16to8add(pV_Cur, &data[5 * 64], stride2);
+	reduced_resolution = !!reduced_resolution;
+	dst[0] = pY_Cur;
+	dst[2] = pY_Cur + next_block;
+	dst[1] = dst[0] + (8<<reduced_resolution);
+	dst[3] = dst[2] + (8<<reduced_resolution);
+	dst[4] = pU_Cur;
+	dst[5] = pV_Cur;
+	strides[0] = strides[1] = strides[2] = strides[3] = stride;
+	strides[4] = stride/2;
+	strides[5] = stride/2;
+	
+	for (i = 0; i < 6; i++) {
+		/* Process only coded blocks */
+		if (cbp & (1 << (5 - i))) {
+
+			/* Clear the block */
+			memset(&data[0], 0, 64*sizeof(int16_t));
+
+			/* Decode coeffs and dequantize on the fly */
+			start_timer();
+			get_inter_block(bs, &data[0], direction, iQuant, get_inter_matrix(dec->mpeg_quant_matrices));
+			stop_coding_timer();
+
+			/* iDCT */
+			start_timer();
+			idct(&data[0]);
+			stop_idct_timer();
+
+			/* Add this residual to the predicted block */
+			start_timer();
+			add_residual(dst[i], &data[0], strides[i]);
+			stop_transfer_timer();
+		}
 	}
-	stop_transfer_timer();
 }
 
 /* decode an inter macroblock */
