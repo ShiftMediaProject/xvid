@@ -901,35 +901,12 @@ int32_t PMVfastSearch16(
 
 	iFound=0;
 	
-/* Step 2: Calculate Distance= |MedianMVX| + |MedianMVY| where MedianMV is the motion 
-   vector of the median. 
-   If PredEq=1 and MVpredicted = Previous Frame MV, set Found=2  
-*/
-
-        if ((bPredEq) && (MVequal(pmv[0],prevMB->mvs[0]) ) )
-		iFound=2;
-
-/* Step 3: If Distance>0 or thresb<1536 or PredEq=1 Select small Diamond Search. 
-   Otherwise select large Diamond Search. 
-*/
-
-	if ( (pmv[0].x != 0) || (pmv[0].y != 0) || (threshB<1536) || (bPredEq) ) 
-		iDiamondSize=1;	// halfpel!
-	else
-		iDiamondSize=2;	// halfpel!
-
-	if (!(MotionFlags & PMV_HALFPELDIAMOND16) )
-		iDiamondSize*=2;
-
 /* Step 4: Calculate SAD around the Median prediction. 
    MinSAD=SAD 
    If Motion Vector equal to Previous frame motion vector 
    and MinSAD<PrevFrmSAD goto Step 10. 
    If SAD<=256 goto Step 10. 
 */	
-
-
-// Prepare for main loop 
 
 	*currMV=pmv[0];		/* current best := prediction */
 	if (!(MotionFlags & PMV_HALFPEL16 ))
@@ -962,12 +939,42 @@ int32_t PMVfastSearch16(
 	
 	if ( (iMinSAD < 256 ) || ( (MVequal(*currMV,prevMB->mvs[0])) && ((uint32_t)iMinSAD < prevMB->sad16) ) )
 	{
-		
+		if (iMinSAD < 2*iQuant) // high chances for SKIP-mode
+		{	
+			if (!MVzero(*currMV)) 
+			{
+				iMinSAD += MV16_00_BIAS;
+				CHECK_MV16_ZERO;		// (0,0) saves space for letterboxed pictures
+				iMinSAD -= MV16_00_BIAS;
+			}
+		}
+
 		if (MotionFlags & PMV_QUICKSTOP16) 
 			goto PMVfast16_Terminate_without_Refine;
 		if (MotionFlags & PMV_EARLYSTOP16)
 			goto PMVfast16_Terminate_with_Refine;
 	}
+
+
+/* Step 2 (lazy eval): Calculate Distance= |MedianMVX| + |MedianMVY| where MedianMV is the motion 
+   vector of the median. 
+   If PredEq=1 and MVpredicted = Previous Frame MV, set Found=2  
+*/
+
+        if ((bPredEq) && (MVequal(pmv[0],prevMB->mvs[0]) ) )
+		iFound=2;
+
+/* Step 3 (lazy eval): If Distance>0 or thresb<1536 or PredEq=1 Select small Diamond Search. 
+   Otherwise select large Diamond Search. 
+*/
+
+	if ( (!MVzero(pmv[0])) || (threshB<1536) || (bPredEq) )
+		iDiamondSize=1;	// halfpel!
+	else
+		iDiamondSize=2;	// halfpel!
+
+	if (!(MotionFlags & PMV_HALFPELDIAMOND16) )
+		iDiamondSize*=2;
 
 /* 
    Step 5: Calculate SAD for motion vectors taken from left block, top, top-right, and Previous frame block. 
@@ -978,36 +985,51 @@ int32_t PMVfastSearch16(
 
 // (0,0) is always possible
 
-	CHECK_MV16_ZERO;
+	if (!MVzero(pmv[0]))
+		CHECK_MV16_ZERO;
 
 // previous frame MV is always possible
-	CHECK_MV16_CANDIDATE(prevMB->mvs[0].x,prevMB->mvs[0].y);
+
+	if (!MVzero(prevMB->mvs[0]))
+	if (!MVequal(prevMB->mvs[0],pmv[0]))
+		CHECK_MV16_CANDIDATE(prevMB->mvs[0].x,prevMB->mvs[0].y);
 	
 // left neighbour, if allowed
-	if (x != 0) 
+
+	if (!MVzero(pmv[1]))
+	if (!MVequal(pmv[1],prevMB->mvs[0]))
+	if (!MVequal(pmv[1],pmv[0]))
 	{
 		if (!(MotionFlags & PMV_HALFPEL16 ))
 		{	pmv[1].x = EVEN(pmv[1].x);
-		pmv[1].y = EVEN(pmv[1].y);
+			pmv[1].y = EVEN(pmv[1].y);
 		}
+
 		CHECK_MV16_CANDIDATE(pmv[1].x,pmv[1].y);		
 	}
 
 // top neighbour, if allowed
-	if (y != 0)
+	if (!MVzero(pmv[2]))
+	if (!MVequal(pmv[2],prevMB->mvs[0]))
+	if (!MVequal(pmv[2],pmv[0]))
+	if (!MVequal(pmv[2],pmv[1]))
 	{	
 		if (!(MotionFlags & PMV_HALFPEL16 ))
 		{	pmv[2].x = EVEN(pmv[2].x);
-		pmv[2].y = EVEN(pmv[2].y);
+			pmv[2].y = EVEN(pmv[2].y);
 		}
 		CHECK_MV16_CANDIDATE(pmv[2].x,pmv[2].y);
 	
 // top right neighbour, if allowed
-		if ((uint32_t)x != (iWcount-1))
+		if (!MVzero(pmv[3]))
+		if (!MVequal(pmv[3],prevMB->mvs[0]))
+		if (!MVequal(pmv[3],pmv[0]))
+		if (!MVequal(pmv[3],pmv[1]))
+		if (!MVequal(pmv[3],pmv[2]))
 		{
 			if (!(MotionFlags & PMV_HALFPEL16 ))
 			{	pmv[3].x = EVEN(pmv[3].x);
-			pmv[3].y = EVEN(pmv[3].y);
+				pmv[3].y = EVEN(pmv[3].y);
 			}
 			CHECK_MV16_CANDIDATE(pmv[3].x,pmv[3].y);
 		}
@@ -1235,6 +1257,7 @@ int32_t PMVfastSearch8(
 	int32_t psad[4];
 	VECTOR newMV;
 	VECTOR backupMV;
+	VECTOR startMV = { start_x, start_y };
 	
 	const MACROBLOCK * const pMB = pMBs + (x>>1) + (y>>1) * iWcount;
 	const MACROBLOCK * const prevMB = prevMBs + (x>>1) + (y>>1) * iWcount;
@@ -1243,7 +1266,7 @@ int32_t PMVfastSearch8(
     	int32_t iFound,bPredEq;
     	int32_t iMinSAD,iSAD;
 
-	int32_t iSubBlock = ((y&1)<<1) + (x&1);
+	int32_t iSubBlock = (y&1)+(y&1) + (x&1);
 
 /* Get maximum range */
 	get_range(&min_dx, &max_dx, &min_dy, &max_dy,
@@ -1251,9 +1274,9 @@ int32_t PMVfastSearch8(
 
 	if (!(MotionFlags & PMV_HALFPELDIAMOND8 ))
 	{ min_dx = EVEN(min_dx);
-	max_dx = EVEN(max_dx);
-	min_dy = EVEN(min_dy);
-	max_dy = EVEN(max_dy); 
+	  max_dx = EVEN(max_dx);
+	  min_dy = EVEN(min_dy);
+	  max_dy = EVEN(max_dy); 
 	}		/* because we might use IF (dx>max_dx) THEN dx=max_dx; */
 		
 
@@ -1276,26 +1299,6 @@ int32_t PMVfastSearch8(
 
 	iFound=0;
 	
-/* Step 2: Calculate Distance= |MedianMVX| + |MedianMVY| where MedianMV is the motion 
-   vector of the median. 
-   If PredEq=1 and MVpredicted = Previous Frame MV, set Found=2  
-*/
-
-        if ((bPredEq) && (MVequal(pmv[0],prevMB->mvs[iSubBlock]) ) )
-		iFound=2;
-
-/* Step 3: If Distance>0 or thresb<1536 or PredEq=1 Select small Diamond Search. 
-   Otherwise select large Diamond Search. 
-*/
-
-	if ( (pmv[0].x != 0) || (pmv[0].y != 0) || (threshB<1536/4) || (bPredEq) ) 
-		iDiamondSize=1;	// 1 halfpel!
-	else
-		iDiamondSize=2;	// 2 halfpel = 1 full pixel!
-
-	if (!(MotionFlags & PMV_HALFPELDIAMOND8) )
-		iDiamondSize*=2;
-
 /* Step 4: Calculate SAD around the Median prediction. 
    MinSAD=SAD 
    If Motion Vector equal to Previous frame motion vector 
@@ -1306,21 +1309,41 @@ int32_t PMVfastSearch8(
 
 // Prepare for main loop 
 
-	currMV->x=start_x;		/* start with mv16 */
-	currMV->y=start_y;		
+	*currMV = startMV;
 	
 	iMinSAD = sad8( cur, 
 			get_ref_mv(pRef, pRefH, pRefV, pRefHV, x, y, 8, currMV, iEdgedWidth),
 			iEdgedWidth);
   	iMinSAD += calc_delta_8(currMV->x - pmv[0].x, currMV->y - pmv[0].y, (uint8_t)iFcode, iQuant);
 	
-	if ( (iMinSAD < 256/4 ) || ( (MVequal(*currMV,prevMB->mvs[iSubBlock])) && ((uint32_t)iMinSAD < prevMB->sad8[iSubBlock]) ) )
+	if ( (iMinSAD < 256/4 ) || ( (MVequal(*currMV,prevMB->mvs[iSubBlock])) 
+				&& ((uint32_t)iMinSAD < prevMB->sad8[iSubBlock]) ) )
 	{
 		if (MotionFlags & PMV_QUICKSTOP16) 
 			goto PMVfast8_Terminate_without_Refine;
 		if (MotionFlags & PMV_EARLYSTOP16)
 			goto PMVfast8_Terminate_with_Refine;
 	}
+
+/* Step 2 (lazy eval): Calculate Distance= |MedianMVX| + |MedianMVY| where MedianMV is the motion 
+   vector of the median. 
+   If PredEq=1 and MVpredicted = Previous Frame MV, set Found=2  
+*/
+
+        if ((bPredEq) && (MVequal(pmv[0],prevMB->mvs[iSubBlock]) ) )
+		iFound=2;
+
+/* Step 3 (lazy eval): If Distance>0 or thresb<1536 or PredEq=1 Select small Diamond Search. 
+   Otherwise select large Diamond Search. 
+*/
+
+	if ( (!MVzero(pmv[0])) || (threshB<1536/4) || (bPredEq) ) 
+		iDiamondSize=1;	// 1 halfpel!
+	else
+		iDiamondSize=2;	// 2 halfpel = 1 full pixel!
+
+	if (!(MotionFlags & PMV_HALFPELDIAMOND8) )
+		iDiamondSize*=2;
 
 
 /* 
@@ -1330,40 +1353,68 @@ int32_t PMVfastSearch8(
    If MV is (0,0) subtract offset. 
 */
 
-// the prediction might be even better than mv16
-	CHECK_MV8_CANDIDATE(pmv[0].x,pmv[0].y);
+// the median prediction might be even better than mv16
 
-// (0,0) is always possible
+	if (!MVequal(pmv[0],startMV))
+		CHECK_MV8_CANDIDATE(pmv[0].x,pmv[0].y);
+
+// (0,0) if needed
+	if (!MVzero(pmv[0]))
+	if (!MVzero(startMV))
 	CHECK_MV8_ZERO;
 
-// previous frame MV is always possible
+// previous frame MV if needed
+	if (!MVzero(prevMB->mvs[iSubBlock]))
+	if (!MVequal(prevMB->mvs[iSubBlock],startMV))
+	if (!MVequal(prevMB->mvs[iSubBlock],pmv[0]))
 	CHECK_MV8_CANDIDATE(prevMB->mvs[iSubBlock].x,prevMB->mvs[iSubBlock].y);
-	
-// left neighbour, if allowed
-	if (psad[1] != MV_MAX_ERROR) 
+
+	if ( (iMinSAD <= threshA) || ( MVequal(*currMV,prevMB->mvs[iSubBlock]) && ((uint32_t)iMinSAD < prevMB->sad8[iSubBlock]) ) )
+	{	
+		if (MotionFlags & PMV_QUICKSTOP16) 
+			goto PMVfast8_Terminate_without_Refine;
+		if (MotionFlags & PMV_EARLYSTOP16)
+			goto PMVfast8_Terminate_with_Refine;
+	}
+
+
+// left neighbour, if allowed and needed
+	if (!MVzero(pmv[1]))
+	if (!MVequal(pmv[1],startMV))
+	if (!MVequal(pmv[1],prevMB->mvs[iSubBlock]))
+	if (!MVequal(pmv[1],pmv[0]))
 	{
 		if (!(MotionFlags & PMV_HALFPEL8 ))	
 		{	pmv[1].x = EVEN(pmv[1].x);	
-		pmv[1].y = EVEN(pmv[1].y);
+			pmv[1].y = EVEN(pmv[1].y);
 		}
 		CHECK_MV8_CANDIDATE(pmv[1].x,pmv[1].y);		
 	}
 
-// top neighbour, if allowed
-	if (psad[2] != MV_MAX_ERROR) 
+// top neighbour, if allowed and needed
+	if (!MVzero(pmv[2]))
+	if (!MVequal(pmv[2],startMV))
+	if (!MVequal(pmv[2],prevMB->mvs[iSubBlock]))
+	if (!MVequal(pmv[2],pmv[0]))
+	if (!MVequal(pmv[2],pmv[1]))
 	{	
 		if (!(MotionFlags & PMV_HALFPEL8 ))
 		{	pmv[2].x = EVEN(pmv[2].x);
-		pmv[2].y = EVEN(pmv[2].y);
+			pmv[2].y = EVEN(pmv[2].y);
 		}
 		CHECK_MV8_CANDIDATE(pmv[2].x,pmv[2].y);
 	
-// top right neighbour, if allowed
-		if (psad[3] != MV_MAX_ERROR) 
+// top right neighbour, if allowed and needed
+	if (!MVzero(pmv[3]))
+	if (!MVequal(pmv[3],startMV))
+	if (!MVequal(pmv[3],prevMB->mvs[iSubBlock]))
+	if (!MVequal(pmv[3],pmv[0]))
+	if (!MVequal(pmv[3],pmv[1]))
+	if (!MVequal(pmv[3],pmv[2]))
 		{
 			if (!(MotionFlags & PMV_HALFPEL8 ))
 			{	pmv[3].x = EVEN(pmv[3].x);
-			pmv[3].y = EVEN(pmv[3].y);
+				pmv[3].y = EVEN(pmv[3].y);
 			}
 			CHECK_MV8_CANDIDATE(pmv[3].x,pmv[3].y);
 		}
