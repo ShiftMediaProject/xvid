@@ -33,7 +33,7 @@
  *
  *  - 13.06.2002 Added legal header - Cosmetic
  *
- *  $Id: decoder.h,v 1.7 2002-06-13 21:53:08 edgomez Exp $
+ *  $Id: decoder.h,v 1.8 2002-07-09 01:09:33 chenm001 Exp $
  *
  ****************************************************************************/
 
@@ -106,6 +106,9 @@ DECODER;
 void init_decoder(uint32_t cpu_flags);
 
 int decoder_create(XVID_DEC_PARAM * param);
+//NIC
+int IM1_decoder_create(XVID_DEC_PARAM * param,XVID_DEC_FRAME * frame);
+//ND NIC
 int decoder_destroy(DECODER * dec);
 int decoder_decode(DECODER * dec,
 				   XVID_DEC_FRAME * frame);
