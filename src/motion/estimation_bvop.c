@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.9 2004-07-10 17:42:18 edgomez Exp $
+ * $Id: estimation_bvop.c,v 1.10 2004-07-18 11:48:08 syskin Exp $
  *
  ****************************************************************************/
 
@@ -375,7 +375,7 @@ initialize_searchData(SearchData * Data_d,
 	Data_d->CurU = Data_f->CurU = Data_b->CurU = Data_i->CurU = Cur[1];
 	Data_d->CurV = Data_f->CurV = Data_b->CurV = Data_i->CurV = Cur[2];
 
-	Data_d->lambda16 = lambda/4;
+	Data_d->lambda16 = lambda;
 	Data_f->lambda16 = Data_b->lambda16 = Data_i->lambda16 = lambda;
 
 	/* reset chroma-sad cache */
@@ -944,6 +944,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 
 	const int32_t TRB = time_pp - time_bp;
 	const int32_t TRD = time_pp;
+	DECLARE_ALIGNED_MATRIX(dct_space, 3, 64, int16_t, CACHE_LINE);
 
 	/* some pre-inintialized data for the rest of the search */
 	SearchData Data_d, Data_f, Data_b, Data_i;
@@ -954,6 +955,9 @@ MotionEstimationBVOP(MBParam * const pParam,
 	Data_d.rounding = 0;
 	Data_d.chroma = frame->motion_flags & XVID_ME_CHROMA_BVOP;
 	Data_d.iQuant = frame->quant;
+	Data_d.dctSpace = dct_space;
+	Data_d.quant_type = !(pParam->vol_flags & XVID_VOL_MPEGQUANT);
+	Data_d.mpeg_quant_matrices = pParam->mpeg_quant_matrices;
 
 	Data_d.RefQ = f_refV->u; /* a good place, also used in MC (for similar purpose) */
 
@@ -1006,10 +1010,10 @@ MotionEstimationBVOP(MBParam * const pParam,
 
 			sad2 = best_sad;
 
-			if (Data_f.iMinSAD[0] < 2*sad2+1500)
+			if (Data_f.iMinSAD[0] < 2*sad2+2000)
 				SearchBF_final(i, j, frame->motion_flags, pParam, &best_sad, &Data_f);
 
-			if (Data_b.iMinSAD[0] < 2*sad2+1500)
+			if (Data_b.iMinSAD[0] < 2*sad2+2000)
 				SearchBF_final(i, j, frame->motion_flags, pParam, &best_sad, &Data_b);
 
 			SearchInterpolate_initial(i, j, frame->motion_flags, pParam, &f_predMV, &b_predMV, &best_sad,
@@ -1019,9 +1023,8 @@ MotionEstimationBVOP(MBParam * const pParam,
 				|| Data_i.iMinSAD[0] <= best_sad)
 
 				SearchInterpolate_final(i, j, frame->motion_flags, pParam, &best_sad, &Data_i);
-
 			
-			if ((Data_d.iMinSAD[0] <= best_sad) && (!(frame->motion_flags&XVID_ME_SKIP_DELTASEARCH)))
+			if ((Data_d.iMinSAD[0] <= 2*best_sad) && (!frame->motion_flags&XVID_ME_SKIP_DELTASEARCH))
 				SearchDirect_final(frame->motion_flags, b_mb, &best_sad, &Data_d);
 
 
@@ -1036,7 +1039,11 @@ MotionEstimationBVOP(MBParam * const pParam,
 				}
 			}
 
-			ModeDecision_BVOP_SAD(&Data_d, &Data_b, &Data_f, &Data_i, pMB, b_mb, &f_predMV, &b_predMV);
+			if (frame->vop_flags & XVID_VOP_RD_BVOP) 
+				ModeDecision_BVOP_RD(&Data_d, &Data_b, &Data_f, &Data_i, 
+					pMB, b_mb, &f_predMV, &b_predMV, frame->motion_flags, pParam, i, j);
+			else
+				ModeDecision_BVOP_SAD(&Data_d, &Data_b, &Data_f, &Data_i, pMB, b_mb, &f_predMV, &b_predMV);
 
 		}
 	}

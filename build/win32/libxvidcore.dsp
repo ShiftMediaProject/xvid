@@ -1137,6 +1137,10 @@ SOURCE=..\..\src\motion\estimation_rd_based.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\src\motion\estimation_rd_based_bvop.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\src\motion\gmc.c
 # End Source File
 # Begin Source File
