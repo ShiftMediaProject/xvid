@@ -15,13 +15,13 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 #
-#    $Id: cbp_ppc.s,v 1.4 2002-03-22 12:24:07 canard Exp $
+#    $Id: cbp_ppc.s,v 1.5 2002-03-22 12:51:22 canard Exp $
 #    $Source: /home/xvid/cvs_copy/cvs-server-root/xvid/xvidcore/src/bitstream/ppc_asm/cbp_ppc.s,v $
-#    $Date: 2002-03-22 12:24:07 $
+#    $Date: 2002-03-22 12:51:22 $
 #    $Author: canard $
 #
-#    This is the PPC ASM code I write. So I might do nasty things.
-#    Please send any comments to guillaume@morinfr.org
+#    This is my first PPC ASM attempt. So I might do nasty things.
+#    Please send any comments to <guillaume@morinfr.org>
 
 
 # Returns a field of bits that indicates non zero ac blocks
@@ -60,8 +60,9 @@ calc_cbp_ppc:
 	# r3 contains the result, therefore we set it to 0
 	xor 3,3,3
 .loop:
-	# r7 is the loop2 counter (columns), FIXME: use CTR
-	li 7,14
+	# CTR is the loop2 counter
+	li 7,15
+	mtspr 9,7
 	# r6 is coeff pointer for this line
 	mr 6,9
 .loop2:
@@ -77,12 +78,8 @@ calc_cbp_ppc:
 	# testing bit 2 (is zero) of CR0
 	bf 2,.cbp
 	addi 6,6,8
-	# subic. updates CR0
-	subic. 7,7,1
-	# testing bit 0 (is negative) of CR0
-	bt 0,.lastcoeffs
-	b .loop2
-.lastcoeffs:
+	bdnz .loop2
+	# latest line coeffs 
 	lha 4,2(6)
 	lha 5,4(6)
 	or 4,5,4
