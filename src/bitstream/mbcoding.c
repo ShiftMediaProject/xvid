@@ -657,7 +657,7 @@ CodeBlockIntra(const FRAMEINFO * const frame,
 		BitstreamPutBits(bs, 0, 1);
 
 	// write cbpy
-	BitstreamPutBits(bs, cbpy_tab[cbpy].code, cbpy_tab[cbpy].len);
+	BitstreamPutBits(bs, xvid_cbpy_tab[cbpy].code, xvid_cbpy_tab[cbpy].len);
 
 	// write dquant
 	if (pMB->mode == MODE_INTRA_Q)
@@ -719,7 +719,7 @@ CodeBlockInter(const FRAMEINFO * const frame,
 		BitstreamPutBit(bs, pMB->mcsel);		// mcsel: '0'=local motion, '1'=GMC
 
 	// write cbpy
-	BitstreamPutBits(bs, cbpy_tab[cbpy].code, cbpy_tab[cbpy].len);
+	BitstreamPutBits(bs, xvid_cbpy_tab[cbpy].code, xvid_cbpy_tab[cbpy].len);
 
 	// write dquant
 	if (pMB->mode == MODE_INTER_Q)
@@ -1618,7 +1618,7 @@ VLC mcbpc_inter_tab[29] = {
 	{5, 6}, {5, 9}, {5, 8}, {3, 7}, {2, 9}
 };
 
-const VLC cbpy_tab[16] = {
+const VLC xvid_cbpy_tab[16] = {
 	{3, 4}, {5, 5}, {4, 5}, {9, 4}, {3, 5}, {7, 4}, {2, 6}, {11, 4},
 	{2, 5}, {3, 6}, {5, 4}, {10, 4}, {4, 4}, {8, 4}, {6, 4}, {3, 2}
 };

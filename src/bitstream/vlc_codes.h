@@ -54,7 +54,7 @@ extern VLC sprite_trajectory_code[32768];
 extern VLC sprite_trajectory_len[15];
 extern VLC mcbpc_intra_tab[15];
 extern VLC mcbpc_inter_tab[29];
-extern const VLC cbpy_tab[16];
+extern const VLC xvid_cbpy_tab[16];
 extern const VLC dcy_tab[511];
 extern const VLC dcc_tab[511];
 extern const VLC mb_motion_table[65];

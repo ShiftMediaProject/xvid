@@ -721,7 +721,7 @@ CheckCandidateBits16(const int x, const int y, const int Direction, int * const 
 		}
 	}
 
-	bits += cbpy_tab[15-(cbp>>2)].len;
+	bits += xvid_cbpy_tab[15-(cbp>>2)].len;
 	bits += mcbpc_inter_tab[(MODE_INTER & 7) | ((cbp & 3) << 3)].len;
 
 	if (bits < data->iMinSAD[0]) {
@@ -2658,7 +2658,7 @@ CountMBBitsInter4v(const SearchData * const Data,
 				bits += CodeCoeffInter_CalcBits(coeff, scan_tables[0]);
 				cbp |= 1 << (5 - 5);
 			}
-			bits += cbpy_tab[15-(cbp>>2)].len;
+			bits += xvid_cbpy_tab[15-(cbp>>2)].len;
 			bits += mcbpc_inter_tab[(MODE_INTER4V & 7) | ((cbp & 3) << 3)].len;
 		}
 	}
@@ -2723,7 +2723,7 @@ CountMBBitsIntra(const SearchData * const Data)
 
 			Data->temp[5] = t;
 
-			bits += t = cbpy_tab[cbp>>2].len;
+			bits += t = xvid_cbpy_tab[cbp>>2].len;
 			Data->temp[6] = t;
 
 			bits += t = mcbpc_inter_tab[(MODE_INTRA & 7) | ((cbp & 3) << 3)].len;
