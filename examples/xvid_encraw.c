@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.2 2002-09-28 14:26:53 edgomez Exp $
+ * $Id: xvid_encraw.c,v 1.3 2002-09-28 14:53:40 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -310,6 +310,12 @@ int main(int argc, char *argv[])
  *                            Main loop
  ****************************************************************************/
 
+	totalsize = LONG_PACK('M','P','4','U');
+	if(*((char *)(&totalsize)) == 'M')
+		bigendian = 1;
+	else
+		bigendian = 0;
+
 	if (ARG_SAVEMPEGSTREAM && (ARG_OUTPUTTYPE || ARG_OUTPUTFILE)) {
 
 		if (ARG_OUTPUTFILE == NULL && ARG_OUTPUTTYPE)
@@ -324,15 +330,8 @@ int main(int argc, char *argv[])
 
 		/* Write header */
 		if (ARG_OUTPUTTYPE) {
-			char *ptr;
-			long test;
 
-			test = LONG_PACK('M','P','4','U');
-			ptr = (unsigned char *)&test;
-			if(*ptr == 'M')
-				bigendian = 1;
-			else
-				bigendian = 0;
+			long test = LONG_PACK('M','P','4','U');
 
 			test = (!bigendian)?SWAP(test):test;
 

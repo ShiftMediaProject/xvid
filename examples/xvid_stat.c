@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_stat.c,v 1.14 2002-09-28 14:27:15 edgomez Exp $
+ * $Id: xvid_stat.c,v 1.15 2002-09-28 14:53:40 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -198,7 +198,6 @@ int main(int argc, char *argv[])
   
 	double Ipsnr=0.,Imaxpsnr=0.,Iminpsnr=999.,Ivarpsnr=0.;
 	double Ppsnr=0.,Pmaxpsnr=0.,Pminpsnr=999.,Pvarpsnr=0.;
-	double Bpsnr=0.,Bmaxpsnr=0.,Bminpsnr=999.,Bvarpsnr=0.;
   
 	char filename[256];
   
@@ -500,7 +499,7 @@ int main(int argc, char *argv[])
 	printf("Avg. Q%1d %2s ",ARG_QUALITY, (ARG_QUANTI ? " q" : "br"));
 	printf("%04d ",(ARG_QUANTI)?ARG_QUANTI:ARG_BITRATE);
 	printf("( %.2f bpp) ", (double)ARG_BITRATE*1000/XDIM/YDIM/ARG_FRAMERATE);
-	printf("size %6d ",totalsize);
+	printf("size %6d ", (int)totalsize);
 	printf("( %4d kbps ",(int)(totalsize*8*ARG_FRAMERATE/1000));
 	printf("/ %.2f bpp) ",(double)totalsize*8/XDIM/YDIM);
 	printf("enc: %6.1f fps, dec: %6.1f fps \n",1000/totalenctime, 1000/totaldectime);
