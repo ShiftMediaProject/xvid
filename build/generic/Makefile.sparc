@@ -1,39 +1,116 @@
-#/**************************************************************************
-# *
-# * sparc makefile
-# *
-# *
-# *
-# *************************************************************************/
-
+#############################################################################
+#
+# GNU/Linux SPARC Makefile
+# 
+# Edit this file to enable/disable optimizations
+#
+# $Id: Makefile.sparc,v 1.2 2002-09-22 12:13:21 edgomez Exp $
+# 
+#############################################################################
 
 include Makefile.inc
 
+# You can set/add options to CC and CFLAGS without editing this Makefile
+# You have just to export an environment CC/CFLAGS variable before running
+# make.
+#
+# Examples :
+# $ export CC='gcc-3.1'
+# $ export CFLAGS='-maccumulate-outgoing-args'
+# $ make
+# ...
 
-CC = gcc
-CFLAGS = -fPIC -Wall -DARCH_IS_BIG_ENDIAN -DARCH_SPARC
+# You can choose a specific compiler here removing the sharp symbol
+#   - Default is 'cc' which is a symlink to your default distro gcc
 
+
+# CC = gcc
+# CC = gcc-3.1
+
+# Assembler
+AS = as
+
+# Constants which should not be modified
+CFLAGS += -DLINUX
+CFLAGS += -DARCH_SPARC
+CFLAGS += -DARCH_IS_BIG_ENDIAN
+
+# Enable some experimental/debugging code
+#   (Use only if you know what you're doing !)
+    # PSNR during encoding
+# CFLAGS += -D_DEBUG_PSNR
+
+# Enable BFrame decoding (still beta)
+# CFLAGS += -DBRAMES_DEC
+
+LIBDIR = /usr/local/lib
+
+  # Warning level options
+      # Shows all warnings
+  CFLAGS += -Wall
+      # To detect non ANSI C code (xvid is not ANSI C (yet?))
+  # CFLAGS += -pedantic
+
+
+  # General Optimization options
+      # Optimize code for size (implies -O2)
+  CFLAGS += -Os
+      # Unroll loops code, this might speed up loops
+  CFLAGS += -funroll-loops
+      # Generates FPU math code
+  CFLAGS += -ffast-math
+      # ??? (man gcc)
+  CFLAGS += -fstrict-aliasing
+      # Omit the frame pointer saving at function beginning
+  CFLAGS += -fomit-frame-pointer
+      # Generates Position Independant Code depending on your nasm version,
+      # this could generate shared libraries that segfault because of a nasm
+      # bug
+  CFLAGS += -fPIC
+
+  # Debugging and Profiling options
+     # Writes debugging symbols in object files
+  # CFLAGS += -g
+     # Includes profiling code in generated code, don't forget to disable
+     # -fomit-frame-pointer as these 2 options are exclusive.
+  # CFLAGS += -pg
+     # Precise profiling + test coverage (-pg must be activated)
+     # Build the library twice and execute a program using the lib twice too
+       # First pass : Will create sourcefile.da files to keep branch statistics
+  # CFLAGS += -fprofile-arcs 
+       # Second pass : Will create .bb and .bbg files suitable for coverage and
+       #               branch probabilities during compilation
+  # CFLAGS += -fprofile-arcs -fbranch-probabilities -ftest-coverage
+
+#############################################################################
+#
+# Makefile rules
+#
+#############################################################################
+
+%.o: %.s
+	$(AS) $< -o $@
 
 RM = rm -rf
 
-
 all: $(LIB) $(LIBSO)
-
 
 $(LIB): $(SRC:.c=.o)
 	ar rcs $@ $^
 
-
 $(LIBSO): $(SRC:.c=.o)
-	$(CC) $^ -shared -lc -lm -o $@
+	$(CC) $(CFLAGS) $^ -shared -lc -lm -o $@
 
-
-clean:
-	$(RM) $(DIRS)
-	$(RM) $(DIRS_INTEL)
+clean:	
+	$(RM) `find $(SRCDIR) -name "*.o"`
 	$(RM) $(LIB)
 	$(RM) $(LIBSO)
 
-%.o: %.c
-	$(CC) $(CFLAGS) -o $@ -c $<
+install: $(LIBSO) $(LIB)
+	cp $(LIBSO) $(LIBDIR)                   # you have to be root for this
+	cp $(LIB) $(LIBDIR)
+	/sbin/ldconfig 
 
+install-test: $(LIBSO)                      # if you don't want to overwrite previous compile
+	cp $(LIBSO) $(LIBDIR)/libtestcore.so
+	/sbin/ldconfig
