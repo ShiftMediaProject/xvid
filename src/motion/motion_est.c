@@ -781,6 +781,269 @@ int32_t Full16_MainSearch(
 	return iMinSAD;
 }
 
+int32_t AdvDiamond16_MainSearch(
+	const uint8_t * const pRef,
+	const uint8_t * const pRefH,
+	const uint8_t * const pRefV,
+	const uint8_t * const pRefHV,
+	const uint8_t * const cur,
+	const int x, const int y,
+	int32_t startx, int32_t starty,
+	int32_t iMinSAD,
+	VECTOR * const currMV,
+	const VECTOR * const pmv,
+	const int32_t min_dx, const int32_t max_dx,
+	const int32_t min_dy, const int32_t max_dy,
+	const int32_t iEdgedWidth,
+	const int32_t iDiamondSize,
+	const int32_t iFcode,
+	const int32_t iQuant,
+	int iDirection)
+{
+
+	int32_t iSAD;
+
+/* directions: 1 - left (x-1); 2 - right (x+1), 4 - up (y-1); 8 - down (y+1) */
+
+	if (iDirection)
+	{
+		CHECK_MV16_CANDIDATE(startx-iDiamondSize, starty);
+		CHECK_MV16_CANDIDATE(startx+iDiamondSize, starty);
+		CHECK_MV16_CANDIDATE(startx, starty-iDiamondSize);
+		CHECK_MV16_CANDIDATE(startx, starty+iDiamondSize);
+	}
+	else
+	{
+		int bDirection = 1+2+4+8;
+		do
+		{
+			iDirection = 0;
+			if (bDirection&1) //we only want to check left if we came from the right (our last motion was to the left, up-left or down-left)
+				CHECK_MV16_CANDIDATE_DIR(startx-iDiamondSize,starty,1);
+
+			if (bDirection&2)
+				CHECK_MV16_CANDIDATE_DIR(startx+iDiamondSize,starty,2);
+
+			if (bDirection&4)
+				CHECK_MV16_CANDIDATE_DIR(startx,starty-iDiamondSize,4);
+
+			if (bDirection&8)
+				CHECK_MV16_CANDIDATE_DIR(startx,starty+iDiamondSize,8);
+
+			/* now we're doing diagonal checks near our candidate */
+
+			if (iDirection) //checking if anything found
+			{
+				bDirection = iDirection;
+				iDirection = 0;
+				startx=currMV->x; starty=currMV->y;
+				if (bDirection & 3) //our candidate is left or right
+				{
+					CHECK_MV16_CANDIDATE_DIR(startx,starty+iDiamondSize, 8);
+					CHECK_MV16_CANDIDATE_DIR(startx,starty-iDiamondSize, 4);
+				}
+				else // what remains here is up or down
+				{
+					CHECK_MV16_CANDIDATE_DIR(startx+iDiamondSize, starty, 2);
+					CHECK_MV16_CANDIDATE_DIR(startx-iDiamondSize, starty, 1);
+				}
+
+				if (iDirection)
+				{	bDirection+=iDirection;
+					startx=currMV->x; starty=currMV->y;
+				}
+			}
+			else //about to quit, eh? not so fast....
+			{
+				switch (bDirection)
+				{
+				case 2:
+					CHECK_MV16_CANDIDATE_DIR(startx+iDiamondSize, starty-iDiamondSize, 2+4);
+					CHECK_MV16_CANDIDATE_DIR(startx+iDiamondSize, starty+iDiamondSize, 2+8);
+					break;
+				case 1:
+					CHECK_MV16_CANDIDATE_DIR(startx-iDiamondSize, starty-iDiamondSize, 1+4);
+					CHECK_MV16_CANDIDATE_DIR(startx-iDiamondSize, starty+iDiamondSize, 1+8);
+					break;
+				case 2+4:
+					CHECK_MV16_CANDIDATE_DIR(startx-iDiamondSize, starty-iDiamondSize, 1+4);
+					CHECK_MV16_CANDIDATE_DIR(startx+iDiamondSize, starty-iDiamondSize, 2+4);
+					CHECK_MV16_CANDIDATE_DIR(startx+iDiamondSize, starty+iDiamondSize, 2+8);
+					break;
+				case 4:
+					CHECK_MV16_CANDIDATE_DIR(startx+iDiamondSize, starty-iDiamondSize, 2+4);
+					CHECK_MV16_CANDIDATE_DIR(startx-iDiamondSize, starty-iDiamondSize, 1+4);
+					break;
+				case 8:
+					CHECK_MV16_CANDIDATE_DIR(startx+iDiamondSize, starty+iDiamondSize, 2+8);
+					CHECK_MV16_CANDIDATE_DIR(startx-iDiamondSize, starty+iDiamondSize, 1+8);
+					break;
+				case 1+4:
+					CHECK_MV16_CANDIDATE_DIR(startx-iDiamondSize, starty+iDiamondSize, 1+8);
+					CHECK_MV16_CANDIDATE_DIR(startx-iDiamondSize, starty-iDiamondSize, 1+4);
+					CHECK_MV16_CANDIDATE_DIR(startx+iDiamondSize, starty-iDiamondSize, 2+4);
+					break;
+				case 2+8:
+					CHECK_MV16_CANDIDATE_DIR(startx-iDiamondSize, starty-iDiamondSize, 1+4);
+					CHECK_MV16_CANDIDATE_DIR(startx-iDiamondSize, starty+iDiamondSize, 1+8);
+					CHECK_MV16_CANDIDATE_DIR(startx+iDiamondSize, starty+iDiamondSize, 2+8);
+					break;
+				case 1+8:
+					CHECK_MV16_CANDIDATE_DIR(startx+iDiamondSize, starty-iDiamondSize, 2+4);
+					CHECK_MV16_CANDIDATE_DIR(startx+iDiamondSize, starty+iDiamondSize, 2+8);
+					CHECK_MV16_CANDIDATE_DIR(startx-iDiamondSize, starty+iDiamondSize, 1+8);
+					break;
+				default: //1+2+4+8 == we didn't find anything at all
+					CHECK_MV16_CANDIDATE_DIR(startx-iDiamondSize, starty-iDiamondSize, 1+4);
+					CHECK_MV16_CANDIDATE_DIR(startx-iDiamondSize, starty+iDiamondSize, 1+8);
+					CHECK_MV16_CANDIDATE_DIR(startx+iDiamondSize, starty-iDiamondSize, 2+4);
+					CHECK_MV16_CANDIDATE_DIR(startx+iDiamondSize, starty+iDiamondSize, 2+8);
+					break;
+				}
+				if (!iDirection) break; //ok, the end. really
+				else
+				{	bDirection=iDirection;
+					startx=currMV->x; starty=currMV->y;
+				}
+			}
+		}
+		while (1); //forever
+	}
+	return iMinSAD;
+}
+
+int32_t AdvDiamond8_MainSearch(
+	const uint8_t * const pRef,
+	const uint8_t * const pRefH,
+	const uint8_t * const pRefV,
+	const uint8_t * const pRefHV,
+	const uint8_t * const cur,
+	const int x, const int y,
+	int32_t startx, int32_t starty,
+	int32_t iMinSAD,
+	VECTOR * const currMV,
+	const VECTOR * const pmv,
+	const int32_t min_dx, const int32_t max_dx,
+	const int32_t min_dy, const int32_t max_dy,
+	const int32_t iEdgedWidth,
+	const int32_t iDiamondSize,
+	const int32_t iFcode,
+	const int32_t iQuant,
+	int iDirection)
+{
+
+	int32_t iSAD;
+
+/* directions: 1 - left (x-1); 2 - right (x+1), 4 - up (y-1); 8 - down (y+1) */
+
+	if (iDirection)
+	{
+		CHECK_MV8_CANDIDATE(startx-iDiamondSize, starty);
+		CHECK_MV8_CANDIDATE(startx+iDiamondSize, starty);
+		CHECK_MV8_CANDIDATE(startx, starty-iDiamondSize);
+		CHECK_MV8_CANDIDATE(startx, starty+iDiamondSize);
+	}
+	else
+	{
+		int bDirection = 1+2+4+8;
+		do
+		{
+			iDirection = 0;
+			if (bDirection&1) //we only want to check left if we came from the right (our last motion was to the left, up-left or down-left)
+				CHECK_MV8_CANDIDATE_DIR(startx-iDiamondSize,starty,1);
+
+			if (bDirection&2)
+				CHECK_MV8_CANDIDATE_DIR(startx+iDiamondSize,starty,2);
+
+			if (bDirection&4)
+				CHECK_MV8_CANDIDATE_DIR(startx,starty-iDiamondSize,4);
+
+			if (bDirection&8)
+				CHECK_MV8_CANDIDATE_DIR(startx,starty+iDiamondSize,8);
+
+			/* now we're doing diagonal checks near our candidate */
+
+			if (iDirection) //checking if anything found
+			{
+				bDirection = iDirection;
+				iDirection = 0;
+				startx=currMV->x; starty=currMV->y;
+				if (bDirection & 3) //our candidate is left or right
+				{
+					CHECK_MV8_CANDIDATE_DIR(startx,starty+iDiamondSize, 8);
+					CHECK_MV8_CANDIDATE_DIR(startx,starty-iDiamondSize, 4);
+				}
+				else // what remains here is up or down
+				{
+					CHECK_MV8_CANDIDATE_DIR(startx+iDiamondSize, starty, 2);
+					CHECK_MV8_CANDIDATE_DIR(startx-iDiamondSize, starty, 1);
+				}
+
+				if (iDirection)
+				{	bDirection+=iDirection;
+					startx=currMV->x; starty=currMV->y;
+				}
+			}
+			else //about to quit, eh? not so fast....
+			{
+				switch (bDirection)
+				{
+				case 2:
+					CHECK_MV8_CANDIDATE_DIR(startx+iDiamondSize, starty-iDiamondSize, 2+4);
+					CHECK_MV8_CANDIDATE_DIR(startx+iDiamondSize, starty+iDiamondSize, 2+8);
+					break;
+				case 1:
+					CHECK_MV8_CANDIDATE_DIR(startx-iDiamondSize, starty-iDiamondSize, 1+4);
+					CHECK_MV8_CANDIDATE_DIR(startx-iDiamondSize, starty+iDiamondSize, 1+8);
+					break;
+				case 2+4:
+					CHECK_MV8_CANDIDATE_DIR(startx-iDiamondSize, starty-iDiamondSize, 1+4);
+					CHECK_MV8_CANDIDATE_DIR(startx+iDiamondSize, starty-iDiamondSize, 2+4);
+					CHECK_MV8_CANDIDATE_DIR(startx+iDiamondSize, starty+iDiamondSize, 2+8);
+					break;
+				case 4:
+					CHECK_MV8_CANDIDATE_DIR(startx+iDiamondSize, starty-iDiamondSize, 2+4);
+					CHECK_MV8_CANDIDATE_DIR(startx-iDiamondSize, starty-iDiamondSize, 1+4);
+					break;
+				case 8:
+					CHECK_MV8_CANDIDATE_DIR(startx+iDiamondSize, starty+iDiamondSize, 2+8);
+					CHECK_MV8_CANDIDATE_DIR(startx-iDiamondSize, starty+iDiamondSize, 1+8);
+					break;
+				case 1+4:
+					CHECK_MV8_CANDIDATE_DIR(startx-iDiamondSize, starty+iDiamondSize, 1+8);
+					CHECK_MV8_CANDIDATE_DIR(startx-iDiamondSize, starty-iDiamondSize, 1+4);
+					CHECK_MV8_CANDIDATE_DIR(startx+iDiamondSize, starty-iDiamondSize, 2+4);
+					break;
+				case 2+8:
+					CHECK_MV8_CANDIDATE_DIR(startx-iDiamondSize, starty-iDiamondSize, 1+4);
+					CHECK_MV8_CANDIDATE_DIR(startx-iDiamondSize, starty+iDiamondSize, 1+8);
+					CHECK_MV8_CANDIDATE_DIR(startx+iDiamondSize, starty+iDiamondSize, 2+8);
+					break;
+				case 1+8:
+					CHECK_MV8_CANDIDATE_DIR(startx+iDiamondSize, starty-iDiamondSize, 2+4);
+					CHECK_MV8_CANDIDATE_DIR(startx+iDiamondSize, starty+iDiamondSize, 2+8);
+					CHECK_MV8_CANDIDATE_DIR(startx-iDiamondSize, starty+iDiamondSize, 1+8);
+					break;
+				default: //1+2+4+8 == we didn't find anything at all
+					CHECK_MV8_CANDIDATE_DIR(startx-iDiamondSize, starty-iDiamondSize, 1+4);
+					CHECK_MV8_CANDIDATE_DIR(startx-iDiamondSize, starty+iDiamondSize, 1+8);
+					CHECK_MV8_CANDIDATE_DIR(startx+iDiamondSize, starty-iDiamondSize, 2+4);
+					CHECK_MV8_CANDIDATE_DIR(startx+iDiamondSize, starty+iDiamondSize, 2+8);
+					break;
+				}
+				if (!(iDirection)) break; //ok, the end. really
+				else
+				{	bDirection=iDirection;
+					startx=currMV->x; starty=currMV->y;
+				}
+			}
+		}
+		while (1); //forever
+	}
+	return iMinSAD;
+}
+
+
 int32_t Full8_MainSearch(
 					const uint8_t * const pRef,
 					const uint8_t * const pRefH,
@@ -888,6 +1151,8 @@ int32_t PMVfastSearch16(
 	
 	VECTOR pmv[4];
 	int32_t psad[4];
+
+	MainSearch16FuncPtr MainSearchPtr;
 	
 //	const MACROBLOCK * const pMB = pMBs + x + y * iWcount;
 	const MACROBLOCK * const prevMB = prevMBs + x + y * iWcount;
@@ -1090,10 +1355,18 @@ int32_t PMVfastSearch16(
    Refine by using small diamond and goto step 10. 
 */
 
+	if (MotionFlags & PMV_USESQUARES16)
+		MainSearchPtr = Square16_MainSearch;
+	else
+		if (MotionFlags & PMV_ADVANCEDDIAMOND16)
+			MainSearchPtr = AdvDiamond16_MainSearch;
+		else
+			MainSearchPtr = Diamond16_MainSearch;
+
 	backupMV = *currMV; /* save best prediction, actually only for EXTSEARCH */
 
 /* default: use best prediction as starting point for one call of PMVfast_MainSearch */
-	iSAD = Diamond16_MainSearch(pRef, pRefH, pRefV, pRefHV, cur,
+	iSAD = (*MainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
 					  x, y, 
 					  currMV->x, currMV->y, iMinSAD, &newMV, 
 					  pmv, min_dx, max_dx, min_dy, max_dy, iEdgedWidth, iDiamondSize, iFcode, iQuant, iFound);
@@ -1109,7 +1382,7 @@ int32_t PMVfastSearch16(
 /* extended: search (up to) two more times: orignal prediction and (0,0) */
 
 		if (!(MVequal(pmv[0],backupMV)) )
-		{ 	iSAD = Diamond16_MainSearch(pRef, pRefH, pRefV, pRefHV, cur,
+		{ 	iSAD = (*MainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
 							  x, y, 
 							  pmv[0].x, pmv[0].y, iMinSAD, &newMV, 
 							  pmv, min_dx, max_dx, min_dy, max_dy, iEdgedWidth, iDiamondSize, iFcode, iQuant, iFound);
@@ -1122,7 +1395,7 @@ int32_t PMVfastSearch16(
 		}
 
 		if ( (!(MVzero(pmv[0]))) && (!(MVzero(backupMV))) )
-		{ 	iSAD = Diamond16_MainSearch(pRef, pRefH, pRefV, pRefHV, cur,
+		{ 	iSAD = (*MainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
 							  x, y, 
 							  0, 0, iMinSAD, &newMV, 
 							  pmv, min_dx, max_dx, min_dy, max_dy, iEdgedWidth, iDiamondSize, iFcode, iQuant, iFound);
@@ -1296,6 +1569,8 @@ int32_t PMVfastSearch8(
 
 	int32_t iSubBlock = (y&1)+(y&1) + (x&1);
 
+	MainSearch8FuncPtr MainSearchPtr;
+
 	/* Init variables */
 	startMV.x = start_x;
 	startMV.y = start_y;
@@ -1340,6 +1615,16 @@ int32_t PMVfastSearch8(
 
 
 // Prepare for main loop 
+
+//	if (MotionFlags & PMV_USESQUARES8)
+//		MainSearchPtr = Square8_MainSearch;
+//	else
+
+	if (MotionFlags & PMV_ADVANCEDDIAMOND8)
+		MainSearchPtr = AdvDiamond8_MainSearch;
+	else
+		MainSearchPtr = Diamond8_MainSearch;
+
 
 	*currMV = startMV;
 	
@@ -1481,7 +1766,7 @@ int32_t PMVfastSearch8(
 	backupMV = *currMV; /* save best prediction, actually only for EXTSEARCH */
 
 /* default: use best prediction as starting point for one call of PMVfast_MainSearch */
-	iSAD = Diamond8_MainSearch(pRef, pRefH, pRefV, pRefHV, cur,
+	iSAD = (*MainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
 					 x, y, 
 					 currMV->x, currMV->y, iMinSAD, &newMV, 
 					 pmv, min_dx, max_dx, min_dy, max_dy, iEdgedWidth, iDiamondSize, iFcode, iQuant, iFound);
@@ -1497,7 +1782,7 @@ int32_t PMVfastSearch8(
 /* extended: search (up to) two more times: orignal prediction and (0,0) */
 
 		if (!(MVequal(pmv[0],backupMV)) )
-		{ 	iSAD = Diamond16_MainSearch(pRef, pRefH, pRefV, pRefHV, cur,
+		{ 	iSAD = (*MainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
 							  x, y, 
 							  pmv[0].x, pmv[0].y, iMinSAD, &newMV, 
 							  pmv, min_dx, max_dx, min_dy, max_dy, iEdgedWidth, iDiamondSize, iFcode, iQuant, iFound);
@@ -1510,7 +1795,7 @@ int32_t PMVfastSearch8(
 		}
 
 		if ( (!(MVzero(pmv[0]))) && (!(MVzero(backupMV))) )
-		{ 	iSAD = Diamond16_MainSearch(pRef, pRefH, pRefV, pRefHV, cur,
+		{ 	iSAD = (*MainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
 							  x, y, 
 							  0, 0, iMinSAD, &newMV, 
 							  pmv, min_dx, max_dx, min_dy, max_dy, iEdgedWidth, iDiamondSize, iFcode, iQuant, iFound);
@@ -1587,7 +1872,7 @@ int32_t EPZSSearch16(
     	int32_t bPredEq;
     	int32_t iMinSAD,iSAD=9999;
 
-	MainSearch16FuncPtr EPZSMainSearchPtr;
+	MainSearch16FuncPtr MainSearchPtr;
 
 	if (oldMBs == NULL)
 	{	oldMBs = (MACROBLOCK*) calloc(iWcount*iHcount,sizeof(MACROBLOCK));
@@ -1756,12 +2041,7 @@ int32_t EPZSSearch16(
 
 /* default: use best prediction as starting point for one call of PMVfast_MainSearch */
 
-	if (MotionFlags & PMV_USESQUARES16)
-		EPZSMainSearchPtr = Square16_MainSearch;
-	else
-		EPZSMainSearchPtr = Diamond16_MainSearch;
-
-	iSAD = (*EPZSMainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
+	iSAD = (*MainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
 			x, y, 
 			currMV->x, currMV->y, iMinSAD, &newMV, pmv, min_dx, max_dx, min_dy, max_dy, iEdgedWidth, 
 			2, iFcode, iQuant, 0);
@@ -1779,7 +2059,7 @@ int32_t EPZSSearch16(
 
 		if (!(MVequal(pmv[0],backupMV)) )
 		{ 	
-			iSAD = (*EPZSMainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
+			iSAD = (*MainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
 				x, y, 
 				pmv[0].x, pmv[0].y, iMinSAD, &newMV, 
 				pmv, min_dx, max_dx, min_dy, max_dy, iEdgedWidth, 2, iFcode, iQuant, 0);
@@ -1793,7 +2073,7 @@ int32_t EPZSSearch16(
 	
 		if ( (!(MVzero(pmv[0]))) && (!(MVzero(backupMV))) )
 		{ 	
-			iSAD = (*EPZSMainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
+			iSAD = (*MainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
 				x, y, 
 			0, 0, iMinSAD, &newMV, 
 			pmv, min_dx, max_dx, min_dy, max_dy, iEdgedWidth, 2, iFcode, iQuant, 0);
@@ -1872,7 +2152,7 @@ int32_t EPZSSearch8(
     	int32_t bPredEq;
     	int32_t iMinSAD,iSAD=9999;
 
-	MainSearch8FuncPtr EPZSMainSearchPtr;
+	MainSearch8FuncPtr MainSearchPtr;
 
 /* Get maximum range */
 	get_range(&min_dx, &max_dx, &min_dy, &max_dy,
@@ -2003,13 +2283,20 @@ int32_t EPZSSearch8(
 /* // there is no EPZS^2 for inter4v at the moment
 
 	if (MotionFlags & PMV_USESQUARES8)
-		EPZSMainSearchPtr = Square8_MainSearch;
+		MainSearchPtr = Square8_MainSearch;
 	else
 */
 
-	EPZSMainSearchPtr = Diamond8_MainSearch; 
-		
-	iSAD = (*EPZSMainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
+//	if (MotionFlags & PMV_USESQUARES8)
+//		MainSearchPtr = Square8_MainSearch;
+//	else
+
+	if (MotionFlags & PMV_ADVANCEDDIAMOND8)
+		MainSearchPtr = AdvDiamond8_MainSearch;
+	else
+		MainSearchPtr = Diamond8_MainSearch;
+
+	iSAD = (*MainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
 		x, y, 
 		currMV->x, currMV->y, iMinSAD, &newMV, 
 		pmv, min_dx, max_dx, min_dy, max_dy, iEdgedWidth, 
@@ -2028,7 +2315,7 @@ int32_t EPZSSearch8(
 
 		if (!(MVequal(pmv[0],backupMV)) )
 		{ 	
-			iSAD = (*EPZSMainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
+			iSAD = (*MainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
 				x, y, 
 			pmv[0].x, pmv[0].y, iMinSAD, &newMV, 
 			pmv, min_dx, max_dx, min_dy, max_dy, iEdgedWidth, iDiamondSize, iFcode, iQuant, 0);
@@ -2042,7 +2329,7 @@ int32_t EPZSSearch8(
 
 		if ( (!(MVzero(pmv[0]))) && (!(MVzero(backupMV))) )
 		{ 	
-			iSAD = (*EPZSMainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
+			iSAD = (*MainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
 				x, y, 
 			0, 0, iMinSAD, &newMV, 
 			pmv, min_dx, max_dx, min_dy, max_dy, iEdgedWidth, iDiamondSize, iFcode, iQuant, 0);
