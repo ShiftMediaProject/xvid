@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: fdct_mmx_skal.asm,v 1.3 2004-07-24 11:46:08 edgomez Exp $
+; * $Id: fdct_mmx_skal.asm,v 1.4 2004-08-21 11:52:50 edgomez Exp $
 ; *
 ; ***************************************************************************/
 
@@ -482,7 +482,7 @@ cglobal %1
   mov edi, fdct_rounding_2
 .loop
   %2 ecx, ecx, edx, ebx, edi
-  add eax, 2*16
+  add ecx, 2*8
   add edx, 2*32
   add ebx, 2*4
   add edi, 2*4
