@@ -38,9 +38,10 @@ int image_output(IMAGE * image, uint32_t width, int height, uint32_t edged_width
 
 
 
-int image_dump_yuvpgm(IMAGE * image, 
-				uint32_t edged_width, 
-			    uint32_t width, uint32_t height,
+int image_dump_yuvpgm(const IMAGE * image, 
+				const uint32_t edged_width, 
+			    const uint32_t width, 
+				const uint32_t height,
 			   char * filename);
 
 float image_mad(const IMAGE * img1, const IMAGE * img2, uint32_t stride,

@@ -599,7 +599,7 @@ static void bs_put_matrix(Bitstream * bs, const int16_t *matrix)
 	write vol header
 */
 void BitstreamWriteVolHeader(Bitstream * const bs,
-						const MBParam * pParam)
+						const MBParam * pParam,  const FRAMEINFO * frame)
 {
 	// video object_start_code & vo_id
     BitstreamPad(bs);
@@ -640,15 +640,15 @@ void BitstreamWriteVolHeader(Bitstream * const bs,
 	BitstreamPutBits(bs, pParam->height, 13);		// height
 	WRITE_MARKER();
 	
-	BitstreamPutBit(bs, pParam->global_flags & XVID_INTERLACING);		// interlace
+	BitstreamPutBit(bs, frame->global_flags & XVID_INTERLACING);		// interlace
 	BitstreamPutBit(bs, 1);		// obmc_disable (overlapped block motion compensation)
 	BitstreamPutBit(bs, 0);		// sprite_enable
 	BitstreamPutBit(bs, 0);		// not_in_bit
 
 	// quant_type   0=h.263  1=mpeg4(quantizer tables)
-	BitstreamPutBit(bs, pParam->quant_type);
+	BitstreamPutBit(bs, pParam->m_quant_type);
 	
-	if (pParam->quant_type)
+	if (pParam->m_quant_type)
 	{
 		BitstreamPutBit(bs, get_intra_matrix_status());	// load_intra_quant_mat
 		if (get_intra_matrix_status())
@@ -680,12 +680,13 @@ void BitstreamWriteVolHeader(Bitstream * const bs,
   (decoder uses these values to determine precise time since last resync)
 */
 void BitstreamWriteVopHeader(Bitstream * const bs,
-						const MBParam * pParam)
+						const MBParam * pParam,  
+						const FRAMEINFO * frame)
 {
     BitstreamPad(bs);
     BitstreamPutBits(bs, VOP_START_CODE, 32);
 
-    BitstreamPutBits(bs, pParam->coding_type, 2);
+    BitstreamPutBits(bs, frame->coding_type, 2);
     
 	// time_base = 0  write n x PutBit(1), PutBit(0)
 	BitstreamPutBits(bs, 0, 1);
@@ -699,19 +700,19 @@ void BitstreamWriteVopHeader(Bitstream * const bs,
 
 	BitstreamPutBits(bs, 1, 1);				// vop_coded
 
-	if (pParam->coding_type != I_VOP)
-		BitstreamPutBits(bs, pParam->rounding_type, 1);
+	if (frame->coding_type != I_VOP)
+		BitstreamPutBits(bs, frame->rounding_type, 1);
     
 	BitstreamPutBits(bs, 0, 3);				// intra_dc_vlc_threshold
 
-	if (pParam->global_flags & XVID_INTERLACING)
+	if (frame->global_flags & XVID_INTERLACING)
 	{
 		BitstreamPutBit(bs, 1);		// top field first
 		BitstreamPutBit(bs, 0);		// alternate vertical scan
 	}
 
- 	BitstreamPutBits(bs, pParam->quant, 5);			// quantizer
+ 	BitstreamPutBits(bs, frame->quant, 5);			// quantizer
 	
-	if (pParam->coding_type != I_VOP)
-		BitstreamPutBits(bs, pParam->fixed_code, 3);		// fixed_code = [1,4]
+	if (frame->coding_type != I_VOP)
+		BitstreamPutBits(bs, frame->fcode, 3);		// fixed_code = [1,4]
 }

@@ -193,8 +193,8 @@ loop_end:
 }
 
 static __inline void CodeVector(Bitstream *bs,
-				int16_t value,
-				int16_t f_code,
+				int32_t value,
+				int32_t f_code,
 				Statistics *pStat)
 {
 
@@ -246,7 +246,7 @@ static __inline void CodeVector(Bitstream *bs,
 
 
 static __inline void CodeCoeff(Bitstream *bs,
-			       int16_t qcoeff[64],
+			       const int16_t qcoeff[64],
 			       VLC *table,
 			       const uint16_t *zigzag,
 			       uint16_t intra)
@@ -280,7 +280,7 @@ static __inline void CodeCoeff(Bitstream *bs,
 }
 
 
-static void CodeBlockIntra(const MBParam * pParam,
+static void CodeBlockIntra(const FRAMEINFO * frame,
 			   const MACROBLOCK *pMB,
 			   int16_t qcoeff[6*64],
 			   Bitstream * bs,
@@ -292,7 +292,7 @@ static void CodeBlockIntra(const MBParam * pParam,
 	cbpy = pMB->cbp >> 2;
 
 	// write mcbpc
-	if(pParam->coding_type == I_VOP) {
+	if(frame->coding_type == I_VOP) {
 		mcbpc = ((pMB->mode >> 1) & 3) | ((pMB->cbp & 3) << 2);
 		BitstreamPutBits(bs, mcbpc_intra_tab[mcbpc].code, mcbpc_intra_tab[mcbpc].len);
 	}
@@ -315,7 +315,7 @@ static void CodeBlockIntra(const MBParam * pParam,
 		BitstreamPutBits(bs, pMB->dquant, 2);
 
 	// write interlacing
-	if (pParam->global_flags & XVID_INTERLACING)
+	if (frame->global_flags & XVID_INTERLACING)
 	{
 		BitstreamPutBit(bs, pMB->field_dct);
 	}
@@ -350,7 +350,7 @@ static void CodeBlockIntra(const MBParam * pParam,
 }
 
 
-static void CodeBlockInter(const MBParam * pParam,
+static void CodeBlockInter(const FRAMEINFO * frame,
 			   const MACROBLOCK *pMB,
 			   int16_t qcoeff[6*64],
 			   Bitstream * bs,
@@ -374,7 +374,7 @@ static void CodeBlockInter(const MBParam * pParam,
 		BitstreamPutBits(bs, pMB->dquant, 2);
     
 	// interlacing
-	if (pParam->global_flags & XVID_INTERLACING)
+	if (frame->global_flags & XVID_INTERLACING)
 	{
 		BitstreamPutBit(bs, pMB->field_dct);
 		DEBUG1("codep: field_dct: ", pMB->field_dct);
@@ -397,8 +397,8 @@ static void CodeBlockInter(const MBParam * pParam,
 	// code motion vector(s)
 	for(i = 0; i < (pMB->mode == MODE_INTER4V ? 4 : 1); i++)
 	{
-		CodeVector(bs, pMB->pmvs[i].x, pParam->fixed_code, pStat);
-		CodeVector(bs, pMB->pmvs[i].y, pParam->fixed_code, pStat);
+		CodeVector(bs, pMB->pmvs[i].x, frame->fcode, pStat);
+		CodeVector(bs, pMB->pmvs[i].y, frame->fcode, pStat);
 	}
 
 	bits = BitstreamPos(bs);
@@ -414,7 +414,7 @@ static void CodeBlockInter(const MBParam * pParam,
 }
 
 
-void MBCoding(const MBParam * pParam,
+void MBCoding(const FRAMEINFO * frame,
 	      MACROBLOCK *pMB,
 	      int16_t qcoeff[6*64], 
 	      Bitstream * bs,
@@ -423,7 +423,7 @@ void MBCoding(const MBParam * pParam,
 
 	int intra = (pMB->mode == MODE_INTRA || pMB->mode == MODE_INTRA_Q);
 
-	if(pParam->coding_type == P_VOP) {
+	if(frame->coding_type == P_VOP) {
 		if(pMB->cbp == 0 && pMB->mode == MODE_INTER &&
 		   pMB->mvs[0].x == 0 && pMB->mvs[0].y == 0)
 		{
@@ -435,9 +435,9 @@ void MBCoding(const MBParam * pParam,
 	}
 
 	if(intra)
-		CodeBlockIntra(pParam, pMB, qcoeff, bs, pStat);
+		CodeBlockIntra(frame, pMB, qcoeff, bs, pStat);
 	else
-		CodeBlockInter(pParam, pMB, qcoeff, bs, pStat);
+		CodeBlockInter(frame, pMB, qcoeff, bs, pStat);
 
 }
 

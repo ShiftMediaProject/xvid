@@ -73,12 +73,12 @@
 /* this isnt pretty, but its better than 20 ifdefs */
 
 void MBTransQuantIntra(const MBParam *pParam,
+					   FRAMEINFO * frame,
 		       MACROBLOCK * pMB,
 		       const uint32_t x_pos,
 		       const uint32_t y_pos,
 		       int16_t data[6*64], 
-		       int16_t qcoeff[6*64], 
-		       IMAGE * const pCurrent)
+		       int16_t qcoeff[6*64])
 			   
 {
 
@@ -86,8 +86,9 @@ void MBTransQuantIntra(const MBParam *pParam,
 	uint32_t stride2 = stride / 2;
 	uint32_t next_block = stride * 8;
 	uint32_t i;
-	uint32_t iQuant = pParam->quant;
+	uint32_t iQuant = frame->quant;
 	uint8_t *pY_Cur, *pU_Cur, *pV_Cur;
+	IMAGE * pCurrent = &frame->image;
 
 	pY_Cur = pCurrent->y + (y_pos << 4) * stride + (x_pos << 4);
 	pU_Cur = pCurrent->u + (y_pos << 3) * stride2 + (x_pos << 3);
@@ -104,7 +105,7 @@ void MBTransQuantIntra(const MBParam *pParam,
 
 	start_timer();
 	pMB->field_dct = 0;
-	if (pParam->global_flags & XVID_INTERLACING)
+	if ((frame->global_flags & XVID_INTERLACING))
 	{
 		pMB->field_dct = MBDecideFieldDCT(data);
 	}
@@ -118,7 +119,7 @@ void MBTransQuantIntra(const MBParam *pParam,
 		fdct(&data[i*64]);
 		stop_dct_timer();
 
-		if (pParam->quant_type == H263_QUANT)
+		if (pParam->m_quant_type == H263_QUANT)
 		{
 			start_timer();
 			quant_intra(&qcoeff[i*64], &data[i*64], iQuant, iDcScaler);
@@ -163,11 +164,11 @@ void MBTransQuantIntra(const MBParam *pParam,
 
 
 uint8_t MBTransQuantInter(const MBParam *pParam, 
+			  FRAMEINFO * frame,
 			  MACROBLOCK * pMB,
 			  const uint32_t x_pos, const uint32_t y_pos,
 			  int16_t data[6*64], 
-			  int16_t qcoeff[6*64], 
-			  IMAGE * const pCurrent)
+			  int16_t qcoeff[6*64])
 
 {
 
@@ -175,10 +176,11 @@ uint8_t MBTransQuantInter(const MBParam *pParam,
 	uint32_t stride2 = stride / 2;
 	uint32_t next_block = stride * 8;
 	uint32_t i;
-	uint32_t iQuant = pParam->quant;
+	uint32_t iQuant = frame->quant;
 	uint8_t *pY_Cur, *pU_Cur, *pV_Cur;
 	uint8_t cbp = 0;
 	uint32_t sum;
+	IMAGE * pCurrent = &frame->image;
     
 	pY_Cur = pCurrent->y + (y_pos << 4) * stride + (x_pos << 4);
 	pU_Cur = pCurrent->u + (y_pos << 3) * stride2 + (x_pos << 3);
@@ -186,7 +188,7 @@ uint8_t MBTransQuantInter(const MBParam *pParam,
 
 	start_timer();
 	pMB->field_dct = 0;
-	if (pParam->global_flags & XVID_INTERLACING)
+	if ((frame->global_flags & XVID_INTERLACING))
 	{
 		pMB->field_dct = MBDecideFieldDCT(data);
 	}
@@ -202,7 +204,7 @@ uint8_t MBTransQuantInter(const MBParam *pParam,
 		fdct(&data[i*64]);
 		stop_dct_timer();
 
-		if (pParam->quant_type == 0)
+		if (pParam->m_quant_type == 0)
 		{
 			start_timer();
 			sum = quant_inter(&qcoeff[i*64], &data[i*64], iQuant);
@@ -217,7 +219,7 @@ uint8_t MBTransQuantInter(const MBParam *pParam,
 
 		if(sum >= TOOSMALL_LIMIT) { // skip block ?
 
-			if (pParam->quant_type == H263_QUANT)
+			if (pParam->m_quant_type == H263_QUANT)
 			{
 				start_timer();
 				dequant_inter(&data[i*64], &qcoeff[i*64], iQuant);

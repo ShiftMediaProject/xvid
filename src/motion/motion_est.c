@@ -2,6 +2,7 @@
  *
  *  Modifications:
  *
+ *	25.04.2002 partial prevMB conversion
  *  22.04.2002 remove some compile warning by chenm001 <chenm001@163.com>
  *  14.04.2002 added MotionEstimationBVOP()
  *  02.04.2002 add EPZS(^2) as ME algorithm, use PMV_USESQUARES to choose between 
@@ -79,8 +80,11 @@ int32_t PMVfastSearch16(
 					const IMAGE * const pCur,
 					const int x, const int y,
 					const uint32_t MotionFlags,
+					const uint32_t iQuant,
+					const uint32_t iFcode,
 					const MBParam * const pParam,
-					MACROBLOCK * const pMBs,
+					const MACROBLOCK * const pMBs,
+					const MACROBLOCK * const prevMBs,
 					VECTOR * const currMV,
 					VECTOR * const currPMV);
 
@@ -92,8 +96,11 @@ int32_t EPZSSearch16(
 					const IMAGE * const pCur,
 					const int x, const int y,
 					const uint32_t MotionFlags,
+					const uint32_t iQuant,
+					const uint32_t iFcode,
 					const MBParam * const pParam,
-					MACROBLOCK * const pMBs,
+					const MACROBLOCK * const pMBs,
+					const MACROBLOCK * const prevMBs,
 					VECTOR * const currMV,
 					VECTOR * const currPMV);
 
@@ -105,10 +112,13 @@ int32_t PMVfastSearch8(
 					const uint8_t * const pRefHV,
 					const IMAGE * const pCur,
 					const int x, const int y,
-					const int start_x, int start_y,
+					const int start_x, const int start_y,
 					const uint32_t MotionFlags,
+					const uint32_t iQuant,
+					const uint32_t iFcode,
 					const MBParam * const pParam,
-					MACROBLOCK * const pMBs,
+					const MACROBLOCK * const pMBs,
+					const MACROBLOCK * const prevMBs,
 					VECTOR * const currMV,
 					VECTOR * const currPMV);
 
@@ -119,10 +129,13 @@ int32_t EPZSSearch8(
 					const uint8_t * const pRefHV,
 					const IMAGE * const pCur,
 					const int x, const int y,
-					const int start_x, int start_y,
+					const int start_x, const int start_y,
 					const uint32_t MotionFlags,
+					const uint32_t iQuant,
+					const uint32_t iFcode,
 					const MBParam * const pParam,
-					MACROBLOCK * const pMBs,
+					const MACROBLOCK * const pMBs,
+					const MACROBLOCK * const prevMBs,
 					VECTOR * const currMV,
 					VECTOR * const currPMV);
 
@@ -232,18 +245,23 @@ static __inline uint32_t calc_delta_8(const int32_t dx, const int32_t dy, const 
 #endif
 
 bool MotionEstimation(
-	MACROBLOCK * const pMBs,
 	MBParam * const pParam,
-	const IMAGE * const pRef,
+	FRAMEINFO * const current,
+	FRAMEINFO * const reference,
 	const IMAGE * const pRefH,
 	const IMAGE * const pRefV,
 	const IMAGE * const pRefHV,
-	IMAGE * const pCurrent, 
 	const uint32_t iLimit)
 
 {
 	const uint32_t iWcount = pParam->mb_width;
 	const uint32_t iHcount = pParam->mb_height;
+	MACROBLOCK * pMBs = current->mbs;
+	IMAGE * pCurrent = &current->image;
+
+	MACROBLOCK * prevMBs = reference->mbs;	// previous frame
+	IMAGE * pRef = &reference->image;
+
  
 	uint32_t i, j, iIntra = 0;
 
@@ -256,16 +274,49 @@ bool MotionEstimation(
 
 	if (sadInit)
 		(*sadInit)();
+
+
+	/* eventhough we have a seperate prevMBs,
+	   pmvfast/epsz does something "funny" with the previous frames data */
+
+	for (i = 0; i < iHcount; i++)
+		for (j = 0; j < iWcount; j++)
+		{
+			pMBs[j + i * iWcount].mvs[0] = prevMBs[j + i * iWcount].mvs[0];
+			pMBs[j + i * iWcount].mvs[1] = prevMBs[j + i * iWcount].mvs[1];
+			pMBs[j + i * iWcount].mvs[2] = prevMBs[j + i * iWcount].mvs[2];
+			pMBs[j + i * iWcount].mvs[3] = prevMBs[j + i * iWcount].mvs[3];
+		}
+
+	/*dprintf("*** BEFORE ***");
+	for (i = 0; i < iHcount; i++)
+		for (j = 0; j < iWcount; j++)
+		{
+			dprintf("   [%i,%i] mode=%i dquant=%i mvs=(%i %i %i %i) sad8=(%i %i %i %i) sad16=(%i)", j,i,
+				pMBs[j + i * iWcount].mode,
+				pMBs[j + i * iWcount].dquant,
+				pMBs[j + i * iWcount].mvs[0],
+				pMBs[j + i * iWcount].mvs[1],
+				pMBs[j + i * iWcount].mvs[2],
+				pMBs[j + i * iWcount].mvs[3],
+				prevMBs[j + i * iWcount].sad8[0],
+				prevMBs[j + i * iWcount].sad8[1],
+				prevMBs[j + i * iWcount].sad8[2],
+				prevMBs[j + i * iWcount].sad8[3],
+				prevMBs[j + i * iWcount].sad16);
+		}
+	*/
 		
 	// note: i==horizontal, j==vertical
 	for (i = 0; i < iHcount; i++)
 		for (j = 0; j < iWcount; j++)
 		{
 			MACROBLOCK *pMB = &pMBs[j + i * iWcount];
+			MACROBLOCK *prevMB = &prevMBs[j + i * iWcount];
 
 			sad16 = SEARCH16(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
-					 j, i, pParam->motion_flags,
-					 pParam, pMBs, &mv16, &pmv16); 
+					 j, i, current->motion_flags, current->quant, current->fcode,
+					 pParam, pMBs, prevMBs, &mv16, &pmv16); 
 			pMB->sad16=sad16;
 
 
@@ -281,6 +332,8 @@ bool MotionEstimation(
 				pMB->mvs[0].x = pMB->mvs[1].x = pMB->mvs[2].x = pMB->mvs[3].x = 0;
 				pMB->mvs[0].y = pMB->mvs[1].y = pMB->mvs[2].y = pMB->mvs[3].y = 0;
 
+				pMB->sad8[0] = pMB->sad8[1] = pMB->sad8[2] = pMB->sad8[3] = 0;
+
 				iIntra++;
 				if(iIntra >= iLimit)	
 					return 1;
@@ -288,23 +341,27 @@ bool MotionEstimation(
 				continue;
 			}
 
-			if (pParam->global_flags & XVID_INTER4V)
+			if (current->global_flags & XVID_INTER4V)
 			{
 				pMB->sad8[0] = SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
-						       2 * j, 2 * i, mv16.x, mv16.y, pParam->motion_flags, 
-						       pParam, pMBs, &pMB->mvs[0], &pMB->pmvs[0]); 
+						       2 * j, 2 * i, mv16.x, mv16.y, 
+							   current->motion_flags, current->quant, current->fcode,
+						       pParam, pMBs, prevMBs, &pMB->mvs[0], &pMB->pmvs[0]);
 
 				pMB->sad8[1] = SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
-						       2 * j + 1, 2 * i, mv16.x, mv16.y, pParam->motion_flags,
-						       pParam, pMBs, &pMB->mvs[1], &pMB->pmvs[1]); 
+						       2 * j + 1, 2 * i, mv16.x, mv16.y, 
+							   current->motion_flags, current->quant, current->fcode,
+						       pParam, pMBs, prevMBs, &pMB->mvs[1], &pMB->pmvs[1]); 
 
 				pMB->sad8[2] = SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
-						       2 * j, 2 * i + 1, mv16.x, mv16.y, pParam->motion_flags,
-						       pParam, pMBs, &pMB->mvs[2], &pMB->pmvs[2]); 
+						       2 * j, 2 * i + 1, mv16.x, mv16.y, 
+							   current->motion_flags, current->quant, current->fcode,
+						       pParam, pMBs, prevMBs, &pMB->mvs[2], &pMB->pmvs[2]); 
 			
 				pMB->sad8[3] = SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
-						       2 * j + 1, 2 * i + 1, mv16.x, mv16.y, pParam->motion_flags,
-						       pParam, pMBs, &pMB->mvs[3], &pMB->pmvs[3]); 
+						       2 * j + 1, 2 * i + 1, mv16.x, mv16.y, 
+							   current->motion_flags, current->quant, current->fcode,
+						       pParam, pMBs, prevMBs, &pMB->mvs[3], &pMB->pmvs[3]); 
 
 				sad8 = pMB->sad8[0] + pMB->sad8[1] + pMB->sad8[2] + pMB->sad8[3];
 			}
@@ -314,9 +371,11 @@ bool MotionEstimation(
 			   mpeg4:   if (sad8 < sad16 - nb/2+1) use_inter4v
 			*/
 
-			if (pMB->dquant == NO_CHANGE) {
-				if (((pParam->global_flags & XVID_INTER4V)==0) || 
-				    (sad16 < (sad8 + (int32_t)(IMV16X16 * pParam->quant)))) { 
+			if (!(current->global_flags & XVID_LUMIMASKING) || pMB->dquant == NO_CHANGE) 
+			{
+				if (((current->global_flags & XVID_INTER4V)==0) || 
+				    (sad16 < (sad8 + (int32_t)(IMV16X16 * current->quant)))) 
+				{ 
 			
 					sad8 = sad16;
 					pMB->mode = MODE_INTER;
@@ -338,6 +397,25 @@ bool MotionEstimation(
 				pMB->pmvs[0].y = pmv16.y;
 			}
 		}
+
+/*	dprintf("*** AFTER ***", pMBs[0].b_mvs[0].x);
+	for (i = 0; i < iHcount; i++)
+		for (j = 0; j < iWcount; j++)
+		{
+			dprintf("   [%i,%i] mode=%i dquant=%i mvs=(%i %i %i %i) sad8=(%i %i %i %i) sad16=(%i)", j,i,
+				pMBs[j + i * iWcount].mode,
+				pMBs[j + i * iWcount].dquant,
+				pMBs[j + i * iWcount].mvs[0],
+				pMBs[j + i * iWcount].mvs[1],
+				pMBs[j + i * iWcount].mvs[2],
+				pMBs[j + i * iWcount].mvs[3],
+				pMBs[j + i * iWcount].sad8[0],
+				pMBs[j + i * iWcount].sad8[1],
+				pMBs[j + i * iWcount].sad8[2],
+				pMBs[j + i * iWcount].sad8[3],
+				pMBs[j + i * iWcount].sad16);
+		}
+	*/
 
 	return 0;
 }
@@ -452,13 +530,15 @@ int32_t ZeroSearch16(
 					const IMAGE * const pCur,
 					const int x, const int y,
 					const uint32_t MotionFlags, 				
+					const uint32_t iQuant,
+					const uint32_t iFcode,
 					MBParam * const pParam,
-					MACROBLOCK * const pMBs,				
+					const MACROBLOCK * const pMBs,				
+					const MACROBLOCK * const prevMBs,
 					VECTOR * const currMV,
 					VECTOR * const currPMV)
 {
 	const int32_t iEdgedWidth = pParam->edged_width; 
-	const int32_t iQuant = pParam->quant;
 	const uint8_t * cur = pCur->y + x*16 + y*16*iEdgedWidth;
 	int32_t iSAD;
 	int32_t pred_x,pred_y;
@@ -780,14 +860,15 @@ int32_t PMVfastSearch16(
 					const IMAGE * const pCur,
 					const int x, const int y,
 					const uint32_t MotionFlags,
+					const uint32_t iQuant,
+					const uint32_t iFcode,
 					const MBParam * const pParam,
-					MACROBLOCK * const pMBs,
+					const MACROBLOCK * const pMBs,
+					const MACROBLOCK * const prevMBs,
 					VECTOR * const currMV,
 					VECTOR * const currPMV)
 {
     const uint32_t iWcount = pParam->mb_width;
-	const int32_t iFcode = pParam->fixed_code;
-	const int32_t iQuant = pParam->quant;
 	const int32_t iWidth = pParam->width;
 	const int32_t iHeight = pParam->height;
 	const int32_t iEdgedWidth = pParam->edged_width; 
@@ -809,7 +890,8 @@ int32_t PMVfastSearch16(
 	VECTOR pmv[4];
 	int32_t psad[4];
 	
-	MACROBLOCK * const pMB = pMBs + x + y * iWcount;
+	const MACROBLOCK * const pMB = pMBs + x + y * iWcount;
+	const MACROBLOCK * const prevMB = prevMBs + x + y * iWcount;
 
 	static int32_t threshA,threshB;
     	int32_t bPredEq;
@@ -853,7 +935,7 @@ int32_t PMVfastSearch16(
    If PredEq=1 and MVpredicted = Previous Frame MV, set Found=2  
 */
 
-        if ((bPredEq) && (MVequal(pmv[0],pMB->mvs[0]) ) )
+        if ((bPredEq) && (MVequal(pmv[0],prevMB->mvs[0]) ) )
 		iFound=2;
 
 /* Step 3: If Distance>0 or thresb<1536 or PredEq=1 Select small Diamond Search. 
@@ -907,7 +989,7 @@ int32_t PMVfastSearch16(
 			 iEdgedWidth, MV_MAX_ERROR);
   	iMinSAD += calc_delta_16(currMV->x-pmv[0].x, currMV->y-pmv[0].y, (uint8_t)iFcode) * iQuant;
 	
-	if ( (iMinSAD < 256 ) || ( (MVequal(*currMV,pMB->mvs[0])) && ((uint32_t)iMinSAD < pMB->sad16) ) )
+	if ( (iMinSAD < 256 ) || ( (MVequal(*currMV,prevMB->mvs[0])) && ((uint32_t)iMinSAD < prevMB->sad16) ) )
 	{
 		
 		if (MotionFlags & PMV_QUICKSTOP16) 
@@ -928,7 +1010,7 @@ int32_t PMVfastSearch16(
 	CHECK_MV16_ZERO;
 
 // previous frame MV is always possible
-	CHECK_MV16_CANDIDATE(pMB->mvs[0].x,pMB->mvs[0].y);
+	CHECK_MV16_CANDIDATE(prevMB->mvs[0].x,prevMB->mvs[0].y);
 	
 // left neighbour, if allowed
 	if (x != 0) 
@@ -964,7 +1046,7 @@ int32_t PMVfastSearch16(
    If Motion Vector equal to Previous frame motion vector and MinSAD<PrevFrmSAD goto Step 10. 
 */
 
-	if ( (iMinSAD <= threshA) || ( MVequal(*currMV,pMB->mvs[0]) && ((uint32_t)iMinSAD < pMB->sad16) ) )
+	if ( (iMinSAD <= threshA) || ( MVequal(*currMV,prevMB->mvs[0]) && ((uint32_t)iMinSAD < prevMB->sad16) ) )
 	{	
 		if (MotionFlags & PMV_QUICKSTOP16) 
 			goto PMVfast16_Terminate_without_Refine;
@@ -1150,17 +1232,17 @@ int32_t PMVfastSearch8(
 					const uint8_t * const pRefHV,
 					const IMAGE * const pCur,
 					const int x, const int y,
-					const int start_x, int start_y,
+					const int start_x, const int start_y,
 					const uint32_t MotionFlags,
+					const uint32_t iQuant,
+					const uint32_t iFcode,
 					const MBParam * const pParam,
-					MACROBLOCK * const pMBs,
+					const MACROBLOCK * const pMBs,
+					const MACROBLOCK * const prevMBs,
 					VECTOR * const currMV,
 					VECTOR * const currPMV)
 {
-        const uint32_t iWcount = pParam->mb_width;
-
-	const int32_t iFcode = pParam->fixed_code;
-	const int32_t iQuant = pParam->quant;
+    const uint32_t iWcount = pParam->mb_width;
 	const int32_t iWidth = pParam->width;
 	const int32_t iHeight = pParam->height;
 	const int32_t iEdgedWidth = pParam->edged_width; 
@@ -1179,7 +1261,8 @@ int32_t PMVfastSearch8(
 	VECTOR newMV;
 	VECTOR backupMV;
 	
-	MACROBLOCK * const pMB = pMBs + (x>>1) + (y>>1) * iWcount;
+	const MACROBLOCK * const pMB = pMBs + (x>>1) + (y>>1) * iWcount;
+	const MACROBLOCK * const prevMB = prevMBs + (x>>1) + (y>>1) * iWcount;
 
 	static int32_t threshA,threshB;
     	int32_t iFound,bPredEq;
@@ -1258,7 +1341,7 @@ int32_t PMVfastSearch8(
 			iEdgedWidth);
   	iMinSAD += calc_delta_8(currMV->x - pmv[0].x, currMV->y - pmv[0].y, (uint8_t)iFcode) * iQuant;
 	
-	if ( (iMinSAD < 256/4 ) || ( (MVequal(*currMV,pMB->mvs[iSubBlock])) && ((uint32_t)iMinSAD < pMB->sad8[iSubBlock]) ) )
+	if ( (iMinSAD < 256/4 ) || ( (MVequal(*currMV,pMB->mvs[iSubBlock])) && ((uint32_t)iMinSAD < prevMB->sad8[iSubBlock]) ) )
 	{
 		if (MotionFlags & PMV_QUICKSTOP16) 
 			goto PMVfast8_Terminate_without_Refine;
@@ -1317,7 +1400,7 @@ int32_t PMVfastSearch8(
    If Motion Vector equal to Previous frame motion vector and MinSAD<PrevFrmSAD goto Step 10. 
 */
 
-	if ( (iMinSAD <= threshA) || ( MVequal(*currMV,pMB->mvs[iSubBlock]) && ((uint32_t)iMinSAD < pMB->sad8[iSubBlock]) ) )
+	if ( (iMinSAD <= threshA) || ( MVequal(*currMV,pMB->mvs[iSubBlock]) && ((uint32_t)iMinSAD < prevMB->sad8[iSubBlock]) ) )
 	{	
 		if (MotionFlags & PMV_QUICKSTOP16) 
 			goto PMVfast8_Terminate_without_Refine;
@@ -1407,15 +1490,16 @@ int32_t EPZSSearch16(
 					const IMAGE * const pCur,
 					const int x, const int y,
 					const uint32_t MotionFlags,
+					const uint32_t iQuant,
+					const uint32_t iFcode,
 					const MBParam * const pParam,
-					MACROBLOCK * const pMBs,
+					const MACROBLOCK * const pMBs,
+					const MACROBLOCK * const prevMBs,
 					VECTOR * const currMV,
 					VECTOR * const currPMV)
 {
     const uint32_t iWcount = pParam->mb_width;
     const uint32_t iHcount = pParam->mb_height;
-	const int32_t iFcode = pParam->fixed_code;
-	const int32_t iQuant = pParam->quant;
 
 	const int32_t iWidth = pParam->width;
 	const int32_t iHeight = pParam->height;
@@ -1435,7 +1519,8 @@ int32_t EPZSSearch16(
 	int32_t psad[8];
 	
 	static MACROBLOCK * oldMBs = NULL; 
-	MACROBLOCK * const pMB = pMBs + x + y * iWcount;
+	const MACROBLOCK * const pMB = pMBs + x + y * iWcount;
+	const MACROBLOCK * const prevMB = prevMBs + x + y * iWcount;
 	MACROBLOCK * oldMB = NULL;
 
 	static int32_t thresh2;
@@ -1498,7 +1583,7 @@ int32_t EPZSSearch16(
   	iMinSAD += calc_delta_16(currMV->x-pmv[0].x, currMV->y-pmv[0].y, (uint8_t)iFcode) * iQuant;
 	
 // thresh1 is fixed to 256 
-	if ( (iMinSAD < 256 ) || ( (MVequal(*currMV,pMB->mvs[0])) && ((uint32_t)iMinSAD < pMB->sad16) ) )
+	if ( (iMinSAD < 256 ) || ( (MVequal(*currMV,pMB->mvs[0])) && ((uint32_t)iMinSAD < prevMB->sad16) ) )
 		{
 			if (MotionFlags & PMV_QUICKSTOP16) 
 				goto EPZS16_Terminate_without_Refine;
@@ -1565,7 +1650,7 @@ int32_t EPZSSearch16(
 */
 
 	if ( (iMinSAD <= thresh2) 
-		|| ( MVequal(*currMV,pMB->mvs[0]) && ((uint32_t)iMinSAD <= pMB->sad16) ) )
+		|| ( MVequal(*currMV,pMB->mvs[0]) && ((uint32_t)iMinSAD <= prevMB->sad16) ) )
 		{	
 			if (MotionFlags & PMV_QUICKSTOP16) 
 				goto EPZS16_Terminate_without_Refine;
@@ -1691,15 +1776,15 @@ int32_t EPZSSearch8(
 					const int x, const int y,
 					const int start_x, const int start_y,
 					const uint32_t MotionFlags,
+					const uint32_t iQuant,
+					const uint32_t iFcode,
 					const MBParam * const pParam,
-					MACROBLOCK * const pMBs,
+					const MACROBLOCK * const pMBs,
+					const MACROBLOCK * const prevMBs,
 					VECTOR * const currMV,
 					VECTOR * const currPMV)
 {
     const uint32_t iWcount = pParam->mb_width;
-	const int32_t iFcode = pParam->fixed_code;
-	const int32_t iQuant = pParam->quant;
-
 	const int32_t iWidth = pParam->width;
 	const int32_t iHeight = pParam->height;
 	const int32_t iEdgedWidth = pParam->edged_width; 
@@ -1721,7 +1806,8 @@ int32_t EPZSSearch8(
 
 	const	int32_t iSubBlock = ((y&1)<<1) + (x&1);
 	
-	MACROBLOCK * const pMB = pMBs + (x>>1) + (y>>1) * iWcount;
+	const MACROBLOCK * const pMB = pMBs + (x>>1) + (y>>1) * iWcount;
+	const MACROBLOCK * const prevMB = prevMBs + (x>>1) + (y>>1) * iWcount;
 
     	int32_t bPredEq;
     	int32_t iMinSAD,iSAD=9999;

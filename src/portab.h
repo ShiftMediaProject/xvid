@@ -4,6 +4,21 @@
 #if defined(WIN32)
 
 #include <windows.h>
+#include <stdio.h>
+
+
+#define DPRINTF_BUF_SZ  1024
+static void dprintf(char *fmt, ...)
+{
+	va_list args;
+	char buf[DPRINTF_BUF_SZ];
+
+	va_start(args, fmt);
+	vsprintf(buf, fmt, args);
+	OutputDebugString(buf);
+	fprintf(stdout, "%s\n", buf);
+}
+
 
 #define DEBUGCBR(A,B,C) { char tmp[100]; wsprintf(tmp, "CBR: frame: %i, quant: %i, deviation: %i\n", (A), (B), (C)); OutputDebugString(tmp); }
 

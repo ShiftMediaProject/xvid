@@ -117,12 +117,12 @@ int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding,
 
 
 void BitstreamWriteVolHeader(Bitstream * const bs,
-						const MBParam * pParam);
-
+						const MBParam * pParam,
+						const FRAMEINFO * frame);
 
 void BitstreamWriteVopHeader(Bitstream * const bs,
-						const MBParam * pParam);
-
+						const MBParam * pParam,
+						const FRAMEINFO * frame);
 
 /* initialise bitstream structure */
 

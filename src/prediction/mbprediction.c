@@ -364,20 +364,19 @@ void apply_acdc(MACROBLOCK *pMB,
 }
 
 
-void MBPrediction(MBParam *pParam,
+void MBPrediction(FRAMEINFO *frame,
 		  uint32_t x,
 		  uint32_t y,
 		  uint32_t mb_width,
-		  int16_t qcoeff[6*64],
-		  MACROBLOCK *mbs)
+		  int16_t qcoeff[6*64])
 {
 
 	int32_t j;
-	int32_t iDcScaler, iQuant = pParam->quant;
+	int32_t iDcScaler, iQuant = frame->quant;
 	int32_t S = 0;
 	int16_t predictors[6][8];
 
-	MACROBLOCK *pMB = &mbs[x + y * mb_width];
+	MACROBLOCK *pMB = &frame->mbs[x + y * mb_width];
 
 	if ((pMB->mode == MODE_INTRA) || (pMB->mode == MODE_INTRA_Q)) {
 		
@@ -385,7 +384,7 @@ void MBPrediction(MBParam *pParam,
 		{
 			iDcScaler = get_dc_scaler(iQuant, (j < 4) ? 1 : 0);
 
-			predict_acdc(mbs,
+			predict_acdc(frame->mbs,
 				     x,
 				     y,
 				     mb_width,

@@ -23,13 +23,12 @@
 /** MotionEstimation **/
 
 bool MotionEstimation(
-	MACROBLOCK * const pMBs,
 	MBParam * const pParam,
-	const IMAGE * const pRef,
+	FRAMEINFO * const current,
+	FRAMEINFO * const reference,
 	const IMAGE * const pRefH,
 	const IMAGE * const pRefV,
 	const IMAGE * const pRefHV,
-	IMAGE * const pCurrent, 
 	const uint32_t iLimit);
 
 
@@ -54,25 +53,22 @@ void MBMotionCompensation(
 
 
 void MBTransQuantIntra(const MBParam *pParam,	 
+			   FRAMEINFO * frame,
 		       MACROBLOCK * pMB,
 		       const uint32_t x_pos,     /* <-- The x position of the MB to be searched */ 
 		       const uint32_t y_pos,     /* <-- The y position of the MB to be searched */ 
 		       int16_t data[6*64],       /* <-> the data of the MB to be coded */ 
-		       int16_t qcoeff[6*64],     /* <-> the quantized DCT coefficients */ 
-		       IMAGE * const pCurrent    /* <-> the reconstructed image */
-                                                 /*     (function will update one MB in it with data from data[])  */
+		       int16_t qcoeff[6*64]     /* <-> the quantized DCT coefficients */ 
 );
 
 
-uint8_t MBTransQuantInter(const MBParam *pParam, /* <-- the parameter for DCT transformation 
-						    and Quantization */ 
+uint8_t MBTransQuantInter(const MBParam *pParam, /* <-- the parameter for DCT transformation and Quantization */ 
+						  FRAMEINFO * frame,
 			  MACROBLOCK * pMB,
 			  const uint32_t x_pos,  /* <-- The x position of the MB to be searched */ 
 			  const uint32_t y_pos,  /* <-- The y position of the MB to be searched */
 			  int16_t data[6*64],    /* <-> the data of the MB to be coded */ 
-			  int16_t qcoeff[6*64],  /* <-> the quantized DCT coefficients */ 
-			  IMAGE * const pCurrent /* <-> the reconstructed image ( function will
-						    update one MB in it with data from data[] ) */
+			  int16_t qcoeff[6*64]  /* <-> the quantized DCT coefficients */ 
 );
 
 
@@ -86,7 +82,7 @@ void MBFrameToField(int16_t data[6*64]);       /* de-interlace vertical Y blocks
 
 /** MBCoding.c **/
 
-void MBCoding(const MBParam *pParam, /* <-- the parameter for coding of the bitstream */
+void MBCoding(const FRAMEINFO *frame, /* <-- the parameter for coding of the bitstream */
 	      MACROBLOCK *pMB,       /* <-- Info of the MB to be coded */ 
 	      int16_t qcoeff[6*64],  /* <-- the quantized DCT coefficients */ 
 	      Bitstream * bs,        /* <-> the bitstream */ 
