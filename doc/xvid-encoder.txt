@@ -7,7 +7,7 @@
 +--------------------------------------------------------------------+
 
 Document version :
-$Id: xvid-encoder.txt,v 1.2 2002-06-24 17:03:03 edgomez Exp $
+$Id: xvid-encoder.txt,v 1.3 2002-06-27 14:49:05 edgomez Exp $
 
 +--------------------------------------------------------------------+
 | Abstract
@@ -259,7 +259,10 @@ Valid flags :
       estimation vectors as hints  for the encoder ME algorithms. Used
       during a 2nd pass.
 
-    - XVID_INTER4V : ??? 
+    - XVID_INTER4V : forces XviD to search a vector for each 8x8 block
+      within the 16x16  Macro Block. This mode should  be used only if
+      the  XVID_HALFPEL mode is  activated (this  could change  in the
+      future). 
 
     - XVID_ME_ZERO : forces XviD to use the zero ME algorithm.
 
@@ -278,8 +281,62 @@ algorithm.
 
  - motion member.
 
-ToDo : add all the XVID_ME flags here and detail the effect of each
-flag.
+Valid flags for  16x16 motion estimation (no XVID_INTER4V  flag in the
+general flag).
+
+    - PMV_ADVANCEDDIAMOND16  : XviD has  a modified  diamond algorithm
+      that performs a bit faster  than the original one. Use this flag
+      if  you want  to use  the  speed optimized  diamond serach.  The
+      quality loss is  not big (better quality than  square search but
+      less than the normal diamond search).
+
+    - PMV_HALFPELDIAMOND16 : switches the search algorithm from 1 or 2
+      full pixels precision to 1 or 2 half pixel precision.
+
+    - PMV_HALFPELREFINE16  :  After normal  diamond  search, an  extra
+      halfpel refinement step is  performed.  Should always be used if
+      XVID_HALFPEL is  on, because it  gives a rather big  increase in
+      quality. 
+
+    - PMV_EXTSEARCH16 :  Normal PMVfast predicts one  start vector and
+      does diamond search around this position. EXTSEARCH means that 2
+      more  start vectors  are used:  (0,0) and  median  predictor and
+      diamond search  is done for  those, too.  Makes  search slightly
+      slower, but quality sometimes gets better. 
+
+    - PMV_EARLYSTOP16 :  PMVfast and EPZS stop search  if current best
+      is  below some dynamic  threshhold. No  diamond search  is done,
+      only halfpel  refinement (if active).  Without EARLYSTOP diamond
+      search is always done. That would be much slower, but not really
+      lead to better quality.
+
+    - PMV_QUICKSTOP16   :  like  EARLYSTOP,   but  not   even  halfpel
+      refinement is  done. Normally worse  quality, so it  defaults to
+      off. Might be removed, too.
+
+    - PMV_UNRESTRICTED16   :  "unrestricted  ME"   is  a   feature  of
+      MPEG4. It's not  implemented, so this flag is  ignored (not even
+      checked).
+
+    - PMV_OVERLAPPING16 :  same as unrestricted.  Not implemented, nor
+      checked.
+
+    - PMV_USESQUARES16  : Replace  the  diamond search  with a  square
+      search.
+
+
+Valid flags  when using 4 vectors  mode prediction. They  have the same
+meaning as their 16x16 counter part so we only give the list :
+
+    - PMV_ADVANCEDDIAMOND8
+    - PMV_HALFPELDIAMOND8
+    - PMV_HALFPELREFINE8
+    - PMV_EXTSEARCH8
+    - PMV_EARLYSTOP8
+    - PMV_QUICKSTOP8
+    - PMV_UNRESTRICTED8
+    - PMV_OVERLAPPING8
+    - PMV_USESQUARES8
 
  - quant member.
 
