@@ -33,7 +33,7 @@
  *
  *  - Sun Jun 16 00:12:49 2002 Added legal header
  *                             Cosmetic
- *  $Id: mem_transfer.h,v 1.6 2002-06-15 22:28:32 edgomez Exp $
+ *  $Id: mem_transfer.h,v 1.7 2002-06-16 19:54:20 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -113,6 +113,7 @@ extern TRANSFER_8TO16SUB2_PTR transfer_8to16sub2;
 /* Implemented functions */
 TRANSFER_8TO16SUB2 transfer_8to16sub2_c;
 //TRANSFER_8TO16SUB2 transfer_8to16sub2_mmx;
+TRANSFER_8TO16SUB2 transfer_8to16sub2_xmm;
 TRANSFER_8TO16SUB2 transfer_8to16sub2_ia64;
 
 
