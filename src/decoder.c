@@ -55,7 +55,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: decoder.c,v 1.36 2002-08-03 05:36:18 chenm001 Exp $
+ *  $Id: decoder.c,v 1.37 2002-09-04 03:23:23 h Exp $
  *
  *************************************************************************/
 
@@ -653,8 +653,10 @@ decoder_pframe(DECODER * dec,
 				mb->quant = quant;
 
 				if (dec->interlacing) {
-					mb->field_dct = BitstreamGetBit(bs);
-					DEBUG1("decp: field_dct: ", mb->field_dct);
+					if (cbp || intra) {
+						mb->field_dct = BitstreamGetBit(bs);
+						DEBUG1("decp: field_dct: ", mb->field_dct);
+					}
 
 					if (mb->mode == MODE_INTER || mb->mode == MODE_INTER_Q) {
 						mb->field_pred = BitstreamGetBit(bs);

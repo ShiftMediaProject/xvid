@@ -370,8 +370,10 @@ CodeBlockInter(const FRAMEINFO * frame,
 
 	// interlacing
 	if (frame->global_flags & XVID_INTERLACING) {
-		BitstreamPutBit(bs, pMB->field_dct);
-		DEBUG1("codep: field_dct: ", pMB->field_dct);
+		if (pMB->cbp) {
+			BitstreamPutBit(bs, pMB->field_dct);
+			DEBUG1("codep: field_dct: ", pMB->field_dct);
+		}
 
 		// if inter block, write field ME flag
 		if (pMB->mode == MODE_INTER || pMB->mode == MODE_INTER_Q) {
