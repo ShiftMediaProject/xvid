@@ -32,6 +32,9 @@
  *
  *  History:
  *
+ *  08.05.2002  add low_delay support for B_VOP decode
+ *              MinChen <chenm001@163.com>
+ *  05.05.2002  fix some B-frame decode problem
  *  02.05.2002  add B-frame decode support(have some problem);
  *              MinChen <chenm001@163.com>
  *  22.04.2002  add some B-frame decode support;  chenm001 <chenm001@163.com>
@@ -44,7 +47,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: decoder.c,v 1.16 2002-05-06 03:58:09 chenm001 Exp $
+ *  $Id: decoder.c,v 1.17 2002-05-09 00:15:51 chenm001 Exp $
  *
  *************************************************************************/
 
@@ -1172,23 +1175,29 @@ int decoder_decode(DECODER * dec, XVID_DEC_FRAME * frame)
 
 	frame->length = BitstreamPos(&bs) / 8;
 
-	if (dec->frames >= 1){
-		start_timer();
-		if ((vop_type == I_VOP || vop_type == P_VOP))
-		{
-			image_output(&dec->refn[0], dec->width, dec->height, dec->edged_width,
+	// test if no B_VOP
+	if (dec->low_delay){
+	    image_output(&dec->cur, dec->width, dec->height, dec->edged_width,
 				     frame->image, frame->stride, frame->colorspace);
-		} else if (vop_type == B_VOP) {
-			image_output(&dec->cur, dec->width, dec->height, dec->edged_width,
-				     frame->image, frame->stride, frame->colorspace);
+	} else {
+		if (dec->frames >= 1){
+			start_timer();
+			if ((vop_type == I_VOP || vop_type == P_VOP))
+			{
+				image_output(&dec->refn[0], dec->width, dec->height, dec->edged_width,
+  					         frame->image, frame->stride, frame->colorspace);
+			} else if (vop_type == B_VOP) {
+				image_output(&dec->cur, dec->width, dec->height, dec->edged_width,
+					         frame->image, frame->stride, frame->colorspace);
+			}
+			stop_conv_timer();
 		}
-		stop_conv_timer();
 	}
 	if (vop_type==I_VOP || vop_type==P_VOP){
 		image_swap(&dec->refn[0], &dec->refn[1]);
 		image_swap(&dec->cur, &dec->refn[0]);
 		// swap MACROBLOCK
-		if (vop_type==P_VOP)
+		if (dec->low_delay && vop_type==P_VOP)
 			mb_swap(&dec->mbs, &dec->last_mbs);
 	}
 

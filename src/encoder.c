@@ -32,9 +32,11 @@
  * 
  *  History
  *
+ *  08.05.2002 fix some problem in DEBUG mode;
+ *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.35 2002-05-06 10:07:18 suxen_drol Exp $
+ *  $Id: encoder.c,v 1.36 2002-05-09 00:15:50 chenm001 Exp $
  *
  ***************************************************************************/
 
@@ -365,6 +367,11 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	Bitstream bs;
 	uint32_t bits;
 
+#ifdef _DEBUG
+	float psnr;
+	char temp[128];
+#endif
+
 	ENC_CHECK(pEnc);
 	ENC_CHECK(pFrame);
 
@@ -457,7 +464,7 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	stop_conv_timer();
 
 #ifdef _DEBUG
-	image_copy(&pEnc->sOriginal, &pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.height);
+	image_copy(&pEnc->sOriginal, &pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.height);
 #endif
 
 
