@@ -25,7 +25,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: plugin_2pass2.c,v 1.4 2004-06-11 08:44:30 suxen_drol Exp $
+ * $Id: plugin_2pass2.c,v 1.5 2004-06-12 13:53:19 edgomez Exp $
  *
  *****************************************************************************/
 
@@ -35,7 +35,7 @@
 /* forces second pass not to be bigger than first */
 #undef PASS_SMALLER
 
-/* automtically alters overflow controls (strength and improvement/degradation) 
+/* automatically alters overflow controls (strength and improvement/degradation)
 	to fight most common problems without user's knowladge */
 #define SMART_OVERFLOW_SETTING
 
@@ -310,9 +310,9 @@ rc_2pass2_create(xvid_plg_create_t * create, rc_2pass2_t **handle)
 		rc->param.vbv_maxrate = param->vbv_maxrate;
 		rc->param.vbv_peakrate = param->vbv_peakrate;
 	}else{
-		rc->param.vbv_size = 
-		rc->param.vbv_initial = 
-		rc->param.vbv_maxrate = 
+		rc->param.vbv_size =
+		rc->param.vbv_initial =
+		rc->param.vbv_maxrate =
 		rc->param.vbv_peakrate = 0;
 	}
 
@@ -452,36 +452,33 @@ rc_2pass2_create(xvid_plg_create_t * create, rc_2pass2_t **handle)
 	 * shape the curve in the BEFORE/AFTER pair of functions */
 	scaled_curve_apply_advanced_parameters(rc);
 
-/* Check curve for VBV compliancy and rescale if necessary */
-
+	/* Check curve for VBV compliancy and rescale if necessary */
 #ifdef VBV_FORCE
-  if (rc->param.vbv_size==0)
-  {
-    rc->param.vbv_size      =  3145728;
-    rc->param.vbv_initial   =  2359296;
-    rc->param.vbv_maxrate  =  4000000;
-    rc->param.vbv_peakrate = 10000000;
-  }
+	if (rc->param.vbv_size==0) {
+		rc->param.vbv_size      =  3145728;
+		rc->param.vbv_initial   =  2359296;
+		rc->param.vbv_maxrate  =  4000000;
+		rc->param.vbv_peakrate = 10000000;
+	}
 #endif
 
-  if (rc->param.vbv_size>0)    /* vbv_size==0 switches VBV check off */
-  {
-    const double fps = (double)create->fbase/(double)create->fincr;
-    int status = check_curve_for_vbv_compliancy(rc, fps);
-#ifdef VBV_DEBUG
-    if (status)
-      fprintf(stderr,"underflow detected\n Scaling Curve for compliancy... ");
-#endif
+	/* vbv_size==0 switches VBV check off */
+	if (rc->param.vbv_size > 0)  {
+		const double fps = (double)create->fbase/(double)create->fincr;
+		int status = check_curve_for_vbv_compliancy(rc, fps);
 
-  	status = scale_curve_for_vbv_compliancy(rc, fps);
+		if (status) {
+			DPRINTF(XVID_DEBUG_RC, "[xvid rc] Underflow detected - Scaling Curve for compliancy.\n");
+		}
 
-#ifdef VBV_DEBUG
-      if (status==0)
-        fprintf(stderr,"done.\n");
-      else
-        fprintf(stderr,"impossible.\n");
-#endif
-  }
+		status = scale_curve_for_vbv_compliancy(rc, fps);
+
+		if (status == 0) {
+			DPRINTF(XVID_DEBUG_RC, "[xvid rc] VBV compliant curve scaling done.\n");
+		} else {
+			DPRINTF(XVID_DEBUG_RC, "[xvid rc] VBV compliant curve scaling impossible.\n");
+		}
+	}
 	*handle = rc;
 	return(0);
 }
@@ -1443,295 +1440,289 @@ scaled_curve_apply_advanced_parameters(rc_2pass2_t * rc)
  * aren't...)
  *
  * DivX profiles have 2 criteria: VBV as in MPEG standard
- *                                a limit on peak bitrate for any 3 seconds 
+ *                                a limit on peak bitrate for any 3 seconds
  *
- * But if VBV is fulfilled, peakrate is automatically fulfilled in any profile 
+ * But if VBV is fulfilled, peakrate is automatically fulfilled in any profile
  * define so far, so we check for it (for completeness) but correct only VBV
- * 
+ *
  *****************************************************************************/
 
-#define VBV_COMPLIANT 0 
+#define VBV_COMPLIANT 0
 #define VBV_UNDERFLOW 1 /* video buffer runs empty */
 #define VBV_OVERFLOW 2  /* doesn't exist for VBR encoding */
 #define VBV_PEAKRATE 4  /* peak bitrate (within 3s) violated */
 
-static int check_curve_for_vbv_compliancy(rc_2pass2_t * rc, const float fps)
+static int
+check_curve_for_vbv_compliancy(rc_2pass2_t * rc, const float fps)
 {
-/* We do all calculations in float, for higher accuracy, 
-   and in bytes for convenience 
+	/* We do all calculations in float, for higher accuracy,
+	 * and in bytes for convenience.
+	 *
+	 * typical values from DivX Home Theater profile:
+	 *  vbv_size= 384*1024 (384kB)
+	 *  vbv_initial= 288*1024 (75% fill)
+	 *  maxrate= 4000000 (4MBps)
+	 *  peakrate= 10000000 (10MBps)
+	 *
+	 *  PAL: offset3s = 75 (3 seconds of 25fps)
+	 *  NTSC: offset3s = 90 (3 seconds of 29.97fps) or 72 (3 seconds of 23.976fps)
+	 */
 
-   typical values from DivX Home Theater profile: 
-   vbv_size= 384*1024 (384kB), vbv_initial= 288*1024 (75% fill)
-   maxrate= 4000000 (4MBps), peakrate= 10000000 (10MBps)
-   
-   PAL: offset3s = 75 (3 seconds of 25fps)
-   NTSC: offset3s = 90 (3 seconds of 29.97fps) or 72 (3 seconds of 23.976fps)
-*/
+	const float vbv_size = (float)rc->param.vbv_size/8.f;
+	float vbvfill = (float)rc->param.vbv_initial/8.f;
+	float vbvmin;
 
-  const float vbv_size = (float)rc->param.vbv_size/8.f; 
-  float vbvfill = (float)rc->param.vbv_initial/8.f;    
-  
-  const float maxrate = (float)rc->param.vbv_maxrate;  
-  const float peakrate = (float)rc->param.vbv_peakrate; 
-  const float r0 = (int)(maxrate/fps+0.5)/8.f;  
+	const float maxrate = (float)rc->param.vbv_maxrate;
+	const float peakrate = (float)rc->param.vbv_peakrate;
+	const float r0 = (int)(maxrate/fps+0.5)/8.f;
 
-  int bytes3s = 0;
-  int offset3s = (int)(3.f*fps+0.5);
+	int bytes3s = 0;
+	int offset3s = (int)(3.f*fps+0.5);
+	int i;
 
-  int i;
-  for (i=0; i<rc->num_frames; i++) {
-/* DivX 3s peak bitrate check  */
+	/* 1Gbit should be enough to inuitialize the vbvmin
+	 *	an arbitrary high value */
+	vbvmin = 1000*1000*1000;
 
-    bytes3s += rc->stats[i].scaled_length;
-    if (i>=offset3s)
-      bytes3s -= rc->stats[i-offset3s].scaled_length;
-    
-    if (8.f*bytes3s > 3*peakrate)
-      return VBV_PEAKRATE;
-     
-/* update vbv fill level */
+	for (i=0; i<rc->num_frames; i++) {
+		/* DivX 3s peak bitrate check  */
+		bytes3s += rc->stats[i].scaled_length;
+		if (i>=offset3s)
+			bytes3s -= rc->stats[i-offset3s].scaled_length;
 
-    vbvfill += r0 - rc->stats[i].scaled_length; 
-    
-/* this check is _NOT_ an "overflow"! only reading from disk stops then */
-    if (vbvfill > vbv_size) 
-      vbvfill = vbv_size; 
-    
-/* but THIS would be an underflow. report it! */
-    if (vbvfill < 0) 
-      return VBV_UNDERFLOW;      
-  }
-  
-  return VBV_COMPLIANT; 
+		if (8.f*bytes3s > 3*peakrate)
+			return(VBV_PEAKRATE);
+
+		/* update vbv fill level */
+		vbvfill += r0 - rc->stats[i].scaled_length;
+
+		/* this check is _NOT_ an "overflow"! only reading from disk stops then */
+		if (vbvfill > vbv_size)
+			vbvfill = vbv_size;
+
+		/* but THIS would be an underflow. report it! */
+		if (vbvfill < 0)
+			return(VBV_UNDERFLOW);
+
+		/* Store the minimum buffer filling */
+		if (vbvfill < vbvmin)
+			vbvmin = vbvfill;
+	}
+
+	DPRINTF(XVID_DEBUG_RC, "[xvid rc] Minimum buffer fill: %f bytes\n", vbvmin);
+
+	return(VBV_COMPLIANT);
 }
-/* TODO: store min(vbvfill) and print "minimum buffer fill" */
 
 
-static int scale_curve_for_vbv_compliancy(rc_2pass2_t * rc, const float fps)
+static int
+scale_curve_for_vbv_compliancy(rc_2pass2_t * rc, const float fps)
 {
-/* correct any VBV violations. Peak bitrate violations disappears 
-   by this automatically 
+	/* correct any VBV violations. Peak bitrate violations disappears
+	 * by this automatically
+	 *
+	 * This implementation follows
+	 *
+	 * Westerink, Rajagopalan, Gonzales "Two-pass MPEG-2 variable-bitrate encoding"
+	 * IBM J. RES. DEVELOP. VOL 43, No. 4, July 1999, p.471--488
+	 *
+	 * Thanks, guys! This paper rocks!!! */
 
-   This implementation follows 
+	/* For each scene of len N, we have to check up to N^2 possible buffer fills.
+	 * This works well with MPEG-2 where N==12 or so, but for MPEG-4 it's a
+	 * little slow...
+	 *
+	 * TODO: Better control on VBVfill between scenes */
 
-   Westerink, Rajagopalan, Gonzales "Two-pass MPEG-2 variable-bitrate encoding"
-   IBM J. RES. DEVELOP. VOL 43, No. 4, July 1999, p.471--488 
+	const float vbv_size = (float)rc->param.vbv_size/8.f;
+	const float vbv_initial = (float)rc->param.vbv_initial/8.f;
 
-   Thanks, guys! This paper rocks!!!
-*/
+	const float maxrate = 0.9*rc->param.vbv_maxrate;
+	const float vbv_low = 0.10f*vbv_size;
+	const float r0 = (int)(maxrate/fps+0.5)/8.f;
 
-/* 
-    For each scene of len N, we have to check up to N^2 possible buffer fills.
-    This works well with MPEG-2 where N==12 or so, but for MPEG-4 it's a 
-    little slow...
+	int i,k,l,n,violation = 0;
+	float *scenefactor;
+	int *scenestart;
+	int *scenelength;
 
-    TODO: Better control on VBVfill between scenes
-*/
+	/* first step: determine how many "scenes" there are and store their
+	 * boundaries we could get all this from existing keyframe_positions,
+	 * somehow, but there we don't have a min_scenelength, and it's no big
+	 * deal to get it again. */
 
-  const float vbv_size = (float)rc->param.vbv_size/8.f;
-  const float vbv_initial = (float)rc->param.vbv_initial/8.f;
-  
-  const float maxrate = 0.9*rc->param.vbv_maxrate;
-  const float vbv_low = 0.10f*vbv_size;
-  const float r0 = (int)(maxrate/fps+0.5)/8.f;  
+	const int min_scenelength = (int)(fps+0.5);
+	int num_scenes = 0;
+	int last_scene = -999;
+	for (i=0; i<rc->num_frames; i++) {
+		if ((rc->stats[i].type == XVID_TYPE_IVOP) && (i-last_scene>min_scenelength)) {
+			last_scene = i;
+			num_scenes++;
+		}
+	}
 
-  int i,k,l,n,violation = 0;   
-  float *scenefactor;	
-  int *scenestart;		
-  int *scenelength;		
+	scenefactor = (float*)malloc(num_scenes*sizeof(float));
+	scenestart = (int*)malloc(num_scenes*sizeof(int));
+	scenelength = (int*)malloc(num_scenes*sizeof(int));
 
-/* first step: determine how many "scenes" there are and store their boundaries
-   we could get all this from existing keyframe_positions, somehow, but there we 
-   don't have a min_scenelength, and it's no big deal to get it again.  */
+	if ((!scenefactor) || (!scenestart) || (!scenelength) ) {
+		free(scenefactor);
+		free(scenestart);
+		free(scenelength);
+		/* remember: free(0) is valid and does exactly nothing. */
+		return(-1);
+	}
 
-  const int min_scenelength = (int)(fps+0.5); 
-  int num_scenes = 0;
-  int last_scene = -999;
-  for (i=0; i<rc->num_frames; i++) {
-    if ( (rc->stats[i].type == XVID_TYPE_IVOP) && (i-last_scene>min_scenelength) )
-    {
-      last_scene = i;
-      num_scenes++;
-    }
-  }
+	/* count again and safe the length/position */
 
-  scenefactor = (float*)malloc( num_scenes*sizeof(float) );
-  scenestart = (int*)malloc( num_scenes*sizeof(int) );
-  scenelength = (int*)malloc( num_scenes*sizeof(int) );
+	num_scenes = 0;
+	last_scene = -999;
+	for (i=0; i<rc->num_frames; i++) {
+		if ((rc->stats[i].type == XVID_TYPE_IVOP) && (i-last_scene>min_scenelength)) {
+			if (num_scenes>0) {
+				scenelength[num_scenes-1]=i-last_scene;
+			}
+			scenestart[num_scenes]=i;
+			num_scenes++;
+			last_scene = i;
+		}
+	}
+	scenelength[num_scenes-1]=i-last_scene;
 
-  if ((!scenefactor) || (!scenestart) || (!scenelength) )
-  {
-    free(scenefactor);
-    free(scenestart);
-    free(scenelength);    
-    /* remember: free(0) is valid and does exactly nothing. */
-    return -1;
-  } 
-  
-/* count again and safe the length/position */
-
-  num_scenes = 0;
-  last_scene = -999;
-  for (i=0; i<rc->num_frames; i++) {
-    if ( (rc->stats[i].type == XVID_TYPE_IVOP) && (i-last_scene>min_scenelength) )
-    {
-      if (num_scenes>0)
-        scenelength[num_scenes-1]=i-last_scene;
-      scenestart[num_scenes]=i;
-      num_scenes++;
-      last_scene = i;
-    }
-  }
-  scenelength[num_scenes-1]=i-last_scene;
-
-/* second step: check for each scene, how much we can scale its frames up or down
-   such that the VBV restriction is just fulfilled 
-*/
-
-   
+	/* second step: check for each scene, how much we can scale its frames up or
+	 * down such that the VBV restriction is just fulfilled */
 #define R(k,n) (((n)+1-(k))*r0)     /* how much enters the buffer between frame k and n */
-  for (l=0; l<num_scenes;l++)
-  {
-    const int start = scenestart[l];
-    const int length = scenelength[l];
-    twopass_stat_t * frames = &rc->stats[start];
+	for (l=0; l<num_scenes;l++) {
+		const int start = scenestart[l];
+		const int length = scenelength[l];
+		twopass_stat_t * frames = &rc->stats[start];
 
-    float S0n,Skn;
-    float f,minf = 99999.f;
-  
-    S0n=0.;
-    for (n=0;n<=length-1;n++)
-    {
-      S0n += frames[n].scaled_length; 
+		float S0n,Skn;
+		float f,minf = 99999.f;
 
-      k=0;
-      Skn = S0n;
-      f = (R(k,n-1) + (vbv_initial - vbv_low)) / Skn;
-      if (f < minf)
-        minf = f;
-      
-      for (k=1;k<=n;k++)
-      {
-        Skn -= frames[k].scaled_length;
-        
-        f = (R(k,n-1) + (vbv_size - vbv_low)) / Skn;
-        if (f < minf)
-          minf = f;
-      }
-    }
+		S0n=0.;
+		for (n=0;n<=length-1;n++) {
+			S0n += frames[n].scaled_length;
 
-    /* special case: at the end, fill buffer up to vbv_initial again 
-       TODO: Allow other values for buffer fill between scenes
-       e.g. if n=N is smallest f-value, then check for better value */
+			k = 0;
+			Skn = S0n;
+			f = (R(k,n-1) + (vbv_initial - vbv_low)) / Skn;
+			if (f < minf)
+				minf = f;
 
-    n=length; 
-    k=0;
-    Skn = S0n;
-    f = R(k,n-1)/Skn;
-    if (f < minf)
-      minf = f;
-    
-    for (k=1;k<=n-1;k++)
-    {
-      Skn -= frames[k].scaled_length;
-      
-      f = (R(k,n-1) + (vbv_initial - vbv_low)) / Skn;
-      if (f < minf)
-        minf = f;
-    }
-  
-#ifdef VBV_DEBUG
-    printf("Scene %d (Frames %d-%d): VBVfactor %f\n", l, start, start+length-1 , minf);
-#endif
+			for (k=1;k<=n;k++) {
+				Skn -= frames[k].scaled_length;
 
-    scenefactor[l] = minf;
-  }
+				f = (R(k,n-1) + (vbv_size - vbv_low)) / Skn;
+				if (f < minf)
+					minf = f;
+			}
+		}
+
+		/* special case: at the end, fill buffer up to vbv_initial again
+		 *
+		 * TODO: Allow other values for buffer fill between scenes
+		 * e.g. if n=N is smallest f-value, then check for better value */
+
+		n=length;
+		k=0;
+		Skn = S0n;
+		f = R(k,n-1)/Skn;
+		if (f < minf)
+			minf = f;
+
+		for (k=1;k<=n-1;k++) {
+			Skn -= frames[k].scaled_length;
+
+			f = (R(k,n-1) + (vbv_initial - vbv_low)) / Skn;
+			if (f < minf)
+				minf = f;
+		}
+
+		DPRINTF(XVID_DEBUG_RC, "[xvid rc] Scene %d (Frames %d-%d): VBVfactor %f\n",
+			   	l, start, start+length-1 , minf);
+
+		scenefactor[l] = minf;
+	}
 #undef R
 
-/* last step: now we know of any scene how much it can be scaled up or down without 
-   violating VBV. Next, distribute bits from the evil scenes to the good ones */
+	/* last step: now we know of any scene how much it can be scaled up or down
+	 * without violating VBV. Next, distribute bits from the evil scenes to the
+	 * good ones */
+	do {
+		float S_red = 0.f;    /* how much to redistribute */
+		float S_elig = 0.f;   /* sum of bit for those scenes you can still swallow something*/
+		float f_red;
+		int l;
 
-  do
-  {
-    float S_red = 0.f;    /* how much to redistribute */
-    float S_elig = 0.f;   /* sum of bit for those scenes you can still swallow something*/
-	float f_red;
-    int l;
-    
-    for (l=0;l<num_scenes;l++)   /* check how much is wrong */
-    {
-    const int start = scenestart[l];
-    const int length = scenelength[l];
-    twopass_stat_t * frames = &rc->stats[start];
+		/* check how much is wrong */
+		for (l=0;l<num_scenes;l++) {
+			const int start = scenestart[l];
+			const int length = scenelength[l];
+			twopass_stat_t * frames = &rc->stats[start];
 
-      if (scenefactor[l] == 1.) /* exactly 1 means "don't touch this anymore!" */
-        continue; 
+			/* exactly 1 means "don't touch this anymore!" */
+			if (scenefactor[l] == 1.)
+				continue;
 
-      if (scenefactor[l] > 1.) /* within limits */
-      {
-        for (n= 0; n < length; n++)
-          S_elig += frames[n].scaled_length;
-      }
-      else /* underflowing segment */
-      {
-        for (n= 0; n < length; n++)
-        {
-          float newbytes = (float)frames[n].scaled_length * scenefactor[l];
-          S_red += (float)frames[n].scaled_length - (float)newbytes;
-          frames[n].scaled_length =(int)newbytes;
-        }
-        scenefactor[l] = 1.f;  
-      }
-    }
+			/* within limits */
+			if (scenefactor[l] > 1.) {
+				for (n= 0; n < length; n++)
+					S_elig += frames[n].scaled_length;
+			} else {
+				/* underflowing segment */
+				for (n= 0; n < length; n++) {
+					float newbytes = (float)frames[n].scaled_length * scenefactor[l];
+					S_red += (float)frames[n].scaled_length - (float)newbytes;
+					frames[n].scaled_length =(int)newbytes;
+				}
+				scenefactor[l] = 1.f;
+			}
+		}
 
-    if (S_red < 1.f)   /* no more underflows */
-      break;
-      
-    if (S_elig < 1.f) 
-    {
-#ifdef VBV_DEBUG
-      fprintf(stderr,"Everything underflowing. \n");
-#endif    
-      free(scenefactor);
-      free(scenestart);
-      free(scenelength);
-      return -2;
-    }
+		/* no more underflows */
+		if (S_red < 1.f)
+			break;
 
-    f_red = (1.f + S_red/S_elig); 
+		if (S_elig < 1.f) {
+			DPRINTF(XVID_DEBUG_RC, "[xvid rc] Everything underflowing.\n");
+			free(scenefactor);
+			free(scenestart);
+			free(scenelength);
+			return(-2);
+		}
 
-#ifdef VBV_DEBUG
-    printf("Moving %.0f kB to avoid buffer underflow, correction factor: %.5f\n",S_red/1024.f,f_red);
-#endif    
-    
-    violation=0;
-    for (l=0; l<num_scenes; l++)   /* scale remaining scenes up to meet total size */
-    {
-      const int start = scenestart[l];
-      const int length = scenelength[l];
-      twopass_stat_t * frames = &rc->stats[start];
+		f_red = (1.f + S_red/S_elig);
 
-      if (scenefactor[l] == 1.)   
-        continue; 
+		DPRINTF(XVID_DEBUG_RC, "[xvid rc] Moving %.0f kB to avoid buffer underflow, correction factor: %.5f\n",
+			   	S_red/1024.f, f_red);
 
-      /* there shouldn't be any segments with factor<1 left, so all the rest is >1 */
-      
-      for (n= 0; n < length; n++)
-      {
-        frames[n].scaled_length = (int)(frames[n].scaled_length * f_red + 0.5);
-      }
+		violation=0;
+		/* scale remaining scenes up to meet total size */
+		for (l=0; l<num_scenes; l++) {
+			const int start = scenestart[l];
+			const int length = scenelength[l];
+			twopass_stat_t * frames = &rc->stats[start];
 
-      scenefactor[l] /= f_red;
-      if (scenefactor[l] < 1.f)
-        violation=1;
-    }
+			if (scenefactor[l] == 1.)
+				continue;
 
-  } while (violation);
+			/* there shouldn't be any segments with factor<1 left, so all the rest is >1 */
+			for (n= 0; n < length; n++) {
+				frames[n].scaled_length = (int)(frames[n].scaled_length * f_red + 0.5);
+			}
 
-  free(scenefactor);
-  free(scenestart);
-  free(scenelength);
-  return 0;
+			scenefactor[l] /= f_red;
+			if (scenefactor[l] < 1.f)
+				violation=1;
+		}
+
+	} while (violation);
+
+	free(scenefactor);
+	free(scenestart);
+	free(scenelength);
+	return(0);
 }
 
 
