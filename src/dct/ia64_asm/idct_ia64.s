@@ -16,7 +16,6 @@ c12 = f44
 c13 = f45
 c14 = f46
 c15 = f47
-
 .sdata
 .align 16
 .data_c0:
@@ -60,14 +59,13 @@ c15 = f47
 .single 1.000000000000000000000000000000, 1.000000000000000000000000000000
 
 .text
-.global idct_ia64, idct_ia64_init
-	
+.global idct_ia64
+.global idct_ia64_init
 .align 16
 .proc idct_ia64_init
 idct_ia64_init:
-	br.ret.sptk.few b0
-.endp	
-	
+br.ret.sptk.few b0
+.endp
 .align 16
 .proc idct_ia64
 idct_ia64:
@@ -1512,36 +1510,52 @@ idct_ia64:
 	;;
 	st4   [addreg1] = r33, 8
 	st4   [addreg2] = r34, 8
+	;;
 	st4   [addreg1] = r35, 8
 	st4   [addreg2] = r36, 8
+	;;
 	st4   [addreg1] = r37, 8
 	st4   [addreg2] = r38, 8
+	;;
 	st4   [addreg1] = r39, 8
 	st4   [addreg2] = r40, 8
+	;;
 	st4   [addreg1] = r41, 8
 	st4   [addreg2] = r42, 8
+	;;
 	st4   [addreg1] = r43, 8
 	st4   [addreg2] = r44, 8
+	;;
 	st4   [addreg1] = r45, 8
 	st4   [addreg2] = r46, 8
+	;;
 	st4   [addreg1] = r47, 8
 	st4   [addreg2] = r48, 8
+	;;
 	st4   [addreg1] = r49, 8
 	st4   [addreg2] = r50, 8
+	;;
 	st4   [addreg1] = r51, 8
 	st4   [addreg2] = r52, 8
+	;;
 	st4   [addreg1] = r53, 8
 	st4   [addreg2] = r54, 8
+	;;
 	st4   [addreg1] = r55, 8
 	st4   [addreg2] = r56, 8
+	;;
 	st4   [addreg1] = r57, 8
 	st4   [addreg2] = r58, 8
+	;;
 	st4   [addreg1] = r59, 8
 	st4   [addreg2] = r60, 8
+	;;
 	st4   [addreg1] = r61, 8
 	st4   [addreg2] = r62, 8
+	;;
 	st4   [addreg1] = r63, 8
 	st4   [addreg2] = r64, 8
+	;;
 
 	mov	ar.pfs = r16
 	br.ret.sptk.few b0
