@@ -15,4 +15,7 @@ uint8_t set_inter_matrix(uint8_t *matrix);
 int16_t *get_intra_matrix(void);
 int16_t *get_inter_matrix(void);
 
+uint8_t *get_default_intra_matrix(void);
+uint8_t *get_default_inter_matrix(void);
+
 #endif /* _QUANT_MATRIX_H_ */

@@ -216,7 +216,6 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	uint16_t x, y;
 	Bitstream bs;
 	uint32_t bits;
-	uint16_t quant_type = 0;
 	uint16_t write_vol_header = 0;
 
 	start_global_timer();
@@ -265,23 +264,29 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 		free(temp_dquants);
 	}
 
-	if(pEnc->mbParam.global_flags & XVID_H263QUANT)
-		quant_type = H263_QUANT;
-	else if(pEnc->mbParam.global_flags & XVID_MPEGQUANT)
-		quant_type = MPEG4_QUANT;
-
-	if(pEnc->mbParam.quant_type != quant_type) {
-		pEnc->mbParam.quant_type = quant_type;
-		write_vol_header = 1;
+	if(pEnc->mbParam.global_flags & XVID_H263QUANT) {
+		if(pEnc->mbParam.quant_type != H263_QUANT)
+			write_vol_header = 1;
+		pEnc->mbParam.quant_type = H263_QUANT;
 	}
-	else
-		write_vol_header = 0;
-
-	if ((pEnc->mbParam.global_flags & XVID_CUSTOM_QMATRIX) > 0)
-	{
+	else if(pEnc->mbParam.global_flags & XVID_MPEGQUANT) {
 		int ret1, ret2;
-		ret1 = set_intra_matrix(pFrame->quant_intra_matrix);
-		ret2 = set_inter_matrix(pFrame->quant_inter_matrix);
+
+		if(pEnc->mbParam.quant_type != MPEG4_QUANT)
+			write_vol_header = 1;
+		
+		pEnc->mbParam.quant_type = MPEG4_QUANT;
+		
+		if ((pEnc->mbParam.global_flags & XVID_CUSTOM_QMATRIX) > 0) {
+			if(pFrame->quant_intra_matrix != NULL)
+				ret1 = set_intra_matrix(pFrame->quant_intra_matrix);
+			if(pFrame->quant_inter_matrix != NULL)
+				ret2 = set_inter_matrix(pFrame->quant_inter_matrix);
+		}
+		else {
+			ret1 = set_intra_matrix(get_default_intra_matrix());
+			ret2 = set_inter_matrix(get_default_inter_matrix());
+		}
 		if(write_vol_header == 0)
 			write_vol_header = ret1 | ret2;
 	}
