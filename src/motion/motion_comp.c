@@ -29,16 +29,16 @@
 #endif
 
 
-/* This is borrowed from    decoder.c   */
+/* This is borrowed from	decoder.c   */
 static __inline int gmc_sanitize(int value, int quarterpel, int fcode)
 {
 	int length = 1 << (fcode+4);
 
 //	if (quarterpel) value *= 2;
 
-	if (value < -length) 
+	if (value < -length)
 		return -length;
-	else if (value >= length) 
+	else if (value >= length)
 		return length-1;
 	else return value;
 }
@@ -59,7 +59,7 @@ log2bin(uint32_t value)
 	return n;
 #else
 	__asm {
-		bsr eax, value 
+		bsr eax, value
 		inc eax
 	}
 #endif
@@ -98,20 +98,20 @@ compensate16x16_interpolate(int16_t * const dct_codes,
 		} else ptr = get_ref(ref, refh, refv, refhv, x, y, 1, dx, dy, stride);
 
 		transfer_8to16sub(dct_codes, cur + y * stride + x,
-							  ptr, stride);
+							ptr, stride);
 		transfer_8to16sub(dct_codes+64, cur + y * stride + x + 8,
-							  ptr + 8, stride);
+							ptr + 8, stride);
 		transfer_8to16sub(dct_codes+128, cur + y * stride + x + 8*stride,
-							  ptr + 8*stride, stride);
+							ptr + 8*stride, stride);
 		transfer_8to16sub(dct_codes+192, cur + y * stride + x + 8*stride+8,
-							  ptr + 8*stride + 8, stride);
+							ptr + 8*stride + 8, stride);
 
 	} else { //reduced_resolution
-	
+
 		x *= 2; y *= 2;
 
 		ptr = get_ref(ref, refh, refv, refhv, x, y, 1, dx, dy, stride);
-		
+
 		filter_18x18_to_8x8(dct_codes, cur+y*stride + x, stride);
 		filter_diff_18x18_to_8x8(dct_codes, ptr, stride);
 
@@ -168,48 +168,10 @@ compensate8x8_interpolate(	int16_t * const dct_codes,
 
 		filter_18x18_to_8x8(dct_codes, cur+y*stride + x, stride);
 		filter_diff_18x18_to_8x8(dct_codes, ptr, stride);
-		
+
 		transfer16x16_copy(cur + y*stride + x, ptr, stride);
 	}
 }
-
-
-static __inline void
-compensate16x16_interpolate_ro(int16_t * const dct_codes,
-								const uint8_t * const cur,
-								const uint8_t * const ref,
-								const uint8_t * const refh,
-								const uint8_t * const refv,
-								const uint8_t * const refhv,
-								uint8_t * const tmp,
-								const uint32_t x, const uint32_t y,
-								const int32_t dx, const int32_t dy,
-								const int32_t stride,
-								const int quarterpel)
-{
-	const uint8_t * ptr;
-
-	if(quarterpel) {
-		if ((dx&3) | (dy&3)) {
-			interpolate16x16_quarterpel(tmp - y * stride - x,
-										(uint8_t *) ref, tmp + 32,
-										tmp + 64, tmp + 96, x, y, dx, dy, stride, 0);
-			ptr = tmp;
-		} else ptr =  ref + (y + dy/4)*stride + x + dx/4; // fullpixel position
-
-	} else ptr = get_ref(ref, refh, refv, refhv, x, y, 1, dx, dy, stride);
-
-	transfer_8to16subro(dct_codes, cur + y * stride + x,
-						  ptr, stride);
-	transfer_8to16subro(dct_codes+64, cur + y * stride + x + 8,
-						  ptr + 8, stride);
-	transfer_8to16subro(dct_codes+128, cur + y * stride + x + 8*stride,
-						  ptr + 8*stride, stride);
-	transfer_8to16subro(dct_codes+192, cur + y * stride + x + 8*stride+8,
-						  ptr + 8*stride + 8, stride);
-
-}
-
 
 /* XXX: slow, inelegant... */
 static void
@@ -249,11 +211,11 @@ CompensateChroma(	int dx, int dy,
 
 	if (!rrv) {
 		transfer_8to16sub(coeff, Cur->u + 8 * j * stride + 8 * i,
-				 			interpolate8x8_switch2(temp, Ref->u, 8 * i, 8 * j,
+							interpolate8x8_switch2(temp, Ref->u, 8 * i, 8 * j,
 													dx, dy, stride, rounding),
 							stride);
 		transfer_8to16sub(coeff + 64, Cur->v + 8 * j * stride + 8 * i,
- 				 			interpolate8x8_switch2(temp, Ref->v, 8 * i, 8 * j,
+ 							interpolate8x8_switch2(temp, Ref->v, 8 * i, 8 * j,
 													dx, dy, stride, rounding),
 							stride);
 	} else {
@@ -276,25 +238,24 @@ CompensateChroma(	int dx, int dy,
 
 void
 MBMotionCompensation(MACROBLOCK * const mb,
-					 const uint32_t i,
-					 const uint32_t j,
-					 const IMAGE * const ref,
-					 const IMAGE * const refh,
-					 const IMAGE * const refv,
-					 const IMAGE * const refhv,
-					 const IMAGE * const refGMC,
-					 IMAGE * const cur,
-					 int16_t * dct_codes,
-					 const uint32_t width,
-					 const uint32_t height,
-					 const uint32_t edged_width,
-					 const int32_t quarterpel,
-					 const int reduced_resolution,
-					 const int32_t rounding)
+					const uint32_t i,
+					const uint32_t j,
+					const IMAGE * const ref,
+					const IMAGE * const refh,
+					const IMAGE * const refv,
+					const IMAGE * const refhv,
+					const IMAGE * const refGMC,
+					IMAGE * const cur,
+					int16_t * dct_codes,
+					const uint32_t width,
+					const uint32_t height,
+					const uint32_t edged_width,
+					const int32_t quarterpel,
+					const int reduced_resolution,
+					const int32_t rounding)
 {
 	int32_t dx;
 	int32_t dy;
-
 
 	uint8_t * const tmp = refv->u;
 
@@ -302,9 +263,9 @@ MBMotionCompensation(MACROBLOCK * const mb,
 /* early SKIP is only activated in P-VOPs, not in S-VOPs, so mcsel can never be 1 */
 
 		transfer16x16_copy(cur->y + 16 * (i + j * edged_width),
-						   ref->y + 16 * (i + j * edged_width),
-						   edged_width);
-	
+						  ref->y + 16 * (i + j * edged_width),
+						  edged_width);
+
 		transfer8x8_copy(cur->u + 8 * (i + j * edged_width/2),
 							ref->u + 8 * (i + j * edged_width/2),
 							edged_width / 2);
@@ -314,23 +275,23 @@ MBMotionCompensation(MACROBLOCK * const mb,
 		return;
 	}
 
-	if ((mb->mode == MODE_NOT_CODED || mb->mode == MODE_INTER 
+	if ((mb->mode == MODE_NOT_CODED || mb->mode == MODE_INTER
 				|| mb->mode == MODE_INTER_Q)) {
 
 	/* reduced resolution + GMC:  not possible */
 
 		if (mb->mcsel) {
-			
+
 			/* call normal routine once, easier than "if (mcsel)"ing all the time */
-			
+
 			transfer_8to16sub(&dct_codes[0*64], cur->y + 16*j*edged_width + 16*i,
-								  			 refGMC->y + 16*j*edged_width + 16*i, edged_width);
+								 			refGMC->y + 16*j*edged_width + 16*i, edged_width);
 			transfer_8to16sub(&dct_codes[1*64], cur->y + 16*j*edged_width + 16*i+8,
-											 refGMC->y + 16*j*edged_width + 16*i+8, edged_width);
+											refGMC->y + 16*j*edged_width + 16*i+8, edged_width);
 			transfer_8to16sub(&dct_codes[2*64], cur->y + (16*j+8)*edged_width + 16*i,
-											 refGMC->y + (16*j+8)*edged_width + 16*i, edged_width);
+											refGMC->y + (16*j+8)*edged_width + 16*i, edged_width);
 			transfer_8to16sub(&dct_codes[3*64], cur->y + (16*j+8)*edged_width + 16*i+8,
-											 refGMC->y + (16*j+8)*edged_width + 16*i+8, edged_width);
+											refGMC->y + (16*j+8)*edged_width + 16*i+8, edged_width);
 
 /* lumi is needed earlier for mode decision, but chroma should be done block-based, but it isn't, yet. */
 
@@ -344,7 +305,7 @@ MBMotionCompensation(MACROBLOCK * const mb,
 		}
 
 		/* ordinary compensation */
-		
+
 		dx = (quarterpel ? mb->qmvs[0].x : mb->mvs[0].x);
 		dy = (quarterpel ? mb->qmvs[0].y : mb->mvs[0].y);
 
@@ -357,9 +318,8 @@ MBMotionCompensation(MACROBLOCK * const mb,
 							refv->y, refhv->y, tmp, 16 * i, 16 * j, dx, dy,
 							edged_width, quarterpel, reduced_resolution, rounding);
 
-		dx /= (int)(1 + quarterpel);
-		dy /= (int)(1 + quarterpel);
-	
+		if (quarterpel) { dx /= 2; dy /= 2; }
+
 		dx = (dx >> 1) + roundtab_79[dx & 0x3];
 		dy = (dy >> 1) + roundtab_79[dy & 0x3];
 
@@ -370,8 +330,8 @@ MBMotionCompensation(MACROBLOCK * const mb,
 		for (k = 0; k < 4; k++) {
 			dx = mvs[k].x;
 			dy = mvs[k].y;
-			sumx += dx / (1 + quarterpel);
-			sumy += dy / (1 + quarterpel);
+			sumx += quarterpel ? dx/2 : dx;
+			sumy += quarterpel ? dy/2 : dy;
 
 			if (reduced_resolution){
 				dx = RRV_MV_SCALEUP(dx);
@@ -436,9 +396,9 @@ MBMotionCompensationBVOP(MBParam * pParam,
 	case MODE_BACKWARD:
 		b_dx = bmvs->x; b_dy = bmvs->y;
 
-		compensate16x16_interpolate_ro(&dct_codes[0 * 64], cur->y, b_ref->y, b_refh->y,
+		compensate16x16_interpolate(&dct_codes[0 * 64], cur->y, b_ref->y, b_refh->y,
 										b_refv->y, b_refhv->y, tmp, 16 * i, 16 * j, b_dx,
-										b_dy, edged_width, quarterpel);
+										b_dy, edged_width, quarterpel, 0, 0);
 
 		if (quarterpel) { b_dx /= 2; b_dy /= 2; }
 
@@ -455,7 +415,7 @@ MBMotionCompensationBVOP(MBParam * pParam,
 		b_dx = bmvs->x; b_dy = bmvs->y;
 
 		if (quarterpel) {
-			
+
 			if ((dx&3) | (dy&3)) {
 				interpolate16x16_quarterpel(tmp - i * 16 - j * 16 * edged_width,
 					(uint8_t *) f_ref->y, tmp + 32,
@@ -496,12 +456,12 @@ MBMotionCompensationBVOP(MBParam * pParam,
 		b_dy = (b_dy >> 1) + roundtab_79[b_dy & 0x3];
 
 		break;
-	
-	default: // MODE_DIRECT
+
+	default: // MODE_DIRECT (or MODE_DIRECT_NONE_MV in case of bframes decoding)
 		sumx = sumy = b_sumx = b_sumy = 0;
 
 		for (k = 0; k < 4; k++) {
-			
+
 			dx = fmvs[k].x; dy = fmvs[k].y;
 			b_dx = bmvs[k].x; b_dy = bmvs[k].y;
 
@@ -511,8 +471,8 @@ MBMotionCompensationBVOP(MBParam * pParam,
 
 				if ((dx&3) | (dy&3)) {
 					interpolate8x8_quarterpel(tmp - (i * 16+(k&1)*8) - (j * 16+((k>>1)*8)) * edged_width,
-						(uint8_t *) f_ref->y, 
-						tmp + 32, tmp + 64, tmp + 96, 
+						(uint8_t *) f_ref->y,
+						tmp + 32, tmp + 64, tmp + 96,
 						16*i + (k&1)*8, 16*j + (k>>1)*8, dx, dy, edged_width, 0);
 					ptr1 = tmp;
 				} else ptr1 = f_ref->y + (16*j + (k>>1)*8 + dy/4)*edged_width + 16*i + (k&1)*8 + dx/4;
@@ -520,7 +480,7 @@ MBMotionCompensationBVOP(MBParam * pParam,
 				if ((b_dx&3) | (b_dy&3)) {
 					interpolate8x8_quarterpel(tmp - (i * 16+(k&1)*8) - (j * 16+((k>>1)*8)) * edged_width + 16,
 						(uint8_t *) b_ref->y,
-						tmp + 16, tmp + 32, tmp + 48, 
+						tmp + 16, tmp + 32, tmp + 48,
 						16*i + (k&1)*8, 16*j + (k>>1)*8, b_dx, b_dy, edged_width, 0);
 					ptr2 = tmp + 16;
 				} else ptr2 = b_ref->y + (16*j + (k>>1)*8 + b_dy/4)*edged_width + 16*i + (k&1)*8 + b_dx/4;
@@ -528,15 +488,15 @@ MBMotionCompensationBVOP(MBParam * pParam,
 				sumx += dx; sumy += dy;
 				b_sumx += b_dx; b_sumy += b_dy;
 
-				ptr1 = get_ref(f_ref->y, f_refh->y, f_refv->y, f_refhv->y, 
+				ptr1 = get_ref(f_ref->y, f_refh->y, f_refv->y, f_refhv->y,
 								2*i + (k&1), 2*j + (k>>1), 8, dx, dy, edged_width);
-				ptr2 = get_ref(b_ref->y, b_refh->y, b_refv->y, b_refhv->y, 
+				ptr2 = get_ref(b_ref->y, b_refh->y, b_refv->y, b_refhv->y,
 								2*i + (k&1), 2*j + (k>>1), 8, b_dx, b_dy,  edged_width);
 			}
 			transfer_8to16sub2(&dct_codes[k * 64],
 								cur->y + (i * 16+(k&1)*8) + (j * 16+((k>>1)*8)) * edged_width,
 								ptr1, ptr2,	edged_width);
-						
+
 		}
 
 		dx = (sumx >> 3) + roundtab_76[sumx & 0xf];
@@ -568,85 +528,83 @@ MBMotionCompensationBVOP(MBParam * pParam,
 
 
 void generate_GMCparameters( const int num_wp, const int res,
-                       const WARPPOINTS *const warp,
-                       const int width, const int height,
-                       GMC_DATA *const gmc)
+						const WARPPOINTS *const warp,
+						const int width, const int height,
+						GMC_DATA *const gmc)
 {
-  const int du0 = warp->duv[0].x;
-  const int dv0 = warp->duv[0].y;
-  const int du1 = warp->duv[1].x;
-  const int dv1 = warp->duv[1].y;
-  const int du2 = warp->duv[2].x;
-  const int dv2 = warp->duv[2].y;
+	const int du0 = warp->duv[0].x;
+	const int dv0 = warp->duv[0].y;
+	const int du1 = warp->duv[1].x;
+	const int dv1 = warp->duv[1].y;
+	const int du2 = warp->duv[2].x;
+	const int dv2 = warp->duv[2].y;
 
-  gmc->W = width;
-  gmc->H = height;
+	gmc->W = width;
+	gmc->H = height;
 
-  gmc->rho = 4 - log2bin(res-1);  // = {3,2,1,0} for res={2,4,8,16}
+	gmc->rho = 4 - log2bin(res-1);  // = {3,2,1,0} for res={2,4,8,16}
 
-  gmc->alpha = log2bin(gmc->W-1);
-  gmc->Ws = (1 << gmc->alpha); 
-  
-  gmc->dxF = 16*gmc->Ws + RDIV( 8*gmc->Ws*du1, gmc->W );
-  gmc->dxG =         	  RDIV( 8*gmc->Ws*dv1, gmc->W );
-  gmc->Fo  = (res*du0 + 1) << (gmc->alpha+gmc->rho-1);
-  gmc->Go  = (res*dv0 + 1) << (gmc->alpha+gmc->rho-1);
+	gmc->alpha = log2bin(gmc->W-1);
+	gmc->Ws = (1 << gmc->alpha);
 
-  if (num_wp==2) {
-    gmc->dyF = -gmc->dxG;
-    gmc->dyG =  gmc->dxF;
-  }
-  else if (num_wp==3) {
-    gmc->beta = log2bin(gmc->H-1);
-    gmc->Hs = (1 << gmc->beta); 
-    gmc->dyF =              RDIV( 8*gmc->Hs*du2, gmc->H );
-    gmc->dyG = 16*gmc->Hs + RDIV( 8*gmc->Hs*dv2, gmc->H );
-    if (gmc->beta > gmc->alpha) {
-      gmc->dxF <<= (gmc->beta - gmc->alpha);
-      gmc->dxG <<= (gmc->beta - gmc->alpha);
-      gmc->alpha = gmc->beta;
-      gmc->Ws = 1<< gmc->beta;
-    }
-    else {
-      gmc->dyF <<= gmc->alpha - gmc->beta;
-      gmc->dyG <<= gmc->alpha - gmc->beta;
-    }
-  }
+	gmc->dxF = 16*gmc->Ws + RDIV( 8*gmc->Ws*du1, gmc->W );
+	gmc->dxG = RDIV( 8*gmc->Ws*dv1, gmc->W );
+	gmc->Fo  = (res*du0 + 1) << (gmc->alpha+gmc->rho-1);
+	gmc->Go  = (res*dv0 + 1) << (gmc->alpha+gmc->rho-1);
 
-  gmc->cFo = gmc->dxF + gmc->dyF + (1 << (gmc->alpha+gmc->rho+1));
-  gmc->cFo += 16*gmc->Ws*(du0-1);
+	if (num_wp==2) {
+		gmc->dyF = -gmc->dxG;
+		gmc->dyG =  gmc->dxF;
+	} else if (num_wp==3) {
+		gmc->beta = log2bin(gmc->H-1);
+		gmc->Hs = (1 << gmc->beta);
+		gmc->dyF =			 RDIV( 8*gmc->Hs*du2, gmc->H );
+		gmc->dyG = 16*gmc->Hs + RDIV( 8*gmc->Hs*dv2, gmc->H );
+		if (gmc->beta > gmc->alpha) {
+			gmc->dxF <<= (gmc->beta - gmc->alpha);
+			gmc->dxG <<= (gmc->beta - gmc->alpha);
+			gmc->alpha = gmc->beta;
+			gmc->Ws = 1<< gmc->beta;
+		} else {
+			gmc->dyF <<= gmc->alpha - gmc->beta;
+			gmc->dyG <<= gmc->alpha - gmc->beta;
+		}
+	}
 
-  gmc->cGo = gmc->dxG + gmc->dyG + (1 << (gmc->alpha+gmc->rho+1));
-  gmc->cGo += 16*gmc->Ws*(dv0-1);
+	gmc->cFo = gmc->dxF + gmc->dyF + (1 << (gmc->alpha+gmc->rho+1));
+	gmc->cFo += 16*gmc->Ws*(du0-1);
+
+	gmc->cGo = gmc->dxG + gmc->dyG + (1 << (gmc->alpha+gmc->rho+1));
+	gmc->cGo += 16*gmc->Ws*(dv0-1);
 }
 
-void 
-generate_GMCimage(	const GMC_DATA *const gmc_data, 	// [input] precalculated data
-					const IMAGE *const pRef,			// [input] 
-					const int mb_width, 
+void
+generate_GMCimage(	const GMC_DATA *const gmc_data, // [input] precalculated data
+					const IMAGE *const pRef,		// [input]
+					const int mb_width,
 					const int mb_height,
 					const int stride,
-					const int stride2, 
-					const int fcode, 					// [input] some parameters...
-  					const int32_t quarterpel,			// [input] for rounding avgMV
-					const int reduced_resolution,		// [input] ignored
+					const int stride2,
+					const int fcode, 				// [input] some parameters...
+  					const int32_t quarterpel,		// [input] for rounding avgMV
+					const int reduced_resolution,	// [input] ignored
 					const int32_t rounding,			// [input] for rounding image data
-					MACROBLOCK *const pMBs, 	// [output] average motion vectors
-					IMAGE *const pGMC)			// [output] full warped image
+					MACROBLOCK *const pMBs, 		// [output] average motion vectors
+					IMAGE *const pGMC)				// [output] full warped image
 {
 
 	unsigned int mj,mi;
 	VECTOR avgMV;
-	
-	for (mj=0;mj<(unsigned int)mb_height;mj++)
-	for (mi=0;mi<(unsigned int)mb_width; mi++)
-	{
-		avgMV = generate_GMCimageMB(gmc_data, pRef, mi, mj, 
-					stride, stride2, quarterpel, rounding, pGMC);
 
-		pMBs[mj*mb_width+mi].amv.x = gmc_sanitize(avgMV.x, quarterpel, fcode);
-		pMBs[mj*mb_width+mi].amv.y = gmc_sanitize(avgMV.y, quarterpel, fcode);
-		pMBs[mj*mb_width+mi].mcsel = 0; /* until mode decision */
+	for (mj = 0; mj < (unsigned int)mb_height; mj++)
+		for (mi = 0; mi < (unsigned int)mb_width; mi++) {
+
+			avgMV = generate_GMCimageMB(gmc_data, pRef, mi, mj,
+						stride, stride2, quarterpel, rounding, pGMC);
+
+			pMBs[mj*mb_width+mi].amv.x = gmc_sanitize(avgMV.x, quarterpel, fcode);
+			pMBs[mj*mb_width+mi].amv.y = gmc_sanitize(avgMV.y, quarterpel, fcode);
+			pMBs[mj*mb_width+mi].mcsel = 0; /* until mode decision */
 	}
 }
 
@@ -660,176 +618,175 @@ static const uint32_t MTab[16] = {
 #undef MLT
 
 VECTOR generate_GMCimageMB( const GMC_DATA *const gmc_data,
-                      const IMAGE *const pRef,
-                      const int mi, const int mj,
-                      const int stride,
-                      const int stride2,
-                      const int quarterpel,
-                      const int rounding,
-                      IMAGE *const pGMC)
+							const IMAGE *const pRef,
+							const int mi, const int mj,
+							const int stride,
+							const int stride2,
+							const int quarterpel,
+							const int rounding,
+							IMAGE *const pGMC)
 {
-  const int W = gmc_data->W;
-  const int H = gmc_data->H;
+	const int W = gmc_data->W;
+	const int H = gmc_data->H;
 
-  const int rho = gmc_data->rho; 
-  const int alpha = gmc_data->alpha; 
+	const int rho = gmc_data->rho;
+	const int alpha = gmc_data->alpha;
 
-  const int rounder = ( 128 - (rounding<<(rho+rho)) ) << 16;
+	const int rounder = ( 128 - (rounding<<(rho+rho)) ) << 16;
 
-  const int dxF = gmc_data->dxF;
-  const int dyF = gmc_data->dyF;
-  const int dxG = gmc_data->dxG;
-  const int dyG = gmc_data->dyG;
-  
-  uint8_t *dstY, *dstU, *dstV;
+	const int dxF = gmc_data->dxF;
+	const int dyF = gmc_data->dyF;
+	const int dxG = gmc_data->dxG;
+	const int dyG = gmc_data->dyG;
 
-  int I,J;
-  VECTOR avgMV = {0,0};
+	uint8_t *dstY, *dstU, *dstV;
 
-  int32_t Fj, Gj;
+	int I,J;
+	VECTOR avgMV = {0,0};
 
-  dstY = &pGMC->y[(mj*16)*stride+mi*16] + 16;
+	int32_t Fj, Gj;
 
-  Fj = gmc_data->Fo + dyF*mj*16 + dxF*mi*16;
-  Gj = gmc_data->Go + dyG*mj*16 + dxG*mi*16;
-  for (J=16; J>0; --J)
-  {
-    int32_t Fi, Gi;
-    
-    Fi = Fj; Fj += dyF;
-    Gi = Gj; Gj += dyG;
-    for (I=-16; I<0; ++I)
-    {
-      int32_t F, G;
-      uint32_t ri, rj;
+	dstY = &pGMC->y[(mj*16)*stride+mi*16] + 16;
 
-      F = ( Fi >> (alpha+rho) ) << rho; Fi += dxF;
-      G = ( Gi >> (alpha+rho) ) << rho; Gi += dxG;
+	Fj = gmc_data->Fo + dyF*mj*16 + dxF*mi*16;
+	Gj = gmc_data->Go + dyG*mj*16 + dxG*mi*16;
+	
+	for (J = 16; J > 0; --J) {
+		int32_t Fi, Gi;
 
-      avgMV.x += F;
-      avgMV.y += G;
+		Fi = Fj; Fj += dyF;
+		Gi = Gj; Gj += dyG;
+		for (I = -16; I < 0; ++I) {
+			int32_t F, G;
+			uint32_t ri, rj;
 
-      ri = MTab[F&15];
-      rj = MTab[G&15];
+			F = ( Fi >> (alpha+rho) ) << rho; Fi += dxF;
+			G = ( Gi >> (alpha+rho) ) << rho; Gi += dxG;
 
-      F >>= 4;
-      G >>= 4;
+			avgMV.x += F;
+			avgMV.y += G;
 
-      if (F< -1) F=-1;
-      else if (F>W) F=W;
-      if (G< -1) G=-1;
-      else if (G>H) G=H;
+			ri = MTab[F&15];
+			rj = MTab[G&15];
 
-      {     // MMX-like bilinear...
-        const int offset = G*stride + F;
-        uint32_t f0, f1;
-        f0  = pRef->y[ offset +0 ];
-        f0 |= pRef->y[ offset +1 ] << 16;
-        f1  = pRef->y[ offset+stride +0 ];
-        f1 |= pRef->y[ offset+stride +1 ] << 16;
-        f0 = (ri*f0)>>16;
-        f1 = (ri*f1) & 0x0fff0000;
-        f0 |= f1; 
-        f0 = ( rj*f0 + rounder ) >> 24;
+			F >>= 4;
+			G >>= 4;
 
-        dstY[I] = (uint8_t)f0;
-      }
-    }
-    dstY += stride;
-  }
+			if (F < -1) F = -1;
+			else if (F > W) F = W;
+			if (G< -1) G=-1;
+			else if (G>H) G=H;
 
-  dstU = &pGMC->u[(mj*8)*stride2+mi*8] + 8;
-  dstV = &pGMC->v[(mj*8)*stride2+mi*8] + 8;
+			{	 // MMX-like bilinear...
+				const int offset = G*stride + F;
+				uint32_t f0, f1;
+				f0 = pRef->y[ offset +0 ];
+				f0 |= pRef->y[ offset +1 ] << 16;
+				f1 = pRef->y[ offset+stride +0 ];
+				f1 |= pRef->y[ offset+stride +1 ] << 16;
+				f0 = (ri*f0)>>16;
+				f1 = (ri*f1) & 0x0fff0000;
+				f0 |= f1;
+				f0 = ( rj*f0 + rounder ) >> 24;
 
-  Fj = gmc_data->cFo + dyF*4 *mj*8 + dxF*4 *mi*8;
-  Gj = gmc_data->cGo + dyG*4 *mj*8 + dxG*4 *mi*8;
-  for (J=8; J>0; --J)
-  {
-    int32_t Fi, Gi;
-    Fi = Fj; Fj += 4*dyF; 
-    Gi = Gj; Gj += 4*dyG;
+				dstY[I] = (uint8_t)f0;
+			}
+		}
+		
+		dstY += stride;
+	}
 
-    for (I=-8; I<0; ++I)
-    {
-      int32_t F, G;
-      uint32_t ri, rj;
+	dstU = &pGMC->u[(mj*8)*stride2+mi*8] + 8;
+	dstV = &pGMC->v[(mj*8)*stride2+mi*8] + 8;
 
-      F = ( Fi >> (alpha+rho+2) ) << rho; Fi += 4*dxF;
-      G = ( Gi >> (alpha+rho+2) ) << rho; Gi += 4*dxG;
+	Fj = gmc_data->cFo + dyF*4 *mj*8 + dxF*4 *mi*8;
+	Gj = gmc_data->cGo + dyG*4 *mj*8 + dxG*4 *mi*8;
+	
+	for (J = 8; J > 0; --J) {
+		int32_t Fi, Gi;
+		Fi = Fj; Fj += 4*dyF;
+		Gi = Gj; Gj += 4*dyG;
 
-      ri = MTab[F&15];
-      rj = MTab[G&15];
+		for (I = -8; I < 0; ++I) {
+			int32_t F, G;
+			uint32_t ri, rj;
 
-      F >>= 4;
-      G >>= 4;
+			F = ( Fi >> (alpha+rho+2) ) << rho; Fi += 4*dxF;
+			G = ( Gi >> (alpha+rho+2) ) << rho; Gi += 4*dxG;
 
-      if (F< -1) F=-1;
-      else if (F>=W/2) F=W/2;
-      if (G< -1) G=-1;
-      else if (G>=H/2) G=H/2;
+			ri = MTab[F&15];
+			rj = MTab[G&15];
 
-      {
-        const int offset = G*stride2 + F;
-        uint32_t f0, f1;
+			F >>= 4;
+			G >>= 4;
 
-        f0  = pRef->u[ offset         +0 ];
-        f0 |= pRef->u[ offset         +1 ] << 16;
-        f1  = pRef->u[ offset+stride2 +0 ];
-        f1 |= pRef->u[ offset+stride2 +1 ] << 16;
-        f0 = (ri*f0)>>16;
-        f1 = (ri*f1) & 0x0fff0000;
-        f0 |= f1; 
-        f0 = ( rj*f0 + rounder ) >> 24;
+			if (F < -1) F=-1;
+			else if (F >= W/2) F = W/2;
+			if (G < -1) G = -1;
+			else if (G >= H/2) G = H/2;
 
-        dstU[I] = (uint8_t)f0;
+			{
+				const int offset = G*stride2 + F;
+				uint32_t f0, f1;
 
+				f0	= pRef->u[ offset		 +0 ];
+				f0 |= pRef->u[ offset		 +1 ] << 16;
+				f1	= pRef->u[ offset+stride2 +0 ];
+				f1 |= pRef->u[ offset+stride2 +1 ] << 16;
+				f0 = (ri*f0)>>16;
+				f1 = (ri*f1) & 0x0fff0000;
+				f0 |= f1;
+				f0 = ( rj*f0 + rounder ) >> 24;
 
-        f0  = pRef->v[ offset         +0 ];
-        f0 |= pRef->v[ offset         +1 ] << 16;
-        f1  = pRef->v[ offset+stride2 +0 ];
-        f1 |= pRef->v[ offset+stride2 +1 ] << 16;
-        f0 = (ri*f0)>>16;
-        f1 = (ri*f1) & 0x0fff0000;
-        f0 |= f1; 
-        f0 = ( rj*f0 + rounder ) >> 24;
-
-        dstV[I] = (uint8_t)f0;    
-      }
-    }
-    dstU += stride2;
-    dstV += stride2;
-  }
+				dstU[I] = (uint8_t)f0;
 
 
-  avgMV.x -= 16*((256*mi+120)<<4);    // 120 = 15*16/2
-  avgMV.y -= 16*((256*mj+120)<<4);
+				f0	= pRef->v[ offset		 +0 ];
+				f0 |= pRef->v[ offset		 +1 ] << 16;
+				f1	= pRef->v[ offset+stride2 +0 ];
+				f1 |= pRef->v[ offset+stride2 +1 ] << 16;
+				f0 = (ri*f0)>>16;
+				f1 = (ri*f1) & 0x0fff0000;
+				f0 |= f1;
+				f0 = ( rj*f0 + rounder ) >> 24;
 
-  avgMV.x = RSHIFT( avgMV.x, (4+7-quarterpel) );
-  avgMV.y = RSHIFT( avgMV.y, (4+7-quarterpel) );
+				dstV[I] = (uint8_t)f0;
+			}
+		}
+		dstU += stride2;
+		dstV += stride2;
+	}
 
-  return avgMV;
+
+	avgMV.x -= 16*((256*mi+120)<<4);	// 120 = 15*16/2
+	avgMV.y -= 16*((256*mj+120)<<4);
+
+	avgMV.x = RSHIFT( avgMV.x, (4+7-quarterpel) );
+	avgMV.y = RSHIFT( avgMV.y, (4+7-quarterpel) );
+
+	return avgMV;
 }
- 
- 
- 
+
+
+
 #ifdef OLD_GRUEL_GMC
-void 
+void
 generate_GMCparameters(	const int num_wp,			// [input]: number of warppoints
-						const int res, 			// [input]: resolution 
-						const WARPPOINTS *const warp, // [input]: warp points  
+						const int res, 			// [input]: resolution
+						const WARPPOINTS *const warp, // [input]: warp points
 						const int width, const int height,
-						GMC_DATA *const gmc) 	// [output] precalculated parameters 
+						GMC_DATA *const gmc) 	// [output] precalculated parameters
 {
 
-/* We follow mainly two sources: The original standard, which is ugly, and the 
-   thesis from Andreas Dehnhardt, which is much nicer. 
-   
-	Notation is: indices are written next to the variable, 
-				 primes in the standard are denoted by a suffix 'p'. 
-	types are   "c"=constant, "i"=input parameter, "f"=calculated, then fixed, 
-                "o"=output data, " "=other, "u" = unused, "p"=calc for every pixel
+/* We follow mainly two sources: The original standard, which is ugly, and the
+   thesis from Andreas Dehnhardt, which is much nicer.
 
-type | variable name  |   ISO name (TeX-style) |  value or range  |  usage 
+	Notation is: indices are written next to the variable,
+				 primes in the standard are denoted by a suffix 'p'.
+	types are   "c"=constant, "i"=input parameter, "f"=calculated, then fixed,
+				"o"=output data, " "=other, "u" = unused, "p"=calc for every pixel
+
+type | variable name  |   ISO name (TeX-style) |  value or range  |  usage
 -------------------------------------------------------------------------------------
  c   | H			  |   H 				   |  [16 , ?]  	  |  image width (w/o edges)
  c   | W			  |   W 				   |  [16 , ?]  	  |  image height (w/o edges)
@@ -839,37 +796,37 @@ type | variable name  |   ISO name (TeX-style) |  value or range  |  usage
  c   | i1			  |   i_1				   |  W 			  |  ref. point #2, X
  c   | j1			  |   j_1				   |  0 			  |  ref. point #2, Y
  cu  | i2			  |   i_2				   |  0 			  |  ref. point #3, X
- cu  | i2			  |   j_2				   |  H 			  |  ref. point #3, Y 
+ cu  | i2			  |   j_2				   |  H 			  |  ref. point #3, Y
 
  i   | du0  		  |   du[0] 			   |  [-16863,16863]  |  warp vector #1, Y
  i   | dv0  		  |   dv[0] 			   |  [-16863,16863]  |  warp vector #1, Y
  i   | du1  		  |   du[1] 			   |  [-16863,16863]  |  warp vector #2, Y
  i   | dv1  		  |   dv[1] 			   |  [-16863,16863]  |  warp vector #2, Y
- iu  | du2  		  |   du[2] 			   |  [-16863,16863]  |  warp vector #3, Y	 
+ iu  | du2  		  |   du[2] 			   |  [-16863,16863]  |  warp vector #3, Y	
  iu  | dv2  		  |   dv[2] 			   |  [-16863,16863]  |  warp vector #3, Y
-	
- i   | s              |   s                    |  {2,4,8,16}      |  interpol. resolution
- f   | sigma          |        -               |  log2(s)         |  X / s == X >> sigma 
- f   | r              |   r                    |  =16/s           |  complementary res. 
- f   | rho            |   \rho                 |  log2(r)         |  X / r == X >> rho
- 
- f   | i0s            |   i'_0                 |                  |  
- f   | j0s            |   j'_0                 |                  | 
- f	 | i1s            |   i'_1                 |                  |
- f	 | j1s            |   j'_1                 |                  |
- f	 | i2s            |   i'_2                 |                  |
- f	 | j2s            |   j'_2                 |                  |
- 
- f   | alpha          |   \alpha               |                  |  2^{alpha-1} < W <= 2^alpha
- f   | beta           |   \beta                |                  |  2^{beta-1} < H <= 2^beta
- 
- f   | Ws             |   W'                   | W = 2^{alpha}    |  scaled width 
- f   | Hs             |   H'                   | W = 2^{beta}     |  scaled height
 
- f   | i1ss           |   i''_1                |  "virtual sprite stuff"
- f   | j1ss           |   j''_1                |  "virtual sprite stuff"
- f   | i2ss           |   i''_2                |  "virtual sprite stuff"
- f   | j2ss           |   j''_2                |  "virtual sprite stuff"
+ i   | s			  |   s					|  {2,4,8,16}	  |  interpol. resolution
+ f   | sigma		  |		-			   |  log2(s)		 |  X / s == X >> sigma
+ f   | r			  |   r					|  =16/s		   |  complementary res.
+ f   | rho			|   \rho				 |  log2(r)		 |  X / r == X >> rho
+
+ f   | i0s			|   i'_0				 |				  |
+ f   | j0s			|   j'_0				 |				  |
+ f	 | i1s			|   i'_1				 |				  |
+ f	 | j1s			|   j'_1				 |				  |
+ f	 | i2s			|   i'_2				 |				  |
+ f	 | j2s			|   j'_2				 |				  |
+
+ f   | alpha		  |   \alpha			   |				  |  2^{alpha-1} < W <= 2^alpha
+ f   | beta		   |   \beta				|				  |  2^{beta-1} < H <= 2^beta
+
+ f   | Ws			 |   W'				   | W = 2^{alpha}	|  scaled width
+ f   | Hs			 |   H'				   | W = 2^{beta}	 |  scaled height
+
+ f   | i1ss		   |   i''_1				|  "virtual sprite stuff"
+ f   | j1ss		   |   j''_1				|  "virtual sprite stuff"
+ f   | i2ss		   |   i''_2				|  "virtual sprite stuff"
+ f   | j2ss		   |   j''_2				|  "virtual sprite stuff"
 */
 
 /* Some calculations are disabled because we only use 2 warppoints at the moment */
@@ -880,22 +837,22 @@ type | variable name  |   ISO name (TeX-style) |  value or range  |  usage
 	int dv1 = warp->duv[1].y;
 //	int du2 = warp->duv[2].x;
 //	int dv2 = warp->duv[2].y;
-	
+
 	gmc->num_wp = num_wp;
 
 	gmc->s = res;						/* scaling parameters 2,4,8 or 16 */
 	gmc->sigma = log2bin(res-1);	/* log2bin(15)=4, log2bin(16)=5, log2bin(17)=5  */
-	gmc->r = 16/res; 
+	gmc->r = 16/res;
 	gmc->rho = 4 - gmc->sigma; 		/* = log2bin(r-1) */
 
 	gmc->W = width;
 	gmc->H = height;			/* fixed reference coordinates */
 
 	gmc->alpha = log2bin(gmc->W-1);
-	gmc->Ws= 1<<gmc->alpha; 
+	gmc->Ws= 1<<gmc->alpha;
 
 //	gmc->beta = log2bin(gmc->H-1);
-//	gmc->Hs= 1<<gmc->beta; 
+//	gmc->Hs= 1<<gmc->beta;
 
 //	printf("du0=%d dv0=%d du1=%d dv1=%d s=%d sigma=%d W=%d alpha=%d, Ws=%d, rho=%d\n",du0,dv0,du1,dv1,gmc->s,gmc->sigma,gmc->W,gmc->alpha,gmc->Ws,gmc->rho);
 
@@ -907,28 +864,26 @@ type | variable name  |   ISO name (TeX-style) |  value or range  |  usage
 	gmc->j1s = res/2 * ( dv1 + dv0 );
 //	gmc->i2s = res/2 * ( du2 + du0 );
 //	gmc->j2s = res/2 * (2*height + dv2 + dv0 );
-	
+
 	/* i2s and i2ss are only needed for num_wp == 3, etc.  */
 
 	/* the 'ss' values are in 1/16 pel resolution */
-	gmc->i1ss = 16*gmc->Ws + ROUNDED_DIV(((gmc->W-gmc->Ws)*(gmc->r*gmc->i0s) + gmc->Ws*(gmc->r*gmc->i1s - 16*gmc->W)),gmc->W); 
-	gmc->j1ss = ROUNDED_DIV( ((gmc->W - gmc->Ws)*(gmc->r*gmc->j0s) + gmc->Ws*gmc->r*gmc->j1s) ,gmc->W );   
+	gmc->i1ss = 16*gmc->Ws + ROUNDED_DIV(((gmc->W-gmc->Ws)*(gmc->r*gmc->i0s) + gmc->Ws*(gmc->r*gmc->i1s - 16*gmc->W)),gmc->W);
+	gmc->j1ss = ROUNDED_DIV( ((gmc->W - gmc->Ws)*(gmc->r*gmc->j0s) + gmc->Ws*gmc->r*gmc->j1s) ,gmc->W );
 
-//	gmc->i2ss = ROUNDED_DIV( ((gmc->H - gmc->Hs)*(gmc->r*gmc->i0s) + gmc->Hs*(gmc->r*gmc->i2s)), gmc->H); 
+//	gmc->i2ss = ROUNDED_DIV( ((gmc->H - gmc->Hs)*(gmc->r*gmc->i0s) + gmc->Hs*(gmc->r*gmc->i2s)), gmc->H);
 //	gmc->j2ss = 16*gmc->Hs + ROUNDED_DIV( ((gmc->H-gmc->Hs)*(gmc->r*gmc->j0s) + gmc->Ws*(gmc->r*gmc->j2s - 16*gmc->H)), gmc->H);
 
-	return; 
+	return;
 }
 
-
-
-void 
+void
 generate_GMCimage(	const GMC_DATA *const gmc_data, 	// [input] precalculated data
-					const IMAGE *const pRef,			// [input] 
-					const int mb_width, 
+					const IMAGE *const pRef,			// [input]
+					const int mb_width,
 					const int mb_height,
 					const int stride,
-					const int stride2, 
+					const int stride2,
 					const int fcode, 					// [input] some parameters...
   					const int32_t quarterpel,			// [input] for rounding avgMV
 					const int reduced_resolution,		// [input] ignored
@@ -939,11 +894,11 @@ generate_GMCimage(	const GMC_DATA *const gmc_data, 	// [input] precalculated dat
 
 	unsigned int mj,mi;
 	VECTOR avgMV;
-	
-	for (mj=0;mj<mb_height;mj++)
-	for (mi=0;mi<mb_width; mi++)
-	{
-		avgMV = generate_GMCimageMB(gmc_data, pRef, mi, mj, 
+
+	for (mj = 0;mj < mb_height; mj++)
+	for (mi = 0;mi < mb_width; mi++) {
+		
+		avgMV = generate_GMCimageMB(gmc_data, pRef, mi, mj,
 					stride, stride2, quarterpel, rounding, pGMC);
 
 		pMBs[mj*mb_width+mi].amv.x = gmc_sanitize(avgMV.x, quarterpel, fcode);
@@ -961,24 +916,24 @@ VECTOR generate_GMCimageMB(	const GMC_DATA *const gmc_data, /* [input] all preca
 							const int quarterpel, 			/* [input] for rounding of avgMV */
 							const int rounding, 			/* [input] for rounding of imgae data */
 							IMAGE *const pGMC)				/* [outut] generate image */
-							
-/*
-type | variable name  |   ISO name (TeX-style) |  value or range  |  usage 
--------------------------------------------------------------------------------------
- p   | F              |   F(i,j)               |                  | pelwise motion vector X in s-th pel 
- p   | G              |   G(i,j)               |                  | pelwise motion vector Y in s-th pel 
- p   | Fc             |   F_c(i,j)             |                  | 
- p   | Gc             |   G_c(i,j)             |                  | same for chroma
- 
- p   | Y00            |   Y_{00}               |  [0,255*s*s]     | first: 4 neighbouring Y-values
- p   | Y01            |   Y_{01}               |  [0,255]         | at fullpel position, around the 
- p   | Y10            |   Y_{10}               |  [0,255*s]       | position where pelweise MV points to
- p   | Y11            |   Y_{11}               |  [0,255]         | later: bilinear interpol Y-values in Y00
 
- p   | C00            |   C_{00}               |  [0,255*s*s]     | same for chroma Cb and Cr 
- p   | C01            |   C_{01}               |  [0,255]         | 
- p   | C10            |   C_{10}               |  [0,255*s]       | 
- p   | C11            |   C_{11}               |  [0,255]         | 
+/*
+type | variable name  |   ISO name (TeX-style) |  value or range  |  usage
+-------------------------------------------------------------------------------------
+ p   | F			  |   F(i,j)			   |				  | pelwise motion vector X in s-th pel
+ p   | G			  |   G(i,j)			   |				  | pelwise motion vector Y in s-th pel
+ p   | Fc			 |   F_c(i,j)			 |				  |
+ p   | Gc			 |   G_c(i,j)			 |				  | same for chroma
+
+ p   | Y00			|   Y_{00}			   |  [0,255*s*s]	 | first: 4 neighbouring Y-values
+ p   | Y01			|   Y_{01}			   |  [0,255]		 | at fullpel position, around the
+ p   | Y10			|   Y_{10}			   |  [0,255*s]	   | position where pelweise MV points to
+ p   | Y11			|   Y_{11}			   |  [0,255]		 | later: bilinear interpol Y-values in Y00
+
+ p   | C00			|   C_{00}			   |  [0,255*s*s]	 | same for chroma Cb and Cr
+ p   | C01			|   C_{01}			   |  [0,255]		 |
+ p   | C10			|   C_{10}			   |  [0,255*s]	   |
+ p   | C11			|   C_{11}			   |  [0,255]		 |
 
 */
 {
@@ -987,39 +942,39 @@ type | variable name  |   ISO name (TeX-style) |  value or range  |  usage
 
 	const int s = gmc_data->s;
 	const int sigma = gmc_data->sigma;
-	
+
 	const int r = gmc_data->r;
-	const int rho = gmc_data->rho; 
-	
+	const int rho = gmc_data->rho;
+
 	const int i0s = gmc_data->i0s;
 	const int j0s = gmc_data->j0s;
-	
-	const int i1ss = gmc_data->i1ss;
-	const int j1ss = gmc_data->j1ss; 
-//	const int i2ss = gmc_data->i2ss; 
-//	const int j2ss = gmc_data->j2ss; 
 
-	const int alpha = gmc_data->alpha; 
-	const int Ws    = gmc_data->Ws;
+	const int i1ss = gmc_data->i1ss;
+	const int j1ss = gmc_data->j1ss;
+//	const int i2ss = gmc_data->i2ss;
+//	const int j2ss = gmc_data->j2ss;
+
+	const int alpha = gmc_data->alpha;
+	const int Ws	= gmc_data->Ws;
 
 //	const int beta  = gmc_data->beta;
-//	const int Hs    = gmc_data->Hs;
+//	const int Hs	= gmc_data->Hs;
 
 	int I,J;
 	VECTOR avgMV = {0,0};
-	
+
 	for (J=16*mj;J<16*(mj+1);J++)
 	for (I=16*mi;I<16*(mi+1);I++)
 	{
 		int F= i0s + ( ((-r*i0s+i1ss)*I + (r*j0s-j1ss)*J + (1<<(alpha+rho-1))) >>  (alpha+rho) );
 		int G= j0s + ( ((-r*j0s+j1ss)*I + (-r*i0s+i1ss)*J + (1<<(alpha+rho-1))) >> (alpha+rho) );
 
-/* this naive implementation (with lots of multiplications) isn't slower (rather faster) than 
+/* this naive implementation (with lots of multiplications) isn't slower (rather faster) than
    working incremental. Don't ask me why... maybe the whole this is memory bound? */
 
 		const int ri= F & (s-1); // fractional part of pelwise MV X
 		const int rj= G & (s-1); // fractional part of pelwise MV Y
-		
+
 		int Y00,Y01,Y10,Y11;
 
 /* unclipped values are used for avgMV */
@@ -1029,7 +984,7 @@ type | variable name  |   ISO name (TeX-style) |  value or range  |  usage
 		F >>= sigma;
 		G >>= sigma;
 
-/* clip values to be in range. Since we have edges, clip to 1 less than lower boundary 
+/* clip values to be in range. Since we have edges, clip to 1 less than lower boundary
    this way positions F+1/G+1 are still right */
 
 		if (F< -1)
@@ -1045,17 +1000,17 @@ type | variable name  |   ISO name (TeX-style) |  value or range  |  usage
 		Y01 = pRef->y[ G*stride + F+1 ];
 		Y10 = pRef->y[ G*stride + F+stride ];
 		Y11 = pRef->y[ G*stride + F+stride+1 ];
-		
+
 		/* bilinear interpolation */
 		Y00 = ((s-ri)*Y00 + ri*Y01);
 		Y10 = ((s-ri)*Y10 + ri*Y11);
-		Y00 = ((s-rj)*Y00 + rj*Y10 + s*s/2 - rounding ) >> (sigma+sigma); 
-		
+		Y00 = ((s-rj)*Y00 + rj*Y10 + s*s/2 - rounding ) >> (sigma+sigma);
+
 		pGMC->y[J*stride+I] = (uint8_t)Y00;										/* output 1 Y-pixel */
 	}
 
-	
-/* doing chroma _here_ is even more stupid and slow, because won't be used until Compensation and 
+
+/* doing chroma _here_ is even more stupid and slow, because won't be used until Compensation and
 	most likely not even then (only if the block really _is_ GMC)
 */
 
@@ -1063,19 +1018,19 @@ type | variable name  |   ISO name (TeX-style) |  value or range  |  usage
 	for (I=8*mi;I<8*(mi+1);I++)		/* For I_c we have to use I_c = 4*i_c+1 ! */
 	{
 		/* same positions for both chroma components, U=Cb and V=Cr */
-		int Fc=((-r*i0s+i1ss)*(4*I+1) + (r*j0s-j1ss)*(4*J+1) +2*Ws*r*i0s 
+		int Fc=((-r*i0s+i1ss)*(4*I+1) + (r*j0s-j1ss)*(4*J+1) +2*Ws*r*i0s
 						-16*Ws +(1<<(alpha+rho+1)))>>(alpha+rho+2);
-	 	int Gc=((-r*j0s+j1ss)*(4*I+1) +(-r*i0s+i1ss)*(4*J+1) +2*Ws*r*j0s 
+	 	int Gc=((-r*j0s+j1ss)*(4*I+1) +(-r*i0s+i1ss)*(4*J+1) +2*Ws*r*j0s
 						-16*Ws +(1<<(alpha+rho+1))) >>(alpha+rho+2);
-						
+
 		const int ri= Fc & (s-1); // fractional part of pelwise MV X
 		const int rj= Gc & (s-1); // fractional part of pelwise MV Y
 
 		int C00,C01,C10,C11;
-		
+
 		Fc >>= sigma;
 		Gc >>= sigma;
-		
+
 		if (Fc< -1)
 			Fc=-1;
 		else if (Fc>=W/2)
@@ -1085,40 +1040,40 @@ type | variable name  |   ISO name (TeX-style) |  value or range  |  usage
 		else if (Gc>=H/2)
 			Gc=H/2;		/* dito */
 
-/* now calculate U data */			
+/* now calculate U data */
 		C00 = pRef->u[ Gc*stride2 + Fc ];				// chroma-value Cb
 		C01 = pRef->u[ Gc*stride2 + Fc+1 ];
 		C10 = pRef->u[ (Gc+1)*stride2 + Fc ];
 		C11 = pRef->u[ (Gc+1)*stride2 + Fc+1 ];
-			
+
 		/* bilinear interpolation */
 		C00 = ((s-ri)*C00 + ri*C01);
 		C10 = ((s-ri)*C10 + ri*C11);
-		C00 = ((s-rj)*C00 + rj*C10 + s*s/2 - rounding ) >> (sigma+sigma); 
-			
+		C00 = ((s-rj)*C00 + rj*C10 + s*s/2 - rounding ) >> (sigma+sigma);
+
 		pGMC->u[J*stride2+I] = (uint8_t)C00;										/* output 1 U-pixel */
-			
+
 /* now calculate V data */
 		C00 = pRef->v[ Gc*stride2 + Fc ];				// chroma-value Cr
 		C01 = pRef->v[ Gc*stride2 + Fc+1 ];
 		C10 = pRef->v[ (Gc+1)*stride2 + Fc ];
 		C11 = pRef->v[ (Gc+1)*stride2 + Fc+1 ];
-			
+
 		/* bilinear interpolation */
 		C00 = ((s-ri)*C00 + ri*C01);
 		C10 = ((s-ri)*C10 + ri*C11);
-		C00 = ((s-rj)*C00 + rj*C10 + s*s/2 - rounding ) >> (sigma+sigma); 
-			
+		C00 = ((s-rj)*C00 + rj*C10 + s*s/2 - rounding ) >> (sigma+sigma);
+
 		pGMC->v[J*stride2+I] = (uint8_t)C00;										/* output 1 V-pixel */
 	}
-		
+
 /* The average vector is rounded from 1/s-pel to 1/2 or 1/4 using the '//' operator*/
 
 	avgMV.x = RSHIFT( avgMV.x, (sigma+7-quarterpel) );
 	avgMV.y = RSHIFT( avgMV.y, (sigma+7-quarterpel) );
 
 	/* ^^^^ this is the way MS Reference Software does it */
-	
+
 	return avgMV;	/* clipping to fcode area is done outside! */
 }
 
