@@ -17,7 +17,6 @@ SRC = \
 	$(SRCDIR)/image/colorspace.c \
 	$(SRCDIR)/image/image.c \
 	$(SRCDIR)/image/interpolate8x8.c \
-	$(SRCDIR)/image/font.c \
 	$(SRCDIR)/motion/motion_comp.c \
 	$(SRCDIR)/motion/motion_est.c \
 	$(SRCDIR)/motion/sad.c \
