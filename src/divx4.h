@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: divx4.h,v 1.7 2003-02-17 22:55:02 edgomez Exp $
+ * $Id: divx4.h,v 1.8 2003-02-17 23:15:48 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -228,7 +228,7 @@ extern "C" {
 	ENC_RESULT;
 
 /* the prototype of the encore() - main encode engine entrance */
-	int encore(void *handle,	/* handle  - the handle of the calling entity, must be unique/
+	int encore(void *handle,	/* handle  - the handle of the calling entity, must be unique */
 			   int enc_opt,		/* enc_opt - the option for encoding, see below */
 			   void *param1,	/* param1  - the parameter 1 (its actually meaning depends on enc_opt */
 			   void *param2);	/* param2  - the parameter 2 (its actually meaning depends on enc_opt */
