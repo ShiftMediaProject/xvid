@@ -29,7 +29,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbtransquant.c,v 1.16 2002-10-09 22:51:42 edgomez Exp $
+ * $Id: mbtransquant.c,v 1.17 2002-10-16 20:58:22 h Exp $
  *
  ****************************************************************************/
 
@@ -598,7 +598,7 @@ MBDecideFieldDCT(int16_t data[6 * 64])
 		}
 	}
 
-	if (frame > field) {
+	if (frame > (field + 350)) {
 		MBFrameToField(data);
 	}
 
