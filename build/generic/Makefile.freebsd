@@ -1,22 +1,17 @@
 #/**************************************************************************
 # *
-# * generic makefile
-# *
-# * defines:   -DLINUX  -DBIG_ENDIAN
-# *
+# * freebsd makefile
 # *
 # *************************************************************************/
 
 
 include Makefile.inc
 
-
 CC = gcc -Wall
 CFLAGS = -DFREEBSD
-
+LIBDIR = /usr/local/lib
 
 RM = rm -rf
-
 
 all: $(LIB) $(LIBSO)
 
@@ -29,9 +24,12 @@ $(LIBSO): $(SRC:.c=.o)
 	$(CC) $^ -shared -lc -lm -o $@
 
 clean:	
-	$(RM) `find $(SRCDIR) -name "*.o"`
+	$(RM) $(LIBSO) $(LIB) `find $(SRCDIR) -name "*.o"`
 
 remove-all:
 	$(RM) $(DIRS)
 	$(RM) $(LIB)
 	$(RM) $(LIBSO)
+
+install: $(LIB) $(LIBSO)
+	install -c -m 0666 $(LIBSO) $(LIB) $(LIBDIR)
