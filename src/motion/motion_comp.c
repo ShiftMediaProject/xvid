@@ -1,3 +1,4 @@
+// 01.05.2002	updated MBMotionCompensationBVOP
 // 14.04.2002	bframe compensation
 
 #include "../encoder.h"
@@ -92,12 +93,13 @@ void MBMotionCompensation(
 		dx = (dx & 3) ? (dx >> 1) | 1 : dx / 2;
 		dy = (dy & 3) ? (dy >> 1) | 1 : dy / 2;
 
-		/* uv-image-based compensation
-		   compensate8x8_halfpel(dct_codes[4], cur->u, ref->u, refh->u, refv->u, refhv->u,
+		/* uv-image-based compensation */
+#ifdef BFRAMES
+		   compensate8x8_halfpel(&dct_codes[4*64], cur->u, ref->u, refh->u, refv->u, refhv->u,
 		   8*i, 8*j, dx, dy, edged_width/2);
-		   compensate8x8_halfpel(dct_codes[5], cur->v, ref->v, refh->v, refv->v, refhv->v,
-		   8*i, 8*j, dx, dy, edged_width/2);		*/
-
+		   compensate8x8_halfpel(&dct_codes[5*64], cur->v, ref->v, refh->v, refv->v, refhv->v,
+		   8*i, 8*j, dx, dy, edged_width/2);	
+#else
 		/* uv-block-based compensation */
 		interpolate8x8_switch(refv->u, ref->u, 8*i, 8*j, dx, dy, edged_width/2, rounding);
 		transfer_8to16sub(&dct_codes[4*64], 
@@ -108,7 +110,7 @@ void MBMotionCompensation(
 		transfer_8to16sub(&dct_codes[5*64], 
 				  cur->v + 8*j*edged_width/2 + 8*i, 
 				  refv->v + 8*j*edged_width/2 + 8*i, edged_width/2);
-
+#endif
 	}
 	else	// mode == MODE_INTER4V
 	{
@@ -129,12 +131,13 @@ void MBMotionCompensation(
 		sum = mb->mvs[0].y + mb->mvs[1].y + mb->mvs[2].y + mb->mvs[3].y;
 		dy = (sum ? SIGN(sum) * (roundtab[ABS(sum) % 16] + (ABS(sum) / 16) * 2) : 0);
 
-		/* uv-image-based compensation
-		   compensate8x8_halfpel(dct_codes[4], cur->u, ref->u, refh->u, refv->u, refhv->u,
+		/* uv-image-based compensation */
+#ifdef BFRAMES
+		   compensate8x8_halfpel(&dct_codes[4*64], cur->u, ref->u, refh->u, refv->u, refhv->u,
 		   8*i, 8*j, dx, dy, edged_width/2);
-		   compensate8x8_halfpel(dct_codes[5], cur->v, ref->v, refh->v, refv->v, refhv->v,
-		   8*i, 8*j, dx, dy, edged_width/2);		*/
-
+		   compensate8x8_halfpel(&dct_codes[5*64], cur->v, ref->v, refh->v, refv->v, refhv->v,
+		   8*i, 8*j, dx, dy, edged_width/2);		
+#else
 		/* uv-block-based compensation */
 		interpolate8x8_switch(refv->u, ref->u, 8*i, 8*j, dx, dy, edged_width/2, rounding);
 		transfer_8to16sub(&dct_codes[4*64], 
@@ -145,10 +148,9 @@ void MBMotionCompensation(
 		transfer_8to16sub(&dct_codes[5*64], 
 				  cur->v + 8*j*edged_width/2 + 8*i, 
 				  refv->v + 8*j*edged_width/2 + 8*i, edged_width/2);
-
+#endif
 	}
 }
-
 
 
 void MBMotionCompensationBVOP(
@@ -165,7 +167,7 @@ void MBMotionCompensationBVOP(
 			const IMAGE * const b_refh,
 		    const IMAGE * const b_refv,
 			const IMAGE * const b_refhv,
-		    int16_t dct_codes[][64])
+		    int16_t * dct_codes)
 {
 	static const uint32_t roundtab[16] =
 		{ 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2 };
@@ -185,28 +187,28 @@ void MBMotionCompensationBVOP(
 		dy = mb->mvs[0].y;
 
 		transfer_8to16sub_c(
-			dct_codes[0],
+			&dct_codes[0*64],
 			cur->y + (j*16)*edged_width + (i*16),
 			get_ref(f_ref->y, f_refh->y, f_refv->y, f_refhv->y,
 							i*16, j*16, 1, dx, dy, edged_width), 
 			edged_width);
 
 		transfer_8to16sub(
-			dct_codes[1],
+			&dct_codes[1*64],
 			cur->y + (j*16)*edged_width + (i*16+8),
 			get_ref(f_ref->y, f_refh->y, f_refv->y, f_refhv->y,
 							i*16+8, j*16, 1, dx, dy, edged_width), 
 			edged_width);
 
 		transfer_8to16sub_c(
-			dct_codes[2],
+			&dct_codes[2*64],
 			cur->y + (j*16+8)*edged_width + (i*16),
 			get_ref(f_ref->y, f_refh->y, f_refv->y, f_refhv->y,
 							i*16, j*16+8, 1, dx, dy, edged_width), 
 			edged_width);
 
 		transfer_8to16sub(
-			dct_codes[3],
+			&dct_codes[3*64],
 			cur->y + (j*16+8)*edged_width + (i*16+8),
 			get_ref(f_ref->y, f_refh->y, f_refv->y, f_refhv->y,
 							i*16+8, j*16+8, 1, dx, dy, edged_width), 
@@ -217,9 +219,9 @@ void MBMotionCompensationBVOP(
 		dy = (dy & 3) ? (dy >> 1) | 1 : dy / 2;
 
 		/* uv-image-based compensation */
-		compensate8x8_halfpel(dct_codes[4], cur->u, f_ref->u, f_refh->u, f_refv->u, f_refhv->u,
+		compensate8x8_halfpel(&dct_codes[4*64], cur->u, f_ref->u, f_refh->u, f_refv->u, f_refhv->u,
 								8*i, 8*j, dx, dy, edged_width/2);
-		compensate8x8_halfpel(dct_codes[5], cur->v, f_ref->v, f_refh->v, f_refv->v, f_refhv->v,
+		compensate8x8_halfpel(&dct_codes[5*64], cur->v, f_ref->v, f_refh->v, f_refv->v, f_refhv->v,
 								8*i, 8*j, dx, dy, edged_width/2);		
 
 		break;
@@ -229,28 +231,28 @@ void MBMotionCompensationBVOP(
 		b_dy = mb->b_mvs[0].y;
 
 		transfer_8to16sub_c(
-			dct_codes[0],
+			&dct_codes[0*64],
 			cur->y + (j*16)*edged_width + (i*16),
 			get_ref(b_ref->y, b_refh->y, b_refv->y, b_refhv->y,
 							i*16, j*16, 1, b_dx, b_dy, edged_width), 
 			edged_width);
 
 		transfer_8to16sub(
-			dct_codes[1],
+			&dct_codes[1*64],
 			cur->y + (j*16)*edged_width + (i*16+8),
 			get_ref(b_ref->y, b_refh->y, b_refv->y, b_refhv->y,
 							i*16+8, j*16, 1, b_dx, b_dy, edged_width), 
 			edged_width);
 
 		transfer_8to16sub_c(
-			dct_codes[2],
+			&dct_codes[2*64],
 			cur->y + (j*16+8)*edged_width + (i*16),
 			get_ref(b_ref->y, b_refh->y, b_refv->y, b_refhv->y,
 							i*16, j*16+8, 1, b_dx, b_dy, edged_width), 
 			edged_width);
 
 		transfer_8to16sub(
-			dct_codes[3],
+			&dct_codes[3*64],
 			cur->y + (j*16+8)*edged_width + (i*16+8),
 			get_ref(b_ref->y, b_refh->y, b_refv->y, b_refhv->y,
 							i*16+8, j*16+8, 1, b_dx, b_dy, edged_width), 
@@ -260,10 +262,10 @@ void MBMotionCompensationBVOP(
 		b_dy = (b_dy & 3) ? (b_dy >> 1) | 1 : b_dy / 2;
 
 		/* uv-image-based compensation */
-		compensate8x8_halfpel(dct_codes[4], cur->u, 
+		compensate8x8_halfpel(&dct_codes[4*64], cur->u, 
 					b_ref->u, b_refh->u, b_refv->u, b_refhv->u,
 					8*i, 8*j, b_dx, b_dy, edged_width/2);
-		compensate8x8_halfpel(dct_codes[5], cur->v, 
+		compensate8x8_halfpel(&dct_codes[5*64], cur->v, 
 					b_ref->v, b_refh->v, b_refv->v, b_refhv->v,
 					8*i, 8*j, b_dx, b_dy, edged_width/2);		
 
@@ -277,7 +279,7 @@ void MBMotionCompensationBVOP(
 		b_dy = mb->b_mvs[0].y;
 
 		transfer_8to16sub2_c(
-				dct_codes[0], 
+				&dct_codes[0*64], 
 				cur->y + (i*16) + (j*16)*edged_width, 
 				get_ref(f_ref->y, f_refh->y, f_refv->y, f_refhv->y, 
 							16*i, 16*j, 1, dx, dy, edged_width),
@@ -286,7 +288,7 @@ void MBMotionCompensationBVOP(
 				edged_width);
 		
 		transfer_8to16sub2_c(
-				dct_codes[1], 
+				&dct_codes[1*64], 
 				cur->y + (i*16+8) + (j*16)*edged_width, 
 				get_ref(f_ref->y, f_refh->y, f_refv->y, f_refhv->y, 
 							16*i+8, 16*j, 1, dx, dy, edged_width),
@@ -295,7 +297,7 @@ void MBMotionCompensationBVOP(
 				edged_width);
 
 		transfer_8to16sub2_c(
-				dct_codes[2], 
+				&dct_codes[2*64], 
 				cur->y + (i*16) + (j*16+8)*edged_width, 
 				get_ref(f_ref->y, f_refh->y, f_refv->y, f_refhv->y, 
 							16*i, 16*j+8, 1, dx, dy, edged_width),
@@ -304,7 +306,7 @@ void MBMotionCompensationBVOP(
 				edged_width);
 
 		transfer_8to16sub2_c(
-				dct_codes[3], 
+				&dct_codes[3*64], 
 				cur->y + (i*16+8) + (j*16+8)*edged_width, 
 				get_ref(f_ref->y, f_refh->y, f_refv->y, f_refhv->y, 
 							16*i + 8, 16*j + 8, 1, dx, dy, edged_width),
@@ -320,7 +322,7 @@ void MBMotionCompensationBVOP(
 		b_dy = (b_dy & 3) ? (b_dy >> 1) | 1 : b_dy / 2;
 
 		transfer_8to16sub2_c(
-				dct_codes[4], 
+				&dct_codes[4*64], 
 				cur->u + (y*8)*edged_width/2 + (x*8), 
 				get_ref(f_ref->u, f_refh->u, f_refv->u, f_refhv->u, 
 							8*i, 8*j, 1, dx, dy, edged_width/2),
@@ -329,7 +331,7 @@ void MBMotionCompensationBVOP(
 				edged_width/2);
 
 		transfer_8to16sub2_c(
-				dct_codes[5], 
+				&dct_codes[5*64], 
 				cur->v + (y*8)*edged_width/2 + (x*8), 
 				get_ref(f_ref->v, f_refh->v, f_refv->v, f_refhv->v, 
 							8*i, 8*j, 1, dx, dy, edged_width/2),
@@ -345,4 +347,3 @@ void MBMotionCompensationBVOP(
 	}
 	
 }
-

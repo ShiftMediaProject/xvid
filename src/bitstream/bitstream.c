@@ -41,6 +41,7 @@
   *																			   *	
   *  Revision history:                                                         *
   *																			   *	
+  *  01.05.2002 added BVOP support to BitstreamWriteVopHeader
   *  15.04.2002 rewrite log2bin use asm386  By MinChen <chenm001@163.com>      *
   *  26.03.2002 interlacing support											   *
   *  03.03.2002 qmatrix writing												   *
@@ -683,18 +684,34 @@ void BitstreamWriteVopHeader(Bitstream * const bs,
 						const MBParam * pParam,  
 						const FRAMEINFO * frame)
 {
+#ifdef BFRAMES
+	uint32_t i;
+#endif
     BitstreamPad(bs);
     BitstreamPutBits(bs, VOP_START_CODE, 32);
 
     BitstreamPutBits(bs, frame->coding_type, 2);
     
 	// time_base = 0  write n x PutBit(1), PutBit(0)
+#ifdef BFRAMES
+	for (i = 0; i < frame->seconds; i++)
+	{
+		BitstreamPutBit(bs, 1);
+	}
+	BitstreamPutBit(bs, 0);
+#else
 	BitstreamPutBits(bs, 0, 1);
+#endif
 
 	WRITE_MARKER();
 
 	// time_increment: value=nth_of_sec, nbits = log2(resolution)
+#ifdef BFRAMES
+	BitstreamPutBits(bs, frame->ticks, 5);	
+	dprintf("[%i:%i] %c\n", frame->seconds, frame->ticks, frame->coding_type == I_VOP ? 'I' : frame->coding_type == P_VOP ? 'P' : 'B');
+#else
 	BitstreamPutBits(bs, 1, 1);		
+#endif
 
 	WRITE_MARKER();
 
@@ -714,5 +731,9 @@ void BitstreamWriteVopHeader(Bitstream * const bs,
  	BitstreamPutBits(bs, frame->quant, 5);			// quantizer
 	
 	if (frame->coding_type != I_VOP)
-		BitstreamPutBits(bs, frame->fcode, 3);		// fixed_code = [1,4]
+		BitstreamPutBits(bs, frame->fcode, 3);		// forward_fixed_code
+
+	if (frame->coding_type == B_VOP)
+		BitstreamPutBits(bs, frame->bcode, 3);		// backward_fixed_code
+
 }
