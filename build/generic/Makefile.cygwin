@@ -1,0 +1,53 @@
+#/**************************************************************************
+# *
+# * cygwin makefile (only static library)
+# *
+# * nasm args:
+# * -f fmt		elf (linux), coff (djgpp), win32 (cygwin)
+# * -DPREFIX	add '_' prefix to symbol names
+# *
+# *
+# *************************************************************************/
+
+
+include Makefile.inc
+
+CC = gcc
+#CC = /usr/local/gcc-3.0.4/bin/gcc
+
+CFLAGS = -DARCH_X86 -DLINUX -UWIN32
+LIBDIR = /usr/local/lib
+
+CFLAGS += -O3 -funroll-loops -ffast-math -fstrict-aliasing -fomit-frame-pointer
+# CFLAGS += -m486
+# CFLAGS += -march=pentium -mcpu=pentium
+CFLAGS += -march=pentiumpro -mcpu=pentiumpro
+# CFLAGS += -march=athlon -mcpu=athlon
+CFLAGS += -mno-cygwin
+
+AS = nasm
+AFLAGS = -f win32 -DPREFIX
+
+%.o: %.asm
+	$(AS) $(AFLAGS) $< -o $@
+
+RM = rm -rf
+
+all: $(LIB) 
+
+$(LIB): $(SRC:.c=.o) $(SRC_INTEL:.asm=.o)
+	ar rcs $@ $^
+
+clean:	
+	$(RM) `find $(SRCDIR) -name "*.o"`
+
+remove-all:
+	$(RM) $(DIRS)
+	$(RM) $(DIRS_INTEL)
+	$(RM) $(LIB)
+
+install: $(LIB)
+	cp $(LIB) $(LIBDIR)/libxvidcore.a			
+
+install-test: $(LIB)				# if you don't want to overwrite previous compile
+	cp $(LIB) $(LIBDIR)/libtestcore.a
