@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: motion_est.h,v 1.8 2003-05-14 13:21:47 syskin Exp $
+ *  $Id: motion_est.h,v 1.9 2003-06-19 10:06:40 syskin Exp $
  *
  ***************************************************************************/
 
@@ -340,7 +340,6 @@ Block_CalcBits(	int16_t * const coeff,
 	}
 	bits += (BITS_MULT*BITS_MULT*distortion)/lambda;
 
-
 	return bits;
 }
 
@@ -355,14 +354,14 @@ Block_CalcBitsIntra(int16_t * const coeff,
 	int bits, i;
 	const int lambda = LAMBDA*quant*quant;
 	int distortion = 0;
-	uint32_t iDcScaler = get_dc_scaler(quant, block > 3);
+	uint32_t iDcScaler = get_dc_scaler(quant, block < 4);
 	int b_dc;
 
 	fdct(data);
 	data[0] -= 1024;
 
-	if (quant_type == 0) quant_intra(coeff, data, quant, iDcScaler);
-	else quant4_intra(coeff, data, quant, iDcScaler);
+	if (quant_type == 0) quant_intra_c(coeff, data, quant, iDcScaler); // MUST BE _C
+	else quant4_intra_c(coeff, data, quant, iDcScaler); // MUST BE _C
 
 	b_dc = coeff[0];
 	if (block < 4) {
@@ -370,10 +369,11 @@ Block_CalcBitsIntra(int16_t * const coeff,
 		*dcpred = b_dc;
 	}
 
-	*cbp |= 1 << (5 - block);
 	bits = BITS_MULT*CodeCoeffIntra_CalcBits(coeff, scan_tables[0]);
-	bits += BITS_MULT*dcy_tab[coeff[0] + 255].len;
 	if (bits != 0) *cbp |= 1 << (5 - block);
+
+	if (block < 4) bits += BITS_MULT*dcy_tab[coeff[0] + 255].len;
+	else bits += BITS_MULT*dcc_tab[coeff[0] + 255].len;
 
 	coeff[0] = b_dc;
 	if (quant_type == 0) dequant_intra(coeff, coeff, quant, iDcScaler);
