@@ -32,6 +32,7 @@
 ; *
 ; *	History:
 ; *
+; * 14.06.2002  mmx+xmm dequant_* funcs revamped  -Skal-
 ; * 24.02.2002	sse2 quant_intra / dequant_intra (have to use movdqu ???)
 ; * 17.04.2002	sse2 quant_inter / dequant_inter
 ; * 26.12.2001	minor bug fixes, dequant saturate, further optimization
@@ -63,7 +64,6 @@ section .data
 align 16
 
 plus_one times 8	dw	 1
-
 
 ;===========================================================================
 ;
@@ -261,9 +261,12 @@ mmx_mul
 ;
 ;===========================================================================
 
-align ALIGN
+align 8
 mmx_32768_minus_2048				times 4 dw (32768-2048)
 mmx_32767_minus_2047				times 4 dw (32767-2047)
+
+align 16
+mmx_2047 times 4 dw 2047
 
 align 16
 sse2_pos_2047						times 8 dw 2047
@@ -700,7 +703,6 @@ align 16
 		jmp		.qes2_done
 		
 		
-		
 ;===========================================================================
 ;
 ; void dequant_intra_mmx(int16_t *data,
@@ -710,100 +712,148 @@ align 16
 ;
 ;===========================================================================
 
+  ; note: we only saturate to +2047 *before* restoring the sign.
+  ; Hence, final clamp really is [-2048,2047]
+
 align ALIGN
 cglobal dequant_intra_mmx
-dequant_intra_mmx
+dequant_intra_mmx:
 
-		push	esi
-		push	edi
-
-		mov	edi, [esp + 8 + 4]		; data
-		mov	esi, [esp + 8 + 8]		; coeff
-		mov	eax, [esp + 8 + 12]		; quant
-
-		movq	mm6, [mmx_add + eax * 8 - 8]
-		movq	mm7, [mmx_mul + eax * 8 - 8]
-		xor eax, eax
+  mov    edx, [esp+ 4]        ; data
+  mov    ecx, [esp+ 8]        ; coeff
+  mov    eax, [esp+12]        ; quant
+  movq mm6, [mmx_add + eax*8 - 8]  ; quant or quant-1 
+  movq mm7, [mmx_mul + eax*8 - 8]  ; 2*quant
+  mov eax, -16
 
 align ALIGN
 .loop
-		movq	mm0, [esi + 8*eax]		; mm0 = [coeff]
-		movq	mm3, [esi + 8*eax + 8]	; 
-		pxor	mm1, mm1		; mm1 = 0
-		pxor	mm4, mm4		;
-		pcmpgtw	mm1, mm0		; mm1 = (0 > mm0)
-		pcmpgtw	mm4, mm3		; 
-		pxor	mm2, mm2		; mm2 = 0
-		pxor	mm5, mm5		;
-		pcmpeqw	mm2, mm0		; mm2 = (0 == mm0)
-		pcmpeqw	mm5, mm3		; 
-		pandn   mm2, mm6		; mm2 = (iszero ? 0 : add)
-		pandn   mm5, mm6		;
-		pxor	mm0, mm1		; mm0 = |mm0|
-		pxor	mm3, mm4		; 
-		psubw	mm0, mm1		; displace
-		psubw	mm3, mm4		; 
-		pmullw	mm0, mm7		; mm0 *= 2Q
-		pmullw	mm3, mm7		; 
-		paddw	mm0, mm2		; mm0 += mm2 (add)
-		paddw	mm3, mm5		;
-		pxor	mm0, mm1		; mm0 *= sign(mm0)
-		pxor	mm3, mm4		;
-		psubw	mm0, mm1		; undisplace
-		psubw	mm3, mm4
+  movq mm0, [ecx+8*eax+8*16]      ; c  = coeff[i]
+  movq mm3, [ecx+8*eax+8*16 + 8]  ; c' = coeff[i+1]
+  pxor mm1, mm1
+  pxor mm4, mm4
+  pcmpgtw mm1, mm0  ; sign(c)
+  pcmpgtw mm4, mm3  ; sign(c')
+  pxor mm2, mm2
+  pxor mm5, mm5
+  pcmpeqw mm2, mm0  ; c is zero
+  pcmpeqw mm5, mm3  ; c' is zero
+  pandn mm2, mm6    ; offset = isZero ? 0 : quant_add
+  pandn mm5, mm6
+  pxor mm0, mm1     ; negate if negative
+  pxor mm3, mm4     ; negate if negative
+  psubw mm0, mm1 
+  psubw mm3, mm4
+  pmullw mm0, mm7 ; *= 2Q
+  pmullw mm3, mm7 ; *= 2Q
+  paddw mm0, mm2 ; + offset
+  paddw mm3, mm5 ; + offset
+  paddw mm0, mm1 ; negate back
+  paddw mm3, mm4 ; negate back
 
-%ifdef SATURATE
-		movq mm2, [mmx_32767_minus_2047] 
-		movq mm4, [mmx_32768_minus_2048] 
-		paddsw	mm0, mm2
-		paddsw	mm3, mm2
-		psubsw	mm0, mm2
-		psubsw	mm3, mm2
-		psubsw	mm0, mm4
-		psubsw	mm3, mm4
-		paddsw	mm0, mm4
-		paddsw	mm3, mm4
-%endif
+    ; saturates to +2047
+  movq mm2, [mmx_32767_minus_2047]
+  add eax, 2
+  paddsw mm0, mm2
+  paddsw mm3, mm2
+  psubsw mm0, mm2
+  psubsw mm3, mm2
 
-		movq	[edi + 8*eax], mm0		; [data] = mm0
-		movq	[edi + 8*eax + 8], mm3
+  pxor mm0, mm1
+  pxor mm3, mm4
+  movq [edx + 8*eax + 8*16   - 2*8], mm0
+  movq [edx + 8*eax + 8*16+8 - 2*8], mm3
+  jnz	near .loop
 
-		add eax, 2
-		cmp eax, 16
-		jnz	near .loop
+    ; deal with DC
 
-		mov	ax, [esi]					; ax = data[0]
-		imul ax, [esp + 8 + 16]			; eax = data[0] * dcscalar
+  movd mm0, [ecx]
+  pmullw mm0, [esp+16]    ; dcscalar
+  movq mm2, [mmx_32767_minus_2047]
+  paddsw mm0, mm2
+  psubsw mm0, mm2
+  movq mm3, [mmx_32768_minus_2048]
+  psubsw mm0, mm3
+  paddsw mm0, mm3
+  movd eax, mm0
+  mov [edx], ax
 
-%ifdef SATURATE
-		cmp ax, -2048
-		jl .set_n2048
-		cmp ax, 2047
-		jg .set_2047
-%endif
-		mov	[edi], ax
+  ret
 
-		pop	edi
-		pop	esi
-		ret
+;===========================================================================
+;
+; void dequant_intra_xmm(int16_t *data,
+;					const int16_t const *coeff,
+;					const uint32_t quant,
+;					const uint32_t dcscalar);
+;
+;===========================================================================
 
-%ifdef SATURATE
+  ; this is the same as dequant_inter_mmx, except that we're
+  ; saturating using 'pminsw' (saves 2 cycles/loop => ~5% faster)
+
 align ALIGN
-.set_n2048
-		mov	word [edi], -2048
-		pop	edi
-		pop	esi
-		ret
-	
+cglobal dequant_intra_xmm
+dequant_intra_xmm:
+
+  mov    edx, [esp+ 4]        ; data
+  mov    ecx, [esp+ 8]        ; coeff
+  mov    eax, [esp+12]        ; quant
+  movq mm6, [mmx_add + eax*8 - 8]  ; quant or quant-1 
+  movq mm7, [mmx_mul + eax*8 - 8]  ; 2*quant
+  mov eax, -16
+
 align ALIGN
-.set_2047
-		mov	word [edi], 2047
-		pop	edi
-		pop	esi
-		ret
-%endif
+.loop
+  movq mm0, [ecx+8*eax+8*16]      ; c  = coeff[i]
+  movq mm3, [ecx+8*eax+8*16 + 8]  ; c' = coeff[i+1]
+  pxor mm1, mm1
+  pxor mm4, mm4
+  pcmpgtw mm1, mm0  ; sign(c)
+  pcmpgtw mm4, mm3  ; sign(c')
+  pxor mm2, mm2
+  pxor mm5, mm5
+  pcmpeqw mm2, mm0  ; c is zero
+  pcmpeqw mm5, mm3  ; c' is zero
+  pandn mm2, mm6    ; offset = isZero ? 0 : quant_add
+  pandn mm5, mm6
+  pxor mm0, mm1     ; negate if negative
+  pxor mm3, mm4     ; negate if negative
+  psubw mm0, mm1 
+  psubw mm3, mm4
+  pmullw mm0, mm7 ; *= 2Q
+  pmullw mm3, mm7 ; *= 2Q
+  paddw mm0, mm2 ; + offset
+  paddw mm3, mm5 ; + offset
+  paddw mm0, mm1 ; negate back
+  paddw mm3, mm4 ; negate back
 
+    ; saturates to +2047
+  movq mm2, [mmx_2047]
+  pminsw mm0, mm2
+  add eax, 2
+  pminsw mm3, mm2
 
+  pxor mm0, mm1
+  pxor mm3, mm4
+  movq [edx + 8*eax + 8*16   - 2*8], mm0
+  movq [edx + 8*eax + 8*16+8 - 2*8], mm3
+  jnz	near .loop
+
+    ; deal with DC
+
+  movd mm0, [ecx]
+  pmullw mm0, [esp+16]    ; dcscalar
+  movq mm2, [mmx_32767_minus_2047]
+  paddsw mm0, mm2
+  psubsw mm0, mm2
+  movq mm2, [mmx_32768_minus_2048]
+  psubsw mm0, mm2
+  paddsw mm0, mm2
+  movd eax, mm0
+  mov [edx], ax
+
+  ret
 
 ;===========================================================================
 ;
@@ -816,7 +866,7 @@ align ALIGN
 
 align 16
 cglobal dequant_intra_sse2
-dequant_intra_sse2
+dequant_intra_sse2:
 
 		push	esi
 		push	edi
@@ -908,8 +958,6 @@ align 16
 		ret
 %endif
 
-
-
 ;===========================================================================
 ;
 ; void dequant_inter_mmx(int16_t * data,
@@ -920,71 +968,116 @@ align 16
 
 align ALIGN
 cglobal dequant_inter_mmx
-dequant_inter_mmx
+dequant_inter_mmx:
 
-		push 	esi
-		push 	edi
-
-		mov 	edi, [esp + 8 + 4]	; data
-		mov 	esi, [esp + 8 + 8]	; coeff
-		mov 	eax, [esp + 8 + 12]	; quant
-		movq	mm6, [mmx_add + eax * 8 - 8]
-		movq	mm7, [mmx_mul + eax * 8 - 8]
-		
-		xor eax, eax
+  mov    edx, [esp+ 4]        ; data
+  mov    ecx, [esp+ 8]        ; coeff
+  mov    eax, [esp+12]        ; quant
+  movq mm6, [mmx_add + eax*8 - 8]  ; quant or quant-1 
+  movq mm7, [mmx_mul + eax*8 - 8]  ; 2*quant
+  mov eax, -16
 
 align ALIGN
 .loop
-		movq	mm0, [esi + 8*eax]			; mm0 = [coeff]
-		movq	mm3, [esi + 8*eax + 8]		; 
-		pxor	mm1, mm1		; mm1 = 0
-		pxor	mm4, mm4		;
-		pcmpgtw	mm1, mm0		; mm1 = (0 > mm0)
-		pcmpgtw	mm4, mm3		; 
-		pxor	mm2, mm2		; mm2 = 0
-		pxor	mm5, mm5		;
-		pcmpeqw	mm2, mm0		; mm2 = (0 == mm0)
-		pcmpeqw	mm5, mm3		; 
-		pandn   mm2, mm6		; mm2 = (iszero ? 0 : add)
-		pandn   mm5, mm6		;
-		pxor	mm0, mm1		; mm0 = |mm0|
-		pxor	mm3, mm4		; 
-		psubw	mm0, mm1		; displace
-		psubw	mm3, mm4		; 
-		pmullw	mm0, mm7		; mm0 *= 2Q
-		pmullw	mm3, mm7		; 
-		paddw	mm0, mm2		; mm0 += mm2 (add)
-		paddw	mm3, mm5		;
-		pxor	mm0, mm1		; mm0 *= sign(mm0)
-		pxor	mm3, mm4		;
-		psubw	mm0, mm1		; undisplace
-		psubw	mm3, mm4
+  movq mm0, [ecx+8*eax+8*16]      ; c  = coeff[i]
+  movq mm3, [ecx+8*eax+8*16 + 8]  ; c' = coeff[i+1]
+  pxor mm1, mm1
+  pxor mm4, mm4
+  pcmpgtw mm1, mm0  ; sign(c)
+  pcmpgtw mm4, mm3  ; sign(c')
+  pxor mm2, mm2
+  pxor mm5, mm5
+  pcmpeqw mm2, mm0  ; c is zero
+  pcmpeqw mm5, mm3  ; c' is zero
+  pandn mm2, mm6    ; offset = isZero ? 0 : quant_add
+  pandn mm5, mm6
+  pxor mm0, mm1     ; negate if negative
+  pxor mm3, mm4     ; negate if negative
+  psubw mm0, mm1 
+  psubw mm3, mm4
+  pmullw mm0, mm7 ; *= 2Q
+  pmullw mm3, mm7 ; *= 2Q
+  paddw mm0, mm2 ; + offset
+  paddw mm3, mm5 ; + offset
+  paddw mm0, mm1 ; negate back
+  paddw mm3, mm4 ; negate back
 
-%ifdef SATURATE
-		movq mm2, [mmx_32767_minus_2047] 
-		movq mm4, [mmx_32768_minus_2048] 
-		paddsw	mm0, mm2
-		paddsw	mm3, mm2
-		psubsw	mm0, mm2
-		psubsw	mm3, mm2
-		psubsw	mm0, mm4
-		psubsw	mm3, mm4
-		paddsw	mm0, mm4
-		paddsw	mm3, mm4
-%endif
+    ; saturates to +2047
+  movq mm2, [mmx_32767_minus_2047]
+  add eax, 2
+  paddsw mm0, mm2
+  paddsw mm3, mm2
+  psubsw mm0, mm2
+  psubsw mm3, mm2
 
-		movq	[edi + 8*eax], mm0
-		movq	[edi + 8*eax + 8], mm3
+  pxor mm0, mm1
+  pxor mm3, mm4
+  movq [edx + 8*eax + 8*16   - 2*8], mm0
+  movq [edx + 8*eax + 8*16+8 - 2*8], mm3
+  jnz	near .loop
 
-		add eax, 2
-		cmp eax, 16
-		jnz	near .loop
+  ret
 
-		pop 	edi
-		pop 	esi
+;===========================================================================
+;
+; void dequant_inter_xmm(int16_t * data,
+;					const int16_t * const coeff,
+;					const uint32_t quant);
+;
+;===========================================================================
 
-		ret
+  ; this is the same as dequant_inter_mmx,
+  ; except that we're saturating using 'pminsw' (saves 2 cycles/loop)
 
+align ALIGN
+cglobal dequant_inter_xmm
+dequant_inter_xmm:
+
+  mov    edx, [esp+ 4]        ; data
+  mov    ecx, [esp+ 8]        ; coeff
+  mov    eax, [esp+12]        ; quant
+  movq mm6, [mmx_add + eax*8 - 8]  ; quant or quant-1 
+  movq mm7, [mmx_mul + eax*8 - 8]  ; 2*quant
+  mov eax, -16
+
+align ALIGN
+.loop
+  movq mm0, [ecx+8*eax+8*16]      ; c  = coeff[i]
+  movq mm3, [ecx+8*eax+8*16 + 8]  ; c' = coeff[i+1]
+  pxor mm1, mm1
+  pxor mm4, mm4
+  pcmpgtw mm1, mm0  ; sign(c)
+  pcmpgtw mm4, mm3  ; sign(c')
+  pxor mm2, mm2
+  pxor mm5, mm5
+  pcmpeqw mm2, mm0  ; c is zero
+  pcmpeqw mm5, mm3  ; c' is zero
+  pandn mm2, mm6    ; offset = isZero ? 0 : quant_add
+  pandn mm5, mm6
+  pxor mm0, mm1     ; negate if negative
+  pxor mm3, mm4     ; negate if negative
+  psubw mm0, mm1 
+  psubw mm3, mm4
+  pmullw mm0, mm7 ; *= 2Q
+  pmullw mm3, mm7 ; *= 2Q
+  paddw mm0, mm2 ; + offset
+  paddw mm3, mm5 ; + offset
+  paddw mm0, mm1 ; start restoring sign
+  paddw mm3, mm4 ; start restoring sign
+
+      ; saturates to +2047
+  movq mm2, [mmx_2047]
+  pminsw mm0, mm2
+  add eax, 2
+  pminsw mm3, mm2
+
+  pxor mm0, mm1 ; finish restoring sign
+  pxor mm3, mm4 ; finish restoring sign
+  movq [edx + 8*eax + 8*16   - 2*8], mm0
+  movq [edx + 8*eax + 8*16+8 - 2*8], mm3
+  jnz	near .loop
+
+  ret
 
 ;===========================================================================
 ;
