@@ -28,7 +28,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbfunctions.h,v 1.11 2002-09-05 21:13:22 edgomez Exp $
+ * $Id: mbfunctions.h,v 1.12 2002-09-05 22:44:00 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -167,7 +167,7 @@ void MBDeQuantInter(const MBParam * pParam,
 				  	const uint8_t cbp);
 
 
-void MBiDCT(nt16_t data[6 * 64], 
+void MBiDCT(int16_t data[6 * 64], 
 			const uint8_t cbp);
 
 
