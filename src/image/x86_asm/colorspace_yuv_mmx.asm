@@ -19,18 +19,27 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: colorspace_yuv_mmx.asm,v 1.3 2004-03-22 22:36:24 edgomez Exp $
+; * $Id: colorspace_yuv_mmx.asm,v 1.4 2004-08-22 11:46:09 edgomez Exp $
 ; *
 ; ***************************************************************************/
 
 BITS 32
 
 %macro cglobal 1
-%ifdef PREFIX
-	global _%1
-		%define %1 _%1
+	%ifdef PREFIX
+		%ifdef MARK_FUNCS
+			global _%1:function
+			%define %1 _%1:function
+		%else
+			global _%1
+			%define %1 _%1
+		%endif
 	%else
-		global %1
+		%ifdef MARK_FUNCS
+			global %1:function
+		%else
+			global %1
+		%endif
 	%endif
 %endmacro
 

@@ -28,10 +28,19 @@ BITS 32
 
 %macro cglobal 1
 	%ifdef PREFIX
-		global _%1
-		%define %1 _%1
+		%ifdef MARK_FUNCS
+			global _%1:function
+			%define %1 _%1:function
+		%else
+			global _%1
+			%define %1 _%1
+		%endif
 	%else
-		global %1
+		%ifdef MARK_FUNCS
+			global %1:function
+		%else
+			global %1
+		%endif
 	%endif
 %endmacro
 

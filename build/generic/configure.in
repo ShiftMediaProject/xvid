@@ -18,6 +18,7 @@ API_MINOR="0"
 dnl NASM version requirement
 minimum_nasm_patch_version=34
 nasm_prog="nasm"
+yasm_prog="yasm"
 
 dnl Default CFLAGS -- Big impact on overall speed
 our_cflags_defaults="-Wall"
@@ -297,7 +298,7 @@ case "$target_os" in
 	;;
      *)
         AC_MSG_RESULT([Unknown Platform (Using default -shared -lc -lm)])
-	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
+    STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
 	SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION)"
 	SPECIFIC_LDFLAGS=""
 	SPECIFIC_CFLAGS=""
@@ -328,55 +329,73 @@ dnl
 if test "$ARCHITECTURE" = "IA32" ; then
 
    dnl
-   dnl Checking nasm existence
+   dnl Checking for nasm compatible programs
+   dnl yasm is preferred over nasm, because... i can use it
+   dnl to profile assembly code ;-)
    dnl
-   AC_CHECK_PROG([ac_nasm], [$nasm_prog], [yes], [no], , [yes])
-   if test "$ac_nasm" = "yes" ; then
 
-      dnl
-      dnl Checking nasm patch version
-      dnl
-      AC_MSG_CHECKING([for nasm patch version])
-      nasm_patch=`nasm -r | cut -d '.' -f 3 | cut -d ' ' -f 1`
-      if test -z $nasm_patch ; then
-        nasm_patch=-1
-      fi
-      AC_MSG_RESULT([$nasm_patch])
+   found_nasm_comp_prog="no"
+   chosen_asm_prog=""
 
-
-      if test "$nasm_patch" -lt "$minimum_nasm_patch_version" ; then
-        AC_MSG_WARN([nasm patch version too old - Compiling generic sources only])
-	ARCHITECTURE="GENERIC"
-      else
-
-         dnl
-         dnl Checking nasm format - win32 or elf
-         dnl
-         AC_MSG_CHECKING([for nasm object format])
-         case "$target_os" in
-              *bsd*|linux*|beos|irix*|solaris*)
-                  AC_MSG_RESULT([elf])
-                  NASM_FORMAT="elf"
-		  PREFIX=""
-                  ;;
-              [[cC]][[yY]][[gG]][[wW]][[iI]][[nN]]*|mingw32*|mks*)
-                  AC_MSG_RESULT([win32])
-                  NASM_FORMAT="win32"
-		  PREFIX="-DPREFIX"
-                  ;;
-          esac
-
-          AS=nasm
-          AFLAGS="-I\$(<D)/ -f $NASM_FORMAT $PREFIX"
-          ASSEMBLY_EXTENSION="asm"
-          ASSEMBLY_SOURCES="SRC_IA32"
-       fi
-
-   else
-	AC_MSG_WARN([nasm not found - Compiling generic sources only])
-	ARCHITECTURE="GENERIC"
+   dnl Check for yasm first
+   AC_CHECK_PROG([ac_yasm], [$yasm_prog], [yes], [no], , [yes])
+   if test "$ac_yasm" = "yes" ; then
+     found_nasm_comp_prog="yes"
+     chosen_asm_prog="$yasm_prog"
    fi
 
+   dnl if yasm hasn't been found, then check for nasm (not buggy version)
+   if test "$found_nasm_comp_prog" = "no" ; then
+       AC_CHECK_PROG([ac_nasm], [$nasm_prog], [yes], [no], , [yes])
+       if test "$ac_nasm" = "yes" ; then
+           dnl
+           dnl Checking nasm patch version
+           dnl
+           AC_MSG_CHECKING([for nasm patch version])
+           nasm_patch=`$nasm_prog -r | cut -d '.' -f 3 | cut -d ' ' -f 1`
+           if test -z $nasm_patch ; then
+              nasm_patch=-1
+           fi
+           AC_MSG_RESULT([$nasm_patch])
+
+
+           if test "$nasm_patch" -lt "$minimum_nasm_patch_version" ; then
+               AC_MSG_WARN([nasm patch version is too old])
+           else
+               found_nasm_comp_prog="yes"
+		       chosen_asm_prog="$nasm_prog"
+           fi
+       fi
+   fi
+
+   dnl
+   dnl Ok now sort what object format we must use
+   dnl
+   if test "$found_nasm_comp_prog" = "yes" ; then
+       AC_MSG_CHECKING([for asm object format])
+       case "$target_os" in
+           *bsd*|linux*|beos|irix*|solaris*)
+               AC_MSG_RESULT([elf])
+               NASM_FORMAT="elf"
+	       MARK_FUNCS="-DMARK_FUNCS"
+	           PREFIX=""
+               ;;
+           [[cC]][[yY]][[gG]][[wW]][[iI]][[nN]]*|mingw32*|mks*)
+               AC_MSG_RESULT([win32])
+               NASM_FORMAT="win32"
+	       PREFIX="-DPREFIX"
+	       MARK_FUNCS=""
+               ;;
+       esac
+
+       AS="$chosen_asm_prog"
+       AFLAGS="-I\$(<D)/ -f $NASM_FORMAT $PREFIX $MARK_FUNCS"
+       ASSEMBLY_EXTENSION="asm"
+       ASSEMBLY_SOURCES="SRC_IA32"
+   else 
+       AC_MSG_WARN([no correct assembler was found - Compiling generic sources only])
+       ARCHITECTURE="GENERIC"
+   fi
 fi
 
 dnl
