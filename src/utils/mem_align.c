@@ -51,7 +51,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: mem_align.c,v 1.11 2002-11-17 00:51:11 edgomez Exp $
+ * $Id: mem_align.c,v 1.12 2002-11-27 21:20:33 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -91,7 +91,7 @@ xvid_malloc(size_t size,
 			*mem_ptr = 0;
 
 			/* Return the mem_ptr pointer */
-			return (void *) mem_ptr++;
+			return (void *)(mem_ptr+1);
 
 		}
 
