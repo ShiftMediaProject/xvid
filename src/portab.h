@@ -214,6 +214,8 @@ read_counter()
 
 #define EMMS()
 
+#ifdef __GNUC__
+
 // needed for bitstream.h
 #define BSWAP(a)  __asm__ __volatile__ ("mux1 %1 = %0, @rev" \
 			";;" \
@@ -229,6 +231,37 @@ static __inline int64_t read_counter() {
 	return result;
 
 }
+
+/* we are missing our ia64intrin.h file, but according to the 
+   Intel's ecc manual, this should be the right way ... 
+   this 
+
+#elif defined(__INTEL_COMPILER) 
+
+#include <ia64intrin.h>
+
+static __inline int64_t read_counter() {
+  return __getReg(44);
+}
+
+#define BSWAP(a) ((unsigned int) (_m64_mux1(a, 0xb) >> 32))
+*/
+
+#else 
+
+// needed for bitstream.h
+#define BSWAP(a) \
+	 ((a) = ( ((a)&0xff)<<24) | (((a)&0xff00)<<8) | (((a)>>8)&0xff00) | (((a)>>24)&0xff))
+
+// rdtsc command most likely not supported,
+// so just dummy code here
+static __inline int64_t
+read_counter()
+{
+	return 0;
+}
+
+#endif // gcc or ecc
 
 #else
 #define BSWAP(a) __asm__ ( "bswapl %0\n" : "=r" (a) : "0" (a) )
