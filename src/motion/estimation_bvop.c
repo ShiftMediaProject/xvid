@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.19 2004-12-09 04:20:44 syskin Exp $
+ * $Id: estimation_bvop.c,v 1.20 2004-12-09 04:58:12 syskin Exp $
  *
  ****************************************************************************/
 
@@ -986,6 +986,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 	Data_d.rounding = 0;
 	Data_d.chroma = frame->motion_flags & XVID_ME_CHROMA_BVOP;
 	Data_d.iQuant = frame->quant;
+	Data_d.quant_sq = frame->quant*frame->quant;
 	Data_d.dctSpace = dct_space;
 	Data_d.quant_type = !(pParam->vol_flags & XVID_VOL_MPEGQUANT);
 	Data_d.mpeg_quant_matrices = pParam->mpeg_quant_matrices;

@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation.h,v 1.9 2004-12-08 12:43:48 syskin Exp $
+ * $Id: estimation.h,v 1.10 2004-12-09 04:58:12 syskin Exp $
  *
  ****************************************************************************/
 
@@ -114,6 +114,7 @@ typedef struct
 	const uint16_t * scan_table; /* current scan table */
 	const uint16_t * mpeg_quant_matrices;			/* current MPEG quantization matrices */
 	int lambda[6];				/* R-D lambdas for all 6 blocks */
+	unsigned int quant_sq;		/* quant squared - saves many multiplications in VHQ */
 
 } SearchData;
 
