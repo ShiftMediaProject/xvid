@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - SAD Routines header -
  *
- *  Copyright(C) 2002 Michael Militzer
+ *  Copyright(C) 2002 Michael Militzer <isibaar@xvid.org>
  *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
@@ -28,7 +28,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  Copyright(C) 2002 Michael Militzer
+ *  Copyright(C) 2002 Michael Militzer <isibaar@xvid.org>
  *  Copyright(C) 2002 Peter Ross <pross@xvid.org>
  *
  ****************************************************************************/

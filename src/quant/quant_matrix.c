@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Custom matrix quantization functions -
  *
- *  Copyright(C) 2002 Michael Militzer
+ *  Copyright(C) 2002 Michael Militzer <isibaar@xvid.org>
  *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
@@ -28,7 +28,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: quant_matrix.c,v 1.9 2002-09-22 18:33:31 h Exp $
+ *  $Id: quant_matrix.c,v 1.10 2002-10-19 11:41:11 edgomez Exp $
  *
  ****************************************************************************/
 
