@@ -3183,17 +3183,12 @@ MotionEstimationBVOP(MBParam * const pParam,
 
 /* special case, if collocated block is SKIPed: encoding is forward (0,0), cpb=0 without further ado */
 
-#ifndef _DISABLE_SKIP
 			if (b_mb->mode == MODE_INTER && b_mb->cbp == 0 &&
-				b_mb->mvs[0].x == 0 && b_mb->mvs[0].y == 0) {	
+				b_mb->mvs[0].x == 0 && b_mb->mvs[0].y == 0) {
 				mb->mode = MODE_NOT_CODED;
-				mb->mvs[0].x = 0;
-				mb->mvs[0].y = 0;
-				mb->b_mvs[0].x = 0;
-				mb->b_mvs[0].y = 0;
+				mb->b_mvs[0] = mb->mvs[0] = zeroMV;
 				continue;
 			}
-#endif
 
 			if (b_mb->mode == MODE_INTER4V)
 			{

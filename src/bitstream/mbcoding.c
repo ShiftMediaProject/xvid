@@ -413,18 +413,6 @@ MBCoding(const FRAMEINFO * frame,
 {
 
 	if (frame->coding_type == P_VOP) {
-		if (pMB->cbp == 0 && pMB->mode == MODE_INTER && pMB->mvs[0].x == 0 &&
-			pMB->mvs[0].y == 0) {
-
-#ifdef _DISABLE_SKIP
-/* disable SKIP when Bframes active until some workaround for the B-SKIP problem is found */
-			BitstreamPutBit(bs, 0);	// always coded!
-#else
-			BitstreamPutBit(bs, 1);	// not_coded
-
-			return;
-#endif
-		} else
 			BitstreamPutBit(bs, 0);	// coded
 	}
 
@@ -434,6 +422,15 @@ MBCoding(const FRAMEINFO * frame,
 		CodeBlockInter(frame, pMB, qcoeff, bs, pStat);
 
 }
+
+
+void
+MBSkip(Bitstream * bs)
+{
+	BitstreamPutBit(bs, 1);	// not coded
+	return;
+}
+
 
 /***************************************************************
  * bframe encoding start
