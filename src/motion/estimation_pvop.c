@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_pvop.c,v 1.11 2004-12-09 23:02:54 edgomez Exp $
+ * $Id: estimation_pvop.c,v 1.12 2005-02-20 13:12:26 syskin Exp $
  *
  ****************************************************************************/
 
@@ -771,16 +771,14 @@ motionStatsPVOP(int * const MVmax, int * const mvCount, int * const mvSum,
 			*mvSum += mv[i].y * mv[i].y;
 		}
 	case MODE_INTER:
-		(*mvCount)++;	/* add mcsel==1 vector to statistics too, or else we ignore useful motion range info */
+		(*mvCount)++;
 		*mvSum += mv[0].x * mv[0].x;
 		*mvSum += mv[0].y * mv[0].y;
-		if (pMB->mcsel == 0) {
-			if (mv[0].x > max) max = mv[0].x;
-			else if (-mv[0].x - 1 > max) max = -mv[0].x - 1;
-			if (mv[0].y > max) max = mv[0].y;
-			else if (-mv[0].y - 1 > max) max = -mv[0].y - 1;
-			*MVmax = max;
-		}
+		if (mv[0].x > max) max = mv[0].x;
+		else if (-mv[0].x - 1 > max) max = -mv[0].x - 1;
+		if (mv[0].y > max) max = mv[0].y;
+		else if (-mv[0].y - 1 > max) max = -mv[0].y - 1;
+		*MVmax = max;
 	default:
 		break;
 	}
