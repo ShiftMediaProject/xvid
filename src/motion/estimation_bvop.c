@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.20 2004-12-09 04:58:12 syskin Exp $
+ * $Id: estimation_bvop.c,v 1.21 2004-12-17 10:45:01 syskin Exp $
  *
  ****************************************************************************/
 
@@ -965,9 +965,8 @@ MotionEstimationBVOP(MBParam * const pParam,
 {
 	uint32_t i, j;
 	int32_t best_sad = 256*4096;
-	int32_t sad2;
 	uint32_t skip_sad;
-
+	int fb_thresh;
 	const MACROBLOCK * const b_mbs = b_reference->mbs;
 
 	VECTOR f_predMV, b_predMV;
@@ -1040,24 +1039,30 @@ MotionEstimationBVOP(MBParam * const pParam,
 			SearchBF_initial(i, j, frame->motion_flags, frame->bcode, pParam, pMB,
 						&b_predMV, &best_sad, MODE_BACKWARD, &Data_b, Data_d.currentMV[2]);
 
-			sad2 = best_sad;
+			if (frame->motion_flags&XVID_ME_BFRAME_EARLYSTOP)
+				fb_thresh = best_sad;
+			else
+				fb_thresh = best_sad + (best_sad>>1);
 
-			if (Data_f.iMinSAD[0] < 2*sad2+2000)
+			if (Data_f.iMinSAD[0] <= fb_thresh)
 				SearchBF_final(i, j, frame->motion_flags, pParam, &best_sad, &Data_f);
 
-			if (Data_b.iMinSAD[0] < 2*sad2+2000)
+			if (Data_b.iMinSAD[0] <= fb_thresh)
 				SearchBF_final(i, j, frame->motion_flags, pParam, &best_sad, &Data_b);
 
 			SearchInterpolate_initial(i, j, frame->motion_flags, pParam, &f_predMV, &b_predMV, &best_sad,
 								  &Data_i, Data_f.currentMV[0], Data_b.currentMV[0]);
 
-			if (((Data_i.iMinSAD[0] < 2*best_sad+2000) && !(frame->motion_flags&XVID_ME_FAST_MODEINTERPOLATE))
+			if (((Data_i.iMinSAD[0] < best_sad +(best_sad>>3)) && !(frame->motion_flags&XVID_ME_FAST_MODEINTERPOLATE))
 				|| Data_i.iMinSAD[0] <= best_sad)
 
 				SearchInterpolate_final(i, j, frame->motion_flags, pParam, &best_sad, &Data_i);
 			
-			if ((Data_d.iMinSAD[0] <= 2*best_sad) && (!frame->motion_flags&XVID_ME_SKIP_DELTASEARCH))
-				SearchDirect_final(frame->motion_flags, b_mb, &best_sad, &Data_d);
+			if (Data_d.iMinSAD[0] <= 2*best_sad)
+				if ((!(frame->motion_flags&XVID_ME_SKIP_DELTASEARCH) && (best_sad > 750))
+					|| (best_sad > 1000))
+				
+					SearchDirect_final(frame->motion_flags, b_mb, &best_sad, &Data_d);
 
 			/* final skip decision */
 			if ( (skip_sad < 2 * Data_d.iQuant * MAX_SAD00_FOR_SKIP )
