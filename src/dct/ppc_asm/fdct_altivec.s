@@ -105,7 +105,7 @@ fdct_altivec:
 	stvx 31,1,0
 	lvx 0,0,3
 	addi 23,1,16
-	vspltisw 3,0
+	vxor %v3,%v3,%v3
 	addi 18,3,16
 	stvx 0,0,23
 	lvx 1,0,18
