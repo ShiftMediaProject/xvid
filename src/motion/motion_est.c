@@ -355,7 +355,7 @@ CheckCandidate16(const int x, const int y, const int Direction, int * const dir,
 	data->temp[1] += (data->lambda8 * t * (data->temp[1] + NEIGH_8X8_BIAS))>>10;
 
 	if (data->chroma) sad += ChromaSAD((xc >> 1) + roundtab_79[xc & 0x3],
-													(yc >> 1) + roundtab_79[yc & 0x3], data);
+										(yc >> 1) + roundtab_79[yc & 0x3], data);
 
 	if (sad < data->iMinSAD[0]) {
 		data->iMinSAD[0] = sad;
@@ -506,8 +506,8 @@ CheckCandidateInt(const int xf, const int yf, const int Direction, int * const d
 	const uint8_t *ReferenceF, *ReferenceB;
 	VECTOR *current;
 
-	if ( (xf > data->max_dx) | (xf < data->min_dx)
-		| (yf > data->max_dy) | (yf < data->min_dy) ) return;
+	if ( (xf > data->max_dx) || (xf < data->min_dx)
+		|| (yf > data->max_dy) || (yf < data->min_dy) ) return;
 
 	if (!data->qpel_precision) {
 		ReferenceF = GetReference(xf, yf, data);
@@ -552,7 +552,7 @@ CheckCandidateDirect(const int x, const int y, const int Direction, int * const 
 	const uint8_t *ReferenceB;
 	VECTOR mvs, b_mvs;
 
-	if (( x > 31) | ( x < -32) | ( y > 31) | (y < -32)) return;
+	if (( x > 31) || ( x < -32) || ( y > 31) || (y < -32)) return;
 
 	for (k = 0; k < 4; k++) {
 		mvs.x = data->directmvF[k].x + x;
@@ -565,10 +565,10 @@ CheckCandidateDirect(const int x, const int y, const int Direction, int * const 
 			data->directmvB[k].y
 			: mvs.y - data->referencemv[k].y);
 
-		if ( (mvs.x > data->max_dx) | (mvs.x < data->min_dx)
-			| (mvs.y > data->max_dy) | (mvs.y < data->min_dy)
-			| (b_mvs.x > data->max_dx) | (b_mvs.x < data->min_dx)
-			| (b_mvs.y > data->max_dy) | (b_mvs.y < data->min_dy) ) return;
+		if ( (mvs.x > data->max_dx) || (mvs.x < data->min_dx)
+			|| (mvs.y > data->max_dy) || (mvs.y < data->min_dy)
+			|| (b_mvs.x > data->max_dx) || (b_mvs.x < data->min_dx)
+			|| (b_mvs.y > data->max_dy) || (b_mvs.y < data->min_dy) ) return;
 
 		if (data->qpel) {
 			xcf += mvs.x/2; ycf += mvs.y/2;
@@ -1000,6 +1000,9 @@ MotionEstimation(MBParam * const pParam,
 	uint32_t x, y;
 	uint32_t iIntra = 0;
 	int32_t quant = current->quant, sad00;
+	int skip_thresh = INITIAL_SKIP_THRESH * 
+		(current->global_flags & XVID_REDUCED ? 4:1) * 
+		(current->global_flags & XVID_MODEDECISION_BITS ? 2:1);
 
 	// some pre-initialized thingies for SearchP
 	int32_t temp[8];
@@ -1066,7 +1069,7 @@ MotionEstimation(MBParam * const pParam,
 //initial skip decision
 /* no early skip for GMC (global vector = skip vector is unknown!)  */
 			if (!(current->global_flags & XVID_GMC))	{ /* no fast SKIP for S(GMC)-VOPs */
-				if (pMB->dquant == NO_CHANGE && sad00 < pMB->quant * INITIAL_SKIP_THRESH * (Data.rrv ? 4:1) )
+				if (pMB->dquant == NO_CHANGE && sad00 < pMB->quant * skip_thresh)
 					if (Data.chroma || SkipDecisionP(pCurrent, pRef, x, y, iEdgedWidth/2, pMB->quant, Data.rrv)) {
 						SkipMacroblockP(pMB, sad00);
 						continue;
@@ -1079,17 +1082,11 @@ MotionEstimation(MBParam * const pParam,
 						current->global_flags & XVID_INTER4V, pMB);
 
 /* final skip decision, a.k.a. "the vector you found, really that good?" */
-			if (!(current->global_flags & XVID_GMC))	{
+			if (!(current->global_flags & XVID_GMC || current->global_flags & XVID_MODEDECISION_BITS)) {
 				if ( pMB->dquant == NO_CHANGE && sad00 < pMB->quant * MAX_SAD00_FOR_SKIP) {
-					if (!(current->global_flags & XVID_MODEDECISION_BITS)) {
-						if ( (100*pMB->sad16)/(sad00+1) > FINAL_SKIP_THRESH * (Data.rrv ? 4:1) )
-							if (Data.chroma || SkipDecisionP(pCurrent, pRef, x, y, iEdgedWidth/2, pMB->quant, Data.rrv))
-								SkipMacroblockP(pMB, sad00);
-					} else { // BITS mode decision
-						if (pMB->sad16 > 10)
-							SkipMacroblockP(pMB, sad00);  // more than 10 bits would be used for this MB - skip
-
-					}
+					if ( (100*pMB->sad16)/(sad00+1) > FINAL_SKIP_THRESH * (Data.rrv ? 4:1) )
+						if (Data.chroma || SkipDecisionP(pCurrent, pRef, x, y, iEdgedWidth/2, pMB->quant, Data.rrv))
+							SkipMacroblockP(pMB, sad00);
 				}
 			}
 			if (pMB->mode == MODE_INTRA)
@@ -1384,14 +1381,16 @@ SearchP(const IMAGE * const pRef,
 		Data->currentQMV[i].y = 2 * Data->currentMV[i].y;
 	}
 
-	if (MotionFlags & PMV_QUARTERPELREFINE16)
+	if (MotionFlags & PMV_QUARTERPELREFINE16) {
+		
+		get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, x, y, 16,
+				pParam->width, pParam->height, Data->iFcode, 1, 0);
+
 		if ((!(MotionFlags & QUARTERPELREFINE16_BITS)) || (Data->iMinSAD[0] < 200*(int)iQuant)) {
 			Data->qpel_precision = 1;
-			get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, x, y, 16,
-					pParam->width, pParam->height, Data->iFcode, 1, 0);
-
 			SubpelRefine(Data);
 		}
+	}
 
 	if ((!(GlobalFlags & XVID_MODEDECISION_BITS)) && (Data->iMinSAD[0] < (int32_t)iQuant * 30)) inter4v = 0;
 
@@ -1823,6 +1822,7 @@ SearchDirect(const IMAGE * const f_Ref,
 		}
 	}
 
+	*Data->iMinSAD += Data->lambda16;
 	skip_sad = *Data->iMinSAD;
 
 //	DIRECT MODE DELTA VECTOR SEARCH.
@@ -2149,7 +2149,7 @@ MEanalyzeMB (	const uint8_t * const pRef,
 
 	int i, mask;
 	VECTOR pmv[3];
-	MACROBLOCK * pMB = &pMBs[x + y * pParam->mb_width];
+	MACROBLOCK * const pMB = &pMBs[x + y * pParam->mb_width];
 
 	for (i = 0; i < 5; i++) Data->iMinSAD[i] = MV_MAX_ERROR;
 
@@ -2163,7 +2163,7 @@ MEanalyzeMB (	const uint8_t * const pRef,
 			else Data->predMV = get_pmv2(pMBs, pParam->mb_width, 0, x, y, 0); //else median
 
 	get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, x, y, 16,
-				pParam->width, pParam->height, Data->iFcode - pParam->m_quarterpel, 0, Data->rrv);
+				pParam->width, pParam->height, Data->iFcode - pParam->m_quarterpel, 0, 0);
 
 	Data->Cur = pCur + (x + y * pParam->edged_width) * 16;
 	Data->Ref = pRef + (x + y * pParam->edged_width) * 16;
@@ -2175,43 +2175,48 @@ MEanalyzeMB (	const uint8_t * const pRef,
 	pmv[0].x = pmv[0].y = 0;
 
 	CheckCandidate32I(0, 0, 255, &i, Data);
+	Data->iMinSAD[1] -= 50;
+	Data->iMinSAD[2] -= 50;
+	Data->iMinSAD[3] -= 50;
+	Data->iMinSAD[4] -= 50;
 
-	if (*Data->iMinSAD > 4 * MAX_SAD00_FOR_SKIP * 4) {
+	if (*Data->iMinSAD > 4 * MAX_SAD00_FOR_SKIP) {
 
 		if (!(mask = make_mask(pmv, 1)))
 			CheckCandidate32I(pmv[1].x, pmv[1].y, mask, &i, Data);
 		if (!(mask = make_mask(pmv, 2)))
 			CheckCandidate32I(pmv[2].x, pmv[2].y, mask, &i, Data);
 
-		if (*Data->iMinSAD > 4 * MAX_SAD00_FOR_SKIP * 4) // diamond only if needed
+		if (*Data->iMinSAD > 4 * MAX_SAD00_FOR_SKIP) // diamond only if needed
 			DiamondSearch(Data->currentMV->x, Data->currentMV->y, Data, i);
+	}
 
-		for (i = 0; i < 4; i++) {
-			MACROBLOCK * MB = &pMBs[x + (i&1) + (y+(i>>1)) * pParam->mb_width];
-			MB->mvs[0] = MB->mvs[1] = MB->mvs[2] = MB->mvs[3] = Data->currentMV[i];
-			MB->mode = MODE_INTER;
-			MB->sad16 = Data->iMinSAD[i+1];
-		}
+	for (i = 0; i < 4; i++) {
+		MACROBLOCK * MB = &pMBs[x + (i&1) + (y+(i>>1)) * pParam->mb_width];
+		MB->mvs[0] = MB->mvs[1] = MB->mvs[2] = MB->mvs[3] = Data->currentMV[i];
+		MB->mode = MODE_INTER;
+		MB->sad16 = Data->iMinSAD[i+1];
 	}
 }
 
-#define INTRA_BIAS		2500
-#define INTRA_THRESH	1500
-#define INTER_THRESH	1400
+#define INTRA_THRESH	2400
+#define INTER_THRESH	1100
 
 int
 MEanalysis(	const IMAGE * const pRef,
-			FRAMEINFO * const Current,
-			MBParam * const pParam,
-			int maxIntra, //maximum number if non-I frames
-			int intraCount, //number of non-I frames after last I frame; 0 if we force P/B frame
-			int bCount) // number of B frames in a row
+			const FRAMEINFO * const Current,
+			const MBParam * const pParam,
+			const int maxIntra, //maximum number if non-I frames
+			const int intraCount, //number of non-I frames after last I frame; 0 if we force P/B frame
+			const int bCount,  // number of B frames in a row
+			const int b_thresh)
 {
 	uint32_t x, y, intra = 0;
 	int sSAD = 0;
 	MACROBLOCK * const pMBs = Current->mbs;
 	const IMAGE * const pCurrent = &Current->image;
-	int IntraThresh = INTRA_THRESH, InterThresh = INTER_THRESH;
+	int IntraThresh = INTRA_THRESH, InterThresh = INTER_THRESH + 10*b_thresh;
+	int s = 0, blocks = 0;
 
 	int32_t iMinSAD[5], temp[5];
 	VECTOR currentMV[5];
@@ -2220,26 +2225,32 @@ MEanalysis(	const IMAGE * const pRef,
 	Data.currentMV = currentMV;
 	Data.iMinSAD = iMinSAD;
 	Data.iFcode = Current->fcode;
-	Data.rrv = Current->global_flags & XVID_REDUCED;
 	Data.temp = temp;
 	CheckCandidate = CheckCandidate32I;
 
 	if (intraCount != 0 && intraCount < 10) // we're right after an I frame
-		IntraThresh += 4 * (intraCount - 10) * (intraCount - 10);
+		IntraThresh += 8 * (intraCount - 10) * (intraCount - 10);
 	else
 		if ( 5*(maxIntra - intraCount) < maxIntra) // we're close to maximum. 2 sec when max is 10 sec
 			IntraThresh -= (IntraThresh * (maxIntra - 5*(maxIntra - intraCount)))/maxIntra;
 
-	InterThresh += 400 * (1 - bCount);
-	if (InterThresh < 300) InterThresh = 300;
+	InterThresh -= (350 - 8*b_thresh) * bCount;
+	if (InterThresh < 300 + 5*b_thresh) InterThresh = 300 + 5*b_thresh;
 
 	if (sadInit) (*sadInit) ();
 
 	for (y = 1; y < pParam->mb_height-1; y += 2) {
 		for (x = 1; x < pParam->mb_width-1; x += 2) {
 			int i;
+			blocks += 4;
 
 			if (bCount == 0) pMBs[x + y * pParam->mb_width].mvs[0] = zeroMV;
+			else { //extrapolation of the vector found for last frame
+				pMBs[x + y * pParam->mb_width].mvs[0].x = 
+					(pMBs[x + y * pParam->mb_width].mvs[0].x * (bCount+1) ) / bCount;
+				pMBs[x + y * pParam->mb_width].mvs[0].y = 
+					(pMBs[x + y * pParam->mb_width].mvs[0].y * (bCount+1) ) / bCount;
+			}
 
 			MEanalyzeMB(pRef->y, pCurrent->y, x, y, pParam, pMBs, &Data);
 
@@ -2251,19 +2262,24 @@ MEanalysis(	const IMAGE * const pRef,
 									pParam->edged_width);
 					if (dev + IntraThresh < pMB->sad16) {
 						pMB->mode = MODE_INTRA;
-						if (++intra > (pParam->mb_height-2)*(pParam->mb_width-2)/2) return I_VOP;
+						if (++intra > ((pParam->mb_height-2)*(pParam->mb_width-2))/2) return I_VOP;
 					}
 				}
+				if (pMB->mvs[0].x == 0 && pMB->mvs[0].y == 0) s++;
+
 				sSAD += pMB->sad16;
 			}
 		}
 	}
-	sSAD /= (pParam->mb_height-2)*(pParam->mb_width-2);
-//	if (sSAD > IntraThresh + INTRA_BIAS) return I_VOP;
+
+	sSAD /= blocks;
+	s = (10*s) / blocks;
+
+	if (s > 5) sSAD += (s - 4) * (180 - 2*b_thresh); //static block - looks bad when in bframe...
+
 	if (sSAD > InterThresh ) return P_VOP;
 	emms();
 	return B_VOP;
-
 }
 
 
@@ -2708,9 +2724,9 @@ CountMBBitsIntra(const SearchData * const Data)
 
 		bits += t = CodeCoeffIntra_CalcBits(coeff, scan_tables[0]) + dcc_tab[coeff[0] + 255].len;
 		if (t != 0) cbp |= 1 << (5 - 4);
-		Data->temp[4] = t;
 
 		if (bits < Data->iMinSAD[0]) {
+			iDcScaler = get_dc_scaler(iQuant, 1);
 			//chroma V
 			transfer_8to16copy(in, Data->CurV, Data->iEdgedWidth/2);
 			fdct(in);
@@ -2721,16 +2737,9 @@ CountMBBitsIntra(const SearchData * const Data)
 			bits += t = CodeCoeffIntra_CalcBits(coeff, scan_tables[0]) + dcc_tab[coeff[0] + 255].len;
 			if (t != 0) cbp |= 1 << (5 - 5);
 
-			Data->temp[5] = t;
-
-			bits += t = xvid_cbpy_tab[cbp>>2].len;
-			Data->temp[6] = t;
-
-			bits += t = mcbpc_inter_tab[(MODE_INTRA & 7) | ((cbp & 3) << 3)].len;
-			Data->temp[7] = t;
-
+			bits += xvid_cbpy_tab[cbp>>2].len;
+			bits += mcbpc_inter_tab[(MODE_INTRA & 7) | ((cbp & 3) << 3)].len;
 		}
 	}
-
 	return bits;
 }
