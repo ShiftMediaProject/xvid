@@ -22,7 +22,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: plugin_2pass1.c,v 1.2 2004-03-22 22:36:24 edgomez Exp $
+ * $Id: plugin_2pass1.c,v 1.3 2004-07-18 12:46:44 syskin Exp $
  *
  *****************************************************************************/
 
@@ -161,6 +161,7 @@ static int rc_2pass1_before(rc_2pass1_t * rc, xvid_plg_data_t * data)
 
 			/* Now VOP flags (no fast replacements) */
 			data->vop_flags &= ~XVID_VOP_MODEDECISION_RD;
+			data->vop_flags &= ~XVID_VOP_RD_BVOP;
 			data->vop_flags &= ~XVID_VOP_FAST_MODEDECISION_RD;
 			data->vop_flags &= ~XVID_VOP_TRELLISQUANT;
 			data->vop_flags &= ~XVID_VOP_INTER4V;
