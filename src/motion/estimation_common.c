@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_common.c,v 1.6 2004-10-03 14:25:01 syskin Exp $
+ * $Id: estimation_common.c,v 1.7 2004-10-03 14:37:18 chl Exp $
  *
  ****************************************************************************/
 
@@ -333,12 +333,13 @@ xvid_me_DiamondSearch(int x, int y, SearchData * const data,
 		/* now we're doing diagonal checks near our candidate */
 		bDirection = *iDirection;
 		if (*iDirection) {		/* checking if anything found */
-			*iDirection = 0;
 			x = data->currentMV->x; y = data->currentMV->y;
 			if (bDirection & 3) {	/* our candidate is left or right */
+				*iDirection=4+8;
 				CHECK_CANDIDATE(x, y + iDiamondSize, 8);
 				CHECK_CANDIDATE(x, y - iDiamondSize, 4);
 			} else {			/* what remains here is up or down */
+				*iDirection=1+2;
 				CHECK_CANDIDATE(x + iDiamondSize, y, 2);
 				CHECK_CANDIDATE(x - iDiamondSize, y, 1);
 			}
