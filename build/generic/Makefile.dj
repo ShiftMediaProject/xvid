@@ -20,7 +20,7 @@ CFLAGS = -Wall -DARCH_X86
 
 
 AS = nasm
-AFLAGS = -f coff -DPREFIX
+AFLAGS = -f coff -DPREFIX -DFORMAT_COFF
 %.o: %.asm
 	$(AS) $(AFLAGS) $< -o $@
 
@@ -37,12 +37,19 @@ $(LIB): $(SRC:.c=.o) $(SRC_INTEL:.asm=.o)
 
 clean:
 	$(RM) $(SRCDIR)/*.o
-	$(RM) $(SRCDIR)/common/*.o
-	$(RM) $(SRCDIR)/decoder/*.o
-	$(RM) $(SRCDIR)/encoder/*.o
+	$(RM) $(SRCDIR)/bitstream/*.o
+	$(RM) $(SRCDIR)/dct/*.o
 	$(RM) $(SRCDIR)/image/*.o
-	$(RM) $(SRCDIR)/common/intel_mmx/*.o
-	$(RM) $(SRCDIR)/decoder/intel_mmx/*.o
-	$(RM) $(SRCDIR)/encoder/intel_mmx/*.o
-	$(RM) $(SRCDIR)/image/intel_mmx/*.o
+	$(RM) $(SRCDIR)/motion/*.o
+	$(RM) $(SRCDIR)/prediction/*.o
+	$(RM) $(SRCDIR)/quant/*.o
+	$(RM) $(SRCDIR)/utils/*.o
+	$(RM) $(SRCDIR)/bitstream/x86_asm/*.o
+	$(RM) $(SRCDIR)/dct/x86_asm/*.o
+	$(RM) $(SRCDIR)/image/x86_asm/*.o
+	$(RM) $(SRCDIR)/motion/x86_asm/*.o
+	$(RM) $(SRCDIR)/quant/x86_asm/*.o
+	$(RM) $(SRCDIR)/utils/x86_asm/*.o
 	$(RM) $(LIB)
+
+

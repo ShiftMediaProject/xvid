@@ -214,6 +214,8 @@ read_counter()
 
 #define CACHE_LINE  16
 #define CACHE_ALIGN
+#define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
+	type name[(sizex)*(sizey)]
 
 #endif
 
