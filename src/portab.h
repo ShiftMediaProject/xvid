@@ -5,12 +5,19 @@
 
 #include <windows.h>
 
+#ifdef _DEBUG
 #define DEBUG(S) OutputDebugString((S));
 #define DEBUG1(S,I) { char tmp[100]; wsprintf(tmp, "%s %i\n", (S), (I)); OutputDebugString(tmp); }
 #define DEBUG2(X,A,B) { char tmp[100]; wsprintf(tmp, "%s %i %i\n", (X), (A), (B)); OutputDebugString(tmp); }
 #define DEBUG3(X,A,B,C){ char tmp[1000]; wsprintf(tmp,"%s %i %i %i",(X),(A), (B), (C)); OutputDebugString(tmp); }
 #define DEBUG8(X,A,B,C,D,E,F,G,H){ char tmp[1000]; wsprintf(tmp,"%s %i %i %i %i %i %i %i %i",(X),(A),(B),(C),(D),(E),(F),(G),(H)); OutputDebugString(tmp); }
-
+#else
+#define DEBUG(S)
+#define DEBUG1(S,I)
+#define DEBUG2(X,A,B)
+#define DEBUG3(X,A,B,C)
+#define DEBUG8(X,A,B,C,D,E,F,G,H)
+#endif
 
 
 #define int8_t char
