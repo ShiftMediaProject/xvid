@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.c,v 1.45 2004-07-09 14:52:56 syskin Exp $
+ * $Id: bitstream.c,v 1.46 2004-09-04 14:16:24 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -992,6 +992,7 @@ BitstreamReadHeaders(Bitstream * bs,
 
 			BitstreamSkip(bs, 32);	/* user_data_start_code */
 
+			memset(tmp, 0, 256);
 			tmp[0] = BitstreamShowBits(bs, 8);
 
 			for(i = 1; i < 256; i++){

@@ -20,7 +20,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.18 2004-07-26 19:31:30 edgomez Exp $
+ * $Id: xvid_decraw.c,v 1.19 2004-09-04 14:16:24 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -54,9 +54,6 @@
  *               Global vars in module and constants
  ****************************************************************************/
 
-/* max number of frames */
-#define ABS_MAXFRAMENR 9999
-
 #define USE_PNM 0
 #define USE_TGA 1
 
@@ -73,6 +70,8 @@ static char filepath[256] = "./";
 static void *dec_handle = NULL;
 
 #define BUFFER_SIZE (2*1024*1024)
+
+static const int display_buffer_bytes = 0;
 
 /*****************************************************************************
  *               Local prototypes
@@ -111,6 +110,7 @@ int main(int argc, char *argv[])
 	unsigned char *mp4_ptr    = NULL;
 	unsigned char *out_buffer = NULL;
 	int useful_bytes;
+	int chunk;
 	xvid_dec_stats_t xvid_dec_stats;
 	
 	double totaldectime;
@@ -244,7 +244,8 @@ int main(int argc, char *argv[])
 	totalsize = 0;
 	filenr = 0;
 	mp4_ptr = mp4_buffer;
-
+	chunk = 0;
+	
 	do {
 		int used_bytes = 0;
 		double dectime;
@@ -302,6 +303,22 @@ int main(int argc, char *argv[])
 
 					fprintf(stderr, "Resized frame buffer to %dx%d\n", XDIM, YDIM);
 				}
+
+				/* Save individual mpeg4 stream if required */
+				if(ARG_SAVEMPEGSTREAM) {
+					FILE *filehandle = NULL;
+
+					sprintf(filename, "%svolhdr.m4v", filepath);
+					filehandle = fopen(filename, "wb");
+					if(!filehandle) {
+						fprintf(stderr,
+								"Error writing vol header mpeg4 stream to file %s\n",
+								filename);
+					} else {
+						fwrite(mp4_ptr, 1, used_bytes, filehandle);
+						fclose(filehandle);
+					}
+				}
 			}
 
 			/* Update buffer pointers */
@@ -313,7 +330,10 @@ int main(int argc, char *argv[])
 				totalsize += used_bytes;
 			}
 
-		}while(xvid_dec_stats.type <= 0 && useful_bytes > 0);
+			if (display_buffer_bytes) {
+				printf("Data chunk %d: %d bytes consumed, %d bytes in buffer\n", chunk++, used_bytes, useful_bytes);
+			}
+		} while (xvid_dec_stats.type <= 0 && useful_bytes > 0);
 
 		/* Check if there is a negative number of useful bytes left in buffer
 		 * This means we went too far */
@@ -324,9 +344,11 @@ int main(int argc, char *argv[])
 		totaldectime += dectime;
 
 			
-        printf("Frame %5d: type = %s, dectime(ms) =%6.1f, length(bytes) =%7d\n",
-			   filenr, type2str(xvid_dec_stats.type), dectime, used_bytes);
-			
+		if (!display_buffer_bytes) {
+			printf("Frame %5d: type = %s, dectime(ms) =%6.1f, length(bytes) =%7d\n",
+					filenr, type2str(xvid_dec_stats.type), dectime, used_bytes);
+		}
+
 		/* Save individual mpeg4 stream if required */
 		if(ARG_SAVEMPEGSTREAM) {
 			FILE *filehandle = NULL;
@@ -356,7 +378,9 @@ int main(int argc, char *argv[])
 
 		filenr++;
 
-	} while ( (status>=0) && (filenr<ABS_MAXFRAMENR));
+	} while (useful_bytes>0 || !feof(in_file));
+
+	useful_bytes = 0; /* Empty buffer */
 
 /*****************************************************************************
  *     Flush decoder buffers
@@ -372,7 +396,10 @@ int main(int argc, char *argv[])
 		    dectime = msecond();
 		    used_bytes = dec_main(NULL, out_buffer, -1, &xvid_dec_stats);
 		    dectime = msecond() - dectime;
-        }while(used_bytes>=0 && xvid_dec_stats.type <= 0);
+			if (display_buffer_bytes) {
+				printf("Data chunk %d: %d bytes consumed, %d bytes in buffer\n", chunk++, used_bytes, useful_bytes);
+			}
+        } while(used_bytes>=0 && xvid_dec_stats.type <= 0);
 
         if (used_bytes < 0) {   /* XVID_ERR_END */
             break;
@@ -382,9 +409,11 @@ int main(int argc, char *argv[])
 		totaldectime += dectime;
 
 		/* Prints some decoding stats */
-        printf("Frame %5d: type = %s, dectime(ms) =%6.1f, length(bytes) =%7d\n",
-			   filenr, type2str(xvid_dec_stats.type), dectime, used_bytes);
-			
+		if (!display_buffer_bytes) {
+			printf("Frame %5d: type = %s, dectime(ms) =%6.1f, length(bytes) =%7d\n",
+					filenr, type2str(xvid_dec_stats.type), dectime, used_bytes);
+		}
+
 		/* Save output frame if required */
 		if (ARG_SAVEDECOUTPUT) {
 			sprintf(filename, "%sdec%05d", filepath, filenr);
