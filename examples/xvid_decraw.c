@@ -20,7 +20,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.14 2004-04-15 19:44:05 edgomez Exp $
+ * $Id: xvid_decraw.c,v 1.15 2004-04-20 19:47:00 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -79,8 +79,6 @@ static void *dec_handle = NULL;
  ****************************************************************************/
 
 static double msecond();
-static int write_pgm(char *filename,
-					 unsigned char *image);
 static int dec_init(int use_assembler, int debug_level);
 static int dec_main(unsigned char *istream,
 					unsigned char *ostream,
@@ -88,9 +86,9 @@ static int dec_main(unsigned char *istream,
 					xvid_dec_stats_t *xvid_dec_stats);
 static int dec_stop();
 static void usage();
-int write_image(char *prefix, unsigned char *image);
-int write_pnm(char *filename, unsigned char *image);
-int write_tga(char *filename, unsigned char *image);
+static int write_image(char *prefix, unsigned char *image);
+static int write_pnm(char *filename, unsigned char *image);
+static int write_tga(char *filename, unsigned char *image);
 
 const char * type2str(int type)
 {
@@ -351,7 +349,7 @@ int main(int argc, char *argv[])
 			sprintf(filename, "%sdec%05d", filepath, filenr);
 			if(write_image(filename, out_buffer)) {
 				fprintf(stderr,
-						"Error writing decoded PGM frame %s\n",
+						"Error writing decoded frame %s\n",
 						filename);
 			}
 		}
@@ -476,7 +474,7 @@ msecond()
  *              output functions
  ****************************************************************************/
 
-int write_image(char *prefix, unsigned char *image)
+static int write_image(char *prefix, unsigned char *image)
 {
 	char filename[1024];
 	char *ext;
@@ -504,7 +502,7 @@ int write_image(char *prefix, unsigned char *image)
 	return(ret);
 }
 
-int write_tga(char *filename, unsigned char *image)
+static int write_tga(char *filename, unsigned char *image)
 {
 	FILE * f;
 	char hdr[18];
@@ -585,7 +583,7 @@ int write_tga(char *filename, unsigned char *image)
 	return(0);
 }
 
-int write_pnm(char *filename, unsigned char *image)
+static int write_pnm(char *filename, unsigned char *image)
 {
 	FILE * f;
 
@@ -624,6 +622,7 @@ int write_pnm(char *filename, unsigned char *image)
 
 	return 0;
 }
+
 /*****************************************************************************
  * Routines for decoding: init decoder, use, and stop decoder
  ****************************************************************************/
