@@ -76,7 +76,8 @@ SRC_PPC = \
 SRC_ALTIVEC = \
 	$(SRCDIR)/bitstream/ppc_asm/cbp_altivec.s \
 	$(SRCDIR)/dct/ppc_asm/fdct_altivec.s \
-	$(SRCDIR)/dct/ppc_asm/idct_altivec.s
+	$(SRCDIR)/dct/ppc_asm/idct_altivec.s \
+	$(SRCDIR)/motion/ppc_asm/sad_altivec.s
 
 
 DIRS_PPC = \
