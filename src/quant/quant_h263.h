@@ -21,6 +21,7 @@ quanth263_intraFunc quant_intra_ia64;
 
 quanth263_intraFunc dequant_intra_c;
 quanth263_intraFunc dequant_intra_mmx;
+quanth263_intraFunc dequant_intra_xmm;
 quanth263_intraFunc dequant_intra_sse2;
 quanth263_intraFunc dequant_intra_ia64;
 
@@ -49,6 +50,7 @@ extern dequanth263_interFuncPtr dequant_inter;
 
 dequanth263_interFunc dequant_inter_c;
 dequanth263_interFunc dequant_inter_mmx;
+dequanth263_interFunc dequant_inter_xmm;
 dequanth263_interFunc dequant_inter_sse2;
 dequanth263_interFunc dequant_inter_ia64;
 
