@@ -40,8 +40,9 @@
  /******************************************************************************
   *																			   *	
   *  Revision history:                                                         *
-  *                                                                            *
-  *  26.03.2002 interlacing support
+  *																			   *	
+  *  15.04.2002 rewrite log2bin use asm386  By MinChen <chenm001@163.com>      *
+  *  26.03.2002 interlacing support											   *
   *  03.03.2002 qmatrix writing												   *
   *  03.03.2002 merged BITREADER and BITWRITER								   *
   *	 30.02.2002	intra_dc_threshold support									   *
@@ -55,8 +56,11 @@
 #include "zigzag.h"
 #include "../quant/quant_matrix.h"
 
+
 static int __inline log2bin(int value)
 {
+/* Changed by Chenm001 */
+#ifndef WIN32
 	int n = 0;
 	while (value)
 	{
@@ -64,6 +68,12 @@ static int __inline log2bin(int value)
 		n++;
 	}
 	return n;
+#else
+	__asm{
+		bsr eax,value
+		inc eax
+	}
+#endif
 }
 
 
