@@ -4,7 +4,7 @@
 # 
 # Edit this file to enable/disable optimizations
 #
-# $Id: Makefile.cygwin,v 1.3 2002-09-20 17:03:47 edgomez Exp $
+# $Id: Makefile.cygwin,v 1.4 2002-09-22 10:30:04 edgomez Exp $
 # 
 #############################################################################
 
@@ -43,6 +43,9 @@ CFLAGS += -mno-cygwin
     # PSNR during encoding
 # CFLAGS += -D_DEBUG_PSNR
 
+# Enable BFrame decoding (still beta)
+# CFLAGS += -DBRAMES_DEC
+
 LIBDIR = /usr/local/lib
 
   # Warning level options
@@ -77,7 +80,14 @@ LIBDIR = /usr/local/lib
      # Try a first run with -fprofile-arcs only then build the lib again
      # with add branch and coverage... this will allow you to profile
      # the lib line a line.
-  # CFLAGS += -pg -fprofile-arcs -fbranch-probabilities -ftest-coverage
+  # CFLAGS += -pg
+     # Precise profiling + test coverage (-pg must be activated)
+     # Build the library twice and execute a program using the lib twice too
+       # First pass : Will create sourcefile.da files to keep branch statistics
+  # CFLAGS += -fprofile-arcs 
+       # Second pass : Will create .bb and .bbg files suitable for coverage and
+       #               branch probabilities during compilation
+  # CFLAGS += -fprofile-arcs -fbranch-probabilities -ftest-coverage
 
 
   # Architecture options : Valid for every gcc version
