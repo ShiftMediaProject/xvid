@@ -28,7 +28,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.c,v 1.29 2002-09-10 22:52:12 edgomez Exp $
+ * $Id: bitstream.c,v 1.30 2002-09-12 19:06:37 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -161,7 +161,7 @@ BitstreamReadHeaders(Bitstream * bs,
 	uint32_t coding_type;
 	uint32_t start_code;
 	uint32_t time_incr = 0;
-	int32_t time_increment;
+	int32_t time_increment = 0;
 
 	do {
 		BitstreamByteAlign(bs);
