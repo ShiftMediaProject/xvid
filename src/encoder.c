@@ -121,38 +121,55 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 	pEnc->iFrameNum = 0;
 	pEnc->iMaxKeyInterval = pParam->max_key_interval;
 
-	/* try to allocate memory */
+	if (image_create(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
+	{
+		xvid_free(pEnc);
+		return XVID_ERR_MEMORY;
+	}
 
-	pEnc->sCurrent.y	=	pEnc->sCurrent.u	=	pEnc->sCurrent.v	= NULL;
-	pEnc->sReference.y	=	pEnc->sReference.u	=	pEnc->sReference.v	= NULL;
-	pEnc->vInterH.y		=	pEnc->vInterH.u		=	pEnc->vInterH.v		= NULL;
-	pEnc->vInterV.y		=	pEnc->vInterV.u		=	pEnc->vInterV.v		= NULL;
-	pEnc->vInterVf.y	=	pEnc->vInterVf.u	=	pEnc->vInterVf.v	= NULL;
-	pEnc->vInterHV.y	=	pEnc->vInterHV.u	=	pEnc->vInterHV.v	= NULL;
-	pEnc->vInterHVf.y	=	pEnc->vInterHVf.u	=	pEnc->vInterHVf.v	= NULL;
+	if (image_create(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
+	{
+		image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+		xvid_free(pEnc);
+		return XVID_ERR_MEMORY;
+	}
 
-	pEnc->pMBs = NULL;
+	if (image_create(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
+	{
+		image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+		image_destroy(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+		xvid_free(pEnc);
+		return XVID_ERR_MEMORY;
+	}
 
-	if (image_create(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
-		image_create(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
-		image_create(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
-		image_create(&pEnc->vInterV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
-		image_create(&pEnc->vInterVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
-		image_create(&pEnc->vInterHV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
-		image_create(&pEnc->vInterHVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
-		(pEnc->pMBs = xvid_malloc(sizeof(MACROBLOCK) * pEnc->mbParam.mb_width * pEnc->mbParam.mb_height, CACHE_LINE)) == NULL)
+	if (image_create(&pEnc->vInterV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
+	{
+		image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+		image_destroy(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+		image_destroy(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+		xvid_free(pEnc);
+		return XVID_ERR_MEMORY;
+	}
+
+	if (image_create(&pEnc->vInterHV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0)
 	{
 		image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->vInterV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		image_destroy(&pEnc->vInterVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+		xvid_free(pEnc);
+		return XVID_ERR_MEMORY;
+	}
+
+	pEnc->pMBs = xvid_malloc(sizeof(MACROBLOCK) * pEnc->mbParam.mb_width * pEnc->mbParam.mb_height, CACHE_LINE);
+	if (pEnc->pMBs == NULL)
+	{
+		image_destroy(&pEnc->sCurrent, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+		image_destroy(&pEnc->sReference, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+		image_destroy(&pEnc->vInterH, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
+		image_destroy(&pEnc->vInterV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
 		image_destroy(&pEnc->vInterHV, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		image_destroy(&pEnc->vInterHVf, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
-		if (pEnc)
-		{
-			xvid_free(pEnc);
-		}
+		xvid_free(pEnc);
 		return XVID_ERR_MEMORY;
 	}
 
@@ -422,11 +439,11 @@ static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool forc
 
 	start_timer();
 	image_setedges(pRef,
-				pEnc->mbParam.edged_width,
-				pEnc->mbParam.edged_height,
-				pEnc->mbParam.width,
-				pEnc->mbParam.height,
-				pEnc->mbParam.global_flags & XVID_INTERLACING);
+		       pEnc->mbParam.edged_width,
+		       pEnc->mbParam.edged_height,
+		       pEnc->mbParam.width,
+		       pEnc->mbParam.height,
+		       pEnc->mbParam.global_flags & XVID_INTERLACING);
 	stop_edges_timer();
 
 	pEnc->mbParam.rounding_type = 1 - pEnc->mbParam.rounding_type;
@@ -436,49 +453,18 @@ static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool forc
 	else
 		iLimit = pEnc->mbParam.mb_width * pEnc->mbParam.mb_height + 1;
 
-	if ((pEnc->mbParam.global_flags & XVID_HALFPEL) > 0)
-	{
-		IMAGE *vInterV = NULL;
-		IMAGE *vInterVf = NULL;
-		IMAGE *vInterHV = NULL;
-		IMAGE *vInterHVf = NULL;
-
-		// interpolate fields together if field ME is used
-		if (pEnc->mbParam.global_flags & XVID_INTERLACING &&
-			pEnc->mbParam.global_flags & XVID_FIELDME)
-		{
-			vInterVf = &pEnc->vInterVf;
-			vInterHVf = &pEnc->vInterHVf;
-		}
-
-		// perform normal interpolation, unless only field-based ME is allowed
-		if (!(pEnc->mbParam.global_flags & XVID_INTERLACING) ||
-			!(pEnc->mbParam.global_flags & XVID_FIELDMEONLY))
-		{
-			vInterV = &pEnc->vInterV;
-			vInterHV = &pEnc->vInterHV;
-		}
-
+	if ((pEnc->mbParam.global_flags & XVID_HALFPEL) > 0) {
 		start_timer();
-		image_interpolate(pRef,
-				&pEnc->vInterH,
-				vInterV, vInterVf,
-				vInterHV, vInterHVf,
-				pEnc->mbParam.edged_width,
-				pEnc->mbParam.edged_height,
-				pEnc->mbParam.rounding_type);
+		image_interpolate(pRef, &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV,
+				  pEnc->mbParam.edged_width, pEnc->mbParam.edged_height,
+				  pEnc->mbParam.rounding_type);
 		stop_inter_timer();
 	}
 
 	start_timer();
-	bIntra = MotionEstimation(pEnc->pMBs,
-				&pEnc->mbParam,
-				&pEnc->sReference,
-				&pEnc->vInterH,
-				&pEnc->vInterV, &pEnc->vInterVf,
-				&pEnc->vInterHV, &pEnc->vInterHVf,
-				&pEnc->sCurrent,
-				iLimit);
+	bIntra = MotionEstimation(pEnc->pMBs, &pEnc->mbParam, &pEnc->sReference,
+				  &pEnc->vInterH, &pEnc->vInterV,
+				  &pEnc->vInterHV, &pEnc->sCurrent, iLimit);
 	stop_motion_timer();
 
 	if (bIntra == 1)
@@ -513,8 +499,8 @@ static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool forc
 						     x, y,
 						     &pEnc->sReference,
 						     &pEnc->vInterH,
-						     &pEnc->vInterV, &pEnc->vInterVf,
-						     &pEnc->vInterHV, &pEnc->vInterHVf,
+						     &pEnc->vInterV,
+						     &pEnc->vInterHV,
 						     &pEnc->sCurrent,
 						     dct_codes,
 						     pEnc->mbParam.width,
