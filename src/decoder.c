@@ -44,7 +44,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: decoder.c,v 1.15 2002-05-06 03:51:43 chenm001 Exp $
+ *  $Id: decoder.c,v 1.16 2002-05-06 03:58:09 chenm001 Exp $
  *
  *************************************************************************/
 
@@ -786,7 +786,6 @@ void decoder_bf_mbinter(DECODER * dec,
 			}
 			stop_iquant_timer();
 
-			data[0]=10;
 			start_timer();
 			idct(&data[i*64]);
 			stop_idct_timer();
