@@ -39,7 +39,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.59 2002-07-20 22:30:30 albeu Exp $
+ *  $Id: encoder.c,v 1.60 2002-07-21 03:41:44 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -344,6 +344,7 @@ encoder_create(XVID_ENC_PARAM * pParam)
 	pEnc->global = pParam->global;
 	pEnc->mbParam.max_bframes = pParam->max_bframes;
 	pEnc->bquant_ratio = pParam->bquant_ratio;
+	pEnc->frame_drop_ratio = pParam->frame_drop_ratio;
 	pEnc->bframes = NULL;
 
 	if (pEnc->mbParam.max_bframes > 0) {
@@ -1721,6 +1722,30 @@ FrameCodeP(Encoder * pEnc,
 	}
 
 	pEnc->sStat.fMvPrevSigma = fSigma;
+
+#ifdef BFRAMES
+	/* frame drop code */
+	// DPRINTF(DPRINTF_DEBUG, "kmu %i %i %i", pEnc->sStat.kblks, pEnc->sStat.mblks, pEnc->sStat.ublks);
+	if (pEnc->sStat.kblks + pEnc->sStat.mblks <=
+		(pEnc->frame_drop_ratio * pEnc->mbParam.mb_width * pEnc->mbParam.mb_height) / 100)
+	{
+		pEnc->sStat.kblks = pEnc->sStat.mblks = 0;
+		pEnc->sStat.ublks = pEnc->mbParam.mb_width * pEnc->mbParam.mb_height;
+
+		BitstreamReset(bs);
+		BitstreamWriteVopHeader(bs, &pEnc->mbParam, pEnc->current, 0);
+
+		// copy reference frame details into the current frame
+		pEnc->current->quant = pEnc->reference->quant;
+		pEnc->current->motion_flags = pEnc->reference->motion_flags;
+		pEnc->current->rounding_type = pEnc->reference->rounding_type;
+		pEnc->current->fcode = pEnc->reference->fcode;
+		pEnc->current->bcode = pEnc->reference->bcode;
+		image_copy(&pEnc->current->image, &pEnc->reference->image, pEnc->mbParam.edged_width, pEnc->mbParam.height);
+		memcpy(pEnc->current->mbs, pEnc->reference->mbs, sizeof(MACROBLOCK) * pEnc->mbParam.mb_width * pEnc->mbParam.mb_height);
+
+	}
+#endif
 
 	*pBits = BitstreamPos(bs) - *pBits;
 

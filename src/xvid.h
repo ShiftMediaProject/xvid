@@ -28,7 +28,7 @@
 *               ToDo ? : when BFRAMES is defined, the API_VERSION should not
 *                        be the same (3.0 ?)
 *
-*  $Id: xvid.h,v 1.15 2002-07-19 11:15:21 albeu Exp $
+*  $Id: xvid.h,v 1.16 2002-07-21 03:41:44 suxen_drol Exp $
 *
 *****************************************************************************/
 
@@ -37,7 +37,7 @@
 #define _XVID_H_
 
 #ifdef __cplusplus
-*  $Id: xvid.h,v 1.15 2002-07-19 11:15:21 albeu Exp $
+*  $Id: xvid.h,v 1.16 2002-07-21 03:41:44 suxen_drol Exp $
 #endif
 
 /*****************************************************************************
@@ -265,6 +265,7 @@
 	typedef struct
 	{
 		int x;
+		int y;
 	}
 	VECTOR;
 
