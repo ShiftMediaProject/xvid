@@ -1,54 +1,36 @@
- /******************************************************************************
-  *                                                                            *
-  *  This file is part of XviD, a free MPEG-4 video encoder/decoder            *
-  *                                                                            *
-  *  XviD is an implementation of a part of one or more MPEG-4 Video tools     *
-  *  as specified in ISO/IEC 14496-2 standard.  Those intending to use this    *
-  *  software module in hardware or software products are advised that its     *
-  *  use may infringe existing patents or copyrights, and any such use         *
-  *  would be at such party's own risk.  The original developer of this        *
-  *  software module and his/her company, and subsequent editors and their     *
-  *  companies, will have no liability for use of this software or             *
-  *  modifications or derivatives thereof.                                     *
-  *                                                                            *
-  *  XviD is free software; you can redistribute it and/or modify it           *
-  *  under the terms of the GNU General Public License as published by         *
-  *  the Free Software Foundation; either version 2 of the License, or         *
-  *  (at your option) any later version.                                       *
-  *                                                                            *
-  *  XviD is distributed in the hope that it will be useful, but               *
-  *  WITHOUT ANY WARRANTY; without even the implied warranty of                *
-  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
-  *  GNU General Public License for more details.                              *
-  *                                                                            *
-  *  You should have received a copy of the GNU General Public License         *
-  *  along with this program; if not, write to the Free Software               *
-  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA  *
-  *                                                                            *
-  ******************************************************************************/
-
- /******************************************************************************
-  *                                                                            *
-  *  bitstream.h                                                               *
-  *                                                                            *
-  *  Copyright (C) 2001 - Peter Ross <pross@cs.rmit.edu.au>                    *
-  *                                                                            *
-  *  For more information visit the XviD homepage: http://www.xvid.org         *
-  *                                                                            *
-  ******************************************************************************/
-
- /******************************************************************************
-  *																			   *	
-  *  Revision history:                                                         *
-  *                                                                            *
-  *  28.06.2002 addded BitstreamNumBitsToByteAlign()                           *
-  *                    BitstreamShowBitsFromByteAlign()                        *
-  *  26.03.2002 interlacing support - modified putvol/vopheaders paramters     *
-  *  04.03.2002 putbits speedup (Isibaar)                                      *
-  *  03.03.2002 merged BITREADER and BITWRITER (Isibaar)                       *
-  *	 16.12.2001	inital version                                           	   *
-  *																			   *
-  ******************************************************************************/
+/*****************************************************************************
+ *
+ *  XVID MPEG-4 VIDEO CODEC
+ *  - Bitstream reader/writer inlined functions and constants-
+ *
+ *  Copyright (C) 2001-2002 - Peter Ross <pross@cs.rmit.edu.au>
+ *
+ *  This program is an implementation of a part of one or more MPEG-4
+ *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
+ *  to use this software module in hardware or software products are
+ *  advised that its use may infringe existing patents or copyrights, and
+ *  any such use would be at such party's own risk.  The original
+ *  developer of this software module and his/her company, and subsequent
+ *  editors and their companies, will have no liability for use of this
+ *  software or modifications or derivatives thereof.
+ *
+ *  This program is free software ; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation ; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY ; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program ; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ *
+ * $Id: bitstream.h,v 1.11 2002-09-10 22:25:23 edgomez Exp $
+ *
+ ****************************************************************************/
 
 #ifndef _BITSTREAM_H_
 #define _BITSTREAM_H_
@@ -56,6 +38,11 @@
 #include "../portab.h"
 #include "../decoder.h"
 #include "../encoder.h"
+
+
+/*****************************************************************************
+ * Constants
+ ****************************************************************************/
 
 // comment any #defs we dont use
 
@@ -117,6 +104,10 @@
 #define RESYNC_MARKER 1
 
 
+/*****************************************************************************
+ * Prototypes
+ ****************************************************************************/
+
 int
 read_video_packet_header(Bitstream *bs, const int addbits, int * quant);
 
@@ -143,6 +134,10 @@ void BitstreamWriteVopHeader(Bitstream * const bs,
 void BitstreamWriteUserData(Bitstream * const bs, 
 							uint8_t * data, 
 							const int length);
+
+/*****************************************************************************
+ * Inlined functions
+ ****************************************************************************/
 
 /* initialise bitstream structure */
 
@@ -219,7 +214,7 @@ BitstreamShowBits(Bitstream * const bs,
 
 /* skip n bits forward in bitstream */
 
-static __inline void
+static void __inline
 BitstreamSkip(Bitstream * const bs,
 			  const uint32_t bits)
 {
@@ -241,7 +236,7 @@ BitstreamSkip(Bitstream * const bs,
 
 
 // number of bits to next byte alignment
-static __inline uint32_t 
+static uint32_t __inline
 BitstreamNumBitsToByteAlign(Bitstream *bs)
 {
 	uint32_t n = (32 - bs->pos) % 8;
@@ -250,7 +245,7 @@ BitstreamNumBitsToByteAlign(Bitstream *bs)
 
 
 // show nbits from next byte alignment
-static __inline uint32_t
+static uint32_t __inline
 BitstreamShowBitsFromByteAlign(Bitstream *bs, int bits)
 {
 	int bspos = bs->pos + BitstreamNumBitsToByteAlign(bs);
@@ -272,7 +267,7 @@ BitstreamShowBitsFromByteAlign(Bitstream *bs, int bits)
 
 /* move forward to the next byte boundary */
 
-static __inline void
+static void __inline
 BitstreamByteAlign(Bitstream * const bs)
 {
 	uint32_t remainder = bs->pos % 8;
@@ -412,4 +407,4 @@ BitstreamPutBits(Bitstream * const bs,
 	}
 }
 
-#endif							/* _BITSTREAM_H_ */
+#endif /* _BITSTREAM_H_ */
