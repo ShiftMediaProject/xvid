@@ -716,7 +716,6 @@ BitstreamWriteVolHeader(Bitstream * const bs,
 
 #ifdef BFRAMES
 	if (pParam->max_bframes > 0) {
-		//DPRINTF("low_delay=1");
 		BitstreamPutBit(bs, 1);	// vol_control_parameters
 		BitstreamPutBits(bs, 1, 2);	// chroma_format 1="4:2:0"
 		BitstreamPutBit(bs, 0);	// low_delay
@@ -724,7 +723,10 @@ BitstreamWriteVolHeader(Bitstream * const bs,
 	} else
 #endif
 	{
-		BitstreamPutBits(bs, 0, 1);	// vol_control_parameters (0=not given)
+		BitstreamPutBit(bs, 1);	// vol_control_parameters
+		BitstreamPutBits(bs, 1, 2);	// chroma_format 1="4:2:0"
+		BitstreamPutBit(bs, 1);	// low_delay
+		BitstreamPutBit(bs, 0);	// vbv_parameters (0=not given)
 	}
 
 
