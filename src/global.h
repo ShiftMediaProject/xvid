@@ -73,38 +73,25 @@ typedef struct
 
 } MACROBLOCK;
 
-static __inline int8_t get_dc_scaler(int32_t quant, uint32_t lum)
+static __inline int8_t get_dc_scaler(uint32_t quant, uint32_t lum)
 {
-    int8_t dc_scaler;
+	if(quant < 5)
+        return 8;
 
-	if(quant > 0 && quant < 5) {
-        dc_scaler = 8;
-		return dc_scaler;
-	}
+	if(quant < 25 && !lum)
+        return (quant + 13) / 2;
 
-	if(quant < 25 && !lum) {
-        dc_scaler = (quant + 13) >> 1;
-		return dc_scaler;
-	}
+	if(quant < 9)
+        return 2 * quant;
 
-	if(quant < 9) {
-        dc_scaler = quant << 1;
-		return dc_scaler;
-	}
-
-    if(quant < 25) {
-        dc_scaler = quant + 8;
-		return dc_scaler;
-	}
+    if(quant < 25)
+        return quant + 8;
 
 	if(lum)
-		dc_scaler = (quant << 1) - 16;
+		return 2 * quant - 16;
 	else
-        dc_scaler = quant - 6;
-
-    return dc_scaler;
+        return quant - 6;
 }
-
 
 // useful macros
 

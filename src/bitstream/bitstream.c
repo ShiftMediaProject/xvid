@@ -559,7 +559,9 @@ int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding, uin
 				}
 			}
 						
-			*quant = BitstreamGetBits(bs, dec->quant_bits);		// vop_quant
+			if((*quant = BitstreamGetBits(bs, dec->quant_bits)) < 1)		// vop_quant
+				*quant = 1;
+
 			//DEBUG1("quant", *quant);
 						
 			if (coding_type != I_VOP)
