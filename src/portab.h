@@ -3,27 +3,25 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Portable macros, types and inlined assembly -
  *
- *  Copyright(C) 2002 Michael Militzer <isibaar@xvid.org>
- *               2002 Peter Ross <pross@xvid.org>
- *               2002 Edouard Gomez <ed.gomez@free.fr>
+ *  Copyright(C) 2002      Michael Militzer <isibaar@xvid.org>
+ *               2002-2003 Peter Ross <pross@xvid.org>
+ *               2002-2003 Edouard Gomez <ed.gomez@free.fr>
  *
- *  This file is part of XviD, a free MPEG-4 video encoder/decoder
- *
- *  XviD is free software; you can redistribute it and/or modify it
- *  under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
+ *  This program is free software ; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation ; either version 2 of the License, or
  *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  but WITHOUT ANY WARRANTY ; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
+ *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: portab.h,v 1.48 2003-03-28 07:28:23 suxen_drol Exp $
+ * $Id: portab.h,v 1.49 2004-03-22 22:36:23 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -34,26 +32,11 @@
  *  Common things
  ****************************************************************************/
 
-/* Debug level masks */
-#define DPRINTF_ERROR       0x00000001
-#define DPRINTF_STARTCODE   0x00000002
-#define DPRINTF_HEADER      0x00000004
-#define DPRINTF_TIMECODE    0x00000008
-#define DPRINTF_MB          0x00000010
-#define DPRINTF_COEFF       0x00000020
-#define DPRINTF_MV          0x00000040
-#define DPRINTF_RC          0x00000080
-#define DPRINTF_DEBUG       0x80000000
-
-/* debug level for this library */
-#ifdef _DEBUG
-#define DPRINTF_LEVEL       0x000000ff
-#else
-#define DPRINTF_LEVEL       0
-#endif
-
 /* Buffer size for msvc implementation because it outputs to DebugOutput */
+#if defined(_DEBUG)
+extern unsigned int xvid_debug;
 #define DPRINTF_BUF_SZ  1024
+#endif
 
 /*****************************************************************************
  *  Types used in XviD sources
@@ -85,27 +68,27 @@
 #endif
 
 /*****************************************************************************
- *  Some things that are only architecture dependant 
+ *  Some things that are only architecture dependant
  ****************************************************************************/
 
 #if defined(ARCH_IS_32BIT)
 #    define CACHE_LINE 64
 #    define ptr_t uint32_t
 #    define intptr_t int32_t
-#    if _MSC_VER < 1300 
-#        define uintptr_t uint32_t 
+#    if _MSC_VER < 1300
+#        define uintptr_t uint32_t
 #    else
 #        include <stdarg.h>
-#    endif 
+#    endif
 #elif defined(ARCH_IS_64BIT)
 #    define CACHE_LINE  64
 #    define ptr_t uint64_t
 #    define intptr_t int64_t
-#    if _MSC_VER < 1300 
+#    if _MSC_VER < 1300
 #        define uintptr_t uint64_t
 #    else
 #        include <stdarg.h>
-#    endif 
+#    endif
 #else
 #    error You are trying to compile XviD without defining address bus size.
 #endif
@@ -141,13 +124,13 @@
 #   ifdef _DEBUG
     static __inline void DPRINTF(int level, char *fmt, ...)
     {
-        if (DPRINTF_LEVEL & level) {
+        if (xvid_debug & level) {
             va_list args;
             char buf[DPRINTF_BUF_SZ];
             va_start(args, fmt);
             vsprintf(buf, fmt, args);
             OutputDebugString(buf);
-            fprintf(stderr, "%s\n", buf);
+            fprintf(stderr, "%s", buf);
          }
      }
 #    else
@@ -232,9 +215,8 @@
         {
             va_list args;
             va_start(args, format);
-            if(DPRINTF_LEVEL & level) {
+            if(xvid_debug & level) {
                    vfprintf(stderr, format, args);
-                   fprintf(stderr, "\n");
             }
         }
 
@@ -345,12 +327,12 @@
 #    ifdef _DEBUG
      static __inline void DPRINTF(int level, char *fmt, ...)
      {
-         if (DPRINTF_LEVEL & level) {
+         if (xvid_debug & level) {
              va_list args;
              char buf[DPRINTF_BUF_SZ];
              va_start(args, fmt);
              vsprintf(buf, fmt, args);
-             fprintf(stderr, "%s\n", buf);
+             fprintf(stderr, "%s", buf);
          }
      }
 #    else /* _DEBUG */
@@ -425,9 +407,8 @@
         {
             va_list args;
             va_start(args, format);
-            if(DPRINTF_LEVEL & level) {
+            if(xvid_debug & level) {
                    vfprintf(stderr, format, args);
-                   fprintf(stderr, "\n");
             }
         }
 

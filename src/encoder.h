@@ -1,16 +1,10 @@
 /*****************************************************************************
  *
  *  XVID MPEG-4 VIDEO CODEC
- *  - Encoder header -
+ *  - Encoder related header  -
  *
- *  This program is an implementation of a part of one or more MPEG-4
- *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
- *  to use this software module in hardware or software products are
- *  advised that its use may infringe existing patents or copyrights, and
- *  any such use would be at such party's own risk.  The original
- *  developer of this software module and his/her company, and subsequent
- *  editors and their companies, will have no liability for use of this
- *  software or modifications or derivatives thereof.
+ *  Copyright(C) 2002-2003 Michael Militzer <isibaar@xvid.org>
+ *               2002-2003 Peter Ross <pross@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -26,17 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- ****************************************************************************/
-/*****************************************************************************
- *
- *  History
- *
- *  - 13.06.2002 Added legal header
- *  - 22.08.2001 Added support for EXT_MODE encoding mode
- *               support for EXTENDED API
- *  - 22.08.2001 fixed bug in iDQtab
- *
- *  $Id: encoder.h,v 1.27 2003-02-15 15:22:17 edgomez Exp $
+ * $Id: encoder.h,v 1.28 2004-03-22 22:36:23 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -46,18 +30,10 @@
 #include "xvid.h"
 #include "portab.h"
 #include "global.h"
-#include "utils/ratecontrol.h"
 
 /*****************************************************************************
  * Constants
  ****************************************************************************/
-
-/* Quatization type */
-#define H263_QUANT	0
-#define MPEG4_QUANT	1
-
-/* Indicates no quantizer changes in INTRA_Q/INTER_Q modes */
-#define NO_CHANGE 64
 
 /*****************************************************************************
  * Types
@@ -65,21 +41,13 @@
 
 typedef int bool;
 
-typedef enum
-{
-	I_VOP = 0,
-	P_VOP = 1,
-	B_VOP = 2,
-	S_VOP = 3
-}
-VOP_TYPE;
-
 /*****************************************************************************
  * Structures
  ****************************************************************************/
 
 typedef struct
 {
+    /* --- constants --- */
 	uint32_t width;
 	uint32_t height;
 
@@ -88,36 +56,49 @@ typedef struct
 	uint32_t mb_width;
 	uint32_t mb_height;
 
+    int plugin_flags;
+
 	/* frame rate increment & base */
-	uint32_t fincr;
+	int32_t fincr;
 	uint32_t fbase;
 
-	/* constants */
-	int global;
+    int profile;
+
+	int global_flags;
 	int bquant_ratio;
 	int bquant_offset;
 	int frame_drop_ratio;
 
+    int min_quant[3];
+    int max_quant[3];
+
+	int par;
+	int par_width;
+	int par_height;
+
+#ifdef _SMP
+	int num_threads;
+#endif
+
+
 	int iMaxKeyInterval;
 	int max_bframes;
 
+/* --- inbetween vop stuff --- */
 	/* rounding type; alternate 0-1 after each interframe */
 	/* 1 <= fixed_code <= 4
 	   automatically adjusted using motion vector statistics inside
 	 */
 
 	/* vars that not "quite" frame independant */
-	uint32_t m_quant_type;
 	uint32_t m_rounding_type;
 	uint32_t m_fcode;
-	uint32_t m_quarterpel;
-	int m_reduced_resolution;	/* reduced_resolution_enable */
-
-	HINTINFO *hint;
+    int vol_flags;
 
 	int64_t m_stamp;
-}
-MBParam;
+
+	uint16_t *mpeg_quant_matrices;
+} MBParam;
 
 
 typedef struct
@@ -129,19 +110,30 @@ typedef struct
 	int mblks;
 	int ublks;
 	int gblks;
-}
-Statistics;
+} Statistics;
+
+
+/* encoding queue */
+typedef struct
+{
+	xvid_enc_frame_t frame;
+	unsigned char quant_intra_matrix[64];
+	unsigned char quant_inter_matrix[64];
+	IMAGE image;
+} QUEUEINFO;
 
 
 typedef struct
 {
-	uint32_t quant;
-	uint32_t motion_flags;
-	uint32_t global_flags;
+    int frame_num;
+    int fincr;
+	int vol_flags;
+    int vop_flags;
+	int motion_flags;
 
-	VOP_TYPE coding_type;
+	int coding_type;
+	uint32_t quant;
 	uint32_t rounding_type;
-	uint32_t quarterpel;
 	uint32_t fcode;
 	uint32_t bcode;
 
@@ -153,12 +145,15 @@ typedef struct
 
 	MACROBLOCK *mbs;
 
-	WARPPOINTS warp;		// as in bitstream
-	GMC_DATA gmc_data;		// common data for all MBs
-		
+	WARPPOINTS warp;		/* as in bitstream */
+	GMC_DATA gmc_data;		/* common data for all MBs */
+	NEW_GMC_DATA new_gmc_data;		/* common data for all MBs */
+
+    int length;         /* the encoded size of this frame */
+
 	Statistics sStat;
-}
-FRAMEINFO;
+	int is_edged, is_interpolated;
+} FRAMEINFO;
 
 
 typedef struct
@@ -168,12 +163,25 @@ typedef struct
 	int iFrameNum;
 	int bitrate;
 
-	// images
+    /* zones */
+    unsigned int num_zones;
+    xvid_enc_zone_t * zones;
+
+    /* plugins */
+    int num_plugins;    /* note: we store plugin flags in MBPARAM */
+    xvid_enc_plugin_t * plugins;
+
+    /* dquant */
+
+    int * temp_dquants;
+
+	/* images */
 
 	FRAMEINFO *current;
 	FRAMEINFO *reference;
 
-	IMAGE sOriginal;
+	IMAGE sOriginal;    /* original image copy for i/p frames */
+    IMAGE sOriginal2;   /* original image copy for b-frames */
 	IMAGE vInterH;
 	IMAGE vInterV;
 	IMAGE vInterVf;
@@ -186,7 +194,7 @@ typedef struct
 	int queue_head;
 	int queue_tail;
 	int queue_size;
-	IMAGE *queue;
+	QUEUEINFO *queue;
 
 	/* bframe buffer */
 	int bframenum_head;
@@ -197,15 +205,15 @@ typedef struct
 	IMAGE f_refh;
 	IMAGE f_refv;
 	IMAGE f_refhv;
-	int bframenum_dx50bvop;
+
+    /* closed_gop fixup temporary storage */
+	int closed_bframenum; /* == -1 if there is no fixup intended */
+    QUEUEINFO closed_qframe;	/* qFrame, only valid when >= 0 */
 
 	int m_framenum; /* debug frame num counter; unlike iFrameNum, does not reset at ivop */
 
-	RateControl rate_control;
-
 	float fMvPrevSigma;
-}
-Encoder;
+} Encoder;
 
 /*****************************************************************************
  * Inline functions
@@ -246,14 +254,10 @@ get_fcode(uint16_t sr)
 
 void init_encoder(uint32_t cpu_flags);
 
-int encoder_create(XVID_ENC_PARAM * pParam);
-int encoder_destroy(Encoder * pEnc);
-int encoder_encode(Encoder * pEnc,
-				   XVID_ENC_FRAME * pFrame,
-				   XVID_ENC_STATS * pResult);
-
-int encoder_encode_bframes(Encoder * pEnc,
-				   XVID_ENC_FRAME * pFrame,
-				   XVID_ENC_STATS * pResult);
+int enc_create(xvid_enc_create_t * create);
+int enc_destroy(Encoder * pEnc);
+int enc_encode(Encoder * pEnc,
+				   xvid_enc_frame_t * pFrame,
+				   xvid_enc_stats_t * stats);
 
 #endif

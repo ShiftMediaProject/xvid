@@ -1,11 +1,9 @@
 ;/*****************************************************************************
 ; *
 ; *  XVID MPEG-4 VIDEO CODEC
-; *   Reduced-Resolution utilities
+; *  - Reduced-Resolution utilities -
 ; *
 ; *  Copyright(C) 2002 Pascal Massimino <skal@planet-d.net>
-; *
-; *  This file is part of XviD, a free MPEG-4 video encoder/decoder
 ; *
 ; *  XviD is free software; you can redistribute it and/or modify it
 ; *  under the terms of the GNU General Public License as published by
@@ -21,44 +19,15 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; *  Under section 8 of the GNU General Public License, the copyright
-; *  holders of XVID explicitly forbid distribution in the following
-; *  countries:
-; *
-; *    - Japan
-; *    - United States of America
-; *
-; *  Linking XviD statically or dynamically with other modules is making a
-; *  combined work based on XviD.  Thus, the terms and conditions of the
-; *  GNU General Public License cover the whole combination.
-; *
-; *  As a special exception, the copyright holders of XviD give you
-; *  permission to link XviD with independent modules that communicate with
-; *  XviD solely through the VFW1.1 and DShow interfaces, regardless of the
-; *  license terms of these independent modules, and to copy and distribute
-; *  the resulting combined work under terms of your choice, provided that
-; *  every copy of the combined work is accompanied by a complete copy of
-; *  the source code of XviD (the version of XviD used to produce the
-; *  combined work), being distributed under the terms of the GNU General
-; *  Public License plus this exception.  An independent module is a module
-; *  which is not derived from or based on XviD.
-; *
-; *  Note that people who make modified versions of XviD are not obligated
-; *  to grant this special exception for their modified versions; it is
-; *  their choice whether to do so.  The GNU General Public License gives
-; *  permission to release a modified version without this exception; this
-; *  exception also makes it possible to release a modified version which
-; *  carries forward this exception.
-; *
-; * $Id: reduced_mmx.asm,v 1.2 2003-02-15 15:22:18 edgomez Exp $
+; * $Id: reduced_mmx.asm,v 1.3 2004-03-22 22:36:24 edgomez Exp $
 ; *
 ; *************************************************************************/
 
-bits 32
+BITS 32
 
-%macro cglobal 1 
+%macro cglobal 1
 	%ifdef PREFIX
-		global _%1 
+		global _%1
 		%define %1 _%1
 	%else
 		global %1
@@ -67,7 +36,11 @@ bits 32
 
 ;===========================================================================
 
-section .data
+%ifdef FORMAT_COFF
+SECTION .rodata data
+%else
+SECTION .rodata data align=16
+%endif
 
 align 16
 Up31 dw  3, 1, 3, 1
@@ -85,7 +58,7 @@ Mask_ff dw 0xff,0xff,0xff,0xff
 
 ;===========================================================================
 
-section .text
+SECTION .text
 
 cglobal xvid_Copy_Upsampled_8x8_16To8_mmx
 cglobal xvid_Add_Upsampled_8x8_16To8_mmx
@@ -158,18 +131,18 @@ cglobal xvid_Filter_Diff_18x18_To_8x8_mmx
 
 ;===========================================================================
 ;
-; void xvid_Copy_Upsampled_8x8_16To8_mmx(uint8_t *Dst, 
+; void xvid_Copy_Upsampled_8x8_16To8_mmx(uint8_t *Dst,
 ;                                        const int16_t *Src, const int BpS);
 ;
 ;===========================================================================
 
-  ; Note: we can use ">>2" instead of "/4" here, since we 
+  ; Note: we can use ">>2" instead of "/4" here, since we
   ; are (supposed to be) averaging positive values
 
 %macro STORE_1 2
   psraw %1, 2
   psraw %2, 2
-  packuswb %1,%2   
+  packuswb %1,%2
   movq [ecx], %1
 %endmacro
 
@@ -292,13 +265,13 @@ xvid_Copy_Upsampled_8x8_16To8_mmx:  ; 344c
 
 ;===========================================================================
 ;
-; void xvid_Add_Upsampled_8x8_16To8_mmx(uint8_t *Dst, 
+; void xvid_Add_Upsampled_8x8_16To8_mmx(uint8_t *Dst,
 ;                                       const int16_t *Src, const int BpS);
 ;
 ;===========================================================================
 
     ; Note: grrr... the 'pcmpgtw' stuff are the "/4" and "/16" operators
-    ; implemented with ">>2" and ">>4" using: 
+    ; implemented with ">>2" and ">>4" using:
     ;       x/4  = ( (x-(x<0))>>2 ) + (x<0)
     ;       x/16 = ( (x-(x<0))>>4 ) + (x<0)
 
@@ -391,7 +364,7 @@ xvid_Add_Upsampled_8x8_16To8_mmx:  ; 579c
   mov eax, [esp+12] ; BpS
 
   COL03 mm0, mm1, 0
-  MUL_PACK mm0,mm1, [Up13], [Up31]  
+  MUL_PACK mm0,mm1, [Up13], [Up31]
   movq mm4, mm0
   movq mm5, mm1
   STORE_ADD_1 mm4, mm5
@@ -439,9 +412,9 @@ xvid_Add_Upsampled_8x8_16To8_mmx:  ; 579c
   add ecx, 8
 
   COL47 mm0, mm1, 0
-  MUL_PACK mm0,mm1, [Up13], [Up31]  
+  MUL_PACK mm0,mm1, [Up13], [Up31]
   movq mm4, mm0
-  movq mm5, mm1  
+  movq mm5, mm1
   STORE_ADD_1 mm4, mm5
   add ecx, eax
 
@@ -486,7 +459,7 @@ xvid_Add_Upsampled_8x8_16To8_mmx:  ; 579c
 
 ;===========================================================================
 ;
-; void xvid_Copy_Upsampled_8x8_16To8_xmm(uint8_t *Dst, 
+; void xvid_Copy_Upsampled_8x8_16To8_xmm(uint8_t *Dst,
 ;                                        const int16_t *Src, const int BpS);
 ;
 ;===========================================================================
@@ -617,7 +590,7 @@ xvid_Copy_Upsampled_8x8_16To8_xmm:  ; 315c
 
 ;===========================================================================
 ;
-; void xvid_Add_Upsampled_8x8_16To8_xmm(uint8_t *Dst, 
+; void xvid_Add_Upsampled_8x8_16To8_xmm(uint8_t *Dst,
 ;                                       const int16_t *Src, const int BpS);
 ;
 ;===========================================================================
@@ -630,7 +603,7 @@ xvid_Add_Upsampled_8x8_16To8_xmm:  ; 549c
   mov eax, [esp+12] ; BpS
 
   COL03_SSE mm0, mm1, 0
-  MUL_PACK mm0,mm1, [Up13], [Up31]  
+  MUL_PACK mm0,mm1, [Up13], [Up31]
   movq mm4, mm0
   movq mm5, mm1
   STORE_ADD_1 mm4, mm5
@@ -678,9 +651,9 @@ xvid_Add_Upsampled_8x8_16To8_xmm:  ; 549c
   add ecx, 8
 
   COL47_SSE mm0, mm1, 0
-  MUL_PACK mm0,mm1, [Up13], [Up31]  
+  MUL_PACK mm0,mm1, [Up13], [Up31]
   movq mm4, mm0
-  movq mm5, mm1  
+  movq mm5, mm1
   STORE_ADD_1 mm4, mm5
   add ecx, eax
 
@@ -755,9 +728,9 @@ xvid_HFilter_31_mmx:
   neg eax
 
 .Loop:  ;12c
-  movd mm0, [esi+eax*4]  
+  movd mm0, [esi+eax*4]
   movd mm1, [edi+eax*4]
-  movq mm2, mm5  
+  movq mm2, mm5
   punpcklbw mm0, mm7
   punpcklbw mm1, mm7
   paddsw mm2, mm0
@@ -875,7 +848,7 @@ xvid_HFilter_31_x86:
 
 %macro VFILTER_1331 4  ; %1-4: regs  %1-%2: trashed
   paddsw %1, [Cst32]
-  paddsw %2, %3    
+  paddsw %2, %3
   pmullw %2, mm7
   paddsw %1,%4
   paddsw %1, %2

@@ -4,6 +4,7 @@
  *  - Console based decoding test application  -
  *
  *  Copyright(C) 2002-2003 Christoph Lampert
+ *               2002-2003 Edouard Gomez <ed.gomez@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +20,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.9 2003-03-03 11:18:53 chl Exp $
+ * $Id: xvid_decraw.c,v 1.10 2004-03-22 22:36:23 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -29,26 +30,11 @@
  *		                    
  *  An MPEG-4 bitstream is read from an input file (or stdin) and decoded,
  *  the speed for this is measured.
- *		                   
+ *
  *  The program is plain C and needs no libraries except for libxvidcore, 
- *  and maths-lib, so with UN*X you simply compile by
- *
- *   gcc xvid_decraw.c -lxvidcore -lm -o xvid_decraw
- *
- *  You have to specify the image dimensions (until the add the feature 
- *  to read this from the bitstream)
- *
- * Usage : xvid_decraw <-w width> <-h height> [OPTIONS]
- * Options :
- *  -asm           : use assembly optimizations (default=disabled)
- *  -w integer     : frame width ([1.2048])
- *  -h integer     : frame height ([1.2048])
- *  -i string      : input filename (default=stdin)
- *  -t integer     : input data type (raw=0, mp4u=1)
- *  -d boolean     : save decoder output (0 False*, !=0 True)
- *  -m boolean     : save mpeg4 raw stream to single files (0 False*, !=0 True)
- *  -help          : This help message
- * (* means default)
+ *  and maths-lib.
+ *		                   
+ *  Use ./xvid_decraw -help for a list of options
  * 
  ****************************************************************************/
 
@@ -81,7 +67,7 @@ static char *ARG_INPUTFILE = NULL;
 static char filepath[256] = "./";
 static void *dec_handle = NULL;
 
-# define BUFFER_SIZE 10*XDIM*YDIM
+#define BUFFER_SIZE (2*1024*1024)
 
 /*****************************************************************************
  *               Local prototypes
@@ -89,15 +75,26 @@ static void *dec_handle = NULL;
 
 static double msecond();
 static int write_pgm(char *filename,
-		     unsigned char *image);
+					 unsigned char *image);
 static int dec_init(int use_assembler);
 static int dec_main(unsigned char *istream,
 					unsigned char *ostream,
 					int istream_size,
-					int *ostream_size,
-					int *isframe);
+					xvid_dec_stats_t *xvid_dec_stats);
 static int dec_stop();
 static void usage();
+
+
+const char * type2str(int type)
+{
+    if (type==XVID_TYPE_IVOP)
+        return "I";
+    if (type==XVID_TYPE_PVOP)
+        return "P";
+    if (type==XVID_TYPE_BVOP)
+        return "B";
+    return "S";
+}
 
 /*****************************************************************************
  *        Main program
@@ -108,9 +105,8 @@ int main(int argc, char *argv[])
 	unsigned char *mp4_buffer = NULL;
 	unsigned char *mp4_ptr    = NULL;
 	unsigned char *out_buffer = NULL;
-	int bigendian = 0;
-	int still_left_in_buffer;
-	int delayed_frames;
+	int useful_bytes;
+	xvid_dec_stats_t xvid_dec_stats;
 	
 	double totaldectime;
   
@@ -136,46 +132,25 @@ int main(int argc, char *argv[])
  
 		if (strcmp("-asm", argv[i]) == 0 ) {
 			use_assembler = 1;
-		}
-		else if (strcmp("-w", argv[i]) == 0 && i < argc - 1 ) {
-			i++;
-			XDIM = atoi(argv[i]);
-		}
-		else if (strcmp("-h", argv[i]) == 0 && i < argc - 1 ) {
-			i++;
-			YDIM = atoi(argv[i]);
-		}
-		else if (strcmp("-d", argv[i]) == 0 && i < argc - 1 ) {
-			i++;
-			ARG_SAVEDECOUTPUT = atoi(argv[i]);
-		}
-		else if (strcmp("-i", argv[i]) == 0 && i < argc - 1 ) {
+		} else if (strcmp("-d", argv[i]) == 0) {
+			ARG_SAVEDECOUTPUT = 1;
+		} else if (strcmp("-i", argv[i]) == 0 && i < argc - 1 ) {
 			i++;
 			ARG_INPUTFILE = argv[i];
-		}
-		else if (strcmp("-m", argv[i]) == 0 && i < argc - 1 ) {
-			i++;
-			ARG_SAVEMPEGSTREAM = atoi(argv[i]);
-		}
-		else if (strcmp("-help", argv[i])) {
+		} else if (strcmp("-m", argv[i]) == 0) {
+			ARG_SAVEMPEGSTREAM = 1;
+		} else if (strcmp("-help", argv[i]) == 0) {
 			usage();
 			return(0);
-		}
-		else {
+		} else {
 			usage();
 			exit(-1);
 		}
-
 	}
   
 /*****************************************************************************
  * Values checking
  ****************************************************************************/
-
-	if(XDIM <= 0 || XDIM > 2048 || YDIM <= 0 || YDIM > 2048) {
-		usage();
-		return -1;
-	}
 
 	if ( ARG_INPUTFILE == NULL || strcmp(ARG_INPUTFILE, "stdin") == 0) {
 		in_file = stdin;
@@ -185,7 +160,7 @@ int main(int argc, char *argv[])
 		in_file = fopen(ARG_INPUTFILE, "rb");
 		if (in_file == NULL) {
 			fprintf(stderr, "Error opening input file %s\n", ARG_INPUTFILE);
-			return -1;
+			return(-1);
 		}
 	}
 
@@ -199,12 +174,6 @@ int main(int argc, char *argv[])
 	if (!mp4_buffer)
 		goto free_all_memory;	
     
-	/* Memory for frame output */
-	out_buffer = (unsigned char *) malloc(XDIM*YDIM*4);
-	if (!out_buffer)
-		goto free_all_memory;	
-
-
 /*****************************************************************************
  *        XviD PART  Start
  ****************************************************************************/
@@ -212,7 +181,7 @@ int main(int argc, char *argv[])
 	status = dec_init(use_assembler);
 	if (status) {
 		fprintf(stderr,
-			"Decore INIT problem, return value %d\n", status);
+				"Decore INIT problem, return value %d\n", status);
 		goto release_all;
 	}
 
@@ -222,89 +191,97 @@ int main(int argc, char *argv[])
  ****************************************************************************/
 
 	/* Fill the buffer */
-	still_left_in_buffer = fread(mp4_buffer, 1, BUFFER_SIZE, in_file);
+	useful_bytes = fread(mp4_buffer, 1, BUFFER_SIZE, in_file);
 
 	totaldectime = 0;
 	totalsize = 0;
 	filenr = 0;
-	delayed_frames = 0;
 	mp4_ptr = mp4_buffer;
 
 	do {
-
-		int mp4_size = (mp4_buffer + BUFFER_SIZE - mp4_ptr);
 		int used_bytes = 0;
 		double dectime;
-		int notification;
 
 		/*
 		 * If the buffer is half empty or there are no more bytes in it
 		 * then fill it.
 		 */
-		if (mp4_ptr > mp4_buffer + BUFFER_SIZE/2 ||
-			still_left_in_buffer <= 0) {
-			int rest = (mp4_buffer + BUFFER_SIZE - mp4_ptr);
+		if (mp4_ptr > mp4_buffer + BUFFER_SIZE/2) {
+			int already_in_buffer = (mp4_buffer + BUFFER_SIZE - mp4_ptr);
 
 			/* Move data if needed */
-			if (rest)
-				memcpy(mp4_buffer, mp4_ptr, rest);
+			if (already_in_buffer > 0)
+				memcpy(mp4_buffer, mp4_ptr, already_in_buffer);
 
 			/* Update mp4_ptr */
 			mp4_ptr = mp4_buffer; 
 
 			/* read new data */
-			if(feof(in_file))
+            if(feof(in_file))
 				break;
 
-			still_left_in_buffer = rest + fread(mp4_buffer + rest,
-										 1,
-										 BUFFER_SIZE - rest,
-										 in_file);
+			useful_bytes += fread(mp4_buffer + already_in_buffer,
+								  1, BUFFER_SIZE - already_in_buffer,
+								  in_file);
 
 		}
 
 
-		/* This loop flushes N_VOPS (with vop_coded bit set to 0) */
+		/* This loop is needed to handle VOL/NVOP reading */
 		do {
 
 			/* Decode frame */
 			dectime = msecond();
-			status = dec_main(mp4_ptr, out_buffer, mp4_size, &used_bytes, &notification);
+			used_bytes = dec_main(mp4_ptr, out_buffer, useful_bytes, &xvid_dec_stats);
 			dectime = msecond() - dectime;
 
-			if (status) {
-				break;
+			/* Resize image buffer if needed */
+			if(xvid_dec_stats.type == XVID_TYPE_VOL) {
+
+				/* Check if old buffer is smaller */
+				if(XDIM*YDIM < xvid_dec_stats.data.vol.width*xvid_dec_stats.data.vol.height) {
+
+					/* Copy new witdh and new height from the vol structure */
+					XDIM = xvid_dec_stats.data.vol.width;
+					YDIM = xvid_dec_stats.data.vol.height;
+
+					/* Free old output buffer*/
+					if(out_buffer) free(out_buffer);
+
+					/* Allocate the new buffer */
+					out_buffer = (unsigned char*)malloc(XDIM*YDIM*4);
+					if(out_buffer == NULL)
+						goto free_all_memory;
+
+					fprintf(stderr, "Resized frame buffer to %dx%d\n", XDIM, YDIM);
+				}
 			}
 
 			/* Update buffer pointers */
-			mp4_ptr += used_bytes;
-			still_left_in_buffer -= used_bytes;
+			if(used_bytes > 0) {
+				mp4_ptr += used_bytes;
+				useful_bytes -= used_bytes;
 
-			/* Total size */
-			totalsize += used_bytes;
+				/* Total size */
+				totalsize += used_bytes;
+			}
 
-		}while(used_bytes <= 7 && still_left_in_buffer > 0); /* <= 7 bytes is a NVOPS */
+		}while(xvid_dec_stats.type <= 0 && useful_bytes > 0);
 
-		/* Negative buffer would mean we went too far */
-		if(still_left_in_buffer < 0) break;
+		/* Check if there is a negative number of useful bytes left in buffer
+		 * This means we went too far */
+        if(useful_bytes < 0)
+            break;
 		
-		/* Skip when decoder is buffering images or decoding VOL information */
-		if(notification != XVID_DEC_VOP) {
-			/* It's a delay only if it notifies NOTHING */
-			if(notification == XVID_DEC_NOTHING)
-				delayed_frames++;
-			continue;
-		}
-
-		/* Updated data - Count only usefull decode time */
+    	/* Updated data - Count only usefull decode time */
 		totaldectime += dectime;
 
-		/* Prints some decoding stats */
-		printf("Frame %5d: dectime(ms) =%6.1f, length(bytes) =%7d\n", 
-			   filenr, dectime, used_bytes);
+			
+        printf("Frame %5d: type = %s, dectime(ms) =%6.1f, length(bytes) =%7d\n",
+			   filenr, type2str(xvid_dec_stats.type), dectime, used_bytes);
 			
 		/* Save individual mpeg4 stream if required */
-		if (ARG_SAVEMPEGSTREAM) {
+		if(ARG_SAVEMPEGSTREAM) {
 			FILE *filehandle = NULL;
 
 			sprintf(filename, "%sframe%05d.m4v", filepath, filenr);
@@ -315,7 +292,7 @@ int main(int argc, char *argv[])
 						filename);
 			}
 			else {
-				fwrite(mp4_buffer, 1, used_bytes, filehandle);
+				fwrite(mp4_ptr-used_bytes, 1, used_bytes, filehandle);
 				fclose(filehandle);
 			}
 		}
@@ -337,32 +314,34 @@ int main(int argc, char *argv[])
 /*****************************************************************************
  *     Flush decoder buffers
  ****************************************************************************/
-	while(delayed_frames--) {
+
+	do {
 
 		/* Fake vars */
-		int used_bytes, isframe;
+		int used_bytes;
 		double dectime;
 
-		/* Decode frame */
-		dectime = msecond();
-		status = dec_main(NULL, out_buffer, -1, &used_bytes, &isframe);
-		dectime = msecond() - dectime;
+        do {
+		    dectime = msecond();
+		    used_bytes = dec_main(NULL, out_buffer, -1, &xvid_dec_stats);
+		    dectime = msecond() - dectime;
+        }while(used_bytes>=0 && xvid_dec_stats.type <= 0);
 
-		if (status) {
-			break;
-		}
+        if (used_bytes < 0) {   /* XVID_ERR_END */
+            break;
+        }
 
 		/* Updated data - Count only usefull decode time */
 		totaldectime += dectime;
 
 		/* Prints some decoding stats */
-		printf("Frame %5d: dectime(ms) =%6.1f, length(bytes) =%7d\n", 
-			   filenr, dectime, used_bytes);
+        printf("Frame %5d: type = %s, dectime(ms) =%6.1f, length(bytes) =%7d\n",
+			   filenr, type2str(xvid_dec_stats.type), dectime, used_bytes);
 			
 		/* Save output frame if required */
 		if (ARG_SAVEDECOUTPUT) {
 			sprintf(filename, "%sdec%05d.pgm", filepath, filenr);
-			if(write_pgm(filename,out_buffer)) {
+			if(write_pgm(filename, out_buffer)) {
 				fprintf(stderr,
 						"Error writing decoded PGM frame %s\n",
 						filename);
@@ -371,7 +350,7 @@ int main(int argc, char *argv[])
 
 		filenr++;
 
-	}
+	}while(1);
 	
 /*****************************************************************************
  *     Calculate totals and averages for output, print results
@@ -381,7 +360,7 @@ int main(int argc, char *argv[])
 	totaldectime /= filenr;
 	
 	printf("Avg: dectime(ms) =%7.2f, fps =%7.2f, length(bytes) =%7d\n",
-		totaldectime, 1000/totaldectime, (int)totalsize);
+		   totaldectime, 1000/totaldectime, (int)totalsize);
 		
 /*****************************************************************************
  *      XviD PART  Stop
@@ -398,7 +377,7 @@ int main(int argc, char *argv[])
 	free(out_buffer);
 	free(mp4_buffer);
 
-	return 0;
+	return(0);
 }
 
 /*****************************************************************************
@@ -408,15 +387,12 @@ int main(int argc, char *argv[])
 static void usage()
 {
 
-	fprintf(stderr, "Usage : xvid_decraw <-w width> <-h height> [OPTIONS]\n");
+	fprintf(stderr, "Usage : xvid_decraw [OPTIONS]\n");
 	fprintf(stderr, "Options :\n");
 	fprintf(stderr, " -asm           : use assembly optimizations (default=disabled)\n");
-	fprintf(stderr, " -w integer     : frame width ([1.2048])\n");
-	fprintf(stderr, " -h integer     : frame height ([1.2048])\n");
 	fprintf(stderr, " -i string      : input filename (default=stdin)\n");
-	fprintf(stderr, " -t integer     : input data type (raw=0, mp4u=1)\n");
-	fprintf(stderr, " -d boolean     : save decoder output (0 False*, !=0 True)\n");
-	fprintf(stderr, " -m boolean     : save mpeg4 raw stream to individual files (0 False*, !=0 True)\n");
+	fprintf(stderr, " -d             : save decoder output\n");
+	fprintf(stderr, " -m             : save mpeg4 raw stream to individual files\n");
 	fprintf(stderr, " -help          : This help message\n");
 	fprintf(stderr, " (* means default)\n");
 
@@ -433,11 +409,11 @@ msecond()
 #ifndef WIN32
 	struct timeval  tv;
 	gettimeofday(&tv, 0);
-	return (double)tv.tv_sec*1.0e3 + (double)tv.tv_usec*1.0e-3;
+	return((double)tv.tv_sec*1.0e3 + (double)tv.tv_usec*1.0e-3);
 #else
 	clock_t clk;
 	clk = clock();
-	return clk * 1000 / CLOCKS_PER_SEC;
+	return(clk * 1000 / CLOCKS_PER_SEC);
 #endif
 }
 
@@ -447,7 +423,7 @@ msecond()
 
 static int
 write_pgm(char *filename,
-	  unsigned char *image)
+		  unsigned char *image)
 {
 	int loop;
 
@@ -482,10 +458,10 @@ write_pgm(char *filename,
 		/* Close file */
 		fclose(filehandle);
 
-		return 0;
+		return(0);
 	}
 	else
-		return 1;
+		return(1);
 }
 
 /*****************************************************************************
@@ -496,29 +472,49 @@ write_pgm(char *filename,
 static int
 dec_init(int use_assembler)
 {
-        int xerr;
+	int ret;
 
-        XVID_INIT_PARAM xinit;
-        XVID_DEC_PARAM xparam;
+	xvid_gbl_init_t   xvid_gbl_init;
+	xvid_dec_create_t xvid_dec_create;
 
-		if(use_assembler)
+	/*------------------------------------------------------------------------
+	 * XviD core initialization
+	 *----------------------------------------------------------------------*/
+
+	/* Version */
+	xvid_gbl_init.version = XVID_VERSION;
+
+	/* Assembly setting */
+	if(use_assembler)
 #ifdef ARCH_IS_IA64
-			xinit.cpu_flags = XVID_CPU_FORCE | XVID_CPU_IA64;
+		xvid_gbl_init.cpu_flags = XVID_CPU_FORCE | XVID_CPU_IA64;
 #else
-			xinit.cpu_flags = 0;
+	xvid_gbl_init.cpu_flags = 0;
 #endif
-		else
-			xinit.cpu_flags = XVID_CPU_FORCE;
+	else
+		xvid_gbl_init.cpu_flags = XVID_CPU_FORCE;
 
-        xvid_init(NULL, 0, &xinit, NULL);
-        xparam.width = XDIM;
-        xparam.height = YDIM;
+	xvid_global(NULL, 0, &xvid_gbl_init, NULL);
 
-        xerr = xvid_decore(NULL, XVID_DEC_CREATE, &xparam, NULL);
+	/*------------------------------------------------------------------------
+	 * XviD encoder initialization
+	 *----------------------------------------------------------------------*/
 
-        dec_handle = xparam.handle;
+	/* Version */
+	xvid_dec_create.version = XVID_VERSION;
 
-        return xerr;
+	/*
+	 * Image dimensions -- set to 0, xvidcore will resize when ever it is
+	 * needed
+	 */
+	xvid_dec_create.width = 0;
+	xvid_dec_create.height = 0;
+
+	ret = xvid_decore(NULL, XVID_DEC_CREATE, &xvid_dec_create, NULL);
+
+	dec_handle = xvid_dec_create.handle;
+
+	return(ret);
 }
 
 /* decode one frame  */
@@ -526,37 +522,41 @@ static int
 dec_main(unsigned char *istream,
 		 unsigned char *ostream,
 		 int istream_size,
-		 int *ostream_size,
-		 int *notification)
+		 xvid_dec_stats_t *xvid_dec_stats)
 {
 
-        int xerr;
-        XVID_DEC_FRAME xframe;
-		XVID_DEC_STATS xstats;
+	int ret;
 
-        xframe.general    = 0;
-		xframe.bitstream  = istream;
-        xframe.length     = istream_size;
-		xframe.image      = ostream;
-        xframe.stride     = XDIM;
-		xframe.colorspace = XVID_CSP_I420;             
+	xvid_dec_frame_t xvid_dec_frame;
 
-		xerr = xvid_decore(dec_handle, XVID_DEC_DECODE, &xframe, &xstats);
+	/* Set version */
+	xvid_dec_frame.version = XVID_VERSION;
+	xvid_dec_stats->version = XVID_VERSION;
 
-		*ostream_size = xframe.length;
+	/* No general flags to set */
+	xvid_dec_frame.general          = 0;
 
-		*notification = xstats.notify;
+	/* Input stream */
+	xvid_dec_frame.bitstream        = istream;
+	xvid_dec_frame.length           = istream_size;
 
-        return xerr;
+	/* Output frame structure */
+	xvid_dec_frame.output.plane[0]  = ostream;
+	xvid_dec_frame.output.stride[0] = XDIM;
+	xvid_dec_frame.output.csp       = XVID_CSP_I420;
+
+	ret = xvid_decore(dec_handle, XVID_DEC_DECODE, &xvid_dec_frame, xvid_dec_stats);
+
+	return(ret);
 }
 
 /* close decoder to release resources */
 static int
 dec_stop()
 {
-        int xerr;
+	int ret;
 
-        xerr = xvid_decore(dec_handle, XVID_DEC_DESTROY, NULL, NULL);
+	ret = xvid_decore(dec_handle, XVID_DEC_DESTROY, NULL, NULL);
 
-        return xerr;
+	return(ret);
 }

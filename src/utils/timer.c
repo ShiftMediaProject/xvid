@@ -1,44 +1,27 @@
- /******************************************************************************
-  *                                                                            *
-  *  This file is part of XviD, a free MPEG-4 video encoder/decoder            *
-  *                                                                            *
-  *  XviD is free software; you can redistribute it and/or modify it           *
-  *  under the terms of the GNU General Public License as published by         *
-  *  the Free Software Foundation; either version 2 of the License, or         *
-  *  (at your option) any later version.                                       *
-  *                                                                            *
-  *  XviD is distributed in the hope that it will be useful, but               *
-  *  WITHOUT ANY WARRANTY; without even the implied warranty of                *
-  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             *
-  *  GNU General Public License for more details.                              *
-  *                                                                            *
-  *  You should have received a copy of the GNU General Public License         *
-  *  along with this program; if not, write to the Free Software               *
-  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA  *
-  *                                                                            *
-  ******************************************************************************/
-
- /******************************************************************************
-  *                                                                            *
-  *  timer.c, some timing functions                                            *
-  *                                                                            *
-  *  Copyright (C) 2001 - Michael Militzer <isibaar@xvid.org>                  *
-  *                                                                            *
-  *  For more information visit the XviD homepage: http://www.xvid.org         *
-  *                                                                            *
-  ******************************************************************************/
-
- /******************************************************************************
-  *                                                                            *
-  *  Revision history:                                                         *
-  *       
-  *  26.03.2002 interlacing timer added
-  *  21.12.2001 edges error fixed
-  *  17.11.2001 small clean up (Isibaar)                                       *
-  *  13.11.2001	inlined rdtsc call and moved to portab.h (Isibaar)             *
-  *  02.11.2001 initial version (Isibaar)                                      *
-  *                                                                            *
-  ******************************************************************************/
+/*****************************************************************************
+ *
+ *  XVID MPEG-4 VIDEO CODEC
+ *  - Timer functions (used for internal debugging)  -
+ *
+ *  Copyright(C) 2002 Michael Militzer <isibaar@xvid.org>
+ *
+ *  This program is free software ; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation ; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY ; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program ; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ *
+ * $Id: timer.c,v 1.9 2004-03-22 22:36:24 edgomez Exp $
+ *
+ ****************************************************************************/
 
 #include <stdio.h>
 #include <time.h>
@@ -70,7 +53,7 @@ struct ts tim;
 
 double frequency = 0.0;
 
-/* 
+/*
     determine cpu frequency
 	not very precise but sufficient
 */
@@ -94,7 +77,7 @@ get_freq()
 	return (double) (y - x) / 1000.;
 }
 
-// set everything to zero //
+/* set everything to zero */
 void
 init_timer()
 {

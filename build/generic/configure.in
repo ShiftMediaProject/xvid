@@ -6,11 +6,11 @@ dnl Copyright(C) 2003 Edouard Gomez <ed.gomez@free.fr>
 dnl
 dnl ==========================================================================
 
-AC_INIT([XviD], [1.0.0 cvs-snapshot], [xvid-devel@xvid.org])
+AC_INIT([XviD], [1.0.0 rc3], [xvid-devel@xvid.org])
 AC_CONFIG_SRCDIR(configure.in)
 
 dnl Do not forget to increase that when needed.
-API_MAJOR="3"
+API_MAJOR="4"
 API_MINOR="0"
 
 dnl NASM version requirement
@@ -20,28 +20,17 @@ nasm_prog="nasm"
 dnl Default CFLAGS -- Big impact on overall speed
 our_cflags_defaults="-Wall"
 our_cflags_defaults="$our_cflags_defaults -O2"
-our_cflags_defaults="$our_cflags_defaults -fomit-frame-pointer"
+our_cflags_defaults="$our_cflags_defaults -fstrength-reduce"
+our_cflags_defaults="$our_cflags_defaults -finline-functions"
+our_cflags_defaults="$our_cflags_defaults -freduce-all-givs"
 our_cflags_defaults="$our_cflags_defaults -ffast-math"
-our_cflags_defaults="$our_cflags_defaults -funroll-loops"
-our_cflags_defaults="$our_cflags_defaults -fschedule-insns"
-our_cflags_defaults="$our_cflags_defaults -fschedule-insns2"
+our_cflags_defaults="$our_cflags_defaults -fomit-frame-pointer"
 
 dnl ==========================================================================
 dnl Features - configure options
 dnl ==========================================================================
 
 FEATURES=""
-DIVX4COMPAT_SOURCES=""
-DIVX4_ENCORE=""
-DIVX4_DECORE=""
-
-dnl BIGLUT aka old VLC code
-AC_ARG_ENABLE(oldvlc,
-		AC_HELP_STRING([--enable-oldvlc],
-				 [Enable old VLC code (Needs much more memory ~10MB)]),
-		[if test "$enable_oldvlc" = "yes" ; then
-		    FEATURES="$FEATURES -DBIGLUT"
-		 fi])
 
 dnl Internal Debug
 AC_ARG_ENABLE(idebug,
@@ -57,6 +46,15 @@ AC_ARG_ENABLE(iprofile,
 				 [Enable internal profiling]),
 		 [if test "$enable_iprofile" = "yes" ; then
 		     FEATURES="$FEATURES -D_PROFILING_"
+		  fi])
+
+dnl GNU Profiling options
+AC_ARG_ENABLE(gnuprofile,
+		AC_HELP_STRING([--enable-gnuprofile],
+				 [Enable profiling informations for gprof]),
+		 [if test "$enable_gnuprofile" = "yes" ; then
+		     GNU_PROF_CFLAGS="-pg -fprofile-arcs -ftest-coverage"
+		     GNU_PROF_LDFLAGS="-pg"
 		  fi])
 
 dnl Assembly code
@@ -80,18 +78,8 @@ AC_ARG_ENABLE(macosx_module,
 		     macosx_module="yes"
 		  else 
 		     macosx_module="no"
-		  fi])
-
-dnl Internal Debug
-AC_ARG_ENABLE(divx4compat,
-		AC_HELP_STRING([--enable-divx4compat],
-				 [Enable DivX4 compatibility API]),
-		 [if test "$enable_divx4compat" = "yes" ; then
-		     DIVX4COMPAT_SOURCES="SRC_DIVX4COMPAT"
-		     DIVX4_ENCORE="encore;"
-		     DIVX4_DECORE="decore;"
-		  fi])
-
+		  fi],
+		  [macosx_module="no"])
 
 dnl ==========================================================================
 dnl Default install prefix and checks build type
@@ -235,7 +223,7 @@ case "$target_os" in
 	SHARED_EXTENSION="so"
 	OBJECT_EXTENSION="o"
 	;;
-     [[cC]][[yY]][[gG]][[wW]][[iI]][[nN]]|mingw32|mks)
+     [[cC]][[yY]][[gG]][[wW]][[iI]][[nN]]*|mingw32*|mks*)
 	AC_MSG_RESULT([.dll .a .obj])
 	STATIC_EXTENSION="a"
 	SHARED_EXTENSION="dll"
@@ -260,21 +248,29 @@ case "$target_os" in
 	;;
 esac
 
+dnl ==========================================================================
+dnl
+dnl Determines best options for CC and LD
+dnl  - STATIC_LIB, SHARED_LIB, SPECIFIC_CFLAGS, SPECIFIC_LDLAGS
+dnl
+dnl ==========================================================================
+
 AC_MSG_CHECKING(for platform specific LDFLAGS/CFLAGS)
 SPECIFIC_LDFLAGS=""
 SPECIFIC_CFLAGS=""
+PRE_SHARED_LIB=""
 case "$target_os" in
      *bsd*|linux*|irix*|solaris*)
-	AC_MSG_RESULT([-Wl,-soname,libxvidcore.so -shared -lc -lm])
+	AC_MSG_RESULT([ok])
 	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
 	SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR).\$(API_MINOR)"
 	SPECIFIC_LDFLAGS="-Wl,-soname,libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR) -shared -lc -lm"
 	SPECIFIC_CFLAGS="-fPIC"
 	;;
-     [[cC]][[yY]][[gG]][[wW]][[iI]][[nN]]|mingw32|mks)
-	AC_MSG_RESULT([-shared -Wl,--dll,--out-implib,\$@.a])
-	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
-	SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION)"
+     [[cC]][[yY]][[gG]][[wW]][[iI]][[nN]]*|mingw32*|mks*)
+	AC_MSG_RESULT([ok])
+	STATIC_LIB="xvidcore.\$(STATIC_EXTENSION)"
+	SHARED_LIB="xvidcore.\$(SHARED_EXTENSION)"
 	SPECIFIC_LDFLAGS="-mno-cygwin -shared -Wl,--dll,--out-implib,\$@.a libxvidcore.def"
 	SPECIFIC_CFLAGS="-mno-cygwin"
 	;;
@@ -284,22 +280,23 @@ case "$target_os" in
 	if test x"$macosx_module" = x"no"; then
 	   AC_MSG_RESULT([dylib options])
 	   SHARED_LIB="libxvidcore.\$(API_MAJOR).\$(SHARED_EXTENSION)"
-	   SPECIFIC_LDFLAGS="-dynamiclib -flat_namespace -compatibility_version \$(API_MAJOR) -current_version \$(API_MINOR) -install_name \$(libdir)/\$(SHARED_LIB)"
+	   SPECIFIC_LDFLAGS="-dynamiclib -flat_namespace -compatibility_version \$(API_MAJOR) -current_version \$(API_MAJOR).\$(API_MINOR) -install_name \$(libdir)/\$(SHARED_LIB)"
 	else 
-	   AC_MSG_RESULT(["module options])
-	   SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION)-temp.o"
-	   SPECIFIC_LDFLAGS="-r -keep_private_externs -nostdlib && \$(CC) \$(LDFLAGS) \$(SHARED_LIB) -o libxvidcore.\$(SHARED_EXTENSION) -bundle -flat_namespace -undefined suppress"
+	   AC_MSG_RESULT([module options])
+ 	   PRE_SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION)-temp.o"
+	   SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR)"
+	   SPECIFIC_LDFLAGS="-r -keep_private_externs -nostdlib && \$(CC) \$(LDFLAGS) \$(PRE_SHARED_LIB) -o libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR) -bundle -flat_namespace -undefined suppress"
 	fi
 	;;
      beos)
+	AC_MSG_RESULT([ok])
 	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
 	SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION)"
-	AC_MSG_RESULT([-nostart])
 	SPECIFIC_LDFLAGS="-nostart"
 	SPECIFIC_CFLAGS="-fPIC"
 	;;
      *)
-        AC_MSG_RESULT([Unknown OS - -shared -lc -lm])
+        AC_MSG_RESULT([Unknown Platform (Using default -shared -lc -lm)])
 	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
 	SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION)"
 	SPECIFIC_LDFLAGS=""
@@ -307,9 +304,14 @@ case "$target_os" in
 	;;
 esac
 
+if test x"$PRE_SHARED_LIB" = x; then 
+  PRE_SHARED_LIB=$SHARED_LIB
+fi
+
 dnl ==========================================================================
 dnl
-dnl Assembler stuff - AS, AFLAGS, ASSEMBLY_EXTENSION, SOURCES
+dnl Assembler stuff
+dnl  - AS, AFLAGS, ASSEMBLY_EXTENSION, SOURCES
 dnl
 dnl ==========================================================================
 
@@ -336,7 +338,11 @@ if test "$ARCHITECTURE" = "IA32" ; then
       dnl
       AC_MSG_CHECKING([for nasm patch version])
       nasm_patch=`nasm -r | cut -d '.' -f 3 | cut -d ' ' -f 1`
+      if test -z $nasm_patch ; then
+        nasm_patch=-1
+      fi
       AC_MSG_RESULT([$nasm_patch])
+
 
       if test "$nasm_patch" -lt "$minimum_nasm_patch_version" ; then
         AC_MSG_WARN([nasm patch version too old - Compiling generic sources only])
@@ -353,7 +359,7 @@ if test "$ARCHITECTURE" = "IA32" ; then
                   NASM_FORMAT="elf"
 		  PREFIX=""
                   ;;
-              [[cC]][[yY]][[gG]][[wW]][[iI]][[nN]]|mingw32|mks)
+              [[cC]][[yY]][[gG]][[wW]][[iI]][[nN]]*|mingw32*|mks*)
                   AC_MSG_RESULT([win32])
                   NASM_FORMAT="win32"
 		  PREFIX="-DPREFIX"
@@ -361,7 +367,7 @@ if test "$ARCHITECTURE" = "IA32" ; then
           esac
 
           AS=nasm
-          AFLAGS="-I\$(<D) -f $NASM_FORMAT $PREFIX"
+          AFLAGS="-I\$(<D)/ -f $NASM_FORMAT $PREFIX"
           ASSEMBLY_EXTENSION="asm"
           ASSEMBLY_SOURCES="SRC_IA32"
        fi
@@ -409,7 +415,7 @@ if test "$ARCHITECTURE" = "IA64" ; then
 
    case `basename $CC` in
 	*ecc*)
-		DCT_IA64_SOURCES="idct_ia64_ecc.s"
+		DCT_IA64_SOURCES="SRC_IA64_IDCT_ECC"
 
 		dnl If the compiler is ecc, then i don't know its options
 		dnl fallback to "no options"
@@ -418,7 +424,7 @@ if test "$ARCHITECTURE" = "IA64" ; then
 		fi
 		;;
 	*)
-		DCT_IA64_SOURCES="idct_ia64_gcc.s"
+		DCT_IA64_SOURCES="SRC_IA64_IDCT_GCC"
 		;;
    esac
 
@@ -447,6 +453,21 @@ fi
 
 dnl ==========================================================================
 dnl
+dnl Profiling stuff goes here
+dnl  - adds options to SPECIFIC_CFLAGS, SPECIFIC_LDLAGS
+dnl  - removes incompatible options from CFLAGS
+dnl
+dnl ==========================================================================
+
+SPECIFIC_LDFLAGS="$SPECIFIC_LDFLAGS $GNU_PROF_LDFLAGS"
+SPECIFIC_CFLAGS="$SPECIFIC_CFLAGS $GNU_PROF_CFLAGS"
+
+if test "$enable_gnuprofile" = "yes" ; then
+   CFLAGS=`echo $CFLAGS | sed s/'-fomit-frame-pointer'/''/`
+fi
+
+dnl ==========================================================================
+dnl
 dnl Substitions
 dnl
 dnl ==========================================================================
@@ -468,14 +489,12 @@ AC_SUBST(CC)
 AC_SUBST(CFLAGS)
 AC_SUBST(SPECIFIC_LDFLAGS)
 AC_SUBST(SPECIFIC_CFLAGS)
-AC_SUBST(DIVX4COMPAT_SOURCES)
 AC_SUBST(DCT_IA64_SOURCES)
-AC_SUBST(DIVX4_ENCORE)
-AC_SUBST(DIVX4_DECORE)
 AC_SUBST(RANLIB)
 AC_SUBST(API_MAJOR)
 AC_SUBST(API_MINOR)
 AC_SUBST(STATIC_LIB)
+AC_SUBST(PRE_SHARED_LIB)
 AC_SUBST(SHARED_LIB)
 
 dnl ==========================================================================
@@ -485,6 +504,5 @@ dnl
 dnl ==========================================================================
 
 AC_CONFIG_FILES(platform.inc)
-AC_CONFIG_FILES(libxvidcore.def)
 
 AC_OUTPUT

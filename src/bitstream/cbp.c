@@ -1,3 +1,29 @@
+/*****************************************************************************
+ *
+ *  XVID MPEG-4 VIDEO CODEC
+ *  - CBP related function  -
+ *
+ *  Copyright(C) 2002-2003 Edouard Gomez <ed.gomez@free.fr>
+ *               2003      Christoph Lampert <gruel@web.de>
+ *
+ *  This program is free software ; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation ; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY ; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program ; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ *
+ * $Id: cbp.c,v 1.13 2004-03-22 22:36:23 edgomez Exp $
+ *
+ ****************************************************************************/
+
 #include "../portab.h"
 #include "cbp.h"
 
@@ -34,14 +60,14 @@ calc_cbp_c(const int16_t codes[6 * 64])
 	uint32_t cbp = 0;
 
 /* uses fixed relation: 4*codes = 1*codes64 */
-/* if prototype is changed (e.g. from int16_t to something like int32) this routine 
+/* if prototype is changed (e.g. from int16_t to something like int32) this routine
    has to be changed! */
 
 	do  {
 		uint64_t *codes64 = (uint64_t*)codes;	/* the compiler doesn't really make this */
 		uint32_t *codes32 = (uint32_t*)codes;	/* variables, just "addressing modes" */
 
-		cbp += cbp; 
+		cbp += cbp;
         if (codes[1] || codes32[1]) {
 			cbp++;
 		}
@@ -68,7 +94,7 @@ calc_cbp_c(const int16_t codes[6 * 64])
 
 
 /* older code maybe better on some plattforms? */
-#if (0==1)
+#if 0
 	for (i = 5; i >= 0; i--) {
 		if (codes[1] | codes[2] | codes[3])
                         cbp |= 1 << i;

@@ -1,10 +1,5 @@
-----------------------------------------------------------------------
-			XviD Core coding style
-
-	      Inspired by the Linux Kernel Coding Style
-
-----------------------------------------------------------------------
-$Id: CodingStyle,v 1.2 2002-06-12 21:23:49 edgomez Exp $
+CodingStyle
+===========
 
 
 This is a short document describing the preferred coding style for the
@@ -55,11 +50,11 @@ in the next line :
         int function(int x)
         {
             body of function
-	}
+        }
 
         struct foo_t
         {
-            body of the strcuture
+            body of the structure
         }
                
 Note that the closing brace is empty on a line of its own, _except_ in
@@ -77,10 +72,9 @@ and
             ..
         } else if (x > y) {
             ...
-        }
-        else {
+        } else {
             ....
-	}
+        }
 
 
 			  Chapter 3: Naming
@@ -269,7 +263,9 @@ case) always be 32bit long (or bigger)
 
 The  code  _must_ be  portable.  Don't  use  specific functions  to  a
 compiler/OS/libC.  Don't  use  specific  compiler pragmas,  or  syntax
-extensions. 
+extensions. The code _must_ be ANSI C  compliant  to ease  portability
+on exotic platforms with only ANSI C compilers, much  more  widespread
+than ISO C99 compilers.
 
 Btw, if you  have to use those deprecated/not  portable features, then
 use the src/portab.h to write a wrapper for each targeted system. 
@@ -277,7 +273,10 @@ use the src/portab.h to write a wrapper for each targeted system.
 For the moment, the supported platforms are :
   - Win32 family (x86) with VC++
   - Cygwin env (bypassing the cygwin.dll with -mno-cygwin flag)
-  - Mingw ???
+  - Mingw + Minsys
   - GNU/Linux (x86 and  ppc for optimized code, or  any other arch for
     the pure C version of the library)
   - *BSD (same archs as GNU/Linux)
+  - Solaris.
+
+Last edited: $Date: 2004-03-22 22:36:23 $

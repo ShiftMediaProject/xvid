@@ -12,7 +12,7 @@
 //*	at the Universitat Karlsruhe (TH) held between April and July 2002	*
 //* 	http://www.info.uni-karlsruhe.de/~rubino/ia64p/				*
 //*										*
-//*******************************************************************************
+//*******************************************************************************/
 	.file	"quant_h263_ia64.s"
 	.pred.safe_across_calls p1-p5,p16-p63
 		.section	.rodata
@@ -55,9 +55,9 @@ multipliers:
 	.global __divdi3#
 .text
 	.align 16
-	.global quant_intra_ia64#
-	.proc quant_intra_ia64#
-quant_intra_ia64:
+	.global quant_h263_intra_ia64#
+	.proc quant_h263_intra_ia64#
+quant_h263_intra_ia64:
 	.prologue 
 	.save ar.pfs, r38
 	alloc r38 = ar.pfs, 4, 3, 2, 0
@@ -175,13 +175,13 @@ quant_intra_ia64:
 	.restore sp
 	adds r12 = 32, r12
 	br.ret.sptk.many b0
-	.endp quant_intra_ia64#
-	.common	quant_intra#,8,8
-	.common	dequant_intra#,8,8
+	.endp quant_h263_intra_ia64#
+	.common	quant_h263_intra#,8,8
+	.common	dequant_h263_intra#,8,8
 	.align 16
-	.global dequant_intra_ia64#
-	.proc dequant_intra_ia64#
-dequant_intra_ia64:
+	.global dequant_h263_intra_ia64#
+	.proc dequant_h263_intra_ia64#
+dequant_h263_intra_ia64:
 	.prologue
 	ld2 r14 = [r33]
 	andcm r15 = 1, r34
@@ -275,19 +275,19 @@ dequant_intra_ia64:
 	;;
 	mov ar.lc = r2
 	br.ret.sptk.many b0
-	.endp dequant_intra_ia64#
+	.endp dequant_h263_intra_ia64#
 
 
 
-//uint32_t quant_inter_ia64(int16_t *coeff, const int16_t *data, const uint32_t quant)
+// uint32_t quant_h263_inter_ia64(int16_t *coeff, const int16_t *data, const uint32_t quant)
 
 
 
-	.common	quant_inter#,8,8
+	.common	quant_h263_inter#,8,8
 	.align 16
-	.global quant_inter_ia64#
-	.proc quant_inter_ia64#
-quant_inter_ia64:
+	.global quant_h263_inter_ia64#
+	.proc quant_h263_inter_ia64#
+quant_h263_inter_ia64:
 
 
 //*******************************************************
@@ -401,7 +401,7 @@ quant_inter_ia64:
 	mov pr = r10, -1
 	mov ar.pfs = r9
 	br.ret.sptk.many b0
-	.endp quant_inter_ia64#
+	.endp quant_h263_inter_ia64#
 
 
 
@@ -409,13 +409,13 @@ quant_inter_ia64:
 
 
 
-// void dequant_inter_ia64(int16_t *data, const int16_t *coeff, const uint32_t quant)
+// void dequant_h263_inter_ia64(int16_t *data, const int16_t *coeff, const uint32_t quant)
 
-	.common	dequant_inter#,8,8
+	.common	dequant_h263_inter#,8,8
 	.align 16
-	.global dequant_inter_ia64#
-	.proc dequant_inter_ia64#
-dequant_inter_ia64:
+	.global dequant_h263_inter_ia64#
+	.proc dequant_h263_inter_ia64#
+dequant_h263_inter_ia64:
 	
 //***********************************************************************
 //*									*
@@ -544,5 +544,5 @@ dequant_inter_ia64:
 	;;
 	mov ar.lc = r2
 	br.ret.sptk.many b0
-	.endp dequant_inter_ia64#
+	.endp dequant_h263_inter_ia64#
 	.ident	"GCC: (GNU) 2.96 20000731 (Red Hat Linux 7.1 2.96-85)"

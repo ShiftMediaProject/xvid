@@ -3,25 +3,23 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Bitstream reader/writer inlined functions and constants-
  *
- *  Copyright (C) 2001-2003 - Peter Ross <pross@xvid.org>
+ *  Copyright (C) 2001-2003 Peter Ross <pross@xvid.org>
  *
- *  This file is part of XviD, a free MPEG-4 video encoder/decoder
- *
- *  XviD is free software; you can redistribute it and/or modify it
- *  under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
+ *  This program is free software ; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation ; either version 2 of the License, or
  *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  but WITHOUT ANY WARRANTY ; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
+ *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.h,v 1.18 2003-04-04 22:16:15 edgomez Exp $
+ * $Id: bitstream.h,v 1.19 2004-03-22 22:36:23 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -60,8 +58,8 @@
 
 #define VIDOBJLAY_TYPE_SIMPLE			1
 /*#define VIDOBJLAY_TYPE_SIMPLE_SCALABLE    2 */
-#define VIDOBJLAY_TYPE_CORE				3
-#define VIDOBJLAY_TYPE_MAIN				4
+/*#define VIDOBJLAY_TYPE_CORE				3 */
+/*#define VIDOBJLAY_TYPE_MAIN				4 */
 /*#define VIDOBJLAY_TYPE_NBIT				5 */
 /*#define VIDOBJLAY_TYPE_ANIM_TEXT			6 */
 /*#define VIDOBJLAY_TYPE_ANIM_MESH			7 */
@@ -69,8 +67,13 @@
 /*#define VIDOBJLAY_TYPE_STILL_SCALABLE		9 */
 #define VIDOBJLAY_TYPE_ART_SIMPLE		10
 /*#define VIDOBJLAY_TYPE_CORE_SCALABLE		11 */
-#define VIDOBJLAY_TYPE_ACE				12
-/*#define VIDOBJLAY_TYPE_SIMPLE_FBA			13 */
+/*#define VIDOBJLAY_TYPE_ACE				12 */
+/*#define VIDOBJLAY_TYPE_ADVANCED_SCALABLE_TEXTURE 13 */
+/*#define VIDOBJLAY_TYPE_SIMPLE_FBA			14 */
+/*#define VIDEOJLAY_TYPE_SIMPLE_STUDIO    15*/
+/*#define VIDEOJLAY_TYPE_CORE_STUDIO      16*/
+#define VIDOBJLAY_TYPE_ASP              17
+/*#define VIDOBJLAY_TYPE_FGS              18*/
 
 
 /*#define VIDOBJLAY_AR_SQUARE           1 */
@@ -113,10 +116,10 @@
  * Prototypes
  ****************************************************************************/
 
-int read_video_packet_header(Bitstream *bs, 
-							 DECODER * dec, 
-							 const int addbits, 
-							 int *quant, 
+int read_video_packet_header(Bitstream *bs,
+							 DECODER * dec,
+							 const int addbits,
+							 int *quant,
 							 int *fcode_forward,
 							 int *fcode_backward,
 							 int *intra_dc_threshold);
@@ -140,10 +143,11 @@ void BitstreamWriteVolHeader(Bitstream * const bs,
 void BitstreamWriteVopHeader(Bitstream * const bs,
 							 const MBParam * pParam,
 							 const FRAMEINFO * const frame,
-							 int vop_coded);
+							 int vop_coded,
+							 unsigned int quant);
 
-void BitstreamWriteUserData(Bitstream * const bs, 
-							uint8_t * data, 
+void BitstreamWriteUserData(Bitstream * const bs,
+							uint8_t * data,
 							const int length);
 
 /* initialise bitstream structure */
@@ -251,7 +255,7 @@ BitstreamSkip(Bitstream * const bs,
 
 
 /* number of bits to next byte alignment */
-static __inline uint32_t 
+static __inline uint32_t
 BitstreamNumBitsToByteAlign(Bitstream *bs)
 {
 	uint32_t n = (32 - bs->pos) % 8;
@@ -438,7 +442,7 @@ BitstreamPad(Bitstream * const bs)
 
 
 /*
- * pad bitstream to the next byte boundary 
+ * pad bitstream to the next byte boundary
  * alway pad: even if currently at the byte boundary
  */
 

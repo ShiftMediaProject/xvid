@@ -1,43 +1,34 @@
-/**************************************************************************
+/*****************************************************************************
  *
- *	XVID MPEG-4 VIDEO CODEC
- *	colorspace conversions
+ *  XVID MPEG-4 VIDEO CODEC
+ *  - Colorspace conversion functions -
  *
- *	This program is free software; you can redistribute it and/or modify
- *	it under the terms of the GNU General Public License as published by
- *	the Free Software Foundation; either version 2 of the License, or
- *	(at your option) any later version.
+ *  Copyright(C) 2001-2003 Peter Ross <pross@xvid.org>
  *
- *	This program is distributed in the hope that it will be useful,
- *	but WITHOUT ANY WARRANTY; without even the implied warranty of
- *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *	GNU General Public License for more details.
+ *  This program is free software ; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation ; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *	You should have received a copy of the GNU General Public License
- *	along with this program; if not, write to the Free Software
- *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY ; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *************************************************************************/
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program ; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ *
+ * $Id: colorspace.c,v 1.9 2004-03-22 22:36:23 edgomez Exp $
+ *
+ ****************************************************************************/
 
-/**************************************************************************
- *
- *	History:
- *
- *	14.04.2002	added user_to_yuv_c()
- *	30.02.2002	out_yuv dst_stride2 fix
- *	26.02.2002	rgb555, rgb565
- *	24.11.2001	accuracy improvement to yuyv/vyuy conversion
- *	28.10.2001	total rewrite <pross@cs.rmit.edu.au>
- *
- **************************************************************************/
-
-#include <string.h>				// memcpy
+#include <string.h>				/* memcpy */
 
 #include "../global.h"
-#include "../divx4.h"			// DEC_PICTURE
 #include "colorspace.h"
 
-// function pointers
+/* function pointers */
 
 /* input */
 packedFuncPtr rgb555_to_yv12;
@@ -46,6 +37,7 @@ packedFuncPtr bgr_to_yv12;
 packedFuncPtr bgra_to_yv12;
 packedFuncPtr abgr_to_yv12;
 packedFuncPtr rgba_to_yv12;
+packedFuncPtr argb_to_yv12;
 packedFuncPtr yuv_to_yv12;
 packedFuncPtr yuyv_to_yv12;
 packedFuncPtr uyvy_to_yv12;
@@ -56,6 +48,7 @@ packedFuncPtr bgri_to_yv12;
 packedFuncPtr bgrai_to_yv12;
 packedFuncPtr abgri_to_yv12;
 packedFuncPtr rgbai_to_yv12;
+packedFuncPtr argbi_to_yv12;
 packedFuncPtr yuyvi_to_yv12;
 packedFuncPtr uyvyi_to_yv12;
 
@@ -66,6 +59,7 @@ packedFuncPtr yv12_to_bgr;
 packedFuncPtr yv12_to_bgra;
 packedFuncPtr yv12_to_abgr;
 packedFuncPtr yv12_to_rgba;
+packedFuncPtr yv12_to_argb;
 packedFuncPtr yv12_to_yuv;
 packedFuncPtr yv12_to_yuyv;
 packedFuncPtr yv12_to_uyvy;
@@ -76,6 +70,7 @@ packedFuncPtr yv12_to_bgri;
 packedFuncPtr yv12_to_bgrai;
 packedFuncPtr yv12_to_abgri;
 packedFuncPtr yv12_to_rgbai;
+packedFuncPtr yv12_to_argbi;
 packedFuncPtr yv12_to_yuyvi;
 packedFuncPtr yv12_to_uyvyi;
 
@@ -136,7 +131,7 @@ NAME(uint8_t * x_ptr, int x_stride,	\
 	Video Demystified" (ISBN 1-878707-09-4)
 
 	rgb<->yuv _is_ lossy, since most programs do the conversion differently
-		
+
 	SCALEBITS/FIX taken from  ffmpeg
 */
 
@@ -231,7 +226,7 @@ NAME(uint8_t * x_ptr, int x_stride,	\
 	b##UVID += b = x_ptr[(ROW)*x_stride+(SIZE)+(C3)];				\
 	y_ptr[(ROW)*y_stride+1] =									\
 		(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +	\
-					FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;	
+					FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;
 
 #define READ_RGB_UV(UV_ROW,UVID)	\
 	u_ptr[(UV_ROW)*uv_stride] =														\
@@ -297,6 +292,7 @@ MAKE_COLORSPACE(bgr_to_yv12_c,     3,2,2, RGB_TO_YV12,    2,1,0, 0)
 MAKE_COLORSPACE(bgra_to_yv12_c,    4,2,2, RGB_TO_YV12,    2,1,0, 0)
 MAKE_COLORSPACE(abgr_to_yv12_c,    4,2,2, RGB_TO_YV12,    3,2,1, 0)
 MAKE_COLORSPACE(rgba_to_yv12_c,    4,2,2, RGB_TO_YV12,    0,1,2, 0)
+MAKE_COLORSPACE(argb_to_yv12_c,    4,2,2, RGB_TO_YV12,    1,2,3, 0)
 MAKE_COLORSPACE(yuyv_to_yv12_c,    2,2,2, YUYV_TO_YV12,   0,1,2,3)
 MAKE_COLORSPACE(uyvy_to_yv12_c,    2,2,2, YUYV_TO_YV12,   1,0,3,2)
 
@@ -306,6 +302,7 @@ MAKE_COLORSPACE(bgri_to_yv12_c,    3,2,4, RGBI_TO_YV12,   2,1,0, 0)
 MAKE_COLORSPACE(bgrai_to_yv12_c,   4,2,4, RGBI_TO_YV12,   2,1,0, 0)
 MAKE_COLORSPACE(abgri_to_yv12_c,   4,2,4, RGBI_TO_YV12,   3,2,1, 0)
 MAKE_COLORSPACE(rgbai_to_yv12_c,   4,2,4, RGBI_TO_YV12,   0,1,2, 0)
+MAKE_COLORSPACE(argbi_to_yv12_c,   4,2,4, RGBI_TO_YV12,   1,2,3, 0)
 MAKE_COLORSPACE(yuyvi_to_yv12_c,   2,2,4, YUYVI_TO_YV12,  0,1,2,3)
 MAKE_COLORSPACE(uyvyi_to_yv12_c,   2,2,4, YUYVI_TO_YV12,  1,0,3,2)
 
@@ -381,7 +378,7 @@ MAKE_COLORSPACE(uyvyi_to_yv12_c,   2,2,4, YUYVI_TO_YV12,  1,0,3,2)
 	WRITE_RGB16(1, 1, C1)										\
     WRITE_RGB16(2, 0, C1)										\
 	WRITE_RGB16(3, 1, C1)										\
-	
+
 
 /* rgb/rgbi output */
 
@@ -433,7 +430,7 @@ MAKE_COLORSPACE(uyvyi_to_yv12_c,   2,2,4, YUYVI_TO_YV12,  1,0,3,2)
 #define YV12_TO_YUYV_ROW(SIZE,C1,C2,C3,C4) 	/* nothing */
 #define YV12_TO_YUYV(SIZE,C1,C2,C3,C4)	\
 	WRITE_YUYV(0, 0, C1,C2,C3,C4)		\
-	WRITE_YUYV(1, 0, C1,C2,C3,C4)	
+	WRITE_YUYV(1, 0, C1,C2,C3,C4)
 
 #define YV12_TO_YUYVI_ROW(SIZE,C1,C2,C3,C4) /* nothing */
 #define YV12_TO_YUYVI(SIZE,C1,C2,C3,C4)	\
@@ -449,6 +446,7 @@ MAKE_COLORSPACE(yv12_to_bgr_c,     3,2,2, YV12_TO_RGB,    2,1,0, 0)
 MAKE_COLORSPACE(yv12_to_bgra_c,    4,2,2, YV12_TO_RGB,	  2,1,0,3)
 MAKE_COLORSPACE(yv12_to_abgr_c,    4,2,2, YV12_TO_RGB,    3,2,1,0)
 MAKE_COLORSPACE(yv12_to_rgba_c,    4,2,2, YV12_TO_RGB,    0,1,2,3)
+MAKE_COLORSPACE(yv12_to_argb_c,    4,2,2, YV12_TO_RGB,    1,2,3,0)
 MAKE_COLORSPACE(yv12_to_yuyv_c,    2,2,2, YV12_TO_YUYV,   0,1,2,3)
 MAKE_COLORSPACE(yv12_to_uyvy_c,    2,2,2, YV12_TO_YUYV,   1,0,3,2)
 
@@ -458,6 +456,7 @@ MAKE_COLORSPACE(yv12_to_bgri_c,    3,2,4, YV12_TO_RGBI,   2,1,0, 0)
 MAKE_COLORSPACE(yv12_to_bgrai_c,   4,2,4, YV12_TO_RGBI,	  2,1,0,3)
 MAKE_COLORSPACE(yv12_to_abgri_c,   4,2,4, YV12_TO_RGBI,   3,2,1,0)
 MAKE_COLORSPACE(yv12_to_rgbai_c,   4,2,4, YV12_TO_RGBI,   0,1,2,3)
+MAKE_COLORSPACE(yv12_to_argbi_c,   4,2,4, YV12_TO_RGBI,   1,2,3,0)
 MAKE_COLORSPACE(yv12_to_yuyvi_c,   2,2,4, YV12_TO_YUYVI,  0,1,2,3)
 MAKE_COLORSPACE(yv12_to_uyvyi_c,   2,2,4, YV12_TO_YUYVI,  1,0,3,2)
 
@@ -466,9 +465,9 @@ MAKE_COLORSPACE(yv12_to_uyvyi_c,   2,2,4, YV12_TO_YUYVI,  1,0,3,2)
 /* yv12 to yv12 copy function */
 
 void
-yv12_to_yv12_c(uint8_t * y_dst, uint8_t * u_dst, uint8_t * v_dst, 
+yv12_to_yv12_c(uint8_t * y_dst, uint8_t * u_dst, uint8_t * v_dst,
 				int y_dst_stride, int uv_dst_stride,
-				uint8_t * y_src, uint8_t * u_src, uint8_t * v_src, 
+				uint8_t * y_src, uint8_t * u_src, uint8_t * v_src,
 				int y_src_stride, int uv_src_stride,
 				int width, int height, int vflip)
 {
