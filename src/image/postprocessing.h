@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: postprocessing.h,v 1.4 2004-04-02 21:29:21 edgomez Exp $
+ * $Id: postprocessing.h,v 1.5 2004-04-18 07:55:11 syskin Exp $
  *
  ****************************************************************************/
 
@@ -38,6 +38,8 @@
 #define MAX_SHIFT 1024
 #define MAX_RES (MAX_NOISE - MAX_SHIFT)
 
+#define DERING_STRENGTH		2
+
 typedef struct {
 	int8_t  xvid_thresh_tbl[511];
 	uint8_t xvid_abs_tbl[511];
@@ -52,8 +54,8 @@ image_postproc(XVID_POSTPROC *tbls, IMAGE * img, int edged_width,
 				const MACROBLOCK * mbs, int mb_width, int mb_height, int mb_stride,
 				int flags, int brightness, int frame_num, int bvop);
 
-void deblock8x8_h(XVID_POSTPROC *tbls, uint8_t *img, int stride, int quant);
-void deblock8x8_v(XVID_POSTPROC *tbls, uint8_t *img, int stride, int quant);
+void deblock8x8_h(XVID_POSTPROC *tbls, uint8_t *img, int stride, int quant, int dering);
+void deblock8x8_v(XVID_POSTPROC *tbls, uint8_t *img, int stride, int quant, int dering);
 
 void init_postproc(XVID_POSTPROC *tbls);
 void init_noise(XVID_POSTPROC *tbls);

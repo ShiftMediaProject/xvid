@@ -3,7 +3,8 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Postprocessing  functions -
  *
- *  Copyright(C) 2003 Michael Militzer <isibaar@xvid.org>
+ *  Copyright(C) 2003-2004 Michael Militzer <isibaar@xvid.org>
+ *                    2004 Marc Fauconneau
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: postprocessing.c,v 1.3 2004-04-01 11:11:28 suxen_drol Exp $
+ * $Id: postprocessing.c,v 1.4 2004-04-18 07:55:11 syskin Exp $
  *
  ****************************************************************************/
 
@@ -60,6 +61,7 @@ image_postproc(XVID_POSTPROC *tbls, IMAGE * img, int edged_width,
 	const int edged_width2 = edged_width /2;
 	int i,j;
 	int quant;
+	int dering = flags & XVID_DERINGY;
 
 	/* luma: j,i in block units */
 	if ((flags & XVID_DEBLOCKY))
@@ -68,14 +70,14 @@ image_postproc(XVID_POSTPROC *tbls, IMAGE * img, int edged_width,
 		for (i = 0; i < mb_width*2; i++)
 		{
 			quant = mbs[(j+0)/2*mb_stride + (i/2)].quant;
-			deblock8x8_h(tbls, img->y + j*8*edged_width + i*8, edged_width, quant);
+			deblock8x8_h(tbls, img->y + j*8*edged_width + i*8, edged_width, quant, dering);
 		}
 
 		for (j = 0; j < mb_height*2; j++)		/* vertical deblocking */
 		for (i = 1; i < mb_width*2; i++)
 		{
 			quant = mbs[(j+0)/2*mb_stride + (i/2)].quant;
-			deblock8x8_v(tbls, img->y + j*8*edged_width + i*8, edged_width, quant);
+			deblock8x8_v(tbls, img->y + j*8*edged_width + i*8, edged_width, quant, dering);
 		}
 	}
 
@@ -83,20 +85,22 @@ image_postproc(XVID_POSTPROC *tbls, IMAGE * img, int edged_width,
 	/* chroma */
 	if ((flags & XVID_DEBLOCKUV))
 	{
+		dering = flags & XVID_DERINGUV;
+
 		for (j = 1; j < mb_height; j++)		/* horizontal deblocking */
 		for (i = 0; i < mb_width; i++)
 		{
 			quant = mbs[(j+0)*mb_stride + i].quant;
-			deblock8x8_h(tbls, img->u + j*8*edged_width2 + i*8, edged_width2, quant);
-			deblock8x8_h(tbls, img->v + j*8*edged_width2 + i*8, edged_width2, quant);
+			deblock8x8_h(tbls, img->u + j*8*edged_width2 + i*8, edged_width2, quant, dering);
+			deblock8x8_h(tbls, img->v + j*8*edged_width2 + i*8, edged_width2, quant, dering);
 		}
 
 		for (j = 0; j < mb_height; j++)		/* vertical deblocking */	
 		for (i = 1; i < mb_width; i++)
 		{
 			quant = mbs[(j+0)*mb_stride + i].quant;
-			deblock8x8_v(tbls, img->u + j*8*edged_width2 + i*8, edged_width2, quant);
-			deblock8x8_v(tbls, img->v + j*8*edged_width2 + i*8, edged_width2, quant);
+			deblock8x8_v(tbls, img->u + j*8*edged_width2 + i*8, edged_width2, quant, dering);
+			deblock8x8_v(tbls, img->v + j*8*edged_width2 + i*8, edged_width2, quant, dering);
 		}
 	}
 
@@ -154,6 +158,15 @@ void init_deblock(XVID_POSTPROC *tbls)
 		s[8] = *(v[8] = img + x*stride + 3); \
 		s[9] = *(v[9] = img + x*stride + 4);
 
+#define APPLY_DERING(x) \
+		*v[x] = (e[x] == 0) ? (			\
+			(e[x-1] == 0) ? (			\
+			(e[x+1] == 0) ? 			\
+			((s[x-1]+s[x]*2+s[x+1])>>2)	\
+			: ((s[x-1]+s[x])>>1) )		\
+			: ((s[x]+s[x+1])>>1) )		\
+			: s[x];	
+
 #define APPLY_FILTER_CORE \
 		/* First, decide whether to use default or DC-offset mode */ \
 		\
@@ -188,6 +201,36 @@ void init_deblock(XVID_POSTPROC *tbls)
 				*v[4] -= diff;	\
 				*v[5] += diff;	\
 			}	\
+			if (dering) {	\
+				e[0] = (tbls->xvid_abs_tbl[(s[0] - s[1]) + 255] > quant + DERING_STRENGTH) ? 1 : 0;	\
+				e[1] = (tbls->xvid_abs_tbl[(s[1] - s[2]) + 255] > quant + DERING_STRENGTH) ? 1 : 0;	\
+				e[2] = (tbls->xvid_abs_tbl[(s[2] - s[3]) + 255] > quant + DERING_STRENGTH) ? 1 : 0;	\
+				e[3] = (tbls->xvid_abs_tbl[(s[3] - s[4]) + 255] > quant + DERING_STRENGTH) ? 1 : 0;	\
+				e[4] = (tbls->xvid_abs_tbl[(s[4] - s[5]) + 255] > quant + DERING_STRENGTH) ? 1 : 0;	\
+				e[5] = (tbls->xvid_abs_tbl[(s[5] - s[6]) + 255] > quant + DERING_STRENGTH) ? 1 : 0;	\
+				e[6] = (tbls->xvid_abs_tbl[(s[6] - s[7]) + 255] > quant + DERING_STRENGTH) ? 1 : 0;	\
+				e[7] = (tbls->xvid_abs_tbl[(s[7] - s[8]) + 255] > quant + DERING_STRENGTH) ? 1 : 0;	\
+				e[8] = (tbls->xvid_abs_tbl[(s[8] - s[9]) + 255] > quant + DERING_STRENGTH) ? 1 : 0;	\
+				\
+				e[1] |= e[0];	\
+				e[2] |= e[1];	\
+				e[3] |= e[2];	\
+				e[4] |= e[3];	\
+				e[5] |= e[4];	\
+				e[6] |= e[5];	\
+				e[7] |= e[6];	\
+				e[8] |= e[7];	\
+				e[9]  = e[8];	\
+				\
+				APPLY_DERING(1)	\
+				APPLY_DERING(2)	\
+				APPLY_DERING(3)	\
+				APPLY_DERING(4)	\
+				APPLY_DERING(5)	\
+				APPLY_DERING(6)	\
+				APPLY_DERING(7)	\
+				APPLY_DERING(8) \
+			}	\
 		}	\
 		else {	/* DC-offset mode */	\
 			uint8_t p0, p9;	\
@@ -214,11 +257,12 @@ void init_deblock(XVID_POSTPROC *tbls)
 			}	\
 		}	
 
-void deblock8x8_h(XVID_POSTPROC *tbls, uint8_t *img, int stride, int quant)
+void deblock8x8_h(XVID_POSTPROC *tbls, uint8_t *img, int stride, int quant, int dering)
 {
 	int eq_cnt;
 	uint8_t *v[10];
-	int32_t s[10];
+	int s[10];
+	int e[10];
 
 	LOAD_DATA_HOR(0)
 	APPLY_FILTER_CORE
@@ -246,11 +290,12 @@ void deblock8x8_h(XVID_POSTPROC *tbls, uint8_t *img, int stride, int quant)
 }
 
 
-void deblock8x8_v(XVID_POSTPROC *tbls, uint8_t *img, int stride, int quant)
+void deblock8x8_v(XVID_POSTPROC *tbls, uint8_t *img, int stride, int quant, int dering)
 {
 	int eq_cnt;
 	uint8_t *v[10];
 	int s[10];
+	int e[10];
 
 	LOAD_DATA_VER(0)
 	APPLY_FILTER_CORE

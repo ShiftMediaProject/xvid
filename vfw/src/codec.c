@@ -981,7 +981,8 @@ LRESULT decompress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpb
 	REG_GET_N("Brightness", pp_brightness, 0);
 	REG_GET_N("Deblock_Y",  pp_dy, 0)
 	REG_GET_N("Deblock_UV", pp_duv, 0)
-	REG_GET_N("Dering",  pp_dr, 0)
+	REG_GET_N("Dering_Y",  pp_dry, 0)
+	REG_GET_N("Dering_UV", pp_druv, 0)
 	REG_GET_N("FilmEffect", pp_fe, 0)
 
 	RegCloseKey(hKey);
@@ -1076,7 +1077,8 @@ LRESULT decompress(CODEC * codec, ICDECOMPRESS * icd)
 
 	if (pp_dy)frame.general |= XVID_DEBLOCKY;
 	if (pp_duv) frame.general |= XVID_DEBLOCKUV;
-/*	if (pp_dr) frame.general |= XVID_DERING; */
+	if (pp_dry) frame.general |= XVID_DERINGY; 
+	if (pp_druv) frame.general |= XVID_DERINGUV; 
 	if (pp_fe) frame.general |= XVID_FILMEFFECT;
 
 	frame.brightness = pp_brightness;

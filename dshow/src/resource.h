@@ -17,10 +17,12 @@
 #define IDC_RESET                       1007
 #define IDC_FILMEFFECT                  1008
 #define IDC_DERING                      1009
+#define IDC_DERINGY                     1009
 #define IDC_DIVX                        1010
 #define IDC_COMPAT                      1011
 #define IDC_MP4V                        1012
 #define IDC_DX50                        1013
+#define IDC_DERINGUV                    1014
 #define VERSION_RES_LANGUAGE            0x409
 #define VERSION_RES_CHARSET             1252
 #define IDC_STATIC                      -1

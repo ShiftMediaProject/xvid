@@ -176,7 +176,7 @@ BEGIN
                     SS_CENTERIMAGE
     LTEXT           "I-frames closer than... (frames):",IDC_STATIC,16,56,124,
                     11
-    GROUPBOX        "Overlflow treatment",IDC_STATIC,7,86,197,75
+    GROUPBOX        "Overflow treatment",IDC_STATIC,7,86,197,75
     GROUPBOX        "Curve compression",IDC_STATIC,7,156,197,51
 END
 
@@ -619,17 +619,19 @@ CAPTION "Decoder Options"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "Deblocking Y",IDC_DEC_DY,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,22,64,63,13
+                    WS_TABSTOP,15,64,63,13
     CONTROL         "Deblocking UV",IDC_DEC_DUV,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,22,81,79,13
-    CONTROL         "Deringing",IDC_DEC_DR,"Button",BS_AUTOCHECKBOX | 
-                    WS_DISABLED | WS_TABSTOP,116,64,60,13
+                    WS_TABSTOP,15,80,61,13
+    CONTROL         "Deringing Y",IDC_DEC_DRY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,88,64,60,13
     CONTROL         "Film Effect",IDC_DEC_FE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,116,81,60,13
+                    WS_TABSTOP,154,64,45,13
     GROUPBOX        "Brightness",IDC_STATIC,5,6,202,41
     CONTROL         "Slider1",IDC_DEC_BRIGHTNESS,"msctls_trackbar32",
                     TBS_AUTOTICKS | TBS_BOTH | WS_TABSTOP,18,18,181,24
     GROUPBOX        "Postprocessing",IDC_STATIC,5,52,202,46
+    CONTROL         "Deringing UV",IDC_DEC_DRUV,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,88,80,60,13
 END
 
 IDD_STATUS DIALOGEX 0, 0, 325, 220

@@ -104,11 +104,11 @@ BEGIN
     CONTROL         "Deblocking (Y)",IDC_DEBLOCK_Y,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,23,109,63,10
     CONTROL         "Deblocking (UV)",IDC_DEBLOCK_UV,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,128,109,68,10
-    CONTROL         "Dering",IDC_DERING,"Button",BS_AUTOCHECKBOX | NOT
-                    WS_VISIBLE | WS_DISABLED | WS_TABSTOP,23,123,37,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,23,123,68,10
+    CONTROL         "Dering (Y)",IDC_DERINGY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,98,109,47,10
     CONTROL         "Film Effect",IDC_FILMEFFECT,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,23,122,49,10
+                    WS_TABSTOP,158,109,47,10
     GROUPBOX        "Output",IDC_STATIC,7,141,202,43
     CONTROL         "Flip video",IDC_FLIPVIDEO,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,23,154,46,10
@@ -125,6 +125,8 @@ BEGIN
                     160,198,38,13
     PUSHBUTTON      "Reset",IDC_RESET,79,220,50,12
     LTEXT           "Output Colourspace",IDC_STATIC,136,151,67,9
+    CONTROL         "Dering (UV)",IDC_DERINGUV,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,98,123,53,10
 END
 
 
