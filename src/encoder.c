@@ -3,6 +3,8 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  -  Encoder main module  -
  *
+ *  Copyright(C) 2002 Michael Militzer
+ *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
  *  to use this software module in hardware or software products are
@@ -27,22 +29,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
  ****************************************************************************/
-
-/*****************************************************************************
- * 
- *  History
- *
- *  10.07.2002  added BFRAMES_DEC_DEBUG support
- *              MinChen <chenm001@163.com>
- *  20.06.2002 bframe patch
- *  08.05.2002 fix some problem in DEBUG mode;
- *             MinChen <chenm001@163.com>
- *  14.04.2002 added FrameCodeB()
- *
- *  $Id: encoder.c,v 1.76 2002-09-03 17:25:18 chl Exp $
- *
- ****************************************************************************/
-
 
 #include <stdlib.h>
 #include <stdio.h>
