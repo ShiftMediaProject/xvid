@@ -100,9 +100,10 @@ void create_vlc_tables(void)
 							level += max_level_ptr[run];
 						else
 							level -= max_level_ptr[run];
-							
+						DEBUG1("1) run:", run);
 						run -= max_run_ptr[abs(level)] + 1;
-							
+						DEBUG1("2) run:", run);
+						
 						if(abs(level) <= max_level_ptr[run] &&
 							run <= max_run_ptr[abs(level)]) {
 						
@@ -125,6 +126,8 @@ void create_vlc_tables(void)
 								run += max_run_ptr[abs(level)] + 1;
 							else
 								run++;
+
+							DEBUG1("3) run:", run);
 
 							vlc[intra]->code = (uint32_t) ((0x1e + last) << 20) |
 										(l << 14) | (1 << 13) | ((k & 0xfff) << 1) | 1;
@@ -265,14 +268,17 @@ static void CodeBlockIntra(const MBParam * pParam, const MACROBLOCK *pMB,
 {
 	uint32_t i, mcbpc, cbpy, bits;
 
-	mcbpc = pMB->cbp & 3;
 	cbpy = pMB->cbp >> 2;
 
     // write mcbpc
-	if(pParam->coding_type == I_VOP)
-		BitstreamPutBits(bs, mcbpc_I[mcbpc].code, mcbpc_I[mcbpc].len);
-    else
-		BitstreamPutBits(bs, mcbpc_P_intra[mcbpc].code, mcbpc_P_intra[mcbpc].len);
+	if(pParam->coding_type == I_VOP) {
+	    mcbpc = ((pMB->mode >> 1) & 3) | ((pMB->cbp & 3) << 2);
+		BitstreamPutBits(bs, mcbpc_intra_tab[mcbpc].code, mcbpc_intra_tab[mcbpc].len);
+	}
+	else {
+	    mcbpc = (pMB->mode & 7) | ((pMB->cbp & 3) << 3);
+		BitstreamPutBits(bs, mcbpc_inter_tab[mcbpc].code, mcbpc_inter_tab[mcbpc].len);
+	}
 
 	// ac prediction flag
 	if(pMB->acpred_directions[0])
@@ -316,14 +322,11 @@ static void CodeBlockInter(const MBParam * pParam, const MACROBLOCK *pMB,
 	int32_t i;
 	uint32_t bits, mcbpc, cbpy;
 
-	mcbpc = pMB->cbp & 3;
+    mcbpc = (pMB->mode & 7) | ((pMB->cbp & 3) << 3);
 	cbpy = 15 - (pMB->cbp >> 2);
 
 	// write mcbpc
-    if(pMB->mode == MODE_INTER4V)
-		BitstreamPutBits(bs, mcbpc_P_inter4v[mcbpc].code, mcbpc_P_inter4v[mcbpc].len);
-    else
-		BitstreamPutBits(bs, mcbpc_P_inter[mcbpc].code, mcbpc_P_inter[mcbpc].len);
+    BitstreamPutBits(bs, mcbpc_inter_tab[mcbpc].code, mcbpc_inter_tab[mcbpc].len);
 
 	// write cbpy
 	BitstreamPutBits(bs, cbpy_tab[cbpy].code, cbpy_tab[cbpy].len);
