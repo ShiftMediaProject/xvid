@@ -20,7 +20,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: interlacing_mmx.asm,v 1.1 2005-01-05 23:02:15 edgomez Exp $
+; * $Id: interlacing_mmx.asm,v 1.2 2005-03-18 18:01:34 edgomez Exp $
 ; *
 ; ***************************************************************************/
 
@@ -182,7 +182,7 @@ MBFieldTest_x86_64:
   paddw mm6, m14                ; add to frame total
 
   lea r9, [nexts wrt rip]	; pic code
-  mov rcx, [r9+rax*4]           ; move rsi/rdi 8 pixels to the right
+  mov ecx, [r9+rax*4]           ; move rsi/rdi 8 pixels to the right
   add rsi, rcx
   add rdi, rcx
 
