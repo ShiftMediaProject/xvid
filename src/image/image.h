@@ -35,8 +35,7 @@ void image_setedges(IMAGE * image,
 					uint32_t edged_width,
 					uint32_t edged_height,
 					uint32_t width,
-					uint32_t height,
-					uint32_t interlacing);
+					uint32_t height);
 void image_interpolate(const IMAGE * refn,
 					   IMAGE * refh,
 					   IMAGE * refv,

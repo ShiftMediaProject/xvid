@@ -28,7 +28,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.83 2002-09-12 18:53:35 edgomez Exp $
+ * $Id: encoder.c,v 1.84 2002-09-25 23:37:08 h Exp $
  *
  ****************************************************************************/
 
@@ -257,9 +257,7 @@ encoder_create(XVID_ENC_PARAM * pParam)
 	image_null(&pEnc->reference->image);
 	image_null(&pEnc->vInterH);
 	image_null(&pEnc->vInterV);
-	image_null(&pEnc->vInterVf);
 	image_null(&pEnc->vInterHV);
-	image_null(&pEnc->vInterHVf);
 
 #ifdef _DEBUG_PSNR
 	if (image_create
@@ -284,15 +282,7 @@ encoder_create(XVID_ENC_PARAM * pParam)
 		 pEnc->mbParam.edged_height) < 0)
 		goto xvid_err_memory3;
 	if (image_create
-		(&pEnc->vInterVf, pEnc->mbParam.edged_width,
-		 pEnc->mbParam.edged_height) < 0)
-		goto xvid_err_memory3;
-	if (image_create
 		(&pEnc->vInterHV, pEnc->mbParam.edged_width,
-		 pEnc->mbParam.edged_height) < 0)
-		goto xvid_err_memory3;
-	if (image_create
-		(&pEnc->vInterHVf, pEnc->mbParam.edged_width,
 		 pEnc->mbParam.edged_height) < 0)
 		goto xvid_err_memory3;
 
@@ -328,11 +318,7 @@ encoder_create(XVID_ENC_PARAM * pParam)
 				  pEnc->mbParam.edged_height);
 	image_destroy(&pEnc->vInterV, pEnc->mbParam.edged_width,
 				  pEnc->mbParam.edged_height);
-	image_destroy(&pEnc->vInterVf, pEnc->mbParam.edged_width,
-				  pEnc->mbParam.edged_height);
 	image_destroy(&pEnc->vInterHV, pEnc->mbParam.edged_width,
-				  pEnc->mbParam.edged_height);
-	image_destroy(&pEnc->vInterHVf, pEnc->mbParam.edged_width,
 				  pEnc->mbParam.edged_height);
 
   xvid_err_memory2:
@@ -375,11 +361,7 @@ encoder_destroy(Encoder * pEnc)
 				  pEnc->mbParam.edged_height);
 	image_destroy(&pEnc->vInterV, pEnc->mbParam.edged_width,
 				  pEnc->mbParam.edged_height);
-	image_destroy(&pEnc->vInterVf, pEnc->mbParam.edged_width,
-				  pEnc->mbParam.edged_height);
 	image_destroy(&pEnc->vInterHV, pEnc->mbParam.edged_width,
-				  pEnc->mbParam.edged_height);
-	image_destroy(&pEnc->vInterHVf, pEnc->mbParam.edged_width,
 				  pEnc->mbParam.edged_height);
 
 #ifdef _DEBUG_PSNR
@@ -898,8 +880,7 @@ FrameCodeP(Encoder * pEnc,
 
 	start_timer();
 	image_setedges(pRef, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height,
-				   pEnc->mbParam.width, pEnc->mbParam.height,
-				   pEnc->current->global_flags & XVID_INTERLACING);
+				   pEnc->mbParam.width, pEnc->mbParam.height);
 	stop_edges_timer();
 
 	pEnc->mbParam.m_rounding_type = 1 - pEnc->mbParam.m_rounding_type;
