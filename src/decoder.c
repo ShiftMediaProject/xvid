@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.54 2004-04-11 09:41:27 syskin Exp $
+ * $Id: decoder.c,v 1.55 2004-04-15 12:05:19 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -1360,17 +1360,19 @@ void decoder_output(DECODER * dec, IMAGE * img, MACROBLOCK * mbs,
 					xvid_dec_frame_t * frame, xvid_dec_stats_t * stats,
 					int coding_type, int quant)
 {
+	const int brightness = XVID_VERSION_MINOR(frame->version) >= 1 ? frame->brightness : 0;
+
 	if (dec->cartoon_mode)
 		frame->general &= ~XVID_FILMEFFECT;
 
-	if ((frame->general & (XVID_DEBLOCKY|XVID_DEBLOCKUV|XVID_FILMEFFECT) || frame->brightness!=0) 
+	if ((frame->general & (XVID_DEBLOCKY|XVID_DEBLOCKUV|XVID_FILMEFFECT) || brightness!=0) 
 		&& mbs != NULL)	/* post process */
 	{
 		/* note: image is stored to tmp */
 		image_copy(&dec->tmp, img, dec->edged_width, dec->height);
 		image_postproc(&dec->postproc, &dec->tmp, dec->edged_width, 
 					   mbs, dec->mb_width, dec->mb_height, dec->mb_width,
-					   frame->general, frame->brightness, dec->frames, (coding_type == B_VOP));
+					   frame->general, brightness, dec->frames, (coding_type == B_VOP));
 		img = &dec->tmp;
 	}
 
