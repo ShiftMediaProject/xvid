@@ -105,7 +105,9 @@ MBTransQuantIntra(const MBParam * pParam,
 
 	start_timer();
 	pMB->field_dct = 0;
-	if ((frame->global_flags & XVID_INTERLACING)) {
+	if ((frame->global_flags & XVID_INTERLACING) &&
+		(x_pos>0) && (x_pos<pParam->mb_width-1) &&
+		(y_pos>0) && (y_pos<pParam->mb_height-1)) {
 		pMB->field_dct = MBDecideFieldDCT(data);
 	}
 	stop_interlacing_timer();
@@ -183,7 +185,9 @@ MBTransQuantInter(const MBParam * pParam,
 
 	start_timer();
 	pMB->field_dct = 0;
-	if ((frame->global_flags & XVID_INTERLACING)) {
+	if ((frame->global_flags & XVID_INTERLACING) &&
+		(x_pos>0) && (x_pos<pParam->mb_width-1) &&
+		(y_pos>0) && (y_pos<pParam->mb_height-1)) {
 		pMB->field_dct = MBDecideFieldDCT(data);
 	}
 	stop_interlacing_timer();
