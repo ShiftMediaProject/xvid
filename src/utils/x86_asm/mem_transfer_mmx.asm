@@ -693,11 +693,6 @@ transfer8x8_copy_mmx
 		movq [edi], mm0
 		movq [edi+eax], mm1
 		
-		add esi, eax
-		add edi, eax
-		add esi, eax
-		add edi, eax
-
 		pop edi
 		pop esi
 
