@@ -518,11 +518,11 @@ MBCodingBVOP(const MACROBLOCK * mb,
 	int i;
 
 /*	------------------------------------------------------------------
-		when a block is skipped it is decoded DIRECT(0,)
-		hence are interpolated from forward & backward frames
+		when a block is skipped it is decoded DIRECT(0,0)
+		hence is interpolated from forward & backward frames
 	------------------------------------------------------------------ */
 
-	if (mb->mode == 5) {
+	if (mb->mode == MODE_DIRECT_NONE_MV) {
 		BitstreamPutBit(bs, 1);	// skipped
 		return;
 	}
@@ -556,7 +556,8 @@ MBCodingBVOP(const MACROBLOCK * mb,
 	}
 
 	if (mb->mode == MODE_DIRECT) {
-		// TODO: direct
+		CodeVector(bs, mb->mvs[0].x, 1, pStat);		/* fcode is always 1 for delta vector */
+		CodeVector(bs, mb->mvs[0].y, 1, pStat);		/* prediction is always (0,0) */
 	}
 
 	for (i = 0; i < 6; i++) {

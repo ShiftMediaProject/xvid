@@ -330,10 +330,10 @@ BitstreamReadHeaders(Bitstream * bs,
 
 			DPRINTF(DPRINTF_HEADER,"vop_time_increment_resolution %i", time_increment_resolution);
 
-			time_increment_resolution--;
+//			time_increment_resolution--;
 
 			if (time_increment_resolution > 0) {
-				dec->time_inc_bits = log2bin(time_increment_resolution);
+				dec->time_inc_bits = log2bin(time_increment_resolution-1);
 			} else {
 				// dec->time_inc_bits = 0;
 				// for "old" xvid compatibility, set time_inc_bits = 1
@@ -550,13 +550,15 @@ BitstreamReadHeaders(Bitstream * bs,
 				dec->time =
 					dec->time_base * time_increment_resolution +
 					time_increment;
-				dec->time_pp = (uint32_t) (dec->time - dec->last_non_b_time);
+				dec->time_pp = (uint32_t) 
+					(time_increment_resolution + dec->time - dec->last_non_b_time)%time_increment_resolution;
 				dec->last_non_b_time = dec->time;
 			} else {
 				dec->time =
 					(dec->last_time_base +
 					 time_incr) * time_increment_resolution + time_increment;
-				dec->time_bp = (uint32_t) (dec->last_non_b_time - dec->time);
+				dec->time_bp = (uint32_t) 
+					(time_increment_resolution + dec->last_non_b_time - dec->time)%time_increment_resolution;
 			}
 
 			READ_MARKER();

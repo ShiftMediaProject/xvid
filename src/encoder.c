@@ -39,7 +39,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.55 2002-07-12 12:26:23 suxen_drol Exp $
+ *  $Id: encoder.c,v 1.56 2002-07-18 23:52:40 chl Exp $
  *
  ****************************************************************************/
 
@@ -1844,7 +1844,7 @@ FrameCodeB(Encoder * pEnc,
 
 			if ((mb->mode == MODE_INTERPOLATE || mb->mode == MODE_DIRECT)
 				&& mb->cbp == 0 && mb->mvs[0].x == 0 && mb->mvs[0].y == 0) {
-				mb->mode = 5;	// skipped
+				mb->mode = MODE_DIRECT_NONE_MV;	// skipped
 			}
 
 			if (mb->mode == MODE_INTERPOLATE || mb->mode == MODE_FORWARD) {
