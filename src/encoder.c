@@ -37,7 +37,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.48 2002-06-24 09:53:17 suxen_drol Exp $
+ *  $Id: encoder.c,v 1.49 2002-06-25 09:41:53 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -742,7 +742,6 @@ ipvop_loop:
 				pEnc->bframenum_head, pEnc->bframenum_tail,
 				pEnc->queue_head, pEnc->queue_tail, pEnc->queue_size);
 
-
 			BitstreamWriteVopHeader(&bs, &pEnc->mbParam, pEnc->current, 0);
 			BitstreamPad(&bs);
 			BitstreamPutBits(&bs, 0x7f, 8);
@@ -812,7 +811,6 @@ bvop_loop:
 		DPRINTF("*** SKIP bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
 				pEnc->bframenum_head, pEnc->bframenum_tail,
 				pEnc->queue_head, pEnc->queue_tail, pEnc->queue_size);
-
 
 		pFrame->intra = 0;
 
@@ -916,7 +914,7 @@ bvop_loop:
 	 * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
 
-	if (pEnc->iFrameNum == 0 || pFrame->intra == 1 || pEnc->bframenum_dx50bvop != -1 ||
+	if (pEnc->iFrameNum == 0 || pFrame->intra == 1 || pEnc->bframenum_dx50bvop >= 0 ||
 		(pFrame->intra < 0 && pEnc->iMaxKeyInterval > 0 &&
 		 pEnc->iFrameNum >= pEnc->iMaxKeyInterval)
 		|| image_mad(&pEnc->reference->image, &pEnc->current->image,
@@ -950,14 +948,16 @@ bvop_loop:
 			pFrame->intra = 0;
 			
 		} else {
-			pEnc->bframenum_dx50bvop = -1;
+
 			FrameCodeI(pEnc, &bs, &bits);
 			pFrame->intra = 1;
+
+			pEnc->bframenum_dx50bvop = -1;
 		}
 
 		pEnc->flush_bframes = 1;
 
-		if ((pEnc->global & XVID_GLOBAL_PACKED)) {
+		if ((pEnc->global & XVID_GLOBAL_PACKED) && pEnc->bframenum_tail > 0) {
 			BitstreamPad(&bs);
 			input_valid = 0;
 			goto ipvop_loop;
@@ -1557,7 +1557,7 @@ FrameCodeP(Encoder * pEnc,
 	uint32_t x, y;
 	int iSearchRange;
 	int bIntra;
-
+	
 	/* IMAGE *pCurrent = &pEnc->current->image; */
 	IMAGE *pRef = &pEnc->reference->image;
 
