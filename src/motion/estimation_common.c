@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_common.c,v 1.9 2004-11-22 05:30:08 syskin Exp $
+ * $Id: estimation_common.c,v 1.10 2004-12-08 12:43:48 syskin Exp $
  *
  ****************************************************************************/
 
@@ -494,4 +494,13 @@ FullRefine_Fast(SearchData * data, CheckFunc * CheckCandidate, int direction)
 
 	CHECK_CANDIDATE((xo+xo2)>>1, (yo+yo2)>>1, direction);
 
+}
+
+/* it's the positive max, so "32" needs fcode of 2, not 1 */
+unsigned int
+getMinFcode(const int MVmax)
+{
+	unsigned int fcode;
+	for (fcode = 1; (16 << fcode) <= MVmax; fcode++);
+	return fcode;
 }

@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: motion_inlines.h,v 1.3 2004-12-05 04:53:01 syskin Exp $
+ * $Id: motion_inlines.h,v 1.4 2004-12-08 12:43:48 syskin Exp $
  *
  ****************************************************************************/
 
@@ -44,11 +44,11 @@ get_range(int32_t * const min_dx,
 		  uint32_t block_sz, /* block dimension, 3(8) or 4(16) */
 		  const uint32_t width,
 		  const uint32_t height,
-		  const uint32_t fcode,
+		  const int fcode,
 		  const int precision) /* 2 for qpel, 1 for halfpel */
 {
 	int k;
-	const int search_range = 16 << fcode;
+	const int search_range = 1 << (4+fcode);
 	int high = search_range - 1;
 	int low = -search_range;
 

@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbcoding.c,v 1.48 2004-08-22 13:16:12 edgomez Exp $
+ * $Id: mbcoding.c,v 1.49 2004-12-08 12:43:48 syskin Exp $
  *
  ****************************************************************************/
 
@@ -199,8 +199,7 @@ init_vlc_tables(void)
 static __inline void
 CodeVector(Bitstream * bs,
 		   int32_t value,
-		   int32_t f_code,
-		   Statistics * pStat)
+		   int32_t f_code)
 {
 
 	const int scale_factor = 1 << (f_code - 1);
@@ -211,9 +210,6 @@ CodeVector(Bitstream * bs,
 
 	if (value > (cmp - 1))
 		value -= 64 * scale_factor;
-
-	pStat->iMvSum += value * value;
-	pStat->iMvCount++;
 
 	if (value == 0) {
 		BitstreamPutBits(bs, mb_motion_table[32].code,
@@ -579,8 +575,8 @@ CodeBlockInter(const FRAMEINFO * const frame,
 	/* code motion vector(s) if motion is local  */
 	if (!pMB->mcsel)
 		for (i = 0; i < (pMB->mode == MODE_INTER4V ? 4 : 1); i++) {
-			CodeVector(bs, pMB->pmvs[i].x, frame->fcode, pStat);
-			CodeVector(bs, pMB->pmvs[i].y, frame->fcode, pStat);
+			CodeVector(bs, pMB->pmvs[i].x, frame->fcode);
+			CodeVector(bs, pMB->pmvs[i].y, frame->fcode);
 		}
 
 	bits = BitstreamPos(bs);
@@ -748,17 +744,17 @@ MBCodingBVOP(const FRAMEINFO * const frame,
 
 	switch (mb->mode) {
 		case MODE_INTERPOLATE:
-			CodeVector(bs, mb->pmvs[1].x, vcode, pStat); /* forward vector of interpolate mode */
-			CodeVector(bs, mb->pmvs[1].y, vcode, pStat);
+			CodeVector(bs, mb->pmvs[1].x, vcode); /* forward vector of interpolate mode */
+			CodeVector(bs, mb->pmvs[1].y, vcode);
 		case MODE_BACKWARD:
 			vcode = bcode;
 		case MODE_FORWARD:
-			CodeVector(bs, mb->pmvs[0].x, vcode, pStat);
-			CodeVector(bs, mb->pmvs[0].y, vcode, pStat);
+			CodeVector(bs, mb->pmvs[0].x, vcode);
+			CodeVector(bs, mb->pmvs[0].y, vcode);
 			break;
 		case MODE_DIRECT:
-			CodeVector(bs, mb->pmvs[3].x, 1, pStat);	/* fcode is always 1 for delta vector */
-			CodeVector(bs, mb->pmvs[3].y, 1, pStat);	/* prediction is always (0,0) */
+			CodeVector(bs, mb->pmvs[3].x, 1);	/* fcode is always 1 for delta vector */
+			CodeVector(bs, mb->pmvs[3].y, 1);	/* prediction is always (0,0) */
 		default: break;
 	}
 
