@@ -1,4 +1,42 @@
-// 14.04.2002	added FrameCodeB()
+/**************************************************************************
+ *
+ *  XVID MPEG-4 VIDEO CODEC
+ *  -  Encoder main module  -
+ *
+ *  This program is an implementation of a part of one or more MPEG-4
+ *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
+ *  to use this software module in hardware or software products are
+ *  advised that its use may infringe existing patents or copyrights, and
+ *  any such use would be at such party's own risk.  The original
+ *  developer of this software module and his/her company, and subsequent
+ *  editors and their companies, will have no liability for use of this
+ *  software or modifications or derivatives thereof.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ *
+ ***************************************************************************/
+
+/****************************************************************************
+ * 
+ *  History
+ *
+ *  14.04.2002 added FrameCodeB()
+ *
+ *  $Id: encoder.c,v 1.29 2002-04-28 21:55:06 edgomez Exp $
+ *
+ ***************************************************************************/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -472,7 +510,7 @@ void HintedMESet(Encoder * pEnc, int * intra)
 			MVBLOCKHINT * bhint = &hint->mvhint.block[x + y * pEnc->mbParam.mb_width];
 			VECTOR pred[4];
 			VECTOR tmp;
-			int dummy[4];
+			uint32_t dummy[4];
 			int vec;
 
 			pMB->mode = (hint->rawhints) ? bhint->mode : BitstreamGetBits(&bs, MODEBITS);
@@ -716,9 +754,9 @@ static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool forc
 	int iLimit;
 	uint32_t x, y;
 	int iSearchRange;
-	bool bIntra;
+	int bIntra;
 
-	IMAGE *pCurrent = &pEnc->current->image;
+	/* IMAGE *pCurrent = &pEnc->current->image; */
 	IMAGE *pRef = &pEnc->reference->image;
 
 	start_timer();
@@ -893,37 +931,37 @@ static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool forc
 }
 
 
+#if 0
 
-/*
 static void FrameCodeB(Encoder * pEnc, FRAMEINFO * frame, Bitstream * bs, uint32_t *pBits)
 {
-    int16_t dct_codes[6][64];
-    int16_t qcoeff[6][64];
-    uint32_t x, y;
+	int16_t dct_codes[6][64];
+	int16_t qcoeff[6][64];
+	uint32_t x, y;
 	VECTOR forward;
 	VECTOR backward;
 
-    IMAGE *f_ref = &pEnc->reference->image;
+	IMAGE *f_ref = &pEnc->reference->image;
 	IMAGE *b_ref = &pEnc->current->image;
 
-	// forward 
+	/* forward  */
 	image_setedges(f_ref, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height, pEnc->mbParam.width, pEnc->mbParam.height);
 	start_timer();
 	image_interpolate(f_ref, &pEnc->f_refh, &pEnc->f_refv, &pEnc->f_refhv,
-		pEnc->mbParam.edged_width, pEnc->mbParam.edged_height, 0);
+			  pEnc->mbParam.edged_width, pEnc->mbParam.edged_height, 0);
 	stop_inter_timer();
 
-	// backward
+	/* backward */
 	image_setedges(b_ref, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height, pEnc->mbParam.width, pEnc->mbParam.height);
-    start_timer();
+	start_timer();
 	image_interpolate(b_ref, &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV,
-		pEnc->mbParam.edged_width, pEnc->mbParam.edged_height, 0);
+			  pEnc->mbParam.edged_width, pEnc->mbParam.edged_height, 0);
 	stop_inter_timer();
 
 	start_timer();
 	MotionEstimationBVOP(&pEnc->mbParam, frame, 
-		pEnc->reference->mbs, f_ref, &pEnc->f_refh, &pEnc->f_refv, &pEnc->f_refhv,
-		pEnc->current->mbs, b_ref, &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV);
+			     pEnc->reference->mbs, f_ref, &pEnc->f_refh, &pEnc->f_refv, &pEnc->f_refhv,
+			     pEnc->current->mbs, b_ref, &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV);
 
 	stop_motion_timer();
 	
@@ -932,19 +970,19 @@ static void FrameCodeB(Encoder * pEnc, FRAMEINFO * frame, Bitstream * bs, uint32
 		BitstreamWriteVolHeader(bs, pEnc->mbParam.width, pEnc->mbParam.height, pEnc->mbParam.quant_type);
 	}
 
-    frame->coding_type = B_VOP;
-    BitstreamWriteVopHeader(bs, B_VOP, frame->tick, 0,
-			frame->quant, frame->fcode, frame->bcode);
+	frame->coding_type = B_VOP;
+	BitstreamWriteVopHeader(bs, B_VOP, frame->tick, 0,
+				frame->quant, frame->fcode, frame->bcode);
 
-    *pBits = BitstreamPos(bs);
+	*pBits = BitstreamPos(bs);
 
-    pEnc->sStat.iTextBits = 0;
-    pEnc->sStat.iMvSum = 0;
-    pEnc->sStat.iMvCount = 0;
+	pEnc->sStat.iTextBits = 0;
+	pEnc->sStat.iMvSum = 0;
+	pEnc->sStat.iMvCount = 0;
 	pEnc->sStat.kblks = pEnc->sStat.mblks = pEnc->sStat.ublks = 0;
 
 
-    for (y = 0; y < pEnc->mbParam.mb_height; y++)
+	for (y = 0; y < pEnc->mbParam.mb_height; y++)
 	{
 		// reset prediction
 
@@ -968,9 +1006,9 @@ static void FrameCodeB(Encoder * pEnc, FRAMEINFO * frame, Bitstream * bs, uint32
 			}
 
 			MBMotionCompensationBVOP(&pEnc->mbParam, mb, x, y, &frame->image,
-					f_ref, &pEnc->f_refh, &pEnc->f_refv, &pEnc->f_refhv, 
-					b_ref, &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV, 
-					dct_codes);
+						 f_ref, &pEnc->f_refh, &pEnc->f_refv, &pEnc->f_refhv, 
+						 b_ref, &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV, 
+						 dct_codes);
 	
 			mb->quant = frame->quant;
 			mb->cbp = MBTransQuantInter(&pEnc->mbParam, frame, x, y, dct_codes, qcoeff);
@@ -978,9 +1016,9 @@ static void FrameCodeB(Encoder * pEnc, FRAMEINFO * frame, Bitstream * bs, uint32
 
 
 			if ((mb->mode == MODE_INTERPOLATE || mb->mode == MODE_DIRECT) &&
-				mb->cbp == 0 &&
-				mb->mvs[0].x == 0 && 
-				mb->mvs[0].y == 0)
+			    mb->cbp == 0 &&
+			    mb->mvs[0].x == 0 && 
+			    mb->mvs[0].y == 0)
 			{
 				mb->mode = 5;  // skipped
 			}
@@ -1001,7 +1039,18 @@ static void FrameCodeB(Encoder * pEnc, FRAMEINFO * frame, Bitstream * bs, uint32
 				backward.y = mb->b_mvs[0].y;
 			}
 
-//			printf("[%i %i] M=%i CBP=%i MVX=%i MVY=%i %i,%i  %i,%i\n", x, y, pMB->mode, pMB->cbp, pMB->mvs[0].x, bmb->pmvs[0].x, bmb->pmvs[0].y, forward.x, forward.y);
+			/*
+			  printf("[%i %i] M=%i CBP=%i MVX=%i MVY=%i %i,%i  %i,%i\n",
+			       x,
+			       y,
+			       pMB->mode,
+			       pMB->cbp,
+			       pMB->mvs[0].x,
+			       bmb->pmvs[0].x,
+			       bmb->pmvs[0].y,
+			       forward.x,
+			       forward.y);
+			*/
 
 			start_timer();			
 			MBCodingBVOP(frame, mb, qcoeff, bs, &pEnc->sStat);
@@ -1017,4 +1066,4 @@ static void FrameCodeB(Encoder * pEnc, FRAMEINFO * frame, Bitstream * bs, uint32
 
 }
 
-*/
+#endif
