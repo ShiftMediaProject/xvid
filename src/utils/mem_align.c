@@ -4,7 +4,7 @@
  *  - Aligned memory allocator -
  *
  *  Copyright(C) 2002 Michael Militzer <isibaar@xvid.org>
- *               2002 Edouard Gomez
+ *               2002 Edouard Gomez <ed.gomez@free.fr>
  *
  *  This file is part of XviD, a free MPEG-4 video encoder/decoder
  *
@@ -51,7 +51,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: mem_align.c,v 1.13 2002-12-15 01:12:01 edgomez Exp $
+ * $Id: mem_align.c,v 1.14 2002-12-28 13:53:08 edgomez Exp $
  *
  ****************************************************************************/
 

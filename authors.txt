@@ -30,7 +30,7 @@ And XviD would not be what it is now without the contributions from :
 Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Daniel Smith <danielsmith@astroboymail.com>
 Dirk Knop <dknop@gwdg.de>
-Edouard Gomez <ed.gomez@wanadoo.fr>
+Edouard Gomez <ed.gomez@free.fr>
 Guillaume Morin <guillaume@morinfr.org>
 MinChen <chenm001@163.com>
 Pascal Massimino <skal@planet-d.net>

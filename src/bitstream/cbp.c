@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - cbp function (zero block flags) -
  *
- *  Copyright (C) 2001-2002 - Edouard Gomez <ed.gomez@wanadoo.fr>
+ *  Copyright (C) 2001-2002 - Edouard Gomez <ed.gomez@free.fr>
  *
  *  This file is part of XviD, a free MPEG-4 video encoder/decoder
  *
@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: cbp.c,v 1.8 2002-11-17 00:57:57 edgomez Exp $
+ * $Id: cbp.c,v 1.9 2002-12-28 13:53:08 edgomez Exp $
  *
  ****************************************************************************/
 

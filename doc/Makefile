@@ -8,7 +8,7 @@
 #      Custom headers/footers/author/latex packages are used and/or generated
 #      on the fly.
 #
-# Author : Edouard Gomez <ed.gomez at wanadoo dot fr>
+# Author : Edouard Gomez <ed.gomez@free.fr>
 #
 ##############################################################################
 

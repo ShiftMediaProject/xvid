@@ -5,7 +5,7 @@
  *
  *  Copyright(C) 2002 Michael Militzer <isibaar@xvid.org>
  *               2002 Peter Ross <pross@xvid.org>
- *               2002 Edouard Gomez <ed.gomez@wanadoo.fr>
+ *               2002 Edouard Gomez <ed.gomez@free.fr>
  *
  *  This file is part of XviD, a free MPEG-4 video encoder/decoder
  *
@@ -52,7 +52,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: portab.h,v 1.39 2002-11-26 23:50:57 edgomez Exp $
+ * $Id: portab.h,v 1.40 2002-12-28 13:53:08 edgomez Exp $
  *
  ****************************************************************************/
 
