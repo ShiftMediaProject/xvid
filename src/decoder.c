@@ -446,6 +446,7 @@ void decoder_pframe(DECODER * dec, Bitstream * bs, int rounding, int quant, int 
 				mcbpc = get_mcbpc_inter(bs);
 				mb->mode = mcbpc & 7;
 				cbpc = (mcbpc >> 4);
+				acpred_flag = 0;
 
 				intra = (mb->mode == MODE_INTRA || mb->mode == MODE_INTRA_Q);
 				
