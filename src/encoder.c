@@ -34,7 +34,7 @@
  *
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.33 2002-05-03 08:32:49 Isibaar Exp $
+ *  $Id: encoder.c,v 1.34 2002-05-03 15:26:30 edgomez Exp $
  *
  ***************************************************************************/
 
@@ -327,7 +327,7 @@ int encoder_destroy(Encoder * pEnc)
 		}
 		free(pEnc->bframes);
 	}
-#endif BFRAMES
+#endif
 //====================================================================
 
 	image_destroy(&pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height);
