@@ -1,4 +1,199 @@
 *****************************************************************************
+*
+* Probably last series of small cleanings, updates before first release :-)
+*
+*****************************************************************************
+
+First change:      2002/09/12 18:53:11 (GMT)
+Last change:       2002/09/22 20:34:05 (GMT)
+Files changed:     49
+Number of changes: 81
+
+===[ authors.txt ]===
+  1.3 (edgomez) - Added main contributors
+  1.2 (suxen_drol) pross email address updates
+
+===[ todo.txt ]===
+  1.8 (edgomez) Updated
+
+===[ build/generic/Makefile.cygwin ]===
+  1.5 (edgomez) Changed header
+  1.4 (edgomez) Synced with last Makefile.linux changes
+  1.3 (edgomez) Fixed a remaining endif statetement forgoten in the file
+  1.2 (edgomez) Updated, creates a dll and its import lib too
+
+===[ build/generic/Makefile.irix64 ]===
+  1.2 (edgomez) Updated
+
+===[ build/generic/Makefile.linux ]===
+  1.10 (edgomez) Renamed file Makefile.linux->Makefile.linxuxx86
+  1.9 (edgomez) Changed profiling option, added arcs profiling, branch probabilities, and test coverage
+  1.8 (edgomez) Removed SMP cflag and added BFRAMES_DEC (lacks real testing).
+
+===[ build/generic/Makefile.linuxppc ]===
+  1.7 (edgomez) Updated
+
+===[ build/generic/Makefile.linuxppc_altivec ]===
+  1.6 (edgomez) Updated
+
+===[ build/generic/Makefile.linuxx86 ]===
+  1.1 (edgomez) Renamed file Makefile.linux->Makefile.linxuxx86
+
+===[ build/generic/Makefile.sparc ]===
+  1.2 (edgomez) Updated
+
+===[ build/generic/libxvidcore.def ]===
+  1.1 (edgomez) Used by cygwin
+
+===[ build/win32/core.dsp ]===
+  1.14 (edgomez) renamed to libxvidcore.dsp
+
+===[ build/win32/core.dsw ]===
+  1.2 (edgomez) Removed in favour of xvidcore.dsw
+
+===[ build/win32/libxvidcore.dsp ]===
+  1.3 (suxen_drol) msvc dsp fix
+  1.2 (suxen_drol) removed smb_motionest.h reference
+  1.1 (edgomez) Old files renamed
+
+===[ build/win32/xvid_stat.dsp ]===
+  1.1 (edgomez) renamed to libxvidcore.dsp
+
+===[ build/win32/xvidcore.dsw ]===
+  1.2 (suxen_drol) msvc dsp fix
+  1.1 (edgomez) Old files renamed
+
+===[ examples/xvid_stat.c ]===
+  1.11 (edgomez) Fix fps report (this patch has been lost somewhere, i'm pretty sure to have fixed that a few days ago)
+  1.10 (edgomez) - Removed LUMIMASKING test for quality 6
+  1.9 (edgomez) - Fixed a problem where when using fixed quantizer, xvid_stat was reporting the use of q default_bitrate
+  1.8 (edgomez) Fixed PSNR (Was only calculated for Y channel)
+  1.7 (edgomez) Fixed a bug in pgm writing (we must interleave data from u and v channels)
+  1.6 (edgomez) - Added command line parsing (for ease of use)
+               - Basic win32 compatibility (I had to lose precision to make it win32 compatible using clock() ... the manual page says POSIX fixes CLOCK_PER_SEC at 1000000, so it should give us millisecond precision, i think it's enough)
+               - Make things static, and const when necessary
+               - Fixed some bugs in pgmreader when stream was != stdin
+               - My usual cosmetic and cleaning work.
+  1.5 (chl) - header cleanup
+               - removed bframe-support
+
+===[ examples/ex1/YUVplayer.exe ]===
+  1.2 (edgomez) These examples do not show no more things than xvid_stat... so i remove them
+
+===[ examples/ex1/ex1.c ]===
+  1.8 (edgomez) These examples do not show no more things than xvid_stat... so i remove them
+
+===[ examples/ex1/ex1.dsp ]===
+  1.3 (edgomez) These examples do not show no more things than xvid_stat... so i remove them
+
+===[ examples/ex1/ex1.dsw ]===
+  1.2 (edgomez) These examples do not show no more things than xvid_stat... so i remove them
+
+===[ examples/ex1/ex1.h ]===
+  1.3 (edgomez) These examples do not show no more things than xvid_stat... so i remove them
+
+===[ examples/ex1/readme.txt ]===
+  1.2 (edgomez) These examples do not show no more things than xvid_stat... so i remove them
+
+===[ examples/ex1/test_dec.bat ]===
+  1.2 (edgomez) These examples do not show no more things than xvid_stat... so i remove them
+
+===[ examples/ex1/test_enc.bat ]===
+  1.2 (edgomez) These examples do not show no more things than xvid_stat... so i remove them
+
+===[ src/decoder.c ]===
+  1.39 (edgomez) Removed DEBUGXXXs calls
+  1.38 (suxen_drol) pross email address updates
+
+===[ src/divx4.c ]===
+  1.19 (suxen_drol) pross email address updates
+
+===[ src/encoder.c ]===
+  1.83 (edgomez) Fixed a VC++ compiler warning
+
+===[ src/portab.h ]===
+  1.32 (edgomez) - First sparcs have a 32bit address bus. If one day we plan to have sparc 64 support, then we'll add ARCH_USPARC.
+  1.31 (h) fixed msvc compilation
+  1.30 (edgomez) - Fixed MIPS and SPARC macros/constants
+  1.29 (edgomez) - Changed DECLARE_ALIGNED_MATRIX
+  1.28 (edgomez) Cleaned (hopefully)
+
+===[ src/xvid.c ]===
+  1.37 (suxen_drol) pross email address updates
+
+===[ src/bitstream/bitstream.c ]===
+  1.33 (edgomez) Removed DEBUGXXXs calls
+  1.32 (suxen_drol) pross email address updates
+  1.31 (edgomez) - Removed last bits of BFRAMES #ifdefs
+  1.30 (edgomez) Fixed an uninitialized variable (gcc 3.1)
+
+===[ src/bitstream/bitstream.h ]===
+  1.13 (suxen_drol) pross email address updates
+
+===[ src/bitstream/mbcoding.c ]===
+  1.32 (edgomez) Removed DEBUGXXXs calls
+  1.31 (suxen_drol) msvc6 static vlc tables fix
+
+===[ src/bitstream/x86_asm/cbp_mmx.asm ]===
+  1.6 (suxen_drol) pross email address updates
+
+===[ src/image/font.c ]===
+  1.3 (edgomez) Was only used by bframe encoder
+
+===[ src/image/font.h ]===
+  1.3 (edgomez) Was only used by bframe encoder
+
+===[ src/motion/motion_est.c ]===
+  1.51 (edgomez) - Removed definitively bframe ME code
+  1.50 (edgomez) - Disabled bframe specific code and macros. My tests seem to confirm this patch does not hurt but i keep these #if 0 #endif just in case i have to revert things easily.
+  1.49 (edgomez) - Removed code from Christoph that should have never been there.
+  1.48 (edgomez) Fixed lot of VC++ compiler warnings
+
+===[ src/motion/sad.h ]===
+  1.15 (suxen_drol) pross email address updates
+
+===[ src/motion/smp_motion_est.c ]===
+  1.5 (edgomez) This stable version will not include smp support
+
+===[ src/motion/smp_motion_est.h ]===
+  1.3 (edgomez) This stable version will not include smp support
+
+===[ src/prediction/mbprediction.c ]===
+  1.9 (suxen_drol) pross email address updates
+
+===[ src/quant/adapt_quant.c ]===
+  1.10 (suxen_drol) pross email address updates
+  1.9 (edgomez) - Possible memory leak if second malloc fails
+  1.8 (edgomez) Stupid bug for a stupid guy like me, sorry
+  1.6.2.1 (suxen_drol) gom's adapt quant free() fix
+
+===[ src/quant/quant_h263.c ]===
+  1.3 (suxen_drol) pross email address updates
+
+===[ src/quant/quant_matrix.c ]===
+  1.9 (h) bugfix - custom matrix mode used to force vol header for every frame
+  1.5.2.1 (h) bugfix - custom matrix mode previously forced vol header for every frame
+
+===[ src/quant/quant_mpeg4.c ]===
+  1.5 (suxen_drol) pross email address updates
+
+===[ src/quant/quant_mpeg4.h ]===
+  1.5 (suxen_drol) pross email address updates
+
+===[ src/utils/mbtransquant.c ]===
+  1.13 (suxen_drol) pross email address updates
+
+===[ src/utils/mem_transfer.c ]===
+  1.6 (suxen_drol) pross email address updates
+
+===[ src/utils/ratecontrol.c ]===
+  1.16 (edgomez) Udated copyright holders
+  1.15 (edgomez) Removed DEBUGXXXs calls
+
+===[ src/utils/x86_asm/mem_transfer_mmx.asm ]===
+  1.7 (suxen_drol) pross email address updates
+
+*****************************************************************************
 * Long list of very basic changes :
 *
 * The aim is simple, make sure we take care of GPL headers, copyrights, and
@@ -6,6 +201,11 @@
 *
 * We'll do better source cleaning once this first step is finnished
 *****************************************************************************
+
+First change:      2002/08/?? ??:??:?? (GMT)
+Last change:       2002/09/12 ??:??:?? (GMT)
+Files changed:     ??
+Number of changes: ??
 
 ===[ todo.txt ]===
   1.7 (edgomez) Updated
@@ -34,13 +234,13 @@
   1.82 (edgomez) - Compiler warning fixed.
   1.81 (chl) Call MBPrediction only of INTRA/INTRA_Q blocks
   1.80 (edgomez) Thanks to christoph i removed this nasty horrible bug ! Kidding of course :-)
-  1.79 (edgomez) Added $Id: changelog.txt,v 1.4 2002-09-10 23:15:31 edgomez Exp $ keyword again
+  1.79 (edgomez) Added $Id: changelog.txt,v 1.5 2002-09-22 20:40:47 edgomez Exp $ keyword again
   1.78 (edgomez) Removed BFRAMES parts of the code.
   1.77 (edgomez) - Removed history header
                - File Copyright to Michael until we find who wrote this file
 
 ===[ src/encoder.h ]===
-  1.21 (edgomez) Added $Id: changelog.txt,v 1.4 2002-09-10 23:15:31 edgomez Exp $ keyword again.
+  1.21 (edgomez) Added $Id: changelog.txt,v 1.5 2002-09-22 20:40:47 edgomez Exp $ keyword again.
   1.20 (edgomez) Removed BFRAMES part of the code
   1.19 (edgomez) - Removed History Header
                - Added Michael Militzer Copyright (well Michael seems to be the first contributor)
@@ -54,7 +254,7 @@
                - Temporary copyright
 
 ===[ src/xvid.c ]===
-  1.36 (edgomez) Added $Id: changelog.txt,v 1.4 2002-09-10 23:15:31 edgomez Exp $ keyword again
+  1.36 (edgomez) Added $Id: changelog.txt,v 1.5 2002-09-22 20:40:47 edgomez Exp $ keyword again
   1.35 (edgomez) Removed BFRAME code
   1.34 (edgomez) Removed History, moved copyright.
 
