@@ -769,6 +769,7 @@ void get_inter_block(Bitstream * bs, int16_t * block)
 			break;
 		}
 		p += run;
+
 		block[ scan[p] ] = level;
 		if (level < -127 || level > 127)
 		{
