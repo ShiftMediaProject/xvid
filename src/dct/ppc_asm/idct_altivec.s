@@ -71,7 +71,7 @@ idct_altivec:
 	stvx 31,1,0
 	lis 11,PreScale@ha
 	lvx 12,0,3
-	vspltisw 3,0
+	vxor %v3,%v3,%v3
 	la 11,PreScale@l(11)
 	lvx 0,0,11
 	addi 9,11,16
