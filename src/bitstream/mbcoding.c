@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: mbcoding.c,v 1.38 2003-01-07 21:57:19 edgomez Exp $
+ * $Id: mbcoding.c,v 1.39 2003-01-26 01:44:07 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -94,7 +94,7 @@ static VLC coeff_VLC[2][2][64][64];
 void
 init_vlc_tables(void)
 {
-	uint32_t i, j, intra, last, run,  run_esc, level, level_esc, escape, escape_len, offset;
+	ptr_t i, j, intra, last, run,  run_esc, level, level_esc, escape, escape_len, offset;
 
 #ifdef BIGLUT
 	intra_table = (VLC*)coeff_VLC[1];
