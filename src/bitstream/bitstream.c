@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.c,v 1.48 2004-12-05 13:56:13 syskin Exp $
+ * $Id: bitstream.c,v 1.49 2005-03-27 03:59:42 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -1251,10 +1251,12 @@ BitstreamWriteVolHeader(Bitstream * const bs,
 
 	BitstreamPadAlways(bs); /* next_start_code(); */
 
-	/* fake divx5 id, to ensure compatibility with divx5 decoder */
-#define DIVX5_ID "DivX999b000p"
-	if (pParam->max_bframes > 0 && (pParam->global_flags & XVID_GLOBAL_PACKED)) {
-		BitstreamWriteUserData(bs, DIVX5_ID, strlen(DIVX5_ID));
+	/* divx5 userdata string */
+#define DIVX5_ID "DivX503b1393"
+  if ((pParam->global_flags & XVID_GLOBAL_DIVX5_USERDATA)) {
+    BitstreamWriteUserData(bs, DIVX5_ID, strlen(DIVX5_ID));
+  	if (pParam->max_bframes > 0 && (pParam->global_flags & XVID_GLOBAL_PACKED))
+      BitstreamPutBits(bs, 'p', 8);
 	}
 
 	/* xvid id */

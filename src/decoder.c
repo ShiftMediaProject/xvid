@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.68 2004-12-05 13:56:13 syskin Exp $
+ * $Id: decoder.c,v 1.69 2005-03-27 03:59:41 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -1384,7 +1384,13 @@ repeat:
 	coding_type = BitstreamReadHeaders(&bs, dec, &rounding,
 			&quant, &fcode_forward, &fcode_backward, &intra_dc_threshold, &gmc_warp);
 
-	DPRINTF(XVID_DEBUG_HEADER, "coding_type=%i,  packed=%i,  time=%lli,  time_pp=%i,  time_bp=%i\n",
+	DPRINTF(XVID_DEBUG_HEADER, "coding_type=%i,  packed=%i,  time=%"
+#if defined(_MSC_VER)
+    "I64"
+#else
+    "ll"
+#endif
+    "i,  time_pp=%i,  time_bp=%i\n",
 							coding_type,	dec->packed_mode, dec->time, dec->time_pp, dec->time_bp);
 
 	if (coding_type == -1) { /* nothing */
@@ -1511,19 +1517,22 @@ repeat:
 
 done :
 
-	/* low_delay_default mode: if we've gotten here without outputting anything,
-	   then output the recently decoded frame, or print an error message  */
-	if (dec->low_delay_default && output == 0) {
-		if (dec->packed_mode && seen_something) {
-			/* output the recently decoded frame */
-			decoder_output(dec, &dec->refn[0], dec->last_mbs, frame, stats, dec->last_coding_type, quant);
-		} else {
-			image_clear(&dec->cur, dec->width, dec->height, dec->edged_width, 0, 128, 128);
-			image_printf(&dec->cur, dec->edged_width, dec->height, 16, 16,
-				"warning: nothing to output");
-			image_printf(&dec->cur, dec->edged_width, dec->height, 16, 64,
-				"bframe decoder lag");
+  /* if we reach here without outputing anything _and_
+     the calling application has specified low_delay_default,
+     we *must* output something.
+     this always occurs on the first call to decode() call
+     when bframes are present in the bitstream. it may also
+     occur if no vops  were seen in the bitstream
 
+     if packed_mode is enabled, then we output the recently
+     decoded frame (the very first ivop). otherwise we have
+     nothing to display, and therefore output a black screen.
+  */
+  if (dec->low_delay_default && output == 0) {
+    if (dec->packed_mode && seen_something) {
+			decoder_output(dec, &dec->refn[0], dec->last_mbs, frame, stats, dec->last_coding_type, quant);
+    } else {
+			image_clear(&dec->cur, dec->width, dec->height, dec->edged_width, 0, 128, 128);
 			decoder_output(dec, &dec->cur, NULL, frame, stats, P_VOP, quant);
 			if (stats) stats->type = XVID_TYPE_NOTHING;
 		}

@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.116 2004-12-10 05:37:11 syskin Exp $
+ * $Id: encoder.c,v 1.117 2005-03-27 03:59:42 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -146,6 +146,8 @@ enc_create(xvid_enc_create_t * create)
 
 	/* global flags */
 	pEnc->mbParam.global_flags = create->global;
+  if ((pEnc->mbParam.global_flags & XVID_GLOBAL_PACKED))
+    pEnc->mbParam.global_flags |= XVID_GLOBAL_DIVX5_USERDATA;
 
 	/* width, height */
 	pEnc->mbParam.width = create->width;
@@ -1256,7 +1258,7 @@ repeat:
 		SWAP(FRAMEINFO*, pEnc->current, pEnc->bframes[pEnc->bframenum_tail]);
 
 		if ((pEnc->current->vop_flags & XVID_VOP_DEBUG)) {
-			image_printf(&pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.height, 5, 100, "DX50 BVOP->PVOP");
+			image_printf(&pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.height, 5, 100, "CLOSED GOP BVOP->PVOP");
 		}
 
 		/* convert B-VOP quant to P-VOP */

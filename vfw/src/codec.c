@@ -504,9 +504,12 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 
 		/* VBV */
 		pass2.vbv_size = profiles[codec->config.profile].max_vbv_size;
-		pass2.vbv_initial = (profiles[codec->config.profile].max_vbv_size*3)/4;
-		pass2.vbv_maxrate = 1000*profiles[codec->config.profile].max_bitrate;
-		pass2.vbv_peakrate = 10000000; /* 10mbps -- fixme */
+		pass2.vbv_initial = (profiles[codec->config.profile].max_vbv_size*3)/4; /* 75% */
+		pass2.vbv_maxrate = profiles[codec->config.profile].max_bitrate;
+
+    // XXX: xvidcore current provides a "peak bits over 3secs" constraint.
+    //      according to the latest dxn literature, a 1sec constraint is now used
+    pass2.vbv_peakrate = profiles[codec->config.profile].vbv_peakrate * 3;
 
 		plugins[create.num_plugins].func = codec->xvid_plugin_2pass2_func;
 		plugins[create.num_plugins].param = &pass2;
@@ -563,16 +566,32 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 	create.max_quant[2] = codec->config.max_bquant;
 
 	if ((profiles[codec->config.profile].flags & PROFILE_BVOP) && codec->config.use_bvop) {
-		create.max_bframes = codec->config.max_bframes;
-		create.bquant_ratio = codec->config.bquant_ratio;
-		create.bquant_offset = codec->config.bquant_offset;
 
-		if (codec->config.packed) 
-			create.global |= XVID_GLOBAL_PACKED;
+    /* dxn: prevent bframes usage if interlacing is selected */
+    if (!((profiles[codec->config.profile].flags & PROFILE_DXN) && codec->config.interlacing)) {
+      create.max_bframes = codec->config.max_bframes;
+		  create.bquant_ratio = codec->config.bquant_ratio;
+		  create.bquant_offset = codec->config.bquant_offset;
 
-		create.global |= XVID_GLOBAL_CLOSED_GOP;
+		  if (codec->config.packed) 
+			  create.global |= XVID_GLOBAL_PACKED;
 
+		  create.global |= XVID_GLOBAL_CLOSED_GOP;
+
+      /* dxn: restrict max bframes and enable packed bframes */
+      if ((profiles[codec->config.profile].flags & PROFILE_DXN)) {
+
+        if (create.max_bframes > profiles[codec->config.profile].dxn_max_bframes)
+          create.max_bframes = profiles[codec->config.profile].dxn_max_bframes;
+
+        create.global |= XVID_GLOBAL_PACKED;
+      }
+    }
 	}
+
+  /* dxn: always write divx5 userdata */
+  if ((profiles[codec->config.profile].flags & PROFILE_DXN))
+    create.global |= XVID_GLOBAL_DIVX5_USERDATA;
 
 	create.frame_drop_ratio = codec->config.frame_drop_ratio;
 
@@ -697,7 +716,10 @@ LRESULT compress(CODEC * codec, ICCOMPRESS * icc)
 	if ((profiles[codec->config.profile].flags & PROFILE_INTERLACE) && codec->config.interlacing)
 		frame.vol_flags |= XVID_VOL_INTERLACING;
 
-	if (codec->config.ar_mode == 0) { /* PAR */
+  /* dxn: force 1:1 picture aspect ration */
+  if ((profiles[codec->config.profile].flags & PROFILE_DXN)) {
+    frame.par = XVID_PAR_11_VGA;
+  } else if (codec->config.ar_mode == 0) { /* PAR */
 		if (codec->config.display_aspect_ratio != 5) {
 			frame.par = codec->config.display_aspect_ratio + 1;
 		} else {
@@ -728,8 +750,10 @@ LRESULT compress(CODEC * codec, ICCOMPRESS * icc)
 		frame.vop_flags |= XVID_VOP_TRELLISQUANT;
 	}
 
-	if (codec->config.motion_search > 4)
-		frame.vop_flags |= XVID_VOP_INTER4V;
+  if ((profiles[codec->config.profile].flags & PROFILE_4MV)) {
+	  if (codec->config.motion_search > 4)
+		  frame.vop_flags |= XVID_VOP_INTER4V;
+  }
 
 	if (codec->config.chromame)
 		frame.motion |= XVID_ME_CHROMA_PVOP + XVID_ME_CHROMA_BVOP;
