@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation.h,v 1.10 2004-12-09 04:58:12 syskin Exp $
+ * $Id: estimation.h,v 1.11 2004-12-17 15:42:35 syskin Exp $
  *
  ****************************************************************************/
 
@@ -192,7 +192,8 @@ ModeDecision_BVOP_RD(SearchData * const Data_d,
 					 VECTOR * b_predMV,
 					 const uint32_t MotionFlags,
 					 const MBParam * const pParam,
-					 int x, int y);
+					 int x, int y,
+					 int best_sad);
 
 unsigned int
 getMinFcode(const int MVmax);
