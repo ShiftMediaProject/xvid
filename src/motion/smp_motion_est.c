@@ -42,7 +42,10 @@
 
 #include <pthread.h>
 #include <signal.h>
+
+#ifndef WIN32
 #include <unistd.h>
+#endif
 
 #include "../encoder.h"
 #include "../utils/mbfunctions.h"
@@ -353,17 +356,17 @@ SMP_MotionEstimation(MBParam * const pParam,
 
 	pthread_mutex_lock(&me_mutex);
 	me_iIntra=0;
-	me_inqueue=NUMTHREADS;
-	me_corrqueue=NUMTHREADS;
-	me_outqueue=NUMTHREADS;
+	me_inqueue=pParam->num_threads;
+	me_corrqueue=pParam->num_threads;
+	me_outqueue=pParam->num_threads;
 
 	if (!threadscreated)
 	{
-		for (i=0;i<NUMTHREADS;i++) {	/* split domain into NUMTHREADS parts */
+		for (i=0;i<pParam->num_threads;i++) {	/* split domain into NUMTHREADS parts */
 
 			jdata[i].id = i;
-			jdata[i].minx = i*iWcount/NUMTHREADS;
-			jdata[i].maxx = (i+1)*iWcount/NUMTHREADS;
+			jdata[i].minx = i*iWcount/pParam->num_threads;
+			jdata[i].maxx = (i+1)*iWcount/pParam->num_threads;
 			jdata[i].miny = 0;
 			jdata[i].maxy = iHcount;
 			jdata[i].gdata = &gdata;
