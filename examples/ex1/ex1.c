@@ -9,7 +9,7 @@
 *                       the BFRAME option must be match to core compile option
 *******************************************************************************/
 
-#define BFRAMES 
+//#define BFRAMES 
 #include "ex1.h"
 
 int Encode(char *, int, int, char *);
@@ -104,6 +104,7 @@ int Encode(char *in, int width, int height, char *out)
 	}
 
 	// get Xvid core status
+	init_param.cpu_flags = 0;
 	xvid_init(0, 0, &init_param, NULL);
 	// Check API Version is 2.1?
 	if (init_param.api_version != ((2<<16)|(1)))
@@ -120,7 +121,7 @@ int Encode(char *in, int width, int height, char *out)
 	// Encode Frame
 	temp=fread(inBuf, 1, width*height*3/2, fpi);	// Read YUV data
 	while(temp == width*height*3/2){
-		//printf("Frames=%d\n",num);
+		printf("Frames=%d\n",num);
 		set_enc_frame(&frame);
 		if (!(num%param.max_key_interval))
 			frame.intra = 1;	// Encode as I-frame
