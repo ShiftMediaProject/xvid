@@ -2012,6 +2012,8 @@ BOOL CALLBACK main_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			case IDC_DEFAULTS :
 				config_reg_default(config);
+				SendDlgItemMessage(hDlg, IDC_PROFILE, CB_SETCURSEL, config->profile, 0);
+				SendDlgItemMessage(hDlg, IDC_MODE, CB_SETCURSEL, config->mode, 0);
 				main_mode(hDlg, config);
 				main_upload(hDlg, config);
 				break;
