@@ -1,69 +1,8 @@
-/*****************************************************************************
- *
- *  XVID MPEG-4 VIDEO CODEC
- *  - Custom matrix quantization functions -
- *
- *  Copyright(C) 2002 Michael Militzer <isibaar@xvid.org>
- *               2002 Peter Ross <pross@xvid.org>
- *
- *  This file is part of XviD, a free MPEG-4 video encoder/decoder
- *
- *  XviD is free software; you can redistribute it and/or modify it
- *  under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
- *
- *  Under section 8 of the GNU General Public License, the copyright
- *  holders of XVID explicitly forbid distribution in the following
- *  countries:
- *
- *    - Japan
- *    - United States of America
- *
- *  Linking XviD statically or dynamically with other modules is making a
- *  combined work based on XviD.  Thus, the terms and conditions of the
- *  GNU General Public License cover the whole combination.
- *
- *  As a special exception, the copyright holders of XviD give you
- *  permission to link XviD with independent modules that communicate with
- *  XviD solely through the VFW1.1 and DShow interfaces, regardless of the
- *  license terms of these independent modules, and to copy and distribute
- *  the resulting combined work under terms of your choice, provided that
- *  every copy of the combined work is accompanied by a complete copy of
- *  the source code of XviD (the version of XviD used to produce the
- *  combined work), being distributed under the terms of the GNU General
- *  Public License plus this exception.  An independent module is a module
- *  which is not derived from or based on XviD.
- *
- *  Note that people who make modified versions of XviD are not obligated
- *  to grant this special exception for their modified versions; it is
- *  their choice whether to do so.  The GNU General Public License gives
- *  permission to release a modified version without this exception; this
- *  exception also makes it possible to release a modified version which
- *  carries forward this exception.
- *
- * $Id: quant_matrix.c,v 1.12 2002-11-17 00:41:19 edgomez Exp $
- *
- ****************************************************************************/
-
 #include "quant_matrix.h"
 
-#define FIX(X) (1 << 16) / (X) + 1
+#define FIX(X)   (((X)==1) ? 0xFFFF : ((1UL << 16) / (X) + 1))
+#define FIXL(X)    ((1UL << 16) / (X) - 1)
 
-/*****************************************************************************
- * Local data
- ****************************************************************************/
-
-/* ToDo : remove all this local to make this module thread safe */
 uint8_t custom_intra_matrix = 0;
 uint8_t custom_inter_matrix = 0;
 
@@ -89,7 +28,41 @@ int16_t intra_matrix[64] = {
 	27, 28, 30, 32, 35, 38, 41, 45
 };
 
-int16_t intra_matrix_fix[64] = {
+uint16_t intra_matrix_fixfix[64] = {
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0
+};
+
+uint16_t inter_matrix_fixfix[64] = {
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0
+};
+
+uint16_t intra_matrix1[64] = {
+	8>>1, 17>>1, 18>>1, 19>>1, 21>>1, 23>>1, 25>>1, 27>>1,
+	17>>1, 18>>1, 19>>1, 21>>1, 23>>1, 25>>1, 27>>1, 28>>1,
+	20>>1, 21>>1, 22>>1, 23>>1, 24>>1, 26>>1, 28>>1, 30>>1,
+	21>>1, 22>>1, 23>>1, 24>>1, 26>>1, 28>>1, 30>>1, 32>>1,
+	22>>1, 23>>1, 24>>1, 26>>1, 28>>1, 30>>1, 32>>1, 35>>1,
+	23>>1, 24>>1, 26>>1, 28>>1, 30>>1, 32>>1, 35>>1, 38>>1,
+	25>>1, 26>>1, 28>>1, 30>>1, 32>>1, 35>>1, 38>>1, 41>>1,
+	27>>1, 28>>1, 30>>1, 32>>1, 35>>1, 38>>1, 41>>1, 45>>1
+};
+
+
+uint16_t intra_matrix_fix[64] = {
 	FIX(8), FIX(17), FIX(18), FIX(19), FIX(21), FIX(23), FIX(25), FIX(27),
 	FIX(17), FIX(18), FIX(19), FIX(21), FIX(23), FIX(25), FIX(27), FIX(28),
 	FIX(20), FIX(21), FIX(22), FIX(23), FIX(24), FIX(26), FIX(28), FIX(30),
@@ -98,6 +71,28 @@ int16_t intra_matrix_fix[64] = {
 	FIX(23), FIX(24), FIX(26), FIX(28), FIX(30), FIX(32), FIX(35), FIX(38),
 	FIX(25), FIX(26), FIX(28), FIX(30), FIX(32), FIX(35), FIX(38), FIX(41),
 	FIX(27), FIX(28), FIX(30), FIX(32), FIX(35), FIX(38), FIX(41), FIX(45)
+};
+
+uint16_t intra_matrix_fixl[64] = {
+	FIXL(8), FIXL(17), FIXL(18), FIXL(19), FIXL(21), FIXL(23), FIXL(25), FIXL(27),
+	FIXL(17), FIXL(18), FIXL(19), FIXL(21), FIXL(23), FIXL(25), FIXL(27), FIXL(28),
+	FIXL(20), FIXL(21), FIXL(22), FIXL(23), FIXL(24), FIXL(26), FIXL(28), FIXL(30),
+	FIXL(21), FIXL(22), FIXL(23), FIXL(24), FIXL(26), FIXL(28), FIXL(30), FIXL(32),
+	FIXL(22), FIXL(23), FIXL(24), FIXL(26), FIXL(28), FIXL(30), FIXL(32), FIXL(35),
+	FIXL(23), FIXL(24), FIXL(26), FIXL(28), FIXL(30), FIXL(32), FIXL(35), FIXL(38),
+	FIXL(25), FIXL(26), FIXL(28), FIXL(30), FIXL(32), FIXL(35), FIXL(38), FIXL(41),
+	FIXL(27), FIXL(28), FIXL(30), FIXL(32), FIXL(35), FIXL(38), FIXL(41), FIXL(45)
+};
+
+uint16_t inter_matrix_fixl[64] = {
+	FIXL(16), FIXL(17), FIXL(18), FIXL(19), FIXL(20), FIXL(21), FIXL(22), FIXL(23),
+	FIXL(17), FIXL(18), FIXL(19), FIXL(20), FIXL(21), FIXL(22), FIXL(23), FIXL(24),
+	FIXL(18), FIXL(19), FIXL(20), FIXL(21), FIXL(22), FIXL(23), FIXL(24), FIXL(25),
+	FIXL(19), FIXL(20), FIXL(21), FIXL(22), FIXL(23), FIXL(24), FIXL(26), FIXL(27),
+	FIXL(20), FIXL(21), FIXL(22), FIXL(23), FIXL(25), FIXL(26), FIXL(27), FIXL(28),
+	FIXL(21), FIXL(22), FIXL(23), FIXL(24), FIXL(26), FIXL(27), FIXL(28), FIXL(30),
+	FIXL(22), FIXL(23), FIXL(24), FIXL(26), FIXL(27), FIXL(28), FIXL(30), FIXL(31),
+	FIXL(23), FIXL(24), FIXL(25), FIXL(27), FIXL(28), FIXL(30), FIXL(31), FIXL(33)
 };
 
 uint8_t default_inter_matrix[64] = {
@@ -121,8 +116,18 @@ int16_t inter_matrix[64] = {
 	22, 23, 24, 26, 27, 28, 30, 31,
 	23, 24, 25, 27, 28, 30, 31, 33
 };
+uint16_t inter_matrix1[64] = {
+	16>>1, 17>>1, 18>>1, 19>>1, 20>>1, 21>>1, 22>>1, 23>>1,
+	17>>1, 18>>1, 19>>1, 20>>1, 21>>1, 22>>1, 23>>1, 24>>1,
+	18>>1, 19>>1, 20>>1, 21>>1, 22>>1, 23>>1, 24>>1, 25>>1,
+	19>>1, 20>>1, 21>>1, 22>>1, 23>>1, 24>>1, 26>>1, 27>>1,
+	20>>1, 21>>1, 22>>1, 23>>1, 25>>1, 26>>1, 27>>1, 28>>1,
+	21>>1, 22>>1, 23>>1, 24>>1, 26>>1, 27>>1, 28>>1, 30>>1,
+	22>>1, 23>>1, 24>>1, 26>>1, 27>>1, 28>>1, 30>>1, 31>>1,
+	23>>1, 24>>1, 25>>1, 27>>1, 28>>1, 30>>1, 31>>1, 33>>1
+};
 
-int16_t inter_matrix_fix[64] = {
+uint16_t inter_matrix_fix[64] = {
 	FIX(16), FIX(17), FIX(18), FIX(19), FIX(20), FIX(21), FIX(22), FIX(23),
 	FIX(17), FIX(18), FIX(19), FIX(20), FIX(21), FIX(22), FIX(23), FIX(24),
 	FIX(18), FIX(19), FIX(20), FIX(21), FIX(22), FIX(23), FIX(24), FIX(25),
@@ -132,10 +137,6 @@ int16_t inter_matrix_fix[64] = {
 	FIX(22), FIX(23), FIX(24), FIX(26), FIX(27), FIX(28), FIX(30), FIX(31),
 	FIX(23), FIX(24), FIX(25), FIX(27), FIX(28), FIX(30), FIX(31), FIX(33)
 };
-
-/*****************************************************************************
- * Functions
- ****************************************************************************/
 
 uint8_t
 get_intra_matrix_status(void)
@@ -198,10 +199,12 @@ set_intra_matrix(uint8_t * matrix)
 		if (intra_matrix[i] != matrix[i])
 			change = 1;
 
-		intra_matrix[i] = (int16_t) matrix[i];
+		intra_matrix1[i] = ((intra_matrix[i] = (int16_t) matrix[i])>>1);
+		intra_matrix1[i] += ((intra_matrix[i] == 1) ? 1: 0);
 		intra_matrix_fix[i] = FIX(intra_matrix[i]);
+		intra_matrix_fixl[i] = FIXL(intra_matrix[i]);
 	}
-	return /*custom_intra_matrix |*/ change;
+	return custom_intra_matrix | change;
 }
 
 
@@ -218,8 +221,10 @@ set_inter_matrix(uint8_t * matrix)
 		if (inter_matrix[i] != matrix[i])
 			change = 1;
 
-		inter_matrix[i] = (int16_t) matrix[i];
+		inter_matrix1[i] = ((inter_matrix[i] = (int16_t) matrix[i])>>1);
+		inter_matrix1[i] += ((inter_matrix[i] == 1) ? 1: 0);
 		inter_matrix_fix[i] = FIX(inter_matrix[i]);
+		inter_matrix_fixl[i] = FIXL(inter_matrix[i]);
 	}
-	return /*custom_inter_matrix |*/ change;
+	return custom_inter_matrix | change;
 }

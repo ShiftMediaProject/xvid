@@ -1,64 +1,7 @@
-/*****************************************************************************
- *
- *  XVID MPEG-4 VIDEO CODEC
- *  - Variable Length Coding tables -
- *
- *  Copyright(C) 2002 Michael Militzer <isibaar@xvid.org>
- *
- *  This file is part of XviD, a free MPEG-4 video encoder/decoder
- *
- *  XviD is free software; you can redistribute it and/or modify it
- *  under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
- *
- *  Under section 8 of the GNU General Public License, the copyright
- *  holders of XVID explicitly forbid distribution in the following
- *  countries:
- *
- *    - Japan
- *    - United States of America
- *
- *  Linking XviD statically or dynamically with other modules is making a
- *  combined work based on XviD.  Thus, the terms and conditions of the
- *  GNU General Public License cover the whole combination.
- *
- *  As a special exception, the copyright holders of XviD give you
- *  permission to link XviD with independent modules that communicate with
- *  XviD solely through the VFW1.1 and DShow interfaces, regardless of the
- *  license terms of these independent modules, and to copy and distribute
- *  the resulting combined work under terms of your choice, provided that
- *  every copy of the combined work is accompanied by a complete copy of
- *  the source code of XviD (the version of XviD used to produce the
- *  combined work), being distributed under the terms of the GNU General
- *  Public License plus this exception.  An independent module is a module
- *  which is not derived from or based on XviD.
- *
- *  Note that people who make modified versions of XviD are not obligated
- *  to grant this special exception for their modified versions; it is
- *  their choice whether to do so.  The GNU General Public License gives
- *  permission to release a modified version without this exception; this
- *  exception also makes it possible to release a modified version which
- *  carries forward this exception.
- *
- * $Id: vlc_codes.h,v 1.14 2003-02-13 17:31:33 edgomez Exp $
- *
- ****************************************************************************/
-
 #ifndef _VLC_CODES_H_
 #define _VLC_CODES_H_
 
 #include "../portab.h"
-#include "mbcoding.h"
 
 #define VLC_ERROR	(-1)
 
@@ -66,10 +9,6 @@
 #define ESCAPE1 6
 #define ESCAPE2 14
 #define ESCAPE3 15
-
-/*****************************************************************************
- * The Vector Length Coding structure
- ****************************************************************************/
 
 typedef struct
 {
@@ -101,9 +40,9 @@ typedef struct
 VLC_TABLE;
 
 
-/*****************************************************************************
- * common tables between encoder/decoder
- ****************************************************************************/
+/******************************************************************
+ * common tables between encoder/decoder                          *
+ ******************************************************************/
 
 static VLC_TABLE const coeff_tab[2][102] =
 {
@@ -422,18 +361,27 @@ static uint8_t const max_run[2][2][64] = {
 	}
 };
 
-
 /******************************************************************
  * encoder tables                                                 *
  ******************************************************************/
 
-/*
- * MCBPC Indexing by cbpc in first two bits, mode in last two.
- * CBPC as in table 4/H.263, MB type (mode): 3 = 01, 4 = 10.
- * Example: cbpc = 01 and mode = 4 gives index = 0110 = 6.
- */
+static VLC sprite_trajectory_code[32768];
 
-static VLC const mcbpc_intra_tab[15] = {
+static VLC sprite_trajectory_len[15] = {
+	{ 0x00 , 2}, 
+	{ 0x02 , 3}, { 0x03, 3}, { 0x04, 3}, { 0x05, 3}, { 0x06, 3}, 
+	{ 0x0E , 4}, { 0x1E, 5}, { 0x3E, 6}, { 0x7F, 7}, { 0xFE, 8},
+	{ 0x1FE, 9}, {0x3FE,10}, {0x7FE,11}, {0xFFE,12} };
+
+
+/* DCT coefficients. Four tables, two for last = 0, two for last = 1.
+   the sign bit must be added afterwards. */
+
+/* MCBPC Indexing by cbpc in first two bits, mode in last two.
+ CBPC as in table 4/H.263, MB type (mode): 3 = 01, 4 = 10.
+ Example: cbpc = 01 and mode = 4 gives index = 0110 = 6. */
+
+static VLC mcbpc_intra_tab[15] = {
 	{0x01, 9}, {0x01, 1}, {0x01, 4}, {0x00, 0},
 	{0x00, 0}, {0x01, 3}, {0x01, 6}, {0x00, 0},
 	{0x00, 0}, {0x02, 3}, {0x02, 6}, {0x00, 0},
@@ -443,19 +391,19 @@ static VLC const mcbpc_intra_tab[15] = {
 /* MCBPC inter.
    Addressing: 5 bit ccmmm (cc = CBPC, mmm = mode (1-4 binary)) */
 
-static VLC const mcbpc_inter_tab[29] = {
+static VLC mcbpc_inter_tab[29] = {
 	{1, 1}, {3, 3}, {2, 3}, {3, 5}, {4, 6}, {1, 9}, {0, 0}, {0, 0},
 	{3, 4}, {7, 7}, {5, 7}, {4, 8}, {4, 9}, {0, 0}, {0, 0}, {0, 0},
 	{2, 4}, {6, 7}, {4, 7}, {3, 8}, {3, 9}, {0, 0}, {0, 0}, {0, 0},
 	{5, 6}, {5, 9}, {5, 8}, {3, 7}, {2, 9}
 };
 
-static VLC const cbpy_tab[16] = {
+static const VLC cbpy_tab[16] = {
 	{3, 4}, {5, 5}, {4, 5}, {9, 4}, {3, 5}, {7, 4}, {2, 6}, {11, 4},
 	{2, 5}, {3, 6}, {5, 4}, {10, 4}, {4, 4}, {8, 4}, {6, 4}, {3, 2}
 };
 
-static VLC const dcy_tab[511] = {
+static const VLC dcy_tab[511] = {
 	{0x100, 15}, {0x101, 15}, {0x102, 15}, {0x103, 15},
 	{0x104, 15}, {0x105, 15}, {0x106, 15}, {0x107, 15},
 	{0x108, 15}, {0x109, 15}, {0x10a, 15}, {0x10b, 15},
@@ -586,7 +534,7 @@ static VLC const dcy_tab[511] = {
 	{0x1fd, 15}, {0x1fe, 15}, {0x1ff, 15},
 };
 
-static VLC const dcc_tab[511] = {
+static const VLC dcc_tab[511] = {
 	{0x100, 16}, {0x101, 16}, {0x102, 16}, {0x103, 16},
 	{0x104, 16}, {0x105, 16}, {0x106, 16}, {0x107, 16},
 	{0x108, 16}, {0x109, 16}, {0x10a, 16}, {0x10b, 16},
@@ -718,7 +666,7 @@ static VLC const dcc_tab[511] = {
 };
 
 
-static VLC const mb_motion_table[65] = {
+static const VLC mb_motion_table[65] = {
 	{0x05, 13}, {0x07, 13}, {0x05, 12}, {0x07, 12},
 	{0x09, 12}, {0x0b, 12}, {0x0d, 12}, {0x0f, 12},
 	{0x09, 11}, {0x0b, 11}, {0x0d, 11}, {0x0f, 11},
@@ -753,7 +701,6 @@ static VLC const mcbpc_intra_table[64] = {
 	{3, 1},  {3, 1},  {3, 1},  {3, 1},  {3, 1},  {3, 1},  {3, 1},  {3, 1},
 	{3, 1},  {3, 1},  {3, 1},  {3, 1},  {3, 1},  {3, 1},  {3, 1},  {3, 1}
 };
-
 
 static VLC const mcbpc_inter_table[257] = {
 	{VLC_ERROR, 0}, {255, 9}, {52, 9}, {36, 9}, {20, 9}, {49, 9}, {35, 8}, {35, 8},
@@ -801,7 +748,6 @@ static VLC const cbpy_table[64] = {
 	{15, 2}, {15, 2}, {15, 2}, {15, 2}, {15, 2}, {15, 2}, {15, 2}, {15, 2},
 	{15, 2}, {15, 2}, {15, 2}, {15, 2}, {15, 2}, {15, 2}, {15, 2}, {15, 2}
 };
-
 
 static VLC const TMNMVtab0[] = {
 	{3, 4}, {-3, 4}, {2, 3}, {2, 3}, {-2, 3}, {-2, 3}, {1, 2},
@@ -873,7 +819,7 @@ static short const dc_threshold[] = {
 	21514, 26984,  8307, 28531, 29798, 24951, 25970, 26912,
 	 8307, 25956, 26994, 25974,  8292, 29286, 28015, 29728,
 	25960, 18208, 21838, 18208, 19536, 22560, 26998,  8260,
-	28515, 25956,  8291, 12328, 14638, 12590, 11817, 22794,
+	28515, 25956,  8291, 25640, 30309, 27749, 11817, 22794,
 	30063,  8306, 28531, 29798, 24951, 25970, 25632, 29545,
 	29300, 25193, 29813, 29295, 26656, 29537, 29728,  8303,
 	26983, 25974, 24864, 25443, 29541,  8307, 28532, 26912,

@@ -1,59 +1,4 @@
-/*****************************************************************************
- *
- *  XVID MPEG4 Codec
- *  - Colorspace functions - header files
- *
- *  This file is part of XviD, a free MPEG-4 video encoder/decoder
- *
- *  XviD is free software; you can redistribute it and/or modify it
- *  under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
- *
- *  Under section 8 of the GNU General Public License, the copyright
- *  holders of XVID explicitly forbid distribution in the following
- *  countries:
- *
- *    - Japan
- *    - United States of America
- *
- *  Linking XviD statically or dynamically with other modules is making a
- *  combined work based on XviD.  Thus, the terms and conditions of the
- *  GNU General Public License cover the whole combination.
- *
- *  As a special exception, the copyright holders of XviD give you
- *  permission to link XviD with independent modules that communicate with
- *  XviD solely through the VFW1.1 and DShow interfaces, regardless of the
- *  license terms of these independent modules, and to copy and distribute
- *  the resulting combined work under terms of your choice, provided that
- *  every copy of the combined work is accompanied by a complete copy of
- *  the source code of XviD (the version of XviD used to produce the
- *  combined work), being distributed under the terms of the GNU General
- *  Public License plus this exception.  An independent module is a module
- *  which is not derived from or based on XviD.
- *
- *  Note that people who make modified versions of XviD are not obligated
- *  to grant this special exception for their modified versions; it is
- *  their choice whether to do so.  The GNU General Public License gives
- *  permission to release a modified version without this exception; this
- *  exception also makes it possible to release a modified version which
- *  carries forward this exception.
- *
- * $Id: colorspace.h,v 1.4 2002-11-17 00:20:30 edgomez Exp $
- *
- ****************************************************************************/
-
 #ifndef _COLORSPACE_H
-
 #define _COLORSPACE_H
 
 #include "../portab.h"
@@ -64,92 +9,141 @@
 void colorspace_init(void);
 
 
-/* input color conversion functions (encoder) */
 
-typedef void (color_inputFunc) (uint8_t * y_out,
-								uint8_t * u_out,
-								uint8_t * v_out,
-								uint8_t * src,
-								int width,
-								int height,
-								int stride);
+/* colorspace conversion function (encoder) */
 
-typedef color_inputFunc *color_inputFuncPtr;
-
-extern color_inputFuncPtr rgb555_to_yv12;
-extern color_inputFuncPtr rgb565_to_yv12;
-extern color_inputFuncPtr rgb24_to_yv12;
-extern color_inputFuncPtr rgb32_to_yv12;
-extern color_inputFuncPtr yuv_to_yv12;
-extern color_inputFuncPtr yuyv_to_yv12;
-extern color_inputFuncPtr uyvy_to_yv12;
-
-/* plain c */
-color_inputFunc rgb555_to_yv12_c;
-color_inputFunc rgb565_to_yv12_c;
-color_inputFunc rgb24_to_yv12_c;
-color_inputFunc rgb32_to_yv12_c;
-color_inputFunc yuv_to_yv12_c;
-color_inputFunc yuyv_to_yv12_c;
-color_inputFunc uyvy_to_yv12_c;
-
-/* mmx */
-color_inputFunc rgb24_to_yv12_mmx;
-color_inputFunc rgb32_to_yv12_mmx;
-color_inputFunc yuv_to_yv12_mmx;
-color_inputFunc yuyv_to_yv12_mmx;
-color_inputFunc uyvy_to_yv12_mmx;
-
-/* xmm */
-color_inputFunc yuv_to_yv12_xmm;
-
-
-/* output color conversion functions (decoder) */
-
-typedef void (color_outputFunc) (uint8_t * dst,
-								 int dst_stride,
+typedef void (packedFunc) (uint8_t * x_ptr,
+								 int x_stride,
 								 uint8_t * y_src,
 								 uint8_t * v_src,
 								 uint8_t * u_src,
 								 int y_stride,
 								 int uv_stride,
 								 int width,
-								 int height);
+								 int height,
+								 int vflip);
 
-typedef color_outputFunc *color_outputFuncPtr;
+typedef packedFunc *packedFuncPtr;
 
-extern color_outputFuncPtr yv12_to_rgb555;
-extern color_outputFuncPtr yv12_to_rgb565;
-extern color_outputFuncPtr yv12_to_rgb24;
-extern color_outputFuncPtr yv12_to_rgb32;
-extern color_outputFuncPtr yv12_to_yuv;
-extern color_outputFuncPtr yv12_to_yuyv;
-extern color_outputFuncPtr yv12_to_uyvy;
+
+/* xxx_to_yv12 colorspace conversion functions (encoder) */
+
+extern packedFuncPtr rgb555_to_yv12;
+extern packedFuncPtr rgb565_to_yv12;
+extern packedFuncPtr bgr_to_yv12;
+extern packedFuncPtr bgra_to_yv12;
+extern packedFuncPtr abgr_to_yv12;
+extern packedFuncPtr rgba_to_yv12;
+extern packedFuncPtr yuyv_to_yv12;
+extern packedFuncPtr uyvy_to_yv12;
+
+extern packedFuncPtr rgb555i_to_yv12;
+extern packedFuncPtr rgb565i_to_yv12;
+extern packedFuncPtr bgri_to_yv12;
+extern packedFuncPtr bgrai_to_yv12;
+extern packedFuncPtr abgri_to_yv12;
+extern packedFuncPtr rgbai_to_yv12;
+extern packedFuncPtr yuyvi_to_yv12;
+extern packedFuncPtr uyvyi_to_yv12;
+
 
 /* plain c */
-void init_yuv_to_rgb(void);
+packedFunc rgb555_to_yv12_c;
+packedFunc rgb565_to_yv12_c;
+packedFunc bgr_to_yv12_c;
+packedFunc bgra_to_yv12_c;
+packedFunc abgr_to_yv12_c;
+packedFunc rgba_to_yv12_c;
+packedFunc yuyv_to_yv12_c;
+packedFunc uyvy_to_yv12_c;
 
-color_outputFunc yv12_to_rgb555_c;
-color_outputFunc yv12_to_rgb565_c;
-color_outputFunc yv12_to_rgb24_c;
-color_outputFunc yv12_to_rgb32_c;
-color_outputFunc yv12_to_yuv_c;
-color_outputFunc yv12_to_yuyv_c;
-color_outputFunc yv12_to_uyvy_c;
+packedFunc rgb555i_to_yv12_c;
+packedFunc rgb565i_to_yv12_c;
+packedFunc bgri_to_yv12_c;
+packedFunc bgrai_to_yv12_c;
+packedFunc abgri_to_yv12_c;
+packedFunc rgbai_to_yv12_c;
+packedFunc yuyvi_to_yv12_c;
+packedFunc uyvyi_to_yv12_c;
+
 
 /* mmx */
-color_outputFunc yv12_to_rgb24_mmx;
-color_outputFunc yv12_to_rgb32_mmx;
-color_outputFunc yv12_to_yuyv_mmx;
-color_outputFunc yv12_to_uyvy_mmx;
+packedFunc bgr_to_yv12_mmx;
+packedFunc bgra_to_yv12_mmx;
+packedFunc yuyv_to_yv12_mmx;
+packedFunc uyvy_to_yv12_mmx;
+
+/* 3dnow */
+packedFunc yuyv_to_yv12_3dn;
+packedFunc uyvy_to_yv12_3dn;
+
+/* xmm */
+packedFunc yuyv_to_yv12_xmm;
+packedFunc uyvy_to_yv12_xmm;
 
 
-void user_to_yuv_c(uint8_t * y_out,
-				   uint8_t * u_out,
-				   uint8_t * v_out,
-				   int stride,
-				   DEC_PICTURE * picture,
-				   int width,
-				   int height);
+/* yv12_to_xxx colorspace conversion functions (decoder) */
+
+extern packedFuncPtr yv12_to_rgb555;
+extern packedFuncPtr yv12_to_rgb565;
+extern packedFuncPtr yv12_to_bgr;
+extern packedFuncPtr yv12_to_bgra;
+extern packedFuncPtr yv12_to_abgr;
+extern packedFuncPtr yv12_to_rgba;
+extern packedFuncPtr yv12_to_yuyv;
+extern packedFuncPtr yv12_to_uyvy;
+
+extern packedFuncPtr yv12_to_rgb555i;
+extern packedFuncPtr yv12_to_rgb565i;
+extern packedFuncPtr yv12_to_bgri;
+extern packedFuncPtr yv12_to_bgrai;
+extern packedFuncPtr yv12_to_abgri;
+extern packedFuncPtr yv12_to_rgbai;
+extern packedFuncPtr yv12_to_yuyvi;
+extern packedFuncPtr yv12_to_uyvyi;
+
+/* plain c */
+packedFunc yv12_to_rgb555_c;
+packedFunc yv12_to_rgb565_c;
+packedFunc yv12_to_bgr_c;
+packedFunc yv12_to_bgra_c;
+packedFunc yv12_to_abgr_c;
+packedFunc yv12_to_rgba_c;
+packedFunc yv12_to_yuyv_c;
+packedFunc yv12_to_uyvy_c;
+
+packedFunc yv12_to_rgb555i_c;
+packedFunc yv12_to_rgb565i_c;
+packedFunc yv12_to_bgri_c;
+packedFunc yv12_to_bgrai_c;
+packedFunc yv12_to_abgri_c;
+packedFunc yv12_to_rgbai_c;
+packedFunc yv12_to_yuyvi_c;
+packedFunc yv12_to_uyvyi_c;
+
+/* mmx */
+packedFunc yv12_to_bgr_mmx;
+packedFunc yv12_to_bgra_mmx;
+packedFunc yv12_to_yuyv_mmx;
+packedFunc yv12_to_uyvy_mmx;
+
+packedFunc yv12_to_yuyvi_mmx;
+packedFunc yv12_to_uyvyi_mmx;
+
+
+typedef void (planarFunc) (
+				uint8_t * y_dst, uint8_t * u_dst, uint8_t * v_dst, 
+				int y_dst_stride, int uv_dst_stride,
+				uint8_t * y_src, uint8_t * u_src, uint8_t * v_src, 
+				int y_src_stride, int uv_src_stride,
+				int width, int height, int vflip);
+typedef planarFunc *planarFuncPtr;
+
+extern planarFuncPtr yv12_to_yv12;
+
+planarFunc yv12_to_yv12_c;
+planarFunc yv12_to_yv12_mmx;
+planarFunc yv12_to_yv12_xmm;
+
 
 #endif							/* _COLORSPACE_H_ */

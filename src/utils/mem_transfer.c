@@ -1,56 +1,34 @@
 /*****************************************************************************
  *
  *  XVID MPEG-4 VIDEO CODEC
- *  - 8bit<->16bit transfer -
+ *  - 8bit<->16bit transfer  -
  *
- *  Copyright(C) 2001-2002 Peter Ross <pross@xvid.org>
- *
- *  This file is part of XviD, a free MPEG-4 video encoder/decoder
- *
- *  XviD is free software; you can redistribute it and/or modify it
- *  under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
+ *  This program is free software ; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation ; either version 2 of the License, or
  *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  but WITHOUT ANY WARRANTY ; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
+ *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  Under section 8 of the GNU General Public License, the copyright
- *  holders of XVID explicitly forbid distribution in the following
- *  countries:
+ ****************************************************************************/
+/*****************************************************************************
  *
- *    - Japan
- *    - United States of America
+ *  History
  *
- *  Linking XviD statically or dynamically with other modules is making a
- *  combined work based on XviD.  Thus, the terms and conditions of the
- *  GNU General Public License cover the whole combination.
+ *  - 14.06.2002 Changed legal header with the new FSF address
+ *	- 14.04.2002 added transfer_8to16sub2
+ *	- 07.01.2002 merge functions from compensate; rename functions
+ *	- 22.12.2001 transfer_8to8add16 limit fix
+ *	- 07.11.2001 initial version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  As a special exception, the copyright holders of XviD give you
- *  permission to link XviD with independent modules that communicate with
- *  XviD solely through the VFW1.1 and DShow interfaces, regardless of the
- *  license terms of these independent modules, and to copy and distribute
- *  the resulting combined work under terms of your choice, provided that
- *  every copy of the combined work is accompanied by a complete copy of
- *  the source code of XviD (the version of XviD used to produce the
- *  combined work), being distributed under the terms of the GNU General
- *  Public License plus this exception.  An independent module is a module
- *  which is not derived from or based on XviD.
- *
- *  Note that people who make modified versions of XviD are not obligated
- *  to grant this special exception for their modified versions; it is
- *  their choice whether to do so.  The GNU General Public License gives
- *  permission to release a modified version without this exception; this
- *  exception also makes it possible to release a modified version which
- *  carries forward this exception.
- *
- * $Id: mem_transfer.c,v 1.8 2002-11-26 23:44:11 edgomez Exp $
+ *  $Id: mem_transfer.c,v 1.9 2003-02-15 15:22:19 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -63,6 +41,7 @@ TRANSFER_8TO16COPY_PTR transfer_8to16copy;
 TRANSFER_16TO8COPY_PTR transfer_16to8copy;
 
 TRANSFER_8TO16SUB_PTR  transfer_8to16sub;
+TRANSFER_8TO16SUBRO_PTR  transfer_8to16subro;
 TRANSFER_8TO16SUB2_PTR transfer_8to16sub2;
 TRANSFER_16TO8ADD_PTR  transfer_16to8add;
 
@@ -167,6 +146,25 @@ transfer_8to16sub_c(int16_t * const dct,
 }
 
 
+void
+transfer_8to16subro_c(int16_t * const dct,
+					const uint8_t * const cur,
+					const uint8_t * ref,
+					const uint32_t stride)
+{
+	uint32_t i, j;
+
+	for (j = 0; j < 8; j++) {
+		for (i = 0; i < 8; i++) {
+			uint8_t c = cur[j * stride + i];
+			uint8_t r = ref[j * stride + i];
+			dct[j * 8 + i] = (int16_t) c - (int16_t) r;
+		}
+	}
+}
+
+
+
 /*
  * C   - the current buffer
  * R1  - the 1st reference buffer
@@ -197,7 +195,7 @@ transfer_8to16sub2_c(int16_t * const dct,
 			if (r > 255) {
 				r = 255;
 			}
-			/*cur[j * stride + i] = r; */
+			//cur[j * stride + i] = r;
 			dct[j * 8 + i] = (int16_t) c - (int16_t) r;
 		}
 	}

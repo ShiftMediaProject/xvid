@@ -1,87 +1,134 @@
-/*****************************************************************************
+/**************************************************************************
  *
- *  XVID MPEG-4 VIDEO CODEC
- *  - colorspace conversion module -
+ *	XVID MPEG-4 VIDEO CODEC
+ *	colorspace conversions
  *
- *  Copyright(C) 2002 Peter Ross <pross@xvid.org>
- *               2002 Michael Militzer <isibaar@xvid.org>
+ *	This program is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
  *
- *  This file is part of XviD, a free MPEG-4 video encoder/decoder
+ *	This program is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
  *
- *  XviD is free software; you can redistribute it and/or modify it
- *  under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *	You should have received a copy of the GNU General Public License
+ *	along with this program; if not, write to the Free Software
+ *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
- *
- *  Under section 8 of the GNU General Public License, the copyright
- *  holders of XVID explicitly forbid distribution in the following
- *  countries:
- *
- *    - Japan
- *    - United States of America
- *
- *  Linking XviD statically or dynamically with other modules is making a
- *  combined work based on XviD.  Thus, the terms and conditions of the
- *  GNU General Public License cover the whole combination.
- *
- *  As a special exception, the copyright holders of XviD give you
- *  permission to link XviD with independent modules that communicate with
- *  XviD solely through the VFW1.1 and DShow interfaces, regardless of the
- *  license terms of these independent modules, and to copy and distribute
- *  the resulting combined work under terms of your choice, provided that
- *  every copy of the combined work is accompanied by a complete copy of
- *  the source code of XviD (the version of XviD used to produce the
- *  combined work), being distributed under the terms of the GNU General
- *  Public License plus this exception.  An independent module is a module
- *  which is not derived from or based on XviD.
- *
- *  Note that people who make modified versions of XviD are not obligated
- *  to grant this special exception for their modified versions; it is
- *  their choice whether to do so.  The GNU General Public License gives
- *  permission to release a modified version without this exception; this
- *  exception also makes it possible to release a modified version which
- *  carries forward this exception.
- *
- * $Id: colorspace.c,v 1.7 2002-11-26 23:44:10 edgomez Exp $
- *
- ****************************************************************************/
+ *************************************************************************/
 
-#include <string.h>				/* memcpy */
+/**************************************************************************
+ *
+ *	History:
+ *
+ *	14.04.2002	added user_to_yuv_c()
+ *	30.02.2002	out_yuv dst_stride2 fix
+ *	26.02.2002	rgb555, rgb565
+ *	24.11.2001	accuracy improvement to yuyv/vyuy conversion
+ *	28.10.2001	total rewrite <pross@cs.rmit.edu.au>
+ *
+ **************************************************************************/
 
+#include <string.h>				// memcpy
+
+#include "../global.h"
+#include "../divx4.h"			// DEC_PICTURE
 #include "colorspace.h"
-#include "../divx4.h"			/* DEC_PICTURE */
 
-/* function pointers */
+// function pointers
 
 /* input */
-color_inputFuncPtr rgb555_to_yv12;
-color_inputFuncPtr rgb565_to_yv12;
-color_inputFuncPtr rgb24_to_yv12;
-color_inputFuncPtr rgb32_to_yv12;
-color_inputFuncPtr yuv_to_yv12;
-color_inputFuncPtr yuyv_to_yv12;
-color_inputFuncPtr uyvy_to_yv12;
+packedFuncPtr rgb555_to_yv12;
+packedFuncPtr rgb565_to_yv12;
+packedFuncPtr bgr_to_yv12;
+packedFuncPtr bgra_to_yv12;
+packedFuncPtr abgr_to_yv12;
+packedFuncPtr rgba_to_yv12;
+packedFuncPtr yuv_to_yv12;
+packedFuncPtr yuyv_to_yv12;
+packedFuncPtr uyvy_to_yv12;
+
+packedFuncPtr rgb555i_to_yv12;
+packedFuncPtr rgb565i_to_yv12;
+packedFuncPtr bgri_to_yv12;
+packedFuncPtr bgrai_to_yv12;
+packedFuncPtr abgri_to_yv12;
+packedFuncPtr rgbai_to_yv12;
+packedFuncPtr yuyvi_to_yv12;
+packedFuncPtr uyvyi_to_yv12;
 
 /* output */
-color_outputFuncPtr yv12_to_rgb555;
-color_outputFuncPtr yv12_to_rgb565;
-color_outputFuncPtr yv12_to_rgb24;
-color_outputFuncPtr yv12_to_rgb32;
-color_outputFuncPtr yv12_to_yuv;
-color_outputFuncPtr yv12_to_yuyv;
-color_outputFuncPtr yv12_to_uyvy;
+packedFuncPtr yv12_to_rgb555;
+packedFuncPtr yv12_to_rgb565;
+packedFuncPtr yv12_to_bgr;
+packedFuncPtr yv12_to_bgra;
+packedFuncPtr yv12_to_abgr;
+packedFuncPtr yv12_to_rgba;
+packedFuncPtr yv12_to_yuv;
+packedFuncPtr yv12_to_yuyv;
+packedFuncPtr yv12_to_uyvy;
 
-#define MIN(A,B)	((A)<(B)?(A):(B))
-#define MAX(A,B)	((A)>(B)?(A):(B))
+packedFuncPtr yv12_to_rgb555i;
+packedFuncPtr yv12_to_rgb565i;
+packedFuncPtr yv12_to_bgri;
+packedFuncPtr yv12_to_bgrai;
+packedFuncPtr yv12_to_abgri;
+packedFuncPtr yv12_to_rgbai;
+packedFuncPtr yv12_to_yuyvi;
+packedFuncPtr yv12_to_uyvyi;
+
+planarFuncPtr yv12_to_yv12;
+
+
+int32_t RGB_Y_tab[256];
+int32_t B_U_tab[256];
+int32_t G_U_tab[256];
+int32_t G_V_tab[256];
+int32_t R_V_tab[256];
+
+
+
+/********** generic colorspace macro **********/
+
+
+#define MAKE_COLORSPACE(NAME,SIZE,PIXELS,VPIXELS,FUNC,C1,C2,C3,C4) \
+void	\
+NAME(uint8_t * x_ptr, int x_stride,	\
+				 uint8_t * y_ptr, uint8_t * u_ptr, uint8_t * v_ptr,	\
+				 int y_stride, int uv_stride,	\
+				 int width, int height, int vflip)	\
+{	\
+	int fixed_width = (width + 1) & ~1;				\
+	int x_dif = x_stride - (SIZE)*fixed_width;		\
+	int y_dif = y_stride - fixed_width;				\
+	int uv_dif = uv_stride - (fixed_width / 2);		\
+	int x, y;										\
+	if (vflip) {								\
+		x_ptr += (height - 1) * x_stride;			\
+		x_dif = -(SIZE)*fixed_width - x_stride;		\
+		x_stride = -x_stride;						\
+	}												\
+	for (y = 0; y < height; y+=(VPIXELS)) {			\
+		FUNC##_ROW(SIZE,C1,C2,C3,C4);				\
+		for (x = 0; x < fixed_width; x+=(PIXELS)) {	\
+			FUNC(SIZE,C1,C2,C3,C4);				\
+			x_ptr += (PIXELS)*(SIZE);				\
+			y_ptr += (PIXELS);						\
+			u_ptr += (PIXELS)/2;					\
+			v_ptr += (PIXELS)/2;					\
+		}											\
+		x_ptr += x_dif + (VPIXELS-1)*x_stride;		\
+		y_ptr += y_dif + (VPIXELS-1)*y_stride;		\
+		u_ptr += uv_dif + ((VPIXELS/2)-1)*uv_stride;	\
+		v_ptr += uv_dif + ((VPIXELS/2)-1)*uv_stride;	\
+	}												\
+}
+
+
+
+/********** colorspace input (xxx_to_yv12) functions **********/
 
 /*	rgb -> yuv def's
 
@@ -112,470 +159,160 @@ color_outputFuncPtr yv12_to_uyvy;
 #define FIX_IN(x)		((uint16_t) ((x) * (1L<<SCALEBITS_IN) + 0.5))
 
 
-int32_t RGB_Y_tab[256];
-int32_t B_U_tab[256];
-int32_t G_U_tab[256];
-int32_t G_V_tab[256];
-int32_t R_V_tab[256];
-
-
-/* rgb555 -> yuv 4:2:0 planar */
-void
-rgb555_to_yv12_c(uint8_t * y_out,
-				 uint8_t * u_out,
-				 uint8_t * v_out,
-				 uint8_t * src,
-				 int width,
-				 int height,
-				 int y_stride)
-{
-	int32_t src_stride = width * 2;
-	uint32_t y_dif = y_stride - width;
-	uint32_t uv_dif = (y_stride - width) / 2;
-	uint32_t x, y;
-
-	if (height < 0) {
-		height = -height;
-		src += (height - 1) * src_stride;
-		src_stride = -src_stride;
-	}
-
-
-	for (y = height / 2; y; y--) {
-		/* process one 2x2 block per iteration */
-		for (x = 0; x < (uint32_t) width; x += 2) {
-			int rgb, r, g, b, r4, g4, b4;
-
-			rgb = *(uint16_t *) (src + x * 2);
-			b4 = b = (rgb << 3) & 0xf8;
-			g4 = g = (rgb >> 2) & 0xf8;
-			r4 = r = (rgb >> 7) & 0xf8;
-			y_out[0] =
-				(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +
-							FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;
-
-			rgb = *(uint16_t *) (src + x * 2 + src_stride);
-			b4 += b = (rgb << 3) & 0xf8;
-			g4 += g = (rgb >> 2) & 0xf8;
-			r4 += r = (rgb >> 7) & 0xf8;
-			y_out[y_stride] =
-				(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +
-							FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;
-
-			rgb = *(uint16_t *) (src + x * 2 + 2);
-			b4 += b = (rgb << 3) & 0xf8;
-			g4 += g = (rgb >> 2) & 0xf8;
-			r4 += r = (rgb >> 7) & 0xf8;
-			y_out[1] =
-				(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +
-							FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;
-
-			rgb = *(uint16_t *) (src + x * 2 + src_stride + 2);
-			b4 += b = (rgb << 3) & 0xf8;
-			g4 += g = (rgb >> 2) & 0xf8;
-			r4 += r = (rgb >> 7) & 0xf8;
-			y_out[y_stride + 1] =
-				(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +
-							FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;
-
-			*u_out++ =
-				(uint8_t) ((-FIX_IN(U_R_IN) * r4 - FIX_IN(U_G_IN) * g4 +
-							FIX_IN(U_B_IN) * b4) >> (SCALEBITS_IN + 2)) +
-				U_ADD_IN;
-
-
-			*v_out++ =
-				(uint8_t) ((FIX_IN(V_R_IN) * r4 - FIX_IN(V_G_IN) * g4 -
-							FIX_IN(V_B_IN) * b4) >> (SCALEBITS_IN + 2)) +
-				V_ADD_IN;
-
-			y_out += 2;
-		}
-		src += src_stride * 2;
-		y_out += y_dif + y_stride;
-		u_out += uv_dif;
-		v_out += uv_dif;
-	}
-}
-
-
-
-/* rgb565_to_yuv_c
-	NOTE:	identical to rgb555 except for shift/mask 
-			not tested */
-
-void
-rgb565_to_yv12_c(uint8_t * y_out,
-				 uint8_t * u_out,
-				 uint8_t * v_out,
-				 uint8_t * src,
-				 int width,
-				 int height,
-				 int y_stride)
-{
-	int32_t src_stride = width * 2;
-
-	uint32_t y_dif = y_stride - width;
-	uint32_t uv_dif = (y_stride - width) / 2;
-	uint32_t x, y;
-
-	if (height < 0) {
-		height = -height;
-		src += (height - 1) * src_stride;
-		src_stride = -src_stride;
-	}
-
-
-	for (y = height / 2; y; y--) {
-		/* process one 2x2 block per iteration */
-		for (x = 0; x < (uint32_t) width; x += 2) {
-			int rgb, r, g, b, r4, g4, b4;
-
-			rgb = *(uint16_t *) (src + x * 2);
-			b4 = b = (rgb << 3) & 0xf8;
-			g4 = g = (rgb >> 3) & 0xfc;
-			r4 = r = (rgb >> 8) & 0xf8;
-			y_out[0] =
-				(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +
-							FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;
-
-			rgb = *(uint16_t *) (src + x * 2 + src_stride);
-			b4 += b = (rgb << 3) & 0xf8;
-			g4 += g = (rgb >> 3) & 0xfc;
-			r4 += r = (rgb >> 8) & 0xf8;
-			y_out[y_stride] =
-				(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +
-							FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;
-
-			rgb = *(uint16_t *) (src + x * 2 + 2);
-			b4 += b = (rgb << 3) & 0xf8;
-			g4 += g = (rgb >> 3) & 0xfc;
-			r4 += r = (rgb >> 8) & 0xf8;
-			y_out[1] =
-				(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +
-							FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;
-
-			rgb = *(uint16_t *) (src + x * 2 + src_stride + 2);
-			b4 += b = (rgb << 3) & 0xf8;
-			g4 += g = (rgb >> 3) & 0xfc;
-			r4 += r = (rgb >> 8) & 0xf8;
-			y_out[y_stride + 1] =
-				(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +
-							FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;
-
-			*u_out++ =
-				(uint8_t) ((-FIX_IN(U_R_IN) * r4 - FIX_IN(U_G_IN) * g4 +
-							FIX_IN(U_B_IN) * b4) >> (SCALEBITS_IN + 2)) +
-				U_ADD_IN;
-
-
-			*v_out++ =
-				(uint8_t) ((FIX_IN(V_R_IN) * r4 - FIX_IN(V_G_IN) * g4 -
-							FIX_IN(V_B_IN) * b4) >> (SCALEBITS_IN + 2)) +
-				V_ADD_IN;
-
-			y_out += 2;
-		}
-		src += src_stride * 2;
-		y_out += y_dif + y_stride;
-		u_out += uv_dif;
-		v_out += uv_dif;
-	}
-}
-
-
-
-
-/*	rgb24 -> yuv 4:2:0 planar 
-
-	NOTE: always flips.
-*/
-
-void
-rgb24_to_yv12_c(uint8_t * y_out,
-				uint8_t * u_out,
-				uint8_t * v_out,
-				uint8_t * src,
-				int width,
-				int height,
-				int stride)
-{
-	uint32_t width3 = (width << 1) + width;	/* width * 3 */
-	uint32_t src_dif = (width << 3) + width;	/* width3 * 3 */
-	uint32_t y_dif = (stride << 1) - width;
-	uint32_t uv_dif = (stride - width) >> 1;
-	uint32_t x, y;
-
-	src += (height - 2) * width3;
-
-
-	for (y = height >> 1; y; y--) {
-		for (x = width >> 1; x; x--) {
-			uint32_t r, g, b, r4, g4, b4;
-
-			b4 = b = src[0];
-			g4 = g = src[1];
-			r4 = r = src[2];
-			y_out[stride + 0] =
-				(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +
-							FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;
-
-			b4 += (b = src[3]);
-			g4 += (g = src[4]);
-			r4 += (r = src[5]);
-			y_out[stride + 1] =
-				(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +
-							FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;
-
-			b4 += (b = src[width3 + 0]);
-			g4 += (g = src[width3 + 1]);
-			r4 += (r = src[width3 + 2]);
-			y_out[0] =
-				(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +
-							FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;
-
-			b4 += (b = src[width3 + 3]);
-			g4 += (g = src[width3 + 4]);
-			r4 += (r = src[width3 + 5]);
-			y_out[1] =
-				(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +
-							FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;
-
-			*u_out++ =
-				(uint8_t) ((-FIX_IN(U_R_IN) * r4 - FIX_IN(U_G_IN) * g4 +
-							FIX_IN(U_B_IN) * b4) >> (SCALEBITS_IN + 2)) +
-				U_ADD_IN;
-
-
-			*v_out++ =
-				(uint8_t) ((FIX_IN(V_R_IN) * r4 - FIX_IN(V_G_IN) * g4 -
-							FIX_IN(V_B_IN) * b4) >> (SCALEBITS_IN + 2)) +
-				V_ADD_IN;
-
-
-			src += 6;
-			y_out += 2;
-		}
-		src -= src_dif;
-		y_out += y_dif;
-		u_out += uv_dif;
-		v_out += uv_dif;
-	}
-}
-
-
-/*	rgb32 -> yuv 4:2:0 planar 
-
-	NOTE: always flips
-*/
-
-void
-rgb32_to_yv12_c(uint8_t * y_out,
-				uint8_t * u_out,
-				uint8_t * v_out,
-				uint8_t * src,
-				int width,
-				int height,
-				int stride)
-{
-	uint32_t width4 = (width << 2);	/* width * 4 */
-	uint32_t src_dif = 3 * width4;
-	uint32_t y_dif = (stride << 1) - width;
-	uint32_t uv_dif = (stride - width) >> 1;
-	uint32_t x, y;
-
-	src += (height - 2) * width4;
-
-	for (y = height >> 1; y; y--) {
-		for (x = width >> 1; x; x--) {
-			uint32_t r, g, b, r4, g4, b4;
-
-			b4 = b = src[0];
-			g4 = g = src[1];
-			r4 = r = src[2];
-			y_out[stride + 0] =
-				(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +
-							FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;
-
-			b4 += (b = src[4]);
-			g4 += (g = src[5]);
-			r4 += (r = src[6]);
-			y_out[stride + 1] =
-				(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +
-							FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;
-
-			b4 += (b = src[width4 + 0]);
-			g4 += (g = src[width4 + 1]);
-			r4 += (r = src[width4 + 2]);
-
-			y_out[0] =
-				(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +
-							FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;
-
-			b4 += (b = src[width4 + 4]);
-			g4 += (g = src[width4 + 5]);
-			r4 += (r = src[width4 + 6]);
-			y_out[1] =
-				(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +
-							FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;
-
-			*u_out++ =
-				(uint8_t) ((-FIX_IN(U_R_IN) * r4 - FIX_IN(U_G_IN) * g4 +
-							FIX_IN(U_B_IN) * b4) >> (SCALEBITS_IN + 2)) +
-				U_ADD_IN;
-
-			*v_out++ =
-				(uint8_t) ((FIX_IN(V_R_IN) * r4 - FIX_IN(V_G_IN) * g4 -
-							FIX_IN(V_B_IN) * b4) >> (SCALEBITS_IN + 2)) +
-				V_ADD_IN;
-
-			src += 8;
-			y_out += 2;
-		}
-		src -= src_dif;
-		y_out += y_dif;
-		u_out += uv_dif;
-		v_out += uv_dif;
-	}
-}
-
-/*	yuv planar -> yuv 4:2:0 planar
-   
-	NOTE: does not flip */
-
-void
-yuv_to_yv12_c(uint8_t * y_out,
-			  uint8_t * u_out,
-			  uint8_t * v_out,
-			  uint8_t * src,
-			  int width,
-			  int height,
-			  int stride)
-{
-	uint32_t stride2 = stride >> 1;
-	uint32_t width2 = width >> 1;
-	uint32_t y;
-
-	for (y = height; y; y--) {
-		memcpy(y_out, src, width);
-		src += width;
-		y_out += stride;
-	}
-
-	for (y = height >> 1; y; y--) {
-		memcpy(u_out, src, width2);
-		src += width2;
-		u_out += stride2;
-	}
-
-	for (y = height >> 1; y; y--) {
-		memcpy(v_out, src, width2);
-		src += width2;
-		v_out += stride2;
-	}
-}
-
-
-
-/* yuyv (yuv2) packed -> yuv 4:2:0 planar
-   
-   NOTE: does not flip */
-
-void
-yuyv_to_yv12_c(uint8_t * y_out,
-			   uint8_t * u_out,
-			   uint8_t * v_out,
-			   uint8_t * src,
-			   int width,
-			   int height,
-			   int stride)
-{
-	uint32_t width2 = width + width;
-	uint32_t y_dif = stride - width;
-	uint32_t uv_dif = y_dif >> 1;
-	uint32_t x, y;
-
-	for (y = height >> 1; y; y--) {
-
-		for (x = width >> 1; x; x--) {
-			*y_out++ = *src++;
-			/**u_out++ = *src++; */
-			*u_out++ = (*(src + width2) + *src) >> 1;
-			src++;
-			*y_out++ = *src++;
-			/**v_out++ = *src++; */
-			*v_out++ = (*(src + width2) + *src) >> 1;
-			src++;
-
-		}
-
-		y_out += y_dif;
-		u_out += uv_dif;
-		v_out += uv_dif;
-
-		for (x = width >> 1; x; x--) {
-			*y_out++ = *src++;
-			src++;
-			*y_out++ = *src++;
-			src++;
-		}
-
-		y_out += y_dif;
-
-	}
-
-}
-
-
-
-/* uyvy packed -> yuv 4:2:0 planar
-   
-   NOTE: does not flip */
-
-
-void
-uyvy_to_yv12_c(uint8_t * y_out,
-			   uint8_t * u_out,
-			   uint8_t * v_out,
-			   uint8_t * src,
-			   int width,
-			   int height,
-			   int stride)
-{
-	uint32_t width2 = width + width;
-	uint32_t y_dif = stride - width;
-	uint32_t uv_dif = y_dif >> 1;
-	uint32_t x, y;
-
-	for (y = height >> 1; y; y--) {
-
-		for (x = width >> 1; x; x--) {
-			*u_out++ = *src++;
-			/* *u_out++ = (*(src+width2) + *src++) >> 1; */
-			*y_out++ = *src++;
-			/**v_out++ = *src++; */
-			*v_out++ = (*(src + width2) + *src) >> 1;
-			src++;
-			*y_out++ = *src++;
-		}
-
-		y_out += y_dif;
-		u_out += uv_dif;;
-		v_out += uv_dif;;
-
-		for (x = width >> 1; x; x--) {
-			src++;
-			*y_out++ = *src++;
-			src++;
-			*y_out++ = *src++;
-		}
-
-		y_out += y_dif;
-	}
-}
-
-
-/*	yuv -> rgb def's */
+/* rgb16/rgb16i input */
+
+#define MK_RGB555_B(RGB)  ((RGB) << 3) & 0xf8
+#define MK_RGB555_G(RGB)  ((RGB) >> 2) & 0xf8
+#define MK_RGB555_R(RGB)  ((RGB) >> 7) & 0xf8
+
+#define MK_RGB565_B(RGB)  ((RGB) << 3) & 0xf8
+#define MK_RGB565_G(RGB)  ((RGB) >> 3) & 0xfc
+#define MK_RGB565_R(RGB)  ((RGB) >> 8) & 0xf8
+
+
+#define READ_RGB16_Y(ROW, UVID, C1,C2,C3,C4)	\
+	rgb = *(uint16_t *) (x_ptr + ((ROW)*x_stride) + 0);	\
+	b##UVID += b = C1##_B(rgb);				\
+	g##UVID += g = C1##_G(rgb);				\
+	r##UVID += r = C1##_R(rgb);				\
+	y_ptr[(ROW)*y_stride+0] =				\
+		(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +	\
+					FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;	\
+	rgb = *(uint16_t *) (x_ptr + ((ROW)*x_stride) + 2);	\
+	b##UVID += b = C1##_B(rgb);				\
+	g##UVID += g = C1##_G(rgb);				\
+	r##UVID += r = C1##_R(rgb);				\
+	y_ptr[(ROW)*y_stride+1] =				\
+		(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +			\
+					FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;
+
+#define READ_RGB16_UV(UV_ROW,UVID)	\
+	u_ptr[(UV_ROW)*uv_stride] =														\
+		(uint8_t) ((-FIX_IN(U_R_IN) * r##UVID - FIX_IN(U_G_IN) * g##UVID +			\
+					FIX_IN(U_B_IN) * b##UVID) >> (SCALEBITS_IN + 2)) + U_ADD_IN;	\
+	v_ptr[(UV_ROW)*uv_stride] =														\
+		(uint8_t) ((FIX_IN(V_R_IN) * r##UVID - FIX_IN(V_G_IN) * g##UVID -			\
+					FIX_IN(V_B_IN) * b##UVID) >> (SCALEBITS_IN + 2)) + V_ADD_IN;
+
+#define RGB16_TO_YV12_ROW(SIZE,C1,C2,C3,C4) \
+	/* nothing */
+#define RGB16_TO_YV12(SIZE,C1,C2,C3,C4)	\
+	uint32_t rgb, r, g, b, r0, g0, b0;	\
+	r0 = g0 = b0 = 0;					\
+	READ_RGB16_Y (0, 0, C1,C2,C3,C4)	\
+	READ_RGB16_Y (1, 0, C1,C2,C3,C4)	\
+	READ_RGB16_UV(0, 0)
+
+
+#define RGB16I_TO_YV12_ROW(SIZE,C1,C2,C3,C4) \
+	/* nothing */
+#define RGB16I_TO_YV12(SIZE,C1,C2,C3,C4)	\
+	uint32_t rgb, r, g, b, r0, g0, b0, r1, g1, b1;	\
+	r0 = g0 = b0 = r1 = g1 = b1 = 0;	\
+	READ_RGB16_Y (0, 0, C1,C2,C3,C4)	\
+	READ_RGB16_Y (1, 1, C1,C2,C3,C4)	\
+	READ_RGB16_Y (2, 0, C1,C2,C3,C4)	\
+	READ_RGB16_Y (3, 1, C1,C2,C3,C4)	\
+	READ_RGB16_UV(0, 0)					\
+	READ_RGB16_UV(1, 1)
+
+
+/* rgb/rgbi input */
+
+#define READ_RGB_Y(SIZE, ROW, UVID, C1,C2,C3,C4)	\
+	r##UVID += r = x_ptr[(ROW)*x_stride+(C1)];						\
+	g##UVID += g = x_ptr[(ROW)*x_stride+(C2)];						\
+	b##UVID += b = x_ptr[(ROW)*x_stride+(C3)];						\
+	y_ptr[(ROW)*y_stride+0] =									\
+		(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +	\
+					FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;	\
+	r##UVID += r = x_ptr[(ROW)*x_stride+(SIZE)+(C1)];				\
+	g##UVID += g = x_ptr[(ROW)*x_stride+(SIZE)+(C2)];				\
+	b##UVID += b = x_ptr[(ROW)*x_stride+(SIZE)+(C3)];				\
+	y_ptr[(ROW)*y_stride+1] =									\
+		(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +	\
+					FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;	
+
+#define READ_RGB_UV(UV_ROW,UVID)	\
+	u_ptr[(UV_ROW)*uv_stride] =														\
+		(uint8_t) ((-FIX_IN(U_R_IN) * r##UVID - FIX_IN(U_G_IN) * g##UVID +			\
+					FIX_IN(U_B_IN) * b##UVID) >> (SCALEBITS_IN + 2)) + U_ADD_IN;	\
+	v_ptr[(UV_ROW)*uv_stride] =														\
+		(uint8_t) ((FIX_IN(V_R_IN) * r##UVID - FIX_IN(V_G_IN) * g##UVID -			\
+					FIX_IN(V_B_IN) * b##UVID) >> (SCALEBITS_IN + 2)) + V_ADD_IN;
+
+
+#define RGB_TO_YV12_ROW(SIZE,C1,C2,C3,C4) \
+	/* nothing */
+#define RGB_TO_YV12(SIZE,C1,C2,C3,C4)	\
+	uint32_t r, g, b, r0, g0, b0;		\
+	r0 = g0 = b0 = 0;					\
+	READ_RGB_Y(SIZE, 0, 0, C1,C2,C3,C4)	\
+	READ_RGB_Y(SIZE, 1, 0, C1,C2,C3,C4)	\
+	READ_RGB_UV(     0, 0)
+
+#define RGBI_TO_YV12_ROW(SIZE,C1,C2,C3,C4) \
+	/* nothing */
+#define RGBI_TO_YV12(SIZE,C1,C2,C3,C4)	\
+	uint32_t r, g, b, r0, g0, b0, r1, g1, b1;	\
+	r0 = g0 = b0 = r1 = g1 = b1 = 0;	\
+	READ_RGB_Y(SIZE, 0, 0, C1,C2,C3,C4)	\
+	READ_RGB_Y(SIZE, 1, 1, C1,C2,C3,C4)	\
+	READ_RGB_Y(SIZE, 2, 0, C1,C2,C3,C4)	\
+	READ_RGB_Y(SIZE, 3, 1, C1,C2,C3,C4)	\
+	READ_RGB_UV(     0, 0)				\
+	READ_RGB_UV(     1, 1)
+
+
+/* yuyv/yuyvi input */
+
+#define READ_YUYV_Y(ROW,C1,C2,C3,C4)	\
+	y_ptr[(ROW)*y_stride+0] = x_ptr[(ROW)*x_stride+(C1)];	\
+	y_ptr[(ROW)*y_stride+1] = x_ptr[(ROW)*x_stride+(C3)];
+#define READ_YUYV_UV(UV_ROW,ROW1,ROW2,C1,C2,C3,C4) \
+	u_ptr[(UV_ROW)*uv_stride] = (x_ptr[(ROW1)*x_stride+(C2)] + x_ptr[(ROW2)*x_stride+(C2)] + 1) / 2;	\
+	v_ptr[(UV_ROW)*uv_stride] = (x_ptr[(ROW1)*x_stride+(C4)] + x_ptr[(ROW2)*x_stride+(C4)] + 1) / 2;
+
+#define YUYV_TO_YV12_ROW(SIZE,C1,C2,C3,C4) \
+	/* nothing */
+#define YUYV_TO_YV12(SIZE,C1,C2,C3,C4)	\
+	READ_YUYV_Y (0,      C1,C2,C3,C4)	\
+	READ_YUYV_Y (1,      C1,C2,C3,C4)	\
+	READ_YUYV_UV(0, 0,1, C1,C2,C3,C4)
+
+#define YUYVI_TO_YV12_ROW(SIZE,C1,C2,C3,C4) \
+	/* nothing */
+#define YUYVI_TO_YV12(SIZE,C1,C2,C3,C4)	\
+	READ_YUYV_Y (0, C1,C2,C3,C4)	\
+	READ_YUYV_Y (1, C1,C2,C3,C4)	\
+	READ_YUYV_Y (2, C1,C2,C3,C4)	\
+	READ_YUYV_Y (3, C1,C2,C3,C4)	\
+	READ_YUYV_UV(0, 0,2, C1,C2,C3,C4)	\
+	READ_YUYV_UV(1, 1,3, C1,C2,C3,C4)
+
+
+MAKE_COLORSPACE(rgb555_to_yv12_c,  2,2,2, RGB16_TO_YV12,  MK_RGB555, 0,0,0)
+MAKE_COLORSPACE(rgb565_to_yv12_c,  2,2,2, RGB16_TO_YV12,  MK_RGB565, 0,0,0)
+MAKE_COLORSPACE(bgr_to_yv12_c,     3,2,2, RGB_TO_YV12,    2,1,0, 0)
+MAKE_COLORSPACE(bgra_to_yv12_c,    4,2,2, RGB_TO_YV12,    2,1,0, 0)
+MAKE_COLORSPACE(abgr_to_yv12_c,    4,2,2, RGB_TO_YV12,    3,2,1, 0)
+MAKE_COLORSPACE(rgba_to_yv12_c,    4,2,2, RGB_TO_YV12,    0,1,2, 0)
+MAKE_COLORSPACE(yuyv_to_yv12_c,    2,2,2, YUYV_TO_YV12,   0,1,2,3)
+MAKE_COLORSPACE(uyvy_to_yv12_c,    2,2,2, YUYV_TO_YV12,   1,0,3,2)
+
+MAKE_COLORSPACE(rgb555i_to_yv12_c, 2,2,4, RGB16I_TO_YV12, MK_RGB555, 0,0,0)
+MAKE_COLORSPACE(rgb565i_to_yv12_c, 2,2,4, RGB16I_TO_YV12, MK_RGB565, 0,0,0)
+MAKE_COLORSPACE(bgri_to_yv12_c,    3,2,4, RGBI_TO_YV12,   2,1,0, 0)
+MAKE_COLORSPACE(bgrai_to_yv12_c,   4,2,4, RGBI_TO_YV12,   2,1,0, 0)
+MAKE_COLORSPACE(abgri_to_yv12_c,   4,2,4, RGBI_TO_YV12,   3,2,1, 0)
+MAKE_COLORSPACE(rgbai_to_yv12_c,   4,2,4, RGBI_TO_YV12,   0,1,2, 0)
+MAKE_COLORSPACE(yuyvi_to_yv12_c,   2,2,4, YUYVI_TO_YV12,  0,1,2,3)
+MAKE_COLORSPACE(uyvyi_to_yv12_c,   2,2,4, YUYVI_TO_YV12,  1,0,3,2)
+
+
+/********** colorspace output (yv12_to_xxx) functions **********/
+
+/* yuv -> rgb def's */
 
 #define RGB_Y_OUT		1.164
 #define B_U_OUT			2.018
@@ -588,9 +325,184 @@ uyvy_to_yv12_c(uint8_t * y_out,
 #define R_V_OUT			1.596
 #define V_ADD_OUT		128
 
-
 #define SCALEBITS_OUT	13
 #define FIX_OUT(x)		((uint16_t) ((x) * (1L<<SCALEBITS_OUT) + 0.5))
+
+
+/* rgb16/rgb16i output */
+
+#define MK_RGB555(R,G,B)	\
+	((MAX(0,MIN(255, R)) << 7) & 0x7c00) | \
+	((MAX(0,MIN(255, G)) << 2) & 0x03e0) | \
+	((MAX(0,MIN(255, B)) >> 3) & 0x001f)
+
+#define MK_RGB565(R,G,B)	\
+	((MAX(0,MIN(255, R)) << 8) & 0xf800) | \
+	((MAX(0,MIN(255, G)) << 3) & 0x07e0) | \
+	((MAX(0,MIN(255, B)) >> 3) & 0x001f)
+
+#define WRITE_RGB16(ROW,UV_ROW,C1)	\
+	rgb_y = RGB_Y_tab[ y_ptr[y_stride + 0] ];			\
+	b[ROW] = (b[ROW] & 0x7) + ((rgb_y + b_u##UV_ROW) >> SCALEBITS_OUT);	\
+	g[ROW] = (g[ROW] & 0x7) + ((rgb_y - g_uv##UV_ROW) >> SCALEBITS_OUT);	\
+	r[ROW] = (r[ROW] & 0x7) + ((rgb_y + r_v##UV_ROW) >> SCALEBITS_OUT);		\
+	*(uint16_t *) (x_ptr+((ROW)*x_stride)+0) = C1(r[ROW], g[ROW], b[ROW]);	\
+	rgb_y = RGB_Y_tab[ y_ptr[y_stride + 1] ];				\
+	b[ROW] = (b[ROW] & 0x7) + ((rgb_y + b_u##UV_ROW) >> SCALEBITS_OUT);		\
+	g[ROW] = (g[ROW] & 0x7) + ((rgb_y - g_uv##UV_ROW) >> SCALEBITS_OUT);	\
+	r[ROW] = (r[ROW] & 0x7) + ((rgb_y + r_v##UV_ROW) >> SCALEBITS_OUT);		\
+	*(uint16_t *) (x_ptr+((ROW)*x_stride)+2) = C1(r[ROW], g[ROW], b[ROW]);
+
+#define YV12_TO_RGB16_ROW(SIZE,C1,C2,C3,C4) \
+	int r[2], g[2], b[2];					\
+	r[0] = r[1] = g[0] = g[1] = b[0] = b[1] = 0;
+#define YV12_TO_RGB16(SIZE,C1,C2,C3,C4)		\
+	int rgb_y; 												\
+	int b_u0 = B_U_tab[ u_ptr[0] ];								\
+	int g_uv0 = G_U_tab[ u_ptr[0] ] + G_V_tab[ v_ptr[0] ];		\
+	int r_v0 = R_V_tab[ v_ptr[0] ];								\
+	WRITE_RGB16(0, 0, C1)										\
+	WRITE_RGB16(1, 0, C1)
+
+#define YV12_TO_RGB16I_ROW(SIZE,C1,C2,C3,C4) \
+	int r[4], g[4], b[4];					\
+	r[0] = r[1] = r[2] = r[3] = 0;			\
+	g[0] = g[1] = g[2] = g[3] = 0;			\
+	b[0] = b[1] = b[2] = b[3] = 0;
+#define YV12_TO_RGB16I(SIZE,C1,C2,C3,C4)		\
+	int rgb_y; 													\
+	int b_u0 = B_U_tab[ u_ptr[0] ];								\
+	int g_uv0 = G_U_tab[ u_ptr[0] ] + G_V_tab[ v_ptr[0] ];		\
+	int r_v0 = R_V_tab[ v_ptr[0] ];								\
+    int b_u1 = B_U_tab[ u_ptr[uv_stride] ];						\
+	int g_uv1 = G_U_tab[ u_ptr[uv_stride] ] + G_V_tab[ v_ptr[uv_stride] ];	\
+	int r_v1 = R_V_tab[ v_ptr[uv_stride] ];						\
+    WRITE_RGB16(0, 0, C1)										\
+	WRITE_RGB16(1, 1, C1)										\
+    WRITE_RGB16(2, 0, C1)										\
+	WRITE_RGB16(3, 1, C1)										\
+	
+
+/* rgb/rgbi output */
+
+#define WRITE_RGB(SIZE,ROW,UV_ROW,C1,C2,C3,C4)	\
+	rgb_y = RGB_Y_tab[ y_ptr[(ROW)*y_stride + 0] ];						\
+	x_ptr[(ROW)*x_stride+(C3)] = MAX(0, MIN(255, (rgb_y + b_u##UV_ROW) >> SCALEBITS_OUT));	\
+	x_ptr[(ROW)*x_stride+(C2)] = MAX(0, MIN(255, (rgb_y - g_uv##UV_ROW) >> SCALEBITS_OUT));	\
+	x_ptr[(ROW)*x_stride+(C1)] = MAX(0, MIN(255, (rgb_y + r_v##UV_ROW) >> SCALEBITS_OUT));	\
+	if ((SIZE)>3) x_ptr[(ROW)*x_stride+(C4)] = 0;									\
+	rgb_y = RGB_Y_tab[ y_ptr[(ROW)*y_stride + 1] ];									\
+	x_ptr[(ROW)*x_stride+(SIZE)+(C3)] = MAX(0, MIN(255, (rgb_y + b_u##UV_ROW) >> SCALEBITS_OUT));	\
+	x_ptr[(ROW)*x_stride+(SIZE)+(C2)] = MAX(0, MIN(255, (rgb_y - g_uv##UV_ROW) >> SCALEBITS_OUT));	\
+	x_ptr[(ROW)*x_stride+(SIZE)+(C1)] = MAX(0, MIN(255, (rgb_y + r_v##UV_ROW) >> SCALEBITS_OUT));	\
+	if ((SIZE)>3) x_ptr[(ROW)*x_stride+(SIZE)+(C4)] = 0;
+
+
+#define YV12_TO_RGB_ROW(SIZE,C1,C2,C3,C4) 	/* nothing */
+#define YV12_TO_RGB(SIZE,C1,C2,C3,C4)				\
+	int rgb_y;												\
+	int b_u0 = B_U_tab[ u_ptr[0] ];							\
+	int g_uv0 = G_U_tab[ u_ptr[0] ] + G_V_tab[ v_ptr[0] ];	\
+	int r_v0 = R_V_tab[ v_ptr[0] ];							\
+	WRITE_RGB(SIZE, 0, 0, C1,C2,C3,C4)						\
+	WRITE_RGB(SIZE, 1, 0, C1,C2,C3,C4)
+
+#define YV12_TO_RGBI_ROW(SIZE,C1,C2,C3,C4) 	/* nothing */
+#define YV12_TO_RGBI(SIZE,C1,C2,C3,C4)				\
+	int rgb_y;												\
+	int b_u0 = B_U_tab[ u_ptr[0] ];							\
+	int g_uv0 = G_U_tab[ u_ptr[0] ] + G_V_tab[ v_ptr[0] ];	\
+	int r_v0 = R_V_tab[ v_ptr[0] ];							\
+    int b_u1 = B_U_tab[ u_ptr[uv_stride] ];					\
+	int g_uv1 = G_U_tab[ u_ptr[uv_stride] ] + G_V_tab[ v_ptr[uv_stride] ];	\
+	int r_v1 = R_V_tab[ v_ptr[uv_stride] ];					\
+	WRITE_RGB(SIZE, 0, 0, C1,C2,C3,C4)		\
+	WRITE_RGB(SIZE, 1, 1, C1,C2,C3,C4)		\
+	WRITE_RGB(SIZE, 2, 0, C1,C2,C3,C4)		\
+	WRITE_RGB(SIZE, 3, 1, C1,C2,C3,C4)
+
+
+/* yuyv/yuyvi output */
+
+#define WRITE_YUYV(ROW,UV_ROW,C1,C2,C3,C4)	\
+	x_ptr[(ROW)*x_stride+(C1)] = y_ptr[   (ROW)*y_stride +0];	\
+	x_ptr[(ROW)*x_stride+(C2)] = u_ptr[(UV_ROW)*uv_stride+0];	\
+	x_ptr[(ROW)*x_stride+(C3)] = y_ptr[   (ROW)*y_stride +1];	\
+	x_ptr[(ROW)*x_stride+(C4)] = v_ptr[(UV_ROW)*uv_stride+0];	\
+
+#define YV12_TO_YUYV_ROW(SIZE,C1,C2,C3,C4) 	/* nothing */
+#define YV12_TO_YUYV(SIZE,C1,C2,C3,C4)	\
+	WRITE_YUYV(0, 0, C1,C2,C3,C4)		\
+	WRITE_YUYV(1, 0, C1,C2,C3,C4)	
+
+#define YV12_TO_YUYVI_ROW(SIZE,C1,C2,C3,C4) /* nothing */
+#define YV12_TO_YUYVI(SIZE,C1,C2,C3,C4)	\
+	WRITE_YUYV(0, 0, C1,C2,C3,C4)		\
+	WRITE_YUYV(1, 1, C1,C2,C3,C4)		\
+	WRITE_YUYV(2, 0, C1,C2,C3,C4)		\
+	WRITE_YUYV(3, 1, C1,C2,C3,C4)
+
+
+MAKE_COLORSPACE(yv12_to_rgb555_c,  2,2,2, YV12_TO_RGB16,  MK_RGB555, 0,0,0)
+MAKE_COLORSPACE(yv12_to_rgb565_c,  2,2,2, YV12_TO_RGB16,  MK_RGB565, 0,0,0)
+MAKE_COLORSPACE(yv12_to_bgr_c,     3,2,2, YV12_TO_RGB,    2,1,0, 0)
+MAKE_COLORSPACE(yv12_to_bgra_c,    4,2,2, YV12_TO_RGB,	  2,1,0,3)
+MAKE_COLORSPACE(yv12_to_abgr_c,    4,2,2, YV12_TO_RGB,    3,2,1,0)
+MAKE_COLORSPACE(yv12_to_rgba_c,    4,2,2, YV12_TO_RGB,    0,1,2,3)
+MAKE_COLORSPACE(yv12_to_yuyv_c,    2,2,2, YV12_TO_YUYV,   0,1,2,3)
+MAKE_COLORSPACE(yv12_to_uyvy_c,    2,2,2, YV12_TO_YUYV,   1,0,3,2)
+
+MAKE_COLORSPACE(yv12_to_rgb555i_c, 2,2,4, YV12_TO_RGB16I, MK_RGB555, 0,0,0)
+MAKE_COLORSPACE(yv12_to_rgb565i_c, 2,2,4, YV12_TO_RGB16I, MK_RGB565, 0,0,0)
+MAKE_COLORSPACE(yv12_to_bgri_c,    3,2,4, YV12_TO_RGBI,   2,1,0, 0)
+MAKE_COLORSPACE(yv12_to_bgrai_c,   4,2,4, YV12_TO_RGBI,	  2,1,0,3)
+MAKE_COLORSPACE(yv12_to_abgri_c,   4,2,4, YV12_TO_RGBI,   3,2,1,0)
+MAKE_COLORSPACE(yv12_to_rgbai_c,   4,2,4, YV12_TO_RGBI,   0,1,2,3)
+MAKE_COLORSPACE(yv12_to_yuyvi_c,   2,2,4, YV12_TO_YUYVI,  0,1,2,3)
+MAKE_COLORSPACE(yv12_to_uyvyi_c,   2,2,4, YV12_TO_YUYVI,  1,0,3,2)
+
+
+
+/* yv12 to yv12 copy function */
+
+void
+yv12_to_yv12_c(uint8_t * y_dst, uint8_t * u_dst, uint8_t * v_dst, 
+				int y_dst_stride, int uv_dst_stride,
+				uint8_t * y_src, uint8_t * u_src, uint8_t * v_src, 
+				int y_src_stride, int uv_src_stride,
+				int width, int height, int vflip)
+{
+	int width2 = width / 2;
+	int height2 = height / 2;
+	int y;
+
+	if (vflip) {
+		y_src += (height - 1) * y_src_stride;
+		u_src += (height2 - 1) * uv_src_stride;
+		v_src += (height2 - 1) * uv_src_stride;
+		y_src_stride = -y_src_stride;
+		uv_src_stride = -uv_src_stride;
+	}
+
+	for (y = height; y; y--) {
+		memcpy(y_dst, y_src, width);
+		y_src += y_src_stride;
+		y_dst += y_dst_stride;
+	}
+
+	for (y = height2; y; y--) {
+		memcpy(u_dst, u_src, width2);
+		u_src += uv_src_stride;
+		u_dst += uv_dst_stride;
+	}
+
+	for (y = height2; y; y--) {
+		memcpy(v_dst, v_src, width2);
+		v_src += uv_src_stride;
+		v_dst += uv_dst_stride;
+	}
+}
+
 
 
 /* initialize rgb lookup tables */
@@ -606,577 +518,5 @@ colorspace_init(void)
 		G_U_tab[i] = FIX_OUT(G_U_OUT) * (i - U_ADD_OUT);
 		G_V_tab[i] = FIX_OUT(G_V_OUT) * (i - V_ADD_OUT);
 		R_V_tab[i] = FIX_OUT(R_V_OUT) * (i - V_ADD_OUT);
-	}
-}
-
-/* yuv 4:2:0 planar -> rgb555 + very simple error diffusion
-*/
-
-#define MK_RGB555(R,G,B)	((MAX(0,MIN(255, R)) << 7) & 0x7c00) | \
-							((MAX(0,MIN(255, G)) << 2) & 0x03e0) | \
-							((MAX(0,MIN(255, B)) >> 3) & 0x001f)
-
-
-void
-yv12_to_rgb555_c(uint8_t * dst,
-				 int dst_stride,
-				 uint8_t * y_src,
-				 uint8_t * u_src,
-				 uint8_t * v_src,
-				 int y_stride,
-				 int uv_stride,
-				 int width,
-				 int height)
-{
-	const uint32_t dst_dif = 4 * dst_stride - 2 * width;
-	int32_t y_dif = 2 * y_stride - width;
-
-	uint8_t *dst2 = dst + 2 * dst_stride;
-	uint8_t *y_src2 = y_src + y_stride;
-	uint32_t x, y;
-
-	if (height < 0) {
-		height = -height;
-		y_src += (height - 1) * y_stride;
-		y_src2 = y_src - y_stride;
-		u_src += (height / 2 - 1) * uv_stride;
-		v_src += (height / 2 - 1) * uv_stride;
-		y_dif = -width - 2 * y_stride;
-		uv_stride = -uv_stride;
-	}
-
-	for (y = height / 2; y; y--) {
-		int r, g, b;
-		int r2, g2, b2;
-
-		r = g = b = 0;
-		r2 = g2 = b2 = 0;
-
-		/* process one 2x2 block per iteration */
-		for (x = 0; x < (uint32_t) width / 2; x++) {
-			int u, v;
-			int b_u, g_uv, r_v, rgb_y;
-
-			u = u_src[x];
-			v = v_src[x];
-
-			b_u = B_U_tab[u];
-			g_uv = G_U_tab[u] + G_V_tab[v];
-			r_v = R_V_tab[v];
-
-			rgb_y = RGB_Y_tab[*y_src];
-			b = (b & 0x7) + ((rgb_y + b_u) >> SCALEBITS_OUT);
-			g = (g & 0x7) + ((rgb_y - g_uv) >> SCALEBITS_OUT);
-			r = (r & 0x7) + ((rgb_y + r_v) >> SCALEBITS_OUT);
-			*(uint16_t *) dst = MK_RGB555(r, g, b);
-
-			y_src++;
-			rgb_y = RGB_Y_tab[*y_src];
-			b = (b & 0x7) + ((rgb_y + b_u) >> SCALEBITS_OUT);
-			g = (g & 0x7) + ((rgb_y - g_uv) >> SCALEBITS_OUT);
-			r = (r & 0x7) + ((rgb_y + r_v) >> SCALEBITS_OUT);
-			*(uint16_t *) (dst + 2) = MK_RGB555(r, g, b);
-			y_src++;
-
-			rgb_y = RGB_Y_tab[*y_src2];
-			b2 = (b2 & 0x7) + ((rgb_y + b_u) >> SCALEBITS_OUT);
-			g2 = (g2 & 0x7) + ((rgb_y - g_uv) >> SCALEBITS_OUT);
-			r2 = (r2 & 0x7) + ((rgb_y + r_v) >> SCALEBITS_OUT);
-			*(uint16_t *) (dst2) = MK_RGB555(r2, g2, b2);
-			y_src2++;
-
-			rgb_y = RGB_Y_tab[*y_src2];
-			b2 = (b2 & 0x7) + ((rgb_y + b_u) >> SCALEBITS_OUT);
-			g2 = (g2 & 0x7) + ((rgb_y - g_uv) >> SCALEBITS_OUT);
-			r2 = (r2 & 0x7) + ((rgb_y + r_v) >> SCALEBITS_OUT);
-			*(uint16_t *) (dst2 + 2) = MK_RGB555(r2, g2, b2);
-			y_src2++;
-
-			dst += 4;
-			dst2 += 4;
-		}
-
-		dst += dst_dif;
-		dst2 += dst_dif;
-
-		y_src += y_dif;
-		y_src2 += y_dif;
-
-		u_src += uv_stride;
-		v_src += uv_stride;
-	}
-}
-
-
-/* yuv 4:2:0 planar -> rgb565 + very simple error diffusion
-	NOTE:	identical to rgb555 except for shift/mask  */
-
-
-#define MK_RGB565(R,G,B)	((MAX(0,MIN(255, R)) << 8) & 0xf800) | \
-							((MAX(0,MIN(255, G)) << 3) & 0x07e0) | \
-							((MAX(0,MIN(255, B)) >> 3) & 0x001f)
-
-void
-yv12_to_rgb565_c(uint8_t * dst,
-				 int dst_stride,
-				 uint8_t * y_src,
-				 uint8_t * u_src,
-				 uint8_t * v_src,
-				 int y_stride,
-				 int uv_stride,
-				 int width,
-				 int height)
-{
-	const uint32_t dst_dif = 4 * dst_stride - 2 * width;
-	int32_t y_dif = 2 * y_stride - width;
-
-	uint8_t *dst2 = dst + 2 * dst_stride;
-	uint8_t *y_src2 = y_src + y_stride;
-	uint32_t x, y;
-
-	if (height < 0) {			/* flip image? */
-		height = -height;
-		y_src += (height - 1) * y_stride;
-		y_src2 = y_src - y_stride;
-		u_src += (height / 2 - 1) * uv_stride;
-		v_src += (height / 2 - 1) * uv_stride;
-		y_dif = -width - 2 * y_stride;
-		uv_stride = -uv_stride;
-	}
-
-	for (y = height / 2; y; y--) {
-		int r, g, b;
-		int r2, g2, b2;
-
-		r = g = b = 0;
-		r2 = g2 = b2 = 0;
-
-		/* process one 2x2 block per iteration */
-		for (x = 0; x < (uint32_t) width / 2; x++) {
-			int u, v;
-			int b_u, g_uv, r_v, rgb_y;
-
-			u = u_src[x];
-			v = v_src[x];
-
-			b_u = B_U_tab[u];
-			g_uv = G_U_tab[u] + G_V_tab[v];
-			r_v = R_V_tab[v];
-
-			rgb_y = RGB_Y_tab[*y_src];
-			b = (b & 0x7) + ((rgb_y + b_u) >> SCALEBITS_OUT);
-			g = (g & 0x7) + ((rgb_y - g_uv) >> SCALEBITS_OUT);
-			r = (r & 0x7) + ((rgb_y + r_v) >> SCALEBITS_OUT);
-			*(uint16_t *) dst = MK_RGB565(r, g, b);
-
-			y_src++;
-			rgb_y = RGB_Y_tab[*y_src];
-			b = (b & 0x7) + ((rgb_y + b_u) >> SCALEBITS_OUT);
-			g = (g & 0x7) + ((rgb_y - g_uv) >> SCALEBITS_OUT);
-			r = (r & 0x7) + ((rgb_y + r_v) >> SCALEBITS_OUT);
-			*(uint16_t *) (dst + 2) = MK_RGB565(r, g, b);
-			y_src++;
-
-			rgb_y = RGB_Y_tab[*y_src2];
-			b2 = (b2 & 0x7) + ((rgb_y + b_u) >> SCALEBITS_OUT);
-			g2 = (g2 & 0x7) + ((rgb_y - g_uv) >> SCALEBITS_OUT);
-			r2 = (r2 & 0x7) + ((rgb_y + r_v) >> SCALEBITS_OUT);
-			*(uint16_t *) (dst2) = MK_RGB565(r2, g2, b2);
-			y_src2++;
-
-			rgb_y = RGB_Y_tab[*y_src2];
-			b2 = (b2 & 0x7) + ((rgb_y + b_u) >> SCALEBITS_OUT);
-			g2 = (g2 & 0x7) + ((rgb_y - g_uv) >> SCALEBITS_OUT);
-			r2 = (r2 & 0x7) + ((rgb_y + r_v) >> SCALEBITS_OUT);
-			*(uint16_t *) (dst2 + 2) = MK_RGB565(r2, g2, b2);
-			y_src2++;
-
-			dst += 4;
-			dst2 += 4;
-		}
-
-		dst += dst_dif;
-		dst2 += dst_dif;
-
-		y_src += y_dif;
-		y_src2 += y_dif;
-
-		u_src += uv_stride;
-		v_src += uv_stride;
-	}
-}
-
-
-
-/* yuv 4:2:0 planar -> rgb24 */
-
-void
-yv12_to_rgb24_c(uint8_t * dst,
-				int dst_stride,
-				uint8_t * y_src,
-				uint8_t * u_src,
-				uint8_t * v_src,
-				int y_stride,
-				int uv_stride,
-				int width,
-				int height)
-{
-	const uint32_t dst_dif = 6 * dst_stride - 3 * width;
-	int32_t y_dif = 2 * y_stride - width;
-
-	uint8_t *dst2 = dst + 3 * dst_stride;
-	uint8_t *y_src2 = y_src + y_stride;
-	uint32_t x, y;
-
-	if (height < 0) {			/* flip image? */
-		height = -height;
-		y_src += (height - 1) * y_stride;
-		y_src2 = y_src - y_stride;
-		u_src += (height / 2 - 1) * uv_stride;
-		v_src += (height / 2 - 1) * uv_stride;
-		y_dif = -width - 2 * y_stride;
-		uv_stride = -uv_stride;
-	}
-
-	for (y = height / 2; y; y--) {
-		/* process one 2x2 block per iteration */
-		for (x = 0; x < (uint32_t) width / 2; x++) {
-			int u, v;
-			int b_u, g_uv, r_v, rgb_y;
-			int r, g, b;
-
-			u = u_src[x];
-			v = v_src[x];
-
-			b_u = B_U_tab[u];
-			g_uv = G_U_tab[u] + G_V_tab[v];
-			r_v = R_V_tab[v];
-
-			rgb_y = RGB_Y_tab[*y_src];
-			b = (rgb_y + b_u) >> SCALEBITS_OUT;
-			g = (rgb_y - g_uv) >> SCALEBITS_OUT;
-			r = (rgb_y + r_v) >> SCALEBITS_OUT;
-			dst[0] = MAX(0, MIN(255, b));
-			dst[1] = MAX(0, MIN(255, g));
-			dst[2] = MAX(0, MIN(255, r));
-
-			y_src++;
-			rgb_y = RGB_Y_tab[*y_src];
-			b = (rgb_y + b_u) >> SCALEBITS_OUT;
-			g = (rgb_y - g_uv) >> SCALEBITS_OUT;
-			r = (rgb_y + r_v) >> SCALEBITS_OUT;
-			dst[3] = MAX(0, MIN(255, b));
-			dst[4] = MAX(0, MIN(255, g));
-			dst[5] = MAX(0, MIN(255, r));
-			y_src++;
-
-			rgb_y = RGB_Y_tab[*y_src2];
-			b = (rgb_y + b_u) >> SCALEBITS_OUT;
-			g = (rgb_y - g_uv) >> SCALEBITS_OUT;
-			r = (rgb_y + r_v) >> SCALEBITS_OUT;
-			dst2[0] = MAX(0, MIN(255, b));
-			dst2[1] = MAX(0, MIN(255, g));
-			dst2[2] = MAX(0, MIN(255, r));
-			y_src2++;
-
-			rgb_y = RGB_Y_tab[*y_src2];
-			b = (rgb_y + b_u) >> SCALEBITS_OUT;
-			g = (rgb_y - g_uv) >> SCALEBITS_OUT;
-			r = (rgb_y + r_v) >> SCALEBITS_OUT;
-			dst2[3] = MAX(0, MIN(255, b));
-			dst2[4] = MAX(0, MIN(255, g));
-			dst2[5] = MAX(0, MIN(255, r));
-			y_src2++;
-
-			dst += 6;
-			dst2 += 6;
-		}
-
-		dst += dst_dif;
-		dst2 += dst_dif;
-
-		y_src += y_dif;
-		y_src2 += y_dif;
-
-		u_src += uv_stride;
-		v_src += uv_stride;
-	}
-}
-
-
-
-/* yuv 4:2:0 planar -> rgb32 */
-
-void
-yv12_to_rgb32_c(uint8_t * dst,
-				int dst_stride,
-				uint8_t * y_src,
-				uint8_t * v_src,
-				uint8_t * u_src,
-				int y_stride,
-				int uv_stride,
-				int width,
-				int height)
-{
-	const uint32_t dst_dif = 8 * dst_stride - 4 * width;
-	int32_t y_dif = 2 * y_stride - width;
-
-	uint8_t *dst2 = dst + 4 * dst_stride;
-	uint8_t *y_src2 = y_src + y_stride;
-	uint32_t x, y;
-
-	if (height < 0) {			/* flip image? */
-		height = -height;
-		y_src += (height - 1) * y_stride;
-		y_src2 = y_src - y_stride;
-		u_src += (height / 2 - 1) * uv_stride;
-		v_src += (height / 2 - 1) * uv_stride;
-		y_dif = -width - 2 * y_stride;
-		uv_stride = -uv_stride;
-	}
-
-	for (y = height / 2; y; y--) {
-		/* process one 2x2 block per iteration */
-		for (x = 0; x < (uint32_t) width / 2; x++) {
-			int u, v;
-			int b_u, g_uv, r_v, rgb_y;
-			int r, g, b;
-
-			u = u_src[x];
-			v = v_src[x];
-
-			b_u = B_U_tab[u];
-			g_uv = G_U_tab[u] + G_V_tab[v];
-			r_v = R_V_tab[v];
-
-			rgb_y = RGB_Y_tab[*y_src];
-			b = (rgb_y + b_u) >> SCALEBITS_OUT;
-			g = (rgb_y - g_uv) >> SCALEBITS_OUT;
-			r = (rgb_y + r_v) >> SCALEBITS_OUT;
-			dst[0] = MAX(0, MIN(255, r));
-			dst[1] = MAX(0, MIN(255, g));
-			dst[2] = MAX(0, MIN(255, b));
-			dst[3] = 0;
-
-			y_src++;
-			rgb_y = RGB_Y_tab[*y_src];
-			b = (rgb_y + b_u) >> SCALEBITS_OUT;
-			g = (rgb_y - g_uv) >> SCALEBITS_OUT;
-			r = (rgb_y + r_v) >> SCALEBITS_OUT;
-			dst[4] = MAX(0, MIN(255, r));
-			dst[5] = MAX(0, MIN(255, g));
-			dst[6] = MAX(0, MIN(255, b));
-			dst[7] = 0;
-			y_src++;
-
-			rgb_y = RGB_Y_tab[*y_src2];
-			b = (rgb_y + b_u) >> SCALEBITS_OUT;
-			g = (rgb_y - g_uv) >> SCALEBITS_OUT;
-			r = (rgb_y + r_v) >> SCALEBITS_OUT;
-			dst2[0] = MAX(0, MIN(255, r));
-			dst2[1] = MAX(0, MIN(255, g));
-			dst2[2] = MAX(0, MIN(255, b));
-			dst2[3] = 0;
-			y_src2++;
-
-			rgb_y = RGB_Y_tab[*y_src2];
-			b = (rgb_y + b_u) >> SCALEBITS_OUT;
-			g = (rgb_y - g_uv) >> SCALEBITS_OUT;
-			r = (rgb_y + r_v) >> SCALEBITS_OUT;
-			dst2[4] = MAX(0, MIN(255, r));
-			dst2[5] = MAX(0, MIN(255, g));
-			dst2[6] = MAX(0, MIN(255, b));
-			dst2[7] = 0;
-			y_src2++;
-
-			dst += 8;
-			dst2 += 8;
-		}
-
-		dst += dst_dif;
-		dst2 += dst_dif;
-
-		y_src += y_dif;
-		y_src2 += y_dif;
-
-		u_src += uv_stride;
-		v_src += uv_stride;
-	}
-}
-
-
-
-/*	yuv 4:2:0 planar -> yuv planar */
-
-void
-yv12_to_yuv_c(uint8_t * dst,
-			  int dst_stride,
-			  uint8_t * y_src,
-			  uint8_t * u_src,
-			  uint8_t * v_src,
-			  int y_stride,
-			  int uv_stride,
-			  int width,
-			  int height)
-{
-	uint32_t dst_stride2 = dst_stride >> 1;
-	uint32_t width2 = width >> 1;
-	uint32_t y;
-
-	if (height < 0) {
-		height = -height;
-		y_src += (height - 1) * y_stride;
-		u_src += (height / 2 - 1) * uv_stride;
-		v_src += (height / 2 - 1) * uv_stride;
-		y_stride = -y_stride;
-		uv_stride = -uv_stride;
-	}
-
-	for (y = height; y; y--) {
-		memcpy(dst, y_src, width);
-		dst += dst_stride;
-		y_src += y_stride;
-	}
-
-	for (y = height >> 1; y; y--) {
-		memcpy(dst, u_src, width2);
-		dst += dst_stride2;
-		u_src += uv_stride;
-	}
-
-	for (y = height >> 1; y; y--) {
-		memcpy(dst, v_src, width2);
-		dst += dst_stride2;
-		v_src += uv_stride;
-	}
-}
-
-
-
-
-/* yuv 4:2:0 planar -> yuyv (yuv2) packed */
-
-void
-yv12_to_yuyv_c(uint8_t * dst,
-			   int dst_stride,
-			   uint8_t * y_src,
-			   uint8_t * u_src,
-			   uint8_t * v_src,
-			   int y_stride,
-			   int uv_stride,
-			   int width,
-			   int height)
-{
-	const uint32_t dst_dif = 2 * (dst_stride - width);
-	uint32_t x, y;
-
-	if (height < 0) {
-		height = -height;
-		y_src += (height - 1) * y_stride;
-		u_src += (height / 2 - 1) * uv_stride;
-		v_src += (height / 2 - 1) * uv_stride;
-		y_stride = -y_stride;
-		uv_stride = -uv_stride;
-	}
-
-	for (y = 0; y < (uint32_t) height; y++) {
-		for (x = 0; x < (uint32_t) width / 2; x++) {
-			dst[0] = y_src[2 * x];
-			dst[1] = u_src[x];
-			dst[2] = y_src[2 * x + 1];
-			dst[3] = v_src[x];
-			dst += 4;
-		}
-		dst += dst_dif;
-		y_src += y_stride;
-		if (y & 1) {
-			u_src += uv_stride;
-			v_src += uv_stride;
-		}
-	}
-}
-
-
-
-/* yuv 4:2:0 planar -> uyvy packed */
-
-void
-yv12_to_uyvy_c(uint8_t * dst,
-			   int dst_stride,
-			   uint8_t * y_src,
-			   uint8_t * u_src,
-			   uint8_t * v_src,
-			   int y_stride,
-			   int uv_stride,
-			   int width,
-			   int height)
-{
-	const uint32_t dst_dif = 2 * (dst_stride - width);
-	uint32_t x, y;
-
-	if (height < 0) {
-		height = -height;
-		y_src += (height - 1) * y_stride;
-		u_src += (height / 2 - 1) * uv_stride;
-		v_src += (height / 2 - 1) * uv_stride;
-		y_stride = -y_stride;
-		uv_stride = -uv_stride;
-	}
-
-	for (y = 0; y < (uint32_t) height; y++) {
-		for (x = 0; x < (uint32_t) width / 2; x++) {
-			dst[0] = u_src[x];
-			dst[1] = y_src[2 * x];
-			dst[2] = v_src[x];
-			dst[3] = y_src[2 * x + 1];
-			dst += 4;
-		}
-		dst += dst_dif;
-		y_src += y_stride;
-		if (y & 1) {
-			u_src += uv_stride;
-			v_src += uv_stride;
-		}
-	}
-}
-
-
-/*	user yuv planar -> yuv 4:2:0 planar
-   
-	NOTE: does not flip */
-
-void
-user_to_yuv_c(uint8_t * y_out,
-			  uint8_t * u_out,
-			  uint8_t * v_out,
-			  int stride,
-			  DEC_PICTURE * picture,
-			  int width,
-			  int height)
-{
-	uint32_t stride2 = stride >> 1;
-	uint32_t width2 = width >> 1;
-	uint32_t y;
-	uint8_t *src;
-
-	src = picture->y;
-	for (y = height; y; y--) {
-		memcpy(y_out, src, width);
-		src += picture->stride_y;
-		y_out += stride;
-	}
-
-	src = picture->u;
-	for (y = height >> 1; y; y--) {
-		memcpy(u_out, src, width2);
-		src += picture->stride_uv;
-		u_out += stride2;
-	}
-
-	src = picture->v;
-	for (y = height >> 1; y; y--) {
-		memcpy(v_out, src, width2);
-		src += picture->stride_uv;
-		v_out += stride2;
 	}
 }

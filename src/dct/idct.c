@@ -1,59 +1,42 @@
-/*****************************************************************************
+/* idct.c, inverse fast discrete cosine transform                           */
+
+/* Copyright (C) 1996, MPEG Software Simulation Group. All Rights Reserved. */
+
+/*
+ * Disclaimer of Warranty
  *
- *  XVID MPEG-4 VIDEO CODEC
- *  - inverse fast disrete cosine transformation - integer C version
+ * These software programs are available to the user without any license fee or
+ * royalty on an "as is" basis.  The MPEG Software Simulation Group disclaims
+ * any and all warranties, whether express, implied, or statuary, including any
+ * implied warranties or merchantability or of fitness for a particular
+ * purpose.  In no event shall the copyright-holder be liable for any
+ * incidental, punitive, or consequential damages of any kind whatsoever
+ * arising from the use of these programs.
  *
- *  These routines are from Independent JPEG Group's free JPEG software
- *  Copyright (C) 1991-1998, Thomas G. Lane (see the file README.IJG)
+ * This disclaimer of warranty extends to the user of these programs and user's
+ * customers, employees, agents, transferees, successors, and assigns.
  *
- *  This file is part of XviD, a free MPEG-4 video encoder/decoder
+ * The MPEG Software Simulation Group does not represent or warrant that the
+ * programs furnished hereunder are free of infringement of any third-party
+ * patents.
  *
- *  XviD is free software; you can redistribute it and/or modify it
- *  under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * Commercial implementations of MPEG-1 and MPEG-2 video, including shareware,
+ * are subject to royalty fees to patent holders.  Many of these patents are
+ * general enough such that they are unavoidable regardless of implementation
+ * design.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
- *
- *  Under section 8 of the GNU General Public License, the copyright
- *  holders of XVID explicitly forbid distribution in the following
- *  countries:
- *
- *    - Japan
- *    - United States of America
- *
- *  Linking XviD statically or dynamically with other modules is making a
- *  combined work based on XviD.  Thus, the terms and conditions of the
- *  GNU General Public License cover the whole combination.
- *
- *  As a special exception, the copyright holders of XviD give you
- *  permission to link XviD with independent modules that communicate with
- *  XviD solely through the VFW1.1 and DShow interfaces, regardless of the
- *  license terms of these independent modules, and to copy and distribute
- *  the resulting combined work under terms of your choice, provided that
- *  every copy of the combined work is accompanied by a complete copy of
- *  the source code of XviD (the version of XviD used to produce the
- *  combined work), being distributed under the terms of the GNU General
- *  Public License plus this exception.  An independent module is a module
- *  which is not derived from or based on XviD.
- *
- *  Note that people who make modified versions of XviD are not obligated
- *  to grant this special exception for their modified versions; it is
- *  their choice whether to do so.  The GNU General Public License gives
- *  permission to release a modified version without this exception; this
- *  exception also makes it possible to release a modified version which
- *  carries forward this exception.
- *
- * $Id: idct.c,v 1.5 2002-11-26 23:44:10 edgomez Exp $
- *
- *************************************************************************/
+ * MPEG2AVI
+ * --------
+ * v0.16B33 renamed the initialization function to init_idct_int32()
+ * v0.16B32 removed the unused idct_row() and idct_col() functions
+ * v0.16B3  changed var declarations to static, to enforce data align
+ * v0.16B22  idct_FAST() renamed to idct_int32()
+ *        also merged idct_FAST() into a single function, to help VC++
+ *        optimize it.
+ *        
+ * v0.14  changed int to long, to avoid confusion when compiling on x86
+ *        platform ( in VC++ "int" -> 32bits )
+ */
 
 /**********************************************************/
 /* inverse two dimensional DCT, Chen-Wang algorithm       */
@@ -69,6 +52,7 @@
 /* this code assumes >> to be a two's-complement arithmetic */
 /* right shift: (-2)>>1 == -1 , (-3)>>1 == -2               */
 
+//#include <windows.h>
 #include "idct.h"
 
 #define W1 2841					/* 2048*sqrt(2)*cos(1*pi/16) */
@@ -80,16 +64,16 @@
 
 
 /* global declarations */
-/*void init_idct_int32 (void); */
-/*void idct_int32 (short *block); */
+//void init_idct_int32 (void);
+//void idct_int32 (short *block);
 
 /* private data */
 static short iclip[1024];		/* clipping table */
 static short *iclp;
 
 /* private prototypes */
-/*static void idctrow _ANSI_ARGS_((short *blk)); */
-/*static void idctcol _ANSI_ARGS_((short *blk)); */
+//static void idctrow _ANSI_ARGS_((short *blk));
+//static void idctcol _ANSI_ARGS_((short *blk));
 
 /* row (horizontal) IDCT
  *
@@ -101,13 +85,13 @@ static short *iclp;
  *        c[1..7] = 128*sqrt(2)
  */
 
-#if 0
+/*
 static void idctrow(blk)
 short *blk;
 {
   int X0, X1, X2, X3, X4, X5, X6, X7, X8;
 
-  /* shortcut  */
+  // shortcut 
   if (!((X1 = blk[4]<<11) | (X2 = blk[6]) | (X3 = blk[2]) |
         (X4 = blk[1]) | (X5 = blk[7]) | (X6 = blk[5]) | (X7 = blk[3])))
   {
@@ -115,9 +99,9 @@ short *blk;
     return;
   }
 
-  X0 = (blk[0]<<11) + 128; /* for proper rounding in the fourth stage  */
+  X0 = (blk[0]<<11) + 128; // for proper rounding in the fourth stage 
 
-  /* first stage  */
+  // first stage 
   X8 = W7*(X4+X5);
   X4 = X8 + (W1-W7)*X4;
   X5 = X8 - (W1+W7)*X5;
@@ -125,7 +109,7 @@ short *blk;
   X6 = X8 - (W3-W5)*X6;
   X7 = X8 - (W3+W5)*X7;
   
-  /* second stage  */
+  // second stage 
   X8 = X0 + X1;
   X0 -= X1;
   X1 = W6*(X3+X2);
@@ -136,7 +120,7 @@ short *blk;
   X6 = X5 + X7;
   X5 -= X7;
   
-  /* third stage  */
+  // third stage 
   X7 = X8 + X3;
   X8 -= X3;
   X3 = X0 + X2;
@@ -144,7 +128,7 @@ short *blk;
   X2 = (181*(X4+X5)+128)>>8;
   X4 = (181*(X4-X5)+128)>>8;
   
-  /* fourth stage  */
+  // fourth stage 
   blk[0] = (X7+X1)>>8;
   blk[1] = (X3+X2)>>8;
   blk[2] = (X0+X4)>>8;
@@ -153,8 +137,7 @@ short *blk;
   blk[5] = (X0-X4)>>8;
   blk[6] = (X3-X2)>>8;
   blk[7] = (X7-X1)>>8;
-}
-#endif
+}*/
 
 /* column (vertical) IDCT
  *
@@ -165,13 +148,13 @@ short *blk;
  * where: c[0]    = 1/1024
  *        c[1..7] = (1/1024)*sqrt(2)
  */
-#if	0
+/*
 static void idctcol(blk)
 short *blk;
 {
   int X0, X1, X2, X3, X4, X5, X6, X7, X8;
 
-  /* shortcut  */
+  // shortcut 
   if (!((X1 = (blk[8*4]<<8)) | (X2 = blk[8*6]) | (X3 = blk[8*2]) |
         (X4 = blk[8*1]) | (X5 = blk[8*7]) | (X6 = blk[8*5]) | (X7 = blk[8*3])))
   {
@@ -182,7 +165,7 @@ short *blk;
 
   X0 = (blk[8*0]<<8) + 8192;
 
-  /* first stage  */
+  // first stage 
   X8 = W7*(X4+X5) + 4;
   X4 = (X8+(W1-W7)*X4)>>3;
   X5 = (X8-(W1+W7)*X5)>>3;
@@ -190,7 +173,7 @@ short *blk;
   X6 = (X8-(W3-W5)*X6)>>3;
   X7 = (X8-(W3+W5)*X7)>>3;
   
-  /* second stage */
+  // second stage
   X8 = X0 + X1;
   X0 -= X1;
   X1 = W6*(X3+X2) + 4;
@@ -201,7 +184,7 @@ short *blk;
   X6 = X5 + X7;
   X5 -= X7;
   
-  /* third stage  */
+  // third stage 
   X7 = X8 + X3;
   X8 -= X3;
   X3 = X0 + X2;
@@ -209,7 +192,7 @@ short *blk;
   X2 = (181*(X4+X5)+128)>>8;
   X4 = (181*(X4-X5)+128)>>8;
   
-  /* fourth stage */
+  // fourth stage
   blk[8*0] = iclp[(X7+X1)>>14];
   blk[8*1] = iclp[(X3+X2)>>14];
   blk[8*2] = iclp[(X0+X4)>>14];
@@ -218,20 +201,19 @@ short *blk;
   blk[8*5] = iclp[(X0-X4)>>14];
   blk[8*6] = iclp[(X3-X2)>>14];
   blk[8*7] = iclp[(X7-X1)>>14];
-}
-#endif
+}*/
 
-/* function pointer */
+// function pointer
 idctFuncPtr idct;
 
 /* two dimensional inverse discrete cosine transform */
-/*void j_rev_dct(block) */
-/*short *block; */
+//void j_rev_dct(block)
+//short *block;
 void
 idct_int32(short *const block)
 {
 
-	/* idct_int32_init() must be called before the first call to this function! */
+	// idct_int32_init() must be called before the first call to this function!
 
 
 	/*int i;
@@ -247,7 +229,7 @@ idct_int32(short *const block)
 	static long X0, X1, X2, X3, X4, X5, X6, X7, X8;
 
 
-	for (i = 0; i < 8; i++)		/* idct rows */
+	for (i = 0; i < 8; i++)		// idct rows
 	{
 		blk = block + (i << 3);
 		if (!
@@ -259,9 +241,9 @@ idct_int32(short *const block)
 			continue;
 		}
 
-		X0 = (blk[0] << 11) + 128;	/* for proper rounding in the fourth stage  */
+		X0 = (blk[0] << 11) + 128;	// for proper rounding in the fourth stage 
 
-		/* first stage  */
+		// first stage 
 		X8 = W7 * (X4 + X5);
 		X4 = X8 + (W1 - W7) * X4;
 		X5 = X8 - (W1 + W7) * X5;
@@ -269,7 +251,7 @@ idct_int32(short *const block)
 		X6 = X8 - (W3 - W5) * X6;
 		X7 = X8 - (W3 + W5) * X7;
 
-		/* second stage  */
+		// second stage 
 		X8 = X0 + X1;
 		X0 -= X1;
 		X1 = W6 * (X3 + X2);
@@ -280,7 +262,7 @@ idct_int32(short *const block)
 		X6 = X5 + X7;
 		X5 -= X7;
 
-		/* third stage  */
+		// third stage 
 		X7 = X8 + X3;
 		X8 -= X3;
 		X3 = X0 + X2;
@@ -288,7 +270,7 @@ idct_int32(short *const block)
 		X2 = (181 * (X4 + X5) + 128) >> 8;
 		X4 = (181 * (X4 - X5) + 128) >> 8;
 
-		/* fourth stage  */
+		// fourth stage 
 
 		blk[0] = (short) ((X7 + X1) >> 8);
 		blk[1] = (short) ((X3 + X2) >> 8);
@@ -299,14 +281,14 @@ idct_int32(short *const block)
 		blk[6] = (short) ((X3 - X2) >> 8);
 		blk[7] = (short) ((X7 - X1) >> 8);
 
-	}							/* end for ( i = 0; i < 8; ++i ) IDCT-rows */
+	}							// end for ( i = 0; i < 8; ++i ) IDCT-rows
 
 
 
-	for (i = 0; i < 8; i++)		/* idct columns */
+	for (i = 0; i < 8; i++)		// idct columns
 	{
 		blk = block + i;
-		/* shortcut  */
+		// shortcut 
 		if (!
 			((X1 = (blk[8 * 4] << 8)) | (X2 = blk[8 * 6]) | (X3 =
 															 blk[8 *
@@ -322,7 +304,7 @@ idct_int32(short *const block)
 
 		X0 = (blk[8 * 0] << 8) + 8192;
 
-		/* first stage  */
+		// first stage 
 		X8 = W7 * (X4 + X5) + 4;
 		X4 = (X8 + (W1 - W7) * X4) >> 3;
 		X5 = (X8 - (W1 + W7) * X5) >> 3;
@@ -330,7 +312,7 @@ idct_int32(short *const block)
 		X6 = (X8 - (W3 - W5) * X6) >> 3;
 		X7 = (X8 - (W3 + W5) * X7) >> 3;
 
-		/* second stage  */
+		// second stage 
 		X8 = X0 + X1;
 		X0 -= X1;
 		X1 = W6 * (X3 + X2) + 4;
@@ -341,7 +323,7 @@ idct_int32(short *const block)
 		X6 = X5 + X7;
 		X5 -= X7;
 
-		/* third stage  */
+		// third stage 
 		X7 = X8 + X3;
 		X8 -= X3;
 		X3 = X0 + X2;
@@ -349,7 +331,7 @@ idct_int32(short *const block)
 		X2 = (181 * (X4 + X5) + 128) >> 8;
 		X4 = (181 * (X4 - X5) + 128) >> 8;
 
-		/* fourth stage  */
+		// fourth stage 
 		blk[8 * 0] = iclp[(X7 + X1) >> 14];
 		blk[8 * 1] = iclp[(X3 + X2) >> 14];
 		blk[8 * 2] = iclp[(X0 + X4) >> 14];
@@ -360,13 +342,13 @@ idct_int32(short *const block)
 		blk[8 * 7] = iclp[(X7 - X1) >> 14];
 	}
 
-}								/* end function idct_int32(block) */
+}								// end function idct_int32(block)
 
 
-/*void */
-/*idct_int32_init() */
+//void
+//idct_int32_init()
 void
-idct_int32_init(void)
+idct_int32_init()
 {
 	int i;
 

@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Console based decoding test application  -
  *
- *  Copyright(C) 2002 Christoph Lampert
+ *  Copyright(C) 2002-2003 Christoph Lampert
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.5 2003-02-09 19:32:52 edgomez Exp $
+ * $Id: xvid_decraw.c,v 1.6 2003-02-15 15:22:17 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -75,7 +75,6 @@ static int XDIM = 0;
 static int YDIM = 0;
 static int ARG_SAVEDECOUTPUT = 0;
 static int ARG_SAVEMPEGSTREAM = 0;
-static int ARG_STREAMTYPE = 0;
 static char *ARG_INPUTFILE = NULL;
 
 
@@ -83,12 +82,6 @@ static char filepath[256] = "./";
 static void *dec_handle = NULL;
 
 # define BUFFER_SIZE 10*XDIM*YDIM
-
-#define LONG_PACK(a,b,c,d) ((long) (((long)(a))<<24) | (((long)(b))<<16) | \
-                                   (((long)(c))<<8)  |((long)(d)))
-
-#define SWAP(a) ( (((a)&0x000000ff)<<24) | (((a)&0x0000ff00)<<8) | \
-                  (((a)&0x00ff0000)>>8)  | (((a)&0xff000000)>>24) )
 
 /*****************************************************************************
  *               Local prototypes
@@ -99,9 +92,10 @@ static int write_pgm(char *filename,
 		     unsigned char *image);
 static int dec_init(int use_assembler);
 static int dec_main(unsigned char *istream,
-		    unsigned char *ostream,
-		    int istream_size,
-		    int *ostream_size);
+					unsigned char *ostream,
+					int istream_size,
+					int *ostream_size,
+					int *isframe);
 static int dec_stop();
 static void usage();
 
@@ -115,7 +109,9 @@ int main(int argc, char *argv[])
 	unsigned char *mp4_ptr    = NULL;
 	unsigned char *out_buffer = NULL;
 	int bigendian = 0;
-
+	int still_left_in_buffer;
+	int delayed_frames;
+	
 	double totaldectime;
   
 	long totalsize;
@@ -130,7 +126,7 @@ int main(int argc, char *argv[])
 	int i;
 
 	printf("xvid_decraw - raw mpeg4 bitstream decoder ");
-	printf("written by Christoph Lampert 2002\n\n");
+	printf("written by Christoph Lampert 2002-2003\n\n");
 
 /*****************************************************************************
  * Command line parsing
@@ -160,10 +156,6 @@ int main(int argc, char *argv[])
 		else if (strcmp("-m", argv[i]) == 0 && i < argc - 1 ) {
 			i++;
 			ARG_SAVEMPEGSTREAM = atoi(argv[i]);
-		}
-		else if (strcmp("-t", argv[i]) == 0 && i < argc - 1 ) {
-			i++;
-			ARG_STREAMTYPE = atoi(argv[i]);
 		}
 		else if (strcmp("-help", argv[i])) {
 			usage();
@@ -229,36 +221,13 @@ int main(int argc, char *argv[])
  *	                         Main loop
  ****************************************************************************/
 
-	totalsize = LONG_PACK('M','P','4','U');
-	mp4_ptr = (unsigned char *)&totalsize;
-	if(*mp4_ptr == 'M')
-		bigendian = 1;
-	else
-		bigendian = 0;
-
-	if(ARG_STREAMTYPE) {
-
-		unsigned char header[4];
-
-		/* MP4U format  : read header */
-		if(feof(in_file))
-			goto release_all;
-		fread(header, 4, 1, in_file);
-		
-		if(header[0] != 'M' || header[1] != 'P' ||
-		   header[2] != '4' || header[3] != 'U') {
-			fprintf(stderr, "Error, this not a mp4u container file\n");
-			goto release_all;
-		}
-
-	}
-	else {
-		fread(mp4_buffer, BUFFER_SIZE, 1, in_file);
-	}
+	/* Fill the buffer */
+	still_left_in_buffer = fread(mp4_buffer, 1, BUFFER_SIZE, in_file);
 
 	totaldectime = 0;
 	totalsize = 0;
 	filenr = 0;
+	delayed_frames = 0;
 	mp4_ptr = mp4_buffer;
 
 	do {
@@ -266,82 +235,75 @@ int main(int argc, char *argv[])
 		int mp4_size = (mp4_buffer + BUFFER_SIZE - mp4_ptr);
 		int used_bytes = 0;
 		double dectime;
-
-		/* Read data from input file */
-		if(ARG_STREAMTYPE) {
-
-			/* MP4U container */
-
-			/* Read stream size first */
-			if(feof(in_file))
-				break;
-			fread(&mp4_size, sizeof(long), 1, in_file);
-
-			/* Mp4U container is big endian */
-			if(!bigendian)
-				mp4_size = SWAP(mp4_size);
-
-			/* Read mp4_size_bytes */
-			if(feof(in_file))
-				break;
-			fread(mp4_buffer, mp4_size, 1, in_file);
-
-			/*
-			 * When reading mp4u, we don't have to care about buffer
-			 * filling as we know exactly how much bytes there are in
-			 * next frame
-			 */
-			mp4_ptr = mp4_buffer;
-
-		}
-		else {
-
-			/* Real raw stream */
-
-			/* buffer more than half empty -> Fill it */
-			if (mp4_ptr > mp4_buffer + BUFFER_SIZE/2) {
-				int rest = (mp4_buffer + BUFFER_SIZE - mp4_ptr);
-
-				/* Move data if needed */
-				if (rest)
-					memcpy(mp4_buffer, mp4_ptr, rest);
-
-				/* Update mp4_ptr */
-				mp4_ptr = mp4_buffer; 
-
-				/* read new data */
-				if(feof(in_file))
-					break;
-				fread(mp4_buffer + rest, BUFFER_SIZE - rest, 1, in_file);
-
-			}
-
-		}
-
-		/* Decode frame */
-		dectime = msecond();
-		status = dec_main(mp4_ptr, out_buffer, mp4_size, &used_bytes);
-		dectime = msecond() - dectime;
-
-		if (status) {
-			break;
-		}
+		int notification;
 
 		/*
-		 * Only needed for real raw stream, mp4u uses
-		 * mp4_ptr = mp4_buffer for each frame 
+		 * If the buffer is half empty or there are no more bytes in it
+		 * then fill it.
 		 */
-		mp4_ptr += used_bytes;
+		if (mp4_ptr > mp4_buffer + BUFFER_SIZE/2 ||
+			still_left_in_buffer <= 0) {
+			int rest = (mp4_buffer + BUFFER_SIZE - mp4_ptr);
 
-		/* Updated data */
-		totalsize += used_bytes;
+			/* Move data if needed */
+			if (rest)
+				memcpy(mp4_buffer, mp4_ptr, rest);
+
+			/* Update mp4_ptr */
+			mp4_ptr = mp4_buffer; 
+
+			/* read new data */
+			if(feof(in_file))
+				break;
+
+			still_left_in_buffer = fread(mp4_buffer + rest,
+										 1,
+										 BUFFER_SIZE - rest,
+										 in_file);
+
+		}
+
+
+		/* This loop flushes N_VOPS (with vop_coded bit set to 0) */
+		do {
+
+			/* Decode frame */
+			dectime = msecond();
+			status = dec_main(mp4_ptr, out_buffer, mp4_size, &used_bytes, &notification);
+			dectime = msecond() - dectime;
+
+			if (status) {
+				break;
+			}
+
+			/* Update buffer pointers */
+			mp4_ptr += used_bytes;
+			still_left_in_buffer -= used_bytes;
+
+			/* Total size */
+			totalsize += used_bytes;
+
+		}while(used_bytes <= 7 && still_left_in_buffer > 0); /* <= 7 bytes is a NVOPS */
+
+		/* Negative buffer would mean we went too far */
+		if(still_left_in_buffer < 0) break;
+		
+		/* Skip when decoder is buffering images or decoding VOL information */
+		if(notification != XVID_DEC_VOP) {
+			/* It's a delay only if it notifies NOTHING */
+			if(notification == XVID_DEC_NOTHING)
+				delayed_frames++;
+			continue;
+		}
+
+		/* Updated data - Count only usefull decode time */
 		totaldectime += dectime;
-      
-		/* Prints some decoding stats */
-		printf("Frame %5d: dectime =%6.1f ms length=%7d bytes \n", 
-		       filenr, dectime, used_bytes);
 
-		/* Save individual mpeg4 strean if required */
+		/* Prints some decoding stats */
+		printf("Frame %5d: dectime(ms) =%6.1f, length(bytes) =%7d\n", 
+			   filenr, dectime, used_bytes);
+			
+		/* Save individual mpeg4 stream if required */
 		if (ARG_SAVEMPEGSTREAM) {
 			FILE *filehandle = NULL;
 
@@ -349,31 +311,68 @@ int main(int argc, char *argv[])
 			filehandle = fopen(filename, "wb");
 			if(!filehandle) {
 				fprintf(stderr,
-					"Error writing single mpeg4 stream to file %s\n",
-					filename);
+						"Error writing single mpeg4 stream to file %s\n",
+						filename);
 			}
 			else {
-				fwrite(mp4_buffer, used_bytes, 1, filehandle);
+				fwrite(mp4_buffer, 1, used_bytes, filehandle);
 				fclose(filehandle);
 			}
 		}
-     
-      
+				
 		/* Save output frame if required */
 		if (ARG_SAVEDECOUTPUT) {
 			sprintf(filename, "%sdec%05d.pgm", filepath, filenr);
 			if(write_pgm(filename,out_buffer)) {
 				fprintf(stderr,
-					"Error writing decoded PGM frame %s\n",
-					filename);
+						"Error writing decoded PGM frame %s\n",
+						filename);
 			}
 		}
 
 		filenr++;
 
-	} while ( (status>=0) && (filenr<ABS_MAXFRAMENR) );
+	} while ( (status>=0) && (filenr<ABS_MAXFRAMENR));
 
-      
+/*****************************************************************************
+ *     Flush decoder buffers
+ ****************************************************************************/
+	while(delayed_frames--) {
+
+		/* Fake vars */
+		int used_bytes, isframe;
+		double dectime;
+
+		/* Decode frame */
+		dectime = msecond();
+		status = dec_main(NULL, out_buffer, -1, &used_bytes, &isframe);
+		dectime = msecond() - dectime;
+
+		if (status) {
+			break;
+		}
+
+		/* Updated data - Count only usefull decode time */
+		totaldectime += dectime;
+
+		/* Prints some decoding stats */
+		printf("Frame %5d: dectime(ms) =%6.1f, length(bytes) =%7d\n", 
+			   filenr, dectime, used_bytes);
+			
+		/* Save output frame if required */
+		if (ARG_SAVEDECOUTPUT) {
+			sprintf(filename, "%sdec%05d.pgm", filepath, filenr);
+			if(write_pgm(filename,out_buffer)) {
+				fprintf(stderr,
+						"Error writing decoded PGM frame %s\n",
+						filename);
+			}
+		}
+
+		filenr++;
+
+	}
+	
 /*****************************************************************************
  *     Calculate totals and averages for output, print results
  ****************************************************************************/
@@ -381,7 +380,7 @@ int main(int argc, char *argv[])
 	totalsize    /= filenr;
 	totaldectime /= filenr;
 	
-	printf("Avg: dectime %5.2f ms, %5.2f fps, mp4 stream size =%d\n",
+	printf("Avg: dectime(ms) =%7.2f, fps =%7.2f, length(bytes) =%7d\n",
 		totaldectime, 1000/totaldectime, (int)totalsize);
 		
 /*****************************************************************************
@@ -516,6 +515,7 @@ dec_init(int use_assembler)
         xparam.height = YDIM;
 
         xerr = xvid_decore(NULL, XVID_DEC_CREATE, &xparam, NULL);
+
         dec_handle = xparam.handle;
 
         return xerr;
@@ -524,23 +524,28 @@ dec_init(int use_assembler)
 /* decode one frame  */
 static int
 dec_main(unsigned char *istream,
-	 unsigned char *ostream,
-	 int istream_size,
-	 int *ostream_size)
+		 unsigned char *ostream,
+		 int istream_size,
+		 int *ostream_size,
+		 int *notification)
 {
 
         int xerr;
         XVID_DEC_FRAME xframe;
+		XVID_DEC_STATS xstats;
 
-        xframe.bitstream = istream;
-        xframe.length = istream_size;
-	xframe.image = ostream;
-        xframe.stride = XDIM;
-	xframe.colorspace = XVID_CSP_YV12;             
+        xframe.general    = 0;
+		xframe.bitstream  = istream;
+        xframe.length     = istream_size;
+		xframe.image      = ostream;
+        xframe.stride     = XDIM;
+		xframe.colorspace = XVID_CSP_YV12;             
 
-	xerr = xvid_decore(dec_handle, XVID_DEC_DECODE, &xframe, NULL);
+		xerr = xvid_decore(dec_handle, XVID_DEC_DECODE, &xframe, &xstats);
 
-	*ostream_size = xframe.length;
+		*ostream_size = xframe.length;
+
+		*notification = xstats.notify;
 
         return xerr;
 }
