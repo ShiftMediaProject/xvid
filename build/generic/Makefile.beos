@@ -4,7 +4,7 @@
 # 
 # Edit this file to enable/disable optimizations
 #
-# $Id: Makefile.beos,v 1.1 2002-08-18 14:06:32 Isibaar Exp $
+# $Id: Makefile.beos,v 1.2 2002-11-28 07:27:37 suxen_drol Exp $
 # 
 #############################################################################
 
@@ -35,9 +35,6 @@ AFLAGS = -f elf
 # Constants which should not be modified
 CFLAGS += -DARCH_X86
 CFLAGS += -DBEOS
-
-# Enable multithreaded ME (experimental), other routines to follow
-# CFLAGS += -D_SMP
 
 # Enable some experimental/debugging code
 #   (Use only if you know what you're doing !)

@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: encoder.h,v 1.25 2002-11-26 23:44:10 edgomez Exp $
+ * $Id: encoder.h,v 1.26 2002-11-28 07:27:37 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -105,10 +105,6 @@ typedef struct
 	/* frame rate increment & base */
 	uint32_t fincr;
 	uint32_t fbase;
-
-#ifdef _SMP
-	int num_threads;
-#endif
 
 	/* rounding type; alternate 0-1 after each interframe */
 	/* 1 <= fixed_code <= 4
