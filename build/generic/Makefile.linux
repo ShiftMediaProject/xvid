@@ -4,7 +4,7 @@
 # 
 # Edit this file to enable/disable optimizations
 #
-# $Id: Makefile.linux,v 1.3 2002-06-23 19:48:06 edgomez Exp $
+# $Id: Makefile.linux,v 1.4 2002-07-07 11:21:20 chl Exp $
 # 
 #############################################################################
 
@@ -35,6 +35,9 @@ AFLAGS = -f elf
 # Constants which should not be modified
 CFLAGS += -DARCH_X86
 CFLAGS += -DLINUX
+
+# Enable multithreaded ME (experimental), other routines to follow
+# CFLAGS += -D_SMP
 
 # Enable some experimental/debugging code
 #   (Use only if you know what you're doing !)
