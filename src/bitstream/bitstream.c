@@ -41,6 +41,7 @@
   *                                                                            *
   *  Revision history:                                                         *
   *                                                                            *
+  *	 22.05.2002 bs_put_matrix fix
   *  20.05.2002 added BitstreamWriteUserData                                   *
   *  19.06.2002  Fix a little bug in use custom quant matrix                   *
   *              MinChen <chenm001@163.com>                                    *
@@ -144,13 +145,13 @@ BitstreamReadHeaders(Bitstream * bs,
 		start_code = BitstreamShowBits(bs, 32);
 
 		if (start_code == VISOBJSEQ_START_CODE) {
-			// DEBUG("visual_object_sequence");
+			// DPRINTF("visual_object_sequence");
 			BitstreamSkip(bs, 32);	// visual_object_sequence_start_code
 			BitstreamSkip(bs, 8);	// profile_and_level_indication
 		} else if (start_code == VISOBJSEQ_STOP_CODE) {
 			BitstreamSkip(bs, 32);	// visual_object_sequence_stop_code
 		} else if (start_code == VISOBJ_START_CODE) {
-			// DEBUG("visual_object");
+			//DPRINTF("visual_object");
 			BitstreamSkip(bs, 32);	// visual_object_start_code
 			if (BitstreamGetBit(bs))	// is_visual_object_identified
 			{
@@ -162,7 +163,7 @@ BitstreamReadHeaders(Bitstream * bs,
 
 			if (BitstreamShowBits(bs, 4) != VISOBJ_TYPE_VIDEO)	// visual_object_type
 			{
-				DEBUG("visual_object_type != video");
+				//DPRINTF("visual_object_type != video");
 				return -1;
 			}
 			BitstreamSkip(bs, 4);
@@ -171,12 +172,12 @@ BitstreamReadHeaders(Bitstream * bs,
 
 			if (BitstreamGetBit(bs))	// video_signal_type
 			{
-				DEBUG("+ video_signal_type");
+				//DPRINTF("+ video_signal_type");
 				BitstreamSkip(bs, 3);	// video_format
 				BitstreamSkip(bs, 1);	// video_range
 				if (BitstreamGetBit(bs))	// color_description
 				{
-					DEBUG("+ color_description");
+					//DPRINTF("+ color_description");
 					BitstreamSkip(bs, 8);	// color_primaries
 					BitstreamSkip(bs, 8);	// transfer_characteristics
 					BitstreamSkip(bs, 8);	// matrix_coefficients
@@ -185,7 +186,7 @@ BitstreamReadHeaders(Bitstream * bs,
 		} else if ((start_code & ~0x1f) == VIDOBJ_START_CODE) {
 			BitstreamSkip(bs, 32);	// video_object_start_code
 		} else if ((start_code & ~0xf) == VIDOBJLAY_START_CODE) {
-			// DEBUG("video_object_layer");
+			//DPRINTF("video_object_layer");
 			BitstreamSkip(bs, 32);	// video_object_layer_start_code
 
 			BitstreamSkip(bs, 1);	// random_accessible_vol
@@ -193,8 +194,8 @@ BitstreamReadHeaders(Bitstream * bs,
 			// video_object_type_indication
 			if (BitstreamShowBits(bs, 8) != VIDOBJLAY_TYPE_SIMPLE && BitstreamShowBits(bs, 8) != VIDOBJLAY_TYPE_CORE && BitstreamShowBits(bs, 8) != VIDOBJLAY_TYPE_MAIN && BitstreamShowBits(bs, 8) != 0)	// BUGGY DIVX
 			{
-				DEBUG1("video_object_type_indication not supported",
-					   BitstreamShowBits(bs, 8));
+				//DPRINTF("video_object_type_indication %i not supported ",
+				//  BitstreamShowBits(bs, 8));
 				return -1;
 			}
 			BitstreamSkip(bs, 8);
@@ -202,29 +203,29 @@ BitstreamReadHeaders(Bitstream * bs,
 
 			if (BitstreamGetBit(bs))	// is_object_layer_identifier
 			{
-				DEBUG("+ is_object_layer_identifier");
+				//DPRINTF("+ is_object_layer_identifier");
 				vol_ver_id = BitstreamGetBits(bs, 4);	// video_object_layer_verid
 				BitstreamSkip(bs, 3);	// video_object_layer_priority
 			} else {
 				vol_ver_id = 1;
 			}
-			//DEBUGI("vol_ver_id", vol_ver_id);
+			//DPRINTF("vol_ver_id %i", vol_ver_id);
 
 			if (BitstreamGetBits(bs, 4) == VIDOBJLAY_AR_EXTPAR)	// aspect_ratio_info
 			{
-				DEBUG("+ aspect_ratio_info");
+				//DPRINTF("+ aspect_ratio_info");
 				BitstreamSkip(bs, 8);	// par_width
 				BitstreamSkip(bs, 8);	// par_height
 			}
 
 			if (BitstreamGetBit(bs))	// vol_control_parameters
 			{
-				DEBUG("+ vol_control_parameters");
+				//DPRINTF("+ vol_control_parameters");
 				BitstreamSkip(bs, 2);	// chroma_format
 				dec->low_delay = BitstreamGetBit(bs);	// low_delay
 				if (BitstreamGetBit(bs))	// vbv_parameters
 				{
-					DEBUG("+ vbv_parameters");
+					//DPRINTF("+ vbv_parameters");
 					BitstreamSkip(bs, 15);	// first_half_bitrate
 					READ_MARKER();
 					BitstreamSkip(bs, 15);	// latter_half_bitrate
@@ -241,7 +242,7 @@ BitstreamReadHeaders(Bitstream * bs,
 			}
 
 			dec->shape = BitstreamGetBits(bs, 2);	// video_object_layer_shape
-			// DEBUG1("shape", dec->shape);
+			//DPRINTF("shape %i", dec->shape);
 
 			if (dec->shape == VIDOBJLAY_SHAPE_GRAYSCALE && vol_ver_id != 1) {
 				BitstreamSkip(bs, 4);	// video_object_layer_shape_extension
@@ -252,7 +253,7 @@ BitstreamReadHeaders(Bitstream * bs,
 // *************************** for decode B-frame time ***********************
 			time_increment_resolution = BitstreamGetBits(bs, 16);	// vop_time_increment_resolution
 			time_increment_resolution--;
-			//DEBUG1("time_increment_resolution=",time_increment_resolution);
+			//DPRINTF("time_increment_resolution = %i",time_increment_resolution);
 			if (time_increment_resolution > 0) {
 				dec->time_inc_bits = log2bin(time_increment_resolution);
 			} else {
@@ -276,35 +277,35 @@ BitstreamReadHeaders(Bitstream * bs,
 
 					READ_MARKER();
 					width = BitstreamGetBits(bs, 13);	// video_object_layer_width
-					//DEBUGI("width", width);
+					//DPRINTF("width %i", width);
 					READ_MARKER();
 					height = BitstreamGetBits(bs, 13);	// video_object_layer_height
-					//DEBUGI("height", height); 
+					//DPRINTF("height %i", height); 
 					READ_MARKER();
 
 					if (width != dec->width || height != dec->height) {
-						DEBUG("FATAL: video dimension discrepancy ***");
-						DEBUG2("bitstream width/height", width, height);
-						DEBUG2("param width/height", dec->width, dec->height);
+						//DPRINTF("FATAL: video dimension discrepancy ***");
+						//DPRINTF("bitstream width/height  %i x %i", width, height);
+						//DPRINTF("param width/height  %i x %i", dec->width, dec->height);
 						return -1;
 					}
 
 				}
 
 				if ((dec->interlacing = BitstreamGetBit(bs))) {
-					DEBUG("vol: interlacing");
+					//DPRINTF("vol: interlacing");
 				}
 
 				if (!BitstreamGetBit(bs))	// obmc_disable
 				{
-					DEBUG("IGNORED/TODO: !obmc_disable");
+					//DPRINTF("IGNORED/TODO: !obmc_disable");
 					// TODO
 					// fucking divx4.02 has this enabled
 				}
 
 				if (BitstreamGetBits(bs, (vol_ver_id == 1 ? 1 : 2)))	// sprite_enable
 				{
-					DEBUG("sprite_enable; not supported");
+					//DPRINTF("sprite_enable; not supported");
 					return -1;
 				}
 
@@ -315,7 +316,7 @@ BitstreamReadHeaders(Bitstream * bs,
 
 				if (BitstreamGetBit(bs))	// not_8_bit
 				{
-					DEBUG("+ not_8_bit [IGNORED/TODO]");
+					//DPRINTF("+ not_8_bit [IGNORED/TODO]");
 					dec->quant_bits = BitstreamGetBits(bs, 4);	// quant_precision
 					BitstreamSkip(bs, 4);	// bits_per_pixel
 				} else {
@@ -329,7 +330,7 @@ BitstreamReadHeaders(Bitstream * bs,
 				}
 
 				dec->quant_type = BitstreamGetBit(bs);	// quant_type
-				// DEBUG1("**** quant_type", dec->quant_type);
+				//DPRINTF("**** quant_type %i", dec->quant_type);
 
 				if (dec->quant_type) {
 					if (BitstreamGetBit(bs))	// load_intra_quant_mat
@@ -352,7 +353,7 @@ BitstreamReadHeaders(Bitstream * bs,
 
 					if (dec->shape == VIDOBJLAY_SHAPE_GRAYSCALE) {
 						// TODO
-						DEBUG("TODO: grayscale matrix stuff");
+						//DPRINTF("TODO: grayscale matrix stuff");
 						return -1;
 					}
 
@@ -362,7 +363,7 @@ BitstreamReadHeaders(Bitstream * bs,
 				if (vol_ver_id != 1) {
 					dec->quarterpel = BitstreamGetBit(bs);	// quarter_sampe
 					if (dec->quarterpel) {
-						DEBUG("IGNORED/TODO: quarter_sample");
+						//DPRINTF("IGNORED/TODO: quarter_sample");
 					}
 				} else {
 					dec->quarterpel = 0;
@@ -370,33 +371,33 @@ BitstreamReadHeaders(Bitstream * bs,
 
 				if (!BitstreamGetBit(bs))	// complexity_estimation_disable
 				{
-					DEBUG("TODO: complexity_estimation header");
+					//DPRINTF("TODO: complexity_estimation header");
 					// TODO
 					return -1;
 				}
 
 				if (!BitstreamGetBit(bs))	// resync_marker_disable
 				{
-					DEBUG("IGNORED/TODO: !resync_marker_disable");
+					//DPRINTF("IGNORED/TODO: !resync_marker_disable");
 					// TODO
 				}
 
 				if (BitstreamGetBit(bs))	// data_partitioned
 				{
-					DEBUG("+ data_partitioned");
+					//DPRINTF("+ data_partitioned");
 					BitstreamSkip(bs, 1);	// reversible_vlc
 				}
 
 				if (vol_ver_id != 1) {
 					if (BitstreamGetBit(bs))	// newpred_enable
 					{
-						DEBUG("+ newpred_enable");
+						//DPRINTF("+ newpred_enable");
 						BitstreamSkip(bs, 2);	// requested_upstream_message_type
 						BitstreamSkip(bs, 1);	// newpred_segment_type
 					}
 					if (BitstreamGetBit(bs))	// reduced_resolution_vop_enable
 					{
-						DEBUG("TODO: reduced_resolution_vop_enable");
+						//DPRINTF("TODO: reduced_resolution_vop_enable");
 						// TODO
 						return -1;
 					}
@@ -405,7 +406,7 @@ BitstreamReadHeaders(Bitstream * bs,
 				if ((dec->scalability = BitstreamGetBit(bs)))	// scalability
 				{
 					// TODO
-					DEBUG("TODO: scalability");
+					//DPRINTF("TODO: scalability");
 					return -1;
 				}
 			} else				// dec->shape == BINARY_ONLY
@@ -414,7 +415,7 @@ BitstreamReadHeaders(Bitstream * bs,
 					if (BitstreamGetBit(bs))	// scalability
 					{
 						// TODO
-						DEBUG("TODO: scalability");
+						//DPRINTF("TODO: scalability");
 						return -1;
 					}
 				}
@@ -423,7 +424,7 @@ BitstreamReadHeaders(Bitstream * bs,
 			}
 
 		} else if (start_code == GRPOFVOP_START_CODE) {
-			// DEBUG("group_of_vop");
+			//DPRINTF("group_of_vop");
 			BitstreamSkip(bs, 32);
 			{
 				int hours, minutes, seconds;
@@ -432,16 +433,16 @@ BitstreamReadHeaders(Bitstream * bs,
 				minutes = BitstreamGetBits(bs, 6);
 				READ_MARKER();
 				seconds = BitstreamGetBits(bs, 6);
-				// DEBUG3("hms", hours, minutes, seconds);
+				//DPRINTF("%ih %im %is", hours, minutes, seconds);
 			}
 			BitstreamSkip(bs, 1);	// closed_gov
 			BitstreamSkip(bs, 1);	// broken_link
 		} else if (start_code == VOP_START_CODE) {
-			// DEBUG("vop_start_code");
+			//DPRINTF("vop_start_code");
 			BitstreamSkip(bs, 32);	// vop_start_code
 
 			coding_type = BitstreamGetBits(bs, 2);	// vop_coding_type
-			//DEBUG1("coding_type", coding_type);
+			//DPRINTF("coding_type %i", coding_type);
 
 // *************************** for decode B-frame time ***********************
 			while (BitstreamGetBit(bs) != 0)	// time_base
@@ -449,8 +450,8 @@ BitstreamReadHeaders(Bitstream * bs,
 
 			READ_MARKER();
 
-			//DEBUG1("time_inc_bits", dec->time_inc_bits);
-			//DEBUG1("vop_time_incr", BitstreamShowBits(bs, dec->time_inc_bits));
+			//DPRINTF("time_inc_bits %i", dec->time_inc_bits);
+			//DPRINTF("vop_time_incr %i", BitstreamShowBits(bs, dec->time_inc_bits));
 			if (dec->time_inc_bits) {
 				//BitstreamSkip(bs, dec->time_inc_bits);    // vop_time_increment
 				time_increment = (BitstreamGetBits(bs, dec->time_inc_bits));	// vop_time_increment
@@ -469,7 +470,7 @@ BitstreamReadHeaders(Bitstream * bs,
 					 time_incr) * time_increment_resolution + time_increment;
 				dec->time_bp = (uint32_t) (dec->last_non_b_time - dec->time);
 			}
-			//DEBUG1("time_increment=",time_increment);
+			//DPRINTF("time_increment %i",time_increment);
 
 			READ_MARKER();
 
@@ -487,7 +488,7 @@ BitstreamReadHeaders(Bitstream * bs,
 			if ((dec->shape != VIDOBJLAY_SHAPE_BINARY_ONLY) &&
 				(coding_type == P_VOP)) {
 				*rounding = BitstreamGetBit(bs);	// rounding_type
-				//DEBUG1("rounding", *rounding);
+				//DPRINTF("rounding %i", *rounding);
 			}
 
 			/* if (reduced_resolution_enable)
@@ -508,8 +509,8 @@ BitstreamReadHeaders(Bitstream * bs,
 				vert_mc_ref = BitstreamGetBits(bs, 13);
 				READ_MARKER();
 
-				// DEBUG2("vop_width/height", width, height);
-				// DEBUG2("ref             ", horiz_mc_ref, vert_mc_ref);
+				//DPRINTF("vop_width/height %i x %i", width, height);
+				//DPRINTF("ref              %i x %i", horiz_mc_ref, vert_mc_ref);
 
 				BitstreamSkip(bs, 1);	// change_conv_ratio_disable
 				if (BitstreamGetBit(bs))	// vop_constant_alpha
@@ -526,10 +527,10 @@ BitstreamReadHeaders(Bitstream * bs,
 
 				if (dec->interlacing) {
 					if ((dec->top_field_first = BitstreamGetBit(bs))) {
-						DEBUG("vop: top_field_first");
+						//DPRINTF("vop: top_field_first");
 					}
 					if ((dec->alternate_vertical_scan = BitstreamGetBit(bs))) {
-						DEBUG("vop: alternate_vertical_scan");
+						//DPRINTF("vop: alternate_vertical_scan");
 					}
 				}
 			}
@@ -537,7 +538,7 @@ BitstreamReadHeaders(Bitstream * bs,
 			if ((*quant = BitstreamGetBits(bs, dec->quant_bits)) < 1)	// vop_quant
 				*quant = 1;
 
-			//DEBUG1("quant", *quant);
+			//DPRINTF("quant %i", *quant);
 
 			if (coding_type != I_VOP) {
 				*fcode_forward = BitstreamGetBits(bs, 3);	// fcode_forward
@@ -554,20 +555,20 @@ BitstreamReadHeaders(Bitstream * bs,
 			}
 			return coding_type;
 		} else if (start_code == USERDATA_START_CODE) {
-			// DEBUG("user_data");
+			//DPRINTF("user_data");
 			BitstreamSkip(bs, 32);	// user_data_start_code
 		} else					// start_code == ?
 		{
 			if (BitstreamShowBits(bs, 24) == 0x000001) {
-				DEBUG1("*** WARNING: unknown start_code",
-					   BitstreamShowBits(bs, 32));
+				//DPRINTF("*** WARNING: unknown start_code %x",
+				//	   BitstreamShowBits(bs, 32));
 			}
 			BitstreamSkip(bs, 8);
 		}
 	}
 	while ((BitstreamPos(bs) >> 3) < bs->length);
 
-	DEBUG("*** WARNING: no vop_start_code found");
+	//DPRINTF("*** WARNING: no vop_start_code found");
 	return -1;					/* ignore it */
 }
 
@@ -581,7 +582,7 @@ bs_put_matrix(Bitstream * bs,
 	int i, j;
 	const int last = matrix[scan_tables[0][63]];
 
-	for (j = 63; j >= 0 && matrix[scan_tables[0][j - 1]] == last; j--);
+	for (j = 63; j > 0 && matrix[scan_tables[0][j - 1]] == last; j--);
 
 	for (i = 0; i <= j; i++) {
 		BitstreamPutBits(bs, matrix[scan_tables[0][i]], 8);
@@ -617,7 +618,7 @@ BitstreamWriteVolHeader(Bitstream * const bs,
 
 #ifdef BFRAMES
 	if (pParam->max_bframes > 0) {
-		DPRINTF("low_delay=1");
+		//DPRINTF("low_delay=1");
 		BitstreamPutBit(bs, 1);	// vol_control_parameters
 		BitstreamPutBits(bs, 1, 2);	// chroma_format 1="4:2:0"
 		BitstreamPutBit(bs, 0);	// low_delay
