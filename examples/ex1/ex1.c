@@ -72,7 +72,6 @@ void set_enc_frame(XVID_ENC_FRAME *frame)
 	frame->colorspace = XVID_CSP_YV12;	// the test.yuv format is YV12
 	frame->quant = 0;	// CBR mode
 
-	frame->general = 0;
 	frame->general |= XVID_MPEGQUANT;	// Use MPEG quant
 	frame->quant_inter_matrix = NULL;	// Use default quant matrix
 	frame->quant_intra_matrix = NULL;
