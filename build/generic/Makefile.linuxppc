@@ -47,11 +47,11 @@ RM = rm -rf
 all: $(LIB) $(LIBSO)
 
 
-$(LIB): $(SRC:.c=.o) $(SRC_INTEL:.asm=.o)
+$(LIB): $(SRC:.c=.o) #$(SRC_INTEL:.asm=.o)
 	ar rcs $@ $^
 
 
-$(LIBSO): $(SRC:.c=.o) $(SRC_INTEL:.asm=.o)
+$(LIBSO): $(SRC:.c=.o) #$(SRC_INTEL:.asm=.o)
 	$(CC) $(CFLAGS) $^ -shared -lc -lm -o $@
 
 
