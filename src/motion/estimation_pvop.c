@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_pvop.c,v 1.7 2004-05-27 14:25:49 syskin Exp $
+ * $Id: estimation_pvop.c,v 1.8 2004-07-08 07:12:54 syskin Exp $
  *
  ****************************************************************************/
 
@@ -530,7 +530,8 @@ Search8(SearchData * const OldData,
 		if(!Data->qpel) {
 			/* halfpel mode */
 			if (MotionFlags & XVID_ME_HALFPELREFINE8)
-				xvid_me_SubpelRefine(Data, CheckCandidate, 0); /* perform halfpel refine of current best vector */
+				/* perform halfpel refine of current best vector */
+				xvid_me_SubpelRefine(Data->currentMV[0], Data, CheckCandidate, 0);
 		} else {
 			/* qpel mode */
 			Data->currentQMV->x = 2*Data->currentMV->x;
@@ -544,7 +545,7 @@ Search8(SearchData * const OldData,
 			} else if(MotionFlags & XVID_ME_QUARTERPELREFINE8) {
 				/* full */
 				if (MotionFlags & XVID_ME_HALFPELREFINE8) {
-					xvid_me_SubpelRefine(Data, CheckCandidate8, 0); /* hpel part */
+					xvid_me_SubpelRefine(Data->currentMV[0], Data, CheckCandidate8, 0); /* hpel part */
 					Data->currentQMV->x = 2*Data->currentMV->x;
 					Data->currentQMV->y = 2*Data->currentMV->y;
 				}
@@ -553,7 +554,7 @@ Search8(SearchData * const OldData,
 					pParam->width, pParam->height, Data->iFcode, 2, 0);
 				Data->qpel_precision = 1;
 
-				xvid_me_SubpelRefine(Data, CheckCandidate8, 0); /* qpel part */
+				xvid_me_SubpelRefine(Data->currentQMV[0], Data, CheckCandidate8, 0); /* qpel part */
 			}
 		}
 
@@ -722,7 +723,7 @@ SearchP(const IMAGE * const pRef,
 	if(!Data->qpel) {
 		/* halfpel mode */
 		if (MotionFlags & XVID_ME_HALFPELREFINE16)
-				xvid_me_SubpelRefine(Data, CheckCandidate, 0);	
+				xvid_me_SubpelRefine(Data->currentMV[0], Data, CheckCandidate, 0);	
 	} else {
 		/* qpel mode */
 		
@@ -739,7 +740,7 @@ SearchP(const IMAGE * const pRef,
 			if(MotionFlags & (XVID_ME_QUARTERPELREFINE16 | XVID_ME_QUARTERPELREFINE16_RD)) {
 				/* full */
 				if (MotionFlags & XVID_ME_HALFPELREFINE16) {
-					xvid_me_SubpelRefine(Data, CheckCandidate, 0); /* hpel part */
+					xvid_me_SubpelRefine(Data->currentMV[0], Data, CheckCandidate, 0); /* hpel part */
 					for(i = 0; i < 5; i++) {
 						Data->currentQMV[i].x = 2 * Data->currentMV[i].x;
 						Data->currentQMV[i].y = 2 * Data->currentMV[i].y;
@@ -749,7 +750,7 @@ SearchP(const IMAGE * const pRef,
 							pParam->width, pParam->height, Data->iFcode, 2, 0);
 				Data->qpel_precision = 1;
 				if(MotionFlags & XVID_ME_QUARTERPELREFINE16)
-					xvid_me_SubpelRefine(Data, CheckCandidate, 0); /* qpel part */
+					xvid_me_SubpelRefine(Data->currentQMV[0], Data, CheckCandidate, 0); /* qpel part */
 			}
 		}
 	}

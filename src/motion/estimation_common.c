@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_common.c,v 1.4 2004-04-20 06:10:40 syskin Exp $
+ * $Id: estimation_common.c,v 1.5 2004-07-08 07:12:54 syskin Exp $
  *
  ****************************************************************************/
 
@@ -351,10 +351,9 @@ xvid_me_DiamondSearch(int x, int y, SearchData * const data,
 }
 
 void
-xvid_me_SubpelRefine(SearchData * const data, CheckFunc * const CheckCandidate, int dir)
+xvid_me_SubpelRefine(VECTOR centerMV, SearchData * const data, CheckFunc * const CheckCandidate, int dir)
 {
 /* Do a half-pel or q-pel refinement */
-	const VECTOR centerMV = data->qpel_precision ? *data->currentQMV : *data->currentMV;
 
 	CHECK_CANDIDATE(centerMV.x, centerMV.y - 1, dir);
 	CHECK_CANDIDATE(centerMV.x + 1, centerMV.y - 1, dir);

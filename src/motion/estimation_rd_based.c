@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_rd_based.c,v 1.5 2004-06-12 13:02:12 edgomez Exp $
+ * $Id: estimation_rd_based.c,v 1.6 2004-07-08 07:12:54 syskin Exp $
  *
  ****************************************************************************/
 
@@ -313,7 +313,7 @@ findRD_inter(SearchData * const Data,
 		xvid_me_SquareSearch(Data->currentMV->x, Data->currentMV->y, Data, 255, CheckCandidateRD16);
 
 	if (MotionFlags&XVID_ME_HALFPELREFINE16_RD)
-		xvid_me_SubpelRefine(Data, CheckCandidateRD16, 0);
+		xvid_me_SubpelRefine(Data->currentMV[0], Data, CheckCandidateRD16, 0);
 
 	if (Data->qpel) {
 		if (MotionFlags&(XVID_ME_EXTSEARCH_RD | XVID_ME_HALFPELREFINE16_RD)) { /* there was halfpel-precision search */
@@ -331,7 +331,7 @@ findRD_inter(SearchData * const Data,
 			if (MotionFlags & XVID_ME_FASTREFINE16)
 				FullRefine_Fast(Data, CheckCandidateRD16, 0);
 			else 
-				xvid_me_SubpelRefine(Data, CheckCandidateRD16, 0);
+				xvid_me_SubpelRefine(Data->currentQMV[0], Data, CheckCandidateRD16, 0);
 		}
 	}
 
@@ -414,7 +414,7 @@ findRD_inter4v(SearchData * const Data,
 					xvid_me_SquareSearch(Data8->currentMV->x, Data8->currentMV->x, Data8, 255, CheckCandidateRD8);
 
 				if (MotionFlags & XVID_ME_HALFPELREFINE8_RD)
-					xvid_me_SubpelRefine(Data8, CheckCandidateRD8, 0);
+					xvid_me_SubpelRefine(Data->currentMV[0], Data8, CheckCandidateRD8, 0);
 
 				if(bsad > *Data8->iMinSAD) { /* we have found a better match */
 					bx = Data8->currentQMV->x = 2*Data8->currentMV->x;
@@ -431,7 +431,7 @@ findRD_inter4v(SearchData * const Data,
 			if (MotionFlags & XVID_ME_QUARTERPELREFINE8_RD) {
 				if (MotionFlags & XVID_ME_FASTREFINE8)
 					FullRefine_Fast(Data8, CheckCandidateRD8, 0);
-				else xvid_me_SubpelRefine(Data8, CheckCandidateRD8, 0);
+				else xvid_me_SubpelRefine(Data->currentQMV[0], Data8, CheckCandidateRD8, 0);
 			}
 
 			if (bsad <= Data->iMinSAD[0]) { 
@@ -447,7 +447,7 @@ findRD_inter4v(SearchData * const Data,
 				xvid_me_SquareSearch(Data8->currentMV->x, Data8->currentMV->x, Data8, 255, CheckCandidateRD8);
 
 			if (MotionFlags & XVID_ME_HALFPELREFINE8_RD)
-				xvid_me_SubpelRefine(Data8, CheckCandidateRD8, 0); /* halfpel refinement */
+				xvid_me_SubpelRefine(Data->currentMV[0], Data8, CheckCandidateRD8, 0); /* halfpel refinement */
 		}
 
 		/* checking vector equal to predicion */

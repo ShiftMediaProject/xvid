@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation.h,v 1.4 2004-04-22 13:39:33 syskin Exp $
+ * $Id: estimation.h,v 1.5 2004-07-08 07:12:54 syskin Exp $
  *
  ****************************************************************************/
 
@@ -149,7 +149,7 @@ MainSearchFunc(int x, int y, SearchData * const Data,
 MainSearchFunc xvid_me_DiamondSearch, xvid_me_AdvDiamondSearch, xvid_me_SquareSearch;
 
 void
-xvid_me_SubpelRefine(SearchData * const data, CheckFunc * const CheckCandidate, int dir);
+xvid_me_SubpelRefine(VECTOR centerMV, SearchData * const data, CheckFunc * const CheckCandidate, int dir);
 
 void 
 FullRefine_Fast(SearchData * data, CheckFunc * CheckCandidate, int direction);
