@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_common.c,v 1.8 2004-10-03 14:49:34 chl Exp $
+ * $Id: estimation_common.c,v 1.9 2004-11-22 05:30:08 syskin Exp $
  *
  ****************************************************************************/
 
@@ -269,14 +269,14 @@ xvid_me_AdvDiamondSearch(int x, int y, SearchData * const data,
 				CHECK_CANDIDATE(x + iDiamondSize, y - iDiamondSize, 2 + 4);
 				break;
 			case 2 + 8:
-				CHECK_CANDIDATE(x - iDiamondSize, y - iDiamondSize, 1 + 4);
-				CHECK_CANDIDATE(x - iDiamondSize, y + iDiamondSize, 1 + 8);
-				CHECK_CANDIDATE(x + iDiamondSize, y + iDiamondSize, 2 + 8);
-				break;
-			case 1 + 8:
 				CHECK_CANDIDATE(x + iDiamondSize, y - iDiamondSize, 2 + 4);
 				CHECK_CANDIDATE(x + iDiamondSize, y + iDiamondSize, 2 + 8);
 				CHECK_CANDIDATE(x - iDiamondSize, y + iDiamondSize, 1 + 8);
+				break;
+			case 1 + 8:
+				CHECK_CANDIDATE(x - iDiamondSize, y - iDiamondSize, 1 + 4);
+				CHECK_CANDIDATE(x - iDiamondSize, y + iDiamondSize, 1 + 8);
+				CHECK_CANDIDATE(x + iDiamondSize, y + iDiamondSize, 2 + 8);
 				break;
 			default:		/* 1+2+4+8 == we didn't find anything at all */
 				CHECK_CANDIDATE(x - iDiamondSize, y - iDiamondSize, 1 + 4);
