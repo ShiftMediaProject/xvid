@@ -1,7 +1,7 @@
 TODO
 ====
 
-This file lists the TODO items stll pending for the 1.0 release.
+This file lists the TODO items stll pending for the next release.
 
 
 Active Items to work on:
@@ -16,9 +16,6 @@ Active Items to work on:
   - xvidcore is still a place where bugs feel confortable
 * docbook writing (every developer should contribute)
   - New API has to be documented.
-* two pass code should not introduce quality regressions (every tester)
-  - first feedback proved kfthresholding was hurting quality, a
-    decision on its behavior has to be settled.   
 * MMX MPEG4 quantization is unprecise. This is probably an inherent
   problem in some MMX opcode precision.
 
@@ -39,6 +36,7 @@ Already completed items:
 * New Qpel code (michael)
 * ME splitting and ME improvements (syskin)
 * New unix build process (ed.gomez)
+* Move/clean/enhance 2pass code from vfw to core (ed.gomez)
 * New thread/instance safe sse2 code (p.massimino)
 * INSTALL guide for Unix and Win32 (ed.gomez)
 * dshow static link to libxvidcore.lib (peter)
@@ -69,4 +67,4 @@ directshow
 
 
 
-Last edited: $Date: 2004-04-15 12:05:19 $
+Last edited: $Date: 2004-06-12 13:02:12 $

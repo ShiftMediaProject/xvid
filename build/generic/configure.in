@@ -8,7 +8,7 @@ dnl ==========================================================================
 
 AC_PREREQ([2.50])
 
-AC_INIT([XviD], [1.0.0], [xvid-devel@xvid.org])
+AC_INIT([XviD], [1.0.1], [xvid-devel@xvid.org])
 AC_CONFIG_SRCDIR(configure.in)
 
 dnl Do not forget to increase that when needed.
