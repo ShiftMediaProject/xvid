@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_common.c,v 1.7 2004-10-03 14:37:18 chl Exp $
+ * $Id: estimation_common.c,v 1.8 2004-10-03 14:49:34 chl Exp $
  *
  ****************************************************************************/
 
@@ -323,31 +323,29 @@ xvid_me_DiamondSearch(int x, int y, SearchData * const data,
 
 	unsigned int * const iDirection = &data->dir;
 
-	do {
+	for (;;) {
 		*iDirection = 0;
 		if (bDirection & 1) CHECK_CANDIDATE(x - iDiamondSize, y, 1);
 		if (bDirection & 2) CHECK_CANDIDATE(x + iDiamondSize, y, 2);
 		if (bDirection & 4) CHECK_CANDIDATE(x, y - iDiamondSize, 4);
 		if (bDirection & 8) CHECK_CANDIDATE(x, y + iDiamondSize, 8);
 
+		if (*iDirection == 0)
+			break;
+		
 		/* now we're doing diagonal checks near our candidate */
 		bDirection = *iDirection;
-		if (*iDirection) {		/* checking if anything found */
-			x = data->currentMV->x; y = data->currentMV->y;
-			if (bDirection & 3) {	/* our candidate is left or right */
-				*iDirection=4+8;
-				CHECK_CANDIDATE(x, y + iDiamondSize, 8);
-				CHECK_CANDIDATE(x, y - iDiamondSize, 4);
-			} else {			/* what remains here is up or down */
-				*iDirection=1+2;
-				CHECK_CANDIDATE(x + iDiamondSize, y, 2);
-				CHECK_CANDIDATE(x - iDiamondSize, y, 1);
-			}
-			bDirection += *iDirection;
-			x = data->currentMV->x; y = data->currentMV->y;
+		x = data->currentMV->x; y = data->currentMV->y;
+		if (bDirection & 3) {	/* our candidate is left or right */
+			CHECK_CANDIDATE(x, y + iDiamondSize, 8);
+			CHECK_CANDIDATE(x, y - iDiamondSize, 4);
+		} else {			/* what remains here is up or down */
+			CHECK_CANDIDATE(x + iDiamondSize, y, 2);
+			CHECK_CANDIDATE(x - iDiamondSize, y, 1);
 		}
+		bDirection |= *iDirection;
+		x = data->currentMV->x; y = data->currentMV->y;
 	}
-	while (bDirection);
 }
 
 void
