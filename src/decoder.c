@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.57 2004-05-21 14:40:15 edgomez Exp $
+ * $Id: decoder.c,v 1.58 2004-05-31 21:36:23 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -1218,7 +1218,6 @@ decoder_bframe(DECODER * dec,
 	uint32_t x, y;
 	VECTOR mv;
 	const VECTOR zeromv = {0,0};
-	const int32_t TRB = dec->time_pp - dec->time_bp, TRD = dec->time_pp;
 	int i;
 
 	if (!dec->is_edged[0]) {
@@ -1322,14 +1321,15 @@ decoder_bframe(DECODER * dec,
 
 			case MODE_DIRECT_NONE_MV:
 				for (i = 0; i < 4; i++) {
-					mb->mvs[i].x = (int32_t) ((TRB * last_mb->mvs[i].x) / TRD + mv.x);
-					mb->b_mvs[i].x = (int32_t) ((mv.x == 0)
-									? ((TRB - TRD) * last_mb->mvs[i].x) / TRD
-									: mb->mvs[i].x - last_mb->mvs[i].x);
-					mb->mvs[i].y = (int32_t) ((TRB * last_mb->mvs[i].y) / TRD + mv.y);
-					mb->b_mvs[i].y = (int32_t) ((mv.y == 0)
-									? ((TRB - TRD) * last_mb->mvs[i].y) / TRD
-									: mb->mvs[i].y - last_mb->mvs[i].y);
+					mb->mvs[i].x = last_mb->mvs[i].x*dec->time_bp/dec->time_pp + mv.x;
+					mb->mvs[i].y = last_mb->mvs[i].y*dec->time_bp/dec->time_pp + mv.y;
+					
+					mb->b_mvs[i].x = (mv.x)
+						?  mb->mvs[i].x - last_mb->mvs[i].x
+						: last_mb->mvs[i].x*(dec->time_bp - dec->time_pp)/dec->time_pp;
+					mb->b_mvs[i].y = (mv.y)
+						? mb->mvs[i].y - last_mb->mvs[i].y
+						: last_mb->mvs[i].y*(dec->time_bp - dec->time_pp)/dec->time_pp;
 				}
 
 				decoder_bf_interpolate_mbinter(dec, dec->refn[1], dec->refn[0],

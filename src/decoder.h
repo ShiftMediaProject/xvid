@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.h,v 1.16 2004-05-21 14:40:15 edgomez Exp $
+ * $Id: decoder.h,v 1.17 2004-05-31 21:36:23 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -145,8 +145,8 @@ typedef struct
 	int64_t time_base;
 	int64_t last_time_base;
 	int64_t last_non_b_time;
-	uint32_t time_pp;
-	uint32_t time_bp;
+	int32_t time_pp;
+	int32_t time_bp;
 	uint32_t low_delay;			/* low_delay flage (1 means no B_VOP) */
 	uint32_t low_delay_default;	/* default value for low_delay flag */
 
