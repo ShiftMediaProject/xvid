@@ -348,7 +348,7 @@ int encore(void * handle, int opt, void * param1, void * param2)
 				xparam.fbase = (int)(FRAMERATE_INCR * eparam->framerate);
 			}
 			xparam.bitrate = eparam->bitrate;
-			xparam.rc_buffersize = 10 * eparam->bitrate;
+			xparam.rc_buffersize = 16;
 			xparam.min_quantizer = eparam->min_quantizer;
 			xparam.max_quantizer = eparam->max_quantizer;
 			xparam.max_key_interval = eparam->max_key_interval;
