@@ -7,8 +7,6 @@
 
 void init_vlc_tables(void);
 
-void skip_stuffing(Bitstream *bs);
-
 int check_resync_marker(Bitstream * bs, int addbits);
 
 int get_mcbpc_intra(Bitstream * bs);

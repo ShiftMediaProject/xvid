@@ -118,7 +118,7 @@
 
 
 int
-read_video_packet_header(Bitstream *bs, int addbits);
+read_video_packet_header(Bitstream *bs, const int addbits, int * quant);
 
 
 // header stuff

@@ -573,15 +573,6 @@ MBCodingBVOP(const MACROBLOCK * mb,
  ***************************************************************/
 
 
-void
-skip_stuffing(Bitstream *bs)
-{
-	while (BitstreamShowBits(bs, 9) == 1)
-		BitstreamSkip(bs, 9);
-}
-
-
-
 // for IVOP addbits == 0
 // for PVOP addbits == fcode - 1
 // for BVOP addbits == max(fcode,bcode) - 1
@@ -782,6 +773,10 @@ get_intra_block(Bitstream * bs,
 		}
 		coeff += run;
 		block[scan[coeff]] = level;
+
+		DPRINTF(DPRINTF_COEFF,"block[%i] %i", scan[coeff], level);
+		//DPRINTF(DPRINTF_COEFF,"block[%i] %i %08x", scan[coeff], level, BitstreamShowBits(bs, 32));
+
 		if (level < -127 || level > 127) {
 			DEBUG1("warning: intra_overflow", level);
 		}
@@ -811,6 +806,10 @@ get_inter_block(Bitstream * bs,
 		p += run;
 
 		block[scan[p]] = level;
+
+		DPRINTF(DPRINTF_COEFF,"block[%i] %i", scan[p], level);
+		// DPRINTF(DPRINTF_COEFF,"block[%i] %i %08x", scan[p], level, BitstreamShowBits(bs, 32));
+
 		if (level < -127 || level > 127) {
 			DEBUG1("warning: inter_overflow", level);
 		}
