@@ -257,6 +257,7 @@ static const REG_INT reg_ints[] = {
 	/* motion */
 	{"motion_search",			&reg.motion_search,				6},
 	{"vhq_mode",				&reg.vhq_mode,					1},
+	{"vhq_bframe",				&reg.vhq_bframe,				0},
 	{"chromame",				&reg.chromame,					1},
 	{"cartoon_mode",			&reg.cartoon_mode,				0},
 	{"turbo",					&reg.turbo,						0},
@@ -1141,6 +1142,7 @@ static void adv_upload(HWND hDlg, int idd, CONFIG * config)
 	case IDD_MOTION :
 		SendDlgItemMessage(hDlg, IDC_MOTION, CB_SETCURSEL, config->motion_search, 0);
 		SendDlgItemMessage(hDlg, IDC_VHQ, CB_SETCURSEL, config->vhq_mode, 0);
+		CheckDlg(hDlg, IDC_VHQ_BFRAME, config->vhq_bframe);
 		CheckDlg(hDlg, IDC_CHROMAME, config->chromame);
 		CheckDlg(hDlg, IDC_CARTOON, config->cartoon_mode);
 		CheckDlg(hDlg, IDC_TURBO, config->turbo);
@@ -1323,6 +1325,7 @@ static void adv_download(HWND hDlg, int idd, CONFIG * config)
 	case IDD_MOTION :
 		config->motion_search = SendDlgItemMessage(hDlg, IDC_MOTION, CB_GETCURSEL, 0, 0);
 		config->vhq_mode = SendDlgItemMessage(hDlg, IDC_VHQ, CB_GETCURSEL, 0, 0);
+		config->vhq_bframe = IsDlgButtonChecked(hDlg, IDC_VHQ_BFRAME);
 		config->chromame = IsDlgChecked(hDlg, IDC_CHROMAME);
 		config->cartoon_mode = IsDlgChecked(hDlg, IDC_CARTOON);
 		config->turbo = IsDlgChecked(hDlg, IDC_TURBO);
@@ -1407,6 +1410,7 @@ static BOOL CALLBACK adv_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			switch (LOWORD(wParam))
 			{
 			case IDC_INTERLACING :
+			case IDC_VHQ_BFRAME :
 			case IDC_BVOP :
 			case IDC_ZONE_MODE_WEIGHT :
 			case IDC_ZONE_MODE_QUANT :

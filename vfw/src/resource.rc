@@ -61,9 +61,9 @@ BEGIN
     COMBOBOX        IDC_VHQ,112,37,76,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     CONTROL         "Use chroma motion",IDC_CHROMAME,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,14,58,77,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,65,77,10
     CONTROL         "Turbo ;-)",IDC_TURBO,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,143,58,43,10
+                    WS_TABSTOP,143,65,43,10
     EDITTEXT        IDC_FRAMEDROP,112,96,75,12,ES_AUTOHSCROLL | ES_NUMBER
     EDITTEXT        IDC_MAXKEY,112,116,76,12,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "Cartoon Mode",IDC_CARTOON,"Button",BS_AUTOCHECKBOX | 
@@ -77,6 +77,8 @@ BEGIN
                     SS_CENTERIMAGE
     GROUPBOX        "Motion Precision",IDC_STATIC,7,7,193,77
     GROUPBOX        "Other",IDC_STATIC,7,79,193,84
+    CONTROL         "Use VHQ for bframes too",IDC_VHQ_BFRAME,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,52,95,10
 END
 
 IDD_MAIN DIALOGEX 0, 0, 225, 255
@@ -823,7 +825,7 @@ BEGIN
                     ES_READONLY
     EDITTEXT        IDC_BITRATE_VRATE,95,135,75,12,ES_AUTOHSCROLL | 
                     ES_READONLY
-    COMBOBOX        IDC_BITRATE_AFORMAT,95,158,75,92,CBS_DROPDOWNLIST | 
+    COMBOBOX        IDC_BITRATE_AFORMAT,95,158,75,64,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_BITRATE_ARATE,95,173,75,64,CBS_DROPDOWN | WS_VSCROLL | 
                     WS_TABSTOP
@@ -1017,7 +1019,7 @@ END
 
 
 /////////////////////////////////////////////////////////////////////////////
-// English (Australia) resources
+// Englisch (Australien) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENA)
 #ifdef _WIN32
@@ -1050,7 +1052,7 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // English (Australia) resources
+#endif    // Englisch (Australien) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
