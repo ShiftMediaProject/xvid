@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.6 2004-07-03 08:46:39 syskin Exp $
+ * $Id: estimation_bvop.c,v 1.7 2004-07-08 07:12:54 syskin Exp $
  *
  ****************************************************************************/
 
@@ -122,7 +122,7 @@ CheckCandidateInt(const int x, const int y, SearchData * const data, const unsig
 		yf = forward.y;
 		xb = x; yb = y;
 	}
-	
+
 	if (!data->qpel_precision) {
 		ReferenceF = GetReference(xf, yf, data);
 		ReferenceB = GetReferenceB(xb, yb, 1, data);
@@ -164,6 +164,7 @@ CheckCandidateDirect(const int x, const int y, SearchData * const data, const un
 	const uint8_t *ReferenceF;
 	const uint8_t *ReferenceB;
 	VECTOR mvs, b_mvs;
+	const int blocks[4] = {0, 8, 8*data->iEdgedWidth, 8*data->iEdgedWidth+8};
 
 	if (( x > 31) || ( x < -32) || ( y > 31) || (y < -32)) return;
 
@@ -187,18 +188,21 @@ CheckCandidateDirect(const int x, const int y, SearchData * const data, const un
 		if (data->qpel) {
 			xcf += mvs.x/2; ycf += mvs.y/2;
 			xcb += b_mvs.x/2; ycb += b_mvs.y/2;
+			if (data->qpel_precision) {
+				ReferenceF = xvid_me_interpolate8x8qpel(mvs.x, mvs.y, k, 0, data);
+				ReferenceB = xvid_me_interpolate8x8qpel(b_mvs.x, b_mvs.y, k, 1, data);
+				goto done;
+			}
+			mvs.x >>=1; mvs.y >>=1; b_mvs.x >>=1; b_mvs.y >>=1; // qpel->hpel
 		} else {
 			xcf += mvs.x; ycf += mvs.y;
 			xcb += b_mvs.x; ycb += b_mvs.y;
-			mvs.x *= 2; mvs.y *= 2; /* we move to qpel precision anyway */
-			b_mvs.x *= 2; b_mvs.y *= 2;
 		}
-
-		ReferenceF = xvid_me_interpolate8x8qpel(mvs.x, mvs.y, k, 0, data);
-		ReferenceB = xvid_me_interpolate8x8qpel(b_mvs.x, b_mvs.y, k, 1, data);
-
+		ReferenceF = GetReference(mvs.x, mvs.y, data) + blocks[k];
+		ReferenceB = GetReferenceB(b_mvs.x, b_mvs.y, 1, data) + blocks[k];
+done:
 		sad += data->iMinSAD[k+1] = 
-			sad8bi(data->Cur + 8*(k&1) + 8*(k>>1)*(data->iEdgedWidth),
+			sad8bi(data->Cur + blocks[k],
 					ReferenceF, ReferenceB, data->iEdgedWidth);
 		if (sad > *(data->iMinSAD)) return;
 	}
@@ -246,15 +250,20 @@ CheckCandidateDirectno4v(const int x, const int y, SearchData * const data, cons
 	if (data->qpel) {
 		xcf = 4*(mvs.x/2); ycf = 4*(mvs.y/2);
 		xcb = 4*(b_mvs.x/2); ycb = 4*(b_mvs.y/2);
-		ReferenceF = xvid_me_interpolate16x16qpel(mvs.x, mvs.y, 0, data);
-		ReferenceB = xvid_me_interpolate16x16qpel(b_mvs.x, b_mvs.y, 1, data);
+		if (data->qpel_precision) {
+			ReferenceF = xvid_me_interpolate16x16qpel(mvs.x, mvs.y, 0, data);
+			ReferenceB = xvid_me_interpolate16x16qpel(b_mvs.x, b_mvs.y, 1, data);
+			goto done;
+		}
+		mvs.x >>=1; mvs.y >>=1; b_mvs.x >>=1; b_mvs.y >>=1; // qpel->hpel
 	} else {
 		xcf = 4*mvs.x; ycf = 4*mvs.y;
 		xcb = 4*b_mvs.x; ycb = 4*b_mvs.y;
-		ReferenceF = GetReference(mvs.x, mvs.y, data);
-		ReferenceB = GetReferenceB(b_mvs.x, b_mvs.y, 1, data);
 	}
+	ReferenceF = GetReference(mvs.x, mvs.y, data);
+	ReferenceB = GetReferenceB(b_mvs.x, b_mvs.y, 1, data);
 
+done:
 	sad = sad16bi(data->Cur, ReferenceF, ReferenceB, data->iEdgedWidth);
 	sad += (data->lambda16 * d_mv_bits(x, y, zeroMV, 1, 0, 0) * sad)>>10;
 
@@ -310,6 +319,74 @@ CheckCandidate16no4v(const int x, const int y, SearchData * const data, const un
 	}
 }
 
+
+static void 
+initialize_searchData(SearchData * Data_d,
+					  SearchData * Data_f,
+					  SearchData * Data_b,
+					  SearchData * Data_i,
+					  int x, int y,
+					  const IMAGE * const f_Ref,
+					  const uint8_t * const f_RefH,
+					  const uint8_t * const f_RefV,
+					  const uint8_t * const f_RefHV,
+					  const IMAGE * const b_Ref,
+					  const uint8_t * const b_RefH,
+					  const uint8_t * const b_RefV,
+					  const uint8_t * const b_RefHV,
+					  const IMAGE * const pCur,
+					  const MACROBLOCK * const b_mb)
+{
+
+	/* per-macroblock SearchData initialization - too many things would be repeated 4 times */
+	const uint8_t * RefP[6], * b_RefP[6], * Cur[3];
+	const uint32_t iEdgedWidth = Data_d->iEdgedWidth;
+	unsigned int lambda;
+	int i;
+
+	/* luma */
+	int offset = (x + iEdgedWidth*y) * 16;
+	RefP[0] = f_Ref->y + offset;
+	RefP[2] = f_RefH + offset;
+	RefP[1] = f_RefV + offset;
+	RefP[3] = f_RefHV + offset;
+	b_RefP[0] = b_Ref->y + offset;
+	b_RefP[2] = b_RefH + offset;
+	b_RefP[1] = b_RefV + offset;
+	b_RefP[3] = b_RefHV + offset;
+	Cur[0] = pCur->y + offset;
+
+	/* chroma */
+	offset = (x + (iEdgedWidth/2)*y) * 8;
+	RefP[4] = f_Ref->u + offset;
+	RefP[5] = f_Ref->v + offset;
+	b_RefP[4] = b_Ref->u + offset;
+	b_RefP[5] = b_Ref->v + offset;
+	Cur[1] = pCur->u + offset;
+	Cur[2] = pCur->v + offset;
+
+	lambda = xvid_me_lambda_vec16[b_mb->quant];
+
+	for (i = 0; i < 6; i++) {
+		Data_d->RefP[i] = Data_f->RefP[i] = Data_i->RefP[i] = RefP[i];
+		Data_d->b_RefP[i] = Data_b->RefP[i] = Data_i->b_RefP[i] = b_RefP[i];
+	}
+	Data_d->Cur = Data_f->Cur = Data_b->Cur = Data_i->Cur = Cur[0];
+	Data_d->CurU = Data_f->CurU = Data_b->CurU = Data_i->CurU = Cur[1];
+	Data_d->CurV = Data_f->CurV = Data_b->CurV = Data_i->CurV = Cur[2];
+
+	Data_d->lambda16 = lambda/4;
+	Data_f->lambda16 = Data_b->lambda16 = Data_i->lambda16 = lambda;
+
+	/* reset chroma-sad cache */
+	Data_d->b_chromaX = Data_d->b_chromaY = Data_d->chromaX = Data_d->chromaY = Data_d->chromaSAD = 256*4096; 
+	Data_i->b_chromaX = Data_i->b_chromaY = Data_i->chromaX = Data_i->chromaY = Data_i->chromaSAD = 256*4096; 
+	Data_f->chromaX = Data_f->chromaY = Data_f->chromaSAD = 256*4096; 
+	Data_b->chromaX = Data_b->chromaY = Data_b->chromaSAD = 256*4096; 
+
+	*Data_d->iMinSAD = *Data_b->iMinSAD = *Data_f->iMinSAD = *Data_i->iMinSAD = 4096*256;
+}
+
 static __inline VECTOR
 ChoosePred(const MACROBLOCK * const pMB, const uint32_t mode)
 {
@@ -321,46 +398,37 @@ static void __inline
 PreparePredictionsBF(VECTOR * const pmv, const int x, const int y,
 							const uint32_t iWcount,
 							const MACROBLOCK * const pMB,
-							const uint32_t mode_curr)
+							const uint32_t mode_curr,
+							const VECTOR hint)
 {
 
 	/* [0] is prediction */
-	pmv[0].x = EVEN(pmv[0].x); pmv[0].y = EVEN(pmv[0].y);
+	pmv[0].x = (pmv[0].x); pmv[0].y = (pmv[0].y);
 
 	pmv[1].x = pmv[1].y = 0; /* [1] is zero */
 
-	pmv[2] = ChoosePred(pMB, mode_curr);
-	pmv[2].x = EVEN(pmv[2].x); pmv[2].y = EVEN(pmv[2].y);
+	pmv[2].x = hint.x; pmv[2].y = hint.y;
 
 	if ((y != 0)&&(x != (int)(iWcount+1))) {			/* [3] top-right neighbour */
 		pmv[3] = ChoosePred(pMB+1-iWcount, mode_curr);
-		pmv[3].x = EVEN(pmv[3].x); pmv[3].y = EVEN(pmv[3].y);
 	} else pmv[3].x = pmv[3].y = 0;
 
 	if (y != 0) {
 		pmv[4] = ChoosePred(pMB-iWcount, mode_curr);
-		pmv[4].x = EVEN(pmv[4].x); pmv[4].y = EVEN(pmv[4].y);
 	} else pmv[4].x = pmv[4].y = 0;
 
 	if (x != 0) {
 		pmv[5] = ChoosePred(pMB-1, mode_curr);
-		pmv[5].x = EVEN(pmv[5].x); pmv[5].y = EVEN(pmv[5].y);
 	} else pmv[5].x = pmv[5].y = 0;
 
 	if (x != 0 && y != 0) {
 		pmv[6] = ChoosePred(pMB-1-iWcount, mode_curr);
-		pmv[6].x = EVEN(pmv[6].x); pmv[6].y = EVEN(pmv[6].y);
 	} else pmv[6].x = pmv[6].y = 0;
 }
 
-
 /* search backward or forward */
 static void
-SearchBF(	const IMAGE * const pRef,
-			const uint8_t * const pRefH,
-			const uint8_t * const pRefV,
-			const uint8_t * const pRefHV,
-			const int x, const int y,
+SearchBF_initial(const int x, const int y,
 			const uint32_t MotionFlags,
 			const uint32_t iFcode,
 			const MBParam * const pParam,
@@ -368,23 +436,14 @@ SearchBF(	const IMAGE * const pRef,
 			const VECTOR * const predMV,
 			int32_t * const best_sad,
 			const int32_t mode_current,
-			SearchData * const Data)
+			SearchData * const Data,
+			VECTOR hint)
 {
 
 	int i;
 	VECTOR pmv[7];
-	int threshA = (MotionFlags & XVID_ME_FASTREFINE16) ? 150 : 300;
 	*Data->iMinSAD = MV_MAX_ERROR;
-	Data->iFcode = iFcode;
 	Data->qpel_precision = 0;
-	Data->chromaX = Data->chromaY = Data->chromaSAD = 256*4096; /* reset chroma-sad cache */
-
-	Data->RefP[0] = pRef->y + (x + Data->iEdgedWidth*y) * 16;
-	Data->RefP[2] = pRefH + (x + Data->iEdgedWidth*y) * 16;
-	Data->RefP[1] = pRefV + (x + Data->iEdgedWidth*y) * 16;
-	Data->RefP[3] = pRefHV + (x + Data->iEdgedWidth*y) * 16;
-	Data->RefP[4] = pRef->u + (x + y * (Data->iEdgedWidth/2)) * 8;
-	Data->RefP[5] = pRef->v + (x + y * (Data->iEdgedWidth/2)) * 8;
 
 	Data->predMV = *predMV;
 
@@ -392,9 +451,12 @@ SearchBF(	const IMAGE * const pRef,
 				pParam->width, pParam->height, iFcode - Data->qpel, 1, 0);
 
 	pmv[0] = Data->predMV;
-	if (Data->qpel) { pmv[0].x /= 2; pmv[0].y /= 2; }
+	if (Data->qpel) { 
+		pmv[0].x /= 2; pmv[0].y /= 2; 
+		hint.x /= 2; hint.y /= 2;
+	}
 
-	PreparePredictionsBF(pmv, x, y, pParam->mb_width, pMB, mode_current);
+	PreparePredictionsBF(pmv, x, y, pParam->mb_width, pMB, mode_current, hint);
 
 	Data->currentMV->x = Data->currentMV->y = 0;
 
@@ -414,74 +476,52 @@ SearchBF(	const IMAGE * const pRef,
 		MainSearchPtr(Data->currentMV->x, Data->currentMV->y, Data, mask, CheckCandidate16no4v);
 	}
 
+	if (Data->iMinSAD[0] < *best_sad) *best_sad = Data->iMinSAD[0];
+}
 
-
-
+static void
+SearchBF_final(const int x, const int y,
+			const uint32_t MotionFlags,
+			const MBParam * const pParam,
+			int32_t * const best_sad,
+			SearchData * const Data)
+{
 	if(!Data->qpel) {
 		/* halfpel mode */
 		if (MotionFlags & XVID_ME_HALFPELREFINE16)
-				xvid_me_SubpelRefine(Data, CheckCandidate16no4v, 0);
+				xvid_me_SubpelRefine(Data->currentMV[0], Data, CheckCandidate16no4v, 0);
 	} else {
 		/* qpel mode */
 		if(MotionFlags & XVID_ME_FASTREFINE16) {
 			/* fast */
 			get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, x, y, 4,
 						pParam->width, pParam->height, Data->iFcode, 2, 0);				
-			if (*Data->iMinSAD < *best_sad + 2*threshA)
-				FullRefine_Fast(Data, CheckCandidate16no4v, 0);
+			FullRefine_Fast(Data, CheckCandidate16no4v, 0);
+
 		} else {
+
 			Data->currentQMV->x = 2*Data->currentMV->x;
 			Data->currentQMV->y = 2*Data->currentMV->y;
 			if(MotionFlags & XVID_ME_QUARTERPELREFINE16) {
 				/* full */
 				if (MotionFlags & XVID_ME_HALFPELREFINE16) {
-					xvid_me_SubpelRefine(Data, CheckCandidate16no4v, 0); /* hpel part */
+					xvid_me_SubpelRefine(Data->currentMV[0], Data, CheckCandidate16no4v, 0); /* hpel part */
 					Data->currentQMV->x = 2*Data->currentMV->x;
 					Data->currentQMV->y = 2*Data->currentMV->y;
 				}
 				get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, x, y, 4,
 							pParam->width, pParam->height, Data->iFcode, 2, 0);
 				Data->qpel_precision = 1;
-				if (*Data->iMinSAD < *best_sad + threshA)
-					xvid_me_SubpelRefine(Data, CheckCandidate16no4v, 0); /* qpel part */
+				xvid_me_SubpelRefine(Data->currentQMV[0], Data, CheckCandidate16no4v, 0); /* qpel part */
 			}
 		}
 	}
+	if (Data->iMinSAD[0] < *best_sad) *best_sad = Data->iMinSAD[0];
 
-	/* three bits are needed to code backward mode. four for forward */
-
-	if (mode_current == MODE_FORWARD) *Data->iMinSAD += 4 * Data->lambda16;
-	else *Data->iMinSAD += 3 * Data->lambda16;
-
-	if (*Data->iMinSAD < *best_sad) {
-		*best_sad = *Data->iMinSAD;
-		pMB->mode = mode_current;
-		if (Data->qpel) {
-			pMB->pmvs[0].x = Data->currentQMV->x - predMV->x;
-			pMB->pmvs[0].y = Data->currentQMV->y - predMV->y;
-			if (mode_current == MODE_FORWARD)
-				pMB->qmvs[0] = *Data->currentQMV;
-			else
-				pMB->b_qmvs[0] = *Data->currentQMV;
-		} else {
-			pMB->pmvs[0].x = Data->currentMV->x - predMV->x;
-			pMB->pmvs[0].y = Data->currentMV->y - predMV->y;
-		}
-		if (mode_current == MODE_FORWARD) pMB->mvs[0] = *Data->currentMV;
-		else pMB->b_mvs[0] = *Data->currentMV;
-	}
-
-	if (mode_current == MODE_FORWARD) *(Data->currentMV+2) = *Data->currentMV;
-	else *(Data->currentMV+1) = *Data->currentMV; /* we store currmv for interpolate search */
 }
 
 static void
-SkipDecisionB(const IMAGE * const pCur,
-				const IMAGE * const f_Ref,
-				const IMAGE * const b_Ref,
-				MACROBLOCK * const pMB,
-				const uint32_t x, const uint32_t y,
-				const SearchData * const Data)
+SkipDecisionB(MACROBLOCK * const pMB, const SearchData * const Data)
 {
 	int k;
 
@@ -503,16 +543,16 @@ SkipDecisionB(const IMAGE * const pCur,
 		b_dy = (b_dy >> 3) + roundtab_76[b_dy & 0xf];
 		b_dx = (b_dx >> 3) + roundtab_76[b_dx & 0xf];
 
-		sum = sad8bi(pCur->u + 8 * x + 8 * y * stride,
-						f_Ref->u + (y*8 + dy/2) * stride + x*8 + dx/2,
-						b_Ref->u + (y*8 + b_dy/2) * stride + x*8 + b_dx/2,
+		sum = sad8bi(Data->CurU,
+						Data->RefP[4] + (dy/2) * stride + dx/2,
+						Data->b_RefP[4] + (b_dy/2) * stride + b_dx/2,
 						stride);
 
 		if (sum >= MAX_CHROMA_SAD_FOR_SKIP * (int)Data->iQuant) return; /* no skip */
 
-		sum += sad8bi(pCur->v + 8*x + 8 * y * stride,
-						f_Ref->v + (y*8 + dy/2) * stride + x*8 + dx/2,
-						b_Ref->v + (y*8 + b_dy/2) * stride + x*8 + b_dx/2,
+		sum += sad8bi(Data->CurV,
+						Data->RefP[5] + (dy/2) * stride + dx/2,
+						Data->b_RefP[5] + (b_dy/2) * stride + b_dx/2,
 						stride);
 		
 		if (sum >= MAX_CHROMA_SAD_FOR_SKIP * (int)Data->iQuant) return; /* no skip */
@@ -527,16 +567,7 @@ SkipDecisionB(const IMAGE * const pCur,
 }
 
 static uint32_t
-SearchDirect(const IMAGE * const f_Ref,
-				const uint8_t * const f_RefH,
-				const uint8_t * const f_RefV,
-				const uint8_t * const f_RefHV,
-				const IMAGE * const b_Ref,
-				const uint8_t * const b_RefH,
-				const uint8_t * const b_RefV,
-				const uint8_t * const b_RefHV,
-				const IMAGE * const pCur,
-				const int x, const int y,
+SearchDirect_initial(const int x, const int y,
 				const uint32_t MotionFlags,
 				const int32_t TRB, const int32_t TRD,
 				const MBParam * const pParam,
@@ -548,57 +579,38 @@ SearchDirect(const IMAGE * const f_Ref,
 {
 	int32_t skip_sad;
 	int k = (x + Data->iEdgedWidth*y) * 16;
-	MainSearchFunc *MainSearchPtr;
-	CheckFunc * CheckCandidate;
-
-	*Data->iMinSAD = 256*4096;
-	Data->RefP[0] = f_Ref->y + k;
-	Data->RefP[2] = f_RefH + k;
-	Data->RefP[1] = f_RefV + k;
-	Data->RefP[3] = f_RefHV + k;
-	Data->b_RefP[0] = b_Ref->y + k;
-	Data->b_RefP[2] = b_RefH + k;
-	Data->b_RefP[1] = b_RefV + k;
-	Data->b_RefP[3] = b_RefHV + k;
-	Data->RefP[4] = f_Ref->u + (x + (Data->iEdgedWidth/2) * y) * 8;
-	Data->RefP[5] = f_Ref->v + (x + (Data->iEdgedWidth/2) * y) * 8;
-	Data->b_RefP[4] = b_Ref->u + (x + (Data->iEdgedWidth/2) * y) * 8;
-	Data->b_RefP[5] = b_Ref->v + (x + (Data->iEdgedWidth/2) * y) * 8;
 
 	k = Data->qpel ? 4 : 2;
 	Data->max_dx = k * (pParam->width - x * 16);
 	Data->max_dy = k * (pParam->height - y * 16);
 	Data->min_dx = -k * (16 + x * 16);
 	Data->min_dy = -k * (16 + y * 16);
-	Data->chromaX = Data->chromaY = Data->b_chromaX = Data->b_chromaY = 256*4096;
 
 	Data->referencemv = Data->qpel ? b_mb->qmvs : b_mb->mvs;
-	Data->qpel_precision = 0;
 
 	for (k = 0; k < 4; k++) {
-		pMB->mvs[k].x = Data->directmvF[k].x = ((TRB * Data->referencemv[k].x) / TRD);
-		pMB->b_mvs[k].x = Data->directmvB[k].x = ((TRB - TRD) * Data->referencemv[k].x) / TRD;
-		pMB->mvs[k].y = Data->directmvF[k].y = ((TRB * Data->referencemv[k].y) / TRD);
-		pMB->b_mvs[k].y = Data->directmvB[k].y = ((TRB - TRD) * Data->referencemv[k].y) / TRD;
+		Data->directmvF[k].x = ((TRB * Data->referencemv[k].x) / TRD);
+		Data->directmvB[k].x = ((TRB - TRD) * Data->referencemv[k].x) / TRD;
+		Data->directmvF[k].y = ((TRB * Data->referencemv[k].y) / TRD);
+		Data->directmvB[k].y = ((TRB - TRD) * Data->referencemv[k].y) / TRD;
 
-		if ( (pMB->b_mvs[k].x > Data->max_dx) | (pMB->b_mvs[k].x < Data->min_dx)
-			| (pMB->b_mvs[k].y > Data->max_dy) | (pMB->b_mvs[k].y < Data->min_dy) ) {
+		if ( (Data->directmvB[k].x > Data->max_dx) | (Data->directmvB[k].x < Data->min_dx)
+			| (Data->directmvB[k].y > Data->max_dy) | (Data->directmvB[k].y < Data->min_dy) ) {
 
-			*best_sad = 256*4096; /* in that case, we won't use direct mode */
-			pMB->mode = MODE_DIRECT; /* just to make sure it doesn't say "MODE_DIRECT_NONE_MV" */
-			pMB->b_mvs[0].x = pMB->b_mvs[0].y = 0;
+			Data->iMinSAD[0] = *best_sad = 256*4096; /* in that case, we won't use direct mode */
 			return 256*4096;
 		}
 		if (b_mb->mode != MODE_INTER4V) {
-			pMB->mvs[1] = pMB->mvs[2] = pMB->mvs[3] = pMB->mvs[0];
-			pMB->b_mvs[1] = pMB->b_mvs[2] = pMB->b_mvs[3] = pMB->b_mvs[0];
 			Data->directmvF[1] = Data->directmvF[2] = Data->directmvF[3] = Data->directmvF[0];
 			Data->directmvB[1] = Data->directmvB[2] = Data->directmvB[3] = Data->directmvB[0];
 			break;
 		}
 	}
+	Data->qpel_precision = Data->qpel; /* this initial check is done with full precision, to find real 
+											SKIP sad */
 
 	CheckCandidateDirect(0, 0, Data, 255);	/* will also fill iMinSAD[1..4] with 8x8 SADs */
+
 
 	/* initial (fast) skip decision */
 	if (Data->iMinSAD[1] < (int)Data->iQuant * INITIAL_SKIP_THRESH
@@ -606,7 +618,7 @@ SearchDirect(const IMAGE * const f_Ref,
 		&& Data->iMinSAD[3] < (int)Data->iQuant * INITIAL_SKIP_THRESH
 		&& Data->iMinSAD[4] < (int)Data->iQuant * INITIAL_SKIP_THRESH) {
 		/* possible skip */
-		SkipDecisionB(pCur, f_Ref, b_Ref, pMB, x, y, Data);
+		SkipDecisionB(pMB, Data);
 		if (pMB->mode == MODE_DIRECT_NONE_MV)
 			return *Data->iMinSAD; /* skipped */
 	}
@@ -614,55 +626,55 @@ SearchDirect(const IMAGE * const f_Ref,
 	skip_sad = 4*MAX(MAX(Data->iMinSAD[1],Data->iMinSAD[2]), MAX(Data->iMinSAD[3],Data->iMinSAD[4]));
 	if (Data->chroma) skip_sad += Data->chromaSAD;
 
-	CheckCandidate = b_mb->mode == MODE_INTER4V ? CheckCandidateDirect : CheckCandidateDirectno4v;
+	Data->currentMV[1].x = Data->directmvF[0].x + Data->currentMV->x; /* hints for forward and backward searches */
+	Data->currentMV[1].y = Data->directmvF[0].y + Data->currentMV->y;
 
-	if (!(MotionFlags & XVID_ME_SKIP_DELTASEARCH)) {
-		if (MotionFlags & XVID_ME_USESQUARES16) MainSearchPtr = xvid_me_SquareSearch;
-			else if (MotionFlags & XVID_ME_ADVANCEDDIAMOND16) MainSearchPtr = xvid_me_AdvDiamondSearch;
-				else MainSearchPtr = xvid_me_DiamondSearch;
+	Data->currentMV[2].x = ((Data->currentMV->x == 0) ?
+			Data->directmvB[0].x
+			: Data->currentMV[1].x - Data->referencemv[0].x);
 
-		MainSearchPtr(0, 0, Data, 255, CheckCandidate);
+	Data->currentMV[2].y = ((Data->currentMV->y == 0) ?
+			Data->directmvB[0].y
+			: Data->currentMV[1].y - Data->referencemv[0].y);
 
-		xvid_me_SubpelRefine(Data, CheckCandidate, 0);
-	}
-
-	*Data->iMinSAD += Data->lambda16;
-	*best_sad = *Data->iMinSAD;
-
-	if (Data->qpel || b_mb->mode == MODE_INTER4V) pMB->mode = MODE_DIRECT;
-	else pMB->mode = MODE_DIRECT_NO4V; /* for faster compensation */
-
-	pMB->pmvs[3] = *Data->currentMV;
-
-	for (k = 0; k < 4; k++) {
-		pMB->mvs[k].x = Data->directmvF[k].x + Data->currentMV->x;
-		pMB->b_mvs[k].x = (	(Data->currentMV->x == 0)
-							? Data->directmvB[k].x
-							:pMB->mvs[k].x - Data->referencemv[k].x);
-		pMB->mvs[k].y = (Data->directmvF[k].y + Data->currentMV->y);
-		pMB->b_mvs[k].y = ((Data->currentMV->y == 0)
-							? Data->directmvB[k].y
-							: pMB->mvs[k].y - Data->referencemv[k].y);
-		if (Data->qpel) {
-			pMB->qmvs[k].x = pMB->mvs[k].x; pMB->mvs[k].x /= 2;
-			pMB->b_qmvs[k].x = pMB->b_mvs[k].x; pMB->b_mvs[k].x /= 2;
-			pMB->qmvs[k].y = pMB->mvs[k].y; pMB->mvs[k].y /= 2;
-			pMB->b_qmvs[k].y = pMB->b_mvs[k].y; pMB->b_mvs[k].y /= 2;
-		}
-
-		if (b_mb->mode != MODE_INTER4V) {
-			pMB->mvs[3] = pMB->mvs[2] = pMB->mvs[1] = pMB->mvs[0];
-			pMB->b_mvs[3] = pMB->b_mvs[2] = pMB->b_mvs[1] = pMB->b_mvs[0];
-			pMB->qmvs[3] = pMB->qmvs[2] = pMB->qmvs[1] = pMB->qmvs[0];
-			pMB->b_qmvs[3] = pMB->b_qmvs[2] = pMB->b_qmvs[1] = pMB->b_qmvs[0];
-			break;
-		}
-	}
 	return skip_sad;
 }
 
+static void
+SearchDirect_final( const uint32_t MotionFlags,
+					const MACROBLOCK * const b_mb,
+					int32_t * const best_sad,
+					SearchData * const Data)
 
-static void set_range(int * range, SearchData * Data)
+{
+	CheckFunc * CheckCandidate = b_mb->mode == MODE_INTER4V ? 
+									CheckCandidateDirect : CheckCandidateDirectno4v;
+	MainSearchFunc *MainSearchPtr;
+
+	if (MotionFlags & XVID_ME_USESQUARES16) MainSearchPtr = xvid_me_SquareSearch;
+	else if (MotionFlags & XVID_ME_ADVANCEDDIAMOND16) MainSearchPtr = xvid_me_AdvDiamondSearch;
+	else MainSearchPtr = xvid_me_DiamondSearch;
+
+	Data->qpel_precision = 0;
+	MainSearchPtr(0, 0, Data, 255, CheckCandidate);
+
+	Data->qpel_precision = Data->qpel;
+	if(Data->qpel) {
+		*Data->iMinSAD = 256*4096; /* this old SAD was not real, it was in hpel precision */
+		CheckCandidate(Data->currentMV->x, Data->currentMV->y, Data, 255);
+	}
+
+	xvid_me_SubpelRefine(Data->currentMV[0], Data, CheckCandidate, 0);
+
+	if (Data->iMinSAD[0] < *best_sad) {
+		*best_sad = Data->iMinSAD[0];
+	}
+		
+}
+
+
+static __inline void 
+set_range(int * range, SearchData * Data)
 {
 	Data->min_dx = range[0];
 	Data->max_dx = range[1];
@@ -671,59 +683,30 @@ static void set_range(int * range, SearchData * Data)
 }
 
 static void
-SearchInterpolate(const IMAGE * const f_Ref,
-				const uint8_t * const f_RefH,
-				const uint8_t * const f_RefV,
-				const uint8_t * const f_RefHV,
-				const IMAGE * const b_Ref,
-				const uint8_t * const b_RefH,
-				const uint8_t * const b_RefV,
-				const uint8_t * const b_RefHV,
+SearchInterpolate_initial(
 				const int x, const int y,
-				const uint32_t fcode,
-				const uint32_t bcode,
 				const uint32_t MotionFlags,
 				const MBParam * const pParam,
 				const VECTOR * const f_predMV,
 				const VECTOR * const b_predMV,
-				MACROBLOCK * const pMB,
 				int32_t * const best_sad,
-				SearchData * const Data)
+				SearchData * const Data,
+				const VECTOR startF,
+				const VECTOR startB)
 
 {
-	int i, j;
 	int b_range[4], f_range[4];
-	int threshA = (MotionFlags & XVID_ME_FAST_MODEINTERPOLATE) ? 250 : 500;
-	int threshB = (MotionFlags & XVID_ME_FAST_MODEINTERPOLATE) ? 150 : 300;
 
 	Data->qpel_precision = 0;
-	*Data->iMinSAD = 4096*256;
-	Data->iFcode = fcode; Data->bFcode = bcode;
-
-	i = (x + y * Data->iEdgedWidth) * 16;
-
-	Data->RefP[0] = f_Ref->y + i;
-	Data->RefP[2] = f_RefH + i;
-	Data->RefP[1] = f_RefV + i;
-	Data->RefP[3] = f_RefHV + i;
-	Data->b_RefP[0] = b_Ref->y + i;
-	Data->b_RefP[2] = b_RefH + i;
-	Data->b_RefP[1] = b_RefV + i;
-	Data->b_RefP[3] = b_RefHV + i;
-	Data->RefP[4] = f_Ref->u + (x + (Data->iEdgedWidth/2) * y) * 8;
-	Data->RefP[5] = f_Ref->v + (x + (Data->iEdgedWidth/2) * y) * 8;
-	Data->b_RefP[4] = b_Ref->u + (x + (Data->iEdgedWidth/2) * y) * 8;
-	Data->b_RefP[5] = b_Ref->v + (x + (Data->iEdgedWidth/2) * y) * 8;
-
-	Data->chromaX = Data->chromaY = 256*4096;
 
 	Data->predMV = *f_predMV;
 	Data->bpredMV = *b_predMV;
 
-	Data->currentMV[0] = Data->currentMV[2]; /* forward search left its vector here */
+	Data->currentMV[0] = startF;
+	Data->currentMV[1] = startB;
 
-	get_range(f_range, f_range+1, f_range+2, f_range+3, x, y, 4, pParam->width, pParam->height, fcode - Data->qpel, 1, 0);
-	get_range(b_range, b_range+1, b_range+2, b_range+3, x, y, 4, pParam->width, pParam->height, bcode - Data->qpel, 1, 0);
+	get_range(f_range, f_range+1, f_range+2, f_range+3, x, y, 4, pParam->width, pParam->height, Data->iFcode - Data->qpel, 1, 0);
+	get_range(b_range, b_range+1, b_range+2, b_range+3, x, y, 4, pParam->width, pParam->height, Data->bFcode - Data->qpel, 1, 0);
 
 	if (Data->currentMV[0].x > f_range[1]) Data->currentMV[0].x = f_range[1];
 	if (Data->currentMV[0].x < f_range[0]) Data->currentMV[0].x = f_range[0];
@@ -738,6 +721,22 @@ SearchInterpolate(const IMAGE * const f_Ref,
 	set_range(f_range, Data);
 
 	CheckCandidateInt(Data->currentMV[0].x, Data->currentMV[0].y, Data, 1);
+
+	if (Data->iMinSAD[0] < *best_sad) *best_sad = Data->iMinSAD[0];
+}
+
+static void
+SearchInterpolate_final(const int x, const int y,
+						const uint32_t MotionFlags,
+						const MBParam * const pParam,
+						int32_t * const best_sad,
+						SearchData * const Data)
+{
+	int i, j;
+	int b_range[4], f_range[4];
+
+	get_range(f_range, f_range+1, f_range+2, f_range+3, x, y, 4, pParam->width, pParam->height, Data->iFcode - Data->qpel, 1, 0);
+	get_range(b_range, b_range+1, b_range+2, b_range+3, x, y, 4, pParam->width, pParam->height, Data->bFcode - Data->qpel, 1, 0);
 
 	/* diamond */
 	do {
@@ -765,45 +764,149 @@ SearchInterpolate(const IMAGE * const f_Ref,
 
 	/* qpel refinement */
 	if (Data->qpel) {
-		if (*Data->iMinSAD > *best_sad + threshA) return;
 		Data->qpel_precision = 1;
-		get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, x, y, 4, pParam->width, pParam->height, fcode, 2, 0);
+		get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, 
+			x, y, 4, pParam->width, pParam->height, Data->iFcode, 2, 0);
 		
 		Data->currentQMV[0].x = 2 * Data->currentMV[0].x;
 		Data->currentQMV[0].y = 2 * Data->currentMV[0].y;
 		Data->currentQMV[1].x = 2 * Data->currentMV[1].x;
 		Data->currentQMV[1].y = 2 * Data->currentMV[1].y;
 
-		if (MotionFlags & XVID_ME_QUARTERPELREFINE16)
-			xvid_me_SubpelRefine(Data, CheckCandidateInt, 1);
+		if (MotionFlags & XVID_ME_QUARTERPELREFINE16) {
+			xvid_me_SubpelRefine(Data->currentQMV[0], Data, CheckCandidateInt, 1);
 
-		if (*Data->iMinSAD > *best_sad + threshB) return;
-		get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, x, y, 4, pParam->width, pParam->height, bcode, 2, 0);
+			get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, 
+				x, y, 4, pParam->width, pParam->height, Data->bFcode, 2, 0);
 
-		if (MotionFlags & XVID_ME_QUARTERPELREFINE16)
-			xvid_me_SubpelRefine(Data, CheckCandidateInt, 2);
+			xvid_me_SubpelRefine(Data->currentQMV[1], Data, CheckCandidateInt, 2);
+		}
 	}
 
-	*Data->iMinSAD += 2 * Data->lambda16; /* two bits are needed to code interpolate mode. */
+	if (Data->iMinSAD[0] < *best_sad) *best_sad = Data->iMinSAD[0];
+}
 
-	if (*Data->iMinSAD < *best_sad) {
-		*best_sad = *Data->iMinSAD;
-		pMB->mvs[0] = Data->currentMV[0];
-		pMB->b_mvs[0] = Data->currentMV[1];
-		pMB->mode = MODE_INTERPOLATE;
-		if (Data->qpel) {
-			pMB->qmvs[0] = Data->currentQMV[0];
-			pMB->b_qmvs[0] = Data->currentQMV[1];
+static void 
+ModeDecision_BVOP_SAD(const SearchData * const Data_d,
+					  const SearchData * const Data_b,
+					  const SearchData * const Data_f,
+					  const SearchData * const Data_i,
+					  MACROBLOCK * const pMB,
+					  const MACROBLOCK * const b_mb,
+					  VECTOR * f_predMV,
+					  VECTOR * b_predMV)
+{
+	int mode = MODE_DIRECT, k;
+	int best_sad, f_sad, b_sad, i_sad;
+	const int qpel = Data_d->qpel;
+
+	/* evaluate cost of all modes - quite simple in SAD */
+	best_sad = Data_d->iMinSAD[0] + 1*Data_d->lambda16;
+	b_sad = Data_b->iMinSAD[0] + 3*Data_d->lambda16;
+	f_sad = Data_f->iMinSAD[0] + 4*Data_d->lambda16;
+	i_sad = Data_i->iMinSAD[0] + 2*Data_d->lambda16;
+
+	if (b_sad < best_sad) {
+		mode = MODE_BACKWARD;
+		best_sad = b_sad;
+	}
+
+	if (f_sad < best_sad) {
+		mode = MODE_FORWARD;
+		best_sad = f_sad;
+	}
+
+	if (i_sad < best_sad) {
+		mode = MODE_INTERPOLATE;
+		best_sad = i_sad;
+	}
+
+	pMB->sad16 = best_sad;
+	pMB->mode = mode;
+
+	switch (mode) {
+
+	case MODE_DIRECT:
+		if (!qpel && b_mb->mode != MODE_INTER4V) pMB->mode = MODE_DIRECT_NO4V; /* for faster compensation */
+
+		pMB->pmvs[3] = Data_d->currentMV[0];
+
+		for (k = 0; k < 4; k++) {
+			pMB->mvs[k].x = Data_d->directmvF[k].x + Data_d->currentMV->x;
+			pMB->b_mvs[k].x = (	(Data_d->currentMV->x == 0)
+								? Data_d->directmvB[k].x
+								:pMB->mvs[k].x - Data_d->referencemv[k].x);
+			pMB->mvs[k].y = (Data_d->directmvF[k].y + Data_d->currentMV->y);
+			pMB->b_mvs[k].y = ((Data_d->currentMV->y == 0)
+								? Data_d->directmvB[k].y
+								: pMB->mvs[k].y - Data_d->referencemv[k].y);
+			if (qpel) {
+				pMB->qmvs[k].x = pMB->mvs[k].x; pMB->mvs[k].x /= 2;
+				pMB->b_qmvs[k].x = pMB->b_mvs[k].x; pMB->b_mvs[k].x /= 2;
+				pMB->qmvs[k].y = pMB->mvs[k].y; pMB->mvs[k].y /= 2;
+				pMB->b_qmvs[k].y = pMB->b_mvs[k].y; pMB->b_mvs[k].y /= 2;
+			}
+
+			if (b_mb->mode != MODE_INTER4V) {
+				pMB->mvs[3] = pMB->mvs[2] = pMB->mvs[1] = pMB->mvs[0];
+				pMB->b_mvs[3] = pMB->b_mvs[2] = pMB->b_mvs[1] = pMB->b_mvs[0];
+				pMB->qmvs[3] = pMB->qmvs[2] = pMB->qmvs[1] = pMB->qmvs[0];
+				pMB->b_qmvs[3] = pMB->b_qmvs[2] = pMB->b_qmvs[1] = pMB->b_qmvs[0];
+				break;
+			}			
+		}
+		break;
+
+	case MODE_FORWARD:
+		if (qpel) {
+			pMB->pmvs[0].x = Data_f->currentQMV->x - f_predMV->x;
+			pMB->pmvs[0].y = Data_f->currentQMV->y - f_predMV->y;
+			pMB->qmvs[0] = *Data_f->currentQMV;
+			*f_predMV = Data_f->currentQMV[0];
+		} else {
+			pMB->pmvs[0].x = Data_f->currentMV->x - f_predMV->x;
+			pMB->pmvs[0].y = Data_f->currentMV->y - f_predMV->y;
+			*f_predMV = Data_f->currentMV[0];
+		}
+		pMB->mvs[0] = *Data_f->currentMV;
+		break;
+
+	case MODE_BACKWARD:
+		if (qpel) {
+			pMB->pmvs[0].x = Data_b->currentQMV->x - b_predMV->x;
+			pMB->pmvs[0].y = Data_b->currentQMV->y - b_predMV->y;
+			pMB->b_qmvs[0] = *Data_b->currentQMV;
+			*b_predMV = Data_b->currentQMV[0];
+		} else {
+			pMB->pmvs[0].x = Data_b->currentMV->x - b_predMV->x;
+			pMB->pmvs[0].y = Data_b->currentMV->y - b_predMV->y;
+			*b_predMV = Data_b->currentMV[0];
+		}
+		pMB->b_mvs[0] = *Data_b->currentMV;
+		break;
+
+
+	case MODE_INTERPOLATE:
+		pMB->mvs[0] = Data_i->currentMV[0];
+		pMB->b_mvs[0] = Data_i->currentMV[1];
+		if (qpel) {
+			pMB->qmvs[0] = Data_i->currentQMV[0];
+			pMB->b_qmvs[0] = Data_i->currentQMV[1];
 			pMB->pmvs[1].x = pMB->qmvs[0].x - f_predMV->x;
 			pMB->pmvs[1].y = pMB->qmvs[0].y - f_predMV->y;
 			pMB->pmvs[0].x = pMB->b_qmvs[0].x - b_predMV->x;
 			pMB->pmvs[0].y = pMB->b_qmvs[0].y - b_predMV->y;
+			*f_predMV = Data_i->currentQMV[0];
+			*b_predMV = Data_i->currentQMV[1];
 		} else {
 			pMB->pmvs[1].x = pMB->mvs[0].x - f_predMV->x;
 			pMB->pmvs[1].y = pMB->mvs[0].y - f_predMV->y;
 			pMB->pmvs[0].x = pMB->b_mvs[0].x - b_predMV->x;
 			pMB->pmvs[0].y = pMB->b_mvs[0].y - b_predMV->y;
+			*f_predMV = Data_i->currentMV[0];
+			*b_predMV = Data_i->currentMV[1];
 		}
+		break;
 	}
 }
 
@@ -826,11 +929,10 @@ MotionEstimationBVOP(MBParam * const pParam,
 					 const IMAGE * const b_refHV)
 {
 	uint32_t i, j;
-	int32_t best_sad;
+	int32_t best_sad, sad2;
 	uint32_t skip_sad;
 
 	const MACROBLOCK * const b_mbs = b_reference->mbs;
-	MACROBLOCK *const pMBs = frame->mbs;
 
 	VECTOR f_predMV, b_predMV;
 
@@ -838,19 +940,25 @@ MotionEstimationBVOP(MBParam * const pParam,
 	const int32_t TRD = time_pp;
 
 	/* some pre-inintialized data for the rest of the search */
+	SearchData Data_d, Data_f, Data_b, Data_i;
+	memset(&Data_d, 0, sizeof(SearchData));
 
-	SearchData Data;
-	memset(&Data, 0, sizeof(SearchData));
+	Data_d.iEdgedWidth = pParam->edged_width;
+	Data_d.qpel = pParam->vol_flags & XVID_VOL_QUARTERPEL ? 1 : 0;
+	Data_d.rounding = 0;
+	Data_d.chroma = frame->motion_flags & XVID_ME_CHROMA_BVOP;
+	Data_d.iQuant = frame->quant;
 
-	Data.iEdgedWidth = pParam->edged_width;
-	Data.qpel = pParam->vol_flags & XVID_VOL_QUARTERPEL ? 1 : 0;
-	Data.rounding = 0;
-	Data.chroma = frame->motion_flags & XVID_ME_CHROMA_BVOP;
-	Data.iQuant = frame->quant;
+	Data_d.RefQ = f_refV->u; /* a good place, also used in MC (for similar purpose) */
 
-	Data.RefQ = f_refV->u; /* a good place, also used in MC (for similar purpose) */
+	memcpy(&Data_f, &Data_d, sizeof(SearchData));
+	memcpy(&Data_b, &Data_d, sizeof(SearchData));
+	memcpy(&Data_i, &Data_d, sizeof(SearchData));
 
-	/* note: i==horizontal, j==vertical */
+	Data_f.iFcode = Data_i.iFcode = frame->fcode;
+	Data_b.iFcode = Data_i.bFcode = frame->bcode;
+
+
 	for (j = 0; j < pParam->mb_height; j++) {
 
 		f_predMV = b_predMV = zeroMV;	/* prediction is reset at left boundary */
@@ -861,6 +969,12 @@ MotionEstimationBVOP(MBParam * const pParam,
 			int interpol_search = 0;
 			int bf_search = 0;
 			int bf_thresh = 0;
+			pMB->mode = -1;
+
+			initialize_searchData(&Data_d, &Data_f, &Data_b, &Data_i,
+					  i, j, f_ref, f_refH->y, f_refV->y, f_refHV->y,
+					  b_ref, b_refH->y, b_refV->y, b_refHV->y,
+					  &frame->image, b_mb);
 
 /* special case, if collocated block is SKIPed in P-VOP: encoding is forward (0,0), cpb=0 without further ado */
 			if (b_reference->coding_type != S_VOP)
@@ -871,126 +985,56 @@ MotionEstimationBVOP(MBParam * const pParam,
 					continue;
 				}
 
-			Data.lambda16 = xvid_me_lambda_vec16[b_mb->quant];
-			Data.Cur = frame->image.y + (j * Data.iEdgedWidth + i) * 16;
-			Data.CurU = frame->image.u + (j * Data.iEdgedWidth/2 + i) * 8;
-			Data.CurV = frame->image.v + (j * Data.iEdgedWidth/2 + i) * 8;
-
 /* direct search comes first, because it (1) checks for SKIP-mode
 	and (2) sets very good predictions for forward and backward search */
-			skip_sad = SearchDirect(f_ref, f_refH->y, f_refV->y, f_refHV->y,
-									b_ref, b_refH->y, b_refV->y, b_refHV->y,
-									&frame->image,
-									i, j,
-									frame->motion_flags,
-									TRB, TRD,
-									pParam,
-									pMB, b_mb,
-									&best_sad,
-									&Data);
+			skip_sad = SearchDirect_initial(i, j, frame->motion_flags, TRB, TRD, pParam, pMB, 
+											b_mb, &best_sad, &Data_d);
 
 			if (pMB->mode == MODE_DIRECT_NONE_MV) {
 				pMB->sad16 = best_sad;
 				continue;
 			}
+			
+			SearchBF_initial(i, j, frame->motion_flags, frame->fcode, pParam, pMB,
+						&f_predMV, &best_sad, MODE_FORWARD, &Data_f, Data_d.currentMV[1]);
 
-			if (frame->motion_flags & XVID_ME_BFRAME_EARLYSTOP) {
-				if(i > 0 && j > 0 && i < pParam->mb_width) {
-					bf_thresh = MIN((&pMBs[(i-1) + j * pParam->mb_width])->sad16, 
-								     MIN((&pMBs[i + (j-1) * pParam->mb_width])->sad16,
-								     (&pMBs[(i+1) + (j-1) * pParam->mb_width])->sad16));
+			SearchBF_initial(i, j, frame->motion_flags, frame->bcode, pParam, pMB,
+						&b_predMV, &best_sad, MODE_BACKWARD, &Data_b, Data_d.currentMV[2]);
 
-					if (((&pMBs[(i-1) + j * pParam->mb_width])->mode != MODE_FORWARD) &&
-						((&pMBs[(i-1) + j * pParam->mb_width])->mode != MODE_BACKWARD) &&
-						((&pMBs[(i-1) + j * pParam->mb_width])->mode != MODE_INTERPOLATE))
-							bf_search++;
+			sad2 = best_sad;
 
-					if (((&pMBs[i + (j - 1) * pParam->mb_width])->mode != MODE_FORWARD) &&
-						((&pMBs[i + (j - 1) * pParam->mb_width])->mode != MODE_BACKWARD) &&
-						((&pMBs[i + (j - 1) * pParam->mb_width])->mode != MODE_INTERPOLATE))
-							bf_search++;
+			if (Data_f.iMinSAD[0] < 2*sad2+1500)
+				SearchBF_final(i, j, frame->motion_flags, pParam, &best_sad, &Data_f);
 
-					if (((&pMBs[(i + 1) + (j - 1) * pParam->mb_width])->mode != MODE_FORWARD) &&
-						((&pMBs[(i + 1) + (j - 1) * pParam->mb_width])->mode != MODE_BACKWARD) &&
-						((&pMBs[(i + 1) + (j - 1) * pParam->mb_width])->mode != MODE_INTERPOLATE))
-						bf_search++;
-				}
+			if (Data_b.iMinSAD[0] < 2*sad2+1500)
+				SearchBF_final(i, j, frame->motion_flags, pParam, &best_sad, &Data_b);
 
-				if ((best_sad < bf_thresh) && (bf_search == 3))
-					continue;
-			}
+			SearchInterpolate_initial(i, j, frame->motion_flags, pParam, &f_predMV, &b_predMV, &best_sad,
+								  &Data_i, Data_f.currentMV[0], Data_b.currentMV[0]);
 
-			/* forward search */
-			SearchBF(f_ref, f_refH->y, f_refV->y, f_refHV->y,
-						i, j,
-						frame->motion_flags,
-						frame->fcode, pParam,
-						pMB, &f_predMV, &best_sad,
-						MODE_FORWARD, &Data);
+			if (((Data_i.iMinSAD[0] < 2*best_sad+2000) && (!(frame->motion_flags&XVID_ME_FAST_MODEINTERPOLATE))
+				|| Data_i.iMinSAD[0] <= best_sad))
 
-			/* backward search */
-			SearchBF(b_ref, b_refH->y, b_refV->y, b_refHV->y,
-						i, j,
-						frame->motion_flags,
-						frame->bcode, pParam,
-						pMB, &b_predMV, &best_sad,
-						MODE_BACKWARD, &Data);
+				SearchInterpolate_final(i, j, frame->motion_flags, pParam, &best_sad, &Data_i);
 
-			/* interpolate search comes last, because it uses data from forward and backward as prediction */
-			if (frame->motion_flags & XVID_ME_FAST_MODEINTERPOLATE) {
+			
+			if ((Data_d.iMinSAD[0] <= best_sad) && (!(frame->motion_flags&XVID_ME_SKIP_DELTASEARCH)))
+				SearchDirect_final(frame->motion_flags, b_mb, &best_sad, &Data_d);
 
-				if(i > 0 && j > 0 && i < pParam->mb_width) {
-					if ((&pMBs[(i-1) + j * pParam->mb_width])->mode == MODE_INTERPOLATE)
-						interpol_search++;
-					if ((&pMBs[i + (j - 1) * pParam->mb_width])->mode == MODE_INTERPOLATE)
-						interpol_search++;
-					if ((&pMBs[(i + 1) + (j - 1) * pParam->mb_width])->mode == MODE_INTERPOLATE)
-						interpol_search++;
-				}
-				else
-					interpol_search = 1;
-
-				interpol_search |= !(best_sad < 3 * Data.iQuant * MAX_SAD00_FOR_SKIP * (Data.chroma ? 3:2));
-			}
-			else
-				interpol_search = 1;
-
-			if (interpol_search) {
-				SearchInterpolate(f_ref, f_refH->y, f_refV->y, f_refHV->y,
-							   	  b_ref, b_refH->y, b_refV->y, b_refHV->y,
-								  i, j,
-							  	  frame->fcode, frame->bcode,
-								  frame->motion_flags,
-								  pParam,
-								  &f_predMV, &b_predMV,
-								  pMB, &best_sad,
-								  &Data);
-			}
 
 			/* final skip decision */
-			if ( (skip_sad < Data.iQuant * MAX_SAD00_FOR_SKIP )
-				&& ((100*best_sad)/(skip_sad+1) > FINAL_SKIP_THRESH) )
+			if ( (skip_sad < Data_d.iQuant * MAX_SAD00_FOR_SKIP )
+				&& ((100*best_sad)/(skip_sad+1) > FINAL_SKIP_THRESH) ) {
 
-				SkipDecisionB(&frame->image, f_ref, b_ref, pMB, i, j, &Data);
-
-			switch (pMB->mode) {
-				case MODE_FORWARD:
-					f_predMV = Data.qpel ? pMB->qmvs[0] : pMB->mvs[0];
+				SkipDecisionB(pMB, &Data_d);
+				if (pMB->mode == MODE_DIRECT_NONE_MV) { /* skipped? */
 					pMB->sad16 = best_sad;
-					break;
-				case MODE_BACKWARD:
-					b_predMV = Data.qpel ? pMB->b_qmvs[0] : pMB->b_mvs[0];
-					pMB->sad16 = best_sad;
-					break;
-				case MODE_INTERPOLATE:
-					f_predMV = Data.qpel ? pMB->qmvs[0] : pMB->mvs[0];
-					b_predMV = Data.qpel ? pMB->b_qmvs[0] : pMB->b_mvs[0];
-					pMB->sad16 = best_sad;
-					break;
-				default:
-					pMB->sad16 = best_sad;
-					break;
+					continue;
+				}
 			}
+
+			ModeDecision_BVOP_SAD(&Data_d, &Data_b, &Data_f, &Data_i, pMB, b_mb, &f_predMV, &b_predMV);
+
 		}
 	}
 }

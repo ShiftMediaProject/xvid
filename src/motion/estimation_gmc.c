@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_gmc.c,v 1.3 2004-04-20 06:10:40 syskin Exp $
+ * $Id: estimation_gmc.c,v 1.4 2004-07-08 07:12:54 syskin Exp $
  *
  ****************************************************************************/
 
@@ -94,7 +94,7 @@ GMEanalyzeMB (	const uint8_t * const pCur,
 
 	xvid_me_DiamondSearch(Data->currentMV[0].x, Data->currentMV[0].y, Data, 255, CheckCandidate16I);
 
-	xvid_me_SubpelRefine(Data, CheckCandidate16I, 0);
+	xvid_me_SubpelRefine(Data->currentMV[0], Data, CheckCandidate16I, 0);
 
 
 	/* for QPel halfpel positions are worse than in halfpel mode :( */
