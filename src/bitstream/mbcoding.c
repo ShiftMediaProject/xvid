@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: mbcoding.c,v 1.34 2002-11-26 23:44:10 edgomez Exp $
+ * $Id: mbcoding.c,v 1.35 2002-12-19 22:58:58 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -71,8 +71,8 @@
  ****************************************************************************/
 
 /* msvc sp5+pp gets confused if they globals are made static */
-VLC intra_table[524032];
-VLC inter_table[524032];
+static VLC intra_table[524288];
+static VLC inter_table[524288];
 
 static VLC DCT3Dintra[4096];
 static VLC DCT3Dinter[4096];
