@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.21 2004-12-17 10:45:01 syskin Exp $
+ * $Id: estimation_bvop.c,v 1.22 2004-12-17 11:57:59 syskin Exp $
  *
  ****************************************************************************/
 
@@ -1081,7 +1081,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 
 			if (frame->vop_flags & XVID_VOP_RD_BVOP) 
 				ModeDecision_BVOP_RD(&Data_d, &Data_b, &Data_f, &Data_i, 
-					pMB, b_mb, &f_predMV, &b_predMV, frame->motion_flags, pParam, i, j);
+					pMB, b_mb, &f_predMV, &b_predMV, frame->motion_flags, pParam, i, j, best_sad);
 			else
 				ModeDecision_BVOP_SAD(&Data_d, &Data_b, &Data_f, &Data_i, pMB, b_mb, &f_predMV, &b_predMV);
 

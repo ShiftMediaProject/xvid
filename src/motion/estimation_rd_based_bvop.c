@@ -460,7 +460,8 @@ ModeDecision_BVOP_RD(SearchData * const Data_d,
 					 VECTOR * b_predMV,
 					 const uint32_t MotionFlags,
 					 const MBParam * const pParam,
-					 int x, int y)
+					 int x, int y,
+					 int best_sad)
 {
 	int mode = MODE_DIRECT, k;
 	int f_rd, b_rd, i_rd, d_rd, best_rd;
@@ -468,11 +469,13 @@ ModeDecision_BVOP_RD(SearchData * const Data_d,
 	const uint32_t iQuant = Data_d->iQuant;
 	int i;
 	int ref_quant = b_mb->quant;
+	int no_of_checks = 0;
 
 	int order[4] = {MODE_DIRECT, MODE_FORWARD, MODE_BACKWARD, MODE_INTERPOLATE};
 
 	Data_d->scan_table = Data_b->scan_table = Data_f->scan_table = Data_i->scan_table 
 		= /*VopFlags & XVID_VOP_ALTERNATESCAN ? scan_tables[2] : */scan_tables[0];
+	*Data_f->cbp = *Data_b->cbp = *Data_i->cbp = *Data_d->cbp = 63;
 
 	f_rd = b_rd = i_rd = d_rd = best_rd = 256*4096;
 
@@ -500,29 +503,41 @@ ModeDecision_BVOP_RD(SearchData * const Data_d,
 		}
 	}
 
-	/* evaluate cost of all modes */
-	for (i = 0; i < 4; i++) {
-		int rd;
-		
-		switch (order[i]) {
-		case MODE_DIRECT:
-			rd = d_rd = SearchDirect_RD(x, y, MotionFlags, pParam, &best_rd, Data_d);
-			break;
-		case MODE_FORWARD:
-			rd = f_rd = SearchBF_RD(x, y, MotionFlags, pParam, &best_rd, Data_f) + 1*BITS_MULT; /* extra one bit for FORWARD vs BACKWARD */
-			break;
-		case MODE_BACKWARD:
-			rd = b_rd = SearchBF_RD(x, y, MotionFlags, pParam, &best_rd, Data_b);
-			break;
-		default:
-		case MODE_INTERPOLATE:
-			rd = i_rd = SearchInterpolate_RD(x, y, MotionFlags, pParam, &best_rd, Data_i);
-			break;
+	for(i = 0; i < 4; i++)
+		if (get_sad_for_mode(order[i], Data_d, Data_b, Data_f, Data_i) < 2*best_sad)
+			no_of_checks++;
+
+	if (no_of_checks > 1) {
+		/* evaluate cost of all modes */
+		for (i = 0; i < no_of_checks; i++) {
+			int rd;
+			if (2*best_sad < get_sad_for_mode(order[i], Data_d, Data_b, Data_f, Data_i)) 
+				break; /* further SADs are too big */
+			
+			switch (order[i]) {
+			case MODE_DIRECT:
+				rd = d_rd = SearchDirect_RD(x, y, MotionFlags, pParam, &best_rd, Data_d);
+				break;
+			case MODE_FORWARD:
+				rd = f_rd = SearchBF_RD(x, y, MotionFlags, pParam, &best_rd, Data_f) + 1*BITS_MULT; /* extra one bit for FORWARD vs BACKWARD */
+				break;
+			case MODE_BACKWARD:
+				rd = b_rd = SearchBF_RD(x, y, MotionFlags, pParam, &best_rd, Data_b);
+				break;
+			default:
+			case MODE_INTERPOLATE:
+				rd = i_rd = SearchInterpolate_RD(x, y, MotionFlags, pParam, &best_rd, Data_i);
+				break;
+			}
+			if (rd < best_rd) {
+				mode = order[i];
+				best_rd = rd;
+			}
 		}
-		if (rd < best_rd) {
-			mode = order[i];
-			best_rd = rd;
-		}
+	} else {
+		/* only 1 mode is below the threshold */
+		mode = order[0];
+		best_rd = 0;
 	}
 
 	pMB->sad16 = best_rd;
