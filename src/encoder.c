@@ -39,7 +39,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.60 2002-07-21 03:41:44 suxen_drol Exp $
+ *  $Id: encoder.c,v 1.61 2002-07-21 14:05:38 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -209,7 +209,7 @@ encoder_create(XVID_ENC_PARAM * pParam)
 
 	/* 1 keyframe each 10 seconds */
 
-	if (pParam->max_key_interval == 0)
+	if (pParam->max_key_interval <= 0)
 		pParam->max_key_interval = 10 * pParam->fincr / pParam->fbase;
 
 	pEnc = (Encoder *) xvid_malloc(sizeof(Encoder), CACHE_LINE);
