@@ -31,6 +31,16 @@ bool MotionEstimation(MBParam * const pParam,
 					  const uint32_t iLimit);
 
 
+bool SMP_MotionEstimation(MBParam * const pParam,
+                                          FRAMEINFO * const current,
+                                          FRAMEINFO * const reference,
+                                          const IMAGE * const pRefH,
+                                          const IMAGE * const pRefV,
+                                          const IMAGE * const pRefHV,
+                                          const uint32_t iLimit);
+
+
+
 /** MBMotionCompensation **/
 void MBMotionCompensation(MACROBLOCK * const pMB,
 						  const uint32_t j,

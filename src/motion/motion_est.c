@@ -1,5 +1,35 @@
 /**************************************************************************
  *
+ *	XVID MPEG-4 VIDEO CODEC
+ *	motion estimation 
+ *
+ *	This program is an implementation of a part of one or more MPEG-4
+ *	Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
+ *	to use this software module in hardware or software products are
+ *	advised that its use may infringe existing patents or copyrights, and
+ *	any such use would be at such party's own risk.  The original
+ *	developer of this software module and his/her company, and subsequent
+ *	editors and their companies, will have no liability for use of this
+ *	software or modifications or derivatives thereof.
+ *
+ *	This program is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	This program is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with this program; if not, write to the Free Software
+ *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ *************************************************************************/
+
+/**************************************************************************
+ *
  *  Modifications:
  *
  *	01.05.2002	updated MotionEstimationBVOP
@@ -47,156 +77,7 @@
 #include "motion.h"
 #include "sad.h"
 
-// very large value
-#define MV_MAX_ERROR	(4096 * 256)
 
-// stop search if sdelta < THRESHOLD
-#define MV16_THRESHOLD	192
-#define MV8_THRESHOLD	56
-
-#define NEIGH_MOVE_THRESH 0
-// how much a block's MV must differ from his neighbour 
-// to be search for INTER4V. The more, the faster...
-
-/* sad16(0,0) bias; mpeg4 spec suggests nb/2+1 */
-/* nb  = vop pixels * 2^(bpp-8) */
-#define MV16_00_BIAS	(128+1)
-#define MV8_00_BIAS	(0)
-
-/* INTER bias for INTER/INTRA decision; mpeg4 spec suggests 2*nb */
-#define MV16_INTER_BIAS	512
-
-/* Parameters which control inter/inter4v decision */
-#define IMV16X16			5
-
-/* vector map (vlc delta size) smoother parameters */
-#define NEIGH_TEND_16X16	2
-#define NEIGH_TEND_8X8		2
-
-// fast ((A)/2)*2
-#define EVEN(A)		(((A)<0?(A)+1:(A)) & ~1)
-
-#define MVzero(A) ( ((A).x)==(0) && ((A).y)==(0) )
-#define MVequal(A,B) ( ((A).x)==((B).x) && ((A).y)==((B).y) )
-
-int32_t PMVfastSearch16(const uint8_t * const pRef,
-						const uint8_t * const pRefH,
-						const uint8_t * const pRefV,
-						const uint8_t * const pRefHV,
-						const IMAGE * const pCur,
-						const int x,
-						const int y,
-						const uint32_t MotionFlags,
-						const uint32_t iQuant,
-						const uint32_t iFcode,
-						const MBParam * const pParam,
-						const MACROBLOCK * const pMBs,
-						const MACROBLOCK * const prevMBs,
-						VECTOR * const currMV,
-						VECTOR * const currPMV);
-
-int32_t EPZSSearch16(const uint8_t * const pRef,
-					 const uint8_t * const pRefH,
-					 const uint8_t * const pRefV,
-					 const uint8_t * const pRefHV,
-					 const IMAGE * const pCur,
-					 const int x,
-					 const int y,
-					 const uint32_t MotionFlags,
-					 const uint32_t iQuant,
-					 const uint32_t iFcode,
-					 const MBParam * const pParam,
-					 const MACROBLOCK * const pMBs,
-					 const MACROBLOCK * const prevMBs,
-					 VECTOR * const currMV,
-					 VECTOR * const currPMV);
-
-
-int32_t PMVfastSearch8(const uint8_t * const pRef,
-					   const uint8_t * const pRefH,
-					   const uint8_t * const pRefV,
-					   const uint8_t * const pRefHV,
-					   const IMAGE * const pCur,
-					   const int x,
-					   const int y,
-					   const int start_x,
-					   const int start_y,
-					   const uint32_t MotionFlags,
-					   const uint32_t iQuant,
-					   const uint32_t iFcode,
-					   const MBParam * const pParam,
-					   const MACROBLOCK * const pMBs,
-					   const MACROBLOCK * const prevMBs,
-					   VECTOR * const currMV,
-					   VECTOR * const currPMV);
-
-int32_t EPZSSearch8(const uint8_t * const pRef,
-					const uint8_t * const pRefH,
-					const uint8_t * const pRefV,
-					const uint8_t * const pRefHV,
-					const IMAGE * const pCur,
-					const int x,
-					const int y,
-					const int start_x,
-					const int start_y,
-					const uint32_t MotionFlags,
-					const uint32_t iQuant,
-					const uint32_t iFcode,
-					const MBParam * const pParam,
-					const MACROBLOCK * const pMBs,
-					const MACROBLOCK * const prevMBs,
-					VECTOR * const currMV,
-					VECTOR * const currPMV);
-
-
-typedef int32_t(MainSearch16Func) (const uint8_t * const pRef,
-								   const uint8_t * const pRefH,
-								   const uint8_t * const pRefV,
-								   const uint8_t * const pRefHV,
-								   const uint8_t * const cur,
-								   const int x,
-								   const int y,
-								   int32_t startx,
-								   int32_t starty,
-								   int32_t iMinSAD,
-								   VECTOR * const currMV,
-								   const VECTOR * const pmv,
-								   const int32_t min_dx,
-								   const int32_t max_dx,
-								   const int32_t min_dy,
-								   const int32_t max_dy,
-								   const int32_t iEdgedWidth,
-								   const int32_t iDiamondSize,
-								   const int32_t iFcode,
-								   const int32_t iQuant,
-								   int iFound);
-
-typedef MainSearch16Func *MainSearch16FuncPtr;
-
-
-typedef int32_t(MainSearch8Func) (const uint8_t * const pRef,
-								  const uint8_t * const pRefH,
-								  const uint8_t * const pRefV,
-								  const uint8_t * const pRefHV,
-								  const uint8_t * const cur,
-								  const int x,
-								  const int y,
-								  int32_t startx,
-								  int32_t starty,
-								  int32_t iMinSAD,
-								  VECTOR * const currMV,
-								  const VECTOR * const pmv,
-								  const int32_t min_dx,
-								  const int32_t max_dx,
-								  const int32_t min_dy,
-								  const int32_t max_dy,
-								  const int32_t iEdgedWidth,
-								  const int32_t iDiamondSize,
-								  const int32_t iFcode,
-								  const int32_t iQuant,
-								  int iFound);
-
-typedef MainSearch8Func *MainSearch8FuncPtr;
 
 static int32_t lambda_vec16[32] =	/* rounded values for lambda param for weight of motion bits as in modified H.26L */
 { 0, (int) (1.00235 + 0.5), (int) (1.15582 + 0.5), (int) (1.31976 + 0.5),
@@ -273,22 +154,7 @@ calc_delta_8(const int32_t dx,
 	return NEIGH_TEND_8X8 * lambda_vec8[iQuant] * (mv_bits(dx, iFcode) +
 												   mv_bits(dy, iFcode));
 }
-
-
-
-
-
-#ifndef SEARCH16
-#define SEARCH16	PMVfastSearch16
-//#define SEARCH16  FullSearch16
-//#define SEARCH16  EPZSSearch16
-#endif
-
-#ifndef SEARCH8
-#define SEARCH8		PMVfastSearch8
-//#define SEARCH8   EPZSSearch8
-#endif
-
+				 
 bool
 MotionEstimation(MBParam * const pParam,
 				 FRAMEINFO * const current,
@@ -307,6 +173,7 @@ MotionEstimation(MBParam * const pParam,
 
 	const VECTOR zeroMV = { 0, 0 };
 
+	long long time;
 	int32_t x, y;
 	int32_t iIntra = 0;
 	VECTOR pmv;
@@ -314,8 +181,9 @@ MotionEstimation(MBParam * const pParam,
 	if (sadInit)
 		(*sadInit) ();
 
-	for (y = 0; y < iHcount; y++)
-		for (x = 0; x < iWcount; x++) {
+	for (y = 0; y < iHcount; y++)	{
+		for (x = 0; x < iWcount; x ++)	{
+	
 			MACROBLOCK *const pMB = &pMBs[x + y * iWcount];
 
 			pMB->sad16 =
@@ -409,8 +277,9 @@ MotionEstimation(MBParam * const pParam,
 			pMB->mvs[0] = pMB->mvs[1] = pMB->mvs[2] = pMB->mvs[3] = pMB->mv16;
 			pMB->sad8[0] = pMB->sad8[1] = pMB->sad8[2] = pMB->sad8[3] =
 				pMB->sad16;
+			}
+			}
 
-		}
 	return 0;
 }
 
@@ -1260,10 +1129,9 @@ PMVfastSearch16(const uint8_t * const pRef,
 
 	MainSearch16FuncPtr MainSearchPtr;
 
-//  const MACROBLOCK * const pMB = pMBs + x + y * iWcount;
 	const MACROBLOCK *const prevMB = prevMBs + x + y * iWcount;
 
-	static int32_t threshA, threshB;
+	int32_t threshA, threshB;
 	int32_t bPredEq;
 	int32_t iMinSAD, iSAD;
 
@@ -1284,10 +1152,14 @@ PMVfastSearch16(const uint8_t * const pRef,
 	bPredEq = get_pmvdata(pMBs, x, y, iWcount, 0, pmv, psad);
 	// bPredEq = get_pmvdata2(pMBs, iWcount, 0, x, y, 0, pmv, psad);
 
+/*	fprintf(stderr,"pmv: %d %d / %d --- %d %d   %d %d   %d %d - %d %d %d\n",
+		pmv[0].x,pmv[0].y,psad[0],
+		pmv[1].x,pmv[1].y,pmv[2].x,pmv[2].y,pmv[3].x,pmv[3].y,
+		psad[1],psad[2],psad[3]);
+*/
 	if ((x == 0) && (y == 0)) {
 		threshA = 512;
 		threshB = 1024;
-
 	} else {
 		threshA = psad[0];
 		threshB = threshA + 256;
@@ -1468,6 +1340,9 @@ PMVfastSearch16(const uint8_t * const pRef,
 
 	backupMV = *currMV;			/* save best prediction, actually only for EXTSEARCH */
 
+
+//	fprintf(stderr,"Entering Diamond %d %d (%d):\n",x,y,iMinSAD);
+
 /* default: use best prediction as starting point for one call of PMVfast_MainSearch */
 	iSAD =
 		(*MainSearchPtr) (pRef, pRefH, pRefV, pRefHV, cur, x, y, currMV->x,
@@ -1521,6 +1396,8 @@ PMVfastSearch16(const uint8_t * const pRef,
 							 iMinSAD, pmv, min_dx, max_dx, min_dy, max_dy,
 							 iFcode, iQuant, iEdgedWidth);
 
+/*fprintf(stderr,"Chosen for %d %d: %d %d - %d %d\n",x,y,currMV->x,currMV->y,pmv[0].x,pmv[0].y);
+*/
   PMVfast16_Terminate_without_Refine:
 	currPMV->x = currMV->x - pmv[0].x;
 	currPMV->y = currMV->y - pmv[0].y;
@@ -1676,7 +1553,7 @@ PMVfastSearch8(const uint8_t * const pRef,
 //  const MACROBLOCK * const pMB = pMBs + (x>>1) + (y>>1) * iWcount;
 	const MACROBLOCK *const prevMB = prevMBs + (x >> 1) + (y >> 1) * iWcount;
 
-	static int32_t threshA, threshB;
+	 int32_t threshA, threshB;
 	int32_t iFound, bPredEq;
 	int32_t iMinSAD, iSAD;
 
@@ -1988,7 +1865,7 @@ EPZSSearch16(const uint8_t * const pRef,
 	const MACROBLOCK *const prevMB = prevMBs + x + y * iWcount;
 	MACROBLOCK *oldMB = NULL;
 
-	static int32_t thresh2;
+	 int32_t thresh2;
 	int32_t bPredEq;
 	int32_t iMinSAD, iSAD = 9999;
 

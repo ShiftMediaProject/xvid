@@ -37,7 +37,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.51 2002-06-30 10:46:29 suxen_drol Exp $
+ *  $Id: encoder.c,v 1.52 2002-07-06 17:04:57 chl Exp $
  *
  ****************************************************************************/
 
@@ -66,6 +66,9 @@
 #include "quant/quant_matrix.h"
 #include "utils/mem_align.h"
 
+#ifdef _SMP
+#include "motion/smp_motion_est.h"
+#endif 
 /*****************************************************************************
  * Local macros
  ****************************************************************************/
@@ -1591,10 +1594,22 @@ FrameCodeP(Encoder * pEnc,
 	if (pEnc->current->global_flags & XVID_HINTEDME_SET) {
 		HintedMESet(pEnc, &bIntra);
 	} else {
-		bIntra =
-			MotionEstimation(&pEnc->mbParam, pEnc->current, pEnc->reference,
+
+#ifdef _SMP
+		if (NUMTHREADS > 1)
+			bIntra =
+				SMP_MotionEstimation(&pEnc->mbParam, pEnc->current, pEnc->reference,
 							 &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV,
 							 iLimit);
+		else
+#endif
+
+                bIntra =
+                         MotionEstimation(&pEnc->mbParam, pEnc->current, pEnc->reference,
+                                                    &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV,
+                                                    iLimit);
+		
+	
 	}
 	stop_motion_timer();
 
