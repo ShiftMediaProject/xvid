@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  *  XVID MPEG-4 VIDEO CODEC
- *  -  Encoder main module  -
+ *  - Encoder main module -
  *
  *  Copyright(C) 2002 Michael Militzer
  *
@@ -27,6 +27,8 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ *
+ * $Id: encoder.c,v 1.79 2002-09-04 21:43:46 edgomez Exp $
  *
  ****************************************************************************/
 
