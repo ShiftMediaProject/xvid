@@ -39,9 +39,10 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.63 2002-07-22 18:03:47 chl Exp $
+ *  $Id: encoder.c,v 1.64 2002-07-24 23:17:19 chl Exp $
  *
  ****************************************************************************/
+
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -1692,9 +1693,9 @@ FrameCodeP(Encoder * pEnc,
 					   pMB->mvs[1].x || pMB->mvs[1].y || pMB->mvs[2].x ||
 					   pMB->mvs[2].y || pMB->mvs[3].x || pMB->mvs[3].y) {
 				pEnc->sStat.mblks++;
-			} else {
+			}  else {
 				pEnc->sStat.ublks++;
-			}
+			} 
 
 			start_timer();
 			MBCoding(pEnc->current, pMB, qcoeff, bs, &pEnc->sStat);
@@ -1883,12 +1884,12 @@ FrameCodeB(Encoder * pEnc,
 								  qcoeff);
 			//mb->cbp = MBTransQuantBVOP(&pEnc->mbParam, x, y, dct_codes, qcoeff, &frame->image, frame->quant);
 
-
-			if ((mb->mode == MODE_INTERPOLATE || mb->mode == MODE_DIRECT)
-				&& mb->cbp == 0 && mb->mvs[0].x == 0 && mb->mvs[0].y == 0) {
+			if ( (mb->mode == MODE_DIRECT) && (mb->cbp == 0)
+				&& (mb->deltamv.x == 0) && (mb->deltamv.y == 0) ) {
 				mb->mode = MODE_DIRECT_NONE_MV;	// skipped
 			}
 
+/* update predictors for forward and backward vectors */
 			if (mb->mode == MODE_INTERPOLATE || mb->mode == MODE_FORWARD) {
 				mb->pmvs[0].x = mb->mvs[0].x - forward.x;
 				mb->pmvs[0].y = mb->mvs[0].y - forward.y;
@@ -1902,6 +1903,7 @@ FrameCodeB(Encoder * pEnc,
 				backward.x = mb->b_mvs[0].x;
 				backward.y = mb->b_mvs[0].y;
 			}
+			
 //			DPRINTF("%05i : [%i %i] M=%i CBP=%i MVS=%i,%i forward=%i,%i", pEnc->m_framenum, x, y, mb->mode, mb->cbp, mb->mvs[0].x, mb->mvs[0].y, forward.x, forward.y);
 
 #ifdef BFRAMES_DEC_DEBUG
@@ -1929,3 +1931,18 @@ FrameCodeB(Encoder * pEnc,
 #endif
 }
 #endif
+
+
+/*	in case internal output is needed somewhere... */
+/*	{
+        FILE *filehandle;
+        filehandle=fopen("last-b.pgm","wb");
+        if (filehandle)
+        {
+                fprintf(filehandle,"P5\n\n");           //
+                fprintf(filehandle,"%d %d 255\n",pEnc->mbParam.edged_width,pEnc->mbParam.edged_height);
+                fwrite(frame->image.y,pEnc->mbParam.edged_width,pEnc->mbParam.edged_height,filehandle);
+                fclose(filehandle);
+		}
+	}
+*/
