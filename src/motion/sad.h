@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: sad.h,v 1.19 2004-03-22 22:36:24 edgomez Exp $
+ * $Id: sad.h,v 1.20 2004-04-05 20:36:36 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -49,12 +49,12 @@ sad16Func sad16_3dne;
 sad16Func sad16_sse2;
 #endif
 
-#ifdef ARCH_IS_ALTIVEC
-sad16Func sad16_altivec;
-#endif
-
 #ifdef ARCH_IS_IA64
 sad16Func sad16_ia64;
+#endif
+
+#ifdef ARCH_IS_PPC
+sad16Func sad16_altivec_c;
 #endif
 
 sad16Func mrsad16_c;
@@ -72,12 +72,12 @@ sad8Func sad8_xmm;
 sad8Func sad8_3dne;
 #endif
 
-#ifdef ARCH_IS_ALTIVEC
-sad8Func sad8_altivec;
-#endif
-
 #ifdef ARCH_IS_IA64
 sad8Func sad8_ia64;
+#endif
+
+#ifdef ARCH_IS_PPC
+sad8Func sad8_altivec_c;
 #endif
 
 typedef uint32_t(sad16biFunc) (const uint8_t * const cur,
@@ -97,6 +97,10 @@ sad16biFunc sad16bi_3dn;
 
 #ifdef ARCH_IS_IA64
 sad16biFunc sad16bi_ia64;
+#endif
+
+#ifdef ARCH_IS_PPC
+sad16biFunc sad16bi_altivec_c;
 #endif
 
 typedef uint32_t(sad8biFunc) (const uint8_t * const cur,
@@ -139,12 +143,12 @@ sad16vFunc sad16v_xmm;
 sad16vFunc sad16v_mmx;
 #endif
 
-#ifdef ARCH_IS_ALTIVEC
-dev16Func dev16_altivec;
-#endif
-
 #ifdef ARCH_IS_IA64
 dev16Func dev16_ia64;
+#endif
+
+#ifdef ARCH_IS_PPC
+dev16Func dev16_altivec_c;
 #endif
 
 typedef uint32_t (sse8Func_16bit)(const int16_t * cur,
@@ -156,6 +160,10 @@ extern sse8Func_16bitPtr sse8_16bit;
 sse8Func_16bit sse8_16bit_c;
 #ifdef ARCH_IS_IA32
 sse8Func_16bit sse8_16bit_mmx;
+#endif
+
+#ifdef ARCH_IS_PPC
+sse8Func_16bit sse8_16bit_altivec_c;
 #endif
 
 #endif							/* _ENCODER_SAD_H_ */

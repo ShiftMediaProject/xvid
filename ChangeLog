@@ -6,6 +6,299 @@
 #
 
 
+2004-04-04 14:07:00 GMT	                                	patch-4
+
+    Summary:
+      Frame dropping disabling for bframes.
+    Revision:
+      xvidcore--stable--1.0--patch-4
+
+    From sysKin & Pete:
+     * Disable frame dropping with bframes enabled. These two options
+       do not play fine together.
+
+    modified files:
+     src/encoder.c
+
+
+2004-04-04 14:05:50 GMT	                                	patch-3
+
+    Summary:
+      Dead code removal.
+    Revision:
+      xvidcore--stable--1.0--patch-3
+
+    From sysKin:
+     * FrameCodeP was always called with contanst parameters. Removed
+       these parameters and associated dead code.
+
+    modified files:
+     src/encoder.c
+
+
+2004-04-04 14:03:42 GMT	                                	patch-2
+
+    Summary:
+      Typo in ME fast comparison.
+    Revision:
+      xvidcore--stable--1.0--patch-2
+
+    From sysKin:
+     * Small typo in Fast ME code.
+
+    modified files:
+     src/motion/estimation_common.c
+
+
+2004-04-02 23:58:19 GMT	                                	patch-1
+
+    Summary:
+      VFW Resource leak fix (try #2)
+    Revision:
+      xvidcore--stable--1.0--patch-1
+
+    From Suiryc on IRC:
+     * both encoder and decoder ending functions were calling
+       the dll freeing code. This was an error as the first function
+       called would unbind core function for the second called one.
+       Thus xvidcore could not release buffers.
+
+    modified files:
+     vfw/src/codec.c vfw/src/driverproc.c
+
+
+2004-04-02 20:33:02 GMT	                                	base-0
+
+    Summary:
+      tag of ed.gomez@free.fr--2004-1/xvidcore--devapi4--1.0--patch-53
+    Revision:
+      xvidcore--stable--1.0--base-0
+
+    (automatically generated log message)
+
+
+2004-03-31 19:32:47 GMT	                                	patch-53
+
+    Summary:
+      Ressources leaking in VFW.
+    Revision:
+      xvidcore--devapi4--1.0--patch-53
+
+    From sysKin:
+     * Storing ressources in global vars is making multithreaded/instanced
+       apps leaking lot of memory. Moved these vars to codec struct.
+    
+    Thanks to dalox <fdalleau at hymatom d0t fr> to spot and fix the bug.
+
+    modified files:
+     vfw/src/codec.c vfw/src/codec.h vfw/src/driverproc.c
+
+
+2004-03-31 19:28:51 GMT	                                	patch-52
+
+    Summary:
+      Fix to bad NVOP+bframe interaction.
+    Revision:
+      xvidcore--devapi4--1.0--patch-52
+
+    From syskin:
+     * When generating a NVOP, it interferes with bframe flushing and
+       packing.
+
+    modified files:
+     src/encoder.c
+
+
+2004-03-31 19:24:42 GMT	                                	patch-51
+
+    Summary:
+      Fix GMC 2 warp point.
+    Revision:
+      xvidcore--devapi4--1.0--patch-51
+
+    From Skal:
+     * Fix 2 warp points GMC.
+
+    modified files:
+     src/motion/gmc.c
+
+
+2004-03-31 19:18:46 GMT	                                	patch-50
+
+    Summary:
+      Added intra quant testing.
+    Revision:
+      xvidcore--devapi4--1.0--patch-50
+
+    From Skal:
+     * Added intra quant testing to xvid_bench
+
+    modified files:
+     examples/xvid_bench.c
+
+
+2004-03-31 19:07:55 GMT	                                	patch-49
+
+    Summary:
+      input width/height check
+    Revision:
+      xvidcore--devapi4--1.0--patch-49
+
+    From Skal:
+     * Input width and height aren't checked and this can cause crash.
+
+    modified files:
+     src/encoder.c
+
+
+2004-03-28 01:02:21 GMT	                                	patch-48
+
+    Summary:
+      $ CVS expansion removed
+    Revision:
+      xvidcore--devapi4--1.0--patch-48
+
+    $ CVS expansion removed
+    
+
+    modified files:
+     dshow/src/Configure.cpp dshow/src/config.c
+     examples/xvid_encraw.c
+
+
+2004-03-28 00:45:23 GMT	                                	patch-47
+
+    Summary:
+      Allow bigger frames
+    Revision:
+      xvidcore--devapi4--1.0--patch-47
+
+    Allow bigger frames
+    
+
+    modified files:
+     examples/xvid_encraw.c
+
+
+2004-03-28 00:41:54 GMT	                                	patch-46
+
+    Summary:
+      Fix in postproc header
+    Revision:
+      xvidcore--devapi4--1.0--patch-46
+
+    Fix in postproc header
+    
+
+    modified files:
+     src/image/postprocessing.h
+
+
+2004-03-28 00:33:02 GMT	                                	patch-45
+
+    Summary:
+      Fixed xvidvfw build on real mingw+msys systems
+    Revision:
+      xvidcore--devapi4--1.0--patch-45
+
+    Fixed xvidvfw build on real mingw+msys systems
+    
+
+    modified files:
+     vfw/bin/Makefile
+
+
+2004-03-15 21:48:48 GMT	                                	patch-44
+
+    Summary:
+      VFW updates.
+    Revision:
+      xvidcore--devapi4--1.0--patch-44
+
+    VFW updates.
+
+    modified files:
+     vfw/src/config.c vfw/src/resource.rc
+
+
+2004-03-15 21:44:17 GMT	                                	patch-43
+
+    Summary:
+      GMC bugfix.
+    Revision:
+      xvidcore--devapi4--1.0--patch-43
+
+    From skal:
+     * GMC bugfixes.
+
+    modified files:
+     src/motion/gmc.c
+
+
+2004-03-15 21:41:18 GMT	                                	patch-42
+
+    Summary:
+      Buffer overrun fix in post proc.
+    Revision:
+      xvidcore--devapi4--1.0--patch-42
+
+    From sysKin:
+     * Fixed buffer overrun in postproc code.
+
+    modified files:
+     src/image/postprocessing.c src/image/postprocessing.h
+
+
+2004-03-15 21:33:22 GMT	                                	patch-41
+
+    Summary:
+      Forgotten files.
+    Revision:
+      xvidcore--devapi4--1.0--patch-41
+
+    Me:
+     * Sorry i missed these file additions. Important for the packages
+       as i build them from the tla archive.
+
+    new files:
+     dshow/src/.arch-ids/Configure.cpp.id
+     dshow/src/.arch-ids/config.c.id
+     dshow/src/.arch-ids/config.h.id dshow/src/.arch-ids/debug.h.id
+     dshow/src/Configure.cpp dshow/src/config.c dshow/src/config.h
+     dshow/src/debug.h
+
+
+2004-03-03 21:01:09 GMT	                                	patch-40
+
+    Summary:
+      MV clipping in decoder.
+    Revision:
+      xvidcore--devapi4--1.0--patch-40
+
+    From sysKin:
+     * clip MVs to valid ranges.
+
+    modified files:
+     src/decoder.c src/decoder.h
+
+
+#########################################################################
+# 1.0.0 RC3
+#########################################################################
+
+2004-02-29 13:17:10 GMT	                                	patch-39
+
+    Summary:
+      Marking 1.0.0 RC3
+    Revision:
+      xvidcore--devapi4--1.0--patch-39
+
+    * Marking RC3
+
+    modified files:
+     ChangeLog build/generic/configure.in src/xvid.h
+
+
 2004-02-29 13:08:38 GMT	                                	patch-38
 
     Summary:
@@ -1177,7 +1470,7 @@
        the bvop lag frame (black with error message).
     
     Fixing previous patch a bit:
-     * added $Id: ChangeLog,v 1.2 2004-03-22 22:36:23 edgomez Exp $ fields
+     * added $Id: ChangeLog,v 1.3 2004-04-05 20:36:36 edgomez Exp $ fields
      * Fixed copyright
 
     modified files:

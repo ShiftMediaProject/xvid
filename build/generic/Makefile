@@ -54,6 +54,7 @@ RM = rm -rf
 OBJECTS  = $(GENERIC_OBJECTS)
 OBJECTS += $(ASSEMBLY_OBJECTS)
 OBJECTS += $(DCT_IA64_OBJECTS)
+OBJECTS += $(PPC_ALTIVEC_OBJECTS)
 
 # The VPATH mecanism could use a "per target" build directory
 # To keep it simple at the moment, the directory is fixed to "build"

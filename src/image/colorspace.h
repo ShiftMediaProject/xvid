@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: colorspace.h,v 1.6 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: colorspace.h,v 1.7 2004-04-05 20:36:36 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -109,6 +109,15 @@ packedFunc yuyv_to_yv12_xmm;
 packedFunc uyvy_to_yv12_xmm;
 #endif
 
+#ifdef ARCH_IS_PPC
+packedFunc bgra_to_yv12_altivec_c;
+packedFunc abgr_to_yv12_altivec_c;
+packedFunc rgba_to_yv12_altivec_c;
+packedFunc argb_to_yv12_altivec_c;
+
+packedFunc yuyv_to_yv12_altivec_c;
+packedFunc uyvy_to_yv12_altivec_c;
+#endif
 
 /* yv12_to_xxx colorspace conversion functions (decoder) */
 
@@ -164,6 +173,10 @@ packedFunc yv12_to_yuyvi_mmx;
 packedFunc yv12_to_uyvyi_mmx;
 #endif
 
+#ifdef ARCH_IS_PPC
+packedFunc yv12_to_yuyv_altivec_c;
+packedFunc yv12_to_uyvy_altivec_c;
+#endif
 
 typedef void (planarFunc) (
 				uint8_t * y_dst, uint8_t * u_dst, uint8_t * v_dst,

@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_common.c,v 1.2 2004-03-22 22:36:24 edgomez Exp $
+ * $Id: estimation_common.c,v 1.3 2004-04-05 20:36:36 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -427,7 +427,7 @@ SubpelRefine_Fast(SearchData * data, CheckFunc * CheckCandidate)
 		CHECK_CANDIDATE(xo-1, yo, 0);
 		CHECK_CANDIDATE(xo+1, yo, 0);
 
-		if(best_sad < data->iMinSAD2) return;
+		if(best_sad <= data->iMinSAD2) return;
 
 		if(data->currentQMV[0].y == data->currentQMV2.y) {
 			CHECK_CANDIDATE(xo-1, (yo+yo2)>>1, 0);

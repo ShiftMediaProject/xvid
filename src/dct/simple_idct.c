@@ -22,7 +22,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: simple_idct.c,v 1.4 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: simple_idct.c,v 1.5 2004-04-05 20:36:36 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -56,7 +56,12 @@
 #define COL_SHIFT 20 /* 6 */
 #endif
 
-#if defined(ARCH_IS_PPC)
+/*
+ PPC mac operation.  Causes compile problems on newer ppc targets
+ 
+ Was originally: #if defined(ARCH_IS_PPC)
+ */
+#if 0
 
 /* signed 16x16 -> 32 multiply add accumulate */
 #define MAC16(rt, ra, rb) \

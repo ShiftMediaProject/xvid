@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: idct.h,v 1.9 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: idct.h,v 1.10 2004-04-05 20:36:36 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -47,12 +47,12 @@ idctFunc simple_idct_mmx;	/* Michael Niedermayer; expects permutated data */
 idctFunc simple_idct_mmx2;	/* Michael Niedermayer */
 #endif
 
-#ifdef ARCH_IS_ALTIVEC
-idctFunc idct_altivec;
-#endif
-
 #ifdef ARCH_IS_IA64
 idctFunc idct_ia64;
+#endif
+
+#ifdef ARCH_IS_PPC
+idctFunc idct_altivec_c;
 #endif
 
 #endif							/* _IDCT_H_ */
