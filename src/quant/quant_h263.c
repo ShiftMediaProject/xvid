@@ -48,7 +48,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: quant_h263.c,v 1.5 2002-11-26 23:44:11 edgomez Exp $
+ * $Id: quant_h263.c,v 1.6 2002-12-15 01:21:12 edgomez Exp $
  *
  *************************************************************************/
 
@@ -95,10 +95,10 @@ quant_intra_c(int16_t * coeff,
 			  const uint32_t dcscalar)
 {
 	const uint32_t mult = multipliers[quant];
-	const uint16_t quant_m_2 = quant << 1;
+	const uint16_t quant_m_2 = (uint16_t)(quant << 1);
 	uint32_t i;
 
-	coeff[0] = DIV_DIV(data[0], (int32_t) dcscalar);
+	coeff[0] = (int16_t)(DIV_DIV(data[0], (int32_t) dcscalar));
 
 	for (i = 1; i < 64; i++) {
 		int16_t acLevel = data[i];
@@ -109,14 +109,14 @@ quant_intra_c(int16_t * coeff,
 				coeff[i] = 0;
 				continue;
 			}
-			acLevel = (acLevel * mult) >> SCALEBITS;
+			acLevel = (int16_t)(((uint32_t)acLevel * mult) >> SCALEBITS);
 			coeff[i] = -acLevel;
 		} else {
 			if (acLevel < quant_m_2) {
 				coeff[i] = 0;
 				continue;
 			}
-			acLevel = (acLevel * mult) >> SCALEBITS;
+			acLevel = (int16_t)(((uint32_t)acLevel * mult) >> SCALEBITS);
 			coeff[i] = acLevel;
 		}
 	}
@@ -132,8 +132,8 @@ quant_inter_c(int16_t * coeff,
 			  const uint32_t quant)
 {
 	const uint32_t mult = multipliers[quant];
-	const uint16_t quant_m_2 = quant << 1;
-	const uint16_t quant_d_2 = quant >> 1;
+	const uint16_t quant_m_2 = (uint16_t)(quant << 1);
+	const uint16_t quant_d_2 = (uint16_t)(quant >> 1);
 	int sum = 0;
 	uint32_t i;
 
@@ -147,7 +147,7 @@ quant_inter_c(int16_t * coeff,
 				continue;
 			}
 
-			acLevel = (acLevel * mult) >> SCALEBITS;
+			acLevel = (int16_t)(((uint32_t)acLevel * mult) >> SCALEBITS);
 			sum += acLevel;		/* sum += |acLevel| */
 			coeff[i] = -acLevel;
 		} else {
@@ -156,7 +156,7 @@ quant_inter_c(int16_t * coeff,
 				coeff[i] = 0;
 				continue;
 			}
-			acLevel = (acLevel * mult) >> SCALEBITS;
+			acLevel = (int16_t)(((uint32_t)acLevel * mult) >> SCALEBITS);
 			sum += acLevel;
 			coeff[i] = acLevel;
 		}
@@ -179,7 +179,7 @@ dequant_intra_c(int16_t * data,
 	const int32_t quant_add = (quant & 1 ? quant : quant - 1);
 	uint32_t i;
 
-	data[0] = coeff[0] * dcscalar;
+	data[0] = (int16_t)(coeff[0] * dcscalar);
 	if (data[0] < -2048) {
 		data[0] = -2048;
 	} else if (data[0] > 2047) {
@@ -213,8 +213,8 @@ dequant_inter_c(int16_t * data,
 				const int16_t * coeff,
 				const uint32_t quant)
 {
-	const uint16_t quant_m_2 = quant << 1;
-	const uint16_t quant_add = (quant & 1 ? quant : quant - 1);
+	const uint16_t quant_m_2 = (uint16_t)(quant << 1);
+	const uint16_t quant_add = (uint16_t)(quant & 1 ? quant : quant - 1);
 	uint32_t i;
 
 	for (i = 0; i < 64; i++) {

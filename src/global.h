@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: global.h,v 1.17 2002-11-26 23:44:10 edgomez Exp $
+ * $Id: global.h,v 1.18 2002-12-15 01:21:12 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -155,18 +155,18 @@ get_dc_scaler(uint32_t quant,
 		return 8;
 
 	if (quant < 25 && !lum)
-		return (quant + 13) / 2;
+		return (int8_t)((quant + 13) / 2);
 
 	if (quant < 9)
-		return 2 * quant;
+		return (int8_t)(2 * quant);
 
 	if (quant < 25)
-		return quant + 8;
+		return (int8_t)(quant + 8);
 
 	if (lum)
-		return 2 * quant - 16;
+		return (int8_t)(2 * quant - 16);
 	else
-		return quant - 6;
+		return (int8_t)(quant - 6);
 }
 
 /* useful macros */

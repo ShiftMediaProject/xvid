@@ -51,7 +51,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: mbprediction.c,v 1.11 2002-11-26 23:44:11 edgomez Exp $
+ * $Id: mbprediction.c,v 1.12 2002-12-15 01:21:12 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -233,13 +233,13 @@ predict_acdc(MACROBLOCK * pMBs,
 
 	if (ABS(pLeft[0] - pDiag[0]) < ABS(pDiag[0] - pTop[0])) {
 		*acpred_direction = 1;	/* vertical */
-		predictors[0] = DIV_DIV(pTop[0], iDcScaler);
+		predictors[0] = (int16_t)(DIV_DIV(pTop[0], iDcScaler));
 		for (i = 1; i < 8; i++) {
 			predictors[i] = rescale(top_quant, current_quant, pTop[i]);
 		}
 	} else {
 		*acpred_direction = 2;	/* horizontal */
-		predictors[0] = DIV_DIV(pLeft[0], iDcScaler);
+		predictors[0] = (int16_t)(DIV_DIV(pLeft[0], iDcScaler));
 		for (i = 1; i < 8; i++) {
 			predictors[i] = rescale(left_quant, current_quant, pLeft[i + 7]);
 		}
@@ -266,7 +266,7 @@ add_acdc(MACROBLOCK * pMB,
 	DPRINTF(DPRINTF_COEFF,"predictor[0] %i", predictors[0]);
 
 	dct_codes[0] += predictors[0];	/* dc prediction */
-	pCurrent[0] = dct_codes[0] * iDcScaler;
+	pCurrent[0] = (int16_t)(dct_codes[0] * iDcScaler);
 
 	if (acpred_direction == 1) {
 		for (i = 1; i < 8; i++) {
@@ -324,7 +324,7 @@ calc_acdc(MACROBLOCK * pMB,
 
 	/* store current coeffs to pred_values[] for future prediction */
 
-	pCurrent[0] = qcoeff[0] * iDcScaler;
+	pCurrent[0] = (int16_t)(qcoeff[0] * iDcScaler);
 	for (i = 1; i < 8; i++) {
 		pCurrent[i] = qcoeff[i];
 		pCurrent[i + 7] = qcoeff[i * 8];

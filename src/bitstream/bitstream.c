@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: bitstream.c,v 1.36 2002-11-26 23:44:10 edgomez Exp $
+ * $Id: bitstream.c,v 1.37 2002-12-15 01:21:12 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -289,7 +289,7 @@ BitstreamReadHeaders(Bitstream * bs,
 			{
 				DPRINTF(DPRINTF_HEADER, "+ vol_control_parameters");
 				BitstreamSkip(bs, 2);	/* chroma_format */
-				dec->low_delay = BitstreamGetBit(bs);	/* low_delay */
+				dec->low_delay = (uint8_t)BitstreamGetBit(bs);	/* low_delay */
 				DPRINTF(DPRINTF_HEADER, "low_delay %i", dec->low_delay);
 				if (BitstreamGetBit(bs))	/* vbv_parameters */
 				{
@@ -474,7 +474,7 @@ BitstreamReadHeaders(Bitstream * bs,
 					}
 				}
 
-				if ((dec->scalability = BitstreamGetBit(bs)))	/* scalability */
+				if ((dec->scalability = (int8_t)BitstreamGetBit(bs)))	/* scalability */
 				{
 					DPRINTF(DPRINTF_ERROR, "scalability not supported");
 					return -1;

@@ -51,7 +51,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: interpolate8x8.c,v 1.7 2002-11-26 23:44:10 edgomez Exp $
+ * $Id: interpolate8x8.c,v 1.8 2002-12-15 01:21:12 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -77,11 +77,10 @@ interpolate8x8_halfpel_h_c(uint8_t * const dst,
 	for (j = 0; j < 8; j++) {
 		for (i = 0; i < 8; i++) {
 
-			int16_t tot =
-				(int32_t) src[j * stride + i] + (int32_t) src[j * stride + i +
-															  1];
+			int32_t tot =
+				(int32_t) src[j * stride + i] + (int32_t) src[j * stride + i + 1];
 
-			tot = (int32_t) ((tot + 1 - rounding) >> 1);
+			tot = (tot + 1 - rounding) >> 1;
 			dst[j * stride + i] = (uint8_t) tot;
 		}
 	}
@@ -99,7 +98,8 @@ interpolate8x8_halfpel_v_c(uint8_t * const dst,
 
 	for (j = 0; j < 8; j++) {
 		for (i = 0; i < 8; i++) {
-			int16_t tot = src[j * stride + i] + src[j * stride + i + stride];
+			int32_t tot = 
+				(int32_t)src[j * stride + i] + (int32_t)src[j * stride + i + stride];
 
 			tot = ((tot + 1 - rounding) >> 1);
 			dst[j * stride + i] = (uint8_t) tot;
@@ -118,10 +118,9 @@ interpolate8x8_halfpel_hv_c(uint8_t * const dst,
 
 	for (j = 0; j < 8; j++) {
 		for (i = 0; i < 8; i++) {
-			int16_t tot =
-				src[j * stride + i] + src[j * stride + i + 1] +
-				src[j * stride + i + stride] + src[j * stride + i + stride +
-												   1];
+			int32_t tot =
+				(int32_t)src[j * stride + i] + (int32_t)src[j * stride + i + 1] +
+				(int32_t)src[j * stride + i + stride] + (int32_t)src[j * stride + i + stride + 1];
 			tot = ((tot + 2 - rounding) >> 2);
 			dst[j * stride + i] = (uint8_t) tot;
 		}
@@ -142,8 +141,8 @@ interpolate8x8_c(uint8_t * const dst,
 	for (j = 0; j < 8; j++) {
 		for (i = 0; i < 8; i++) {
 			int32_t tot =
-				((src[(y + j) * stride + x + i] +
-				  dst[(y + j) * stride + x + i] + 1) >> 1);
+				(((int32_t)src[(y + j) * stride + x + i] +
+				  (int32_t)dst[(y + j) * stride + x + i] + 1) >> 1);
 			dst[(y + j) * stride + x + i] = (uint8_t) tot;
 		}
 	}
@@ -258,14 +257,14 @@ void interpolate8x8_bilinear2(uint8_t *dst, uint8_t *src1, uint8_t *src2, int32_
 
     for(i = 0; i < 8; i++)
     {
-        dst[0] = (src1[0] + src2[0] + (1 - rounding)) >> 1;
-        dst[1] = (src1[1] + src2[1] + (1 - rounding)) >> 1;
-        dst[2] = (src1[2] + src2[2] + (1 - rounding)) >> 1;
-        dst[3] = (src1[3] + src2[3] + (1 - rounding)) >> 1;
-        dst[4] = (src1[4] + src2[4] + (1 - rounding)) >> 1;
-        dst[5] = (src1[5] + src2[5] + (1 - rounding)) >> 1;
-        dst[6] = (src1[6] + src2[6] + (1 - rounding)) >> 1;
-        dst[7] = (src1[7] + src2[7] + (1 - rounding)) >> 1;
+        dst[0] = (uint8_t)((src1[0] + src2[0] + (1 - rounding)) >> 1);
+        dst[1] = (uint8_t)((src1[1] + src2[1] + (1 - rounding)) >> 1);
+        dst[2] = (uint8_t)((src1[2] + src2[2] + (1 - rounding)) >> 1);
+        dst[3] = (uint8_t)((src1[3] + src2[3] + (1 - rounding)) >> 1);
+        dst[4] = (uint8_t)((src1[4] + src2[4] + (1 - rounding)) >> 1);
+        dst[5] = (uint8_t)((src1[5] + src2[5] + (1 - rounding)) >> 1);
+        dst[6] = (uint8_t)((src1[6] + src2[6] + (1 - rounding)) >> 1);
+        dst[7] = (uint8_t)((src1[7] + src2[7] + (1 - rounding)) >> 1);
 
         dst += dst_stride;
         src1 += src_stride;
@@ -279,14 +278,14 @@ void interpolate8x8_bilinear4(uint8_t *dst, uint8_t *src1, uint8_t *src2, uint8_
 
     for(i = 0; i < 8; i++)
     {
-        dst[0] = (src1[0] + src2[0] + src3[0] + src4[0] + (2 - rounding)) >> 2;
-        dst[1] = (src1[1] + src2[1] + src3[1] + src4[1] + (2 - rounding)) >> 2;
-        dst[2] = (src1[2] + src2[2] + src3[2] + src4[2] + (2 - rounding)) >> 2;
-        dst[3] = (src1[3] + src2[3] + src3[3] + src4[3] + (2 - rounding)) >> 2;
-        dst[4] = (src1[4] + src2[4] + src3[4] + src4[4] + (2 - rounding)) >> 2;
-        dst[5] = (src1[5] + src2[5] + src3[5] + src4[5] + (2 - rounding)) >> 2;
-        dst[6] = (src1[6] + src2[6] + src3[6] + src4[6] + (2 - rounding)) >> 2;
-        dst[7] = (src1[7] + src2[7] + src3[7] + src4[7] + (2 - rounding)) >> 2;
+        dst[0] = (uint8_t)((src1[0] + src2[0] + src3[0] + src4[0] + (2 - rounding)) >> 2);
+        dst[1] = (uint8_t)((src1[1] + src2[1] + src3[1] + src4[1] + (2 - rounding)) >> 2);
+        dst[2] = (uint8_t)((src1[2] + src2[2] + src3[2] + src4[2] + (2 - rounding)) >> 2);
+        dst[3] = (uint8_t)((src1[3] + src2[3] + src3[3] + src4[3] + (2 - rounding)) >> 2);
+        dst[4] = (uint8_t)((src1[4] + src2[4] + src3[4] + src4[4] + (2 - rounding)) >> 2);
+        dst[5] = (uint8_t)((src1[5] + src2[5] + src3[5] + src4[5] + (2 - rounding)) >> 2);
+        dst[6] = (uint8_t)((src1[6] + src2[6] + src3[6] + src4[6] + (2 - rounding)) >> 2);
+        dst[7] = (uint8_t)((src1[7] + src2[7] + src3[7] + src4[7] + (2 - rounding)) >> 2);
         
 		dst += stride;
         src1 += stride;

@@ -51,7 +51,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: decoder.c,v 1.44 2002-11-26 23:44:09 edgomez Exp $
+ * $Id: decoder.c,v 1.45 2002-12-15 01:21:12 edgomez Exp $
  *
  *************************************************************************/
 
@@ -1179,7 +1179,7 @@ decoder_bframe(DECODER * dec,
 			}
 
 			if (!BitstreamGetBit(bs)) {	/* modb=='0' */
-				const uint8_t modb2 = BitstreamGetBit(bs);
+				const uint8_t modb2 = (uint8_t)BitstreamGetBit(bs);
 
 				mb->mb_type = get_mbtype(bs);
 
