@@ -7,7 +7,14 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
+#ifdef _MSC_VER
 #include "afxres.h"
+#else
+#include <windows.h>
+#ifndef IDC_STATIC
+#define IDC_STATIC (-1)
+#endif
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -1010,7 +1017,7 @@ END
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Englisch (Australien) resources
+// English (Australia) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENA)
 #ifdef _WIN32
@@ -1043,7 +1050,7 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // Englisch (Australien) resources
+#endif    // English (Australia) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
