@@ -778,7 +778,9 @@ align 16
   movq [edx + 8*eax + 8*16   -2*8   ], mm2   ; data[i]
   movq [edx + 8*eax + 8*16   -2*8 +8], mm6   ; data[i+1]
 
-  jnz .loop
+  jz .noloop
+  jmp .loop
+.noloop
 
     ; deal with DC
 
@@ -880,7 +882,9 @@ align 16
   pxor mm6, mm2     ; mismatch control
   movq [edx + 8*eax + 8*16 -2*8 +8], mm2   ; data[i+1]
 
-  jnz .loop
+  jz .noloop
+  jmp .loop
+.noloop
 
   ; mismatch control
 
