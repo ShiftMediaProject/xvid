@@ -12,9 +12,9 @@
  *	editors and their companies, will have no liability for use of this
  *	software or modifications or derivatives thereof.
  *
- *	This program is free software; you can redistribute it and/or modify
+ *	This program is xvid_free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
- *	the Free Software Foundation; either version 2 of the License, or
+ *	the xvid_free Software Foundation; either version 2 of the License, or
  *	(at your option) any later version.
  *
  *	This program is distributed in the hope that it will be useful,
@@ -23,7 +23,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with this program; if not, write to the Free Software
+ *	along with this program; if not, write to the xvid_free Software
  *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  *************************************************************************/
@@ -62,12 +62,13 @@
 
 #include "image/image.h"
 #include "image/colorspace.h"
+#include "utils/mem_align.h"
 
 int decoder_create(XVID_DEC_PARAM * param)
 {
 	DECODER * dec;
 
-	dec = malloc(sizeof(DECODER));
+	dec = xvid_malloc(sizeof(DECODER), 16);
 	if (dec == NULL) 
 	{
 		return XVID_ERR_MEMORY;
@@ -85,22 +86,22 @@ int decoder_create(XVID_DEC_PARAM * param)
 	
 	if (image_create(&dec->cur, dec->edged_width, dec->edged_height))
 	{
-		free(dec);
+		xvid_free(dec);
 		return XVID_ERR_MEMORY;
 	}
 
 	if (image_create(&dec->refn, dec->edged_width, dec->edged_height))
 	{
 		image_destroy(&dec->cur, dec->edged_width, dec->edged_height);
-		free(dec);
+		xvid_free(dec);
 		return XVID_ERR_MEMORY;
 	}
 
-	dec->mbs = malloc(sizeof(MACROBLOCK) * dec->mb_width * dec->mb_height);
+	dec->mbs = xvid_malloc(sizeof(MACROBLOCK) * dec->mb_width * dec->mb_height, 16);
 	if (dec->mbs == NULL)
 	{
 		image_destroy(&dec->cur, dec->edged_width, dec->edged_height);
-		free(dec);
+		xvid_free(dec);
 		return XVID_ERR_MEMORY;
 	}
 
@@ -113,10 +114,10 @@ int decoder_create(XVID_DEC_PARAM * param)
 
 int decoder_destroy(DECODER * dec)
 {
-	free(dec->mbs);
+	xvid_free(dec->mbs);
 	image_destroy(&dec->refn, dec->edged_width, dec->edged_height);
 	image_destroy(&dec->cur, dec->edged_width, dec->edged_height);
-	free(dec);
+	xvid_free(dec);
 
 	destroy_vlc_tables();
 
