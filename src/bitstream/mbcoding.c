@@ -18,6 +18,7 @@ static short clip_table[4096];
 
 void create_vlc_tables(void)
 {
+
 	int32_t k, l, i, intra, last;
 	VLC *vlc[2];
 	VLC **coeff_ptr;
@@ -138,6 +139,7 @@ void create_vlc_tables(void)
 			}
 		}
 	}
+
 	intra_table += 64*255; // center vlc tables
 	inter_table += 64*255; // center vlc tables
 
@@ -184,8 +186,12 @@ void destroy_vlc_tables(void) {
 
 }
 
-static __inline void CodeVector(Bitstream *bs, int16_t value, int16_t f_code, Statistics *pStat)
+static __inline void CodeVector(Bitstream *bs,
+				int16_t value,
+				int16_t f_code,
+				Statistics *pStat)
 {
+
 	const int scale_factor = 1 << (f_code - 1);
 	const int cmp = scale_factor << 5;
 
@@ -195,12 +201,12 @@ static __inline void CodeVector(Bitstream *bs, int16_t value, int16_t f_code, St
 	if(value > (cmp - 1))
 		value -= 64 * scale_factor;
 
-    pStat->iMvSum += value * value;
-    pStat->iMvCount++;
+	pStat->iMvSum += value * value;
+	pStat->iMvCount++;
 
-	if (value == 0)
+	if (value == 0) {
 		BitstreamPutBits(bs, mb_motion_table[32].code, mb_motion_table[32].len);
-    else {
+	} else {
 		uint16_t length, code, mv_res, sign;
 		
 		length = 16 << f_code;
@@ -228,12 +234,18 @@ static __inline void CodeVector(Bitstream *bs, int16_t value, int16_t f_code, St
 		
 		if(f_code)
 			BitstreamPutBits(bs, mv_res, f_code);
-  }
+	}
+
 }
 
 
-static __inline void CodeCoeff(Bitstream *bs, int16_t qcoeff[64], VLC *table,
-							   const uint16_t *zigzag, uint16_t intra) {
+static __inline void CodeCoeff(Bitstream *bs,
+			       int16_t qcoeff[64],
+			       VLC *table,
+			       const uint16_t *zigzag,
+			       uint16_t intra)
+{
+
 	uint32_t j, last;
 	short v;
 	VLC *vlc;
@@ -258,37 +270,42 @@ static __inline void CodeCoeff(Bitstream *bs, int16_t qcoeff[64], VLC *table,
 			break;
 		}
 	} while(1);
+
 }
 
 
-static void CodeBlockIntra(const MBParam * pParam, const MACROBLOCK *pMB,
-								  int16_t qcoeff[][64], Bitstream * bs, Statistics * pStat)
+static void CodeBlockIntra(const MBParam * pParam,
+			   const MACROBLOCK *pMB,
+			   int16_t qcoeff[6*64],
+			   Bitstream * bs,
+			   Statistics * pStat)
 {
+
 	uint32_t i, mcbpc, cbpy, bits;
 
 	cbpy = pMB->cbp >> 2;
 
-    // write mcbpc
+	// write mcbpc
 	if(pParam->coding_type == I_VOP) {
-	    mcbpc = ((pMB->mode >> 1) & 3) | ((pMB->cbp & 3) << 2);
+		mcbpc = ((pMB->mode >> 1) & 3) | ((pMB->cbp & 3) << 2);
 		BitstreamPutBits(bs, mcbpc_intra_tab[mcbpc].code, mcbpc_intra_tab[mcbpc].len);
 	}
 	else {
-	    mcbpc = (pMB->mode & 7) | ((pMB->cbp & 3) << 3);
+		mcbpc = (pMB->mode & 7) | ((pMB->cbp & 3) << 3);
 		BitstreamPutBits(bs, mcbpc_inter_tab[mcbpc].code, mcbpc_inter_tab[mcbpc].len);
 	}
 
 	// ac prediction flag
 	if(pMB->acpred_directions[0])
-	    BitstreamPutBits(bs, 1, 1);
+		BitstreamPutBits(bs, 1, 1);
 	else
-	    BitstreamPutBits(bs, 0, 1);
+		BitstreamPutBits(bs, 0, 1);
 
-    // write cbpy
+	// write cbpy
 	BitstreamPutBits (bs, cbpy_tab[cbpy].code, cbpy_tab[cbpy].len);
 
 	// write dquant
-    if(pMB->mode == MODE_INTRA_Q)
+	if(pMB->mode == MODE_INTRA_Q)
 		BitstreamPutBits(bs, pMB->dquant, 2);
 
 	// write interlacing
@@ -301,42 +318,53 @@ static void CodeBlockIntra(const MBParam * pParam, const MACROBLOCK *pMB,
 	for(i = 0; i < 6; i++)
 	{
 		if(i < 4)
-			BitstreamPutBits(bs, dcy_tab[qcoeff[i][0] + 255].code,
-							 dcy_tab[qcoeff[i][0] + 255].len);
+			BitstreamPutBits(bs,
+					 dcy_tab[qcoeff[i*64 + 0] + 255].code,
+					 dcy_tab[qcoeff[i*64 + 0] + 255].len);
 		else
-			BitstreamPutBits(bs, dcc_tab[qcoeff[i][0] + 255].code,
-			                 dcc_tab[qcoeff[i][0] + 255].len);
+			BitstreamPutBits(bs,
+					 dcc_tab[qcoeff[i*64 + 0] + 255].code,
+			                 dcc_tab[qcoeff[i*64 + 0] + 255].len);
 		
 		if(pMB->cbp & (1 << (5 - i)))
 		{
 			bits = BitstreamPos(bs);
 
-			CodeCoeff(bs, qcoeff[i], intra_table, scan_tables[pMB->acpred_directions[i]], 1);
+			CodeCoeff(bs,
+				  &qcoeff[i*64],
+				  intra_table,
+				  scan_tables[pMB->acpred_directions[i]],
+				  1);
 
 			bits = BitstreamPos(bs) - bits;
 			pStat->iTextBits += bits;
 		}
 	}
+
 }
 
 
-static void CodeBlockInter(const MBParam * pParam, const MACROBLOCK *pMB,
-								  int16_t qcoeff[][64], Bitstream * bs, Statistics * pStat)
+static void CodeBlockInter(const MBParam * pParam,
+			   const MACROBLOCK *pMB,
+			   int16_t qcoeff[6*64],
+			   Bitstream * bs,
+			   Statistics * pStat)
 {
+
 	int32_t i;
 	uint32_t bits, mcbpc, cbpy;
 
-    mcbpc = (pMB->mode & 7) | ((pMB->cbp & 3) << 3);
+	mcbpc = (pMB->mode & 7) | ((pMB->cbp & 3) << 3);
 	cbpy = 15 - (pMB->cbp >> 2);
 
 	// write mcbpc
-    BitstreamPutBits(bs, mcbpc_inter_tab[mcbpc].code, mcbpc_inter_tab[mcbpc].len);
+	BitstreamPutBits(bs, mcbpc_inter_tab[mcbpc].code, mcbpc_inter_tab[mcbpc].len);
 
 	// write cbpy
 	BitstreamPutBits(bs, cbpy_tab[cbpy].code, cbpy_tab[cbpy].len);
 
 	// write dquant
-    if(pMB->mode == MODE_INTER_Q)
+	if(pMB->mode == MODE_INTER_Q)
 		BitstreamPutBits(bs, pMB->dquant, 2);
     
 	// interlacing
@@ -372,22 +400,26 @@ static void CodeBlockInter(const MBParam * pParam, const MACROBLOCK *pMB,
 	// code block coeffs
 	for(i = 0; i < 6; i++)
 		if(pMB->cbp & (1 << (5 - i)))
-			CodeCoeff(bs, qcoeff[i], inter_table, scan_tables[0], 0);
+			CodeCoeff(bs, &qcoeff[i*64], inter_table, scan_tables[0], 0);
 
 	bits = BitstreamPos(bs) - bits;
 	pStat->iTextBits += bits;
+
 }
 
 
-void MBCoding(const MBParam * pParam, MACROBLOCK *pMB,
-	      int16_t qcoeff[][64], 
-		  Bitstream * bs, Statistics * pStat)
+void MBCoding(const MBParam * pParam,
+	      MACROBLOCK *pMB,
+	      int16_t qcoeff[6*64], 
+	      Bitstream * bs,
+	      Statistics * pStat)
 {
+
 	int intra = (pMB->mode == MODE_INTRA || pMB->mode == MODE_INTRA_Q);
 
-    if(pParam->coding_type == P_VOP) {
+	if(pParam->coding_type == P_VOP) {
 		if(pMB->cbp == 0 && pMB->mode == MODE_INTER &&
-			pMB->mvs[0].x == 0 && pMB->mvs[0].y == 0)
+		   pMB->mvs[0].x == 0 && pMB->mvs[0].y == 0)
 		{
 			BitstreamPutBit(bs, 1);		// not_coded
 			return;
@@ -400,6 +432,7 @@ void MBCoding(const MBParam * pParam, MACROBLOCK *pMB,
 		CodeBlockIntra(pParam, pMB, qcoeff, bs, pStat);
 	else
 		CodeBlockInter(pParam, pMB, qcoeff, bs, pStat);
+
 }
 
 
@@ -409,6 +442,7 @@ void MBCoding(const MBParam * pParam, MACROBLOCK *pMB,
 
 int get_mcbpc_intra(Bitstream * bs)
 {
+
 	uint32_t index;
 	
 	while((index = BitstreamShowBits(bs, 9)) == 1)
@@ -417,22 +451,28 @@ int get_mcbpc_intra(Bitstream * bs)
 	index >>= 3;
 
 	BitstreamSkip(bs, mcbpc_intra_table[index].len);
+
 	return mcbpc_intra_table[index].code;
+
 }
 
 int get_mcbpc_inter(Bitstream * bs)
 {
+
 	uint32_t index;
 	
 	while((index = CLIP(BitstreamShowBits(bs, 9), 256)) == 1)
 		BitstreamSkip(bs, 9);
 
-    BitstreamSkip(bs,  mcbpc_inter_table[index].len);
+	BitstreamSkip(bs,  mcbpc_inter_table[index].len);
+
 	return mcbpc_inter_table[index].code;
+
 }
 
 int get_cbpy(Bitstream * bs, int intra)
 {
+
 	int cbpy;
 	uint32_t index = BitstreamShowBits(bs, 6);
 
@@ -443,10 +483,12 @@ int get_cbpy(Bitstream * bs, int intra)
 		cbpy = 15 - cbpy;
 
 	return cbpy;
+
 }
 
 int get_mv_data(Bitstream * bs)
 {
+
 	uint32_t index;
 
 	if(BitstreamGetBit(bs))
@@ -472,10 +514,12 @@ int get_mv_data(Bitstream * bs)
 
 	BitstreamSkip(bs, TMNMVtab2[index].len);
 	return TMNMVtab2[index].code;
+
 }
 
 int get_mv(Bitstream * bs, int fcode)
 {
+
 	int data;
 	int res;
 	int mv;
@@ -490,10 +534,12 @@ int get_mv(Bitstream * bs, int fcode)
 	mv = ((ABS(data) - 1) * scale_fac) + res + 1;
 	
 	return data < 0 ? -mv : mv;
+
 }
 
 int get_dc_dif(Bitstream * bs, uint32_t dc_size)
 {
+
 	int code = BitstreamGetBits(bs, dc_size);
 	int msb = code >> (dc_size - 1);
 
@@ -501,10 +547,12 @@ int get_dc_dif(Bitstream * bs, uint32_t dc_size)
 		return (-1 * (code^((1 << dc_size) - 1)));
 
 	return code;
+
 }
 
 int get_dc_size_lum(Bitstream * bs)
 {
+
 	int code, i;
 	code = BitstreamShowBits(bs, 11);
 
@@ -518,11 +566,13 @@ int get_dc_size_lum(Bitstream * bs)
 
 	BitstreamSkip(bs, dc_lum_tab[code].len);
 	return dc_lum_tab[code].code;
+
 }
 
 
 int get_dc_size_chrom(Bitstream * bs)
 {
+
 	uint32_t code, i;
 	code = BitstreamShowBits(bs, 12);
 
@@ -535,12 +585,14 @@ int get_dc_size_chrom(Bitstream * bs)
 	}
 
 	return 3 - BitstreamGetBits(bs, 2);
+
 }
 
 int get_coeff(Bitstream * bs, int *run, int *last, int intra, int short_video_header) 
 {
-    uint32_t mode;
-    const VLC *tab;
+
+	uint32_t mode;
+	const VLC *tab;
 	int32_t level;
 
 	if(short_video_header) // inter-VLCs will be used for both intra and inter blocks
@@ -560,7 +612,7 @@ int get_coeff(Bitstream * bs, int *run, int *last, int intra, int short_video_he
 			level = tab->code & 15;
 			*last = (tab->code >> 12) & 1;
 		}
-	    else 
+		else 
 		{
 			*run = (tab->code >> 8) & 255;
 			level = tab->code & 255;
@@ -623,14 +675,16 @@ int get_coeff(Bitstream * bs, int *run, int *last, int intra, int short_video_he
 
 	return (level & 0x800) ? (level | (-1 ^ 0xfff)) : level;
 
-error:
+ error:
 	*run = VLC_ERROR;
 	return 0;
+
 }
 
 
 void get_intra_block(Bitstream * bs, int16_t * block, int direction, int coeff) 
 {
+
 	const uint16_t * scan = scan_tables[ direction ];
 	int level;
 	int run;
@@ -652,10 +706,12 @@ void get_intra_block(Bitstream * bs, int16_t * block, int direction, int coeff)
 		}
 		coeff++;
 	} while (!last);
+
 }
 
 void get_inter_block(Bitstream * bs, int16_t * block) 
 {
+
 	const uint16_t * scan = scan_tables[0];
 	int p;
 	int level;
@@ -679,4 +735,5 @@ void get_inter_block(Bitstream * bs, int16_t * block)
 		}
 		p++;
 	} while (!last);
+
 }

@@ -32,10 +32,14 @@
 #define EMMS() __asm {emms}
 
 #define CACHE_LINE  16
+
 #if _MSC_VER <= 1200
-#define CACHE_ALIGN
+#define #define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
+	type name##_storage[(sizex)*(sizey)+(alignment)-1]; \
+	type * name = (type *) (((int32_t) name##_storage+(alignment - 1)) & ~((int32_t)(alignment)-1))
 #else
-#define CACHE_ALIGN __declspec(align(CACHE_LINE))
+#define #define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
+	__declspec(align(CACHE_LINE)) type name[(sizex)*(sizey)]
 #endif
 
 // needed for bitstream.h
@@ -63,11 +67,11 @@ static __inline int64_t read_counter() {
 #ifdef _DEBUG
 
 #include <stdio.h>
-#define DEBUG_WHERE		stdout
-#define DEBUG(S)        fprintf(DEBUG_WHERE, "%s\n", (S));
-#define DEBUG1(S,I)     fprintf(DEBUG_WHERE, "%s %i\n", (S), (I))
-#define DEBUG2(S,A,B)   fprintf(DEBUG_WHERE, "%s%i=%i\n", (S), (A), (B))
-#define DEBUG3(S,A,B,C) fprintf(DEBUG_WHERE, "%s %i %x %x\n", (S), (A), (B), (C))
+#define DEBUG_WHERE               stdout
+#define DEBUG(S)                  fprintf(DEBUG_WHERE, "%s\n", (S));
+#define DEBUG1(S,I)               fprintf(DEBUG_WHERE, "%s %i\n", (S), (I))
+#define DEBUG2(S,A,B)             fprintf(DEBUG_WHERE, "%s%i=%i\n", (S), (A), (B))
+#define DEBUG3(S,A,B,C)           fprintf(DEBUG_WHERE, "%s %i %x %x\n", (S), (A), (B), (C))
 #define DEBUG8(S,A,B,C,D,E,F,G,H)
 #else
 #define DEBUG(S)
@@ -85,19 +89,20 @@ static __inline int64_t read_counter() {
 
 #define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
 	type name##_storage[(sizex)*(sizey)+(alignment)-1]; \
-	typedef type  name##_sub[sizey]; \
-	name##_sub * name = (void *) (((int32_t) name##_storage+(alignment)) & ~((int32_t)(alignment)-1))
+	type * name = (type *) (((int32_t) name##_storage+(alignment - 1)) & ~((int32_t)(alignment)-1))
 
 #else
 
-#define CACHE_ALIGN __attribute__ ((__aligned__(CACHE_LINE)))
-#define int8_t char
-#define uint8_t unsigned char
-#define int16_t short
+#define #define #define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
+	__attribute__ ((__aligned__(CACHE_LINE))) type name[(sizex)*(sizey)]
+
+#define int8_t   char
+#define uint8_t  unsigned char
+#define int16_t  short
 #define uint16_t unsigned short
-#define int32_t int
+#define int32_t  int
 #define uint32_t unsigned int
-#define int64_t long long
+#define int64_t  long long
 #define uint64_t unsigned long long
 
 #endif
@@ -111,7 +116,7 @@ static __inline int64_t read_counter() {
 #else
 	#define BSWAP(a) __asm__ ( "bswapl %0\n" : "=r" (a) : "0" (a) )
 	#define EMMS() __asm__("emms\n\t")
-#endif
+
 
 // needed for timer.c
 static __inline int64_t read_counter() {
@@ -124,6 +129,8 @@ static __inline int64_t read_counter() {
 
     return ts;
 }
+
+#endif
 
 #else // OTHER OS
 

@@ -54,19 +54,19 @@ static __inline void compensate8x8_halfpel(
 
 
 void MBMotionCompensation(
-			MACROBLOCK * const mb,
-		    const uint32_t i,
-			const uint32_t j,
-		    const IMAGE * const ref,
-			const IMAGE * const refh,
-		    const IMAGE * const refv,
-			const IMAGE * const refhv,
-		    IMAGE * const cur,
-		    int16_t dct_codes[][64],
-			const uint32_t width, 
-			const uint32_t height,
-			const uint32_t edged_width,
-			const uint32_t rounding)
+	MACROBLOCK * const mb,
+	const uint32_t i,
+	const uint32_t j,
+	const IMAGE * const ref,
+	const IMAGE * const refh,
+	const IMAGE * const refv,
+	const IMAGE * const refhv,
+	IMAGE * const cur,
+	int16_t *dct_codes,
+	const uint32_t width, 
+	const uint32_t height,
+	const uint32_t edged_width,
+	const uint32_t rounding)
 {
 	static const uint32_t roundtab[16] =
 		{ 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2 };
@@ -77,48 +77,48 @@ void MBMotionCompensation(
 		int32_t dx = mb->mvs[0].x;
 		int32_t dy = mb->mvs[0].y;
 
-		compensate8x8_halfpel(dct_codes[0], cur->y, ref->y, refh->y, refv->y, refhv->y,
-								16*i,     16*j,     dx, dy, edged_width);
-		compensate8x8_halfpel(dct_codes[1], cur->y, ref->y, refh->y, refv->y, refhv->y,
-								16*i + 8, 16*j,     dx, dy, edged_width);
-		compensate8x8_halfpel(dct_codes[2], cur->y, ref->y, refh->y, refv->y, refhv->y,
-								16*i,     16*j + 8, dx, dy, edged_width);
-		compensate8x8_halfpel(dct_codes[3], cur->y, ref->y, refh->y, refv->y, refhv->y,
-								16*i + 8, 16*j + 8, dx, dy, edged_width);
+		compensate8x8_halfpel(&dct_codes[0*64], cur->y, ref->y, refh->y, refv->y, refhv->y,
+				      16*i,     16*j,     dx, dy, edged_width);
+		compensate8x8_halfpel(&dct_codes[1*64], cur->y, ref->y, refh->y, refv->y, refhv->y,
+				      16*i + 8, 16*j,     dx, dy, edged_width);
+		compensate8x8_halfpel(&dct_codes[2*64], cur->y, ref->y, refh->y, refv->y, refhv->y,
+				      16*i,     16*j + 8, dx, dy, edged_width);
+		compensate8x8_halfpel(&dct_codes[3*64], cur->y, ref->y, refh->y, refv->y, refhv->y,
+				      16*i + 8, 16*j + 8, dx, dy, edged_width);
 
 		dx = (dx & 3) ? (dx >> 1) | 1 : dx / 2;
 		dy = (dy & 3) ? (dy >> 1) | 1 : dy / 2;
 
 		/* uv-image-based compensation
-		compensate8x8_halfpel(dct_codes[4], cur->u, ref->u, refh->u, refv->u, refhv->u,
-								8*i, 8*j, dx, dy, edged_width/2);
-		compensate8x8_halfpel(dct_codes[5], cur->v, ref->v, refh->v, refv->v, refhv->v,
-								8*i, 8*j, dx, dy, edged_width/2);		*/
+		   compensate8x8_halfpel(dct_codes[4], cur->u, ref->u, refh->u, refv->u, refhv->u,
+		   8*i, 8*j, dx, dy, edged_width/2);
+		   compensate8x8_halfpel(dct_codes[5], cur->v, ref->v, refh->v, refv->v, refhv->v,
+		   8*i, 8*j, dx, dy, edged_width/2);		*/
 
 		/* uv-block-based compensation */
 		interpolate8x8_switch(refv->u, ref->u, 8*i, 8*j, dx, dy, edged_width/2, rounding);
-		transfer_8to16sub(dct_codes[4], 
-				cur->u + 8*j*edged_width/2 + 8*i, 
-				refv->u + 8*j*edged_width/2 + 8*i, edged_width/2);
+		transfer_8to16sub(&dct_codes[4*64], 
+				  cur->u + 8*j*edged_width/2 + 8*i, 
+				  refv->u + 8*j*edged_width/2 + 8*i, edged_width/2);
 
 		interpolate8x8_switch(refv->v, ref->v, 8*i, 8*j, dx, dy, edged_width/2, rounding);
-		transfer_8to16sub(dct_codes[5], 
-				cur->v + 8*j*edged_width/2 + 8*i, 
-				refv->v + 8*j*edged_width/2 + 8*i, edged_width/2);
+		transfer_8to16sub(&dct_codes[5*64], 
+				  cur->v + 8*j*edged_width/2 + 8*i, 
+				  refv->v + 8*j*edged_width/2 + 8*i, edged_width/2);
 
 	}
 	else	// mode == MODE_INTER4V
 	{
 		int32_t sum, dx, dy;
 
-		compensate8x8_halfpel(dct_codes[0], cur->y, ref->y, refh->y, refv->y, refhv->y,
-								16*i,     16*j,     mb->mvs[0].x, mb->mvs[0].y, edged_width);
-		compensate8x8_halfpel(dct_codes[1], cur->y, ref->y, refh->y, refv->y, refhv->y,
-								16*i + 8, 16*j,     mb->mvs[1].x, mb->mvs[1].y, edged_width);
-		compensate8x8_halfpel(dct_codes[2], cur->y, ref->y, refh->y, refv->y, refhv->y,
-								16*i,     16*j + 8, mb->mvs[2].x, mb->mvs[2].y, edged_width);
-		compensate8x8_halfpel(dct_codes[3], cur->y, ref->y, refh->y, refv->y, refhv->y,
-								16*i + 8, 16*j + 8, mb->mvs[3].x, mb->mvs[3].y, edged_width);
+		compensate8x8_halfpel(&dct_codes[0*64], cur->y, ref->y, refh->y, refv->y, refhv->y,
+				      16*i,     16*j,     mb->mvs[0].x, mb->mvs[0].y, edged_width);
+		compensate8x8_halfpel(&dct_codes[1*64], cur->y, ref->y, refh->y, refv->y, refhv->y,
+				      16*i + 8, 16*j,     mb->mvs[1].x, mb->mvs[1].y, edged_width);
+		compensate8x8_halfpel(&dct_codes[2*64], cur->y, ref->y, refh->y, refv->y, refhv->y,
+				      16*i,     16*j + 8, mb->mvs[2].x, mb->mvs[2].y, edged_width);
+		compensate8x8_halfpel(&dct_codes[3*64], cur->y, ref->y, refh->y, refv->y, refhv->y,
+				      16*i + 8, 16*j + 8, mb->mvs[3].x, mb->mvs[3].y, edged_width);
 
 		sum = mb->mvs[0].x + mb->mvs[1].x + mb->mvs[2].x + mb->mvs[3].x;
 		dx = (sum ? SIGN(sum) * (roundtab[ABS(sum) % 16] + (ABS(sum) / 16) * 2) : 0);
@@ -127,21 +127,21 @@ void MBMotionCompensation(
 		dy = (sum ? SIGN(sum) * (roundtab[ABS(sum) % 16] + (ABS(sum) / 16) * 2) : 0);
 
 		/* uv-image-based compensation
-		compensate8x8_halfpel(dct_codes[4], cur->u, ref->u, refh->u, refv->u, refhv->u,
-								8*i, 8*j, dx, dy, edged_width/2);
-		compensate8x8_halfpel(dct_codes[5], cur->v, ref->v, refh->v, refv->v, refhv->v,
-								8*i, 8*j, dx, dy, edged_width/2);		*/
+		   compensate8x8_halfpel(dct_codes[4], cur->u, ref->u, refh->u, refv->u, refhv->u,
+		   8*i, 8*j, dx, dy, edged_width/2);
+		   compensate8x8_halfpel(dct_codes[5], cur->v, ref->v, refh->v, refv->v, refhv->v,
+		   8*i, 8*j, dx, dy, edged_width/2);		*/
 
 		/* uv-block-based compensation */
 		interpolate8x8_switch(refv->u, ref->u, 8*i, 8*j, dx, dy, edged_width/2, rounding);
-		transfer_8to16sub(dct_codes[4], 
-				cur->u + 8*j*edged_width/2 + 8*i, 
-				refv->u + 8*j*edged_width/2 + 8*i, edged_width/2);
+		transfer_8to16sub(&dct_codes[4*64], 
+				  cur->u + 8*j*edged_width/2 + 8*i, 
+				  refv->u + 8*j*edged_width/2 + 8*i, edged_width/2);
 
 		interpolate8x8_switch(refv->v, ref->v, 8*i, 8*j, dx, dy, edged_width/2, rounding);
-		transfer_8to16sub(dct_codes[5], 
-				cur->v + 8*j*edged_width/2 + 8*i, 
-				refv->v + 8*j*edged_width/2 + 8*i, edged_width/2);
+		transfer_8to16sub(&dct_codes[5*64], 
+				  cur->v + 8*j*edged_width/2 + 8*i, 
+				  refv->v + 8*j*edged_width/2 + 8*i, edged_width/2);
 
 	}
 }

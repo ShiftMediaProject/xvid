@@ -255,9 +255,14 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	{
 		int * temp_dquants = (int *) xvid_malloc(pEnc->mbParam.mb_width * pEnc->mbParam.mb_height * sizeof(int), CACHE_LINE);
 		
-		pEnc->mbParam.quant = adaptive_quantization(pEnc->sCurrent.y, pEnc->mbParam.width,
-							    temp_dquants, pFrame->quant, pFrame->quant,
-							    2*pFrame->quant, pEnc->mbParam.mb_width, pEnc->mbParam.mb_height);
+		pEnc->mbParam.quant = adaptive_quantization(pEnc->sCurrent.y,
+							    pEnc->mbParam.width,
+							    temp_dquants,
+							    pFrame->quant,
+							    pFrame->quant,
+							    2*pFrame->quant,
+							    pEnc->mbParam.mb_width,
+							    pEnc->mbParam.mb_height);
 			
 		for (y = 0; y < pEnc->mbParam.mb_height; y++)
 			for (x = 0; x < pEnc->mbParam.mb_width; x++)
@@ -275,6 +280,8 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	}
 	else if(pEnc->mbParam.global_flags & XVID_MPEGQUANT) {
 		int ret1, ret2;
+
+		ret1 = ret2 = 0;
 
 		if(pEnc->mbParam.quant_type != MPEG4_QUANT)
 			write_vol_header = 1;
@@ -364,13 +371,10 @@ static __inline void CodeIntraMB(Encoder *pEnc, MACROBLOCK *pMB) {
 
 static int FrameCodeI(Encoder * pEnc, Bitstream * bs, uint32_t *pBits)
 {
-#ifdef LINUX
-	DECLARE_ALIGNED_MATRIX(dct_codes,6,64,int16_t,16);
-	DECLARE_ALIGNED_MATRIX(qcoeff,6,64,int16_t,16);
-#else
-	CACHE_ALIGN int16_t dct_codes[6][64];
-	CACHE_ALIGN int16_t qcoeff[6][64];
-#endif
+
+	DECLARE_ALIGNED_MATRIX(dct_codes, 6, 64, int16_t, CACHE_LINE);
+	DECLARE_ALIGNED_MATRIX(qcoeff,    6, 64, int16_t, CACHE_LINE);
+
 	uint16_t x, y;
 
 	pEnc->iFrameNum = 0;
@@ -421,13 +425,9 @@ static int FrameCodeI(Encoder * pEnc, Bitstream * bs, uint32_t *pBits)
 static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool force_inter, bool vol_header)
 {
 	float fSigma;
-#ifdef LINUX
-	DECLARE_ALIGNED_MATRIX(dct_codes,6,64,int16_t,16);
-	DECLARE_ALIGNED_MATRIX(qcoeff,6,64,int16_t,16);
-#else
-	CACHE_ALIGN int16_t dct_codes[6][64];
-	CACHE_ALIGN int16_t qcoeff[6][64];
-#endif
+
+	DECLARE_ALIGNED_MATRIX(dct_codes, 6, 64, int16_t, CACHE_LINE);
+	DECLARE_ALIGNED_MATRIX(qcoeff,    6, 64, int16_t, CACHE_LINE);
 
 	int iLimit;
 	uint32_t x, y;
@@ -438,7 +438,12 @@ static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool forc
 	IMAGE *pRef = &pEnc->sReference;
 
 	start_timer();
-	image_setedges(pRef,pEnc->mbParam.edged_width, pEnc->mbParam.edged_height, pEnc->mbParam.width, pEnc->mbParam.height, pEnc->mbParam.global_flags & XVID_INTERLACING);
+	image_setedges(pRef,
+		       pEnc->mbParam.edged_width,
+		       pEnc->mbParam.edged_height,
+		       pEnc->mbParam.width,
+		       pEnc->mbParam.height,
+		       pEnc->mbParam.global_flags & XVID_INTERLACING);
 	stop_edges_timer();
 
 	pEnc->mbParam.rounding_type = 1 - pEnc->mbParam.rounding_type;
@@ -490,9 +495,14 @@ static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool forc
 			if (!bIntra)
 			{
 				start_timer();
-				MBMotionCompensation(pMB, x, y, &pEnc->sReference,
-						     &pEnc->vInterH, &pEnc->vInterV,
-						     &pEnc->vInterHV, &pEnc->sCurrent, dct_codes,
+				MBMotionCompensation(pMB,
+						     x, y,
+						     &pEnc->sReference,
+						     &pEnc->vInterH,
+						     &pEnc->vInterV,
+						     &pEnc->vInterHV,
+						     &pEnc->sCurrent,
+						     dct_codes,
 						     pEnc->mbParam.width,
 						     pEnc->mbParam.height,
 						     pEnc->mbParam.edged_width,

@@ -17,7 +17,7 @@ void MBPrediction(MBParam *pParam,	 /* <-- the parameter for ACDC and MV predict
 		  uint32_t x_pos,		 /* <-- The x position of the MB to be searched */
 		  uint32_t y_pos, 		 /* <-- The y position of the MB to be searched */ 
 		  uint32_t x_dim,		 /* <-- Number of macroblocks in a row */
-		  int16_t qcoeff[][64], 	 /* <-> The quantized DCT coefficients */ 
+		  int16_t *qcoeff, 	 /* <-> The quantized DCT coefficients */ 
 		  MACROBLOCK *MB_array		 /* <-> the array of all the MB Infomations */
     );
 
