@@ -76,8 +76,6 @@ int xvid_init(void *handle, int opt, void *param1, void *param2)
 	// initialize the function pointers
 	idct_int32_init();
 	
-	init_timer();
-
 	fdct = fdct_int32;
 	idct = idct_int32;
 
@@ -195,8 +193,6 @@ int xvid_init(void *handle, int opt, void *param1, void *param2)
 
 	// something clever has to be done for this
 	init_param->core_build = 1000;
-
-	init_timer();
 
 	return XVID_ERR_OK;
 }
