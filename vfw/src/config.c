@@ -2096,6 +2096,61 @@ BOOL CALLBACK main_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 
+/* ===================================================================================== */
+/* LICENSE DIALOG ====================================================================== */
+/* ===================================================================================== */
+
+static BOOL CALLBACK license_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+	case WM_INITDIALOG :
+		{
+			HRSRC hRSRC;
+			HGLOBAL hGlobal = NULL;
+			if ((hRSRC = FindResource(g_hInst, MAKEINTRESOURCE(IDR_GPL), "TEXT"))) {
+				if ((hGlobal = LoadResource(g_hInst, hRSRC))) {
+					LPVOID lpData;
+					if ((lpData = LockResource(hGlobal))) {
+						SendDlgItemMessage(hDlg, IDC_LICENSE_TEXT, WM_SETFONT, (WPARAM)GetStockObject(ANSI_FIXED_FONT), MAKELPARAM(TRUE, 0));
+						SetDlgItemText(hDlg, IDC_LICENSE_TEXT, lpData);
+						SendDlgItemMessage(hDlg, IDC_LICENSE_TEXT, EM_SETSEL, (WPARAM)-1, (LPARAM)0);
+					}
+				}
+			}
+			SetWindowLong(hDlg, GWL_USERDATA, (LONG)hGlobal);
+		}
+		break;
+
+	case WM_DESTROY :
+		{
+			HGLOBAL hGlobal = (HGLOBAL)GetWindowLong(hDlg, GWL_USERDATA);
+			if (hGlobal) {
+				FreeResource(hGlobal);
+			}
+		}
+		break;
+
+	case WM_COMMAND :
+		if (HIWORD(wParam) == BN_CLICKED) {
+			switch(LOWORD(wParam)) {
+			case IDOK :
+			case IDCANCEL :
+				EndDialog(hDlg, 0);
+				break;
+			default :
+				return 0;
+			}
+			break;
+		}
+		break;
+
+	default :
+		return 0;
+	}
+
+	return 1;
+}
 
 /* ===================================================================================== */
 /* ABOUT DIALOG ======================================================================== */
@@ -2163,12 +2218,11 @@ BOOL CALLBACK about_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return 0;
 
 	case WM_COMMAND :
-		if (LOWORD(wParam) == IDC_WEBSITE && HIWORD(wParam) == STN_CLICKED)
-		{
+		if (LOWORD(wParam) == IDC_WEBSITE && HIWORD(wParam) == STN_CLICKED)	{
 			ShellExecute(hDlg, "open", XVID_WEBSITE, NULL, NULL, SW_SHOWNORMAL);
-		}
-		else if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-		{
+		}else if (LOWORD(wParam) == IDC_LICENSE) {
+			DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_LICENSE), hDlg, license_proc, (LPARAM)0);
+		} else if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL) {
 			EndDialog(hDlg, LOWORD(wParam));
 		}
 		break;
