@@ -38,7 +38,7 @@ maybe,	in_yuv, in_yuyv, in_uyuv, in_rgbXX
 output flipping support is not 'perfect'.
 using negative height is bad, best to have seperate vflip parameter
 
-- rgb24/32_mmx cause yellow dots to appear on left hand size [DONE]
+- rgb24/32_mmx cause yellow dots to appear on left hand size
 (only visibile with high contrast colors)
 
 - rgb16. [DONE]
@@ -57,7 +57,7 @@ or just code for the popular 16bit formats 555, 565
 	best to write an entirely new 'decoder' than bolt stuff onto
 	the existing one.
 
-- post processing
+- post processing [IN PROGRESS]
 
 - add basic mpeg4 stuff:
 	- custom mpeg quant matrixes [DONE]
@@ -81,13 +81,21 @@ or just code for the popular 16bit formats 555, 565
 	
 - pmvfast bug fixing [DONE]
 
-- quater pixel motion search
+- quater pixel motion search [IN PROGRESS]
+
+- bidirectional coding [IN PROGRESS]
+
+- global motion compensation
+
+- redo coefficient thresholding like described in H26L
 
 - 'smearing bug' when motion occurs in straight vertical direction (
 http://www.videocoding.de/forum/viewtopic.php?topic=71&forum=2&6 )
 coefficient thresholding problems? [FIXED/REMOVED]
 
 - better luminance masking [DONE]
+
+- further improve adaptive quantisation, maybe implement JND maps
 
 - use N_VOP when a interframe is entirely composed of ublks
 	& frame dropping. eg. simple ublk threshold
@@ -96,10 +104,10 @@ coefficient thresholding problems? [FIXED/REMOVED]
 
 *** gpl conversion ***
 
-mbdecoding.c
+mbdecoding.c [REPLACED]
 
 encoder.c	[REPLACED]
 mbmotionestcomp.c	[REPLACED]
 mbcoding [REPLACED]
 putvlc.c [REPLACED]
-ratecontol.c
+ratecontol.c [REPLACED]
