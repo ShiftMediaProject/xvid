@@ -184,6 +184,19 @@ typedef int32_t (MainSearch8Func)(
 
 typedef MainSearch8Func* MainSearch8FuncPtr;
 
+static int32_t lambda_vec16[32] =  /* rounded values for lambda param for weight of motion bits as in modified H.26L */
+	{     0    ,(int)(1.00235+0.5), (int)(1.15582+0.5), (int)(1.31976+0.5), (int)(1.49591+0.5), (int)(1.68601+0.5),
+	(int)(1.89187+0.5), (int)(2.11542+0.5), (int)(2.35878+0.5), (int)(2.62429+0.5), (int)(2.91455+0.5), 
+	(int)(3.23253+0.5), (int)(3.58158+0.5), (int)(3.96555+0.5), (int)(4.38887+0.5), (int)(4.85673+0.5), 
+	(int)(5.37519+0.5), (int)(5.95144+0.5), (int)(6.59408+0.5), (int)(7.31349+0.5), (int)(8.12242+0.5), 
+	(int)(9.03669+0.5), (int)(10.0763+0.5), (int)(11.2669+0.5), (int)(12.6426+0.5), (int)(14.2493+0.5), 
+	(int)(16.1512+0.5), (int)(18.442+0.5),  (int)(21.2656+0.5), (int)(24.8580+0.5), (int)(29.6436+0.5), 
+	(int)(36.4949+0.5)	};
+
+static int32_t *lambda_vec8 = lambda_vec16;	/* same table for INTER and INTER4V for now*/
+
+
+
 // mv.length table
 static const uint32_t mvtab[33] = {
     1,  2,  3,  4,  6,  7,  7,  7,
@@ -219,15 +232,15 @@ static __inline uint32_t mv_bits(int32_t component, const uint32_t iFcode)
 }
 
 
-static __inline uint32_t calc_delta_16(const int32_t dx, const int32_t dy, const uint32_t iFcode)
+static __inline uint32_t calc_delta_16(const int32_t dx, const int32_t dy, const uint32_t iFcode, const uint32_t iQuant)
 {
-	return NEIGH_TEND_16X16 * (mv_bits(dx, iFcode) + mv_bits(dy, iFcode));
+	return NEIGH_TEND_16X16 * lambda_vec16[iQuant] * (mv_bits(dx, iFcode) + mv_bits(dy, iFcode));
 }
 
-static __inline uint32_t calc_delta_8(const int32_t dx, const int32_t dy, const uint32_t iFcode)
+static __inline uint32_t calc_delta_8(const int32_t dx, const int32_t dy, const uint32_t iFcode, const uint32_t iQuant)
 
 {
-    return NEIGH_TEND_8X8 * (mv_bits(dx, iFcode) + mv_bits(dy, iFcode));
+    return NEIGH_TEND_8X8 * lambda_vec8[iQuant] * (mv_bits(dx, iFcode) + mv_bits(dy, iFcode));
 }
 
 
@@ -431,14 +444,14 @@ bool MotionEstimation(
     && (0 <= max_dy) && (0 >= min_dy) ) \
   { \
     iSAD = sad16( cur, get_ref(pRef, pRefH, pRefV, pRefHV, x, y, 16, 0, 0 , iEdgedWidth), iEdgedWidth, MV_MAX_ERROR); \
-    iSAD += calc_delta_16(-pmv[0].x, -pmv[0].y, (uint8_t)iFcode) * iQuant;\
+    iSAD += calc_delta_16(-pmv[0].x, -pmv[0].y, (uint8_t)iFcode, iQuant);\
     if (iSAD < iMinSAD) \
     {  iMinSAD=iSAD; currMV->x=0; currMV->y=0; }  }	\
 }
 
 #define NOCHECK_MV16_CANDIDATE(X,Y) { \
     iSAD = sad16( cur, get_ref(pRef, pRefH, pRefV, pRefHV, x, y, 16, X, Y, iEdgedWidth),iEdgedWidth, iMinSAD); \
-    iSAD += calc_delta_16((X) - pmv[0].x, (Y) - pmv[0].y, (uint8_t)iFcode) * iQuant;\
+    iSAD += calc_delta_16((X) - pmv[0].x, (Y) - pmv[0].y, (uint8_t)iFcode, iQuant);\
     if (iSAD < iMinSAD) \
     {  iMinSAD=iSAD; currMV->x=(X); currMV->y=(Y); } \
 }
@@ -448,7 +461,7 @@ bool MotionEstimation(
     && ((Y) <= max_dy) && ((Y) >= min_dy) ) \
   { \
     iSAD = sad16( cur, get_ref(pRef, pRefH, pRefV, pRefHV, x, y, 16, X, Y, iEdgedWidth),iEdgedWidth, iMinSAD); \
-    iSAD += calc_delta_16((X) - pmv[0].x, (Y) - pmv[0].y, (uint8_t)iFcode) * iQuant;\
+    iSAD += calc_delta_16((X) - pmv[0].x, (Y) - pmv[0].y, (uint8_t)iFcode, iQuant);\
     if (iSAD < iMinSAD) \
     {  iMinSAD=iSAD; currMV->x=(X); currMV->y=(Y); } } \
 }
@@ -458,7 +471,7 @@ bool MotionEstimation(
     && ((Y) <= max_dy) && ((Y) >= min_dy) ) \
   { \
     iSAD = sad16( cur, get_ref(pRef, pRefH, pRefV, pRefHV, x, y, 16, X, Y, iEdgedWidth),iEdgedWidth, iMinSAD); \
-    iSAD += calc_delta_16((X) - pmv[0].x, (Y) - pmv[0].y, (uint8_t)iFcode) * iQuant;\
+    iSAD += calc_delta_16((X) - pmv[0].x, (Y) - pmv[0].y, (uint8_t)iFcode, iQuant);\
     if (iSAD < iMinSAD) \
     {  iMinSAD=iSAD; currMV->x=(X); currMV->y=(Y); iDirection=(D); } } \
 }
@@ -468,7 +481,7 @@ bool MotionEstimation(
     && ((Y) <= max_dy) && ((Y) >= min_dy) ) \
   { \
     iSAD = sad16( cur, get_ref(pRef, pRefH, pRefV, pRefHV, x, y, 16, X, Y, iEdgedWidth),iEdgedWidth, iMinSAD); \
-    iSAD += calc_delta_16((X) - pmv[0].x, (Y) - pmv[0].y, (uint8_t)iFcode) * iQuant;\
+    iSAD += calc_delta_16((X) - pmv[0].x, (Y) - pmv[0].y, (uint8_t)iFcode, iQuant);\
     if (iSAD < iMinSAD) \
     {  iMinSAD=iSAD; currMV->x=(X); currMV->y=(Y); iDirection=(D); iFound=0; } } \
 }
@@ -476,7 +489,7 @@ bool MotionEstimation(
 
 #define CHECK_MV8_ZERO {\
   iSAD = sad8( cur, get_ref(pRef, pRefH, pRefV, pRefHV, x, y, 8, 0, 0 , iEdgedWidth), iEdgedWidth); \
-  iSAD += calc_delta_8(-pmv[0].x, -pmv[0].y, (uint8_t)iFcode) * iQuant;\
+  iSAD += calc_delta_8(-pmv[0].x, -pmv[0].y, (uint8_t)iFcode, iQuant);\
   if (iSAD < iMinSAD) \
   { iMinSAD=iSAD; currMV->x=0; currMV->y=0; } \
 }
@@ -484,7 +497,7 @@ bool MotionEstimation(
 #define NOCHECK_MV8_CANDIDATE(X,Y) \
   { \
     iSAD = sad8( cur, get_ref(pRef, pRefH, pRefV, pRefHV, x, y, 8, (X), (Y), iEdgedWidth),iEdgedWidth); \
-    iSAD += calc_delta_8((X)-pmv[0].x, (Y)-pmv[0].y, (uint8_t)iFcode) * iQuant;\
+    iSAD += calc_delta_8((X)-pmv[0].x, (Y)-pmv[0].y, (uint8_t)iFcode, iQuant);\
     if (iSAD < iMinSAD) \
     {  iMinSAD=iSAD; currMV->x=(X); currMV->y=(Y); } \
 }
@@ -494,7 +507,7 @@ bool MotionEstimation(
     && ((Y) <= max_dy) && ((Y) >= min_dy) ) \
   { \
     iSAD = sad8( cur, get_ref(pRef, pRefH, pRefV, pRefHV, x, y, 8, (X), (Y), iEdgedWidth),iEdgedWidth); \
-    iSAD += calc_delta_8((X)-pmv[0].x, (Y)-pmv[0].y, (uint8_t)iFcode) * iQuant;\
+    iSAD += calc_delta_8((X)-pmv[0].x, (Y)-pmv[0].y, (uint8_t)iFcode, iQuant);\
     if (iSAD < iMinSAD) \
     {  iMinSAD=iSAD; currMV->x=(X); currMV->y=(Y); } } \
 }
@@ -504,7 +517,7 @@ bool MotionEstimation(
     && ((Y) <= max_dy) && ((Y) >= min_dy) ) \
   { \
     iSAD = sad8( cur, get_ref(pRef, pRefH, pRefV, pRefHV, x, y, 8, (X), (Y), iEdgedWidth),iEdgedWidth); \
-    iSAD += calc_delta_8((X)-pmv[0].x, (Y)-pmv[0].y, (uint8_t)iFcode) * iQuant;\
+    iSAD += calc_delta_8((X)-pmv[0].x, (Y)-pmv[0].y, (uint8_t)iFcode, iQuant);\
     if (iSAD < iMinSAD) \
     {  iMinSAD=iSAD; currMV->x=(X); currMV->y=(Y); iDirection=(D); } } \
 }
@@ -514,7 +527,7 @@ bool MotionEstimation(
     && ((Y) <= max_dy) && ((Y) >= min_dy) ) \
   { \
     iSAD = sad8( cur, get_ref(pRef, pRefH, pRefV, pRefHV, x, y, 8, (X), (Y), iEdgedWidth),iEdgedWidth); \
-    iSAD += calc_delta_8((X)-pmv[0].x, (Y)-pmv[0].y, (uint8_t)iFcode) * iQuant;\
+    iSAD += calc_delta_8((X)-pmv[0].x, (Y)-pmv[0].y, (uint8_t)iFcode, iQuant);\
     if (iSAD < iMinSAD) \
     {  iMinSAD=iSAD; currMV->x=(X); currMV->y=(Y); iDirection=(D); iFound=0; } } \
 }
@@ -986,7 +999,7 @@ int32_t PMVfastSearch16(
 	iMinSAD = sad16( cur, 
 			 get_ref_mv(pRef, pRefH, pRefV, pRefHV, x, y, 16, currMV, iEdgedWidth),
 			 iEdgedWidth, MV_MAX_ERROR);
-  	iMinSAD += calc_delta_16(currMV->x-pmv[0].x, currMV->y-pmv[0].y, (uint8_t)iFcode) * iQuant;
+  	iMinSAD += calc_delta_16(currMV->x-pmv[0].x, currMV->y-pmv[0].y, (uint8_t)iFcode, iQuant);
 	
 	if ( (iMinSAD < 256 ) || ( (MVequal(*currMV,prevMB->mvs[0])) && ((uint32_t)iMinSAD < prevMB->sad16) ) )
 	{
@@ -1041,7 +1054,7 @@ int32_t PMVfastSearch16(
 		}
 	}
 	
-    	if ( (MVzero(*currMV)) && (!MVzero(pmv[0])) && (iSAD <= iQuant * 96) )
+    	if ( (MVzero(*currMV)) && (!MVzero(pmv[0])) /* && (iMinSAD <= iQuant * 96)*/ )
 		iMinSAD -= MV16_00_BIAS;
 
 	
@@ -1340,7 +1353,7 @@ int32_t PMVfastSearch8(
 	iMinSAD = sad8( cur, 
 			get_ref_mv(pRef, pRefH, pRefV, pRefHV, x, y, 8, currMV, iEdgedWidth),
 			iEdgedWidth);
-  	iMinSAD += calc_delta_8(currMV->x - pmv[0].x, currMV->y - pmv[0].y, (uint8_t)iFcode) * iQuant;
+  	iMinSAD += calc_delta_8(currMV->x - pmv[0].x, currMV->y - pmv[0].y, (uint8_t)iFcode, iQuant);
 	
 	if ( (iMinSAD < 256/4 ) || ( (MVequal(*currMV,prevMB->mvs[iSubBlock])) && ((uint32_t)iMinSAD < prevMB->sad8[iSubBlock]) ) )
 	{
@@ -1397,7 +1410,7 @@ int32_t PMVfastSearch8(
 		}
 	}
 
-    	if ( (MVzero(*currMV)) && (!MVzero(pmv[0])) && (iSAD <= iQuant * 96) )
+    	if ( (MVzero(*currMV)) && (!MVzero(pmv[0])) /* && (iMinSAD <= iQuant * 96) */ )
 		iMinSAD -= MV8_00_BIAS;
 
 
@@ -1535,7 +1548,7 @@ int32_t EPZSSearch16(
 	MainSearch16FuncPtr EPZSMainSearchPtr;
 
 	if (oldMBs == NULL)
-	{	oldMBs = (MACROBLOCK*) calloc(1,iWcount*iHcount*sizeof(MACROBLOCK));
+	{	oldMBs = (MACROBLOCK*) calloc(iWcount*iHcount,sizeof(MACROBLOCK));
 //		fprintf(stderr,"allocated %d bytes for oldMBs\n",iWcount*iHcount*sizeof(MACROBLOCK));
 	}
 	oldMB = oldMBs + x + y * iWcount;
@@ -1583,10 +1596,10 @@ int32_t EPZSSearch16(
 	iMinSAD = sad16( cur, 
 		get_ref_mv(pRef, pRefH, pRefV, pRefHV, x, y, 16, currMV, iEdgedWidth),
 		iEdgedWidth, MV_MAX_ERROR);
-  	iMinSAD += calc_delta_16(currMV->x-pmv[0].x, currMV->y-pmv[0].y, (uint8_t)iFcode) * iQuant;
+  	iMinSAD += calc_delta_16(currMV->x-pmv[0].x, currMV->y-pmv[0].y, (uint8_t)iFcode, iQuant);
 	
 // thresh1 is fixed to 256 
-	if ( (iMinSAD < 256 ) || ( (MVequal(*currMV,pMB->mvs[0])) && ((uint32_t)iMinSAD < prevMB->sad16) ) )
+	if ( (iMinSAD < 256 ) || ( (MVequal(*currMV, prevMB->mvs[0])) && ((uint32_t)iMinSAD < prevMB->sad16) ) )
 		{
 			if (MotionFlags & PMV_QUICKSTOP16) 
 				goto EPZS16_Terminate_without_Refine;
@@ -1597,7 +1610,7 @@ int32_t EPZSSearch16(
 /************** This is predictor SET B: (0,0), prev.frame MV, neighbours **************/ 
 
 // previous frame MV 
-	CHECK_MV16_CANDIDATE(pMB->mvs[0].x,pMB->mvs[0].y);
+	CHECK_MV16_CANDIDATE(prevMB->mvs[0].x,prevMB->mvs[0].y);
 
 // set threshhold based on Min of Prediction and SAD of collocated block
 // CHECK_MV16 always uses iSAD for the SAD of last vector to check, so now iSAD is what we want
@@ -1653,7 +1666,7 @@ int32_t EPZSSearch16(
 */
 
 	if ( (iMinSAD <= thresh2) 
-		|| ( MVequal(*currMV,pMB->mvs[0]) && ((uint32_t)iMinSAD <= prevMB->sad16) ) )
+		|| ( MVequal(*currMV,prevMB->mvs[0]) && ((uint32_t)iMinSAD <= prevMB->sad16) ) )
 		{	
 			if (MotionFlags & PMV_QUICKSTOP16) 
 				goto EPZS16_Terminate_without_Refine;
@@ -1663,28 +1676,28 @@ int32_t EPZSSearch16(
 
 /***** predictor SET C: acceleration MV (new!), neighbours in prev. frame(new!) ****/
 
-	backupMV = pMB->mvs[0]; 		// last MV
-	backupMV.x += (pMB->mvs[0].x - oldMB->mvs[0].x );	// acceleration X
-	backupMV.y += (pMB->mvs[0].y - oldMB->mvs[0].y );	// acceleration Y 
+	backupMV = prevMB->mvs[0]; 		// collocated MV
+	backupMV.x += (prevMB->mvs[0].x - oldMB->mvs[0].x );	// acceleration X
+	backupMV.y += (prevMB->mvs[0].y - oldMB->mvs[0].y );	// acceleration Y 
 
-	CHECK_MV16_CANDIDATE(backupMV.x,backupMV.y);	
+	CHECK_MV16_CANDIDATE(backupMV.x,backupMV.y);
 
 // left neighbour
 	if (x != 0)  
-		CHECK_MV16_CANDIDATE((oldMB-1)->mvs[0].x,oldMB->mvs[0].y);		
+		CHECK_MV16_CANDIDATE((prevMB-1)->mvs[0].x,(prevMB-1)->mvs[0].y);		
 
 // top neighbour 
 	if (y != 0)
-		CHECK_MV16_CANDIDATE((oldMB-iWcount)->mvs[0].x,oldMB->mvs[0].y);		
+		CHECK_MV16_CANDIDATE((prevMB-iWcount)->mvs[0].x,(prevMB-iWcount)->mvs[0].y);		
 
 // right neighbour, if allowed (this value is not written yet, so take it from   pMB->mvs 
 
 	if ((uint32_t)x != iWcount-1)
-		CHECK_MV16_CANDIDATE((pMB+1)->mvs[0].x,oldMB->mvs[0].y);		
+		CHECK_MV16_CANDIDATE((prevMB+1)->mvs[0].x,(prevMB+1)->mvs[0].y);		
 
 // bottom neighbour, dito
 	if ((uint32_t)y != iHcount-1)
-		CHECK_MV16_CANDIDATE((pMB+iWcount)->mvs[0].x,oldMB->mvs[0].y);		
+		CHECK_MV16_CANDIDATE((prevMB+iWcount)->mvs[0].x,(prevMB+iWcount)->mvs[0].y);		
 
 /* Terminate if MinSAD <= T_3 (here T_3 = T_2)  */
 	if (iMinSAD <= thresh2)
@@ -1741,7 +1754,7 @@ int32_t EPZSSearch16(
 			iSAD = (*EPZSMainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
 				x, y, 
 			0, 0, iMinSAD, &newMV, 
-			pmv, min_dx, max_dx, min_dy, max_dy, iEdgedWidth, /*iDiamondSize*/ 2, iFcode, iQuant, 0);
+			pmv, min_dx, max_dx, min_dy, max_dy, iEdgedWidth, 2, iFcode, iQuant, 0);
 		
 			if (iSAD < iMinSAD) 
 			{
@@ -1762,7 +1775,7 @@ EPZS16_Terminate_with_Refine:
 
 EPZS16_Terminate_without_Refine:
 
-	*oldMB = *pMB;
+	*oldMB = *prevMB;
 	
 	currPMV->x = currMV->x - pmv[0].x;
 	currPMV->y = currMV->y - pmv[0].y;
@@ -1787,7 +1800,9 @@ int32_t EPZSSearch8(
 					VECTOR * const currMV,
 					VECTOR * const currPMV)
 {
-    const uint32_t iWcount = pParam->mb_width;
+/* Please not that EPZS might not be a good choice for 8x8-block motion search ! */
+
+	const uint32_t iWcount = pParam->mb_width;
 	const int32_t iWidth = pParam->width;
 	const int32_t iHeight = pParam->height;
 	const int32_t iEdgedWidth = pParam->edged_width; 
@@ -1864,7 +1879,7 @@ int32_t EPZSSearch8(
 	iMinSAD = sad8( cur, 
 		get_ref_mv(pRef, pRefH, pRefV, pRefHV, x, y, 8, currMV, iEdgedWidth),
 		iEdgedWidth);
-  	iMinSAD += calc_delta_8(currMV->x-pmv[0].x, currMV->y-pmv[0].y, (uint8_t)iFcode) * iQuant;
+  	iMinSAD += calc_delta_8(currMV->x-pmv[0].x, currMV->y-pmv[0].y, (uint8_t)iFcode, iQuant);
 
 	
 // thresh1 is fixed to 256 
@@ -1878,12 +1893,49 @@ int32_t EPZSSearch8(
 
 /************** This is predictor SET B: (0,0), prev.frame MV, neighbours **************/ 
 
-// previous frame MV 
-	CHECK_MV8_CANDIDATE(pMB->mvs[0].x,pMB->mvs[0].y);
 
 // MV=(0,0) is often a good choice
-
 	CHECK_MV8_ZERO;
+
+// previous frame MV 
+	CHECK_MV8_CANDIDATE(prevMB->mvs[iSubBlock].x,prevMB->mvs[iSubBlock].y);
+	
+// left neighbour, if allowed
+	if (psad[1] != MV_MAX_ERROR) 
+	{
+		if (!(MotionFlags & PMV_HALFPEL8 ))	
+		{	pmv[1].x = EVEN(pmv[1].x);	
+			pmv[1].y = EVEN(pmv[1].y);
+		}
+		CHECK_MV8_CANDIDATE(pmv[1].x,pmv[1].y);		
+	}
+
+// top neighbour, if allowed
+	if (psad[2] != MV_MAX_ERROR) 
+	{	
+		if (!(MotionFlags & PMV_HALFPEL8 ))
+		{	pmv[2].x = EVEN(pmv[2].x);
+			pmv[2].y = EVEN(pmv[2].y);
+		}
+		CHECK_MV8_CANDIDATE(pmv[2].x,pmv[2].y);
+	
+// top right neighbour, if allowed
+		if (psad[3] != MV_MAX_ERROR) 
+		{
+			if (!(MotionFlags & PMV_HALFPEL8 ))
+			{	pmv[3].x = EVEN(pmv[3].x);
+				pmv[3].y = EVEN(pmv[3].y);
+			}
+			CHECK_MV8_CANDIDATE(pmv[3].x,pmv[3].y);
+		}
+	}
+
+/*  // this bias is zero anyway, at the moment! 
+
+    	if ( (MVzero(*currMV)) && (!MVzero(pmv[0])) ) // && (iMinSAD <= iQuant * 96) 
+		iMinSAD -= MV8_00_BIAS;		
+
+*/ 
 
 /* Terminate if MinSAD <= T_2 
    Terminate if MV[t] == MV[t-1] and MinSAD[t] <= MinSAD[t-1] 
@@ -1897,27 +1949,31 @@ int32_t EPZSSearch8(
 				goto EPZS8_Terminate_with_Refine;
 		}
 
-/************ (if Diamond Search)  **************/
+/************ (Diamond Search)  **************/
 
 	backupMV = *currMV; /* save best prediction, actually only for EXTSEARCH */
 
 	if (!(MotionFlags & PMV_HALFPELDIAMOND8))
 		iDiamondSize *= 2;
 		
-/* default: use best prediction as starting point for one call of PMVfast_MainSearch */
+/* default: use best prediction as starting point for one call of EPZS_MainSearch */
 
-//	if (MotionFlags & PMV_USESQUARES8)
-//		EPZSMainSearchPtr = Square8_MainSearch;
-//	else
-		EPZSMainSearchPtr = Diamond8_MainSearch;
+/* // there is no EPZS^2 for inter4v at the moment
+
+	if (MotionFlags & PMV_USESQUARES8)
+		EPZSMainSearchPtr = Square8_MainSearch;
+	else
+*/
+
+	EPZSMainSearchPtr = Diamond8_MainSearch; 
 		
 	iSAD = (*EPZSMainSearchPtr)(pRef, pRefH, pRefV, pRefHV, cur,
 		x, y, 
 		currMV->x, currMV->y, iMinSAD, &newMV, 
 		pmv, min_dx, max_dx, min_dy, max_dy, iEdgedWidth, 
-		iDiamondSize, iFcode, iQuant, 00);
+		iDiamondSize, iFcode, iQuant, 0);
 
-	
+
 	if (iSAD < iMinSAD) 
 	{
 		*currMV = newMV;
