@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: config.h,v 1.5 2005-01-08 12:28:48 syskin Exp $
+ * $Id: config.h,v 1.6 2005-01-10 05:01:01 syskin Exp $
  *
  ****************************************************************************/
 #ifndef _CONFIG_H_
@@ -120,13 +120,11 @@ typedef struct
 	int tff;
 	int qpel;
 	int gmc;
-	int reduced_resolution;
 	int use_bvop;
 	int max_bframes;
 	int bquant_ratio;
 	int bquant_offset;
 	int packed;
-	int closed_gov;
 	int display_aspect_ratio;				/* aspect ratio */
 	int ar_x, ar_y;							/* picture aspect ratio */
 	int par_x, par_y;						/* custom pixel aspect ratio */
@@ -230,10 +228,9 @@ typedef struct REG_STR
 #define PROFILE_INTERLACE	0x00000008
 #define PROFILE_QPEL		0x00000010
 #define PROFILE_GMC			0x00000020
-#define PROFILE_REDUCED		0x00000040	/* dynamic resolution conversion */
 
 #define PROFILE_AS			(PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_MPEGQUANT|PROFILE_INTERLACE|PROFILE_QPEL|PROFILE_GMC)
-#define PROFILE_ARTS		(PROFILE_ADAPTQUANT|PROFILE_REDUCED)
+#define PROFILE_ARTS		(PROFILE_ADAPTQUANT)
 
 static const int PARS[][2] = {
 	{1, 1},
