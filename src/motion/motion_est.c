@@ -2535,6 +2535,10 @@ MotionEstimationBVOP(MBParam * const pParam,
 							   &mb->b_mvs[0], &pmv_dontcare);	// ignore pmv
 
 			// interpolate search (simple, but effective)
+			i_sad16 = 65535;
+
+			/*
+			x/y range somewhat buggy
 			i_sad16 =
 				sad16bi_c(frame->image.y + i * 16 + j * 16 * edged_width,
 						  get_ref(f_ref->y, f_refH->y, f_refV->y, f_refHV->y,
@@ -2546,6 +2550,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 														mb->b_mvs[0].x,
 														edged_width),
 						  edged_width);
+			*/
 
 			// TODO: direct search
 			// predictor + range of [-32,32]

@@ -35,7 +35,7 @@
  *  - 22.12.2001  API change: added xvid_init() - Isibaar
  *  - 16.12.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: xvid.c,v 1.19 2002-06-16 19:53:44 edgomez Exp $
+ *  $Id: xvid.c,v 1.20 2002-06-21 16:12:47 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -365,6 +365,12 @@ xvid_encore(void *handle,
 {
 	switch (opt) {
 	case XVID_ENC_ENCODE:
+#ifdef BFRAMES
+		if (((Encoder *) handle)->mbParam.max_bframes >= 0)
+		return encoder_encode_bframes((Encoder *) handle, (XVID_ENC_FRAME *) param1,
+							  (XVID_ENC_STATS *) param2);
+		else 
+#endif
 		return encoder_encode((Encoder *) handle, (XVID_ENC_FRAME *) param1,
 							  (XVID_ENC_STATS *) param2);
 
