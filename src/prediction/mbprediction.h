@@ -3,6 +3,9 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  -  MB prediction header file  -
  *
+ *  Copyright(C) 2002 Christoph Lampert <gruel@web.de>
+ *               2002 Peter Ross <pross@xvid.org>
+ *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
  *  to use this software module in hardware or software products are
@@ -26,7 +29,7 @@
  *  along with this program; if not, write to the xvid_free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: mbprediction.h,v 1.15 2002-09-08 17:25:10 edgomez Exp $
+ *  $Id: mbprediction.h,v 1.16 2002-10-19 12:20:33 edgomez Exp $
  *
  *************************************************************************/
 
