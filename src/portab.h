@@ -23,7 +23,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: portab.h,v 1.44 2003-02-16 01:41:24 edgomez Exp $
+ * $Id: portab.h,v 1.45 2003-02-16 05:11:39 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -139,9 +139,7 @@
          }
      }
 #    else
-     static __inline void DPRINTF(int level, char *fmt, ...)
-     {
-     }
+         static __inline void DPRINTF(int level, char *fmt, ...) {}
 #    endif
 
 #    if _MSC_VER <= 1200
@@ -160,20 +158,18 @@
 #    if defined(ARCH_IS_IA32)
 #        define BSWAP(a) __asm mov eax,a __asm bswap eax __asm mov a, eax
 
-#        ifdef _PROFILING_
-             static __inline int64_t read_counter(void)
-             {
-                 int64_t ts;
-                 uint32_t ts1, ts2;
-                 __asm {
-                     rdtsc
-                     mov ts1, eax
-                     mov ts2, edx
-                 }
-                 ts = ((uint64_t) ts2 << 32) | ((uint64_t) ts1);
-                 return ts;
+         static __inline int64_t read_counter(void)
+         {
+             int64_t ts;
+             uint32_t ts1, ts2;
+             __asm {
+                 rdtsc
+                 mov ts1, eax
+                 mov ts2, edx
              }
-#        endif
+             ts = ((uint64_t) ts2 << 32) | ((uint64_t) ts1);
+             return ts;
+         }
 
 /*----------------------------------------------------------------------------
  | msvc GENERIC (plain C only) - Probably alpha or some embedded device
@@ -183,13 +179,11 @@
                 ((a) = (((a) & 0xff) << 24)  | (((a) & 0xff00) << 8) | \
                        (((a) >> 8) & 0xff00) | (((a) >> 24) & 0xff))
 
-#        ifdef _PROFILING_
-#            include <time.h>
-             static __inline int64_t read_counter(void)
-             {
-                 return (int64_t)clock();
-             }
-#        endif
+#        include <time.h>
+         static __inline int64_t read_counter(void)
+         {
+             return (int64_t)clock();
+         }
 
 /*----------------------------------------------------------------------------
  | msvc Not given architecture - This is probably an user who tries to build
@@ -229,8 +223,8 @@
             if(DPRINTF_LEVEL & level) {
                    vfprintf(stderr, format, args);
                    fprintf(stderr, "\n");
-			}
-		}
+            }
+        }
 
 #    else /* _DEBUG */
         static __inline void DPRINTF(int level, char *format, ...) {}
@@ -247,16 +241,14 @@
 #    if defined(ARCH_IS_IA32)
 #        define BSWAP(a) __asm__ ( "bswapl %0\n" : "=r" (a) : "0" (a) );
 
-#        ifdef _PROFILING_
-             static __inline int64_t read_counter(void)
-             {
-                 int64_t ts;
-                 uint32_t ts1, ts2;
-                 __asm__ __volatile__("rdtsc\n\t":"=a"(ts1), "=d"(ts2));
-                 ts = ((uint64_t) ts2 << 32) | ((uint64_t) ts1);
-                 return ts;
-             }
-#        endif
+         static __inline int64_t read_counter(void)
+         {
+             int64_t ts;
+             uint32_t ts1, ts2;
+             __asm__ __volatile__("rdtsc\n\t":"=a"(ts1), "=d"(ts2));
+             ts = ((uint64_t) ts2 << 32) | ((uint64_t) ts1);
+             return ts;
+         }
 
 /*----------------------------------------------------------------------------
  | gcc PPC and PPC Altivec specific macros/functions
@@ -265,31 +257,29 @@
 #        define BSWAP(a) __asm__ __volatile__ \
                 ( "lwbrx %0,0,%1; eieio" : "=r" (a) : "r" (&(a)), "m" (a));
 
-#        ifdef _PROFILING_
-             static __inline unsigned long get_tbl(void)
-             {
-                 unsigned long tbl;
-                 asm volatile ("mftb %0":"=r" (tbl));
-                 return tbl;
-             }
+         static __inline unsigned long get_tbl(void)
+         {
+             unsigned long tbl;
+             asm volatile ("mftb %0":"=r" (tbl));
+             return tbl;
+         }
 
-             static __inline unsigned long get_tbu(void)
-             {
-                 unsigned long tbl;
-                 asm volatile ("mftbu %0":"=r" (tbl));
-                 return tbl;
-             }
+         static __inline unsigned long get_tbu(void)
+         {
+             unsigned long tbl;
+             asm volatile ("mftbu %0":"=r" (tbl));
+             return tbl;
+         }
 
-             static __inline int64_t read_counter(void)
-             {
-                 unsigned long tb, tu;
-                 do {
-                     tu = get_tbu();
-                     tb = get_tbl();
-                 }while (tb != get_tbl());
-                 return (((int64_t) tu) << 32) | (int64_t) tb;
-             }
-#        endif
+         static __inline int64_t read_counter(void)
+         {
+             unsigned long tb, tu;
+             do {
+                 tu = get_tbu();
+                 tb = get_tbl();
+             }while (tb != get_tbl());
+             return (((int64_t) tu) << 32) | (int64_t) tb;
+         }
 
 /*----------------------------------------------------------------------------
  | gcc IA64 specific macros/functions
@@ -299,14 +289,12 @@
                 ("mux1 %1 = %0, @rev" ";;" \
                  "shr.u %1 = %1, 32" : "=r" (a) : "r" (a));
 
-#        ifdef _PROFILING_
-             static __inline int64_t read_counter(void)
-             {
-                 unsigned long result;
-                 __asm__ __volatile__("mov %0=ar.itc" : "=r"(result) :: "memory");
-                 return result;
-             }
-#        endif
+         static __inline int64_t read_counter(void)
+         {
+             unsigned long result;
+             __asm__ __volatile__("mov %0=ar.itc" : "=r"(result) :: "memory");
+             return result;
+         }
 
 /*----------------------------------------------------------------------------
  | gcc GENERIC (plain C only) specific macros/functions
@@ -316,13 +304,11 @@
                 ((a) = (((a) & 0xff) << 24)  | (((a) & 0xff00) << 8) | \
                        (((a) >> 8) & 0xff00) | (((a) >> 24) & 0xff))
 
-#        ifdef _PROFILING_
-#            include <time.h>
-             static __inline int64_t read_counter(void)
-             {
-                 return (int64_t)clock();
-             }
-#        endif
+#        include <time.h>
+         static __inline int64_t read_counter(void)
+         {
+             return (int64_t)clock();
+         }
 
 /*----------------------------------------------------------------------------
  | gcc Not given architecture - This is probably an user who tries to build
@@ -345,21 +331,21 @@
 #    include <stdarg.h>
 
 #    ifdef _DEBUG
-    static __inline void DPRINTF(int level, char *fmt, ...)
-    {
-		if (DPRINTF_LEVEL & level) {
-            va_list args;
-            char buf[DPRINTF_BUF_SZ];
-            va_start(args, fmt);
-            vsprintf(buf, fmt, args);
-			fprintf(stderr, "%s\n", buf);
-		}
-	}
+     static __inline void DPRINTF(int level, char *fmt, ...)
+     {
+         if (DPRINTF_LEVEL & level) {
+             va_list args;
+             char buf[DPRINTF_BUF_SZ];
+             va_start(args, fmt);
+             vsprintf(buf, fmt, args);
+             fprintf(stderr, "%s\n", buf);
+         }
+     }
 #    else /* _DEBUG */
-        static __inline void DPRINTF(int level, char *format, ...) {}
+         static __inline void DPRINTF(int level, char *format, ...) {}
 #    endif /* _DEBUG */
 
-#       define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
+#        define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
                 type name##_storage[(sizex)*(sizey)+(alignment)-1]; \
                 type * name = (type *) (((int32_t) name##_storage+(alignment - 1)) & ~((int32_t)(alignment)-1))
 
@@ -370,7 +356,6 @@
 
 #        define BSWAP(a)  __asm mov eax,a __asm bswap eax __asm mov a, eax
 
-#        ifdef _PROFILING_
          static __inline int64_t read_counter(void)
          {
              uint64_t ts;
@@ -383,22 +368,19 @@
              ts = ((uint64_t) ts2 << 32) | ((uint64_t) ts1);
              return ts;
          }
-#        endif
 
 /*----------------------------------------------------------------------------
  | watcom GENERIC (plain C only) specific macros/functions.
  *---------------------------------------------------------------------------*/
-#	elif defined(ARCH_IS_GENERIC)
+#    elif defined(ARCH_IS_GENERIC)
 
-#		define BSWAP(x) \
-			x = ((((x) & 0xff000000) >> 24) | \
-				(((x) & 0x00ff0000) >>  8) | \
-				(((x) & 0x0000ff00) <<  8) | \
-				(((x) & 0x000000ff) << 24))
+#        define BSWAP(x) \
+            x = ((((x) & 0xff000000) >> 24) | \
+                (((x) & 0x00ff0000) >>  8) | \
+                (((x) & 0x0000ff00) <<  8) | \
+                (((x) & 0x000000ff) << 24))
 
-#        ifdef _PROFILING_
          static int64_t read_counter() { return 0; }
-#        endif
 
 /*----------------------------------------------------------------------------
  | watcom Not given architecture - This is probably an user who tries to build
@@ -415,11 +397,11 @@
 #else /* Compiler test */
 
       /*
-	   * Ok we know nothing about the compiler, so we fallback to ANSI C
-	   * features, so every compiler should be happy and compile the code.
-	   *
-	   * This is (mostly) equivalent to ARCH_IS_GENERIC.
-	   */
+       * Ok we know nothing about the compiler, so we fallback to ANSI C
+       * features, so every compiler should be happy and compile the code.
+       *
+       * This is (mostly) equivalent to ARCH_IS_GENERIC.
+       */
 
 #    ifdef _DEBUG
 
@@ -434,8 +416,8 @@
             if(DPRINTF_LEVEL & level) {
                    vfprintf(stderr, format, args);
                    fprintf(stderr, "\n");
-			}
-		}
+            }
+        }
 
 #    else /* _DEBUG */
         static __inline void DPRINTF(int level, char *format, ...) {}
@@ -445,15 +427,13 @@
             ((a) = (((a) & 0xff) << 24)  | (((a) & 0xff00) << 8) | \
                    (((a) >> 8) & 0xff00) | (((a) >> 24) & 0xff))
 
-#    ifdef _PROFILING_
-#       include <time.h>
-        static __inline int64_t read_counter(void)
-        {
-            return (int64_t)clock();
-        }
-#    endif
+#    include <time.h>
+     static __inline int64_t read_counter(void)
+     {
+         return (int64_t)clock();
+     }
 
-#        define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
+#    define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
                 type name[(sizex)*(sizey)]
 
 #endif /* Compiler test */

@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.6 2003-02-15 15:22:17 edgomez Exp $
+ * $Id: xvid_decraw.c,v 1.7 2003-02-16 05:11:39 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -502,7 +502,7 @@ dec_init(int use_assembler)
         XVID_DEC_PARAM xparam;
 
 		if(use_assembler)
-#ifdef ARCH_IA64
+#ifdef ARCH_IS_IA64
 			xinit.cpu_flags = XVID_CPU_FORCE | XVID_CPU_IA64;
 #else
 			xinit.cpu_flags = 0;

@@ -41,8 +41,7 @@
 #include <stdio.h>
 #include <malloc.h>
 
-#include "encore2.h"
-#include "decore.h"		/* these come with XviD */
+#include "divx4.h"
 
 #define ARG_FRAMERATE 25
 #define ARG_BITRATE 900
