@@ -364,8 +364,8 @@ static __inline void CodeIntraMB(Encoder *pEnc, MACROBLOCK *pMB) {
 
 static int FrameCodeI(Encoder * pEnc, Bitstream * bs, uint32_t *pBits)
 {
-	int16_t dct_codes[6][64];
-	int16_t qcoeff[6][64];
+	CACHE_ALIGN int16_t dct_codes[6][64];
+	CACHE_ALIGN int16_t qcoeff[6][64];
 	uint16_t x, y;
 
 	pEnc->iFrameNum = 0;
@@ -418,8 +418,10 @@ static int FrameCodeI(Encoder * pEnc, Bitstream * bs, uint32_t *pBits)
 static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool force_inter, bool vol_header)
 {
 	float fSigma;
-	int16_t dct_codes[6][64];
-	int16_t qcoeff[6][64];
+
+	CACHE_ALIGN int16_t dct_codes[6][64];
+	CACHE_ALIGN int16_t qcoeff[6][64];
+
 	int iLimit;
 	uint32_t x, y;
 	int iSearchRange;

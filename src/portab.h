@@ -31,6 +31,9 @@
 
 #define EMMS() __asm {emms}
 
+#define CACHE_LINE  16
+#define CACHE_ALIGN __declspec(align(CACHE_LINE))
+
 // needed for bitstream.h
 #define BSWAP(a) __asm mov eax,a __asm bswap eax __asm mov a, eax
 
@@ -69,6 +72,9 @@ static __inline int64_t read_counter() {
 #define DEBUG3(X,A,B,C)
 #define DEBUG8(X,A,B,C,D,E,F,G,H)
 #endif
+
+#define CACHE_LINE  16
+#define CACHE_ALIGN
 
 #if defined(LINUX)
 
@@ -125,6 +131,9 @@ static __inline int64_t read_counter() {
 static __inline int64_t read_counter() {
 	return 0;
 }
+
+#define CACHE_LINE  16
+#define CACHE_ALIGN
 
 #endif
 
