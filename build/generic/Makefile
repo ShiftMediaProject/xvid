@@ -31,7 +31,7 @@ RM = rm -rf
 ##############################################################################
 
 # Our main targets
-STATIC_LIB=libxvidcore.$(STATIC_EXTENSION).3.0
+STATIC_LIB=libxvidcore.$(STATIC_EXTENSION)
 SHARED_LIB=libxvidcore.$(SHARED_EXTENSION).3.0
 
 # Their Objects
