@@ -34,7 +34,7 @@
  *
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.29 2002-04-28 21:55:06 edgomez Exp $
+ *  $Id: encoder.c,v 1.30 2002-04-28 23:31:00 edgomez Exp $
  *
  ***************************************************************************/
 
@@ -510,7 +510,7 @@ void HintedMESet(Encoder * pEnc, int * intra)
 			MVBLOCKHINT * bhint = &hint->mvhint.block[x + y * pEnc->mbParam.mb_width];
 			VECTOR pred[4];
 			VECTOR tmp;
-			uint32_t dummy[4];
+			int32_t dummy[4];
 			int vec;
 
 			pMB->mode = (hint->rawhints) ? bhint->mode : BitstreamGetBits(&bs, MODEBITS);
