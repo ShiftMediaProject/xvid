@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: gmc.c,v 1.2 2004-03-22 22:36:24 edgomez Exp $
+ * $Id: gmc.c,v 1.3 2004-04-02 21:29:21 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -341,16 +341,15 @@ void generate_GMCparameters( int nb_pts, const int accuracy,
 	gmc->num_wp = nb_pts;
 
 	/* reduce the number of points, if possible */
-	if (nb_pts<3 || (pts->duv[2].x==-pts->duv[1].y && pts->duv[2].y==pts->duv[1].x)) {
-	if (nb_pts<2 || (pts->duv[1].x==0 && pts->duv[1].y==0)) {
-		if (nb_pts<1 || (pts->duv[0].x==0 && pts->duv[0].y==0)) {
-		nb_pts = 0;
-		}
-		else nb_pts = 1;
-	}
-	else nb_pts = 2;
-	}
-	else nb_pts = 3;
+	if (nb_pts<2 || (pts->duv[2].x==0 && pts->duv[2].y==0 && pts->duv[1].x==0 && pts->duv[1].y==0 )) {
+  	if (nb_pts<2 || (pts->duv[1].x==0 && pts->duv[1].y==0)) {
+	  	if (nb_pts<1 || (pts->duv[0].x==0 && pts->duv[0].y==0)) {
+		    nb_pts = 0;
+  		}
+	  	else nb_pts = 1;
+  	}
+	  else nb_pts = 2;
+  }
 
 	/* now, nb_pts stores the actual number of points required for interpolation */
 
@@ -380,15 +379,11 @@ void generate_GMCparameters( int nb_pts, const int accuracy,
 	gmc->dU[0] = 16*Ws + RDIV( 8*Ws*pts->duv[1].x, width );	 /* dU/dx */
 	gmc->dV[0] =		 RDIV( 8*Ws*pts->duv[1].y, width );	 /* dV/dx */
 
-/*	 disabled, because possibly buggy? */
-
-#if 0
 	if (nb_pts==2) {
 		gmc->dU[1] = -gmc->dV[0];	/* -Sin */
 		gmc->dV[1] =	gmc->dU[0] ;	/* Cos */
 	}
 	else
-#endif
 	{
 		const int Beta = log2bin(height-1);
 		const int Hs = 1<<Beta;
