@@ -20,7 +20,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: cbp_mmx.asm,v 1.9 2004-03-22 22:36:23 edgomez Exp $
+; * $Id: cbp_mmx.asm,v 1.10 2004-07-24 11:46:08 edgomez Exp $
 ; *
 ; ***************************************************************************/
 
@@ -44,9 +44,9 @@ BITS 32
 ;=============================================================================
 
 %ifdef FORMAT_COFF
-SECTION .rodata data
+SECTION .rodata
 %else
-SECTION .rodata data align=16
+SECTION .rodata align=16
 %endif
 
 ALIGN 16

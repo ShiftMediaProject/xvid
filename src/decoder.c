@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.62 2004-07-14 23:26:06 edgomez Exp $
+ * $Id: decoder.c,v 1.63 2004-07-24 11:46:08 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -1153,32 +1153,32 @@ decoder_bf_interpolate_mbinter(DECODER * dec,
 	interpolate8x8_avg2(dec->cur.y + (16 * y_pos * stride) + 16 * x_pos,
 						dec->cur.y + (16 * y_pos * stride) + 16 * x_pos,
 						dec->tmp.y + (16 * y_pos * stride) + 16 * x_pos,
-						stride, 1, 8);
+						stride, 0, 8);
 
 	interpolate8x8_avg2(dec->cur.y + (16 * y_pos * stride) + 16 * x_pos + 8,
 						dec->cur.y + (16 * y_pos * stride) + 16 * x_pos + 8,
 						dec->tmp.y + (16 * y_pos * stride) + 16 * x_pos + 8,
-						stride, 1, 8);
+						stride, 0, 8);
 
 	interpolate8x8_avg2(dec->cur.y + ((16 * y_pos + 8) * stride) + 16 * x_pos,
 						dec->cur.y + ((16 * y_pos + 8) * stride) + 16 * x_pos,
 						dec->tmp.y + ((16 * y_pos + 8) * stride) + 16 * x_pos,
-						stride, 1, 8);
+						stride, 0, 8);
 
 	interpolate8x8_avg2(dec->cur.y + ((16 * y_pos + 8) * stride) + 16 * x_pos + 8,
 						dec->cur.y + ((16 * y_pos + 8) * stride) + 16 * x_pos + 8,
 						dec->tmp.y + ((16 * y_pos + 8) * stride) + 16 * x_pos + 8,
-						stride, 1, 8);
+						stride, 0, 8);
 
 	interpolate8x8_avg2(dec->cur.u + (8 * y_pos * stride2) + 8 * x_pos,
 						dec->cur.u + (8 * y_pos * stride2) + 8 * x_pos,
 						dec->tmp.u + (8 * y_pos * stride2) + 8 * x_pos,
-						stride2, 1, 8);
+						stride2, 0, 8);
 
 	interpolate8x8_avg2(dec->cur.v + (8 * y_pos * stride2) + 8 * x_pos,
 						dec->cur.v + (8 * y_pos * stride2) + 8 * x_pos,
 						dec->tmp.v + (8 * y_pos * stride2) + 8 * x_pos,
-						stride2, 1, 8);
+						stride2, 0, 8);
 
 	stop_comp_timer();
 
