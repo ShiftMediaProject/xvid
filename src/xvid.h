@@ -26,7 +26,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.18 2002-09-04 22:12:21 edgomez Exp $
+ * $Id: xvid.h,v 1.19 2002-09-04 22:26:04 edgomez Exp $
  *
  *****************************************************************************/
 
@@ -46,27 +46,27 @@ extern "C" {
 
 
 /* Error codes */
-#define XVID_ERR_FAIL		-1
-#define XVID_ERR_OK			0
-#define	XVID_ERR_MEMORY		1
-#define XVID_ERR_FORMAT		2
+#define XVID_ERR_FAIL   -1
+#define XVID_ERR_OK      0
+#define XVID_ERR_MEMORY  1
+#define XVID_ERR_FORMAT  2
 
 
 /* Colorspaces */
-#define XVID_CSP_RGB24 	0
-#define XVID_CSP_YV12	1
-#define XVID_CSP_YUY2	2
-#define XVID_CSP_UYVY	3
-#define XVID_CSP_I420	4
-#define XVID_CSP_RGB555	10
-#define XVID_CSP_RGB565	11
-#define XVID_CSP_USER	12
-#define XVID_CSP_EXTERN      1004  // per slice rendering
-#define XVID_CSP_YVYU	1002
-#define XVID_CSP_RGB32 	1000
-#define XVID_CSP_NULL 	9999
+#define XVID_CSP_RGB24  0
+#define XVID_CSP_YV12   1  
+#define XVID_CSP_YUY2   2
+#define XVID_CSP_UYVY   3
+#define XVID_CSP_I420   4
+#define XVID_CSP_RGB555 10
+#define XVID_CSP_RGB565 11
+#define XVID_CSP_USER   12
+#define XVID_CSP_EXTERN 1004 // per slice rendering
+#define XVID_CSP_YVYU   1002
+#define XVID_CSP_RGB32  1000
+#define XVID_CSP_NULL   9999
 
-#define XVID_CSP_VFLIP	0x80000000	// flip mask
+#define XVID_CSP_VFLIP  0x80000000 // flip mask
 
 
 /*****************************************************************************
@@ -75,19 +75,20 @@ extern "C" {
 
 /* CPU flags for XVID_INIT_PARAM.cpu_flags */
 
-#define XVID_CPU_MMX		0x00000001
-#define XVID_CPU_MMXEXT		0x00000002
-#define XVID_CPU_SSE		0x00000004 
-#define XVID_CPU_SSE2		0x00000008
-#define XVID_CPU_3DNOW		0x00000010
-#define XVID_CPU_3DNOWEXT	0x00000020
+	/* x86 cpu flags */
+#define XVID_CPU_MMX      0x00000001
+#define XVID_CPU_MMXEXT   0x00000002
+#define XVID_CPU_SSE      0x00000004 
+#define XVID_CPU_SSE2     0x00000008
+#define XVID_CPU_3DNOW    0x00000010
+#define XVID_CPU_3DNOWEXT 0x00000020
+#define XVID_CPU_TSC      0x00000040
 
-#define XVID_CPU_TSC		0x00000040
+	/* ia64 cpu flags */
+#define XVID_CPU_IA64     0x00000080
 
-#define XVID_CPU_IA64		0x00000080
-
-#define XVID_CPU_CHKONLY	0x40000000		/* check cpu only; dont init globals */
-#define XVID_CPU_FORCE		0x80000000
+#define XVID_CPU_CHKONLY  0x40000000 /* check cpu only; dont init globals */
+#define XVID_CPU_FORCE    0x80000000
 
 
 /*****************************************************************************
@@ -172,10 +173,12 @@ extern "C" {
  * Encoder constants
  ****************************************************************************/
 
-/* Flags for XVID_ENC_PARAM.global */
-#define XVID_GLOBAL_PACKED		0x00000001	/* packed bitstream */
-#define XVID_GLOBAL_DX50BVOP	0x00000002	/* dx50 bvop compatibility */
-#define XVID_GLOBAL_DEBUG		0x00000004	/* print debug info on each frame */
+/* Flags for XVID_ENC_PARAM.global
+ * ToDo : Remove this part when BFRAMES stuff will be out of XviD stable tree
+ */
+#define XVID_GLOBAL_PACKED   0x00000001 /* packed bitstream */
+#define XVID_GLOBAL_DX50BVOP 0x00000002 /* dx50 bvop compatibility */
+#define XVID_GLOBAL_DEBUG    0x00000004 /* print debug info on each frame */
 
 /* Flags for XVID_ENC_FRAME.general */
 #define XVID_VALID_FLAGS		0x80000000
@@ -204,8 +207,8 @@ extern "C" {
 #define XVID_ME_EPZS			0x00100000
 
 
-#define XVID_GREYSCALE			0x01000000	/* enable greyscale only mode (even for */
-#define XVID_GRAYSCALE			0x01000000      /* color input material chroma is ignored) */
+#define XVID_GREYSCALE			0x01000000	   /* enable greyscale only mode (even for */
+#define XVID_GRAYSCALE			XVID_GREYSCALE /* color input material chroma is ignored) */
 
 
 /* Flags for XVID_ENC_FRAME.motion */
@@ -237,29 +240,21 @@ extern "C" {
 
 	typedef struct
 	{
-		int width, height;
-		int fincr, fbase;		/* frame increment, fbase. each frame = "fincr/fbase" seconds */
-		int rc_bitrate;			/* the bitrate of the target encoded stream, in bits/second */
-		int rc_reaction_delay_factor;	/* how fast the rate control reacts - lower values are faster */
-		int rc_averaging_period;	/* as above */
-		int rc_buffer;			/* as above */
-		int max_quantizer;		/* the upper limit of the quantizer */
-		int min_quantizer;		/* the lower limit of the quantizer */
-		int max_key_interval;	/* the maximum interval between key frames */
+		int width;
+		int height;
+		int fincr;
+		int fbase;                    /* frame increment, fbase. each frame = "fincr/fbase" seconds */
+		int rc_bitrate;               /* the bitrate of the target encoded stream, in bits/second */
+		int rc_reaction_delay_factor; /* how fast the rate control reacts - lower values are faster */
+		int rc_averaging_period;      /* as above */
+		int rc_buffer;	              /* as above */
+		int max_quantizer;            /* the upper limit of the quantizer */
+		int min_quantizer;            /* the lower limit of the quantizer */
+		int max_key_interval;         /* the maximum interval between key frames */
 #ifdef _SMP
-		int num_threads;		/* number of threads */
+		int num_threads;              /* number of threads */
 #endif
-#ifdef BFRAMES
-		int global;				/* global/debug options */
-		int max_bframes;		/* max sequential bframes (0=disable bframes) */
-		int bquant_ratio;		/* bframe quantizer multipier (percentage).
-								 * used only when bquant < 1
-								 * eg. 200 = x2 multiplier
-								 * quant = ((past_quant + future_quant) * bquant_ratio)/200
-								 */
-		int frame_drop_ratio;   /* frame dropping: 0=drop none... 100=drop all */
-#endif
-		void *handle;			/* [out] encoder instance handle */
+		void *handle;                 /* [out] encoder instance handle */
 	}
 	XVID_ENC_PARAM;
 
@@ -312,10 +307,6 @@ extern "C" {
 								 * [out] intra state
 								 */
 		HINTINFO hint;			/* [in/out] mv hint information */
-
-#ifdef BFRAMES
-		int bquant;				/* [in] bframe quantizer */
-#endif
 
 	}
 	XVID_ENC_FRAME;
