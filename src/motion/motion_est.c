@@ -173,7 +173,6 @@ MotionEstimation(MBParam * const pParam,
 
 	const VECTOR zeroMV = { 0, 0 };
 
-	int64_t time;
 	int32_t x, y;
 	int32_t iIntra = 0;
 	VECTOR pmv;
@@ -1209,7 +1208,7 @@ PMVfastSearch16(const uint8_t * const pRef,
 
 	if ((iMinSAD < 256) ||
 		((MVequal(*currMV, prevMB->mvs[0])) &&
-		 ((uint32_t) iMinSAD < prevMB->sad16))) {
+		 ((int32_t) iMinSAD < prevMB->sad16))) {
 		if (iMinSAD < 2 * iQuant)	// high chances for SKIP-mode
 		{
 			if (!MVzero(*currMV)) {
@@ -1313,7 +1312,7 @@ PMVfastSearch16(const uint8_t * const pRef,
 
 	if ((iMinSAD <= threshA) ||
 		(MVequal(*currMV, prevMB->mvs[0]) &&
-		 ((uint32_t) iMinSAD < prevMB->sad16))) {
+		 ((int32_t) iMinSAD < prevMB->sad16))) {
 		if (MotionFlags & PMV_QUICKSTOP16)
 			goto PMVfast16_Terminate_without_Refine;
 		if (MotionFlags & PMV_EARLYSTOP16)
@@ -1628,7 +1627,7 @@ PMVfastSearch8(const uint8_t * const pRef,
 					 (uint8_t) iFcode, iQuant);
 
 	if ((iMinSAD < 256 / 4) || ((MVequal(*currMV, prevMB->mvs[iSubBlock]))
-								&& ((uint32_t) iMinSAD <
+								&& ((int32_t) iMinSAD <
 									prevMB->sad8[iSubBlock]))) {
 		if (MotionFlags & PMV_QUICKSTOP16)
 			goto PMVfast8_Terminate_without_Refine;
@@ -1683,7 +1682,7 @@ PMVfastSearch8(const uint8_t * const pRef,
 
 	if ((iMinSAD <= threshA) ||
 		(MVequal(*currMV, prevMB->mvs[iSubBlock]) &&
-		 ((uint32_t) iMinSAD < prevMB->sad8[iSubBlock]))) {
+		 ((int32_t) iMinSAD < prevMB->sad8[iSubBlock]))) {
 		if (MotionFlags & PMV_QUICKSTOP16)
 			goto PMVfast8_Terminate_without_Refine;
 		if (MotionFlags & PMV_EARLYSTOP16)
@@ -1742,7 +1741,7 @@ PMVfastSearch8(const uint8_t * const pRef,
 
 	if ((iMinSAD <= threshA) ||
 		(MVequal(*currMV, prevMB->mvs[iSubBlock]) &&
-		 ((uint32_t) iMinSAD < prevMB->sad8[iSubBlock]))) {
+		 ((int32_t) iMinSAD < prevMB->sad8[iSubBlock]))) {
 		if (MotionFlags & PMV_QUICKSTOP16)
 			goto PMVfast8_Terminate_without_Refine;
 		if (MotionFlags & PMV_EARLYSTOP16)
@@ -1928,7 +1927,7 @@ EPZSSearch16(const uint8_t * const pRef,
 // thresh1 is fixed to 256 
 	if ((iMinSAD < 256) ||
 		((MVequal(*currMV, prevMB->mvs[0])) &&
-		 ((uint32_t) iMinSAD < prevMB->sad16))) {
+		 ((int32_t) iMinSAD < prevMB->sad16))) {
 		if (MotionFlags & PMV_QUICKSTOP16)
 			goto EPZS16_Terminate_without_Refine;
 		if (MotionFlags & PMV_EARLYSTOP16)
@@ -1988,7 +1987,7 @@ EPZSSearch16(const uint8_t * const pRef,
 
 	if ((iMinSAD <= thresh2)
 		|| (MVequal(*currMV, prevMB->mvs[0]) &&
-			((uint32_t) iMinSAD <= prevMB->sad16))) {
+			((int32_t) iMinSAD <= prevMB->sad16))) {
 		if (MotionFlags & PMV_QUICKSTOP16)
 			goto EPZS16_Terminate_without_Refine;
 		if (MotionFlags & PMV_EARLYSTOP16)
@@ -2347,6 +2346,291 @@ EPZSSearch8(const uint8_t * const pRef,
 }
 
 
+
+int32_t
+PMVfastIntSearch16(const uint8_t * const pRef,
+				const uint8_t * const pRefH,
+				const uint8_t * const pRefV,
+				const uint8_t * const pRefHV,
+				const IMAGE * const pCur,
+				const int x,
+				const int y,
+				const uint32_t MotionFlags,
+				const uint32_t iQuant,
+				const uint32_t iFcode,
+				const MBParam * const pParam,
+				const MACROBLOCK * const pMBs,
+				const MACROBLOCK * const prevMBs,
+				VECTOR * const currMV,
+				VECTOR * const currPMV)
+{
+	const uint32_t iWcount = pParam->mb_width;
+	const int32_t iWidth = pParam->width;
+	const int32_t iHeight = pParam->height;
+	const int32_t iEdgedWidth = pParam->edged_width;
+
+	const uint8_t *cur = pCur->y + x * 16 + y * 16 * iEdgedWidth;
+	const VECTOR zeroMV = { 0, 0 };
+
+	int32_t iDiamondSize;
+
+	int32_t min_dx;
+	int32_t max_dx;
+	int32_t min_dy;
+	int32_t max_dy;
+
+	int32_t iFound;
+
+	VECTOR newMV;
+	VECTOR backupMV;			/* just for PMVFAST */
+
+	VECTOR pmv[4];
+	int32_t psad[4];
+
+	MainSearch16FuncPtr MainSearchPtr;
+
+	const MACROBLOCK *const prevMB = prevMBs + x + y * iWcount;
+	MACROBLOCK *const pMB = pMBs + x + y * iWcount;
+
+	int32_t threshA, threshB;
+	int32_t bPredEq;
+	int32_t iMinSAD, iSAD;
+
+/* Get maximum range */
+	get_range(&min_dx, &max_dx, &min_dy, &max_dy, x, y, 16, iWidth, iHeight,
+			  iFcode);
+
+/* we work with abs. MVs, not relative to prediction, so get_range is called relative to 0,0 */
+
+	if ((x == 0) && (y == 0)) {
+		threshA = 512;
+		threshB = 1024;
+
+		bPredEq = 0;
+		psad[0] = psad[1] = psad[2] = psad[3] = 0;
+		*currMV = pmv[0] = pmv[1] = pmv[2] = pmv[3] = zeroMV;
+
+	} else {
+		threshA = psad[0];
+		threshB = threshA + 256;
+		if (threshA < 512)
+			threshA = 512;
+		if (threshA > 1024)
+			threshA = 1024;
+		if (threshB > 1792)
+			threshB = 1792;
+
+		bPredEq = get_ipmvdata(pMBs, iWcount, 0, x, y, 0, pmv, psad);
+		*currMV = pmv[0];			/* current best := prediction */
+	}
+
+	iFound = 0;
+
+/* Step 4: Calculate SAD around the Median prediction. 
+   MinSAD=SAD 
+   If Motion Vector equal to Previous frame motion vector 
+   and MinSAD<PrevFrmSAD goto Step 10. 
+   If SAD<=256 goto Step 10. 
+*/
+
+	if (currMV->x > max_dx) {
+		currMV->x = EVEN(max_dx);
+	}
+	if (currMV->x < min_dx) {
+		currMV->x = EVEN(min_dx);
+	}
+	if (currMV->y > max_dy) {
+		currMV->y = EVEN(max_dy);
+	}
+	if (currMV->y < min_dy) {
+		currMV->y = EVEN(min_dy);
+	}
+
+	iMinSAD =
+		sad16(cur,
+			  get_ref_mv(pRef, pRefH, pRefV, pRefHV, x, y, 16, currMV,
+						 iEdgedWidth), iEdgedWidth, MV_MAX_ERROR);
+	iMinSAD +=
+		calc_delta_16(currMV->x - pmv[0].x, currMV->y - pmv[0].y,
+					  (uint8_t) iFcode, iQuant);
+
+	if ((iMinSAD < 256) ||
+		((MVequal(*currMV, prevMB->i_mvs[0])) &&
+		 ((int32_t) iMinSAD < prevMB->i_sad16))) {
+		if (iMinSAD < 2 * iQuant)	// high chances for SKIP-mode
+		{
+			if (!MVzero(*currMV)) {
+				iMinSAD += MV16_00_BIAS;
+				CHECK_MV16_ZERO;	// (0,0) saves space for letterboxed pictures
+				iMinSAD -= MV16_00_BIAS;
+			}
+		}
+
+		if (MotionFlags & PMV_EARLYSTOP16)
+			goto PMVfastInt16_Terminate_with_Refine;
+	}
+
+
+/* Step 2 (lazy eval): Calculate Distance= |MedianMVX| + |MedianMVY| where MedianMV is the motion 
+   vector of the median. 
+   If PredEq=1 and MVpredicted = Previous Frame MV, set Found=2  
+*/
+
+	if ((bPredEq) && (MVequal(pmv[0], prevMB->i_mvs[0])))
+		iFound = 2;
+
+/* Step 3 (lazy eval): If Distance>0 or thresb<1536 or PredEq=1 Select small Diamond Search. 
+   Otherwise select large Diamond Search. 
+*/
+
+	if ((!MVzero(pmv[0])) || (threshB < 1536) || (bPredEq))
+		iDiamondSize = 2;		// halfpel units!
+	else
+		iDiamondSize = 4;		// halfpel units!
+
+/* 
+   Step 5: Calculate SAD for motion vectors taken from left block, top, top-right, and Previous frame block. 
+   Also calculate (0,0) but do not subtract offset. 
+   Let MinSAD be the smallest SAD up to this point. 
+   If MV is (0,0) subtract offset. 
+*/
+
+// (0,0) is often a good choice
+
+	if (!MVzero(pmv[0]))
+		CHECK_MV16_ZERO;
+
+// previous frame MV is always possible
+
+	if (!MVzero(prevMB->i_mvs[0]))
+		if (!MVequal(prevMB->i_mvs[0], pmv[0]))
+			CHECK_MV16_CANDIDATE(prevMB->i_mvs[0].x, prevMB->i_mvs[0].y);
+
+// left neighbour, if allowed
+
+	if (!MVzero(pmv[1]))
+		if (!MVequal(pmv[1], prevMB->i_mvs[0]))
+			if (!MVequal(pmv[1], pmv[0])) 
+				CHECK_MV16_CANDIDATE(pmv[1].x, pmv[1].y);
+
+// top neighbour, if allowed
+	if (!MVzero(pmv[2]))
+		if (!MVequal(pmv[2], prevMB->i_mvs[0]))
+			if (!MVequal(pmv[2], pmv[0]))
+				if (!MVequal(pmv[2], pmv[1])) 
+					CHECK_MV16_CANDIDATE(pmv[2].x, pmv[2].y);
+
+// top right neighbour, if allowed
+					if (!MVzero(pmv[3]))
+						if (!MVequal(pmv[3], prevMB->i_mvs[0]))
+							if (!MVequal(pmv[3], pmv[0]))
+								if (!MVequal(pmv[3], pmv[1]))
+									if (!MVequal(pmv[3], pmv[2])) 
+										CHECK_MV16_CANDIDATE(pmv[3].x,
+															 pmv[3].y);
+
+	if ((MVzero(*currMV)) &&
+		(!MVzero(pmv[0])) /* && (iMinSAD <= iQuant * 96) */ )
+		iMinSAD -= MV16_00_BIAS;
+
+
+/* Step 6: If MinSAD <= thresa goto Step 10. 
+   If Motion Vector equal to Previous frame motion vector and MinSAD<PrevFrmSAD goto Step 10. 
+*/
+
+	if ((iMinSAD <= threshA) ||
+		(MVequal(*currMV, prevMB->i_mvs[0]) &&
+		 ((int32_t) iMinSAD < prevMB->i_sad16))) {
+
+		if (MotionFlags & PMV_EARLYSTOP16)
+			goto PMVfastInt16_Terminate_with_Refine;
+	}
+
+
+/************ (Diamond Search)  **************/
+/* 
+   Step 7: Perform Diamond search, with either the small or large diamond. 
+   If Found=2 only examine one Diamond pattern, and afterwards goto step 10 
+   Step 8: If small diamond, iterate small diamond search pattern until motion vector lies in the center of the diamond. 
+   If center then goto step 10. 
+   Step 9: If large diamond, iterate large diamond search pattern until motion vector lies in the center. 
+   Refine by using small diamond and goto step 10. 
+*/
+
+	if (MotionFlags & PMV_USESQUARES16)
+		MainSearchPtr = Square16_MainSearch;
+	else if (MotionFlags & PMV_ADVANCEDDIAMOND16)
+		MainSearchPtr = AdvDiamond16_MainSearch;
+	else
+		MainSearchPtr = Diamond16_MainSearch;
+
+	backupMV = *currMV;			/* save best prediction, actually only for EXTSEARCH */
+
+
+/* default: use best prediction as starting point for one call of PMVfast_MainSearch */
+	iSAD =
+		(*MainSearchPtr) (pRef, pRefH, pRefV, pRefHV, cur, x, y, currMV->x,
+						  currMV->y, iMinSAD, &newMV, pmv, min_dx, max_dx,
+						  min_dy, max_dy, iEdgedWidth, iDiamondSize, iFcode,
+						  iQuant, iFound);
+
+	if (iSAD < iMinSAD) {
+		*currMV = newMV;
+		iMinSAD = iSAD;
+	}
+
+	if (MotionFlags & PMV_EXTSEARCH16) {
+/* extended: search (up to) two more times: orignal prediction and (0,0) */
+
+		if (!(MVequal(pmv[0], backupMV))) {
+			iSAD =
+				(*MainSearchPtr) (pRef, pRefH, pRefV, pRefHV, cur, x, y,
+								  pmv[0].x, pmv[0].y, iMinSAD, &newMV, pmv,
+								  min_dx, max_dx, min_dy, max_dy, iEdgedWidth,
+								  iDiamondSize, iFcode, iQuant, iFound);
+
+			if (iSAD < iMinSAD) {
+				*currMV = newMV;
+				iMinSAD = iSAD;
+			}
+		}
+
+		if ((!(MVzero(pmv[0]))) && (!(MVzero(backupMV)))) {
+			iSAD =
+				(*MainSearchPtr) (pRef, pRefH, pRefV, pRefHV, cur, x, y, 0, 0,
+								  iMinSAD, &newMV, pmv, min_dx, max_dx, min_dy,
+								  max_dy, iEdgedWidth, iDiamondSize, iFcode,
+								  iQuant, iFound);
+
+			if (iSAD < iMinSAD) {
+				*currMV = newMV;
+				iMinSAD = iSAD;
+			}
+		}
+	}
+
+/* 
+   Step 10:  The motion vector is chosen according to the block corresponding to MinSAD.
+*/
+
+PMVfastInt16_Terminate_with_Refine:
+
+	pMB->i_mvs[0] = pMB->i_mvs[1] = pMB->i_mvs[2] = pMB->i_mvs[3] = pMB->i_mv16 = *currMV;
+	pMB->i_sad8[0] = pMB->i_sad8[1] = pMB->i_sad8[2] = pMB->i_sad8[3] = pMB->i_sad16 = iMinSAD;
+	
+	if (MotionFlags & PMV_HALFPELREFINE16)	// perform final half-pel step 
+		iMinSAD =
+			Halfpel16_Refine(pRef, pRefH, pRefV, pRefHV, cur, x, y, currMV,
+							 iMinSAD, pmv, min_dx, max_dx, min_dy, max_dy,
+							 iFcode, iQuant, iEdgedWidth);
+
+  	pmv[0] = get_pmv2(pMBs, pParam->mb_width, 0, x, y, 0);  	// get _REAL_ prediction (halfpel possible)
+
+PMVfastInt16_Terminate_without_Refine:
+	currPMV->x = currMV->x - pmv[0].x;
+	currPMV->y = currMV->y - pmv[0].y;
+	return iMinSAD;
+}
 
 
 
