@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.27 2003-02-18 00:23:27 edgomez Exp $
+ * $Id: xvid.h,v 1.28 2003-03-04 10:55:21 syskin Exp $
  *
  ****************************************************************************/
 
@@ -420,6 +420,7 @@ extern "C" {
 		HINTINFO hint;                     /* [in/out] mv hint information */
 
 		int bquant;                        /* [in] bframe quantizer */
+		int bframe_threshold;			   /* [in] sensitivity of B-frame decision */
 
 	} XVID_ENC_FRAME;
 
