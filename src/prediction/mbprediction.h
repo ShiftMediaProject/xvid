@@ -35,6 +35,113 @@ void predict_acdc(MACROBLOCK *pMBs,
 				int32_t iDcScaler,
 				int16_t predictors[8]);
 
+/* get_pmvdata returns the median predictor and nothing else */
+
+static __inline VECTOR get_pmv(const MACROBLOCK * const pMBs,
+							const uint32_t x, const uint32_t y,
+							const uint32_t x_dim,
+							const uint32_t block)
+{
+
+    int xin1, xin2, xin3;
+    int yin1, yin2, yin3;
+    int vec1, vec2, vec3;
+    VECTOR lneigh,tneigh,trneigh; /* left neighbour, top neighbour, topright neighbour */
+    VECTOR median;
+
+    static VECTOR zeroMV = {0,0};
+    uint32_t index = x + y * x_dim;
+//    zeroMV.x = zeroMV.y = 0;
+
+	// first row (special case)
+    if (y == 0 && (block == 0 || block == 1))
+    {
+		if ((x == 0) && (block == 0))		// first column, first block
+		{ 
+			return zeroMV;
+		}
+		if (block == 1)		// second block; has only a left neighbour
+		{
+			return pMBs[index].mvs[0];
+		}
+		else /* block==0, but x!=0, so again, there is a left neighbour*/
+		{
+			return pMBs[index-1].mvs[1];
+		}
+    }
+
+	/*
+		MODE_INTER, vm18 page 48
+		MODE_INTER4V vm18 page 51
+
+					(x,y-1)		(x+1,y-1)
+					[   |   ]	[	|   ]
+					[ 2 | 3 ]	[ 2 |   ]
+
+		(x-1,y)		(x,y)		(x+1,y)
+		[   | 1 ]	[ 0 | 1 ]	[ 0 |   ]
+		[   | 3 ]	[ 2 | 3 ]	[	|   ]
+	*/
+
+    switch (block)
+    {
+	case 0:
+		xin1 = x - 1;	yin1 = y;	vec1 = 1;	/* left */
+		xin2 = x;	yin2 = y - 1;	vec2 = 2;	/* top */
+		xin3 = x + 1;	yin3 = y - 1;	vec3 = 2;	/* top right */
+		break;
+	case 1:
+		xin1 = x;		yin1 = y;		vec1 = 0;	
+		xin2 = x;		yin2 = y - 1;   vec2 = 3;
+		xin3 = x + 1;	yin3 = y - 1;	vec3 = 2;
+	    break;
+	case 2:
+		xin1 = x - 1;	yin1 = y;		vec1 = 3;
+		xin2 = x;		yin2 = y;		vec2 = 0;
+		xin3 = x;		yin3 = y;		vec3 = 1;
+	    break;
+	default:
+		xin1 = x;		yin1 = y;		vec1 = 2;
+		xin2 = x;		yin2 = y;		vec2 = 0;
+		xin3 = x;		yin3 = y;		vec3 = 1;
+    }
+
+
+	if (xin1 < 0 || /* yin1 < 0  || */ xin1 >= (int32_t)x_dim)
+	{
+	    	lneigh = zeroMV;
+	}
+	else
+	{
+		lneigh = pMBs[xin1 + yin1 * x_dim].mvs[vec1]; 
+	}
+
+	if (xin2 < 0 || /* yin2 < 0 || */ xin2 >= (int32_t)x_dim)
+	{
+		tneigh = zeroMV;
+	}
+	else
+	{
+		tneigh = pMBs[xin2 + yin2 * x_dim].mvs[vec2]; 
+	}
+
+	if (xin3 < 0 || /* yin3 < 0 || */ xin3 >= (int32_t)x_dim)
+	{
+		trneigh = zeroMV;
+	}
+	else
+	{
+		trneigh = pMBs[xin3 + yin3 * x_dim].mvs[vec3];
+	}
+
+	// median,minimum
+	
+	median.x = MIN(MAX(lneigh.x, tneigh.x), MIN(MAX(tneigh.x, trneigh.x), MAX(lneigh.x, trneigh.x)));
+	median.y = MIN(MAX(lneigh.y, tneigh.y), MIN(MAX(tneigh.y, trneigh.y), MAX(lneigh.y, trneigh.y)));
+	return median;
+}
+
+
 /* This is somehow a copy of get_pmv, but returning all MVs and Minimum SAD 
    instead of only Median MV */
 
@@ -175,6 +282,7 @@ static __inline int get_pmvdata(const MACROBLOCK * const pMBs,
 	psad[0]=MIN(MIN(psad[1],psad[2]),psad[3]);
 	return 0;
 }
+
 
 
 #endif /* _MBPREDICTION_H_ */
