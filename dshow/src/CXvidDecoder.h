@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.h,v 1.4 2004-07-16 15:38:01 syskin Exp $
+ * $Id: CXvidDecoder.h,v 1.5 2005-03-14 01:18:20 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -81,6 +81,7 @@ public :
 private :
 
 	HRESULT ChangeColorspace(GUID subtype, GUID formattype, void * format);
+	HRESULT OpenLib();
 	void CloseLib();
 
 	xvid_dec_create_t m_create;
