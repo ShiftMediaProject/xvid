@@ -34,7 +34,7 @@
  *
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.32 2002-05-01 13:00:01 suxen_drol Exp $
+ *  $Id: encoder.c,v 1.33 2002-05-03 08:32:49 Isibaar Exp $
  *
  ***************************************************************************/
 
@@ -433,6 +433,13 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 	SWAP(pEnc->current, pEnc->reference);
 
 	pEnc->current->quant = (pFrame->quant == 0) ? RateControlGetQ(0) : pFrame->quant;
+	
+	if(pEnc->current->quant < 1)
+		pEnc->current->quant = 1;
+	
+	if(pEnc->current->quant > 31)
+		pEnc->current->quant = 31;
+
 	pEnc->current->global_flags = pFrame->general;
 	pEnc->current->motion_flags = pFrame->motion;
 	pEnc->current->seconds = pEnc->mbParam.m_seconds;
