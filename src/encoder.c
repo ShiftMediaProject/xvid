@@ -36,7 +36,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.37 2002-06-07 10:21:48 edgomez Exp $
+ *  $Id: encoder.c,v 1.38 2002-06-07 10:36:08 edgomez Exp $
  *
  ***************************************************************************/
 
@@ -444,7 +444,7 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 
 	SWAP(pEnc->current, pEnc->reference);
 
-	pEnc->current->quant = (pFrame->quant == 0) ? RateControlGetQ(0) : pFrame->quant;
+	pEnc->current->quant = (pFrame->quant == 0) ? RateControlGetQ(&pEnc->rate_control, 0) : pFrame->quant;
 	
 	if(pEnc->current->quant < 1)
 		pEnc->current->quant = 1;
@@ -581,7 +581,10 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 
 	if (pFrame->quant == 0)
 	{
-		RateControlUpdate(pEnc->current->quant, pFrame->length, pFrame->intra);
+		RateControlUpdate(&pEnc->rate_control,
+				  pEnc->current->quant,
+				  pFrame->length,
+				  pFrame->intra);
 	}
 
 	pEnc->iFrameNum++;
