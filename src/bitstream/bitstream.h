@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: bitstream.h,v 1.15 2002-11-26 23:44:10 edgomez Exp $
+ * $Id: bitstream.h,v 1.16 2003-02-09 19:32:52 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -301,7 +301,7 @@ BitstreamByteAlign(Bitstream * const bs)
 static uint32_t __inline
 BitstreamPos(const Bitstream * const bs)
 {
-	return 8 * ((ptr_t)bs->tail - (ptr_t)bs->start) + bs->pos;
+	return((uint32_t)(8*((ptr_t)bs->tail - (ptr_t)bs->start) + bs->pos));
 }
 
 
@@ -312,7 +312,7 @@ BitstreamPos(const Bitstream * const bs)
 static uint32_t __inline
 BitstreamLength(Bitstream * const bs)
 {
-	uint32_t len = (ptr_t) bs->tail - (ptr_t) bs->start;
+	uint32_t len = (uint32_t)((ptr_t)bs->tail - (ptr_t)bs->start);
 
 	if (bs->pos) {
 		uint32_t b = bs->buf;

@@ -35,7 +35,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef	_MSC_VER
+#ifdef	WIN32
 #include <time.h>  /* for clock */
 #else
 #include <sys/time.h>  /* for gettimeofday */

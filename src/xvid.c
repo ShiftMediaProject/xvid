@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: xvid.c,v 1.39 2002-11-16 23:38:16 edgomez Exp $
+ * $Id: xvid.c,v 1.40 2003-02-09 19:32:52 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -71,9 +71,9 @@
 #include "utils/timer.h"
 #include "bitstream/mbcoding.h"
 
-#if defined(ARCH_X86) && defined(EXPERIMENTAL_SSE2_CODE)
+#if defined(ARCH_IS_IA32) && defined(EXPERIMENTAL_SSE2_CODE)
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #include <windows.h>
 #else
 #include <signal.h>
@@ -81,7 +81,7 @@
 #endif
 
 
-#ifndef WIN32
+#ifndef _MSC_VER
 
 static jmp_buf mark;
 
@@ -104,7 +104,7 @@ sigill_handler(int signal)
 int
 sigill_check(void (*func)())
 {
-#ifdef WIN32
+#ifdef _MSC_VER
 	_try {
 		func();
 	}
@@ -178,7 +178,7 @@ xvid_init(void *handle,
 
 		cpu_flags = check_cpu_features();
 
-#if defined(ARCH_X86) && defined(EXPERIMENTAL_SSE2_CODE)
+#if defined(ARCH_IS_IA32) && defined(EXPERIMENTAL_SSE2_CODE)
 		if ((cpu_flags & XVID_CPU_SSE) && sigill_check(sse_os_trigger))
 			cpu_flags &= ~XVID_CPU_SSE;
 
@@ -265,7 +265,7 @@ xvid_init(void *handle,
 	
 	Halfpel8_Refine = Halfpel8_Refine_c;
 
-#ifdef ARCH_X86
+#ifdef ARCH_IS_IA32
 	if ((cpu_flags & XVID_CPU_MMX) > 0) {
 
 		/* Forward and Inverse Discrete Cosine Transformation functions */
@@ -392,7 +392,7 @@ xvid_init(void *handle,
 
 #endif
 
-#ifdef ARCH_IA64
+#ifdef ARCH_IS_IA64
 	if ((cpu_flags & XVID_CPU_IA64) > 0) { //use assembler routines?
 	  idct_ia64_init();
 	  fdct = fdct_ia64;
@@ -419,8 +419,8 @@ xvid_init(void *handle,
 	}
 #endif 
 
-#ifdef ARCH_PPC
-#ifdef ARCH_PPC_ALTIVEC
+#ifdef ARCH_IS_PPC
+#ifdef ARCH_IS_PPC_ALTIVEC
 	calc_cbp = calc_cbp_altivec;
 	fdct = fdct_altivec;
 	idct = idct_altivec;
