@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.12 2004-07-21 14:52:22 syskin Exp $
+ * $Id: estimation_bvop.c,v 1.13 2004-07-21 15:47:51 syskin Exp $
  *
  ****************************************************************************/
 
@@ -522,8 +522,6 @@ SkipDecisionB(MACROBLOCK * const pMB, const SearchData * const Data)
 {
 	int k;
 
-	pMB->mode = MODE_DIRECT; /* just to initialize it */
-
 	if (!Data->chroma) {
 		int dx = 0, dy = 0, b_dx = 0, b_dy = 0;
 		int32_t sum;
@@ -566,6 +564,10 @@ SkipDecisionB(MACROBLOCK * const pMB, const SearchData * const Data)
 	for (k = 0; k < 4; k++) {
 		pMB->qmvs[k] = pMB->mvs[k] = Data->directmvF[k];
 		pMB->b_qmvs[k] = pMB->b_mvs[k] =  Data->directmvB[k];
+		if (Data->qpel) {
+			pMB->mvs[k].x /= 2; pMB->mvs[k].y /= 2; /* it's a hint for future searches */
+			pMB->b_mvs[k].x /= 2; pMB->b_mvs[k].y /= 2;
+		}
 	}
 }
 
@@ -1031,14 +1033,11 @@ MotionEstimationBVOP(MBParam * const pParam,
 			if ( (skip_sad < 2 * Data_d.iQuant * MAX_SAD00_FOR_SKIP )
 				&& ((100*best_sad)/(skip_sad+1) > FINAL_SKIP_THRESH) ) {
 
-				if (!Data_d.chroma) { /* we still need to check chroma */
-					SkipDecisionB(pMB, &Data_d);
-					if (pMB->mode == MODE_DIRECT_NONE_MV) { /* skipped? */
-						pMB->sad16 = skip_sad;
-						continue;
-					}	
-				} else { /* just SKIP */
-					pMB->mode = MODE_DIRECT_NONE_MV;
+				Data_d.chromaSAD = 0; /* green light for chroma check */
+
+				SkipDecisionB(pMB, &Data_d);
+				
+				if (pMB->mode == MODE_DIRECT_NONE_MV) { /* skipped? */
 					pMB->sad16 = skip_sad;
 					continue;
 				}
