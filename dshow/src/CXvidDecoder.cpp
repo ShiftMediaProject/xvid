@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.cpp,v 1.10 2004-07-18 00:58:14 suxen_drol Exp $
+ * $Id: CXvidDecoder.cpp,v 1.11 2004-07-25 11:13:16 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -36,11 +36,11 @@
 	place these paths at the top of the Tools|Options|Directories list
 
 	headers:
-	C:\DXVCSDK\include
-	C:\DXVCSDK\samples\Multimedia\DirectShow\BaseClasses
+	C:\DX90SDK\Include
+	C:\DX90SDK\Samples\C++\DirectShow\BaseClasses
 	
-	libraries (optional):
-	C:\DXVCSDK\samples\Multimedia\DirectShow\BaseClasses\Release
+	C:\DX90SDK\Samples\C++\DirectShow\BaseClasses\Release
+	C:\DX90SDK\Samples\C++\DirectShow\BaseClasses\Debug
 */
 
 

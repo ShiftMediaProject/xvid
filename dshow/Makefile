@@ -8,7 +8,7 @@
 # Requires GNU Make because of shell expansion performed at a bad time with
 # other make programs (even using := variable assignments)
 #
-# $Id: Makefile,v 1.3 2004-07-20 12:18:44 suxen_drol Exp $
+# $Id: Makefile,v 1.4 2004-07-25 11:13:16 suxen_drol Exp $
 ##############################################################################
 
 include sources.inc
@@ -19,7 +19,8 @@ include sources.inc
 # if a release prior to "directx v9.0 sdk update (summer 2003)" is installed,
 # uncomment the DXBASECLASSES=$(DXTREE)/Samples/MultiMedia/DirectShow/BaseClasses
 ##############################################################################
-DXTREE=/c/DX9VCSDK
+DXTREE=/c/DX90SDK
+# DXTREE=/c/DXVCSDK
 DXBASECLASSES=$(DXTREE)/Samples/C++/DirectShow/BaseClasses
 # DXBASECLASSES=$(DXTREE)/Samples/MultiMedia/DirectShow/BaseClasses
 
