@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_stat.c,v 1.11 2002-09-21 11:55:53 edgomez Exp $
+ * $Id: xvid_stat.c,v 1.12 2002-09-27 18:35:35 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -44,7 +44,7 @@
  *  -q integer     : quality ([0..5])
  *  -d boolean     : save decoder output (0 False*, !=0 True)
  *  -m boolean     : save mpeg4 raw stream (0 False*, !=0 True)
- *  -h, -help      : prints this help message
+ *  -help          : prints this help message
  *  -quant integer : fixed quantizer (disables -b setting)
  *  (* means default)
  *
@@ -65,9 +65,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#ifndef _MSC_VER
+#include <sys/time.h>
+#else
 #include <time.h>
+#endif
 
-#include "../src/xvid.h"
+#include "xvid.h"
 
 /****************************************************************************
  *                               Prototypes
@@ -257,7 +261,7 @@ int main(int argc, char *argv[])
 			i++;
 			ARG_SAVEMPEGSTREAM = atoi(argv[i]);
 		}
-		else if (strcmp("-h", argv[i]) == 0 || strcmp("-help", argv[i])) {
+		else if (strcmp("-help", argv[i])) {
 			usage();
 			return(0);
 		}
@@ -502,7 +506,7 @@ int main(int argc, char *argv[])
 	printf("size %6d ",totalsize);
 	printf("( %4d kbps ",(int)(totalsize*8*ARG_FRAMERATE/1000));
 	printf("/ %.2f bpp) ",(double)totalsize*8/XDIM/YDIM);
-	printf("enc: %6.1f fps, dec: %6.1f fps \n",CLOCKS_PER_SEC/(totalenctime*1000), CLOCKS_PER_SEC/(totaldectime*1000));
+	printf("enc: %6.1f fps, dec: %6.1f fps \n",1000/totalenctime, 1000/totaldectime);
 	printf("PSNR P(%d): %5.2f ( %5.2f , %5.2f ; %5.4f ) ",Pframes,Ppsnr,Pminpsnr,Pmaxpsnr,sqrt(Pvarpsnr/filenr));
 	printf("I(%d): %5.2f ( %5.2f , %5.2f ; %5.4f ) ",Iframes,Ipsnr,Iminpsnr,Imaxpsnr,sqrt(Ivarpsnr/filenr));
 	printf("\n");
@@ -551,12 +555,15 @@ int main(int argc, char *argv[])
 /* Return time elapsed time in miliseconds since the program started */
 static double msecond()
 {	
+#ifndef _MSC_VER
+	struct timeval  tv;
+	gettimeofday(&tv, 0);
+	return tv.tv_sec*10e3 + tv.tv_usec * 1.0e-3;
+#else
 	clock_t clk;
-	   
 	clk = clock();
-			
 	return clk * 1000 / CLOCKS_PER_SEC;
-
+#endif
 }
 
 
@@ -628,7 +635,7 @@ static void usage()
 	fprintf(stderr, " -q integer     : quality ([0..5])\n");
 	fprintf(stderr, " -d boolean     : save decoder output (0 False*, !=0 True)\n");
 	fprintf(stderr, " -m boolean     : save mpeg4 raw stream (0 False*, !=0 True)\n");
-	fprintf(stderr, " -h, -help      : prints this help message\n");
+	fprintf(stderr, " -help          : prints this help message\n");
 	fprintf(stderr, " -quant integer : fixed quantizer (disables -b setting)\n");
 	fprintf(stderr, " (* means default)\n");
 
@@ -701,7 +708,7 @@ static int read_pgmdata(FILE* handle, unsigned char *image)
 static int read_yuvdata(FILE* handle, unsigned char *image)
 {
    
-	if (fread(image, 1, IMAGE_SIZE(XDIM, YDIM), handle) != IMAGE_SIZE(XDIM, YDIM)) 
+	if (fread(image, 1, IMAGE_SIZE(XDIM, YDIM), handle) != (unsigned int)IMAGE_SIZE(XDIM, YDIM)) 
 		return 1;
 	else	
 		return 0;
