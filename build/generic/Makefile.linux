@@ -4,7 +4,7 @@
 # 
 # Edit this file to enable/disable optimizations
 #
-# $Id: Makefile.linux,v 1.4 2002-07-07 11:21:20 chl Exp $
+# $Id: Makefile.linux,v 1.5 2002-07-09 21:39:19 chl Exp $
 # 
 #############################################################################
 
@@ -90,6 +90,8 @@ else
   # CFLAGS += -march=i486 -mcpu=i486
   # CFLAGS += -march=i586 -mcpu=i586
   # CFLAGS += -march=i686 -mcpu=i686
+  # CFLAGS += -march=pentium -mcpu=pentium
+  # CFLAGS += -march=pentiumpro -mcpu=pentiumpro
 
   # Architecture options : Valid for every gcc >= 3.1
   # Uncomment the one which you want to compile for
