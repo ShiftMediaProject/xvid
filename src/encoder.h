@@ -66,6 +66,8 @@ typedef struct
 	uint32_t quant_type;
 	uint32_t motion_flags;	
 	uint32_t global_flags;
+
+	HINTINFO * hint;
 } MBParam;
 
 typedef struct
