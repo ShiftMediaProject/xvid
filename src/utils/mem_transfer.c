@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mem_transfer.c,v 1.11 2004-07-14 23:26:06 edgomez Exp $
+ * $Id: mem_transfer.c,v 1.12 2004-12-19 13:16:50 syskin Exp $
  *
  ****************************************************************************/
 
@@ -34,6 +34,7 @@ TRANSFER_16TO8COPY_PTR transfer_16to8copy;
 TRANSFER_8TO16SUB_PTR  transfer_8to16sub;
 TRANSFER_8TO16SUBRO_PTR  transfer_8to16subro;
 TRANSFER_8TO16SUB2_PTR transfer_8to16sub2;
+TRANSFER_8TO16SUB2RO_PTR transfer_8to16sub2ro;
 TRANSFER_16TO8ADD_PTR  transfer_16to8add;
 
 TRANSFER8X8_COPY_PTR transfer8x8_copy;
@@ -188,6 +189,24 @@ transfer_8to16sub2_c(int16_t * const dct,
 				r = 255;
 			}
 			cur[j * stride + i] = r;
+			dct[j * 8 + i] = (int16_t) c - (int16_t) r;
+		}
+	}
+}
+
+void
+transfer_8to16sub2ro_c(int16_t * const dct,
+					 const uint8_t * const cur,
+					 const uint8_t * ref1,
+					 const uint8_t * ref2,
+					 const uint32_t stride)
+{
+	uint32_t i, j;
+
+	for (j = 0; j < 8; j++) {
+		for (i = 0; i < 8; i++) {
+			uint8_t c = cur[j * stride + i];
+			int r = (ref1[j * stride + i] + ref2[j * stride + i] + 1) / 2;
 			dct[j * 8 + i] = (int16_t) c - (int16_t) r;
 		}
 	}

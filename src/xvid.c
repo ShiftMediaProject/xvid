@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.58 2004-12-09 23:02:54 edgomez Exp $
+ * $Id: xvid.c,v 1.59 2004-12-19 13:16:50 syskin Exp $
  *
  ****************************************************************************/
 
@@ -210,6 +210,7 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 	transfer_8to16sub  = transfer_8to16sub_c;
 	transfer_8to16subro  = transfer_8to16subro_c;
 	transfer_8to16sub2 = transfer_8to16sub2_c;
+	transfer_8to16sub2ro = transfer_8to16sub2ro_c;
 	transfer_16to8add  = transfer_16to8add_c;
 	transfer8x8_copy   = transfer8x8_copy_c;
 
@@ -429,6 +430,7 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 
 		/* Buffer transfer */
 		transfer_8to16sub2 = transfer_8to16sub2_xmm;
+		transfer_8to16sub2ro = transfer_8to16sub2ro_xmm;
 
 		/* Colorspace transformation */
 		yv12_to_yv12  = yv12_to_yv12_xmm;

@@ -31,7 +31,8 @@ Block_CalcBits_BVOP(int16_t * const coeff,
 				const int block,
 				const uint16_t * scan_table,
 				const unsigned int lambda,
-				const uint16_t * mpeg_quant_matrices)
+				const uint16_t * mpeg_quant_matrices,
+				const unsigned int quant_sq)
 {
 	int sum;
 	int bits;
@@ -66,7 +67,7 @@ Block_CalcBits_BVOP(int16_t * const coeff,
 		distortion = sse8_16bit(data, zero_block, 8*sizeof(int16_t));
 	}
 
-	return bits + (lambda*distortion)/(quant*quant);
+	return bits + (lambda*distortion)/quant_sq;
 }
 
 
@@ -79,7 +80,8 @@ Block_CalcBits_BVOP_direct(int16_t * const coeff,
 				const int block,
 				const uint16_t * scan_table,
 				const unsigned int lambda,
-				const uint16_t * mpeg_quant_matrices)
+				const uint16_t * mpeg_quant_matrices,
+				const unsigned int quant_sq)
 {
 	int sum;
 	int bits;
@@ -114,26 +116,7 @@ Block_CalcBits_BVOP_direct(int16_t * const coeff,
 		distortion = sse8_16bit(data, zero_block, 8*sizeof(int16_t));
 	}
 
-	return bits + (lambda*distortion)/(quant*quant);
-}
-
-
-static void
-transfer_8to16sub2ro(int16_t * const dct,
-					 const uint8_t * const cur,
-					 const uint8_t * ref1,
-					 const uint8_t * ref2,
-					 const uint32_t stride)
-{
-	uint32_t i, j;
-
-	for (j = 0; j < 8; j++) {
-		for (i = 0; i < 8; i++) {
-			uint8_t c = cur[j * stride + i];
-			int r = (ref1[j * stride + i] + ref2[j * stride + i] + 1) / 2;
-			dct[j * 8 + i] = (int16_t) c - (int16_t) r;
-		}
-	}
+	return bits + (lambda*distortion)/quant_sq;
 }
 
 static void
@@ -141,7 +124,7 @@ CheckCandidateRDBF(const int x, const int y, SearchData * const data, const unsi
 {
 
 	int16_t *in = data->dctSpace, *coeff = data->dctSpace + 64;
-	int32_t rd = 3*BITS_MULT; /* note to self: 3 bits minimum, but maybe 4 if it's forward mode */
+	int32_t rd = (3+2)*BITS_MULT; /* 3 bits for mode + 2 for vector (minimum) */
 	VECTOR * current;
 	const uint8_t * ptr;
 	int i, xc, yc;
@@ -160,12 +143,13 @@ CheckCandidateRDBF(const int x, const int y, SearchData * const data, const unsi
 		xc = x/2; yc = y/2;
 	}
 
-	rd += BITS_MULT*d_mv_bits(x, y, data->predMV, data->iFcode, data->qpel^data->qpel_precision);
+	rd += BITS_MULT*(d_mv_bits(x, y, data->predMV, data->iFcode, data->qpel^data->qpel_precision)-2);
 
 	for(i = 0; i < 4; i++) {
 		int s = 8*((i&1) + (i>>1)*data->iEdgedWidth);
 		transfer_8to16subro(in, data->Cur + s, ptr + s, data->iEdgedWidth);
-		rd += Block_CalcBits_BVOP(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type, &cbp, i, data->scan_table, data->lambda[i], data->mpeg_quant_matrices);
+		rd += Block_CalcBits_BVOP(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type,
+								&cbp, i, data->scan_table, data->lambda[i], data->mpeg_quant_matrices, data->quant_sq);
 		if (rd >= data->iMinSAD[0]) return;
 	}
 
@@ -176,13 +160,15 @@ CheckCandidateRDBF(const int x, const int y, SearchData * const data, const unsi
 	/* chroma U */
 	ptr = interpolate8x8_switch2(data->RefQ, data->RefP[4], 0, 0, xc, yc, data->iEdgedWidth/2, data->rounding);
 	transfer_8to16subro(in, data->CurU, ptr, data->iEdgedWidth/2);
-	rd += Block_CalcBits_BVOP(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type, &cbp, 4, data->scan_table, data->lambda[4], data->mpeg_quant_matrices);
+	rd += Block_CalcBits_BVOP(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type,
+								&cbp, 4, data->scan_table, data->lambda[4], data->mpeg_quant_matrices, data->quant_sq);
 	if (rd >= data->iMinSAD[0]) return;
 
 	/* chroma V */
 	ptr = interpolate8x8_switch2(data->RefQ, data->RefP[5], 0, 0, xc, yc, data->iEdgedWidth/2, data->rounding);
 	transfer_8to16subro(in, data->CurV, ptr, data->iEdgedWidth/2);
-	rd += Block_CalcBits_BVOP(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type, &cbp, 5, data->scan_table, data->lambda[5], data->mpeg_quant_matrices);
+	rd += Block_CalcBits_BVOP(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type, 
+								&cbp, 5, data->scan_table, data->lambda[5], data->mpeg_quant_matrices, data->quant_sq);
 
 	if (cbp) rd += BITS_MULT * 7;
 
@@ -193,7 +179,6 @@ CheckCandidateRDBF(const int x, const int y, SearchData * const data, const unsi
 		*data->cbp = cbp;
 	}
 }
-
 
 static void
 CheckCandidateRDDirect(const int x, const int y, SearchData * const data, const unsigned int Direction)
@@ -241,7 +226,8 @@ CheckCandidateRDDirect(const int x, const int y, SearchData * const data, const 
 		}
 
 		transfer_8to16sub2ro(in, data->Cur + s, ReferenceF, ReferenceB, data->iEdgedWidth);
-		rd += Block_CalcBits_BVOP_direct(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type, &cbp, k, data->scan_table, data->lambda[k], data->mpeg_quant_matrices);
+		rd += Block_CalcBits_BVOP_direct(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type, 
+										&cbp, k, data->scan_table, data->lambda[k], data->mpeg_quant_matrices, data->quant_sq);
 		if (rd > *(data->iMinSAD)) return;
 	}
 	
@@ -255,14 +241,16 @@ CheckCandidateRDDirect(const int x, const int y, SearchData * const data, const 
 	ReferenceF = interpolate8x8_switch2(data->RefQ, data->RefP[4], 0, 0, xcf, ycf, data->iEdgedWidth/2, data->rounding);
 	ReferenceB = interpolate8x8_switch2(data->RefQ + 16, data->b_RefP[4], 0, 0, xcb, ycb, data->iEdgedWidth/2, data->rounding);
 	transfer_8to16sub2ro(in, data->CurU, ReferenceF, ReferenceB, data->iEdgedWidth/2);
-	rd += Block_CalcBits_BVOP_direct(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type, &cbp, 4, data->scan_table, data->lambda[4], data->mpeg_quant_matrices);
+	rd += Block_CalcBits_BVOP_direct(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type,
+									&cbp, 4, data->scan_table, data->lambda[4], data->mpeg_quant_matrices, data->quant_sq);
 	if (rd >= data->iMinSAD[0]) return;
 
 	/* chroma V */
 	ReferenceF = interpolate8x8_switch2(data->RefQ, data->RefP[5], 0, 0, xcf, ycf, data->iEdgedWidth/2, data->rounding);
 	ReferenceB = interpolate8x8_switch2(data->RefQ + 16, data->b_RefP[5], 0, 0, xcb, ycb, data->iEdgedWidth/2, data->rounding);
 	transfer_8to16sub2ro(in, data->CurV, ReferenceF, ReferenceB, data->iEdgedWidth/2);
-	rd += Block_CalcBits_BVOP_direct(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type, &cbp, 5, data->scan_table, data->lambda[5], data->mpeg_quant_matrices);
+	rd += Block_CalcBits_BVOP_direct(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type,
+									&cbp, 5, data->scan_table, data->lambda[5], data->mpeg_quant_matrices, data->quant_sq);
 
 	if (cbp) 
 		rd += BITS_MULT * 6;
@@ -276,9 +264,6 @@ CheckCandidateRDDirect(const int x, const int y, SearchData * const data, const 
 		*data->cbp = cbp;
 	}
 }
-
-
-
 
 static void
 CheckCandidateRDInt(const int x, const int y, SearchData * const data, const unsigned int Direction)
@@ -325,12 +310,12 @@ CheckCandidateRDInt(const int x, const int y, SearchData * const data, const uns
 	rd += BITS_MULT * (d_mv_bits(xf, yf, data->predMV, data->iFcode, data->qpel^data->qpel_precision)
 					+ d_mv_bits(xb, yb, data->bpredMV, data->iFcode, data->qpel^data->qpel_precision));
 
-	
 	for(i = 0; i < 4; i++) {
 		int s = 8*((i&1) + (i>>1)*data->iEdgedWidth);
 		if (rd >= *data->iMinSAD) return;
 		transfer_8to16sub2ro(in, data->Cur + s, ReferenceF + s, ReferenceB + s, data->iEdgedWidth);
-		rd += Block_CalcBits_BVOP(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type, &cbp, i, data->scan_table, data->lambda[i], data->mpeg_quant_matrices);
+		rd += Block_CalcBits_BVOP(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type, &cbp,
+								i, data->scan_table, data->lambda[i], data->mpeg_quant_matrices, data->quant_sq);
 	}
 	
 	/* chroma */
@@ -343,7 +328,8 @@ CheckCandidateRDInt(const int x, const int y, SearchData * const data, const uns
 	ReferenceF = interpolate8x8_switch2(data->RefQ, data->RefP[4], 0, 0, xcf, ycf, data->iEdgedWidth/2, data->rounding);
 	ReferenceB = interpolate8x8_switch2(data->RefQ + 16, data->b_RefP[4], 0, 0, xcb, ycb, data->iEdgedWidth/2, data->rounding);
 	transfer_8to16sub2ro(in, data->CurU, ReferenceF, ReferenceB, data->iEdgedWidth/2);
-	rd += Block_CalcBits_BVOP(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type, &cbp, 4, data->scan_table, data->lambda[4], data->mpeg_quant_matrices);
+	rd += Block_CalcBits_BVOP(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type, &cbp,
+								4, data->scan_table, data->lambda[4], data->mpeg_quant_matrices, data->quant_sq);
 	if (rd >= data->iMinSAD[0]) return;
 
 
@@ -351,7 +337,8 @@ CheckCandidateRDInt(const int x, const int y, SearchData * const data, const uns
 	ReferenceF = interpolate8x8_switch2(data->RefQ, data->RefP[5], 0, 0, xcf, ycf, data->iEdgedWidth/2, data->rounding);
 	ReferenceB = interpolate8x8_switch2(data->RefQ + 16, data->b_RefP[5], 0, 0, xcb, ycb, data->iEdgedWidth/2, data->rounding);
 	transfer_8to16sub2ro(in, data->CurV, ReferenceF, ReferenceB, data->iEdgedWidth/2);
-	rd += Block_CalcBits_BVOP(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type, &cbp, 5, data->scan_table, data->lambda[5], data->mpeg_quant_matrices);
+	rd += Block_CalcBits_BVOP(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type, &cbp,
+								5, data->scan_table, data->lambda[5], data->mpeg_quant_matrices, data->quant_sq);
 
 	if (cbp) rd += BITS_MULT * 7;
 

@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: mem_transfer_mmx.asm,v 1.15 2004-08-29 10:02:38 edgomez Exp $
+; * $Id: mem_transfer_mmx.asm,v 1.16 2004-12-19 13:16:50 syskin Exp $
 ; *
 ; ***************************************************************************/
 
@@ -71,6 +71,7 @@ cglobal transfer_8to16sub_mmx
 cglobal transfer_8to16subro_mmx
 cglobal transfer_8to16sub2_mmx
 cglobal transfer_8to16sub2_xmm
+cglobal transfer_8to16sub2ro_xmm
 cglobal transfer_16to8add_mmx
 cglobal transfer8x8_copy_mmx
 
@@ -398,6 +399,74 @@ transfer_8to16sub2_xmm:
   pop ebx
   ret
 .endfunc
+
+
+;-----------------------------------------------------------------------------
+;
+; void transfer_8to16sub2ro_xmm(int16_t * const dct,
+;				const uint8_t * const cur,
+;				const uint8_t * ref1,
+;				const uint8_t * ref2,
+;				const uint32_t stride)
+;
+;-----------------------------------------------------------------------------
+
+%macro COPY_8_TO_16_SUB2RO_SSE 1
+  movq mm0, [eax]      ; cur
+  movq mm2, [eax+edx]
+  movq mm1, mm0
+  movq mm3, mm2
+
+  punpcklbw mm0, mm7
+  punpcklbw mm2, mm7
+  movq mm4, [ebx]     ; ref1
+  pavgb mm4, [esi]     ; ref2
+  punpckhbw mm1, mm7
+  punpckhbw mm3, mm7
+  movq mm5, [ebx+edx] ; ref
+  pavgb mm5, [esi+edx] ; ref2
+
+  movq mm6, mm4
+  punpcklbw mm4, mm7
+  punpckhbw mm6, mm7
+  psubsw mm0, mm4
+  psubsw mm1, mm6
+  lea esi, [esi+2*edx]
+  movq mm6, mm5
+  punpcklbw mm5, mm7
+  punpckhbw mm6, mm7
+  psubsw mm2, mm5
+  lea eax, [eax+2*edx]
+  psubsw mm3, mm6
+  lea ebx, [ebx+2*edx]
+
+  movq [ecx+%1*32+ 0], mm0 ; dst
+  movq [ecx+%1*32+ 8], mm1
+  movq [ecx+%1*32+16], mm2
+  movq [ecx+%1*32+24], mm3
+%endmacro
+
+ALIGN 16
+transfer_8to16sub2ro_xmm:
+  pxor mm7, mm7
+  mov ecx, [esp  + 4] ; Dst
+  mov eax, [esp  + 8] ; Cur
+  push ebx
+  mov ebx, [esp+4+12] ; Ref1
+  push esi
+  mov esi, [esp+8+16] ; Ref2
+  mov edx, [esp+8+20] ; Stride
+
+  COPY_8_TO_16_SUB2RO_SSE 0
+  COPY_8_TO_16_SUB2RO_SSE 1
+  COPY_8_TO_16_SUB2RO_SSE 2
+  COPY_8_TO_16_SUB2RO_SSE 3
+
+  pop esi
+  pop ebx
+  ret
+.endfunc
+
 
 ;-----------------------------------------------------------------------------
 ;
