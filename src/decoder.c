@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.56 2004-04-19 12:42:01 syskin Exp $
+ * $Id: decoder.c,v 1.57 2004-05-21 14:40:15 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -303,7 +303,7 @@ decoder_mbintra(DECODER * dec,
 
 		start_timer();
 		predict_acdc(dec->mbs, x_pos, y_pos, dec->mb_width, i, &block[i * 64],
-					 iQuant, iDcScaler, predictors, bound);
+					 iQuant, iDcScaler, predictors, bound, dec->bs_version);
 		if (!acpred_flag) {
 			pMB->acpred_directions[i] = 0;
 		}
@@ -815,10 +815,13 @@ decoder_pframe(DECODER * dec,
 		mb_height = (dec->height + 31) / 32;
 	}
 
-	start_timer();
-	image_setedges(&dec->refn[0], dec->edged_width, dec->edged_height,
-					dec->width, dec->height, dec->bs_version);
-	stop_edges_timer();
+	if (!dec->is_edged[0]) {
+		start_timer();
+		image_setedges(&dec->refn[0], dec->edged_width, dec->edged_height,
+						dec->width, dec->height, dec->bs_version);
+		dec->is_edged[0] = 1;
+		stop_edges_timer();	
+	}
 
 	if (gmc_warp) {
 		/* accuracy: 0==1/2, 1=1/4, 2=1/8, 3=1/16 */
@@ -1215,15 +1218,24 @@ decoder_bframe(DECODER * dec,
 	uint32_t x, y;
 	VECTOR mv;
 	const VECTOR zeromv = {0,0};
-	const int64_t TRB = dec->time_pp - dec->time_bp, TRD = dec->time_pp;
+	const int32_t TRB = dec->time_pp - dec->time_bp, TRD = dec->time_pp;
 	int i;
 
-	start_timer();
-	image_setedges(&dec->refn[0], dec->edged_width, dec->edged_height,
-					dec->width, dec->height, dec->bs_version);
-	image_setedges(&dec->refn[1], dec->edged_width, dec->edged_height,
-					dec->width, dec->height, dec->bs_version);
-	stop_edges_timer();
+	if (!dec->is_edged[0]) {
+		start_timer();
+		image_setedges(&dec->refn[0], dec->edged_width, dec->edged_height,
+						dec->width, dec->height, dec->bs_version);
+		dec->is_edged[0] = 1;
+		stop_edges_timer();
+	}
+
+	if (!dec->is_edged[1]) {
+		start_timer();
+		image_setedges(&dec->refn[1], dec->edged_width, dec->edged_height,
+						dec->width, dec->height, dec->bs_version);
+		dec->is_edged[1] = 1;
+		stop_edges_timer();
+	}
 
 	for (y = 0; y < dec->mb_height; y++) {
 		/* Initialize Pred Motion Vector */
@@ -1547,7 +1559,9 @@ repeat:
 		}
 
 		image_swap(&dec->refn[0], &dec->refn[1]);
+		dec->is_edged[1] = dec->is_edged[0];
 		image_swap(&dec->cur, &dec->refn[0]);
+		dec->is_edged[0] = 0;
 		SWAP(MACROBLOCK *, dec->mbs, dec->last_mbs);
 		dec->last_reduced_resolution = reduced_resolution;
 		dec->last_coding_type = coding_type;

@@ -934,7 +934,7 @@ BEGIN
     IDC_CHROMAME            "Use chroma information to detect motion (slower)."
     IDC_BQUANTOFFSET        "B-frame quantizer offset from last p-frame quantizer; refer to b-frame quant ratio (above)"
     IDC_VHQ                 "VHQ enables an additional search process to increase quality (much slower)."
-    IDC_CHROMA_OPT          "Interpolates colours in bright/dark areas for achieving a nicer edge impression"
+    IDC_ZONE_CHROMAOPT     "Interpolates colours in bright/dark areas for achieving a nicer edge impression"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -966,7 +966,7 @@ BEGIN
     IDC_LEVEL_VBV           "Video Buffer Verifier (VBV):\n\nThe maximum size of the video decoder buffer. The encoded bitstream but not overflow or underflow this buffer."
     IDC_LEVEL_BITRATE       "Maximum instantaneous bitrate."
     IDC_BITRATE             "The target AVI bitrate, file size, or quantizer."
-    IDC_ZONE_BVOPTHRESHOLD_S 
+    IDC_ZONE_BVOPTHRESHOLD 
                             "Change the amount of b-frames in this zone. Recommended values are between -20 (almost no b-vops) and 30 (many b-vops).\nThe hardcoded maximum in profile/level will never be exceeded"
     IDC_TRELLISQUANT        "Advanced, high quality quantization mode"
     IDC_BITRATE_S           "Toggle between quantizer, target bitrate, target file size"
