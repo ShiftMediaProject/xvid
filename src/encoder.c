@@ -32,12 +32,14 @@
  * 
  *  History
  *
- *	20.06.2002 bframe patch
+ *  10.07.2002  added BFRAMES_DEC_DEBUG support
+ *              MinChen <chenm001@163.com>
+ *  20.06.2002 bframe patch
  *  08.05.2002 fix some problem in DEBUG mode;
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.53 2002-07-10 19:16:32 chl Exp $
+ *  $Id: encoder.c,v 1.54 2002-07-11 00:15:59 chenm001 Exp $
  *
  ****************************************************************************/
 
@@ -1740,6 +1742,18 @@ FrameCodeB(Encoder * pEnc,
 	IMAGE *f_ref = &pEnc->reference->image;
 	IMAGE *b_ref = &pEnc->current->image;
 
+#ifdef BFRAMES_DEC_DEBUG
+	FILE *fp;
+	static char first=0;
+#define BFRAME_DEBUG  	if (!first && fp){ \
+		fprintf(fp,"Y=%3d   X=%3d   MB=%2d   CBP=%02X\n",y,x,mb->mode,mb->cbp); \
+	}
+
+	if (!first){
+		fp=fopen("C:\\XVIDDBGE.TXT","w");
+	}
+#endif
+
 	// forward 
 	image_setedges(f_ref, pEnc->mbParam.edged_width,
 				   pEnc->mbParam.edged_height, pEnc->mbParam.width,
@@ -1806,6 +1820,11 @@ FrameCodeB(Encoder * pEnc,
 			if (mb->mode == MODE_NOT_CODED) {
 				mb->mvs[0].x = 0;
 				mb->mvs[0].y = 0;
+
+				mb->cbp = 0;
+#ifdef BFRAMES_DEC_DEBUG
+	BFRAME_DEBUG
+#endif
 				continue;
 			}
 
@@ -1842,6 +1861,9 @@ FrameCodeB(Encoder * pEnc,
 			}
 //			DPRINTF("%05i : [%i %i] M=%i CBP=%i MVS=%i,%i forward=%i,%i", pEnc->m_framenum, x, y, mb->mode, mb->cbp, mb->mvs[0].x, mb->mvs[0].y, forward.x, forward.y);
 
+#ifdef BFRAMES_DEC_DEBUG
+	BFRAME_DEBUG
+#endif
 			start_timer();
 			MBCodingBVOP(mb, qcoeff, frame->fcode, frame->bcode, bs,
 						 &pEnc->sStat);
@@ -1854,5 +1876,13 @@ FrameCodeB(Encoder * pEnc,
 	// TODO: dynamic fcode/bcode ???
 
 	*pBits = BitstreamPos(bs) - *pBits;
+
+#ifdef BFRAMES_DEC_DEBUG
+	if (!first){
+		first=1;
+		if (fp)
+			fclose(fp);
+	}
+#endif
 }
 #endif
