@@ -28,7 +28,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: motion.h,v 1.15 2002-09-07 09:12:21 chl Exp $
+ *  $Id: motion.h,v 1.16 2002-09-07 09:18:48 chl Exp $
  *
  ***************************************************************************/
 
@@ -38,7 +38,7 @@
 #include "../portab.h"
 #include "../global.h"
 
-/* hard coded motion search parameters for motion_est and smp_motion_est */
+/* hard coded motion search parameters for motion_est */
 
 // very large value
 #define MV_MAX_ERROR	(4096 * 256)
@@ -346,17 +346,6 @@ MotionEstimation(MBParam * const pParam,
 				 const IMAGE * const pRefV,
 				 const IMAGE * const pRefHV,
 				 const uint32_t iLimit);
-
-#ifdef _SMP			 
-bool
-SMP_MotionEstimation(MBParam * const pParam,
-				 FRAMEINFO * const current,
-				 FRAMEINFO * const reference,
-				 const IMAGE * const pRefH,
-				 const IMAGE * const pRefV,
-				 const IMAGE * const pRefHV,
-				 const uint32_t iLimit);
-#endif
 
 typedef int32_t(Halfpel8_RefineFunc) (const uint8_t * const pRef,
 				      const uint8_t * const pRefH,

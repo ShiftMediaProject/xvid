@@ -20,7 +20,6 @@ SRC = \
 	$(SRCDIR)/image/font.c \
 	$(SRCDIR)/motion/motion_comp.c \
 	$(SRCDIR)/motion/motion_est.c \
-	$(SRCDIR)/motion/smp_motion_est.c \
 	$(SRCDIR)/motion/sad.c \
 	$(SRCDIR)/prediction/mbprediction.c \
 	$(SRCDIR)/quant/adapt_quant.c \
