@@ -59,6 +59,7 @@ libxvidcore
 vfw
 * integrated Packed<->ISO converter
 * vfw-ext api to get/set configuration parameters
+* ICM_DECOMPRESSEX_* support
 
 directshow
 * manual aspect ratio setting (1:1, 4:3, 16:9, Custom)
@@ -67,4 +68,4 @@ directshow
 
 
 
-Last edited: $Date: 2004-07-13 12:23:29 $
+Last edited: $Date: 2004-07-15 11:54:53 $
