@@ -46,6 +46,8 @@ uint32_t
 sad8FuncPtr sad8;
 		  const uint8_t * const ref,
 
+sad16biFuncPtr sad8bi;		// not really sad16, but no difference in prototype
+		  const uint32_t stride,
 		  const uint32_t best_sad)
 {
 
@@ -165,6 +167,44 @@ sad8bi_c(const uint8_t * const cur,
 {
 
 	uint32_t sad = 0;
+	uint32_t i, j;
+	uint8_t const *ptr_cur = cur;
+	uint8_t const *ptr_ref1 = ref1;
+	uint8_t const *ptr_ref2 = ref2;
+
+	for (j = 0; j < 8; j++) {
+
+		for (i = 0; i < 8; i++) {
+			int pixel = (ptr_ref1[i] + ptr_ref2[i] + 1) / 2;
+
+			if (pixel < 0) {
+				pixel = 0;
+			} else if (pixel > 255) {
+				pixel = 255;
+			}
+
+			sad += ABS(ptr_cur[i] - pixel);
+		}
+
+		ptr_cur += stride;
+		ptr_ref1 += stride;
+		ptr_ref2 += stride;
+
+	}
+
+	return sad;
+
+}
+
+
+
+uint32_t
+sad8_c(const uint8_t * const cur,
+	   const uint8_t * const ref,
+	   const uint32_t stride)
+{
+	uint32_t sad = 0;
+	uint32_t i, j;
 	uint8_t const *ptr_cur = cur;
 	uint8_t const *ptr_ref = ref;
 

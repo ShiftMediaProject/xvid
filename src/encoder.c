@@ -39,7 +39,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.61 2002-07-21 14:05:38 edgomez Exp $
+ *  $Id: encoder.c,v 1.62 2002-07-21 23:34:07 chl Exp $
  *
  ****************************************************************************/
 
@@ -853,12 +853,12 @@ bvop_loop:
 		else
 			pEnc->current->quant = pFrame->quant;
 
-		if (pEnc->current->quant < 1)
+/*		if (pEnc->current->quant < 1)
 			pEnc->current->quant = 1;
 
 		if (pEnc->current->quant > 31)
 			pEnc->current->quant = 31;
-
+*/
 		pEnc->current->global_flags = pFrame->general;
 		pEnc->current->motion_flags = pFrame->motion;
 
@@ -1005,10 +1005,6 @@ bvop_loop:
 		 * This will be coded as a Bidirectional Frame
 		 */
 
-		DPRINTF(DPRINTF_DEBUG,"*** BFRAME (store) bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
-				pEnc->bframenum_head, pEnc->bframenum_tail,
-				pEnc->queue_head, pEnc->queue_tail, pEnc->queue_size);
-
 		if ((pEnc->global & XVID_GLOBAL_DEBUG)) {
 			image_printf(&pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.height, 5, 200, "BVOP");
 		}
@@ -1020,6 +1016,18 @@ bvop_loop:
 		} else {
 			pEnc->current->quant = pFrame->bquant;
 		}
+/*                if (pEnc->current->quant < 1)
+                        pEnc->current->quant = 1;
+
+                if (pEnc->current->quant > 31)
+                        pEnc->current->quant = 31;
+ 
+*/
+			DPRINTF(DPRINTF_DEBUG,"*** BFRAME (store) bf: head=%i tail=%i   queue: head=%i tail=%i size=%i  quant=%i\n",
+                                pEnc->bframenum_head, pEnc->bframenum_tail,
+                                pEnc->queue_head, pEnc->queue_tail, pEnc->queue_size,pEnc->current->quant);
+
+
 
 		/* store frame into bframe buffer & swap ref back to current */
 		SWAP(pEnc->current, pEnc->bframes[pEnc->bframenum_tail]);
@@ -1751,9 +1759,9 @@ FrameCodeP(Encoder * pEnc,
 
 #ifdef BFRAMES
 	pEnc->time_pp = ((int32_t)pEnc->mbParam.fbase - (int32_t)pEnc->last_pframe + (int32_t)pEnc->mbParam.m_ticks) % (int32_t)pEnc->mbParam.fbase;
-
 	pEnc->last_pframe = pEnc->mbParam.m_ticks;
 #endif
+
 	return 0;					// inter
 }
 

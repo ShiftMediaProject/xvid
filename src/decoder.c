@@ -55,7 +55,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: decoder.c,v 1.32 2002-07-19 11:15:21 albeu Exp $
+ *  $Id: decoder.c,v 1.33 2002-07-21 23:34:07 chl Exp $
  *
  *************************************************************************/
 
@@ -1188,12 +1188,13 @@ decoder_bframe(DECODER * dec,
 #ifdef BFRAMES_DEC_DEBUG
 	BFRAME_DEBUG
 #endif
+
 			switch (mb->mb_type) {
 			case MODE_DIRECT:
 				get_b_motion_vector(dec, bs, x, y, &mv, 1, zeromv);
 
 			case MODE_DIRECT_NONE_MV:
-				{				// Because this file is a C file not C++ so I use '{' to define var
+				{	
 					const int64_t TRB = dec->time_pp - dec->time_bp, TRD = dec->time_pp;
 					int i;
 
@@ -1253,9 +1254,17 @@ decoder_bframe(DECODER * dec,
 				break;
 
 			default:
-				//DEBUG1("Not support B-frame mb_type =", mb->mb_type);
+				DEBUG1("Not support B-frame mb_type =", mb->mb_type);
 				;
 			}
+
+			if ( (x==19) && (y==8) ) 
+			{
+				fprintf(stderr,"D %d   %d    %d %d   %d %d  \n",0, mb->mb_type, 
+						mb->mvs[0].x, mb->mvs[0].y,mb->b_mvs[0].x, mb->b_mvs[0].y );
+			}
+
+
 
 		}						// end of FOR
 	}
