@@ -73,18 +73,97 @@ void MBTransQuantIntra(const MBParam * pParam,
 	);
 
 
-uint8_t MBTransQuantInter(const MBParam * pParam,	/* <-- the parameter for DCT transformation and Quantization */
+void MBTransQuantIntra2(const MBParam * pParam,
+					   FRAMEINFO * frame,
+					   MACROBLOCK * pMB,
+					   const uint32_t x_pos,	/* <-- The x position of the MB to be searched */
 
+					   const uint32_t y_pos,	/* <-- The y position of the MB to be searched */
+
+					   int16_t data[6 * 64],	/* <-> the data of the MB to be coded */
+
+					   int16_t qcoeff[6 * 64]	/* <-> the quantized DCT coefficients */
+	);
+
+
+uint8_t MBTransQuantInter(const MBParam * pParam,
 						  FRAMEINFO * frame,
 						  MACROBLOCK * pMB,
-						  const uint32_t x_pos,	/* <-- The x position of the MB to be searched */
+						  const uint32_t x_pos,
+						  const uint32_t y_pos,
+						  int16_t data[6 * 64],
+						  int16_t qcoeff[6 * 64]);
 
-						  const uint32_t y_pos,	/* <-- The y position of the MB to be searched */
 
-						  int16_t data[6 * 64],	/* <-> the data of the MB to be coded */
+uint8_t MBTransQuantInter2(const MBParam * pParam,
+						  FRAMEINFO * frame,
+						  MACROBLOCK * pMB,
+						  const uint32_t x_pos,
+						  const uint32_t y_pos,	
+						  int16_t data[6 * 64],
+						  int16_t qcoeff[6 * 64]);
 
-						  int16_t qcoeff[6 * 64]	/* <-> the quantized DCT coefficients */
-	);
+uint8_t MBTransQuantInterBVOP(const MBParam * pParam,
+						  FRAMEINFO * frame,
+						  MACROBLOCK * pMB,
+						  const uint32_t x_pos,
+						  const uint32_t y_pos,	
+						  int16_t data[6 * 64],
+						  int16_t qcoeff[6 * 64]);
+
+void MBTrans(const MBParam * pParam,
+						  FRAMEINFO * frame,
+						  MACROBLOCK * pMB,
+						  const uint32_t x_pos,
+						  const uint32_t y_pos,
+						  int16_t data[6 * 64]);
+
+void MBfDCT(const MBParam * pParam,
+			FRAMEINFO * frame,
+			MACROBLOCK * pMB,
+			int16_t data[6 * 64]);
+
+uint8_t MBQuantInter(	 const MBParam * pParam,
+						 const int iQuant,
+						 int16_t data[6 * 64],
+						 int16_t qcoeff[6 * 64]);
+
+void MBQuantDeQuantIntra(const MBParam * pParam,
+					  	 FRAMEINFO * frame,
+						 MACROBLOCK *pMB,
+				  		 int16_t qcoeff[6 * 64],
+  				  		 int16_t data[6*64]);
+
+void MBQuantIntra(		 const MBParam * pParam,
+					  	 FRAMEINFO * frame,
+						 MACROBLOCK *pMB,
+				  		 int16_t qcoeff[6 * 64],
+				  		 int16_t data[6*64]);
+
+void MBDeQuantIntra(const MBParam * pParam,
+			   		const int iQuant,
+				  	int16_t qcoeff[6 * 64],
+				  	int16_t data[6*64]);
+
+void MBDeQuantInter(const MBParam * pParam,
+					const int iQuant,
+					int16_t data[6 * 64],
+					int16_t qcoeff[6 * 64],
+				  	const uint8_t cbp);
+
+
+void MBiDCT(		int16_t data[6 * 64], 
+					const uint8_t cbp);
+
+
+void MBTransAdd(	const MBParam * pParam,
+					FRAMEINFO * frame,
+					MACROBLOCK * pMB,
+					const uint32_t x_pos,
+					const uint32_t y_pos,
+					int16_t data[6 * 64],
+					const uint8_t cbp);
+
 
 
 /** interlacing **/
