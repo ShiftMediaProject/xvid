@@ -1049,7 +1049,7 @@ InputName=quantize4_mmx
 
 !ELSEIF  "$(CFG)" == "core - Win32 Debug"
 
-# Begin Custom Build
+# Begin Custom Build - Assembling $(InputPath)
 IntDir=.\Debug
 InputPath=..\..\src\quant\x86_asm\quantize4_mmx.asm
 InputName=quantize4_mmx
@@ -1092,7 +1092,7 @@ InputName=quantize_mmx
 
 !ELSEIF  "$(CFG)" == "core - Win32 Debug"
 
-# Begin Custom Build
+# Begin Custom Build - Assembling $(InputPath)
 IntDir=.\Debug
 InputPath=..\..\src\quant\x86_asm\quantize_mmx.asm
 InputName=quantize_mmx
