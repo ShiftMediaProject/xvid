@@ -207,15 +207,15 @@ static __inline void CodeCoeff(Bitstream *bs,
 	VLC *vlc;
 	
 	j = intra;
-	last = 1 + intra;
+	last = intra;
 
-	while((v = qcoeff[zigzag[j++]]) == 0);
+	while((v = qcoeff[zigzag[j]]) == 0) j++;
     
 	do {
 		// count zeroes
 		vlc = table + 64*255 + (clip_table[2048+v] << 6) + j - last;
-		last = j + 1;
-		while(j < 64 && (v = qcoeff[zigzag[j++]]) == 0);
+		last = ++j;
+		while(j < 64 && (v = qcoeff[zigzag[j]]) == 0) j++;
 				
 		// write code
 		if(j != 64) {
