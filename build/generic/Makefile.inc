@@ -49,6 +49,7 @@ SRC_INTEL = \
 	$(SRCDIR)/utils/x86_asm/cpuid.asm \
 	\
 	$(SRCDIR)/bitstream/x86_asm/cbp_mmx.asm \
+	$(SRCDIR)/bitstream/x86_asm/cbp_sse2.asm \
 	$(SRCDIR)/dct/x86_asm/fdct_mmx.asm \
 	$(SRCDIR)/dct/x86_asm/idct_mmx.asm \
 	$(SRCDIR)/image/x86_asm/interpolate8x8_mmx.asm \
@@ -65,6 +66,7 @@ SRC_INTEL = \
 	\
 	$(SRCDIR)/image/x86_asm/interpolate8x8_xmm.asm	\
 	$(SRCDIR)/motion/x86_asm/sad_xmm.asm \
+	$(SRCDIR)/motion/x86_asm/sad_sse2.asm \
 	\
 	$(SRCDIR)/image/x86_asm/interpolate8x8_3dn.asm
 	
