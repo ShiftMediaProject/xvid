@@ -1,4 +1,4 @@
-LIB=libcore.a
+LIB=libxvidcore.a
 LIBSO=libxvidcore.so
 
 
