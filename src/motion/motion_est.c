@@ -659,7 +659,7 @@ static void
 CheckCandidateBits16(const int x, const int y, const int Direction, int * const dir, const SearchData * const data)
 {
 
-	static int16_t in[64], coeff[64];
+	int16_t *in = data->dctSpace, *coeff = data->dctSpace + 64;
 	int32_t bits = 0, sum;
 	VECTOR * current;
 	const uint8_t * ptr;
@@ -744,7 +744,7 @@ static void
 CheckCandidateBits8(const int x, const int y, const int Direction, int * const dir, const SearchData * const data)
 {
 
-	static int16_t in[64], coeff[64];
+	int16_t *in = data->dctSpace, *coeff = data->dctSpace + 64;
 	int32_t sum, bits;
 	VECTOR * current;
 	const uint8_t * ptr;
@@ -1009,6 +1009,7 @@ MotionEstimation(MBParam * const pParam,
 	VECTOR currentMV[5];
 	VECTOR currentQMV[5];
 	int32_t iMinSAD[5];
+	DECLARE_ALIGNED_MATRIX(dct_space, 2, 64, int16_t, CACHE_LINE);
 	SearchData Data;
 	memset(&Data, 0, sizeof(SearchData));
 	Data.iEdgedWidth = iEdgedWidth;
@@ -1021,6 +1022,7 @@ MotionEstimation(MBParam * const pParam,
 	Data.qpel = pParam->m_quarterpel;
 	Data.chroma = MotionFlags & PMV_CHROMA16;
 	Data.rrv = current->global_flags & XVID_REDUCED;
+	Data.dctSpace = dct_space;
 
 	if ((current->global_flags & XVID_REDUCED)) {
 		mb_width = (pParam->width + 31) / 32;
@@ -2547,7 +2549,7 @@ CountMBBitsInter4v(const SearchData * const Data,
 	int cbp = 0, bits = 0, t = 0, i, iDirection;
 	SearchData Data2, *Data8 = &Data2;
 	int sumx = 0, sumy = 0;
-	int16_t in[64], coeff[64];
+	int16_t *in = Data->dctSpace, *coeff = Data->dctSpace + 64;
 
 	memcpy(Data8, Data, sizeof(SearchData));
 	CheckCandidate = CheckCandidateBits8;
@@ -2689,7 +2691,7 @@ CountMBBitsIntra(const SearchData * const Data)
 	int bits = 1; //this one is ac/dc prediction flag. always 1.
 	int cbp = 0, i, t, dc = 0, b_dc = 1024;
 	const uint32_t iQuant = Data->lambda16;
-	int16_t in[64], coeff[64];
+	int16_t *in = Data->dctSpace, * coeff = Data->dctSpace + 64;
 
 	for(i = 0; i < 4; i++) {
 		uint32_t iDcScaler = get_dc_scaler(iQuant, 1);
