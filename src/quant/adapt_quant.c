@@ -1,6 +1,8 @@
 #include "../portab.h"
 #include "adapt_quant.h"
 
+#include <stdlib.h> /* free, malloc */
+
 #define MAX(a,b)      (((a) > (b)) ? (a) : (b))
 #define RDIFF(a,b)    ((int)(a+0.5)-(int)(b+0.5))
 
@@ -15,7 +17,7 @@ int normalize_quantizer_field(float *in, int *out, int num, int min_quant, int m
 		for(i = 1; i < num; i++)
 		{
 			if(RDIFF(in[i], in[i-1]) > 2)
-            {
+			{
 				in[i] -= (float) 0.5;
 				finished = 0;
 			}
@@ -25,26 +27,26 @@ int normalize_quantizer_field(float *in, int *out, int num, int min_quant, int m
 				finished = 0;
 			}
         
-          if(in[i] > max_quant)
-		  {
-			  in[i] = (float) max_quant;
-			  finished = 0;
-		  }
-          if(in[i] < min_quant)
-		  { 
-			  in[i] = (float) min_quant;
-			  finished = 0;
-		  }
-          if(in[i-1] > max_quant)
-		  { 
-			  in[i-1] = (float) max_quant;
-			  finished = 0;
-		  }
-          if(in[i-1] < min_quant) 
-		  { 
-			  in[i-1] = (float) min_quant;
-			  finished = 0;
-		  }
+			if(in[i] > max_quant)
+			{
+				in[i] = (float) max_quant;
+				finished = 0;
+			}
+			if(in[i] < min_quant)
+			{ 
+				in[i] = (float) min_quant;
+				finished = 0;
+			}
+			if(in[i-1] > max_quant)
+			{ 
+				in[i-1] = (float) max_quant;
+				finished = 0;
+			}
+			if(in[i-1] < min_quant) 
+			{ 
+				in[i-1] = (float) min_quant;
+				finished = 0;
+			}
 		}
 	} while(!finished);
 	
@@ -56,8 +58,8 @@ int normalize_quantizer_field(float *in, int *out, int num, int min_quant, int m
 }
 
 int adaptive_quantization(unsigned char* buf, int stride, int* intquant, 
-        int framequant, int min_quant, int max_quant,
-		int mb_width, int mb_height)  // no qstride because normalization
+			  int framequant, int min_quant, int max_quant,
+			  int mb_width, int mb_height)  // no qstride because normalization
 {
 	int i,j,k,l;
 	
@@ -86,7 +88,7 @@ int adaptive_quantization(unsigned char* buf, int stride, int* intquant,
 
 	val = (float *) malloc(mb_width*mb_height * sizeof(float));
 
-    for(k = 0; k < mb_height; k++)
+	for(k = 0; k < mb_height; k++)
 	{
 		for(l = 0;l < mb_width; l++)        // do this for all macroblocks individually 
 		{
@@ -100,18 +102,18 @@ int adaptive_quantization(unsigned char* buf, int stride, int* intquant,
 			for(i = 0; i < 16; i++)
 				for(j = 0; j < 16; j++)
 					val[k*mb_width+l] += ptr[i*stride+j];
-				val[k*mb_width+l] /= 256.;
-				global += val[k*mb_width+l];
+			val[k*mb_width+l] /= 256.;
+			global += val[k*mb_width+l];
 
-				if((val[k*mb_width+l] > LowerLimit) && (val[k*mb_width+l] < UpperLimit))
-					mid_range++;
+			if((val[k*mb_width+l] > LowerLimit) && (val[k*mb_width+l] < UpperLimit))
+				mid_range++;
 		}
 	}
 
 	global /= mb_width*mb_height;
 
-	if((global < GlobalBrightThres) && (global > GlobalDarkThres)
-		|| (mid_range < MidRangeThres)) {
+	if(((global < GlobalBrightThres) && (global > GlobalDarkThres))
+	   || (mid_range < MidRangeThres)) {
 		for(k = 0; k < mb_height; k++)
 		{
 			for(l = 0;l < mb_width; l++)        // do this for all macroblocks individually 
