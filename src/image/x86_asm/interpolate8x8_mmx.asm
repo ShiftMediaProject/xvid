@@ -27,15 +27,15 @@ BITS 32
 %macro cglobal 1
 	%ifdef PREFIX
 		%ifdef MARK_FUNCS
-			global _%1:function
-			%define %1 _%1:function
+			global _%1:function %1.endfunc-%1
+			%define %1 _%1:function %1.endfunc-%1
 		%else
 			global _%1
 			%define %1 _%1
 		%endif
 	%else
 		%ifdef MARK_FUNCS
-			global %1:function
+			global %1:function %1.endfunc-%1
 		%else
 			global %1
 		%endif
@@ -185,6 +185,7 @@ interpolate8x8_halfpel_h_mmx:
   pop esi
 
   ret
+.endfunc
 
 
 ;-----------------------------------------------------------------------------
@@ -244,6 +245,7 @@ interpolate8x8_halfpel_v_mmx:
   pop esi
 
   ret
+.endfunc
 
 
 ;-----------------------------------------------------------------------------
@@ -335,6 +337,7 @@ interpolate8x8_halfpel_hv_mmx:
   pop esi
 
   ret
+.endfunc
 
 ;-----------------------------------------------------------------------------
 ;
@@ -509,6 +512,7 @@ interpolate8x8_avg2_mmx:
 
   pop ebx
   ret
+.endfunc
 
 
 ;-----------------------------------------------------------------------------
@@ -697,6 +701,7 @@ interpolate8x8_avg4_mmx:
   pop edi
   pop ebx
   ret
+.endfunc
 
 
 ;-----------------------------------------------------------------------------
@@ -807,6 +812,7 @@ interpolate8x8_6tap_lowpass_h_mmx:
   LOWPASS_6TAP_H_MMX
 
   ret
+.endfunc
 
 ;-----------------------------------------------------------------------------
 ;
@@ -924,6 +930,7 @@ interpolate8x8_6tap_lowpass_v_mmx:
 
   pop ebx
   ret
+.endfunc
 
 ;===========================================================================
 ;
@@ -1036,6 +1043,7 @@ interpolate8x8_halfpel_add_mmx:
   ADD_FF_MMX 1
   ADD_FF_MMX 0
   ret
+.endfunc
 
 ;===========================================================================
 ;
@@ -1081,6 +1089,7 @@ interpolate8x8_halfpel_h_add_mmx:
   lea ecx,[ecx+edx]
   ADD_FH_MMX
   ret
+.endfunc
 
 ;===========================================================================
 ;
@@ -1127,6 +1136,7 @@ interpolate8x8_halfpel_v_add_mmx:
   lea ecx,[ecx+edx]
   ADD_HF_MMX
   ret
+.endfunc
 
 ; The trick is to correct the result of 'pavgb' with some combination of the
 ; lsb's of the 4 input values i,j,k,l, and their intermediate 'pavgb' (s and t).
@@ -1237,4 +1247,5 @@ interpolate8x8_halfpel_hv_add_mmx:
   ADD_HH_MMX
 
   ret
+.endfunc
 

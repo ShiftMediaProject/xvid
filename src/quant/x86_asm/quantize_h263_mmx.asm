@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_h263_mmx.asm,v 1.6 2004-08-22 11:46:10 edgomez Exp $
+; * $Id: quantize_h263_mmx.asm,v 1.7 2004-08-29 10:02:38 edgomez Exp $
 ; *
 ; ****************************************************************************/
 
@@ -33,15 +33,15 @@ BITS 32
 %macro cglobal 1
 	%ifdef PREFIX
 		%ifdef MARK_FUNCS
-			global _%1:function
-			%define %1 _%1:function
+			global _%1:function %1.endfunc-%1
+			%define %1 _%1:function %1.endfunc-%1
 		%else
 			global _%1
 			%define %1 _%1
 		%endif
 	%else
 		%ifdef MARK_FUNCS
-			global %1:function
+			global %1:function %1.endfunc-%1
 		%else
 			global %1
 		%endif
@@ -234,6 +234,7 @@ quant_h263_intra_mmx:
 
   pop esi
   ret
+.endfunc
  
 
 ;-----------------------------------------------------------------------------
@@ -345,6 +346,7 @@ quant_h263_intra_sse2:
 
   pop esi
   ret
+.endfunc
  
 ;-----------------------------------------------------------------------------
 ;
@@ -448,6 +450,7 @@ ALIGN 8
   jnz .q1loop
 
   jmp .done
+.endfunc
 
 
 
@@ -562,6 +565,7 @@ ALIGN 16
   cmp ecx, 16
   jnz .qes2_q1loop
   jmp .qes2_done
+.endfunc
 
 
 ;-----------------------------------------------------------------------------
@@ -647,6 +651,7 @@ dequant_h263_intra_mmx:
 
   xor eax, eax                    ; return 0
   ret
+.endfunc
 
 ;-----------------------------------------------------------------------------
 ;
@@ -731,6 +736,7 @@ dequant_h263_intra_xmm:
 
   xor eax, eax                      ; return 0
   ret
+.endfunc
 
 
 ;-----------------------------------------------------------------------------
@@ -819,6 +825,7 @@ dequant_h263_intra_sse2:
 
   xor eax, eax                  ; return 0
   ret
+.endfunc
 
 ;-----------------------------------------------------------------------------
 ;
@@ -889,6 +896,7 @@ dequant_h263_inter_mmx:
   
   xor eax, eax              ; return 0
   ret
+.endfunc
 
 
 ;-----------------------------------------------------------------------------
@@ -957,6 +965,7 @@ dequant_h263_inter_xmm:
 
   xor eax, eax              ; return 0
   ret
+.endfunc
 
  
 ;-----------------------------------------------------------------------------
@@ -1028,4 +1037,5 @@ dequant_h263_inter_sse2:
 
   xor eax, eax              ; return 0
   ret
+.endfunc
 

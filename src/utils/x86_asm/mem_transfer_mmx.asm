@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: mem_transfer_mmx.asm,v 1.14 2004-08-22 11:46:10 edgomez Exp $
+; * $Id: mem_transfer_mmx.asm,v 1.15 2004-08-29 10:02:38 edgomez Exp $
 ; *
 ; ***************************************************************************/
 
@@ -30,15 +30,15 @@ BITS 32
 %macro cglobal 1
 	%ifdef PREFIX
 		%ifdef MARK_FUNCS
-			global _%1:function
-			%define %1 _%1:function
+			global _%1:function %1.endfunc-%1
+			%define %1 _%1:function %1.endfunc-%1
 		%else
 			global _%1
 			%define %1 _%1
 		%endif
 	%else
 		%ifdef MARK_FUNCS
-			global %1:function
+			global %1:function %1.endfunc-%1
 		%else
 			global %1
 		%endif
@@ -111,6 +111,7 @@ transfer_8to16copy_mmx:
   COPY_8_TO_16 2
   COPY_8_TO_16 3
   ret
+.endfunc
 
 ;-----------------------------------------------------------------------------
 ;
@@ -146,6 +147,7 @@ transfer_16to8copy_mmx:
   lea ecx,[ecx+2*edx]
   COPY_16_TO_8 3
   ret
+.endfunc
 
 ;-----------------------------------------------------------------------------
 ;
@@ -209,6 +211,7 @@ transfer_8to16sub_mmx:
 
   pop ebx
   ret
+.endfunc
 
 
 ALIGN 16
@@ -227,6 +230,7 @@ transfer_8to16subro_mmx:
 
   pop ebx
   ret
+.endfunc
 
 
 ;-----------------------------------------------------------------------------
@@ -325,6 +329,7 @@ transfer_8to16sub2_mmx:
   pop esi
   pop ebx
   ret
+.endfunc
 
 ;-----------------------------------------------------------------------------
 ;
@@ -392,6 +397,7 @@ transfer_8to16sub2_xmm:
   pop esi
   pop ebx
   ret
+.endfunc
 
 ;-----------------------------------------------------------------------------
 ;
@@ -436,6 +442,7 @@ transfer_16to8add_mmx:
   lea ecx,[ecx+2*edx]
   COPY_16_TO_8_ADD 3
   ret
+.endfunc
 
 ;-----------------------------------------------------------------------------
 ;
@@ -468,3 +475,5 @@ transfer8x8_copy_mmx:
   lea ecx,[ecx+2*edx]
   COPY_8_TO_8
   ret
+.endfunc
+

@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: qpel_mmx.asm,v 1.4 2004-08-22 11:46:10 edgomez Exp $
+; * $Id: qpel_mmx.asm,v 1.5 2004-08-29 10:02:38 edgomez Exp $
 ; *
 ; *************************************************************************/
 
@@ -43,15 +43,15 @@ bits 32
 %macro cglobal 1
 	%ifdef PREFIX
 		%ifdef MARK_FUNCS
-			global _%1:function
-			%define %1 _%1:function
+			global _%1:function %1.endfunc-%1
+			%define %1 _%1:function %1.endfunc-%1
 		%else
 			global _%1
 			%define %1 _%1
 		%endif
 	%else
 		%ifdef MARK_FUNCS
-			global %1:function
+			global %1:function %1.endfunc-%1
 		%else
 			global %1
 		%endif
@@ -560,40 +560,52 @@ SECTION .text
 
 xvid_H_Pass_16_mmx:
   H_PASS_16 0, 0
+.endfunc
 xvid_H_Pass_Avrg_16_mmx:
   H_PASS_16 1, 0
+.endfunc
 xvid_H_Pass_Avrg_Up_16_mmx:
   H_PASS_16 2, 0
+.endfunc
 
 ;//////////////////////////////////////////////////////////////////////
 ;// 8x? copy Functions
 
 xvid_H_Pass_8_mmx:
   H_PASS_8 0, 0
+.endfunc
 xvid_H_Pass_Avrg_8_mmx:
   H_PASS_8 1, 0
+.endfunc
 xvid_H_Pass_Avrg_Up_8_mmx:
   H_PASS_8 2, 0
+.endfunc
 
 ;//////////////////////////////////////////////////////////////////////
 ;// 16x? avrg Functions
 
 xvid_H_Pass_Add_16_mmx:
   H_PASS_16 0, 1
+.endfunc
 xvid_H_Pass_Avrg_Add_16_mmx:
   H_PASS_16 1, 1
+.endfunc
 xvid_H_Pass_Avrg_Up_Add_16_mmx:
   H_PASS_16 2, 1
+.endfunc
 
 ;//////////////////////////////////////////////////////////////////////
 ;// 8x? avrg Functions
 
 xvid_H_Pass_8_Add_mmx:
   H_PASS_8 0, 1
+.endfunc
 xvid_H_Pass_Avrg_8_Add_mmx:
   H_PASS_8 1, 1
+.endfunc
 xvid_H_Pass_Avrg_Up_8_Add_mmx:
   H_PASS_8 2, 1
+.endfunc
 
 
 
@@ -1000,39 +1012,51 @@ xvid_H_Pass_Avrg_Up_8_Add_mmx:
 
 xvid_V_Pass_16_mmx:
   V_PASS_16 0, 0
+.endfunc
 xvid_V_Pass_Avrg_16_mmx:
   V_PASS_16 1, 0
+.endfunc
 xvid_V_Pass_Avrg_Up_16_mmx:
   V_PASS_16 2, 0
+.endfunc
 
 ;//////////////////////////////////////////////////////////////////////
 ;// 8x? copy Functions
 
 xvid_V_Pass_8_mmx:
   V_PASS_8 0, 0
+.endfunc
 xvid_V_Pass_Avrg_8_mmx:
   V_PASS_8 1, 0
+.endfunc
 xvid_V_Pass_Avrg_Up_8_mmx:
   V_PASS_8 2, 0
+.endfunc
 
 ;//////////////////////////////////////////////////////////////////////
 ;// 16x? avrg Functions
 
 xvid_V_Pass_Add_16_mmx:
   V_PASS_16 0, 1
+.endfunc
 xvid_V_Pass_Avrg_Add_16_mmx:
   V_PASS_16 1, 1
+.endfunc
 xvid_V_Pass_Avrg_Up_Add_16_mmx:
   V_PASS_16 2, 1
+.endfunc
 
 ;//////////////////////////////////////////////////////////////////////
 ;// 8x? avrg Functions
 
 xvid_V_Pass_8_Add_mmx:
   V_PASS_8 0, 1
+.endfunc
 xvid_V_Pass_Avrg_8_Add_mmx:
   V_PASS_8 1, 1
+.endfunc
 xvid_V_Pass_Avrg_Up_8_Add_mmx:
   V_PASS_8 2, 1
+.endfunc
 
 ;//////////////////////////////////////////////////////////////////////
