@@ -1,24 +1,24 @@
-# Microsoft Developer Studio Project File - Name="xvid_stat" - Package Owner=<4>
+# Microsoft Developer Studio Project File - Name="xvid_decraw" - Package Owner=<4>
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Console Application" 0x0103
 
-CFG=xvid_stat - Win32 Debug
+CFG=xvid_decraw - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
-!MESSAGE NMAKE /f "xvid_stat.mak".
+!MESSAGE NMAKE /f "xvid_decraw.mak".
 !MESSAGE 
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "xvid_stat.mak" CFG="xvid_stat - Win32 Debug"
+!MESSAGE NMAKE /f "xvid_decraw.mak" CFG="xvid_decraw - Win32 Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "xvid_stat - Win32 Release" (based on "Win32 (x86) Console Application")
-!MESSAGE "xvid_stat - Win32 Debug" (based on "Win32 (x86) Console Application")
+!MESSAGE "xvid_decraw - Win32 Release" (based on "Win32 (x86) Console Application")
+!MESSAGE "xvid_decraw - Win32 Debug" (based on "Win32 (x86) Console Application")
 !MESSAGE 
 
 # Begin Project
@@ -28,7 +28,7 @@ CFG=xvid_stat - Win32 Debug
 CPP=cl.exe
 RSC=rc.exe
 
-!IF  "$(CFG)" == "xvid_stat - Win32 Release"
+!IF  "$(CFG)" == "xvid_decraw - Win32 Release"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
@@ -52,7 +52,7 @@ LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libxvidcore.lib /nologo /subsystem:console /machine:I386 /libpath:"bin"
 
-!ELSEIF  "$(CFG)" == "xvid_stat - Win32 Debug"
+!ELSEIF  "$(CFG)" == "xvid_decraw - Win32 Debug"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
@@ -74,21 +74,21 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libxvidcore.lib /nologo /subsystem:console /pdb:"Debug/xvid_stat.pdb" /debug /machine:I386 /pdbtype:sept /libpath:"bin"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib libxvidcore.lib /nologo /subsystem:console /pdb:"Debug/xvid_decraw.pdb" /debug /machine:I386 /pdbtype:sept /libpath:"bin"
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
 
 # Begin Target
 
-# Name "xvid_stat - Win32 Release"
-# Name "xvid_stat - Win32 Debug"
+# Name "xvid_decraw - Win32 Release"
+# Name "xvid_decraw - Win32 Debug"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\..\examples\xvid_stat.c
+SOURCE=..\..\examples\xvid_decraw.c
 # End Source File
 # End Group
 # End Target
