@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.108 2004-07-18 15:24:05 edgomez Exp $
+ * $Id: encoder.c,v 1.109 2004-12-05 13:01:27 syskin Exp $
  *
  ****************************************************************************/
 
@@ -1697,7 +1697,6 @@ FrameCodeP(Encoder * pEnc,
 								 pParam->height,
 								 pParam->edged_width,
 								 (current->vol_flags & XVID_VOL_QUARTERPEL),
-								 (current->vop_flags & XVID_VOP_REDUCED),
 								 current->rounding_type);
 
 			stop_comp_timer();
@@ -2017,7 +2016,7 @@ FrameCodeB(Encoder * pEnc,
 			if (mb->mode == MODE_NOT_CODED) {
 				if (pEnc->mbParam.plugin_flags & XVID_REQORIGINAL) {
 					MBMotionCompensation(mb, x, y, f_ref, NULL, f_ref, NULL, NULL, &frame->image,
-											NULL, 0, 0, pEnc->mbParam.edged_width, 0, 0, 0);
+											NULL, 0, 0, pEnc->mbParam.edged_width, 0, 0);
 				}
 
 				continue;

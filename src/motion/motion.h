@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: motion.h,v 1.22 2004-03-22 22:36:24 edgomez Exp $
+ *  $Id: motion.h,v 1.23 2004-12-05 13:01:27 syskin Exp $
  *
  ***************************************************************************/
 
@@ -144,7 +144,6 @@ MBMotionCompensation(MACROBLOCK * const mb,
 					const uint32_t height,
 					const uint32_t edged_width,
 					const int32_t quarterpel,
-					const int reduced_resolution,
 					const int32_t rounding);
 
 void
