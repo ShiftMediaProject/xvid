@@ -39,7 +39,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.58 2002-07-19 15:02:38 chl Exp $
+ *  $Id: encoder.c,v 1.59 2002-07-20 22:30:30 albeu Exp $
  *
  ****************************************************************************/
 
@@ -1724,9 +1724,11 @@ FrameCodeP(Encoder * pEnc,
 
 	*pBits = BitstreamPos(bs) - *pBits;
 
+#ifdef BFRAMES
 	pEnc->time_pp = ((int32_t)pEnc->mbParam.fbase - (int32_t)pEnc->last_pframe + (int32_t)pEnc->mbParam.m_ticks) % (int32_t)pEnc->mbParam.fbase;
 
 	pEnc->last_pframe = pEnc->mbParam.m_ticks;
+#endif
 	return 0;					// inter
 }
 
