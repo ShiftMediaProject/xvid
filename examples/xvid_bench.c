@@ -67,7 +67,7 @@ double gettime_usec()
 {    
   struct timeval  tv;
   gettimeofday(&tv, 0);
-  return tv.tv_sec*1.0e6f + tv.tv_usec;
+  return tv.tv_sec*1.0e6 + tv.tv_usec;
 }
 
  /* returns squared deviates (mean(v*v)-mean(v)^2) of a 8x8 block */
@@ -102,6 +102,7 @@ CPU cpu_list[] =
 , { "SSE2  ", XVID_CPU_SSE2 | XVID_CPU_MMX }
 , { "3DNOW ", XVID_CPU_3DNOW }
 , { "3DNOWE", XVID_CPU_3DNOWEXT }
+, { "IA64  ", XVID_CPU_IA64 }  
 //, { "TSC   ", XVID_CPU_TSC }
 , { 0, 0 } }
 
@@ -109,6 +110,7 @@ CPU cpu_list[] =
 { { "PLAINC", 0 }
 , { "MMX   ", XVID_CPU_MMX }
 //, { "MMXEXT", XVID_CPU_MMXEXT | XVID_CPU_MMX }
+, { "IA64  ", XVID_CPU_IA64 }
 , { 0, 0 } }
 
 , cpu_short_list2[] = 
