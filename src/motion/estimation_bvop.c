@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.14 2004-09-04 14:16:24 edgomez Exp $
+ * $Id: estimation_bvop.c,v 1.15 2004-09-04 15:07:45 syskin Exp $
  *
  ****************************************************************************/
 
@@ -642,6 +642,8 @@ SearchDirect_initial(const int x, const int y,
 	Data->currentMV[2].y = ((Data->currentMV->y == 0) ?
 			Data->directmvB[0].y
 			: Data->currentMV[1].y - Data->referencemv[0].y);
+
+	*best_sad = Data->iMinSAD[0];
 
 	return skip_sad;
 }
