@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_stat.c,v 1.7 2002-09-15 20:22:01 edgomez Exp $
+ * $Id: xvid_stat.c,v 1.8 2002-09-15 20:43:52 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -422,7 +422,7 @@ int main(int argc, char *argv[])
  *             Analyse the decoded frame and compare to original
  ****************************************************************************/
       
-		framepsnr[filenr] = PSNR(XDIM,YDIM, in_buffer, XDIM, out_buffer, XDIM);
+		framepsnr[filenr] = PSNR(XDIM,YDIM*3/2, in_buffer, XDIM, out_buffer, XDIM);
 	
 		printf("dectime =%6.1f ms PSNR %5.2f\n",dectime, framepsnr[filenr]);
 
