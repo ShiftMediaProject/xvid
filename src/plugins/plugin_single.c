@@ -3,7 +3,7 @@
  *  XviD Standard Plugins
  *  - single-pass bitrate controller implementation -
  *
- *  Copyright(C) 2002      Benjamin Lambert <foxer@hotmail.com>
+ *  Copyright(C) 2002-2004 Benjamin Lambert <foxer@hotmail.com>
  *               2002-2003 Edouard Gomez <ed.gomez@free.fr>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -20,7 +20,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: plugin_single.c,v 1.2 2004-03-22 22:36:24 edgomez Exp $
+ * $Id: plugin_single.c,v 1.3 2004-08-10 22:34:32 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -186,40 +186,50 @@ rc_single_after(rc_single_t * rc,
 	rc->time += (double) data->fincr / data->fbase;
 	rc->total_size += data->length;
 
-	if(data->type == XVID_TYPE_BVOP)
-		return (0);
-
-	rc->rtn_quant = data->quant;
-
 	/* Compute the deviation from expected total size */
 	deviation = 
 		rc->total_size - rc->bytes_per_sec * rc->time;
 
+	averaging_period = (double) rc->averaging_period;
 
-	if (data->quant >= 2) {
+	/* calculate the sequence quality */
+	rc->sequence_quality -= rc->sequence_quality / averaging_period;
 
-		averaging_period = (double) rc->averaging_period;
+	rc->sequence_quality +=
+		2.0 / (double) data->quant / averaging_period;
 
-		rc->sequence_quality -= rc->sequence_quality / averaging_period;
+	/* clamp the sequence quality to 10% to 100%
+	 * to try to avoid using the highest
+	 * and lowest quantizers 'too' much */
+	if (rc->sequence_quality < 0.1)
+		rc->sequence_quality = 0.1;
+	else if (rc->sequence_quality > 1.0)
+		rc->sequence_quality = 1.0;
 
-		rc->sequence_quality +=
-			2.0 / (double) data->quant / averaging_period;
-
-		if (rc->sequence_quality < 0.1)
-			rc->sequence_quality = 0.1;
-
-		if (data->type != XVID_TYPE_IVOP) {
-			reaction_delay_factor = (double) rc->reaction_delay_factor;
-			rc->avg_framesize -= rc->avg_framesize / reaction_delay_factor;
-			rc->avg_framesize += data->length / reaction_delay_factor;
-		}
-
+	/* factor this frame's size into the average framesize
+	 * but skip using ivops as they are usually very large
+	 * and as such, usually disrupt quantizer distribution */
+	if (data->type != XVID_TYPE_IVOP) {
+		reaction_delay_factor = (double) rc->reaction_delay_factor;
+		rc->avg_framesize -= rc->avg_framesize / reaction_delay_factor;
+		rc->avg_framesize += data->length / reaction_delay_factor;
 	}
 
-	quality_scale =
-		rc->target_framesize / rc->avg_framesize * rc->target_framesize /
-		rc->avg_framesize;
+	/* don't change the quantizer between pvops */
+	if (data->type == XVID_TYPE_BVOP)
+		return (0);
 
+	/* calculate the quality_scale which will be used
+	 * to drag the target quality up or down, depending
+	 * on if avg_framesize is >= target_framesize */
+	quality_scale =
+		rc->target_framesize / rc->avg_framesize *
+		rc->target_framesize / rc->avg_framesize;
+
+	/* use the current sequence_quality as the
+	 * base_quality which will be dragged around
+	 * 
+	 * 0.06452 = 6.452% quality (quant:31) */
 	base_quality = rc->sequence_quality;
 	if (quality_scale >= 1.0) {
 		base_quality = 1.0 - (1.0 - base_quality) / quality_scale;
@@ -229,10 +239,20 @@ rc_single_after(rc_single_t * rc,
 
 	overflow = -((double) deviation / (double) rc->buffer);
 
+	/* clamp overflow to 1 buffer unit to avoid very
+	 * large bursts of bitrate following still scenes */
+	if (overflow > rc->target_framesize)
+		overflow = rc->target_framesize;
+	else if (overflow < -rc->target_framesize)
+		overflow = -rc->target_framesize;
+
+	/* apply overflow / buffer to get the target_quality */
 	target_quality =
 		base_quality + (base_quality -
 						0.06452) * overflow / rc->target_framesize;
 
+	/* clamp the target_quality to quant 1-31
+	 * 2.0 = 200% quality (quant:1) */
 	if (target_quality > 2.0)
 		target_quality = 2.0;
 	else if (target_quality < 0.06452)
@@ -240,19 +260,35 @@ rc_single_after(rc_single_t * rc,
 
 	rtn_quant = (int) (2.0 / target_quality);
 
+	/* accumulate quant <-> quality error and apply if >= 1.0 */
 	if (rtn_quant > 0 && rtn_quant < 31) {
 		rc->quant_error[rtn_quant - 1] += 2.0 / target_quality - rtn_quant;
 		if (rc->quant_error[rtn_quant - 1] >= 1.0) {
 			rc->quant_error[rtn_quant - 1] -= 1.0;
 			rtn_quant++;
+			rc->rtn_quant++;
 		}
 	}
 
 	/* prevent rapid quantization change */
-	if (rtn_quant > data->quant + 1)
-		rtn_quant = data->quant + 1;
-	else if (rtn_quant < data->quant - 1)
-		rtn_quant = data->quant - 1;
+	if (rtn_quant > rc->rtn_quant + 1) {
+		if (rtn_quant > rc->rtn_quant + 3)
+			if (rtn_quant > rc->rtn_quant + 5)
+				rtn_quant = rc->rtn_quant + 3;
+			else
+				rtn_quant = rc->rtn_quant + 2;
+		else
+			rtn_quant = rc->rtn_quant + 1;
+	}
+	else if (rtn_quant < rc->rtn_quant - 1) {
+		if (rtn_quant < rc->rtn_quant - 3)
+			if (rtn_quant < rc->rtn_quant - 5)
+				rtn_quant = rc->rtn_quant - 3;
+			else
+				rtn_quant = rc->rtn_quant - 2;
+		else
+			rtn_quant = rc->rtn_quant - 1;
+	}
 
 	rc->rtn_quant = rtn_quant;
 
