@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mem_transfer.h,v 1.14 2004-04-05 20:36:37 edgomez Exp $
+ * $Id: mem_transfer.h,v 1.15 2004-12-19 13:16:50 syskin Exp $
  *
  ****************************************************************************/
 
@@ -169,6 +169,28 @@ extern TRANSFER_8TO16SUB2 transfer_8to16sub2_ia64;
 
 #ifdef ARCH_IS_PPC
 extern TRANSFER_8TO16SUB2 transfer_8to16sub2_altivec_c;
+#endif
+
+/*****************************************************************************
+ * transfer8to16 + substraction op API - Bidirectionnal Version *readonly*
+ ****************************************************************************/
+
+typedef void (TRANSFER_8TO16SUB2RO) (int16_t * const dct,
+								   const uint8_t * const cur,
+								   const uint8_t * ref1,
+								   const uint8_t * ref2,
+								   const uint32_t stride);
+
+typedef TRANSFER_8TO16SUB2RO *TRANSFER_8TO16SUB2RO_PTR;
+
+/* Our global function pointer - Initialized in xvid.c */
+extern TRANSFER_8TO16SUB2RO_PTR transfer_8to16sub2ro;
+
+/* Implemented functions */
+TRANSFER_8TO16SUB2RO transfer_8to16sub2ro_c;
+
+#ifdef ARCH_IS_IA32
+extern TRANSFER_8TO16SUB2RO transfer_8to16sub2ro_xmm;
 #endif
 
 /*****************************************************************************
