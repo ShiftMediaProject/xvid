@@ -39,7 +39,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.64 2002-07-24 23:17:19 chl Exp $
+ *  $Id: encoder.c,v 1.65 2002-07-28 13:06:45 chl Exp $
  *
  ****************************************************************************/
 
@@ -56,6 +56,7 @@
 #include "image/image.h"
 #ifdef BFRAMES
 #include "image/font.h"
+#include "motion/sad.h"
 #endif
 #include "motion/motion.h"
 #include "bitstream/cbp.h"
@@ -1556,6 +1557,7 @@ FrameCodeI(Encoder * pEnc,
 
 
 #define INTRA_THRESHOLD 0.5
+#define BFRAME_SKIP_THRESHHOLD 16
 
 static int
 FrameCodeP(Encoder * pEnc,
@@ -1570,7 +1572,8 @@ FrameCodeP(Encoder * pEnc,
 	DECLARE_ALIGNED_MATRIX(qcoeff, 6, 64, int16_t, CACHE_LINE);
 
 	int iLimit;
-	uint32_t x, y;
+	int k;
+	int x, y;
 	int iSearchRange;
 	int bIntra;
 	
@@ -1698,7 +1701,46 @@ FrameCodeP(Encoder * pEnc,
 			} 
 
 			start_timer();
-			MBCoding(pEnc->current, pMB, qcoeff, bs, &pEnc->sStat);
+
+			/* Finished processing the MB, now check if to CODE or SKIP */
+
+			if (pMB->cbp == 0 && pMB->mode == MODE_INTER && pMB->mvs[0].x == 0 &&
+				pMB->mvs[0].y == 0) {
+
+/* This is a candidate for SKIPping, but check intermediate B-frames first */
+
+#ifdef BFRAMES
+				int iSAD=BFRAME_SKIP_THRESHHOLD;
+				int bSkip=1;
+				
+				for (k=pEnc->bframenum_head; k< pEnc->bframenum_tail; k++)
+				{		
+					iSAD = sad16(pEnc->reference->image.y + 16*y*pEnc->mbParam.edged_width + 16*x,
+								pEnc->bframes[k]->image.y + 16*y*pEnc->mbParam.edged_width + 16*x,
+								pEnc->mbParam.edged_width,BFRAME_SKIP_THRESHHOLD);
+					if (iSAD >= BFRAME_SKIP_THRESHHOLD)
+					{	bSkip = 0; 
+						break;
+					}
+				}
+				if (!bSkip) 
+				{	
+					MBCoding(pEnc->current, pMB, qcoeff, bs, &pEnc->sStat);
+					pMB->cbp = 0x80;		/* trick! so cbp!=0, but still nothing is written to bs */
+				}
+				else 
+					MBSkip(bs);
+				
+
+#else
+					MBSkip(bs);	/* without B-frames, no precautions are needed */
+
+#endif			
+
+			} else {
+				MBCoding(pEnc->current, pMB, qcoeff, bs, &pEnc->sStat);
+			}
+
 			stop_coding_timer();
 		}
 	}
