@@ -39,7 +39,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.65 2002-07-28 13:06:45 chl Exp $
+ *  $Id: encoder.c,v 1.66 2002-07-29 19:21:23 chl Exp $
  *
  ****************************************************************************/
 
@@ -424,7 +424,7 @@ encoder_create(XVID_ENC_PARAM * pParam)
 	pEnc->mbParam.m_seconds = 0;
 	pEnc->mbParam.m_ticks = 0;
 	pEnc->m_framenum = 0;
-	pEnc->last_pframe = 1;
+	pEnc->last_pframe = 0;
 #endif
 
 	pParam->handle = (void *) pEnc;
@@ -1801,8 +1801,9 @@ FrameCodeP(Encoder * pEnc,
 	*pBits = BitstreamPos(bs) - *pBits;
 
 #ifdef BFRAMES
-	pEnc->time_pp = ((int32_t)pEnc->mbParam.fbase - (int32_t)pEnc->last_pframe + (int32_t)pEnc->mbParam.m_ticks) % (int32_t)pEnc->mbParam.fbase;
-	pEnc->last_pframe = pEnc->mbParam.m_ticks;
+	pEnc->time_pp = ((int32_t)pEnc->mbParam.fbase - (int32_t)pEnc->last_pframe + (int32_t)pEnc->current->ticks) %
+			(int32_t)pEnc->mbParam.fbase;
+	pEnc->last_pframe = pEnc->current->ticks;
 #endif
 
 	return 0;					// inter
@@ -1861,7 +1862,7 @@ FrameCodeB(Encoder * pEnc,
 
 	start_timer();
 	MotionEstimationBVOP(&pEnc->mbParam, frame, 
- 	  ((int32_t)pEnc->mbParam.fbase + (int32_t)pEnc->mbParam.m_ticks + 1 - (int32_t)pEnc->last_pframe) % pEnc->mbParam.fbase, 
+		((int32_t)pEnc->mbParam.fbase + pEnc->last_pframe - frame->ticks) % pEnc->mbParam.fbase,
 						pEnc->time_pp, 
 						pEnc->reference->mbs, f_ref,
 						 &pEnc->f_refh, &pEnc->f_refv, &pEnc->f_refhv,
