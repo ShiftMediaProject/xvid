@@ -34,11 +34,11 @@
 #define CACHE_LINE  16
 
 #if _MSC_VER <= 1200
-#define #define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
+#define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
 	type name##_storage[(sizex)*(sizey)+(alignment)-1]; \
 	type * name = (type *) (((int32_t) name##_storage+(alignment - 1)) & ~((int32_t)(alignment)-1))
 #else
-#define #define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
+#define DECLARE_ALIGNED_MATRIX(name,sizex,sizey,type,alignment) \
 	__declspec(align(CACHE_LINE)) type name[(sizex)*(sizey)]
 #endif
 
