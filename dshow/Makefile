@@ -8,15 +8,20 @@
 # Requires GNU Make because of shell expansion performed at a bad time with
 # other make programs (even using := variable assignments)
 #
-# $Id: Makefile,v 1.2 2004-07-18 04:10:22 suxen_drol Exp $
+# $Id: Makefile,v 1.3 2004-07-20 12:18:44 suxen_drol Exp $
 ##############################################################################
 
 include sources.inc
 
 ##############################################################################
-# DXTREE must point to the DirectShow SDK root directory.
+# DXTREE must point to the directx sdk root directory.
+#
+# if a release prior to "directx v9.0 sdk update (summer 2003)" is installed,
+# uncomment the DXBASECLASSES=$(DXTREE)/Samples/MultiMedia/DirectShow/BaseClasses
 ##############################################################################
-DXTREE=/c/DXVCSDK
+DXTREE=/c/DX9VCSDK
+DXBASECLASSES=$(DXTREE)/Samples/C++/DirectShow/BaseClasses
+# DXBASECLASSES=$(DXTREE)/Samples/MultiMedia/DirectShow/BaseClasses
 
 MAKEFILE_PWD:=$(shell pwd)
 LOCAL_XVID_SRCTREE:=$(MAKEFILE_PWD)/../src
@@ -36,7 +41,7 @@ CXXFLAGS +=-mthreads
 CXXFLAGS += -DRELEASE \
         -I$(LOCAL_XVID_SRCTREE) \
         -I$(DXTREE)/Include \
-        -I$(DXTREE)/samples/MultiMedia/DirectShow/BaseClasses \
+        -I$(DXBASECLASSES) \
         -include $(DXTREE)/mingw_dshow_port.h
 CXXFLAGS += -mno-cygwin
 
@@ -107,7 +112,7 @@ $(LIBSO): $(BUILD_DIR) $(OBJECTS)
 			-o $@ \
 			$(OBJECTS) xvid.ax.def \
 			-L$(DXTREE)/Lib -lstrmiids \
-			$(DXTREE)/samples/Multimedia/DirectShow/BaseClasses/strmbase.lib \
+			$(DXBASECLASSES)/strmbase.lib \
 			-luuid -lwinmm -lole32 -loleaut32 -lcomctl32 -lstdc++
 			
 
