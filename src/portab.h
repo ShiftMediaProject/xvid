@@ -52,7 +52,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: portab.h,v 1.37 2002-11-23 22:00:43 chl Exp $
+ * $Id: portab.h,v 1.38 2002-11-26 23:44:10 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -140,7 +140,9 @@
 #    define CACHE_LINE  32
 #    define ptr_t uint64_t
 #else
-#    error Architecture not supported.
+/* todo: fix cache_line 0 operation */
+#    define CACHE_LINE  16
+#    define ptr_t uint32_t
 #endif
 
 /*****************************************************************************
@@ -210,7 +212,14 @@
  | msvc unknown architecture
  *---------------------------------------------------------------------------*/
 #    else
-#        error Architecture not supported.
+/* ANSI C version of BSWAP, and POSIX clock() for timer */
+#define BSWAP(x) \
+ x = ((((x) & 0xff000000) >> 24) | \
+     (((x) & 0x00ff0000) >>  8) | \
+     (((x) & 0x0000ff00) <<  8) | \
+     (((x) & 0x000000ff) << 24))
+
+#define EMMS() clock()
 #    endif
 
 
@@ -346,7 +355,14 @@
  | XviD + gcc unsupported Architecture
  *---------------------------------------------------------------------------*/
 #    else
-#        error Architecture not supported.
+/* ANSI C version of BSWAP, and POSIX clock() for timer */
+#define BSWAP(x) \
+ x = ((((x) & 0xff000000) >> 24) | \
+     (((x) & 0x00ff0000) >>  8) | \
+     (((x) & 0x0000ff00) <<  8) | \
+     (((x) & 0x000000ff) << 24))
+
+#define EMMS() clock()
 #    endif /* Architecture checking */
 
 /*****************************************************************************

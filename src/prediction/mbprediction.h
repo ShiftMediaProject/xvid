@@ -51,7 +51,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: mbprediction.h,v 1.17 2002-11-17 00:35:33 edgomez Exp $
+ * $Id: mbprediction.h,v 1.18 2002-11-26 23:44:11 edgomez Exp $
  *
  *************************************************************************/
 
@@ -315,7 +315,7 @@ get_pmvdata2(const MACROBLOCK * const mbs,
 	if (num_cand == 1) {
 		pmv[0] = pmv[last_cand];
 		psad[0] = psad[last_cand];
-        // return MVequal(pmv[0], zeroMV); /* no point calculating median mv and minimum sad */
+        /* return MVequal(pmv[0], zeroMV);  no point calculating median mv and minimum sad  */
 		
 		/* original pmvdata() compatibility hack */
 		return y==0 && block <= 1 ? 0 : MVequal(pmv[0], zeroMV);
@@ -326,7 +326,7 @@ get_pmvdata2(const MACROBLOCK * const mbs,
 		psad[0] = MIN(MIN(psad[1], psad[2]), psad[3]);
 		return 1;
 		/* compatibility patch */
-		//return y==0 && block <= 1 ? 0 : 1;
+		/*return y==0 && block <= 1 ? 0 : 1; */
 	}
 
 	/* set median, minimum */
@@ -518,7 +518,7 @@ get_ipmvdata(const MACROBLOCK * const mbs,
 	if (num_cand == 1) {
 		pmv[0] = pmv[last_cand];
 		psad[0] = psad[last_cand];
-        // return MVequal(pmv[0], zeroMV); /* no point calculating median mv and minimum sad */
+        /* return MVequal(pmv[0], zeroMV); no point calculating median mv and minimum sad */
 		
 		/* original pmvdata() compatibility hack */
 		return y==0 && block <= 1 ? 0 : MVequal(pmv[0], zeroMV);
@@ -529,7 +529,7 @@ get_ipmvdata(const MACROBLOCK * const mbs,
 		psad[0] = MIN(MIN(psad[1], psad[2]), psad[3]);
 		return 1;
 		/* compatibility patch */
-		//return y==0 && block <= 1 ? 0 : 1;
+		/*return y==0 && block <= 1 ? 0 : 1; */
 	}
 
 	/* set median, minimum */

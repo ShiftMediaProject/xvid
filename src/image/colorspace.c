@@ -51,16 +51,16 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: colorspace.c,v 1.6 2002-11-17 00:20:30 edgomez Exp $
+ * $Id: colorspace.c,v 1.7 2002-11-26 23:44:10 edgomez Exp $
  *
  ****************************************************************************/
 
-#include <string.h>				// memcpy
+#include <string.h>				/* memcpy */
 
 #include "colorspace.h"
-#include "../divx4.h"			// DEC_PICTURE
+#include "../divx4.h"			/* DEC_PICTURE */
 
-// function pointers
+/* function pointers */
 
 /* input */
 color_inputFuncPtr rgb555_to_yv12;
@@ -142,7 +142,7 @@ rgb555_to_yv12_c(uint8_t * y_out,
 
 
 	for (y = height / 2; y; y--) {
-		// process one 2x2 block per iteration
+		/* process one 2x2 block per iteration */
 		for (x = 0; x < (uint32_t) width; x += 2) {
 			int rgb, r, g, b, r4, g4, b4;
 
@@ -227,7 +227,7 @@ rgb565_to_yv12_c(uint8_t * y_out,
 
 
 	for (y = height / 2; y; y--) {
-		// process one 2x2 block per iteration
+		/* process one 2x2 block per iteration */
 		for (x = 0; x < (uint32_t) width; x += 2) {
 			int rgb, r, g, b, r4, g4, b4;
 
@@ -499,11 +499,11 @@ yuyv_to_yv12_c(uint8_t * y_out,
 
 		for (x = width >> 1; x; x--) {
 			*y_out++ = *src++;
-			//*u_out++ = *src++;
+			/**u_out++ = *src++; */
 			*u_out++ = (*(src + width2) + *src) >> 1;
 			src++;
 			*y_out++ = *src++;
-			//*v_out++ = *src++;
+			/**v_out++ = *src++; */
 			*v_out++ = (*(src + width2) + *src) >> 1;
 			src++;
 
@@ -551,9 +551,9 @@ uyvy_to_yv12_c(uint8_t * y_out,
 
 		for (x = width >> 1; x; x--) {
 			*u_out++ = *src++;
-			// *u_out++ = (*(src+width2) + *src++) >> 1;
+			/* *u_out++ = (*(src+width2) + *src++) >> 1; */
 			*y_out++ = *src++;
-			//*v_out++ = *src++;
+			/**v_out++ = *src++; */
 			*v_out++ = (*(src + width2) + *src) >> 1;
 			src++;
 			*y_out++ = *src++;
@@ -652,7 +652,7 @@ yv12_to_rgb555_c(uint8_t * dst,
 		r = g = b = 0;
 		r2 = g2 = b2 = 0;
 
-		// process one 2x2 block per iteration
+		/* process one 2x2 block per iteration */
 		for (x = 0; x < (uint32_t) width / 2; x++) {
 			int u, v;
 			int b_u, g_uv, r_v, rgb_y;
@@ -734,7 +734,7 @@ yv12_to_rgb565_c(uint8_t * dst,
 	uint8_t *y_src2 = y_src + y_stride;
 	uint32_t x, y;
 
-	if (height < 0) {			// flip image?
+	if (height < 0) {			/* flip image? */
 		height = -height;
 		y_src += (height - 1) * y_stride;
 		y_src2 = y_src - y_stride;
@@ -751,7 +751,7 @@ yv12_to_rgb565_c(uint8_t * dst,
 		r = g = b = 0;
 		r2 = g2 = b2 = 0;
 
-		// process one 2x2 block per iteration
+		/* process one 2x2 block per iteration */
 		for (x = 0; x < (uint32_t) width / 2; x++) {
 			int u, v;
 			int b_u, g_uv, r_v, rgb_y;
@@ -828,7 +828,7 @@ yv12_to_rgb24_c(uint8_t * dst,
 	uint8_t *y_src2 = y_src + y_stride;
 	uint32_t x, y;
 
-	if (height < 0) {			// flip image?
+	if (height < 0) {			/* flip image? */
 		height = -height;
 		y_src += (height - 1) * y_stride;
 		y_src2 = y_src - y_stride;
@@ -839,7 +839,7 @@ yv12_to_rgb24_c(uint8_t * dst,
 	}
 
 	for (y = height / 2; y; y--) {
-		// process one 2x2 block per iteration
+		/* process one 2x2 block per iteration */
 		for (x = 0; x < (uint32_t) width / 2; x++) {
 			int u, v;
 			int b_u, g_uv, r_v, rgb_y;
@@ -925,7 +925,7 @@ yv12_to_rgb32_c(uint8_t * dst,
 	uint8_t *y_src2 = y_src + y_stride;
 	uint32_t x, y;
 
-	if (height < 0) {			// flip image?
+	if (height < 0) {			/* flip image? */
 		height = -height;
 		y_src += (height - 1) * y_stride;
 		y_src2 = y_src - y_stride;
@@ -936,7 +936,7 @@ yv12_to_rgb32_c(uint8_t * dst,
 	}
 
 	for (y = height / 2; y; y--) {
-		// process one 2x2 block per iteration
+		/* process one 2x2 block per iteration */
 		for (x = 0; x < (uint32_t) width / 2; x++) {
 			int u, v;
 			int b_u, g_uv, r_v, rgb_y;

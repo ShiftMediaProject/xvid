@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: encoder.h,v 1.24 2002-11-16 23:38:16 edgomez Exp $
+ * $Id: encoder.h,v 1.25 2002-11-26 23:44:10 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -172,7 +172,7 @@ typedef struct
 	int iMaxKeyInterval;
 	int bitrate;
 
-	// images
+	/* images */
 
 	FRAMEINFO *current;
 	FRAMEINFO *reference;

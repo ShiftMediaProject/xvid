@@ -51,7 +51,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: fdct.c,v 1.4 2002-11-16 23:51:58 edgomez Exp $
+ * $Id: fdct.c,v 1.5 2002-11-26 23:44:10 edgomez Exp $
  *
  *************************************************************************/
 
@@ -138,7 +138,7 @@
 #define FIX_2_562915447  ((int) 20995)	/* FIX(2.562915447) */
 #define FIX_3_072711026  ((int) 25172)	/* FIX(3.072711026) */
 
-// function pointer
+/* function pointer */
 fdctFuncPtr fdct;
 
 /*

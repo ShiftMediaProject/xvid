@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: motion_comp.c,v 1.15 2002-11-17 00:32:06 edgomez Exp $
+ * $Id: motion_comp.c,v 1.16 2002-11-26 23:44:10 edgomez Exp $
  *
  *************************************************************************/
 
@@ -78,7 +78,7 @@ compensate8x8_halfpel(int16_t * const dct_codes,
 {
 	int32_t ddx, ddy;
 
-	switch (((dx & 1) << 1) + (dy & 1))	// ((dx%2)?2:0)+((dy%2)?1:0)
+	switch (((dx & 1) << 1) + (dy & 1))	/* ((dx%2)?2:0)+((dy%2)?1:0) */
 	{
 	case 0:
 		ddx = dx / 2;
@@ -101,7 +101,7 @@ compensate8x8_halfpel(int16_t * const dct_codes,
 						  refh + (int) ((y + ddy) * stride + x + ddx), stride);
 		break;
 
-	default:					// case 3:
+	default:					/* case 3: */
 		ddx = (dx - 1) / 2;
 		ddy = (dy - 1) / 2;
 		transfer_8to16sub(dct_codes, cur + y * stride + x,
@@ -167,7 +167,7 @@ MBMotionCompensation(MACROBLOCK * const mb,
 						  refv->v + 8 * j * edged_width / 2 + 8 * i,
 						  edged_width / 2);
 
-	} else						// mode == MODE_INTER4V
+	} else						/* mode == MODE_INTER4V */
 	{
 		int32_t sum, dx, dy;
 

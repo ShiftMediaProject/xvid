@@ -48,15 +48,15 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: idct.h,v 1.6 2002-11-16 23:51:58 edgomez Exp $
+ * $Id: idct.h,v 1.7 2002-11-26 23:44:10 edgomez Exp $
  *
  *************************************************************************/
 
 #ifndef _IDCT_H_
 #define _IDCT_H_
 
-void idct_int32_init();
-void idct_ia64_init();
+void idct_int32_init(void);
+void idct_ia64_init(void);
 
 typedef void (idctFunc) (short *const block);
 typedef idctFunc *idctFuncPtr;

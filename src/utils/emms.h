@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: emms.h,v 1.10 2002-11-17 00:51:10 edgomez Exp $
+ * $Id: emms.h,v 1.11 2002-11-26 23:44:11 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -63,7 +63,7 @@
  * emms API
  ****************************************************************************/
 
-typedef void (emmsFunc) ();
+typedef void (emmsFunc) (void);
 
 typedef emmsFunc *emmsFuncPtr;
 

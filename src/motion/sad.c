@@ -51,7 +51,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: sad.c,v 1.11 2002-11-17 00:32:06 edgomez Exp $
+ * $Id: sad.c,v 1.12 2002-11-26 23:44:11 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -61,7 +61,7 @@
 sad16FuncPtr sad16;
 sad8FuncPtr sad8;
 sad16biFuncPtr sad16bi;
-sad8biFuncPtr sad8bi;		// not really sad16, but no difference in prototype
+sad8biFuncPtr sad8bi;		/* not really sad16, but no difference in prototype */
 dev16FuncPtr dev16;
 
 sadInitFuncPtr sadInit;

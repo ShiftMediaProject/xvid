@@ -48,7 +48,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: quant_h263.c,v 1.4 2002-11-17 00:41:19 edgomez Exp $
+ * $Id: quant_h263.c,v 1.5 2002-11-26 23:44:11 edgomez Exp $
  *
  *************************************************************************/
 
@@ -75,7 +75,7 @@ static const uint32_t multipliers[32] = {
 
 #define DIV_DIV(a, b) ((a)>0) ? ((a)+((b)>>1))/(b) : ((a)-((b)>>1))/(b)
 
-// function pointers
+/* function pointers */
 quanth263_intraFuncPtr quant_intra;
 quanth263_intraFuncPtr dequant_intra;
 
@@ -148,7 +148,7 @@ quant_inter_c(int16_t * coeff,
 			}
 
 			acLevel = (acLevel * mult) >> SCALEBITS;
-			sum += acLevel;		// sum += |acLevel|
+			sum += acLevel;		/* sum += |acLevel| */
 			coeff[i] = -acLevel;
 		} else {
 			acLevel -= quant_d_2;
@@ -195,7 +195,7 @@ dequant_intra_c(int16_t * data,
 		} else if (acLevel < 0) {
 			acLevel = quant_m_2 * -acLevel + quant_add;
 			data[i] = (acLevel <= 2048 ? -acLevel : -2048);
-		} else					//  if (acLevel > 0) {
+		} else					/*  if (acLevel > 0) { */
 		{
 			acLevel = quant_m_2 * acLevel + quant_add;
 			data[i] = (acLevel <= 2047 ? acLevel : 2047);
@@ -225,7 +225,7 @@ dequant_inter_c(int16_t * data,
 		} else if (acLevel < 0) {
 			acLevel = acLevel * quant_m_2 - quant_add;
 			data[i] = (acLevel >= -2048 ? acLevel : -2048);
-		} else					// if (acLevel > 0)
+		} else					/* if (acLevel > 0) */
 		{
 			acLevel = acLevel * quant_m_2 + quant_add;
 			data[i] = (acLevel <= 2047 ? acLevel : 2047);

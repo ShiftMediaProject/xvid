@@ -2,7 +2,7 @@
 |                         ToDo List for Stable Tree                          |
 |                                                                            |
 +----------------------------------------------------------------------------+
-$Id: todo.txt,v 1.9 2002-09-27 18:36:51 edgomez Exp $
+$Id: todo.txt,v 1.10 2002-11-26 23:44:09 edgomez Exp $
 
 
 
@@ -24,7 +24,7 @@ will test the source tree on all supported platforms and fix last bugs.
 ++ Fixes
 -----------------------------------------------------------------------------
 * Add all legal headers (same headers all over the sources) - [DONE]
-* Sort out who has main copyrigths on files - [TODO]
+* Sort out who has main copyrigths on files - [DONE]
 * Check core reentrancy - [IN PROGRESS]
   + Problems detected in custom matrices, get_mv code, and function pointers.
 * Check the small mem problems reported by valgrind [DONE]
@@ -32,10 +32,11 @@ will test the source tree on all supported platforms and fix last bugs.
   + Purify detects lot of small unitialized reads (probably in bitstream functions)
 * Rewrite portab.h in a better way [DONE]
   + Needs to be tested (and probably fixed) on all platforms/compilers
+* Ansi C compliancy [DONE]
 
 
 ++ Other
 -----------------------------------------------------------------------------
 * Add automatic ChangeLog Generator - [DONE]
   + Thanks to rockbox' script http://rockbox.haxx.se/
-* Find a co maintainer - [IN PROGRESS]
+* Find a co maintainer - [NO]

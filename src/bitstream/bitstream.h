@@ -50,7 +50,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: bitstream.h,v 1.14 2002-11-17 00:57:57 edgomez Exp $
+ * $Id: bitstream.h,v 1.15 2002-11-26 23:44:10 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -66,7 +66,7 @@
  * Constants
  ****************************************************************************/
 
-// comment any #defs we dont use
+/* comment any #defs we dont use */
 
 #define VIDOBJ_START_CODE		0x00000100	/* ..0x0000011f  */
 #define VIDOBJLAY_START_CODE	0x00000120	/* ..0x0000012f */
@@ -74,30 +74,30 @@
 #define VISOBJSEQ_STOP_CODE		0x000001b1	/* ??? */
 #define USERDATA_START_CODE		0x000001b2
 #define GRPOFVOP_START_CODE		0x000001b3
-//#define VIDSESERR_ERROR_CODE  0x000001b4
+/*#define VIDSESERR_ERROR_CODE  0x000001b4 */
 #define VISOBJ_START_CODE		0x000001b5
-//#define SLICE_START_CODE      0x000001b7
-//#define EXT_START_CODE        0x000001b8
+/*#define SLICE_START_CODE      0x000001b7 */
+/*#define EXT_START_CODE        0x000001b8 */
 
 
 #define VISOBJ_TYPE_VIDEO				1
-//#define VISOBJ_TYPE_STILLTEXTURE      2
-//#define VISOBJ_TYPE_MESH              3
-//#define VISOBJ_TYPE_FBA               4
-//#define VISOBJ_TYPE_3DMESH            5
+/*#define VISOBJ_TYPE_STILLTEXTURE      2 */
+/*#define VISOBJ_TYPE_MESH              3 */
+/*#define VISOBJ_TYPE_FBA               4 */
+/*#define VISOBJ_TYPE_3DMESH            5 */
 
 
 #define VIDOBJLAY_TYPE_SIMPLE			1
-//#define VIDOBJLAY_TYPE_SIMPLE_SCALABLE    2
+/*#define VIDOBJLAY_TYPE_SIMPLE_SCALABLE    2 */
 #define VIDOBJLAY_TYPE_CORE				3
 #define VIDOBJLAY_TYPE_MAIN				4
 
 
-//#define VIDOBJLAY_AR_SQUARE           1
-//#define VIDOBJLAY_AR_625TYPE_43       2
-//#define VIDOBJLAY_AR_525TYPE_43       3
-//#define VIDOBJLAY_AR_625TYPE_169      8
-//#define VIDOBJLAY_AR_525TYPE_169      9
+/*#define VIDOBJLAY_AR_SQUARE           1 */
+/*#define VIDOBJLAY_AR_625TYPE_43       2 */
+/*#define VIDOBJLAY_AR_525TYPE_43       3 */
+/*#define VIDOBJLAY_AR_625TYPE_169      8 */
+/*#define VIDOBJLAY_AR_525TYPE_169      9 */
 #define VIDOBJLAY_AR_EXTPAR				15
 
 
@@ -113,15 +113,15 @@
 #define READ_MARKER()	BitstreamSkip(bs, 1)
 #define WRITE_MARKER()	BitstreamPutBit(bs, 1)
 
-// vop coding types 
-// intra, prediction, backward, sprite, not_coded
+/* vop coding types  */
+/* intra, prediction, backward, sprite, not_coded */
 #define I_VOP	0
 #define P_VOP	1
 #define B_VOP	2
 #define S_VOP	3
 #define N_VOP	4
 
-// resync-specific
+/* resync-specific */
 #define NUMBITS_VP_RESYNC_MARKER  17
 #define RESYNC_MARKER 1
 
@@ -134,7 +134,7 @@ int
 read_video_packet_header(Bitstream *bs, const int addbits, int * quant);
 
 
-// header stuff
+/* header stuff */
 int BitstreamReadHeaders(Bitstream * bs,
 						 DECODER * dec,
 						 uint32_t * rounding,
@@ -253,7 +253,7 @@ BitstreamSkip(Bitstream * const bs,
 }
 
 
-// number of bits to next byte alignment
+/* number of bits to next byte alignment */
 static uint32_t __inline
 BitstreamNumBitsToByteAlign(Bitstream *bs)
 {
@@ -262,7 +262,7 @@ BitstreamNumBitsToByteAlign(Bitstream *bs)
 }
 
 
-// show nbits from next byte alignment
+/* show nbits from next byte alignment */
 static uint32_t __inline
 BitstreamShowBitsFromByteAlign(Bitstream *bs, int bits)
 {
