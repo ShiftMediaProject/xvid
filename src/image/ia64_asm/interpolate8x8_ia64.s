@@ -1,318 +1,236 @@
-	.file	"interpolate8x8.c"
+
+	.file	"interpolate8x8_ia64.s"
 	.pred.safe_across_calls p1-p5,p16-p63
-	.common	interpolate8x8_halfpel_h#,8,8
-	.common	interpolate8x8_halfpel_v#,8,8
-	.common	interpolate8x8_halfpel_hv#,8,8
-.text
-	.align 16
-	.global interpolate8x8_halfpel_h_ia64#
-	.proc interpolate8x8_halfpel_h_ia64#
+	.text
+        .align 16
+        .global interpolate8x8_halfpel_h_ia64#
+        .proc interpolate8x8_halfpel_h_ia64#
 interpolate8x8_halfpel_h_ia64:
-	.prologue
-	.body
-	mov r26 = r0
-	mov r25 = r0
-.L15:
-	mov r24 = r0
+	LL=3
+	SL=1
+	SL2=1
+	OL=1
+	OL2=1
+	AVL=1
+	AL=1
+      STL=3
+
+	alloc r9=ar.pfs,4, 60,0,64
+
+	mov r20 = ar.lc
+	mov r21 = pr
+
+	dep.z r22 = r33,3,3		// rshift of src
+
+	and r14 = -8,r33			// align src
+	mov r15 = r32			// get dest
+	mov r16 = r34			// stride
+	sub r17 = 1,r35			// 1-rounding
 	;;
-	adds r23 = 1, r25
-.L19:
-	add r18 = r25, r24
+
+	add r18 = 8,r14			
+	mux1 r17 = r17, @brcst		// broadcast 1-rounding
+
+	sub r24 = 64,r22			// lshift of src
+	add r26 = 8,r22			// rshift of src+1
+	sub r27 = 56,r22			// lshift of src+1
+
+	mov ar.lc = 7						// loopcounter
+	mov ar.ec = LL + SL +OL + AVL + AL + STL		// sum of latencies
+	mov pr.rot = 1 << 16					// init pr regs for sw-pipeling
+
 	;;
-	zxt4 r15 = r23
-	adds r21 = 1, r24
-	zxt4 r18 = r18
+	.rotr ald1[LL+1],ald2[LL+1],shru1[SL+1],shl1[SL+1],shru2[SL+1],shl2[SL+1],or1[OL+1],or2[OL+1+AL],add1[AL+1],avg[AVL+1]
+	.rotp aldp[LL], sh1p[SL], or1p[OL], addp[AL], pavg1p[AVL],stp[STL]
+
+
+loop_interpolate:
+	(aldp[0]) ld8 ald1[0] = [r14],r16		// load aligned src
+	(aldp[0]) ld8 ald2[0] = [r18],r16		// and aligned src+8
+
+	(sh1p[0]) shr.u shru1[0] = ald1[LL],r22	// get src
+	(sh1p[0]) shl shl1[0] = ald2[LL],r27
+      (sh1p[0]) shr.u shru2[0] = ald1[LL],r26	// get src+1
+      (sh1p[0]) shl shl2[0] = ald2[LL],r24
+
+	(or1p[0]) or or1[0] = shru1[SL],shl2[SL]		// merge things
+	(or1p[0]) or or2[0] = shru2[SL],shl1[SL]
+
+	(addp[0]) padd1.uus add1[0] = or1[OL],r17		// add 1-rounding
+
+	(pavg1p[0]) pavg1 avg[0] = add1[AL],or2[OL+AL]	// parallel average
+
+	 (stp[0]) st8 [r15] = avg[AVL]			// store results
+	 (stp[0]) add r15 = r15,r16
+
+
+
+
+	br.ctop.sptk.few loop_interpolate
 	;;
-	add r15 = r33, r15
-	adds r17 = 1, r23
-	;;
-	ld1 r14 = [r15]
-	add r16 = r33, r18
-	add r21 = r25, r21
-	;;
-	ld1 r15 = [r16]
-	zxt4 r21 = r21
-	add r18 = r32, r18
-	;;
-	add r14 = r14, r15
-	zxt4 r17 = r17
-	add r16 = r33, r21
-	;;
-	sub r14 = r14, r35
-	add r17 = r33, r17
-	adds r19 = 2, r24
-	;;
-	adds r14 = 1, r14
-	adds r20 = 2, r23
-	add r19 = r25, r19
-	;;
-	extr r14 = r14, 1, 16
-	zxt4 r19 = r19
-	add r21 = r32, r21
-	;;
-	st1 [r18] = r14
-	zxt4 r20 = r20
-	add r22 = r33, r19
-	ld1 r15 = [r16]
-	ld1 r14 = [r17]
-	;;
-	add r20 = r33, r20
-	add r14 = r14, r15
-	adds r16 = 3, r24
-	adds r17 = 3, r23
-	;;
-	sub r14 = r14, r35
-	add r16 = r25, r16
-	add r19 = r32, r19
-	;;
-	adds r14 = 1, r14
-	zxt4 r16 = r16
-	zxt4 r17 = r17
-	;;
-	extr r14 = r14, 1, 16
-	add r18 = r33, r16
-	add r17 = r33, r17
-	;;
-	st1 [r21] = r14
-	add r16 = r32, r16
-	adds r24 = 4, r24
-	ld1 r15 = [r22]
-	ld1 r14 = [r20]
-	adds r23 = 4, r23
-	;;
-	add r14 = r14, r15
-	cmp4.geu p6, p7 = 7, r24
-	;;
-	sub r14 = r14, r35
-	;;
-	adds r14 = 1, r14
-	;;
-	extr r14 = r14, 1, 16
-	;;
-	st1 [r19] = r14
-	ld1 r15 = [r18]
-	ld1 r14 = [r17]
-	;;
-	add r14 = r14, r15
-	;;
-	sub r14 = r14, r35
-	;;
-	adds r14 = 1, r14
-	;;
-	extr r14 = r14, 1, 16
-	;;
-	st1 [r16] = r14
-	(p6) br.cond.dptk .L19
-	adds r26 = 1, r26
-	add r25 = r25, r34
-	;;
-	cmp4.geu p6, p7 = 7, r26
-	(p6) br.cond.dptk .L15
+	mov ar.lc = r20
+	mov pr = r21,-1
 	br.ret.sptk.many b0
 	.endp interpolate8x8_halfpel_h_ia64#
-	.align 16
-	.global interpolate8x8_halfpel_v_ia64#
-	.proc interpolate8x8_halfpel_v_ia64#
+
+        .align 16
+        .global interpolate8x8_halfpel_v_ia64#
+        .proc interpolate8x8_halfpel_v_ia64#
 interpolate8x8_halfpel_v_ia64:
-	.prologue
-	.body
-	mov r26 = r0
-	mov r25 = r0
-.L26:
-	mov r24 = r0
+	LL=3
+	SL=1
+	SL2=1
+	OL=1
+	OL2=1
+	AVL=1
+	AL=1
+      STL=3
+
+	alloc r9=ar.pfs,4, 60,0,64
+
+	mov r20 = ar.lc
+	mov r21 = pr
+
+	dep.z r22 = r33,3,3
+
+	and r14 = -8,r33
+	mov r15 = r32
+	mov r16 = r34
+	sub r17 = 1,r35
 	;;
-	add r23 = r25, r34
-.L30:
-	add r18 = r25, r24
+
+	add r18 = 8,r14
+	add r19 = r14,r16			// src + stride 
+	mux1 r17 = r17, @brcst
+
+	sub r24 = 64,r22
+	;;	
+	add r26 = 8,r19			// src + stride + 8
+
+	mov ar.lc = 7
+	mov ar.ec = LL + SL +OL + AVL + AL + STL
+	mov pr.rot = 1 << 16
+
 	;;
-	zxt4 r15 = r23
-	adds r21 = 1, r24
-	zxt4 r18 = r18
+	.rotr ald1[LL+1],ald2[LL+1],ald3[LL+1],ald4[LL+1],shru1[SL+1],shl1[SL+1],shru2[SL+1],shl2[SL+1],or1[OL+1],or2[OL+1+AL],add1[AL+1],avg[AVL+1]
+	.rotp aldp[LL], sh1p[SL], or1p[OL], addp[AL], pavg1p[AVL],stp[STL]
+
+
+loop_interpolate2:
+	(aldp[0]) ld8 ald1[0] = [r14],r16
+	(aldp[0]) ld8 ald2[0] = [r18],r16
+	(aldp[0]) ld8 ald3[0] = [r19],r16
+	(aldp[0]) ld8 ald4[0] = [r26],r16
+
+	(sh1p[0]) shr.u shru1[0] = ald1[LL],r22
+	(sh1p[0]) shl shl1[0] = ald2[LL],r24
+      (sh1p[0]) shr.u shru2[0] = ald3[LL],r22
+      (sh1p[0]) shl shl2[0] = ald4[LL],r24
+
+	(or1p[0]) or or1[0] = shru1[SL],shl1[SL]
+	(or1p[0]) or or2[0] = shru2[SL],shl2[SL]
+
+	(addp[0]) padd1.uus add1[0] = or1[OL],r17
+
+	(pavg1p[0]) pavg1 avg[0] = add1[AL],or2[OL+AL]
+
+	 (stp[0]) st8 [r15] = avg[AVL]
+	 (stp[0]) add r15 = r15,r16
+
+
+
+
+	br.ctop.sptk.few loop_interpolate2
 	;;
-	add r15 = r33, r15
-	adds r17 = 1, r23
-	;;
-	ld1 r14 = [r15]
-	add r16 = r33, r18
-	add r21 = r25, r21
-	;;
-	ld1 r15 = [r16]
-	zxt4 r21 = r21
-	add r18 = r32, r18
-	;;
-	add r14 = r14, r15
-	zxt4 r17 = r17
-	add r16 = r33, r21
-	;;
-	sub r14 = r14, r35
-	add r17 = r33, r17
-	adds r19 = 2, r24
-	;;
-	adds r14 = 1, r14
-	adds r20 = 2, r23
-	add r19 = r25, r19
-	;;
-	extr r14 = r14, 1, 16
-	zxt4 r19 = r19
-	add r21 = r32, r21
-	;;
-	st1 [r18] = r14
-	zxt4 r20 = r20
-	add r22 = r33, r19
-	ld1 r15 = [r16]
-	ld1 r14 = [r17]
-	;;
-	add r20 = r33, r20
-	add r14 = r14, r15
-	adds r16 = 3, r24
-	adds r17 = 3, r23
-	;;
-	sub r14 = r14, r35
-	add r16 = r25, r16
-	add r19 = r32, r19
-	;;
-	adds r14 = 1, r14
-	zxt4 r16 = r16
-	zxt4 r17 = r17
-	;;
-	extr r14 = r14, 1, 16
-	add r18 = r33, r16
-	add r17 = r33, r17
-	;;
-	st1 [r21] = r14
-	add r16 = r32, r16
-	adds r24 = 4, r24
-	ld1 r15 = [r22]
-	ld1 r14 = [r20]
-	adds r23 = 4, r23
-	;;
-	add r14 = r14, r15
-	cmp4.geu p6, p7 = 7, r24
-	;;
-	sub r14 = r14, r35
-	;;
-	adds r14 = 1, r14
-	;;
-	extr r14 = r14, 1, 16
-	;;
-	st1 [r19] = r14
-	ld1 r15 = [r18]
-	ld1 r14 = [r17]
-	;;
-	add r14 = r14, r15
-	;;
-	sub r14 = r14, r35
-	;;
-	adds r14 = 1, r14
-	;;
-	extr r14 = r14, 1, 16
-	;;
-	st1 [r16] = r14
-	(p6) br.cond.dptk .L30
-	adds r26 = 1, r26
-	add r25 = r25, r34
-	;;
-	cmp4.geu p6, p7 = 7, r26
-	(p6) br.cond.dptk .L26
+	mov ar.lc = r20
+	mov pr = r21,-1
 	br.ret.sptk.many b0
 	.endp interpolate8x8_halfpel_v_ia64#
-	.align 16
-	.global interpolate8x8_halfpel_hv_ia64#
-	.proc interpolate8x8_halfpel_hv_ia64#
+
+        .align 16
+        .global interpolate8x8_halfpel_hv_ia64#
+        .proc interpolate8x8_halfpel_hv_ia64#
 interpolate8x8_halfpel_hv_ia64:
-	.prologue
-	.save ar.lc, r2
-	mov r2 = ar.lc
-	.body
-	mov r27 = r0
-	mov r26 = r0
+	LL=3
+	SL=1
+	SL2=1
+	OL=1
+	OL2=1
+	AVL=1
+	AL=1
+      STL=3
+
+	alloc r9=ar.pfs,4, 60,0,64
+
+	mov r20 = ar.lc
+	mov r21 = pr
+
+	dep.z r22 = r33,3,3
+
+	and r14 = -8,r33
+	mov r15 = r32
+	mov r16 = r34
+	sub r17 = 1,r35
 	;;
-.L37:
-	add r14 = r26, r34
-	mov r25 = r0
-	adds r24 = 1, r26
+
+	add r18 = 8,r14
+	add r19 = r14,r16
+	mux1 r17 = r17, @brcst
+
+	add r27 = 8,r22
+	sub r28 = 56,r22
+	sub r24 = 64,r22
 	;;
-	mov r23 = r14
-	adds r22 = 1, r14
-	addl r14 = 3, r0
+	add r26 = 8,r19
+
+	mov ar.lc = 7
+	mov ar.ec = LL + SL +OL + 2*AVL + AL + STL
+	mov pr.rot = 1 << 16
+
 	;;
-	mov ar.lc = r14
+	.rotr ald1[LL+1],ald2[LL+1],ald3[LL+1],ald4[LL+1],shru1[SL+1],shl1[SL+1],shru2[SL+1],shl2[SL+1],shl3[SL+1],shru3[SL+1],shl4[SL+1],shru4[SL+1],or1[OL+1],or2[OL+1+AL],or3[OL+AL+1],or4[OL+AL+1],add1[AL+1],avg[AVL+1],avg1[AVL+1],avg2[AVL+1]
+	.rotp aldp[LL], sh1p[SL], or1p[OL], addp[AL],pavg1p[AVL],pavg2p[AVL],stp[STL]
+
+
+loop_interpolate3:
+	(aldp[0]) ld8 ald1[0] = [r14],r16
+	(aldp[0]) ld8 ald2[0] = [r18],r16
+	(aldp[0]) ld8 ald3[0] = [r19],r16
+	(aldp[0]) ld8 ald4[0] = [r26],r16
+
+	(sh1p[0]) shr.u shru1[0] = ald1[LL],r22
+	(sh1p[0]) shl shl1[0] = ald2[LL],r24
+      (sh1p[0]) shr.u shru2[0] = ald3[LL],r22
+      (sh1p[0]) shl shl2[0] = ald4[LL],r24
+	(sh1p[0]) shr.u shru3[0] = ald1[LL],r27
+	(sh1p[0]) shl shl3[0] = ald2[LL],r28
+	(sh1p[0]) shr.u shru4[0] = ald3[LL],r27
+	(sh1p[0]) shl shl4[0] = ald4[LL],r28
+	
+
+	(or1p[0]) or or1[0] = shru1[SL],shl1[SL]
+	(or1p[0]) or or2[0] = shru2[SL],shl2[SL]
+	(or1p[0]) or or3[0] = shru3[SL],shl3[SL]
+	(or1p[0]) or or4[0] = shru4[SL],shl4[SL]
+
+	(addp[0]) padd1.uus add1[0] = or1[OL],r17
+
+	(pavg1p[0]) pavg1 avg[0] = add1[AL],or2[OL+AL]
+	(pavg1p[0]) pavg1 avg1[0] = or3[OL+AL],or4[OL+AL]
+	
+	(pavg2p[0]) pavg1 avg2[0] = avg[AVL],avg1[AVL]
+
+	 (stp[0]) st8 [r15] = avg2[AVL]
+	 (stp[0]) add r15 = r15,r16
+
+
+
+
+	br.ctop.sptk.few loop_interpolate3
 	;;
-.L70:
-	add r21 = r26, r25
-	zxt4 r15 = r24
-	zxt4 r16 = r23
-	;;
-	zxt4 r21 = r21
-	add r15 = r33, r15
-	add r16 = r33, r16
-	;;
-	add r19 = r33, r21
-	ld1 r17 = [r15]
-	zxt4 r14 = r22
-	;;
-	ld1 r20 = [r19]
-	ld1 r18 = [r16]
-	add r14 = r33, r14
-	;;
-	add r17 = r17, r20
-	ld1 r15 = [r14]
-	adds r19 = 1, r24
-	;;
-	add r18 = r18, r17
-	adds r20 = 1, r25
-	adds r14 = 1, r23
-	;;
-	add r15 = r15, r18
-	add r20 = r26, r20
-	add r21 = r32, r21
-	;;
-	sub r15 = r15, r35
-	zxt4 r20 = r20
-	zxt4 r19 = r19
-	;;
-	adds r15 = 2, r15
-	add r17 = r33, r20
-	adds r16 = 1, r22
-	;;
-	extr r15 = r15, 2, 16
-	add r19 = r33, r19
-	zxt4 r14 = r14
-	;;
-	st1 [r21] = r15
-	add r14 = r33, r14
-	zxt4 r16 = r16
-	ld1 r18 = [r17]
-	ld1 r15 = [r19]
-	;;
-	add r16 = r33, r16
-	ld1 r17 = [r14]
-	add r15 = r15, r18
-	add r20 = r32, r20
-	;;
-	ld1 r14 = [r16]
-	add r17 = r17, r15
-	adds r22 = 2, r22
-	;;
-	add r14 = r14, r17
-	adds r23 = 2, r23
-	adds r24 = 2, r24
-	;;
-	sub r14 = r14, r35
-	adds r25 = 2, r25
-	;;
-	adds r14 = 2, r14
-	;;
-	extr r14 = r14, 2, 16
-	;;
-	st1 [r20] = r14
-	br.cloop.sptk.few .L70
-	adds r27 = 1, r27
-	add r26 = r26, r34
-	;;
-	cmp4.geu p6, p7 = 7, r27
-	(p6) br.cond.dptk .L37
-	mov ar.lc = r2
+	mov ar.lc = r20
+	mov pr = r21,-1
 	br.ret.sptk.many b0
 	.endp interpolate8x8_halfpel_hv_ia64#
-	.ident	"GCC: (GNU) 2.96 20000731 (Red Hat Linux 7.1 2.96-85)"
+
+
