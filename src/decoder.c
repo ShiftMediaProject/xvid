@@ -32,9 +32,12 @@
  *
  *  History:
  *
+ *  10.07.2002  added BFRAMES_DEC_DEBUG support
+ *              Fix a little bug for low_delay flage
+ *              MinChen <chenm001@163.com>
  *  28.06.2002  added basic resync support to iframe/pframe_decode()
- *	22.06.2002	added primative N_VOP support
- *				#define BFRAMES_DEC now enables Minchenm's bframe decoder
+ *  22.06.2002	added primative N_VOP support
+ *		#define BFRAMES_DEC now enables Minchen's bframe decoder
  *  08.05.2002  add low_delay support for B_VOP decode
  *              MinChen <chenm001@163.com>
  *  05.05.2002  fix some B-frame decode problem
@@ -50,12 +53,16 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: decoder.c,v 1.26 2002-07-09 01:37:22 chenm001 Exp $
+ *  $Id: decoder.c,v 1.27 2002-07-11 00:15:59 chenm001 Exp $
  *
  *************************************************************************/
 
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef BFRAMES_DEC_DEBUG
+	#define BFRAMES_DEC
+#endif
 
 #include "xvid.h"
 #include "portab.h"
@@ -1082,6 +1089,13 @@ decoder_bframe(DECODER * dec,
 
 	uint32_t x, y;
 	VECTOR mv, zeromv;
+#ifdef BFRAMES_DEC_DEBUG
+	FILE *fp;
+	static char first=0;
+#define BFRAME_DEBUG  	if (!first && fp){ \
+		fprintf(fp,"Y=%3d   X=%3d   MB=%2d   CBP=%02X\n",y,x,mb->mb_type,mb->cbp); \
+	}
+#endif
 
 	start_timer();
 	image_setedges(&dec->refn[0], dec->edged_width, dec->edged_height,
@@ -1089,6 +1103,11 @@ decoder_bframe(DECODER * dec,
 	//image_setedges(&dec->refn[1], dec->edged_width, dec->edged_height, dec->width, dec->height, dec->interlacing);
 	stop_edges_timer();
 
+#ifdef BFRAMES_DEC_DEBUG
+	if (!first){
+		fp=fopen("C:\\XVIDDBG.TXT","w");
+	}
+#endif
 
 	for (y = 0; y < dec->mb_height; y++) {
 		// Initialize Pred Motion Vector
@@ -1097,14 +1116,17 @@ decoder_bframe(DECODER * dec,
 			MACROBLOCK *mb = &dec->mbs[y * dec->mb_width + x];
 			MACROBLOCK *last_mb = &dec->last_mbs[y * dec->mb_width + x];
 
-			mb->mvs[0].x = mb->mvs[0].y = zeromv.x = zeromv.y = mv.x = mv.y =
-				0;
+			mb->mvs[0].x = mb->mvs[0].y = zeromv.x = zeromv.y = mv.x = mv.y = 0;
 
 			// the last P_VOP is skip macroblock ?
 			if (last_mb->mode == MODE_NOT_CODED) {
 				//DEBUG2("Skip MB in B-frame at (X,Y)=!",x,y);
-				mb->mb_type = MODE_FORWARD;
+				mb->mb_type = MODE_NOT_CODED;
 				mb->cbp = 0;
+#ifdef BFRAMES_DEC_DEBUG
+	BFRAME_DEBUG
+#endif
+				mb->mb_type = MODE_FORWARD;
 				mb->mvs[1].x = mb->mvs[2].x = mb->mvs[3].x = mb->mvs[0].x;
 				mb->mvs[1].y = mb->mvs[2].y = mb->mvs[3].y = mb->mvs[0].y;
 				mb->quant = 8;
@@ -1144,6 +1166,9 @@ decoder_bframe(DECODER * dec,
 			mb->mode = MODE_INTER;
 			//DEBUG1("Switch bm_type=",mb->mb_type);
 
+#ifdef BFRAMES_DEC_DEBUG
+	BFRAME_DEBUG
+#endif
 			switch (mb->mb_type) {
 			case MODE_DIRECT:
 				get_b_motion_vector(dec, bs, x, y, &mb->mvs[0], 1, zeromv);
@@ -1224,11 +1249,19 @@ decoder_bframe(DECODER * dec,
 				break;
 
 			default:
-				DEBUG1("Not support B-frame mb_type =", mb->mb_type);
+				//DEBUG1("Not support B-frame mb_type =", mb->mb_type);
+				;
 			}
 
 		}						// end of FOR
 	}
+#ifdef BFRAMES_DEC_DEBUG
+	if (!first){
+		first=1;
+		if (fp)
+			fclose(fp);
+	}
+#endif
 }
 
 // swap two MACROBLOCK array
@@ -1306,17 +1339,22 @@ decoder_decode(DECODER * dec,
 		return XVID_ERR_FAIL;
 	}
 
+	if (frame->length != BitstreamPos(&bs) / 8){
+		DEBUG2("InLen/UseLen",frame->length, BitstreamPos(&bs) / 8);
+	}
 	frame->length = BitstreamPos(&bs) / 8;
+
 
 #ifdef BFRAMES_DEC
 	// test if no B_VOP
 	if (dec->low_delay) {
 #endif
-		image_output(&dec->cur, dec->width, dec->height, dec->edged_width,
+	image_output(&dec->cur, dec->width, dec->height, dec->edged_width,
 					 frame->image, frame->stride, frame->colorspace);
+
 #ifdef BFRAMES_DEC
 	} else {
-		if (dec->frames >= 1) {
+		if (dec->frames >= 0) {
 			start_timer();
 			if ((vop_type == I_VOP || vop_type == P_VOP)) {
 				image_output(&dec->refn[0], dec->width, dec->height,
@@ -1336,7 +1374,7 @@ decoder_decode(DECODER * dec,
 		image_swap(&dec->refn[0], &dec->refn[1]);
 		image_swap(&dec->cur, &dec->refn[0]);
 		// swap MACROBLOCK
-		if (dec->low_delay && vop_type == P_VOP)
+		if (!dec->low_delay && vop_type == P_VOP)
 			mb_swap(&dec->mbs, &dec->last_mbs);
 	}
 
