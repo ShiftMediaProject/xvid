@@ -28,7 +28,7 @@
 *               ToDo ? : when BFRAMES is defined, the API_VERSION should not
 *                        be the same (3.0 ?)
 *
-*  $Id: xvid.h,v 1.16 2002-07-21 03:41:44 suxen_drol Exp $
+*  $Id: xvid.h,v 1.17 2002-07-31 18:10:34 chl Exp $
 *
 *****************************************************************************/
 
@@ -37,7 +37,7 @@
 #define _XVID_H_
 
 #ifdef __cplusplus
-*  $Id: xvid.h,v 1.16 2002-07-21 03:41:44 suxen_drol Exp $
+extern "C" {
 #endif
 
 /*****************************************************************************
@@ -214,6 +214,10 @@
 /* Flags for XVID_ENC_FRAME.motion */
 #define PMV_ADVANCEDDIAMOND8	0x00004000
 #define PMV_ADVANCEDDIAMOND16   0x00008000
+
+#define PMV_HALFPELDIAMOND16 	0x00010000
+#define PMV_HALFPELREFINE16 	0x00020000
+#define PMV_EXTSEARCH16 		0x00040000	/* extend PMV by more searches */
 #define PMV_EARLYSTOP16	   		0x00080000
 #define PMV_QUICKSTOP16	   		0x00100000	/* like early, but without any more refinement */
 #define PMV_UNRESTRICTED16   	0x00200000	/* unrestricted ME, not implemented */
