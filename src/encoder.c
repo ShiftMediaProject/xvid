@@ -39,7 +39,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.62 2002-07-21 23:34:07 chl Exp $
+ *  $Id: encoder.c,v 1.63 2002-07-22 18:03:47 chl Exp $
  *
  ****************************************************************************/
 
@@ -1016,13 +1016,13 @@ bvop_loop:
 		} else {
 			pEnc->current->quant = pFrame->bquant;
 		}
-/*                if (pEnc->current->quant < 1)
+                if (pEnc->current->quant < 1)
                         pEnc->current->quant = 1;
 
                 if (pEnc->current->quant > 31)
                         pEnc->current->quant = 31;
  
-*/
+
 			DPRINTF(DPRINTF_DEBUG,"*** BFRAME (store) bf: head=%i tail=%i   queue: head=%i tail=%i size=%i  quant=%i\n",
                                 pEnc->bframenum_head, pEnc->bframenum_tail,
                                 pEnc->queue_head, pEnc->queue_tail, pEnc->queue_size,pEnc->current->quant);
