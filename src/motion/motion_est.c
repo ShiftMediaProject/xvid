@@ -874,78 +874,69 @@ AdvDiamond16_MainSearch(const uint8_t * const pRef,
 	return iMinSAD;
 }
 
-
-#define CHECK_MV16_F_INTERPOL(X,Y,BX,BY) { \
-  if ( ((X) <= max_dx) && ((X) >= min_dx) \
-    && ((Y) <= max_dy) && ((Y) >= min_dy) ) \
+#define CHECK_MV16_F_INTERPOL(X,Y) { \
+  if ( ((X) <= f_max_dx) && ((X) >= f_min_dx) \
+    && ((Y) <= f_max_dy) && ((Y) >= f_min_dy) ) \
   { \
-    iSAD = sad16( cur, get_ref(pRef, pRefH, pRefV, pRefHV, x, y, 16, X, Y, iEdgedWidth),iEdgedWidth, iMinSAD); \
-    iSAD += calc_delta_16((X) - center_x, (Y) - center_y, (uint8_t)iFcode, iQuant);\
+    iSAD = sad16bi( cur, \
+			get_ref(f_pRef, f_pRefH, f_pRefV, f_pRefHV, x, y, 16, X, Y, iEdgedWidth),	\
+			get_ref(b_pRef, b_pRefH, b_pRefV, b_pRefHV, x, y, 16, b_currMV->x, b_currMV->y, iEdgedWidth),	\
+			iEdgedWidth); \
+    iSAD += calc_delta_16((X) - f_center_x, (Y) - f_center_y, (uint8_t)f_iFcode, iQuant);\
+    iSAD += calc_delta_16(b_currMV->x - b_center_x, b_currMV->y - b_center_y, (uint8_t)b_iFcode, iQuant);\
     if (iSAD < iMinSAD) \
-    {  iMinSAD=iSAD; currMV->x=(X); currMV->y=(Y); } } \
+    {  iMinSAD=iSAD; f_currMV->x=(X); f_currMV->y=(Y); } } \
 }
 
-#define CHECK_MV16_F_INTERPOL_DIR(X,Y,BX,BY,D) { \
-  if ( ((X) <= max_dx) && ((X) >= min_dx) \
-    && ((Y) <= max_dy) && ((Y) >= min_dy) ) \
+#define CHECK_MV16_F_INTERPOL_FOUND(X,Y) { \
+  if ( ((X) <= f_max_dx) && ((X) >= f_min_dx) \
+    && ((Y) <= f_max_dy) && ((Y) >= f_min_dy) ) \
   { \
-    iSAD = sad16( cur, get_ref(pRef, pRefH, pRefV, pRefHV, x, y, 16, X, Y, iEdgedWidth),iEdgedWidth, iMinSAD); \
-    iSAD += calc_delta_16((X) - center_x, (Y) - center_y, (uint8_t)iFcode, iQuant);\
+    iSAD = sad16bi( cur, \
+			get_ref(f_pRef, f_pRefH, f_pRefV, f_pRefHV, x, y, 16, X, Y, iEdgedWidth),	\
+			get_ref(b_pRef, b_pRefH, b_pRefV, b_pRefHV, x, y, 16, b_currMV->x, b_currMV->y, iEdgedWidth),	\
+			iEdgedWidth); \
+    iSAD += calc_delta_16((X) - f_center_x, (Y) - f_center_y, (uint8_t)f_iFcode, iQuant);\
+    iSAD += calc_delta_16(b_currMV->x - b_center_x, b_currMV->y - b_center_y, (uint8_t)b_iFcode, iQuant);\
     if (iSAD < iMinSAD) \
-    {  iMinSAD=iSAD; currMV->x=(X); currMV->y=(Y); iDirection=(D); } } \
+    {  iMinSAD=iSAD; f_currMV->x=(X); f_currMV->y=(Y); iFound=0;} } \
 }
 
-#define CHECK_MV16_F_INTERPOL_FOUND(X,Y,BX,BY,D) { \
-  if ( ((X) <= max_dx) && ((X) >= min_dx) \
-    && ((Y) <= max_dy) && ((Y) >= min_dy) ) \
+#define CHECK_MV16_B_INTERPOL(X,Y) { \
+  if ( ((X) <= b_max_dx) && ((X) >= b_min_dx) \
+    && ((Y) <= b_max_dy) && ((Y) >= b_min_dy) ) \
   { \
-    iSAD = sad16( cur, get_ref(pRef, pRefH, pRefV, pRefHV, x, y, 16, X, Y, iEdgedWidth),iEdgedWidth, iMinSAD); \
-    iSAD += calc_delta_16((X) - center_x, (Y) - center_y, (uint8_t)iFcode, iQuant);\
+    iSAD = sad16bi( cur, \
+			get_ref(f_pRef, f_pRefH, f_pRefV, f_pRefHV, x, y, 16, f_currMV->x, f_currMV->y, iEdgedWidth),	\
+			get_ref(b_pRef, b_pRefH, b_pRefV, b_pRefHV, x, y, 16, X, Y, iEdgedWidth),	\
+			iEdgedWidth); \
+    iSAD += calc_delta_16(f_currMV->x - f_center_x, f_currMV->y - f_center_y, (uint8_t)f_iFcode, iQuant);\
+    iSAD += calc_delta_16((X) - b_center_x, (Y) - b_center_y, (uint8_t)b_iFcode, iQuant);\
     if (iSAD < iMinSAD) \
-    {  iMinSAD=iSAD; currMV->x=(X); currMV->y=(Y); iDirection=(D); iFound=0; } } \
+    {  iMinSAD=iSAD; b_currMV->x=(X); b_currMV->y=(Y); } } \
 }
 
-
-#define CHECK_MV16_B_INTERPOL(FX,FY,X,Y) { \
-  if ( ((X) <= max_dx) && ((X) >= min_dx) \
-    && ((Y) <= max_dy) && ((Y) >= min_dy) ) \
+#define CHECK_MV16_B_INTERPOL_FOUND(X,Y) { \
+  if ( ((X) <= b_max_dx) && ((X) >= b_min_dx) \
+    && ((Y) <= b_max_dy) && ((Y) >= b_min_dy) ) \
   { \
-    iSAD = sad16( cur, get_ref(pRef, pRefH, pRefV, pRefHV, x, y, 16, X, Y, iEdgedWidth),iEdgedWidth, iMinSAD); \
-    iSAD += calc_delta_16((X) - center_x, (Y) - center_y, (uint8_t)iFcode, iQuant);\
+    iSAD = sad16bi( cur, \
+			get_ref(f_pRef, f_pRefH, f_pRefV, f_pRefHV, x, y, 16, f_currMV->x, f_currMV->y, iEdgedWidth),	\
+			get_ref(b_pRef, b_pRefH, b_pRefV, b_pRefHV, x, y, 16, X, Y, iEdgedWidth),	\
+			iEdgedWidth); \
+    iSAD += calc_delta_16(f_currMV->x - f_center_x, f_currMV->y - f_center_y, (uint8_t)f_iFcode, iQuant);\
+    iSAD += calc_delta_16((X) - b_center_x, (Y) - b_center_y, (uint8_t)b_iFcode, iQuant);\
     if (iSAD < iMinSAD) \
-    {  iMinSAD=iSAD; currMV->x=(X); currMV->y=(Y); } } \
+    {  iMinSAD=iSAD; b_currMV->x=(X); b_currMV->y=(Y); iFound=0;} } \
 }
 
-
-#define CHECK_MV16_B_INTERPOL_DIR(FX,FY,X,Y,D) { \
-  if ( ((X) <= max_dx) && ((X) >= min_dx) \
-    && ((Y) <= max_dy) && ((Y) >= min_dy) ) \
-  { \
-    iSAD = sad16( cur, get_ref(pRef, pRefH, pRefV, pRefHV, x, y, 16, X, Y, iEdgedWidth),iEdgedWidth, iMinSAD); \
-    iSAD += calc_delta_16((X) - center_x, (Y) - center_y, (uint8_t)iFcode, iQuant);\
-    if (iSAD < iMinSAD) \
-    {  iMinSAD=iSAD; currMV->x=(X); currMV->y=(Y); iDirection=(D); } } \
-}
-
-
-#define CHECK_MV16_B_INTERPOL_FOUND(FX,FY,X,Y,D) { \
-  if ( ((X) <= max_dx) && ((X) >= min_dx) \
-    && ((Y) <= max_dy) && ((Y) >= min_dy) ) \
-  { \
-    iSAD = sad16( cur, get_ref(pRef, pRefH, pRefV, pRefHV, x, y, 16, X, Y, iEdgedWidth),iEdgedWidth, iMinSAD); \
-    iSAD += calc_delta_16((X) - center_x, (Y) - center_y, (uint8_t)iFcode, iQuant);\
-    if (iSAD < iMinSAD) \
-    {  iMinSAD=iSAD; currMV->x=(X); currMV->y=(Y); iDirection=(D); iFound=0; } } \
-}
-
-
-#if (0==1)
 int32_t
 Diamond16_InterpolMainSearch(
 					const uint8_t * const f_pRef,
 					 const uint8_t * const f_pRefH,
 					 const uint8_t * const f_pRefV,
 					 const uint8_t * const f_pRefHV,
+
 					 const uint8_t * const cur,
 
 					const uint8_t * const b_pRef,
@@ -970,64 +961,163 @@ Diamond16_InterpolMainSearch(
 				   const int b_center_x,
 				   const int b_center_y,
 
-					 const int32_t min_dx,
-					 const int32_t max_dx,
-					 const int32_t min_dy,
-					 const int32_t max_dy,
-					 const int32_t iEdgedWidth,
-					 const int32_t iDiamondSize,
+				    const int32_t f_min_dx,
+					const int32_t f_max_dx,
+					const int32_t f_min_dy,
+					const int32_t f_max_dy,
 
-					 const int32_t f_iFcode,
-					 const int32_t b_iFcode,
+				    const int32_t b_min_dx,
+					const int32_t b_max_dx,
+					const int32_t b_min_dy,
+					const int32_t b_max_dy,
 
-					 const int32_t iQuant,
-					 int iFound)
+					const int32_t iEdgedWidth,
+					const int32_t iDiamondSize,
+
+					const int32_t f_iFcode,
+					const int32_t b_iFcode,
+
+					const int32_t iQuant,
+					int iFound)
 {
 /* Do a diamond search around given starting point, return SAD of best */
 
-	int32_t f_iDirection = 0;
-	int32_t b_iDirection = 0;
 	int32_t iSAD;
 
 	VECTOR f_backupMV;
 	VECTOR b_backupMV;
 
-	f_backupMV.x = start_x;
-	f_backupMV.y = start_y;
-	b_backupMV.x = start_x;
-	b_backupMV.y = start_y;
+	f_currMV->x = f_start_x;
+	f_currMV->y = f_start_y;
+	b_currMV->x = b_start_x;
+	b_currMV->y = b_start_y;
+
+	do
+	{	
+		iFound = 1;
+	
+		f_backupMV = *f_currMV;
+	
+		CHECK_MV16_F_INTERPOL_FOUND(f_backupMV.x - iDiamondSize, f_backupMV.y);
+		CHECK_MV16_F_INTERPOL_FOUND(f_backupMV.x + iDiamondSize, f_backupMV.y);
+		CHECK_MV16_F_INTERPOL_FOUND(f_backupMV.x, f_backupMV.y - iDiamondSize);
+		CHECK_MV16_F_INTERPOL_FOUND(f_backupMV.x, f_backupMV.y + iDiamondSize);
+
+		b_backupMV = *b_currMV;
+
+		CHECK_MV16_B_INTERPOL_FOUND(b_backupMV.x - iDiamondSize, b_backupMV.y);
+		CHECK_MV16_B_INTERPOL_FOUND(b_backupMV.x + iDiamondSize, b_backupMV.y);
+		CHECK_MV16_B_INTERPOL_FOUND(b_backupMV.x, b_backupMV.y - iDiamondSize);
+		CHECK_MV16_B_INTERPOL_FOUND(b_backupMV.x, b_backupMV.y + iDiamondSize);
+
+	} while (!iFound);
+
+	return iMinSAD;
+}
+
+/* Sorry, these MACROS really got too large... I'll turn them into function soon! */
+
+#define CHECK_MV16_DIRECT_FOUND(X,Y) \
+	if ( (X)>=(-32) && (X)<=(31) && ((Y)>=-32) && ((Y)<=31) ) \
+	{ int k;\
+  	VECTOR mvs,b_mvs;	\
+	iSAD = 0;\
+	for (k = 0; k < 4; k++) {	\
+					mvs.x = (int32_t) ((TRB * directmv[k].x) / TRD + (X));		\
+            	    b_mvs.x = (int32_t) (((X) == 0) 							\
+										? ((TRB - TRD) * directmv[k].x) / TRD	\
+	                                    : mvs.x - directmv[k].x);				\
+																				\
+    	            mvs.y = (int32_t) ((TRB * directmv[k].y) / TRD + (Y));		\
+        	        b_mvs.y = (int32_t) (((Y) == 0) 							\
+										? ((TRB - TRD) * directmv[k].y) / TRD	\
+                	                    : mvs.y - directmv[k].y);				\
+																				\
+  if ( (mvs.x <= max_dx) && (mvs.x >= min_dx) \
+    && (mvs.y <= max_dy) && (mvs.y >= min_dy)  \
+	&& (b_mvs.x <= max_dx) && (b_mvs.x >= min_dx)  \
+    && (b_mvs.y <= max_dy) && (b_mvs.y >= min_dy) ) { \
+	    iSAD += sad8bi( cur + 8*(k&1) + 8*(k>>1)*iEdgedWidth, 													\
+			get_ref(f_pRef, f_pRefH, f_pRefV, f_pRefHV, 2*x+(k&1), 2*y+(k>>1), 8, \
+					mvs.x, mvs.y, iEdgedWidth),								\
+			get_ref(b_pRef, b_pRefH, b_pRefV, b_pRefHV, 2*x+(k&1), 2*y+(k>>1), 8, \
+					b_mvs.x, b_mvs.y, iEdgedWidth),								\
+			iEdgedWidth); \
+		} 	\
+	else 	\
+		iSAD = 65535; 	\
+	} \
+	iSAD += calc_delta_16((X),(Y), 1, iQuant);\
+	if (iSAD < iMinSAD) \
+	    {  iMinSAD=iSAD; currMV->x=(X); currMV->y=(Y); iFound=0; } \
+}
+
+
+
+int32_t
+Diamond16_DirectMainSearch(
+					const uint8_t * const f_pRef,
+					const uint8_t * const f_pRefH,
+					const uint8_t * const f_pRefV,
+					const uint8_t * const f_pRefHV,
+
+					const uint8_t * const cur,
+
+					const uint8_t * const b_pRef,
+					const uint8_t * const b_pRefH,
+					const uint8_t * const b_pRefV,
+					const uint8_t * const b_pRefHV,
+
+					const int x,
+					const int y,
+
+					const int TRB,
+					const int TRD,
+
+				    const int start_x,
+				    const int start_y,
+
+				    int iMinSAD,
+				    VECTOR * const currMV,
+					const VECTOR * const directmv,
+
+				    const int32_t min_dx,
+					const int32_t max_dx,
+					const int32_t min_dy,
+					const int32_t max_dy,
+
+					const int32_t iEdgedWidth,
+					const int32_t iDiamondSize,
+
+					const int32_t iQuant,
+					int iFound)
+{
+/* Do a diamond search around given starting point, return SAD of best */
+
+	int32_t iSAD;
+
+	VECTOR backupMV;
+
+	currMV->x = start_x;
+	currMV->y = start_y;
 
 /* It's one search with full Diamond pattern, and only 3 of 4 for all following diamonds */
 
-	CHECK_MV16_CANDIDATE_DIR(backupMV.x - iDiamondSize, backupMV.y, 1);
-	CHECK_MV16_CANDIDATE_DIR(backupMV.x + iDiamondSize, backupMV.y, 2);
-	CHECK_MV16_CANDIDATE_DIR(backupMV.x, backupMV.y - iDiamondSize, 3);
-	CHECK_MV16_CANDIDATE_DIR(backupMV.x, backupMV.y + iDiamondSize, 4);
+	do
+	{
+		iFound = 1;
+	
+		backupMV = *currMV;
+	
+		CHECK_MV16_DIRECT_FOUND(backupMV.x - iDiamondSize, backupMV.y);
+		CHECK_MV16_DIRECT_FOUND(backupMV.x + iDiamondSize, backupMV.y);
+		CHECK_MV16_DIRECT_FOUND(backupMV.x, backupMV.y - iDiamondSize);
+		CHECK_MV16_DIRECT_FOUND(backupMV.x, backupMV.y + iDiamondSize);
 
-	if (iDirection)
-		while (!iFound) {
-			iFound = 1;
-			backupMV = *currMV;
+	} while (!iFound);
 
-			if (iDirection != 2)
-				CHECK_MV16_CANDIDATE_FOUND(backupMV.x - iDiamondSize,
-										   backupMV.y, 1);
-			if (iDirection != 1)
-				CHECK_MV16_CANDIDATE_FOUND(backupMV.x + iDiamondSize,
-										   backupMV.y, 2);
-			if (iDirection != 4)
-				CHECK_MV16_CANDIDATE_FOUND(backupMV.x,
-										   backupMV.y - iDiamondSize, 3);
-			if (iDirection != 3)
-				CHECK_MV16_CANDIDATE_FOUND(backupMV.x,
-										   backupMV.y + iDiamondSize, 4);
-	} else {
-		currMV->x = start_x;
-		currMV->y = start_y;
-	}
 	return iMinSAD;
 }
-#endif
 
 
 int32_t
@@ -1278,9 +1368,9 @@ PMVfastSearch16(const uint8_t * const pRef,
 				const IMAGE * const pCur,
 				const int x,
 				const int y,
-				const int start_x,
-				const int start_y,
-				const int center_x,
+				const int start_x,	/* start is searched first, so it should contain the most */
+				const int start_y,  /* likely motion vector for this block */
+				const int center_x,	/* center is from where length of MVs is measured */
 				const int center_y,
 				const uint32_t MotionFlags,
 				const uint32_t iQuant,
@@ -2737,10 +2827,10 @@ PMVfastIntSearch16(const uint8_t * const pRef,
 				const IMAGE * const pCur,
 				const int x,
 				const int y,
-			const int start_x,
-			const int start_y,
-			const int center_x,
-			const int center_y,
+				const int start_x,		/* start should be most likely vector */
+				const int start_y,
+				const int center_x,		/* center is from where length of MVs is measured */
+				const int center_y,
 				const uint32_t MotionFlags,
 				const uint32_t iQuant,
 				const uint32_t iFcode,
@@ -2768,7 +2858,7 @@ PMVfastIntSearch16(const uint8_t * const pRef,
 	int32_t iFound;
 
 	VECTOR newMV;
-	VECTOR backupMV;			/* just for PMVFAST */
+	VECTOR backupMV;	
 
 	VECTOR pmv[4];
 	int32_t psad[4];
@@ -3023,12 +3113,7 @@ PMVfastInt16_Terminate_without_Refine:
 
 /* ***********************************************************
 	bvop motion estimation 
-// TODO: need to incorporate prediction here (eg. sad += calc_delta_16)
 ***************************************************************/
-
-
-#define DIRECT_PENALTY 0	
-#define DIRECT_UPPERLIMIT 256	// never use direct mode if SAD is larger than this
 
 void
 MotionEstimationBVOP(MBParam * const pParam,
@@ -3052,6 +3137,9 @@ MotionEstimationBVOP(MBParam * const pParam,
 	const int mb_height = pParam->mb_height;
 	const int edged_width = pParam->edged_width;
 
+	const int32_t iWidth = pParam->width;
+	const int32_t iHeight = pParam->height;
+
 	int i, j, k;
 
 	static const VECTOR zeroMV={0,0};
@@ -3059,18 +3147,22 @@ MotionEstimationBVOP(MBParam * const pParam,
 	int f_sad16;	/* forward (as usual) search */
 	int b_sad16;	/* backward (only in b-frames) search */
 	int i_sad16;	/* interpolated (both direction, b-frames only) */
-	int d_sad16;	/* direct mode (assume linear motion) */
+	int d_sad16;	/* direct mode (assume almost linear motion) */
 
 	int best_sad;
 
 	VECTOR f_predMV, b_predMV;	/* there is no prediction for direct mode*/
+	VECTOR f_interpolMV, b_interpolMV;	
 	VECTOR pmv_dontcare;
+
+	int min_dx, max_dx, min_dy, max_dy;
+	int f_min_dx, f_max_dx, f_min_dy, f_max_dy;
+	int b_min_dx, b_max_dx, b_min_dy, b_max_dy;
 
 	int f_count=0;
 	int b_count=0;
 	int i_count=0;
 	int d_count=0;
-	int s_count=0;
 
 	const int64_t TRB = (int32_t)time_pp - (int32_t)time_bp;
     const int64_t TRD = (int32_t)time_pp;
@@ -3089,7 +3181,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 
 			mb->deltamv=zeroMV;
 
-/* special case, if collocated block is SKIPed: encoding is forward(0,0)  */
+/* special case, if collocated block is SKIPed: encoding is forward (0,0), cpb=0 without further ado */
 
 #ifndef _DISABLE_SKIP
 			if (b_mb->mode == MODE_INTER && b_mb->cbp == 0 &&
@@ -3103,11 +3195,9 @@ MotionEstimationBVOP(MBParam * const pParam,
 			}
 #endif
 
-			d_sad16 = DIRECT_PENALTY;
-
 			if (b_mb->mode == MODE_INTER4V)
 			{
-
+				d_sad16 = 0;
 			/* same method of scaling as in decoder.c, so we copy from there */
 	            for (k = 0; k < 4; k++) {
 		
@@ -3119,7 +3209,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 	                                    : mb->mvs[k].x - mb->directmv[k].x);
 
     	            mb->mvs[k].y = (int32_t) ((TRB * mb->directmv[k].y) / TRD + mb->deltamv.y);
-        	        mb->b_mvs[k].y = (int32_t) ((mb->directmv[k].y == 0) 
+        	        mb->b_mvs[k].y = (int32_t) ((mb->deltamv.y == 0) 
 										? ((TRB - TRD) * mb->directmv[k].y) / TRD
                 	                    : mb->mvs[k].y - mb->directmv[k].y);
 
@@ -3135,7 +3225,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 			else
 			{
 				mb->directmv[3] = mb->directmv[2] = mb->directmv[1] = 
-				mb->directmv[0] = b_mb->mvs[0];
+					mb->directmv[0] = b_mb->mvs[0];
 
 				mb->mvs[0].x = (int32_t) ((TRB * mb->directmv[0].x) / TRD + mb->deltamv.x);
            	    mb->b_mvs[0].x = (int32_t) ((mb->deltamv.x == 0) 
@@ -3147,7 +3237,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 									? ((TRB - TRD) * mb->directmv[0].y) / TRD
                	                    : mb->mvs[0].y - mb->directmv[0].y);
 
-				d_sad16 += sad16bi(frame->image.y + i * 16 + j * 16 * edged_width,
+				d_sad16 = sad16bi(frame->image.y + i * 16 + j * 16 * edged_width,
 						  get_ref_mv(f_ref->y, f_refH->y, f_refV->y, f_refHV->y,
 								i, j, 16, &mb->mvs[0], edged_width), 
 						  get_ref_mv(b_ref->y, b_refH->y, b_refV->y, b_refHV->y,
@@ -3190,12 +3280,56 @@ MotionEstimationBVOP(MBParam * const pParam,
 		    i_sad16 += calc_delta_16(mb->b_mvs[0].x-b_predMV.x, mb->b_mvs[0].y-b_predMV.y, 
 								frame->bcode, frame->quant);
 
-			// TODO: direct search
-			// predictor + delta vector in range [-32,32] (fcode=1)
-			
-			i_sad16 = 65535;
-			f_sad16 = 65535;
-			b_sad16 = 65535;
+			get_range(&f_min_dx, &f_max_dx, &f_min_dy, &f_max_dy, i, j, 16, iWidth, iHeight,
+			  frame->fcode);
+			get_range(&b_min_dx, &b_max_dx, &b_min_dy, &b_max_dy, i, j, 16, iWidth, iHeight,
+			  frame->bcode);
+
+/* Interpolated MC motion vector search, this is tedious and more complicated because there are
+   two values for everything, always one for backward and one for forward ME. Still, we don't gain
+   much from this search, maybe it should simply be skipped and simply current i_sad16 value used 
+   as "optimal". */
+
+			i_sad16 = Diamond16_InterpolMainSearch(
+						f_ref->y, f_refH->y, f_refV->y, f_refHV->y,
+						frame->image.y + i * 16 + j * 16 * edged_width,
+						b_ref->y, b_refH->y, b_refV->y, b_refHV->y,
+						i, j, 
+						mb->mvs[0].x, mb->mvs[0].y,
+						mb->b_mvs[0].x, mb->b_mvs[0].y,
+						i_sad16,
+				   		&f_interpolMV, &b_interpolMV,
+						f_predMV.x, f_predMV.y, b_predMV.x, b_predMV.y,
+						f_min_dx, f_max_dx, f_min_dy, f_max_dy,
+						b_min_dx, b_max_dx, b_min_dy, b_max_dy,
+						edged_width,  1, 
+						frame->fcode, frame->bcode,frame->quant,0);
+
+
+/*  DIRECT MODE DELTA VECTOR SEARCH. 
+    This has to be made more effective, but at the moment I'm happy it's running at all */
+
+/* range is taken without fcode restriction, just a hack instead of writing down the dimensions, of course */
+
+			get_range(&min_dx, &max_dx, &min_dy, &max_dy, i, j, 16, iWidth, iHeight, 19);
+
+			d_sad16 = Diamond16_DirectMainSearch(
+						f_ref->y, f_refH->y, f_refV->y, f_refHV->y,
+						frame->image.y + i*16 + j*16*edged_width,
+						b_ref->y, b_refH->y, b_refV->y, b_refHV->y,
+						i, j, 
+						TRB,TRD, 
+						0,0,
+						d_sad16,
+				   		&mb->deltamv, 
+						mb->directmv, // this has to be pre-initialized with b_mb->mvs[} 
+				    	min_dx, max_dx, min_dy, max_dy, 
+						edged_width, 1, frame->quant, 0);
+
+
+//			i_sad16 = 65535;		/* remove the comment to disable any of the MODEs */
+//			f_sad16 = 65535;
+//			b_sad16 = 65535;
 //			d_sad16 = 65535;
 
 			if (f_sad16 < b_sad16) {
@@ -3216,7 +3350,9 @@ MotionEstimationBVOP(MBParam * const pParam,
 				if (b_mb->mode == MODE_INTER4V)
 				{
 
-				/* same method of scaling as in decoder.c, so we copy from there */
+				/* how to calc vectors is defined in standard. mvs[] and b_mvs[] are only for motion compensation */
+				/* for the bitstream, the value mb->deltamv is read directly */
+				
 		            for (k = 0; k < 4; k++) {
 	
 						mb->mvs[k].x = (int32_t) ((TRB * mb->directmv[k].x) / TRD + mb->deltamv.x);
@@ -3225,7 +3361,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 		                                    : mb->mvs[k].x - mb->directmv[k].x);
 
         	            mb->mvs[k].y = (int32_t) ((TRB * mb->directmv[k].y) / TRD + mb->deltamv.y);
-            	        mb->b_mvs[k].y = (int32_t) ((mb->directmv[k].y == 0)
+            	        mb->b_mvs[k].y = (int32_t) ((mb->deltamv.y == 0)
 											? ((TRB - TRD) * mb->directmv[k].y) / TRD
                     	                    : mb->mvs[k].y - mb->directmv[k].y);
 					}
@@ -3240,7 +3376,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 
    	   	            mb->mvs[0].y = (int32_t) ((TRB * mb->directmv[0].y) / TRD + mb->deltamv.y);
 
-           	        mb->b_mvs[0].y = (int32_t) ((mb->directmv[0].y == 0)
+           	        mb->b_mvs[0].y = (int32_t) ((mb->deltamv.y == 0)
 										? ((TRB - TRD) * mb->directmv[0].y) / TRD
                    	                    : mb->mvs[0].y - mb->directmv[0].y);
 										
@@ -3250,7 +3386,6 @@ MotionEstimationBVOP(MBParam * const pParam,
 	
 				best_sad = d_sad16;
 				mb->mode = MODE_DIRECT;
-				mb->mode = MODE_INTERPOLATE;		// direct mode still broken :-(
 			}
 
 			switch (mb->mode)
@@ -3266,6 +3401,8 @@ MotionEstimationBVOP(MBParam * const pParam,
 					break;
 				case MODE_INTERPOLATE:
 					i_count++; 
+					mb->mvs[0] = f_interpolMV;
+					mb->b_mvs[0] = b_interpolMV;
 					f_predMV = mb->mvs[0];
 					b_predMV = mb->b_mvs[0];
 					break;
@@ -3273,7 +3410,6 @@ MotionEstimationBVOP(MBParam * const pParam,
 					d_count++; 
 					break;
 				default:
-					s_count++; 		// ???
 					break;
 			}
 			
@@ -3281,8 +3417,8 @@ MotionEstimationBVOP(MBParam * const pParam,
 	}
 	
 #ifdef _DEBUG_BFRAME_STAT
-	fprintf(stderr,"B-Stat: F: %04d   B: %04d   I: %04d  D: %04d   S: %04d\n",
-				f_count,b_count,i_count,d_count,s_count);
+	fprintf(stderr,"B-Stat: F: %04d   B: %04d   I: %04d  D: %04d\n",
+				f_count,b_count,i_count,d_count);
 #endif
 
 }
