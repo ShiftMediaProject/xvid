@@ -31,7 +31,8 @@ typedef uint32_t bool;
 typedef enum
 {
     I_VOP = 0,
-    P_VOP = 1
+    P_VOP = 1,
+	B_VOP = 2
 }
 VOP_TYPE;
 
@@ -51,24 +52,39 @@ typedef struct
 	uint32_t mb_width;
 	uint32_t mb_height;
 
-    VOP_TYPE coding_type;
-
     /* rounding type; alternate 0-1 after each interframe */
-
-    uint32_t rounding_type;
-
 	/* 1 <= fixed_code <= 4
 	   automatically adjusted using motion vector statistics inside
 	 */
 
-    uint32_t fixed_code;
+	/* vars that not "quite" frame independant */
+	uint32_t m_quant_type;
+	uint32_t m_rounding_type;
+	uint32_t m_fcode;
+
+	HINTINFO * hint;
+
+} MBParam;
+
+
+typedef struct
+{
     uint32_t quant;
-	uint32_t quant_type;
 	uint32_t motion_flags;	
 	uint32_t global_flags;
 
-	HINTINFO * hint;
-} MBParam;
+	VOP_TYPE coding_type;
+    uint32_t rounding_type;
+    uint32_t fcode;
+	uint32_t bcode;
+
+	uint32_t tick;
+
+	IMAGE image;
+
+	MACROBLOCK * mbs;
+
+} FRAMEINFO;
 
 typedef struct
 {
@@ -90,13 +106,13 @@ typedef struct
 
     int iFrameNum;
     int iMaxKeyInterval;
-	int lum_masking;
 	int bitrate;
 
 	// images
 
-    IMAGE sCurrent;
-    IMAGE sReference;
+	FRAMEINFO * current;
+	FRAMEINFO * reference;
+
 #ifdef _DEBUG
 	IMAGE sOriginal;
 #endif
@@ -105,10 +121,6 @@ typedef struct
 	IMAGE vInterVf;
     IMAGE vInterHV;
 	IMAGE vInterHVf;
-
-	// macroblock
-
-	MACROBLOCK * pMBs;
 
     Statistics sStat;
 }
