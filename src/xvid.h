@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.47 2004-12-19 12:49:05 edgomez Exp $
+ * $Id: xvid.h,v 1.48 2005-01-16 10:34:52 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -57,7 +57,7 @@ extern "C" {
 #define XVID_API_MAJOR(a)        (((a)>>16) & 0xff)
 #define XVID_API_MINOR(a)        (((a)>> 0) & 0xff)
 
-#define XVID_VERSION             XVID_MAKE_VERSION(1,1,-127)
+#define XVID_VERSION             XVID_MAKE_VERSION(1,1,-126)
 #define XVID_API                 XVID_MAKE_API(4, 1)
 
 #define XVID_UNSTABLE
@@ -73,7 +73,7 @@ extern "C" {
  * doesnt hurt but not increasing it could cause difficulty for decoders in the
  * future
  */
-#define XVID_BS_VERSION 37
+#define XVID_BS_VERSION 38
 
 /*****************************************************************************
  * error codes
