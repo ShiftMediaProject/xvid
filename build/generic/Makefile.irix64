@@ -1,0 +1,41 @@
+#/**************************************************************************
+# *
+# * sgi-mips-irix64 makefile
+# *
+# *
+# *
+# *************************************************************************/
+
+
+include Makefile.inc
+
+
+CC = gcc
+CFLAGS = -fPIC -Wall -DARCH_IS_BIG_ENDIAN -DARCH_MIPS
+CFLAGS+= -O2 -mabi=n32 -mips4 -mcpu=r8000 -funroll-loops -fomit-frame-pointer
+
+
+RM = rm -rf
+
+
+all: $(LIB) $(LIBSO)
+
+
+$(LIB): $(SRC:.c=.o)
+	ar rcs $@ $^
+
+
+$(LIBSO): $(SRC:.c=.o)
+	$(CC) $^ -shared -lc -lm -o $@
+
+
+clean:
+	$(RM) $(DIRS)
+	$(RM) $(LIB)
+	$(RM) $(LIBSO)
+
+
+%.o: %.c
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+
