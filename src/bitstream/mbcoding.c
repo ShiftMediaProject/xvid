@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbcoding.c,v 1.47 2004-07-10 17:49:31 edgomez Exp $
+ * $Id: mbcoding.c,v 1.48 2004-08-22 13:16:12 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -38,6 +38,8 @@
 
 #define LEVELOFFSET 32
 
+/* Initialized once during xvid_global call
+ * RO access is thread safe */
 static REVERSE_EVENT DCT3D[2][4096];
 static VLC coeff_VLC[2][2][64][64];
 
@@ -453,7 +455,7 @@ CodeCoeffInter_CalcBits(const int16_t qcoeff[64], const uint16_t * zigzag)
 	return bits;
 }
 
-static int iDQtab[5] = {
+static const int iDQtab[5] = {
 	1, 0, -1 /* no change */, 2, 3
 };
 #define DQ_VALUE2INDEX(value)  iDQtab[(value)+2]

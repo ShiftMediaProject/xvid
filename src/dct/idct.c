@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: idct.c,v 1.7 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: idct.c,v 1.8 2004-08-22 13:16:12 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -85,7 +85,9 @@
 #define W6 1108					/* 2048*sqrt(2)*cos(6*pi/16) */
 #define W7 565					/* 2048*sqrt(2)*cos(7*pi/16) */
 
-/* private data */
+/* private data
+ * Initialized by idct_int32_init so it's mostly RO data,
+ * doesn't hurt thread safety */
 static short iclip[1024];		/* clipping table */
 static short *iclp;
 
@@ -247,9 +249,9 @@ idct_int32(short *const block)
 		idctcol(block+i);
 #endif
 
-	static short *blk;
-	static long i;
-	static long X0, X1, X2, X3, X4, X5, X6, X7, X8;
+	short *blk;
+	long i;
+	long X0, X1, X2, X3, X4, X5, X6, X7, X8;
 
 
 	for (i = 0; i < 8; i++)		/* idct rows */
