@@ -54,6 +54,10 @@
 #define MV16_THRESHOLD	192
 #define MV8_THRESHOLD	56
 
+#define NEIGH_MOVE_THRESH 8
+// how much a block's MV must differ from his neighbour 
+// to be search for INTER4V. The more, the faster...
+
 /* sad16(0,0) bias; mpeg4 spec suggests nb/2+1 */
 /* nb  = vop pixels * 2^(bpp-8) */
 #define MV16_00_BIAS	(128+1)
@@ -328,8 +332,29 @@ bool MotionEstimation(
 				&& (!(current->global_flags & XVID_LUMIMASKING) 
 					|| pMB->dquant == NO_CHANGE) )
 			{
-				int32_t sad8 = 129; //IMV16X16 * current->quant;
+				int32_t neigh=0;
 
+				if (x>0)
+				{	neigh += abs((pMB->mv16.x)-((pMB-1)->mv16.x));
+					neigh += abs((pMB->mv16.y)-((pMB-1)->mv16.y));
+				}
+				if (y>0)
+				{	neigh += abs((pMB->mv16.x)-((pMB-iWcount)->mv16.x));
+					neigh += abs((pMB->mv16.y)-((pMB-iWcount)->mv16.y));
+				}
+				if (x<(iWcount-1))
+				{	neigh += abs((pMB->mv16.x)-((pMB+1)->mv16.x));
+					neigh += abs((pMB->mv16.y)-((pMB+1)->mv16.y));
+				}
+				if (y<(iHcount-1))
+				{	neigh += abs((pMB->mv16.x)-((pMB+iHcount)->mv16.x));
+					neigh += abs((pMB->mv16.y)-((pMB+iHcount)->mv16.y));
+				}				
+				
+				if (neigh > NEIGH_MOVE_THRESH)
+				{
+					int32_t sad8 = 129; //IMV16X16 * current->quant;
+				
 				if (sad8 < pMB->sad16)
 				sad8 += pMB->sad8[0] 
 					= SEARCH8(pRef->y, pRefH->y, pRefV->y, pRefHV->y, pCurrent, 
@@ -371,20 +396,21 @@ bool MotionEstimation(
 					pMB->sad8[3] *= 4;
 					continue;
 				}
+				}
 			}
 
 			pMB->mode = MODE_INTER;
 			pMB->mvs[0] = pMB->mvs[1] = pMB->mvs[2] = pMB->mvs[3] = pMB->mv16;
          pMB->sad8[0] = pMB->sad8[1] = pMB->sad8[2] = pMB->sad8[3] = pMB->sad16;
 
-			if (current->global_flags & XVID_INTER4V)
-			{	pmv = get_pmv(pMBs, x, y, pParam->mb_width, 0);  
-				// get_pmv has to be called again. inter4v changes predictors
+			pmv = get_pmv(pMBs, x, y, pParam->mb_width, 0);  
+			// get_pmv has to be called again. 
+			// intra-decision and inter4v change predictors
 				
 				pMB->pmvs[0].x = pMB->mv16.x - pmv.x;
 				pMB->pmvs[0].y = pMB->mv16.y - pmv.y;
-			}
 		}
+
 	return 0;
 }
 
