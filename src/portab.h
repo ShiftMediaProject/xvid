@@ -113,6 +113,25 @@ static __inline int64_t read_counter() {
 	#define BSWAP(a) __asm__ ( "lwbrx %0,0,%1; eieio" : "=r" (a) : \
 		"r" (&(a)), "m" (a));
 	#define EMMS()
+
+	static __inline unsigned long get_tbl(void) {
+		unsigned long tbl;
+		asm volatile("mftb %0" : "=r" (tbl));
+		return tbl;
+	}
+	static __inline unsigned long get_tbu(void) {
+		unsigned long tbl;
+		asm volatile("mftbu %0" : "=r" (tbl));
+		return tbl;
+	}
+	static __inline int64_t read_counter() {
+		unsigned long tb, tu;
+		do {
+			tb = get_tbl();
+			tu = get_tbu();
+		} while(tb != get_tbl());
+		return (((int64_t)tu) << 32) | (int64_t)tb;
+	}
 #else
 	#define BSWAP(a) __asm__ ( "bswapl %0\n" : "=r" (a) : "0" (a) )
 	#define EMMS() __asm__("emms\n\t")
