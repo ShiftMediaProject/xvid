@@ -28,7 +28,7 @@
 *               ToDo ? : when BFRAMES is defined, the API_VERSION should not
 *                        be the same (3.0 ?)
 *
-*  $Id: xvid.h,v 1.12 2002-06-20 14:05:57 suxen_drol Exp $
+*  $Id: xvid.h,v 1.13 2002-06-23 03:58:32 suxen_drol Exp $
 *
 *****************************************************************************/
 
@@ -37,7 +37,7 @@
 #define _XVID_H_
 
 #ifdef __cplusplus
-*  $Id: xvid.h,v 1.12 2002-06-20 14:05:57 suxen_drol Exp $
+*  $Id: xvid.h,v 1.13 2002-06-23 03:58:32 suxen_drol Exp $
 #endif
 
 /*****************************************************************************
@@ -97,6 +97,7 @@
  ****************************************************************************/
 
 	typedef struct
+	{
 		int cpu_flags;
 		int api_version;
 		int core_build;
@@ -174,6 +175,11 @@
 #define XVID_VALID_FLAGS		0x80000000
 
 #define XVID_CUSTOM_QMATRIX		0x00000004	/* use custom quant matrix */
+#define XVID_H263QUANT			0x00000010
+#define XVID_MPEGQUANT			0x00000020
+#define XVID_HALFPEL			0x00000040	/* use halfpel interpolation */
+#define XVID_ADAPTIVEQUANT		0x00000080
+#define XVID_LUMIMASKING		0x00000100
 #define XVID_LATEINTRA			0x00000200
 
 #define XVID_INTERLACING		0x00000400	/* enable interlaced encoding */
@@ -240,7 +246,7 @@
 								 * used only when bquant < 1
 								 * eg. 200 = x2 multiplier
 #endif
-		int packed;				/* enable packed mode */
+		void *handle;			/* [out] encoder instance handle */
 	}
 	XVID_ENC_PARAM;
 

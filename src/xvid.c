@@ -31,11 +31,12 @@
  *
  *  History
  *
+ *	- 23.06.2002	added XVID_CPU_CHKONLY
  *  - 17.03.2002	Added interpolate8x8_halfpel_hv_xmm
  *  - 22.12.2001  API change: added xvid_init() - Isibaar
  *  - 16.12.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: xvid.c,v 1.20 2002-06-21 16:12:47 suxen_drol Exp $
+ *  $Id: xvid.c,v 1.21 2002-06-23 03:58:32 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -79,6 +80,18 @@ xvid_init(void *handle,
 	XVID_INIT_PARAM *init_param;
 
 	init_param = (XVID_INIT_PARAM *) param1;
+
+	/* Inform the client the API version */
+	init_param->api_version = API_VERSION;
+
+	/* Inform the client the core build - unused because we're still alpha */
+	init_param->core_build = 1000;
+
+	if ((init_param->cpu_flags & XVID_CPU_CHKONLY))
+	{
+		init_param->cpu_flags = check_cpu_features();
+		return XVID_ERR_OK;
+	}
 
 	/* Do we have to force CPU features  ? */
 	if ((init_param->cpu_flags & XVID_CPU_FORCE) > 0) {
@@ -305,12 +318,6 @@ xvid_init(void *handle,
 	calc_cbp = calc_cbp_ppc;
 #endif
 #endif
-
-	/* Inform the client the API version */
-	init_param->api_version = API_VERSION;
-
-	/* Inform the client the core build - unused because we're still alpha */
-	init_param->core_build = 1000;
 
 	return XVID_ERR_OK;
 }

@@ -498,6 +498,10 @@ SOURCE=..\..\src\image\colorspace.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\src\image\font.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\src\image\image.h
 # End Source File
 # Begin Source File
@@ -508,6 +512,10 @@ SOURCE=..\..\src\image\interpolate8x8.h
 # Begin Source File
 
 SOURCE=..\..\src\image\colorspace.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\image\font.c
 # End Source File
 # Begin Source File
 

@@ -37,7 +37,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.45 2002-06-22 07:23:10 suxen_drol Exp $
+ *  $Id: encoder.c,v 1.46 2002-06-23 03:58:32 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -51,6 +51,7 @@
 #include "global.h"
 #include "utils/timer.h"
 #include "image/image.h"
+#include "image/font.h"
 #include "motion/motion.h"
 #include "bitstream/cbp.h"
 #include "utils/mbfunctions.h"
@@ -330,7 +331,7 @@ encoder_create(XVID_ENC_PARAM * pParam)
 	/* B Frames specific init */
 #ifdef BFRAMES
 
-	pEnc->packed = pParam->packed;
+	pEnc->global = pParam->global;
 	pEnc->mbParam.max_bframes = pParam->max_bframes;
 	pEnc->bquant_ratio = pParam->bquant_ratio;
 	pEnc->bframes = NULL;
@@ -408,6 +409,7 @@ encoder_create(XVID_ENC_PARAM * pParam)
 
 	pEnc->mbParam.m_seconds = 0;
 	pEnc->mbParam.m_ticks = 0;
+	pEnc->m_framenum = 0;
 #endif
 
 	pParam->handle = (void *) pEnc;
@@ -608,10 +610,9 @@ void inc_frame_num(Encoder * pEnc)
 {
 	pEnc->iFrameNum++;
 	pEnc->mbParam.m_ticks += pEnc->mbParam.fincr;
-	if (pEnc->mbParam.m_ticks > pEnc->mbParam.fbase) {
-		pEnc->mbParam.m_seconds = pEnc->mbParam.m_ticks % pEnc->mbParam.fbase;
-		pEnc->mbParam.m_ticks = pEnc->mbParam.m_ticks % pEnc->mbParam.fbase;
-	}
+
+	pEnc->mbParam.m_seconds = pEnc->mbParam.m_ticks / pEnc->mbParam.fbase;
+	pEnc->mbParam.m_ticks = pEnc->mbParam.m_ticks % pEnc->mbParam.fbase;
 }
 #endif
 
@@ -732,7 +733,7 @@ ipvop_loop:
 	if (pEnc->bframenum_head > 0) {
 		pEnc->bframenum_head = pEnc->bframenum_tail = 0;
 
-		if (pEnc->packed) {
+		if ((pEnc->global & XVID_GLOBAL_PACKED)) {
 			
 			DPRINTF("*** EMPTY bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
 				pEnc->bframenum_head, pEnc->bframenum_tail,
@@ -852,6 +853,12 @@ bvop_loop:
 
 	emms();
 
+	if ((pEnc->global & XVID_GLOBAL_DEBUG)) {
+		image_printf(&pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.height, 5, 5, 
+			"%i  if:%i  st:%i:%i", pEnc->m_framenum++, pEnc->iFrameNum, pEnc->current->seconds, pEnc->current->ticks);
+	}
+
+
 	/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	 * Luminance masking
 	 * %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
@@ -905,6 +912,10 @@ bvop_loop:
 		DPRINTF("*** IFRAME bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
 				pEnc->bframenum_head, pEnc->bframenum_tail,
 				pEnc->queue_head, pEnc->queue_tail, pEnc->queue_size);
+		
+		if ((pEnc->global & XVID_GLOBAL_DEBUG)) {
+			image_printf(&pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.height, 5, 200, "IVOP");
+		}
 
 		FrameCodeI(pEnc, &bs, &bits);
 
@@ -913,7 +924,7 @@ bvop_loop:
 
 		inc_frame_num(pEnc);
 
-		if (pEnc->packed) {
+		if ((pEnc->global & XVID_GLOBAL_PACKED)) {
 			BitstreamPad(&bs);
 			input_valid = 0;
 			goto ipvop_loop;
@@ -931,6 +942,10 @@ bvop_loop:
 		DPRINTF("*** PFRAME bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
 				pEnc->bframenum_head, pEnc->bframenum_tail,
 				pEnc->queue_head, pEnc->queue_tail, pEnc->queue_size);
+		
+		if ((pEnc->global & XVID_GLOBAL_DEBUG)) {
+			image_printf(&pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.height, 5, 200, "PVOP");
+		}
 
 		FrameCodeP(pEnc, &bs, &bits, 1, 0);
 		pFrame->intra = 0;
@@ -938,7 +953,7 @@ bvop_loop:
 
 		inc_frame_num(pEnc);
 
-		if (pEnc->packed) {
+		if ((pEnc->global & XVID_GLOBAL_PACKED)) {
 			BitstreamPad(&bs);
 			input_valid = 0;
 			goto ipvop_loop;
@@ -952,6 +967,10 @@ bvop_loop:
 		DPRINTF("*** BFRAME (store) bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
 				pEnc->bframenum_head, pEnc->bframenum_tail,
 				pEnc->queue_head, pEnc->queue_tail, pEnc->queue_size);
+
+		if ((pEnc->global & XVID_GLOBAL_DEBUG)) {
+			image_printf(&pEnc->current->image, pEnc->mbParam.edged_width, pEnc->mbParam.height, 5, 200, "BVOP");
+		}
 
 		if (pFrame->bquant < 1) {
 			pEnc->current->quant =
@@ -1444,7 +1463,7 @@ FrameCodeI(Encoder * pEnc,
 	BitstreamWriteVolHeader(bs, &pEnc->mbParam, pEnc->current);
 #ifdef BFRAMES
 #define DIVX501B481P "DivX501b481p"
-	if (pEnc->packed) {
+	if ((pEnc->global & XVID_GLOBAL_PACKED)) {
 		BitstreamWriteUserData(bs, DIVX501B481P, strlen(DIVX501B481P));
 	}
 #endif
@@ -1780,7 +1799,7 @@ FrameCodeB(Encoder * pEnc,
 				backward.x = mb->b_mvs[0].x;
 				backward.y = mb->b_mvs[0].y;
 			}
-//          printf("[%i %i] M=%i CBP=%i MVX=%i MVY=%i %i,%i  %i,%i\n", x, y, pMB->mode, pMB->cbp, pMB->mvs[0].x, bmb->pmvs[0].x, bmb->pmvs[0].y, forward.x, forward.y);
+//			DPRINTF("%05i : [%i %i] M=%i CBP=%i MVS=%i,%i forward=%i,%i", pEnc->m_framenum, x, y, mb->mode, mb->cbp, mb->mvs[0].x, mb->mvs[0].y, forward.x, forward.y);
 
 			start_timer();
 			MBCodingBVOP(mb, qcoeff, frame->fcode, frame->bcode, bs,
