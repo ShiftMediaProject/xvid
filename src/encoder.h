@@ -97,7 +97,9 @@ typedef struct
     IMAGE sReference;
     IMAGE vInterH;
     IMAGE vInterV;
+	IMAGE vInterVf;
     IMAGE vInterHV;
+	IMAGE vInterHVf;
 
 	// macroblock
 
