@@ -9,8 +9,11 @@ typedef idctFunc* idctFuncPtr;
 extern idctFuncPtr idct;
 
 idctFunc idct_int32;
+
 idctFunc idct_mmx;
 idctFunc idct_xmm;
+idctFunc idct_sse2;
+
 idctFunc idct_altivec;
 
 #endif /* _IDCT_H_ */

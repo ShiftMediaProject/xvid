@@ -196,14 +196,18 @@ int xvid_init(void *handle, int opt, void *param1, void *param2)
 	}
 
 	if((cpu_flags & XVID_CPU_SSE2) > 0) {
-//		quant_intra = quant_intra_sse2;
-//		dequant_intra = dequant_intra_sse2;
-//		quant_inter = quant_inter_sse2;
-//		dequant_inter = dequant_inter_sse2;
+#ifdef EXPERIMENTAL_SSE2_CODE
+		quant_intra = quant_intra_sse2;
+		dequant_intra = dequant_intra_sse2;
+		quant_inter = quant_inter_sse2;
+		dequant_inter = dequant_inter_sse2;
 
-//		calc_cbp = calc_cbp_sse2;
-//		sad16 = sad16_sse2;
-//		dev16 = dev16_sse2;
+		calc_cbp = calc_cbp_sse2;
+		sad16 = sad16_sse2;
+		dev16 = dev16_sse2;
+		idct = idct_sse2;
+		fdct = fdct_sse2;
+#endif
 	}
 
 #endif
