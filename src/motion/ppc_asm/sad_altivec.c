@@ -17,11 +17,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-    $Id: sad_altivec.c,v 1.9 2004-04-05 20:39:49 edgomez Exp $
-    $Source: /home/xvid/cvs_copy/cvs-server-root/xvid/xvidcore/src/motion/ppc_asm/sad_altivec.c,v $
-    $Date: 2004-04-05 20:39:49 $
-    $Author: edgomez $
-
+    $Id: sad_altivec.c,v 1.10 2004-04-12 14:05:08 edgomez Exp $
 */
 
 #ifdef HAVE_ALTIVEC_H
