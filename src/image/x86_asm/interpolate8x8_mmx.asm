@@ -4,7 +4,6 @@
 ; *	 mmx 8x8 block-based halfpel interpolation
 ; *
 ; *  Copyright(C) 2002 Peter Ross <pross@xvid.org>
-; *  Copyright(C) 2002 Michael Militzer <michael@xvid.org>
 ; *
 ; *  This program is an implementation of a part of one or more MPEG-4
 ; *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending

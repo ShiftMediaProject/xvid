@@ -4,8 +4,7 @@
  *  - Motion Estimation module -
  *
  *  Copyright(C) 2002 Christoph Lampert <gruel@web.de>
- *  Copyright(C) 2002 Michael Militzer <michael@xvid.org>
- *  Copyright(C) 2002 Edouard Gomez <ed.gomez@wanadoo.fr>
+ *               2002 Michael Militzer <michael@xvid.org>
  *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending

@@ -3,8 +3,10 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - MacroBlock transfer and quantization -
  *
- *  Copyright(C) 2002-2001 Michael Militzer <isibaar@xvid.org>
+ *  Copyright(C) 2002-2001 Christoph Lampert <gruel@web.de>
+ *               2002-2001 Michael Militzer <isibaar@xvid.org>
  *               2002-2001 Peter Ross <pross@xvid.org>
+ *               2002      Daniel Smith <danielsmith@astroboymail.com>
  *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
@@ -29,7 +31,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbtransquant.c,v 1.17 2002-10-16 20:58:22 h Exp $
+ * $Id: mbtransquant.c,v 1.18 2002-10-19 12:20:33 edgomez Exp $
  *
  ****************************************************************************/
 

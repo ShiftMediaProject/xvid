@@ -3,6 +3,9 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  -  Decoder main module  -
  *
+ *  Copyright(C) 2002 MinChen <chenm001@163.com>
+ *               2002 Peter Ross <pross@xvid.org>
+ *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
  *  to use this software module in hardware or software products are
@@ -33,7 +36,7 @@
  *  History:
  *
  *  15.07.2002  fix a bug in B-frame decode at DIRECT mode
- *              MinChen <chenm001@163.com>
+
  *  10.07.2002  added BFRAMES_DEC_DEBUG support
  *              Fix a little bug for low_delay flage
  *              MinChen <chenm001@163.com>
@@ -55,7 +58,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@xvid.org>
  *
- *  $Id: decoder.c,v 1.41 2002-09-25 23:37:08 h Exp $
+ *  $Id: decoder.c,v 1.42 2002-10-19 12:20:33 edgomez Exp $
  *
  *************************************************************************/
 

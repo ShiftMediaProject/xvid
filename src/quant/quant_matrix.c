@@ -4,6 +4,7 @@
  *  - Custom matrix quantization functions -
  *
  *  Copyright(C) 2002 Michael Militzer <isibaar@xvid.org>
+ *               2002 Peter Ross <pross@xvid.org>
  *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
@@ -28,7 +29,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: quant_matrix.c,v 1.10 2002-10-19 11:41:11 edgomez Exp $
+ *  $Id: quant_matrix.c,v 1.11 2002-10-19 12:20:33 edgomez Exp $
  *
  ****************************************************************************/
 
