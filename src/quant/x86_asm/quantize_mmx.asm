@@ -58,7 +58,9 @@ section .data
 	%endif
 %endmacro
 
-plus_one times 4	dw	 1
+align 16
+
+plus_one times 8	dw	 1
 
 ;===========================================================================
 ;
@@ -70,7 +72,7 @@ plus_one times 4	dw	 1
 times 4 dw %1 / 2
 %endmacro
 
-align ALIGN
+align 16
 mmx_sub
 		MMX_SUB 1
 		MMX_SUB 2
@@ -120,7 +122,7 @@ mmx_sub
 times 4 dw  (1 << 16) / (%1 * 2) + 1
 %endmacro
 
-align ALIGN
+align 16
 mmx_div
 		MMX_DIV 1
 		MMX_DIV 2
@@ -170,7 +172,7 @@ times 4 dw %1 - 1
 %endif
 %endmacro
 
-align ALIGN
+align 16
 mmx_add
 		MMX_ADD 1
 		MMX_ADD 2
@@ -215,7 +217,7 @@ mmx_add
 times 4 dw %1 * 2
 %endmacro
 
-align ALIGN
+align 16
 mmx_mul
 		MMX_MUL 1
 		MMX_MUL 2
@@ -259,6 +261,10 @@ mmx_mul
 align ALIGN
 mmx_32768_minus_2048				times 4 dw (32768-2048)
 mmx_32767_minus_2047				times 4 dw (32767-2047)
+
+align 16
+sse2_pos_2047						times 8 dw 2047
+sse2_neg_2048						times 8 dw -2048
 
 
 section .text
@@ -476,6 +482,120 @@ align ALIGN
 
 ;===========================================================================
 ;
+; uint32_t quant_inter_sse2(int16_t * coeff,
+;					const int16_t const * data,
+;					const uint32_t quant);
+;
+;===========================================================================
+
+align 16
+cglobal quant_inter_sse2
+		quant_inter_sse2
+
+		push	esi
+		push	edi
+
+		mov		edi, [esp + 8 + 4]			; coeff
+		mov		esi, [esp + 8 + 8]			; data
+		mov		eax, [esp + 8 + 12]			; quant
+
+		xor		ecx, ecx
+
+		pxor	xmm5, xmm5					; sum
+
+		movq	mm0, [mmx_sub + eax*8 - 8]	; sub
+		movq2dq	xmm6, mm0					; load into low 8 bytes
+		movlhps	xmm6, xmm6					; duplicate into high 8 bytes
+
+		cmp		al, 1
+		jnz		.not1
+		jmp		.q1loop
+
+.not1
+		movq	mm0, [mmx_div + eax*8 - 8]	; divider
+		movq2dq	xmm7, mm0
+		movlhps	xmm7, xmm7
+
+align 16
+.loop
+		movdqa	xmm0, [esi + ecx*8]			; xmm0 = [1st]
+		movdqa	xmm3, [esi + ecx*8 + 16]	; xmm3 = [2nd]
+		pxor	xmm1, xmm1					; xmm1 = 0
+		pxor	xmm4, xmm4
+		pcmpgtw	xmm1, xmm0					; xmm1 = (0 > xmm0)
+		pcmpgtw	xmm4, xmm3
+		pxor	xmm0, xmm1					; xmm0 = |xmm0|
+		pxor	xmm3, xmm4
+		psubw	xmm0, xmm1					; displace
+		psubw	xmm3, xmm4
+		psubusw	xmm0, xmm6					; xmm0 -= sub (unsigned, dont go < 0)
+		psubusw	xmm3, xmm6
+		pmulhw	xmm0, xmm7					; xmm0 = (xmm0 / 2Q) >> 16
+		pmulhw	xmm3, xmm7
+		paddw	xmm5, xmm0					; sum += xmm0
+		pxor	xmm0, xmm1					; xmm0 *= sign(xmm0)
+		paddw	xmm5, xmm3
+		pxor	xmm3, xmm4
+		psubw	xmm0, xmm1					; undisplace
+		psubw	xmm3, xmm4
+		movdqa	[edi + ecx*8], xmm0
+		movdqa	[edi + ecx*8 + 16], xmm3
+
+		add		ecx, 4	
+		cmp		ecx, 16
+		jnz		.loop
+
+.done
+		pmaddwd xmm5, [plus_one]
+		movhlps	xmm6, xmm5
+		paddd	xmm5, xmm6
+		movdq2q	mm0, xmm5
+
+		movq    mm5, mm0
+		psrlq   mm5, 32
+		paddd   mm0, mm5
+		movd	eax, mm0					; return sum
+
+		pop		edi
+		pop		esi
+
+		ret
+
+align 16
+.q1loop
+		movq	mm0, [esi + 8*ecx]		; mm0 = [1st]
+		movq	mm3, [esi + 8*ecx+ 8]		; 
+		pxor	mm1, mm1		; mm1 = 0
+		pxor	mm4, mm4		;
+		pcmpgtw	mm1, mm0		; mm1 = (0 > mm0)
+		pcmpgtw	mm4, mm3		; 
+		pxor	mm0, mm1		; mm0 = |mm0|
+		pxor	mm3, mm4		; 
+		psubw	mm0, mm1		; displace
+		psubw	mm3, mm4		; 
+		psubusw	mm0, mm6		; mm0 -= sub (unsigned, dont go < 0)
+		psubusw	mm3, mm6		;
+		psrlw	mm0, 1			; mm0 >>= 1   (/2)
+		psrlw	mm3, 1			;
+		paddw	mm5, mm0		; sum += mm0
+		pxor	mm0, mm1		; mm0 *= sign(mm0)
+		paddw	mm5, mm3		;
+		pxor	mm3, mm4		;
+		psubw	mm0, mm1		; undisplace
+		psubw	mm3, mm4
+		movq	[edi + 8*ecx], mm0
+		movq	[edi + 8*ecx + 8], mm3
+		
+		add ecx,2
+		cmp ecx,16
+		jnz	.q1loop
+
+		jmp	.done
+		
+		
+		
+;===========================================================================
+;
 ; void dequant_intra_mmx(int16_t *data,
 ;					const int16_t const *coeff,
 ;					const uint32_t quant,
@@ -643,6 +763,83 @@ align ALIGN
 		movq	[edi + 8*eax + 8], mm3
 
 		add eax, 2
+		cmp eax, 16
+		jnz	near .loop
+
+		pop 	edi
+		pop 	esi
+
+		ret
+
+
+;===========================================================================
+;
+; void dequant_inter_sse2(int16_t * data,
+;					const int16_t * const coeff,
+;					const uint32_t quant);
+;
+;===========================================================================
+
+align 16
+cglobal dequant_inter_sse2
+dequant_inter_sse2
+
+		push 	esi
+		push 	edi
+
+		mov 	edi, [esp + 8 + 4]	; data
+		mov 	esi, [esp + 8 + 8]	; coeff
+		mov 	eax, [esp + 8 + 12]	; quant
+		movq	mm6, [mmx_add + eax * 8 - 8]
+		movq	mm7, [mmx_mul + eax * 8 - 8]
+
+		movq2dq	xmm6, mm6
+		movq2dq xmm7, mm7
+		movlhps xmm6, xmm6
+		movlhps	xmm7, xmm7
+		
+		xor eax, eax
+
+align 16
+.loop
+		movdqa	xmm0, [esi + eax*8]			; xmm0 = [coeff]
+		movdqa	xmm3, [esi + eax*8 + 16]
+		pxor	xmm1, xmm1
+		pxor	xmm4, xmm4
+		pcmpgtw	xmm1, xmm0
+		pcmpgtw	xmm4, xmm3
+		pxor	xmm2, xmm2
+		pxor	xmm5, xmm5
+		pcmpeqw	xmm2, xmm0
+		pcmpeqw	xmm5, xmm3
+		pandn   xmm2, xmm6
+		pandn   xmm5, xmm6
+		pxor	xmm0, xmm1
+		pxor	xmm3, xmm4
+		psubw	xmm0, xmm1
+		psubw	xmm3, xmm4
+		pmullw	xmm0, xmm7
+		pmullw	xmm3, xmm7
+		paddw	xmm0, xmm2
+		paddw	xmm3, xmm5
+		pxor	xmm0, xmm1
+		pxor	xmm3, xmm4
+		psubw	xmm0, xmm1
+		psubw	xmm3, xmm4
+
+%ifdef SATURATE
+		movdqa	xmm2, [sse2_pos_2047]
+		movdqa	xmm4, [sse2_neg_2048]
+		pminsw	xmm0, xmm2
+		pminsw	xmm3, xmm2
+		pmaxsw	xmm0, xmm4
+		pmaxsw	xmm3, xmm4
+%endif
+
+		movdqa	[edi + eax*8], xmm0
+		movdqa	[edi + eax*8 + 16], xmm3
+
+		add eax, 4
 		cmp eax, 16
 		jnz	near .loop
 

@@ -195,6 +195,13 @@ int xvid_init(void *handle, int opt, void *param1, void *param2)
 		interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_3dn;
 	}
 
+	if((cpu_flags & XVID_CPU_SSE2) > 0) {
+//		calc_cbp = calc_cbp_sse2;
+//		sad16 = sad16_sse2;
+//		quant_inter = quant_inter_sse2;
+//		dequant_inter = dequant_inter_sse2;
+	}
+
 #endif
 #ifdef ARCH_PPC
 #ifdef ARCH_PPC_ALTIVEC
