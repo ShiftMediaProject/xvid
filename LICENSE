@@ -4,12 +4,13 @@
 XviD is licensed under the terms of the GNU GPL + Link over controlled
 interface + location restrictions.
 
-First part of the file presents the location restrictions and the
-linking permission. The second part is the GNU GPL v2.
+The first part of the file presents the location restrictions
+The second part of the file describes the linking permission.
+The third part of the file is the GNU GPL v2.
 
 
 
-            LOCATION RESTTRICTION AND LINKING PERMISSION
+                       LOCATION RESTRICTIONS
 ----------------------------------------------------------------------
 
 Under section 8 of the GNU General Public License, the copyright
@@ -18,6 +19,11 @@ countries:
 
   - Japan
   - United States of America
+
+
+
+                        LINKING PERMISSION
+----------------------------------------------------------------------
 
 Linking XviD statically or dynamically with other modules is making a
 combined work based on XviD.  Thus, the terms and conditions of the
