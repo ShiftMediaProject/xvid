@@ -71,23 +71,55 @@ MBFIELDTEST_PTR MBFieldTest;
 
 #define TOOSMALL_LIMIT 	1	/* skip blocks having a coefficient sum below this value */
 
+static __inline void
+MBfDCT(int16_t data[6 * 64])
+{
+	start_timer();
+	fdct(&data[0 * 64]);
+	fdct(&data[1 * 64]);
+	fdct(&data[2 * 64]);
+	fdct(&data[3 * 64]);
+	fdct(&data[4 * 64]);
+	fdct(&data[5 * 64]);
+	stop_dct_timer();
+}
+
+
+static __inline uint32_t 
+QuantizeInterBlock(	int16_t qcoeff[64],
+					const int16_t data[64],
+					const uint32_t iQuant,
+					const uint32_t quant_type)
+{
+	uint32_t sum;
+
+	start_timer();
+	if (quant_type == H263_QUANT)
+		sum = quant_inter(qcoeff, data, iQuant);
+	else
+		sum = quant4_inter(qcoeff, data, iQuant);
+
+	stop_quant_timer();
+	return sum;
+}
+
 void
-MBTransQuantIntra(const MBParam * pParam,
-				  FRAMEINFO * frame,
-				  MACROBLOCK * pMB,
-				  const uint32_t x_pos,
-				  const uint32_t y_pos,
-				  int16_t data[6 * 64],
-				  int16_t qcoeff[6 * 64])
+MBTransQuantIntra(const MBParam * const pParam,
+				FRAMEINFO * const frame,
+				MACROBLOCK * const pMB,
+				const uint32_t x_pos,
+				const uint32_t y_pos,
+				int16_t data[6 * 64],
+				int16_t qcoeff[6 * 64])
 {
 
 	uint32_t stride = pParam->edged_width;
-	uint32_t stride2 = stride / 2;
+	const uint32_t stride2 = stride / 2;
 	uint32_t next_block = stride * ((frame->global_flags & XVID_REDUCED)?16:8);
-	uint32_t i;
-	uint32_t iQuant = frame->quant;
+	int i;
+	const uint32_t iQuant = pMB->quant;
 	uint8_t *pY_Cur, *pU_Cur, *pV_Cur;
-	IMAGE *pCurrent = &frame->image;
+	const IMAGE * const pCurrent = &frame->image;
 
 	start_timer();
 	if ((frame->global_flags & XVID_REDUCED))
@@ -102,7 +134,7 @@ MBTransQuantIntra(const MBParam * pParam,
 		filter_18x18_to_8x8(&data[3 * 64], pY_Cur + next_block + 16, stride);
 		filter_18x18_to_8x8(&data[4 * 64], pU_Cur, stride2);
 		filter_18x18_to_8x8(&data[5 * 64], pV_Cur, stride2);
-	}else{
+	} else {
 		pY_Cur = pCurrent->y + (y_pos << 4) * stride + (x_pos << 4);
 		pU_Cur = pCurrent->u + (y_pos << 3) * stride2 + (x_pos << 3);
 		pV_Cur = pCurrent->v + (y_pos << 3) * stride2 + (x_pos << 3);
@@ -126,35 +158,27 @@ MBTransQuantIntra(const MBParam * pParam,
 	}
 	stop_interlacing_timer();
 
+	MBfDCT(data);
+
 	for (i = 0; i < 6; i++) {
-		uint32_t iDcScaler = get_dc_scaler(iQuant, i < 4);
+		const uint32_t iDcScaler = get_dc_scaler(iQuant, i < 4);
 
 		start_timer();
-		fdct(&data[i * 64]);
-		stop_dct_timer();
-
-		if (pParam->m_quant_type == H263_QUANT) {
-			start_timer();
+		if (pParam->m_quant_type == H263_QUANT)
 			quant_intra(&qcoeff[i * 64], &data[i * 64], iQuant, iDcScaler);
-			stop_quant_timer();
-		} else {
-			start_timer();
+		else
 			quant4_intra(&qcoeff[i * 64], &data[i * 64], iQuant, iDcScaler);
-			stop_quant_timer();
-		}
+		stop_quant_timer();
 
 		/* speedup: dont decode when encoding only ivops */
 		if (pParam->iMaxKeyInterval != 1 || pParam->max_bframes > 0)
 		{
-			if (pParam->m_quant_type == H263_QUANT) {
-				start_timer();
+			start_timer();
+			if (pParam->m_quant_type == H263_QUANT)
 				dequant_intra(&data[i * 64], &qcoeff[i * 64], iQuant, iDcScaler);
-				stop_iquant_timer();
-			} else {
-				start_timer();
+			else
 				dequant4_intra(&data[i * 64], &qcoeff[i * 64], iQuant, iDcScaler);
-				stop_iquant_timer();
-			}
+			stop_iquant_timer();
 
 			start_timer();
 			idct(&data[i * 64]);
@@ -172,16 +196,14 @@ MBTransQuantIntra(const MBParam * pParam,
 		}
 
 		start_timer();
-		if ((frame->global_flags & XVID_REDUCED))
-		{
+		if ((frame->global_flags & XVID_REDUCED)) {
 			copy_upsampled_8x8_16to8(pY_Cur, &data[0 * 64], stride);
 			copy_upsampled_8x8_16to8(pY_Cur + 16, &data[1 * 64], stride);
 			copy_upsampled_8x8_16to8(pY_Cur + next_block, &data[2 * 64], stride);
 			copy_upsampled_8x8_16to8(pY_Cur + next_block + 16, &data[3 * 64], stride);
 			copy_upsampled_8x8_16to8(pU_Cur, &data[4 * 64], stride2);
 			copy_upsampled_8x8_16to8(pV_Cur, &data[5 * 64], stride2);
-
-		}else{
+		} else {
 			transfer_16to8copy(pY_Cur, &data[0 * 64], stride);
 			transfer_16to8copy(pY_Cur + 8, &data[1 * 64], stride);
 			transfer_16to8copy(pY_Cur + next_block, &data[2 * 64], stride);
@@ -194,33 +216,30 @@ MBTransQuantIntra(const MBParam * pParam,
 
 }
 
-
 uint8_t
-MBTransQuantInter(const MBParam * pParam,
-				  FRAMEINFO * frame,
-				  MACROBLOCK * pMB,
-				  const uint32_t x_pos,
-				  const uint32_t y_pos,
-				  int16_t data[6 * 64],
-				  int16_t qcoeff[6 * 64])
+MBTransQuantInter(const MBParam * const pParam,
+				FRAMEINFO * const frame,
+				MACROBLOCK * const pMB,
+				const uint32_t x_pos,
+				const uint32_t y_pos,
+				int16_t data[6 * 64],
+				int16_t qcoeff[6 * 64])
 {
-
 	uint32_t stride = pParam->edged_width;
-	uint32_t stride2 = stride / 2;
+	const uint32_t stride2 = stride / 2;
 	uint32_t next_block = stride * ((frame->global_flags & XVID_REDUCED)?16:8);
-	uint32_t i;
-	uint32_t iQuant = frame->quant;
+	int i;
+	const uint32_t iQuant = pMB->quant;
 	uint8_t *pY_Cur, *pU_Cur, *pV_Cur;
-	uint8_t cbp = 0;
+	int cbp = 0;
 	uint32_t sum;
-	IMAGE *pCurrent = &frame->image;
+	const IMAGE * const pCurrent = &frame->image;
 
-	if ((frame->global_flags & XVID_REDUCED))
-	{
+	if ((frame->global_flags & XVID_REDUCED)) {
 		pY_Cur = pCurrent->y + (y_pos << 5) * stride + (x_pos << 5);
 		pU_Cur = pCurrent->u + (y_pos << 4) * stride2 + (x_pos << 4);
 		pV_Cur = pCurrent->v + (y_pos << 4) * stride2 + (x_pos << 4);
-	}else{
+	} else {
 		pY_Cur = pCurrent->y + (y_pos << 4) * stride + (x_pos << 4);
 		pU_Cur = pCurrent->u + (y_pos << 3) * stride2 + (x_pos << 3);
 		pV_Cur = pCurrent->v + (y_pos << 3) * stride2 + (x_pos << 3);
@@ -235,39 +254,25 @@ MBTransQuantInter(const MBParam * pParam,
 	}
 	stop_interlacing_timer();
 
+	MBfDCT(data);
+
 	for (i = 0; i < 6; i++) {
-		uint32_t increase_limit = (iQuant == 1) ? 1 : 0;
-
-		/* 
+		const uint32_t limit = TOOSMALL_LIMIT + ((iQuant == 1) ? 1 : 0);
+		/*
 		 *  no need to transfer 8->16-bit
-		 * (this is performed already in motion compensation) 
+		 * (this is performed already in motion compensation)
 		 */
-		start_timer();
-		fdct(&data[i * 64]);
-		stop_dct_timer();
 
-		if (pParam->m_quant_type == 0) {
+		sum = QuantizeInterBlock(&qcoeff[i * 64], &data[i * 64], iQuant, pParam->m_quant_type);
+
+		if (sum >= limit) {
+
 			start_timer();
-			sum = quant_inter(&qcoeff[i * 64], &data[i * 64], iQuant);
-			stop_quant_timer();
-		} else {
-			start_timer();
-			sum = quant4_inter(&qcoeff[i * 64], &data[i * 64], iQuant);
-			stop_quant_timer();
-		}
-
-		if ((sum >= TOOSMALL_LIMIT + increase_limit) || (qcoeff[i*64] != 0) ||
-			(qcoeff[i*64+1] != 0) || (qcoeff[i*64+8] != 0)) {
-
-			if (pParam->m_quant_type == H263_QUANT) {
-				start_timer();
+			if (pParam->m_quant_type == H263_QUANT)
 				dequant_inter(&data[i * 64], &qcoeff[i * 64], iQuant);
-				stop_iquant_timer();
-			} else {
-				start_timer();
+			else
 				dequant4_inter(&data[i * 64], &qcoeff[i * 64], iQuant);
-				stop_iquant_timer();
-			}
+			stop_iquant_timer();
 
 			cbp |= 1 << (5 - i);
 
@@ -283,8 +288,7 @@ MBTransQuantInter(const MBParam * pParam,
 	}
 
 	start_timer();
-	if ((frame->global_flags & XVID_REDUCED))
-	{
+	if ((frame->global_flags & XVID_REDUCED)) {
 		if (cbp & 32)
 			add_upsampled_8x8_16to8(pY_Cur, &data[0 * 64], stride);
 		if (cbp & 16)
@@ -297,7 +301,7 @@ MBTransQuantInter(const MBParam * pParam,
 			add_upsampled_8x8_16to8(pU_Cur, &data[4 * 64], stride2);
 		if (cbp & 1)
 			add_upsampled_8x8_16to8(pV_Cur, &data[5 * 64], stride2);
-	}else{
+	} else {
 		if (cbp & 32)
 			transfer_16to8add(pY_Cur, &data[0 * 64], stride);
 		if (cbp & 16)
@@ -313,48 +317,7 @@ MBTransQuantInter(const MBParam * pParam,
 	}
 	stop_transfer_timer();
 
-	return cbp;
-
-}
-
-void 
-MBTransQuantIntra2(const MBParam * pParam,
-				  FRAMEINFO * frame,
-				  MACROBLOCK * pMB,
-				  const uint32_t x_pos,
-				  const uint32_t y_pos,
-				  int16_t data[6 * 64],
-				  int16_t qcoeff[6 * 64])
-{
-	MBTrans(pParam,frame,pMB,x_pos,y_pos,data);
-	MBfDCT(pParam,frame,pMB,data);
-	MBQuantIntra(pParam,frame,pMB,data,qcoeff);
-	MBDeQuantIntra(pParam,frame->quant,data,qcoeff);
-	MBiDCT(data,0x3F);
-	MBTransAdd(pParam,frame,pMB,x_pos,y_pos,data,0x3F);
-}
-
-
-uint8_t
-MBTransQuantInter2(const MBParam * pParam,
-				  FRAMEINFO * frame,
-				  MACROBLOCK * pMB,
-				  const uint32_t x_pos,
-				  const uint32_t y_pos,
-				  int16_t data[6 * 64],
-				  int16_t qcoeff[6 * 64])
-{
-	uint8_t cbp;
-	
-/* there is no MBTrans for Inter block, that's done in motion compensation already */
-
-	MBfDCT(pParam,frame,pMB,data);
-	cbp = MBQuantInter(pParam,frame->quant,data,qcoeff);
-	MBDeQuantInter(pParam,frame->quant,data,qcoeff,cbp);
-	MBiDCT(data,cbp);
-	MBTransAdd(pParam,frame,pMB,x_pos,y_pos,data,cbp);
-	
-	return cbp;
+	return (uint8_t) cbp;
 }
 
 uint8_t
@@ -364,27 +327,11 @@ MBTransQuantInterBVOP(const MBParam * pParam,
 				  int16_t data[6 * 64],
 				  int16_t qcoeff[6 * 64])
 {
-	uint8_t cbp;
-	
+	int cbp = 0;
+	int i;
+
 /* there is no MBTrans for Inter block, that's done in motion compensation already */
 
-	MBfDCT(pParam,frame,pMB,data);
-	cbp = MBQuantInter(pParam,frame->quant,data,qcoeff);
-
-/* we don't have to DeQuant, iDCT and Transfer back data for B-frames */
-
-	return cbp;
-}
-
-
-void
-MBfDCT(const MBParam * pParam,
-				  FRAMEINFO * frame,
-				  MACROBLOCK * pMB,
-				  int16_t data[6 * 64])
-{	
-	int i;
-
 	start_timer();
 	pMB->field_dct = 0;
 	if ((frame->global_flags & XVID_INTERLACING)) {
@@ -392,266 +339,40 @@ MBfDCT(const MBParam * pParam,
 	}
 	stop_interlacing_timer();
 
-	for (i = 0; i < 6; i++) {
-		start_timer();
-		fdct(&data[i * 64]);
-		stop_dct_timer();
-	}
-}
-
-void
-MBQuantDeQuantIntra(const MBParam * pParam,
-				  	FRAMEINFO * frame,
-				  	MACROBLOCK * pMB,
-				  	int16_t qcoeff[6 * 64],
-  				  	int16_t data[6*64])
-{
-	int i;
-	int iQuant = frame->quant;
-
-	start_timer();
-	pMB->field_dct = 0;
-	if ((frame->global_flags & XVID_INTERLACING)) {
-		pMB->field_dct = MBDecideFieldDCT(data);
-	}
-	stop_interlacing_timer();
+	MBfDCT(data);
 
 	for (i = 0; i < 6; i++) {
-		uint32_t iDcScaler = get_dc_scaler(iQuant, i < 4);
-
-		if (pParam->m_quant_type == H263_QUANT) {
-			start_timer();
-			quant_intra(&qcoeff[i * 64], &data[i * 64], iQuant, iDcScaler);
-			stop_quant_timer();
-
-			start_timer();
-			dequant_intra(&data[i * 64], &qcoeff[i * 64], iQuant, iDcScaler);
-			stop_iquant_timer();
-		} else {
-			start_timer();
-			quant4_intra(&qcoeff[i * 64], &data[i * 64], iQuant, iDcScaler);
-			stop_quant_timer();
-
-			start_timer();
-			dequant4_intra(&data[i * 64], &qcoeff[i * 64], iQuant, iDcScaler);
-			stop_iquant_timer();
-		}
-	}
-}
-
-void
-MBQuantIntra(const MBParam * pParam,
-		  	 FRAMEINFO * frame,
-			 MACROBLOCK *pMB,
-		     int16_t qcoeff[6 * 64],
-			 int16_t data[6*64])
-{
-	int i;
-	int iQuant = frame->quant;
-
-	start_timer();
-	pMB->field_dct = 0;
-	if ((frame->global_flags & XVID_INTERLACING)) {
-		pMB->field_dct = MBDecideFieldDCT(data);
-	}
-	stop_interlacing_timer();
-
-	for (i = 0; i < 6; i++) {
-		uint32_t iDcScaler = get_dc_scaler(iQuant, i < 4);
-
-		if (pParam->m_quant_type == H263_QUANT) {
-			start_timer();
-			quant_intra(&qcoeff[i * 64], &data[i * 64], iQuant, iDcScaler);
-			stop_quant_timer();
-		} else {
-			start_timer();
-			quant4_intra(&qcoeff[i * 64], &data[i * 64], iQuant, iDcScaler);
-			stop_quant_timer();
-		}
-	}
-}
-
-void
-MBDeQuantIntra(const MBParam * pParam,
-			   const int iQuant,
-				  int16_t qcoeff[6 * 64],
-				  int16_t data[6*64])
-{
-	int i;
-
-	for (i = 0; i < 6; i++) {
-		uint32_t iDcScaler = get_dc_scaler(iQuant, i < 4);
-
-		if (pParam->m_quant_type == H263_QUANT) {
-			start_timer();
-			dequant_intra(&data[i * 64], &qcoeff[i * 64], iQuant, iDcScaler);
-			stop_iquant_timer();
-		} else {
-			start_timer();
-			dequant4_intra(&data[i * 64], &qcoeff[i * 64], iQuant, iDcScaler);
-			stop_iquant_timer();
-		}
-	}
-}
-
-uint8_t
-MBQuantInter(const MBParam * pParam,
-			 const int iQuant,
-				  int16_t data[6 * 64],
-				  int16_t qcoeff[6 * 64])
-{
-
-	int i;
-	uint8_t cbp = 0;
-	int sum;
-
-	for (i = 0; i < 6; i++) {
-	
-		if (pParam->m_quant_type == 0) {
-			start_timer();
-			sum = quant_inter(&qcoeff[i * 64], &data[i * 64], iQuant);
-			stop_quant_timer();
-		} else {
-			start_timer();
-			sum = quant4_inter(&qcoeff[i * 64], &data[i * 64], iQuant);
-			stop_quant_timer();
-		}
-
-		if (sum >= TOOSMALL_LIMIT) {	// skip block ?
-			cbp |= 1 << (5 - i);
-		}
-	}
-	return cbp;
-}
-
-void 
-MBDeQuantInter(	const MBParam * pParam,
-				const int iQuant,
-				  int16_t data[6 * 64],
-				  int16_t qcoeff[6 * 64],
-				  const uint8_t cbp)
-{
-	int i;
-
-	for (i = 0; i < 6; i++) {
-		if (cbp & (1 << (5 - i)))
-		{	
-			if (pParam->m_quant_type == H263_QUANT) {
-				start_timer();
-				dequant_inter(&data[i * 64], &qcoeff[i * 64], iQuant);
-				stop_iquant_timer();
-			} else {
-				start_timer();
-				dequant4_inter(&data[i * 64], &qcoeff[i * 64], iQuant);
-				stop_iquant_timer();
-			}
-		}
-	}
-}
-
-void
-MBiDCT(	int16_t data[6 * 64],
-		const uint8_t cbp)
-{
-	int i;
-
-	for (i = 0; i < 6; i++) {
-		if (cbp & (1 << (5 - i)))
-		{	
-			start_timer();
-			idct(&data[i * 64]);
-			stop_idct_timer();
+		int codedecision = 0;
 		
+		int sum = QuantizeInterBlock(&qcoeff[i * 64], &data[i * 64], pMB->quant, pParam->m_quant_type);
+		
+		if ((sum > 2) || (qcoeff[i*64+1] != 0) || (qcoeff[i*64+8] != 0) ) codedecision = 1;
+		else {
+			if (pMB->mode == MODE_DIRECT || pMB->mode == MODE_DIRECT_NO4V) {
+				// dark blocks prevention for direct mode
+				if ( (qcoeff[i*64] < -1) || (qcoeff[i*64] > 0) ) codedecision = 1;
+			} else
+				if (qcoeff[i*64] != 0) codedecision = 1; // not direct mode
 		}
-	}
-}
 
-
-void
-MBTrans(const MBParam * pParam,
-				  FRAMEINFO * frame,
-				  MACROBLOCK * pMB,
-				  const uint32_t x_pos,
-				  const uint32_t y_pos,
-				  int16_t data[6 * 64])
-{
-	uint32_t stride = pParam->edged_width;
-	uint32_t stride2 = stride / 2;
-	uint32_t next_block = stride * 8;
-	uint8_t *pY_Cur, *pU_Cur, *pV_Cur;
-	IMAGE *pCurrent = &frame->image;
-
-	pY_Cur = pCurrent->y + (y_pos << 4) * stride + (x_pos << 4);
-	pU_Cur = pCurrent->u + (y_pos << 3) * stride2 + (x_pos << 3);
-	pV_Cur = pCurrent->v + (y_pos << 3) * stride2 + (x_pos << 3);
-
-	start_timer();
-	transfer_8to16copy(&data[0 * 64], pY_Cur, stride);
-	transfer_8to16copy(&data[1 * 64], pY_Cur + 8, stride);
-	transfer_8to16copy(&data[2 * 64], pY_Cur + next_block, stride);
-	transfer_8to16copy(&data[3 * 64], pY_Cur + next_block + 8, stride);
-	transfer_8to16copy(&data[4 * 64], pU_Cur, stride2);
-	transfer_8to16copy(&data[5 * 64], pV_Cur, stride2);
-	stop_transfer_timer();
-}
-	
-void
-MBTransAdd(const MBParam * pParam,
-				  FRAMEINFO * frame,
-				  MACROBLOCK * pMB,
-				  const uint32_t x_pos,
-				  const uint32_t y_pos,
-				  int16_t data[6 * 64],
-				  const uint8_t cbp)
-{
-	uint8_t *pY_Cur, *pU_Cur, *pV_Cur;
-	uint32_t stride = pParam->edged_width;
-	uint32_t stride2 = stride / 2;
-	uint32_t next_block = stride * 8;
-	IMAGE *pCurrent = &frame->image;
-
-	pY_Cur = pCurrent->y + (y_pos << 4) * stride + (x_pos << 4);
-	pU_Cur = pCurrent->u + (y_pos << 3) * stride2 + (x_pos << 3);
-	pV_Cur = pCurrent->v + (y_pos << 3) * stride2 + (x_pos << 3);
-
-	if (pMB->field_dct) {
-		next_block = stride;
-		stride *= 2;
+		if (codedecision) cbp |= 1 << (5 - i);
 	}
 
-	start_timer();
-	if (cbp & 32)
-		transfer_16to8add(pY_Cur, &data[0 * 64], stride);
-	if (cbp & 16)
-		transfer_16to8add(pY_Cur + 8, &data[1 * 64], stride);
-	if (cbp & 8)
-		transfer_16to8add(pY_Cur + next_block, &data[2 * 64], stride);
-	if (cbp & 4)
-		transfer_16to8add(pY_Cur + next_block + 8, &data[3 * 64], stride);
-	if (cbp & 2)
-		transfer_16to8add(pU_Cur, &data[4 * 64], stride2);
-	if (cbp & 1)
-		transfer_16to8add(pV_Cur, &data[5 * 64], stride2);
-	stop_transfer_timer();
+/* we don't have to DeQuant, iDCT and Transfer back data for B-frames if we don't reconstruct this frame */
+/* warning: reconstruction not supported yet */
+	return (uint8_t) cbp;
 }
-
-
 
 /* permute block and return field dct choice */
 
-
-uint32_t
+static uint32_t
 MBDecideFieldDCT(int16_t data[6 * 64])
 {
-	uint32_t field = MBFieldTest(data);
-
-	if (field) {
-		MBFrameToField(data);
-	}
+	const uint32_t field = MBFieldTest(data);
+	if (field) MBFrameToField(data);
 
 	return field;
 }
-
 
 /* if sum(diff between field lines) < sum(diff between frame lines), use field dct */
 
