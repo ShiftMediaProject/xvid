@@ -55,7 +55,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: decoder.c,v 1.30 2002-07-15 23:50:31 chenm001 Exp $
+ *  $Id: decoder.c,v 1.31 2002-07-18 00:07:04 chenm001 Exp $
  *
  *************************************************************************/
 
@@ -1367,8 +1367,16 @@ decoder_decode(DECODER * dec,
 	if (vop_type == I_VOP || vop_type == P_VOP) {
 		image_swap(&dec->refn[0], &dec->refn[1]);
 		image_swap(&dec->cur, &dec->refn[0]);
+
 		// swap MACROBLOCK
-		if (!dec->low_delay && vop_type == P_VOP)
+                // the Divx will not set the low_delay flage some times
+                // so follow code will wrong to not swap at that time
+                // this will broken bitstream! so I'm change it,
+                // But that is not the best way! can anyone tell me how
+                // to do another way?
+                // 18-07-2002   MinChen<chenm001@163.com>
+                //if (!dec->low_delay && vop_type == P_VOP)
+                if (vop_type == P_VOP)
 			mb_swap(&dec->mbs, &dec->last_mbs);
 	}
 
