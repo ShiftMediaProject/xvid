@@ -3,7 +3,9 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Rate Controler module -
  *
- *  Copyright(C) 2002 Michael Militzer
+ *  Copyright(C) 2002 Michael Militzer <isibaar@xvid.org>
+ *  Copyright(C) 2002 Daniel Smith <danielsmith@astroboymail.com>
+ *  Copyright(C) 2002 Dirk Knop <dknop@gwdg.de>
  *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
@@ -28,7 +30,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: ratecontrol.c,v 1.15 2002-09-22 17:01:36 edgomez Exp $
+ * $Id: ratecontrol.c,v 1.16 2002-09-22 19:35:38 edgomez Exp $
  *
  ****************************************************************************/
 
