@@ -20,7 +20,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.10 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: xvid_decraw.c,v 1.11 2004-04-10 04:25:31 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -76,7 +76,7 @@ static void *dec_handle = NULL;
 static double msecond();
 static int write_pgm(char *filename,
 					 unsigned char *image);
-static int dec_init(int use_assembler);
+static int dec_init(int use_assembler, int debug_level);
 static int dec_main(unsigned char *istream,
 					unsigned char *ostream,
 					int istream_size,
@@ -114,6 +114,7 @@ int main(int argc, char *argv[])
 	int status;
   
 	int use_assembler = 0;
+	int debug_level = 0;
   
 	char filename[256];
   
@@ -132,6 +133,11 @@ int main(int argc, char *argv[])
  
 		if (strcmp("-asm", argv[i]) == 0 ) {
 			use_assembler = 1;
+		} else if (strcmp("-debug", argv[i]) == 0 && i < argc - 1 ) {
+			i++;
+			if (sscanf(argv[i], "0x%x", &debug_level) != 1) {
+				debug_level = atoi(argv[i]);
+			}
 		} else if (strcmp("-d", argv[i]) == 0) {
 			ARG_SAVEDECOUTPUT = 1;
 		} else if (strcmp("-i", argv[i]) == 0 && i < argc - 1 ) {
@@ -178,7 +184,7 @@ int main(int argc, char *argv[])
  *        XviD PART  Start
  ****************************************************************************/
 
-	status = dec_init(use_assembler);
+	status = dec_init(use_assembler, debug_level);
 	if (status) {
 		fprintf(stderr,
 				"Decore INIT problem, return value %d\n", status);
@@ -390,6 +396,7 @@ static void usage()
 	fprintf(stderr, "Usage : xvid_decraw [OPTIONS]\n");
 	fprintf(stderr, "Options :\n");
 	fprintf(stderr, " -asm           : use assembly optimizations (default=disabled)\n");
+	fprintf(stderr, " -debug         : debug level (debug=0)\n");
 	fprintf(stderr, " -i string      : input filename (default=stdin)\n");
 	fprintf(stderr, " -d             : save decoder output\n");
 	fprintf(stderr, " -m             : save mpeg4 raw stream to individual files\n");
@@ -470,7 +477,7 @@ write_pgm(char *filename,
 
 /* init decoder before first run */
 static int
-dec_init(int use_assembler)
+dec_init(int use_assembler, int debug_level)
 {
 	int ret;
 
@@ -493,6 +500,8 @@ dec_init(int use_assembler)
 #endif
 	else
 		xvid_gbl_init.cpu_flags = XVID_CPU_FORCE;
+
+	xvid_gbl_init.debug = debug_level;
 
 	xvid_global(NULL, 0, &xvid_gbl_init, NULL);
 
