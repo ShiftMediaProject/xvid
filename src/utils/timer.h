@@ -28,25 +28,79 @@ extern void write_timer();
 
 #else
 
-static __inline void start_timer() {}
-static __inline void start_global_timer() {}
-static __inline void stop_dct_timer() {}
-static __inline void stop_idct_timer() {}
-static __inline void stop_motion_timer() {}
-static __inline void stop_comp_timer() {}
-static __inline void stop_edges_timer() {}
-static __inline void stop_inter_timer() {}
-static __inline void stop_quant_timer() {}
-static __inline void stop_iquant_timer() {}
-static __inline void stop_conv_timer() {}
-static __inline void stop_transfer_timer() {}
-static __inline void init_timer() {}
-static __inline void write_timer() {}
-static __inline void stop_coding_timer() {}
-static __inline void stop_interlacing_timer() {}
-static __inline void stop_prediction_timer() {}
-static __inline void stop_global_timer() {}
+static __inline void
+start_timer()
+{
+}
+static __inline void
+start_global_timer()
+{
+}
+static __inline void
+stop_dct_timer()
+{
+}
+static __inline void
+stop_idct_timer()
+{
+}
+static __inline void
+stop_motion_timer()
+{
+}
+static __inline void
+stop_comp_timer()
+{
+}
+static __inline void
+stop_edges_timer()
+{
+}
+static __inline void
+stop_inter_timer()
+{
+}
+static __inline void
+stop_quant_timer()
+{
+}
+static __inline void
+stop_iquant_timer()
+{
+}
+static __inline void
+stop_conv_timer()
+{
+}
+static __inline void
+stop_transfer_timer()
+{
+}
+static __inline void
+init_timer()
+{
+}
+static __inline void
+write_timer()
+{
+}
+static __inline void
+stop_coding_timer()
+{
+}
+static __inline void
+stop_interlacing_timer()
+{
+}
+static __inline void
+stop_prediction_timer()
+{
+}
+static __inline void
+stop_global_timer()
+{
+}
 
 #endif
 
-#endif /* _TIMER_H_ */
+#endif							/* _TIMER_H_ */

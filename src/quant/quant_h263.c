@@ -48,17 +48,16 @@
 #define SCALEBITS	16
 #define FIX(X)		((1L << SCALEBITS) / (X) + 1)
 
-static const uint32_t multipliers[32] =
-{
-	0,			FIX(2),		FIX(4),		FIX(6),
-	FIX(8),		FIX(10),	FIX(12),	FIX(14),
-	FIX(16),	FIX(18),	FIX(20),	FIX(22),
-	FIX(24),	FIX(26),	FIX(28),	FIX(30),
-	FIX(32),	FIX(34),	FIX(36),	FIX(38),
-	FIX(40),	FIX(42),	FIX(44),	FIX(46),
-	FIX(48),	FIX(50),	FIX(52),	FIX(54),
-	FIX(56),	FIX(58),	FIX(60),	FIX(62)
-}; 
+static const uint32_t multipliers[32] = {
+	0, FIX(2), FIX(4), FIX(6),
+	FIX(8), FIX(10), FIX(12), FIX(14),
+	FIX(16), FIX(18), FIX(20), FIX(22),
+	FIX(24), FIX(26), FIX(28), FIX(30),
+	FIX(32), FIX(34), FIX(36), FIX(38),
+	FIX(40), FIX(42), FIX(44), FIX(46),
+	FIX(48), FIX(50), FIX(52), FIX(54),
+	FIX(56), FIX(58), FIX(60), FIX(62)
+};
 
 
 
@@ -77,13 +76,17 @@ dequanth263_interFuncPtr dequant_inter;
 */
 
 
-void quant_intra_c(int16_t * coeff, const int16_t * data, const uint32_t quant, const uint32_t dcscalar)
+void
+quant_intra_c(int16_t * coeff,
+			  const int16_t * data,
+			  const uint32_t quant,
+			  const uint32_t dcscalar)
 {
 	const uint32_t mult = multipliers[quant];
 	const uint16_t quant_m_2 = quant << 1;
-    uint32_t i;
+	uint32_t i;
 
-	coeff[0] = DIV_DIV(data[0], (int32_t)dcscalar);
+	coeff[0] = DIV_DIV(data[0], (int32_t) dcscalar);
 
 	for (i = 1; i < 64; i++) {
 		int16_t acLevel = data[i];
@@ -111,7 +114,10 @@ void quant_intra_c(int16_t * coeff, const int16_t * data, const uint32_t quant, 
 /*	quantize inter-block
 */
 
-uint32_t quant_inter_c(int16_t *coeff, const int16_t *data, const uint32_t quant)
+uint32_t
+quant_inter_c(int16_t * coeff,
+			  const int16_t * data,
+			  const uint32_t quant)
 {
 	const uint32_t mult = multipliers[quant];
 	const uint16_t quant_m_2 = quant << 1;
@@ -121,7 +127,7 @@ uint32_t quant_inter_c(int16_t *coeff, const int16_t *data, const uint32_t quant
 
 	for (i = 0; i < 64; i++) {
 		int16_t acLevel = data[i];
-		
+
 		if (acLevel < 0) {
 			acLevel = (-acLevel) - quant_d_2;
 			if (acLevel < quant_m_2) {
@@ -151,36 +157,34 @@ uint32_t quant_inter_c(int16_t *coeff, const int16_t *data, const uint32_t quant
 /*	dequantize intra-block & clamp to [-2048,2047]
 */
 
-void dequant_intra_c(int16_t *data, const int16_t *coeff, const uint32_t quant, const uint32_t dcscalar)
+void
+dequant_intra_c(int16_t * data,
+				const int16_t * coeff,
+				const uint32_t quant,
+				const uint32_t dcscalar)
 {
 	const int32_t quant_m_2 = quant << 1;
 	const int32_t quant_add = (quant & 1 ? quant : quant - 1);
-    uint32_t i;
+	uint32_t i;
 
-	data[0] = coeff[0]  * dcscalar;
-	if (data[0] < -2048)
-	{
+	data[0] = coeff[0] * dcscalar;
+	if (data[0] < -2048) {
 		data[0] = -2048;
-	} 
-	else if (data[0] > 2047)
-	{
+	} else if (data[0] > 2047) {
 		data[0] = 2047;
 	}
 
 
 	for (i = 1; i < 64; i++) {
 		int32_t acLevel = coeff[i];
-		if (acLevel == 0)
-		{
+
+		if (acLevel == 0) {
 			data[i] = 0;
-		} 
-		else if (acLevel < 0) 
-		{
+		} else if (acLevel < 0) {
 			acLevel = quant_m_2 * -acLevel + quant_add;
 			data[i] = (acLevel <= 2048 ? -acLevel : -2048);
-		} 
-		else  //  if (acLevel > 0) {
-		{   
+		} else					//  if (acLevel > 0) {
+		{
 			acLevel = quant_m_2 * acLevel + quant_add;
 			data[i] = (acLevel <= 2047 ? acLevel : 2047);
 		}
@@ -192,7 +196,10 @@ void dequant_intra_c(int16_t *data, const int16_t *coeff, const uint32_t quant, 
 /* dequantize inter-block & clamp to [-2048,2047]
 */
 
-void dequant_inter_c(int16_t *data, const int16_t *coeff, const uint32_t quant)
+void
+dequant_inter_c(int16_t * data,
+				const int16_t * coeff,
+				const uint32_t quant)
 {
 	const uint16_t quant_m_2 = quant << 1;
 	const uint16_t quant_add = (quant & 1 ? quant : quant - 1);
@@ -200,18 +207,14 @@ void dequant_inter_c(int16_t *data, const int16_t *coeff, const uint32_t quant)
 
 	for (i = 0; i < 64; i++) {
 		int16_t acLevel = coeff[i];
-		
-		if (acLevel == 0)
-		{
+
+		if (acLevel == 0) {
 			data[i] = 0;
-		}
-		else if (acLevel < 0) 
-		{
+		} else if (acLevel < 0) {
 			acLevel = acLevel * quant_m_2 - quant_add;
 			data[i] = (acLevel >= -2048 ? acLevel : -2048);
-		} 
-		else // if (acLevel > 0)
-		{ 
+		} else					// if (acLevel > 0)
+		{
 			acLevel = acLevel * quant_m_2 + quant_add;
 			data[i] = (acLevel <= 2047 ? acLevel : 2047);
 		}

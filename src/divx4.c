@@ -37,7 +37,7 @@
  *  22.12.2001  removed some compiler warnings
  *  16.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: divx4.c,v 1.13 2002-06-09 23:05:35 edgomez Exp $
+ *  $Id: divx4.c,v 1.14 2002-06-12 20:38:39 edgomez Exp $
  *
  *************************************************************************/
 
@@ -68,21 +68,23 @@
 typedef struct DINST
 {
 	unsigned long key;
-	struct DINST * next;
+	struct DINST *next;
 
-	void * handle;
+	void *handle;
 	XVID_DEC_FRAME xframe;
 
-} DINST;
+}
+DINST;
 
 typedef struct EINST
 {
-	struct EINST * next;
+	struct EINST *next;
 
-	void * handle;
+	void *handle;
 	int quality;
 
-} EINST;
+}
+EINST;
 
 /**************************************************************************
  * Global data (needed to emulate correctly exported symbols from divx4)
@@ -96,38 +98,38 @@ int quiet_encore = 1;
  *************************************************************************/
 
 /* The Divx4 instance chainlist */
-static DINST * dhead = NULL;
-static EINST * ehead = NULL;
+static DINST *dhead = NULL;
+static EINST *ehead = NULL;
 
 /* Divx4 quality to XviD encoder motion flag presets */
 static int const divx4_motion_presets[7] = {
-	0, 
+	0,
 
-	PMV_EARLYSTOP16, 
+	PMV_EARLYSTOP16,
 
 	PMV_EARLYSTOP16 | PMV_ADVANCEDDIAMOND16,
 
 	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16,
 
-	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 |
-	PMV_EARLYSTOP8  | PMV_HALFPELREFINE8,
+	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 | PMV_EARLYSTOP8 |
+		PMV_HALFPELREFINE8,
 
-	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 |
-	PMV_EARLYSTOP8  | PMV_HALFPELREFINE8,
+	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 | PMV_EARLYSTOP8 |
+		PMV_HALFPELREFINE8,
 
-	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 | PMV_EXTSEARCH16 | 
-	PMV_EARLYSTOP8  | PMV_HALFPELREFINE8 
+	PMV_EARLYSTOP16 | PMV_HALFPELREFINE16 | PMV_EXTSEARCH16 | PMV_EARLYSTOP8 |
+		PMV_HALFPELREFINE8
 };
 
 
 /* Divx4 quality to general encoder flag presets */
 static int const divx4_general_presets[7] = {
-	0, 
-	XVID_H263QUANT, 
+	0,
+	XVID_H263QUANT,
 	XVID_H263QUANT,
 	XVID_H263QUANT | XVID_HALFPEL,
 	XVID_H263QUANT | XVID_INTER4V | XVID_HALFPEL,
-	XVID_H263QUANT | XVID_INTER4V | XVID_HALFPEL, 
+	XVID_H263QUANT | XVID_INTER4V | XVID_HALFPEL,
 	XVID_H263QUANT | XVID_INTER4V | XVID_HALFPEL
 };
 
@@ -136,13 +138,13 @@ static int const divx4_general_presets[7] = {
  *************************************************************************/
 
 /* Chain list helper functions */
-static DINST * dinst_find(unsigned long key);
-static DINST * dinst_add(unsigned long key);
-static void    dinst_remove(unsigned long key);
+static DINST *dinst_find(unsigned long key);
+static DINST *dinst_add(unsigned long key);
+static void dinst_remove(unsigned long key);
 
-static EINST * einst_find(void *handle);
-static EINST * einst_add(void *handle);
-static void    einst_remove(void *handle);
+static EINST *einst_find(void *handle);
+static EINST *einst_add(void *handle);
+static void einst_remove(void *handle);
 
 /* Converts divx4 colorspaces codes to xvid codes */
 static int xvid_to_opendivx_dec_csp(int csp);
@@ -156,170 +158,165 @@ static int xvid_to_opendivx_enc_csp(int csp);
  *************************************************************************/
 
 int
-decore(unsigned long key, unsigned long opt, void * param1, void * param2)
+decore(unsigned long key,
+	   unsigned long opt,
+	   void *param1,
+	   void *param2)
 {
 
 	int xerr;
 
 	switch (opt) {
 
-	case DEC_OPT_MEMORY_REQS :
-	{
-		memset(param2, 0, sizeof(DEC_MEM_REQS));
-		return DEC_OK;
-	}
-	
-	case DEC_OPT_INIT :
-	{
-		XVID_INIT_PARAM xinit;
-		XVID_DEC_PARAM xparam;
-		DINST * dcur;
-		DEC_PARAM * dparam = (DEC_PARAM *)param1;
-
-		/* Find the divx4 instance */
-		if ((dcur = dinst_find(key)) == NULL)
+	case DEC_OPT_MEMORY_REQS:
 		{
-			dcur = dinst_add(key);
+			memset(param2, 0, sizeof(DEC_MEM_REQS));
+			return DEC_OK;
 		}
 
-		/*
-		 * XviD initialization
-		 * XviD will detect the host cpu type and activate optimized
-		 * functions according to the host cpu features.
-		 */
-		xinit.cpu_flags = 0;
-		xvid_init(NULL, 0, &xinit, NULL);
-
-		/* XviD decoder initialization for this instance */
-		xparam.width = dparam->x_dim;
-		xparam.height = dparam->y_dim;
-		dcur->xframe.colorspace =
-			xvid_to_opendivx_dec_csp(dparam->output_format);
-				
-		xerr = decoder_create(&xparam);
-
-		/* Store the xvid handle into the divx4 instance chainlist */
-		dcur->handle = xparam.handle;
-			
-		break;
-	}
-
-	case DEC_OPT_RELEASE :
-	{
-		DINST * dcur;
-
-		/* Find the divx4 instance into the chain list */
-		if ((dcur = dinst_find(key)) == NULL)
+	case DEC_OPT_INIT:
 		{
-			return DEC_EXIT;
-		}
-			
-		/* Destroy the XviD decoder attached to this divx4 instance */
-		xerr = decoder_destroy(dcur->handle);
+			XVID_INIT_PARAM xinit;
+			XVID_DEC_PARAM xparam;
+			DINST *dcur;
+			DEC_PARAM *dparam = (DEC_PARAM *) param1;
 
-		/* Remove the divx4 instance from the chainlist */
-		dinst_remove(key);
+			/* Find the divx4 instance */
+			if ((dcur = dinst_find(key)) == NULL) {
+				dcur = dinst_add(key);
+			}
 
-		break;
-	}
-	
-	case DEC_OPT_SETPP :
-	{
-		DINST * dcur;
-
-		/* Find the divx4 instance into the chain list */
-		if ((dcur = dinst_find(key)) == NULL)
-		{
-			return DEC_EXIT;
-		}
-
-		/*
-		 * We return DEC_OK but XviD has no postprocessing implemented
-		 * in core.
-		 */
-		return DEC_OK;
-	}
-
-	case DEC_OPT_SETOUT :
-	{
-		DINST * dcur;
-		DEC_PARAM * dparam = (DEC_PARAM *)param1;
-
-		if ((dcur = dinst_find(key)) == NULL)
-		{
-			return DEC_EXIT;
-		}
-
-		/* Change the output colorspace */
-		dcur->xframe.colorspace =
-			xvid_to_opendivx_dec_csp(dparam->output_format);
-
-		return DEC_OK;
-	}
-	
-	case DEC_OPT_FRAME:
-	{
-		int csp_tmp = 0;
-		DINST * dcur;
-		DEC_FRAME * dframe = (DEC_FRAME *)param1;
-
-		if ((dcur = dinst_find(key)) == NULL)
-		{
-			return DEC_EXIT;
-		}
-
-		/* Copy the divx4 fields to the XviD decoder structure */
-		dcur->xframe.bitstream = dframe->bitstream;
-		dcur->xframe.length = dframe->length;
-		dcur->xframe.image = dframe->bmp;
-		dcur->xframe.stride = dframe->stride;
-			
-		/* Does the frame need to be skipped ? */
-		if (!dframe->render_flag)
-		{
 			/*
-			 * Then we use the null colorspace to force XviD to
-			 * skip the frame. The original colorspace will be
-			 * restored after the decoder call
+			 * XviD initialization
+			 * XviD will detect the host cpu type and activate optimized
+			 * functions according to the host cpu features.
 			 */
-			csp_tmp = dcur->xframe.colorspace;
-			dcur->xframe.colorspace = XVID_CSP_NULL;
-		}
-			
-		/* Decode the bitstream */
-		xerr = decoder_decode(dcur->handle, &dcur->xframe);
+			xinit.cpu_flags = 0;
+			xvid_init(NULL, 0, &xinit, NULL);
 
-		/* Restore the real colorspace for this instance */
-		if (!dframe->render_flag)
+			/* XviD decoder initialization for this instance */
+			xparam.width = dparam->x_dim;
+			xparam.height = dparam->y_dim;
+			dcur->xframe.colorspace =
+				xvid_to_opendivx_dec_csp(dparam->output_format);
+
+			xerr = decoder_create(&xparam);
+
+			/* Store the xvid handle into the divx4 instance chainlist */
+			dcur->handle = xparam.handle;
+
+			break;
+		}
+
+	case DEC_OPT_RELEASE:
 		{
-			dcur->xframe.colorspace = csp_tmp;
+			DINST *dcur;
+
+			/* Find the divx4 instance into the chain list */
+			if ((dcur = dinst_find(key)) == NULL) {
+				return DEC_EXIT;
+			}
+
+			/* Destroy the XviD decoder attached to this divx4 instance */
+			xerr = decoder_destroy(dcur->handle);
+
+			/* Remove the divx4 instance from the chainlist */
+			dinst_remove(key);
+
+			break;
 		}
 
-		break;
-	}
+	case DEC_OPT_SETPP:
+		{
+			DINST *dcur;
 
-	case DEC_OPT_FRAME_311 :
+			/* Find the divx4 instance into the chain list */
+			if ((dcur = dinst_find(key)) == NULL) {
+				return DEC_EXIT;
+			}
+
+			/*
+			 * We return DEC_OK but XviD has no postprocessing implemented
+			 * in core.
+			 */
+			return DEC_OK;
+		}
+
+	case DEC_OPT_SETOUT:
+		{
+			DINST *dcur;
+			DEC_PARAM *dparam = (DEC_PARAM *) param1;
+
+			if ((dcur = dinst_find(key)) == NULL) {
+				return DEC_EXIT;
+			}
+
+			/* Change the output colorspace */
+			dcur->xframe.colorspace =
+				xvid_to_opendivx_dec_csp(dparam->output_format);
+
+			return DEC_OK;
+		}
+
+	case DEC_OPT_FRAME:
+		{
+			int csp_tmp = 0;
+			DINST *dcur;
+			DEC_FRAME *dframe = (DEC_FRAME *) param1;
+
+			if ((dcur = dinst_find(key)) == NULL) {
+				return DEC_EXIT;
+			}
+
+			/* Copy the divx4 fields to the XviD decoder structure */
+			dcur->xframe.bitstream = dframe->bitstream;
+			dcur->xframe.length = dframe->length;
+			dcur->xframe.image = dframe->bmp;
+			dcur->xframe.stride = dframe->stride;
+
+			/* Does the frame need to be skipped ? */
+			if (!dframe->render_flag) {
+				/*
+				 * Then we use the null colorspace to force XviD to
+				 * skip the frame. The original colorspace will be
+				 * restored after the decoder call
+				 */
+				csp_tmp = dcur->xframe.colorspace;
+				dcur->xframe.colorspace = XVID_CSP_NULL;
+			}
+
+			/* Decode the bitstream */
+			xerr = decoder_decode(dcur->handle, &dcur->xframe);
+
+			/* Restore the real colorspace for this instance */
+			if (!dframe->render_flag) {
+				dcur->xframe.colorspace = csp_tmp;
+			}
+
+			break;
+		}
+
+	case DEC_OPT_FRAME_311:
 		/* XviD does not handle Divx ;-) 3.11 yet */
 		return DEC_EXIT;
 
 	case DEC_OPT_VERSION:
 		return EMULATED_DIVX_VERSION;
 
-	default :
+	default:
 		return DEC_EXIT;
 	}
 
 
 	/* XviD error code -> Divx4 */
-	switch(xerr)
-	{
-	case XVID_ERR_OK :
+	switch (xerr) {
+	case XVID_ERR_OK:
 		return DEC_OK;
-	case XVID_ERR_MEMORY :
+	case XVID_ERR_MEMORY:
 		return DEC_MEMORY;
-	case XVID_ERR_FORMAT :
+	case XVID_ERR_FORMAT:
 		return DEC_BAD_FORMAT;
-	default : 
+	default:
 		return DEC_EXIT;
 	}
 }
@@ -334,151 +331,147 @@ decore(unsigned long key, unsigned long opt, void * param1, void * param2)
 #define FRAMERATE_INCR		1001
 
 int
-encore(void * handle, int opt, void * param1, void * param2)
+encore(void *handle,
+	   int opt,
+	   void *param1,
+	   void *param2)
 {
 
 	int xerr;
 
-	switch(opt) {
-	case ENC_OPT_INIT :
-	{
-		EINST *ecur;
-		ENC_PARAM * eparam = (ENC_PARAM *)param1;
-		XVID_INIT_PARAM xinit;
-		XVID_ENC_PARAM xparam;
-
-		/* Init XviD which will detect host cpu features */
-		xinit.cpu_flags = 0;
-		xvid_init(NULL, 0, &xinit, NULL);
-						
-		/* Settings are copied to the XviD encoder structure */
-		xparam.width = eparam->x_dim;
-		xparam.height = eparam->y_dim;
-		if ((eparam->framerate - (int)eparam->framerate) == 0)
+	switch (opt) {
+	case ENC_OPT_INIT:
 		{
-			xparam.fincr = 1; 
-			xparam.fbase = (int)eparam->framerate;
-		}
-		else
-		{
-			xparam.fincr = FRAMERATE_INCR;
-			xparam.fbase = (int)(FRAMERATE_INCR * eparam->framerate);
-		}
-		xparam.rc_bitrate = eparam->bitrate;
-		xparam.rc_reaction_delay_factor = 16;
-		xparam.rc_averaging_period = 100;
-		xparam.rc_buffer = 100;
-		xparam.min_quantizer = eparam->min_quantizer;
-		xparam.max_quantizer = eparam->max_quantizer;
-		xparam.max_key_interval = eparam->max_key_interval;
+			EINST *ecur;
+			ENC_PARAM *eparam = (ENC_PARAM *) param1;
+			XVID_INIT_PARAM xinit;
+			XVID_ENC_PARAM xparam;
 
-		/* Create the encoder session */
-		xerr = encoder_create(&xparam);
+			/* Init XviD which will detect host cpu features */
+			xinit.cpu_flags = 0;
+			xvid_init(NULL, 0, &xinit, NULL);
 
-		eparam->handle = xparam.handle;
+			/* Settings are copied to the XviD encoder structure */
+			xparam.width = eparam->x_dim;
+			xparam.height = eparam->y_dim;
+			if ((eparam->framerate - (int) eparam->framerate) == 0) {
+				xparam.fincr = 1;
+				xparam.fbase = (int) eparam->framerate;
+			} else {
+				xparam.fincr = FRAMERATE_INCR;
+				xparam.fbase = (int) (FRAMERATE_INCR * eparam->framerate);
+			}
+			xparam.rc_bitrate = eparam->bitrate;
+			xparam.rc_reaction_delay_factor = 16;
+			xparam.rc_averaging_period = 100;
+			xparam.rc_buffer = 100;
+			xparam.min_quantizer = eparam->min_quantizer;
+			xparam.max_quantizer = eparam->max_quantizer;
+			xparam.max_key_interval = eparam->max_key_interval;
 
-		/* Create an encoder instance in the chainlist */
-		if ((ecur = einst_find(xparam.handle)) == NULL)
-		{
-			ecur = einst_add(xparam.handle);
+			/* Create the encoder session */
+			xerr = encoder_create(&xparam);
 
-			if(ecur == NULL) {
-				encoder_destroy((Encoder*)xparam.handle);
-				return ENC_MEMORY;
+			eparam->handle = xparam.handle;
+
+			/* Create an encoder instance in the chainlist */
+			if ((ecur = einst_find(xparam.handle)) == NULL) {
+				ecur = einst_add(xparam.handle);
+
+				if (ecur == NULL) {
+					encoder_destroy((Encoder *) xparam.handle);
+					return ENC_MEMORY;
+				}
+
 			}
 
+			ecur->quality = eparam->quality;
+			if (ecur->quality < 0)
+				ecur->quality = 0;
+			if (ecur->quality > 6)
+				ecur->quality = 6;
+
+			break;
 		}
 
-		ecur->quality = eparam->quality;
-		if(ecur->quality < 0) ecur->quality = 0;
-		if(ecur->quality > 6) ecur->quality = 6;
-
-		break;
-	}
-
-	case ENC_OPT_RELEASE :
-	{
-		EINST *ecur;
-
-		if ((ecur = einst_find(handle)) == NULL)
+	case ENC_OPT_RELEASE:
 		{
-			return ENC_FAIL;
+			EINST *ecur;
+
+			if ((ecur = einst_find(handle)) == NULL) {
+				return ENC_FAIL;
+			}
+
+			einst_remove(handle);
+			xerr = encoder_destroy((Encoder *) handle);
+
+			break;
 		}
-		
-		einst_remove(handle);
-		xerr = encoder_destroy((Encoder *) handle);
 
-		break;
-	}
-
-	case ENC_OPT_ENCODE :
-	case ENC_OPT_ENCODE_VBR :
-	{
-		EINST *ecur;
-
-		ENC_FRAME * eframe = (ENC_FRAME *)param1;
-		ENC_RESULT * eresult = (ENC_RESULT *)param2;
-		XVID_ENC_FRAME xframe;
-		XVID_ENC_STATS xstats;
-
-		if ((ecur = einst_find(handle)) == NULL)
+	case ENC_OPT_ENCODE:
+	case ENC_OPT_ENCODE_VBR:
 		{
-			return ENC_FAIL;
+			EINST *ecur;
+
+			ENC_FRAME *eframe = (ENC_FRAME *) param1;
+			ENC_RESULT *eresult = (ENC_RESULT *) param2;
+			XVID_ENC_FRAME xframe;
+			XVID_ENC_STATS xstats;
+
+			if ((ecur = einst_find(handle)) == NULL) {
+				return ENC_FAIL;
+			}
+
+			/* Copy the divx4 info into the xvid structure */
+			xframe.bitstream = eframe->bitstream;
+			xframe.length = eframe->length;
+			xframe.motion = divx4_motion_presets[ecur->quality];
+			xframe.general = divx4_general_presets[ecur->quality];
+
+			xframe.image = eframe->image;
+			xframe.colorspace = xvid_to_opendivx_enc_csp(eframe->colorspace);
+
+			if (opt == ENC_OPT_ENCODE_VBR) {
+				xframe.intra = eframe->intra;
+				xframe.quant = eframe->quant;
+			} else {
+				xframe.intra = -1;
+				xframe.quant = 0;
+			}
+
+			/* Encode the frame */
+			xerr =
+				encoder_encode((Encoder *) handle, &xframe,
+							   (eresult ? &xstats : NULL));
+
+			/* Copy back the xvid structure to the divx4 one */
+			if (eresult) {
+				eresult->is_key_frame = xframe.intra;
+				eresult->quantizer = xstats.quant;
+				eresult->total_bits = xframe.length * 8;
+				eresult->motion_bits = xstats.hlength * 8;
+				eresult->texture_bits =
+					eresult->total_bits - eresult->motion_bits;
+			}
+
+			eframe->length = xframe.length;
+
+			break;
 		}
-
-		/* Copy the divx4 info into the xvid structure */
-		xframe.bitstream = eframe->bitstream;
-		xframe.length = eframe->length;
-		xframe.motion = divx4_motion_presets[ecur->quality];
-		xframe.general = divx4_general_presets[ecur->quality];
-
-		xframe.image = eframe->image;
-		xframe.colorspace =
-			xvid_to_opendivx_enc_csp(eframe->colorspace);
-
-		if (opt == ENC_OPT_ENCODE_VBR)	
-		{
-			xframe.intra = eframe->intra;
-			xframe.quant = eframe->quant;
-		}
-		else
-		{
-			xframe.intra = -1;
-			xframe.quant = 0;
-		}
-			
-		/* Encode the frame */
-		xerr = encoder_encode((Encoder *) handle, &xframe, (eresult ? &xstats : NULL) );
-
-		/* Copy back the xvid structure to the divx4 one */
-		if (eresult)
-		{
-			eresult->is_key_frame = xframe.intra;
-			eresult->quantizer = xstats.quant;
-			eresult->total_bits = xframe.length * 8;
-			eresult->motion_bits = xstats.hlength * 8;
-			eresult->texture_bits = eresult->total_bits - eresult->motion_bits;
-		}
-
-		eframe->length = xframe.length;
-
-		break;
-	}
 
 	default:
 		return ENC_FAIL;
 	}
 
 	/* XviD Error code  -> Divx4 error code */
-	switch(xerr)
-	{
-	case XVID_ERR_OK :
+	switch (xerr) {
+	case XVID_ERR_OK:
 		return ENC_OK;
-	case XVID_ERR_MEMORY :
+	case XVID_ERR_MEMORY:
 		return ENC_MEMORY;
-	case XVID_ERR_FORMAT :
+	case XVID_ERR_FORMAT:
 		return ENC_BAD_FORMAT;
-	default : 
+	default:
 		return ENC_FAIL;
 	}
 }
@@ -492,14 +485,13 @@ encore(void * handle, int opt, void * param1, void * param2)
  ***************************************/
 
 /* Find an element in the chainlist according to its key value */
-static DINST * dinst_find(unsigned long key)
+static DINST *
+dinst_find(unsigned long key)
 {
-	DINST * dcur = dhead;
+	DINST *dcur = dhead;
 
-	while (dcur)
-	{
-		if (dcur->key == key)
-		{
+	while (dcur) {
+		if (dcur->key == key) {
 			return dcur;
 		}
 		dcur = dcur->next;
@@ -510,13 +502,13 @@ static DINST * dinst_find(unsigned long key)
 
 
 /* Add an element to the chainlist */
-static DINST * dinst_add(unsigned long key)
+static DINST *
+dinst_add(unsigned long key)
 {
-	DINST * dnext = dhead;
+	DINST *dnext = dhead;
 
 	dhead = malloc(sizeof(DINST));
-	if (dhead == NULL)
-	{
+	if (dhead == NULL) {
 		dhead = dnext;
 		return NULL;
 	}
@@ -529,27 +521,25 @@ static DINST * dinst_add(unsigned long key)
 
 
 /* Remove an elmement from the chainlist */
-static void dinst_remove(unsigned long key)
+static void
+dinst_remove(unsigned long key)
 {
-	DINST * dcur = dhead;
+	DINST *dcur = dhead;
 
-	if (dhead == NULL)
-	{
+	if (dhead == NULL) {
 		return;
 	}
 
-	if (dcur->key == key)
-	{
+	if (dcur->key == key) {
 		dhead = dcur->next;
 		free(dcur);
 		return;
 	}
 
-	while (dcur->next)
-	{
-		if (dcur->next->key == key)
-		{
-			DINST * tmp = dcur->next;
+	while (dcur->next) {
+		if (dcur->next->key == key) {
+			DINST *tmp = dcur->next;
+
 			dcur->next = tmp->next;
 			free(tmp);
 			return;
@@ -564,14 +554,13 @@ static void dinst_remove(unsigned long key)
  ***************************************/
 
 /* Find an element in the chainlist according to its handle */
-static EINST * einst_find(void *handle)
+static EINST *
+einst_find(void *handle)
 {
-	EINST * ecur = ehead;
+	EINST *ecur = ehead;
 
-	while (ecur)
-	{
-		if (ecur->handle == handle)
-		{
+	while (ecur) {
+		if (ecur->handle == handle) {
 			return ecur;
 		}
 		ecur = ecur->next;
@@ -582,13 +571,13 @@ static EINST * einst_find(void *handle)
 
 
 /* Add an element to the chainlist */
-static EINST * einst_add(void *handle)
+static EINST *
+einst_add(void *handle)
 {
-	EINST * enext = ehead;
+	EINST *enext = ehead;
 
 	ehead = malloc(sizeof(EINST));
-	if (ehead == NULL)
-	{
+	if (ehead == NULL) {
 		ehead = enext;
 		return NULL;
 	}
@@ -601,27 +590,25 @@ static EINST * einst_add(void *handle)
 
 
 /* Remove an elmement from the chainlist */
-static void einst_remove(void *handle)
+static void
+einst_remove(void *handle)
 {
-	EINST * ecur = ehead;
+	EINST *ecur = ehead;
 
-	if (ehead == NULL)
-	{
+	if (ehead == NULL) {
 		return;
 	}
 
-	if (ecur->handle == handle)
-	{
+	if (ecur->handle == handle) {
 		ehead = ecur->next;
 		free(ecur);
 		return;
 	}
 
-	while (ecur->next)
-	{
-		if (ecur->next->handle == handle)
-		{
-			EINST * tmp = ecur->next;
+	while (ecur->next) {
+		if (ecur->next->handle == handle) {
+			EINST *tmp = ecur->next;
+
 			ecur->next = tmp->next;
 			free(tmp);
 			return;
@@ -629,62 +616,63 @@ static void einst_remove(void *handle)
 		ecur = ecur->next;
 	}
 }
+
 /***************************************
  * Colorspace code converter           *
  ***************************************/
 
-static int xvid_to_opendivx_dec_csp(int csp)
+static int
+xvid_to_opendivx_dec_csp(int csp)
 {
 
-	switch(csp)
-	{
-	case DEC_YV12 :
+	switch (csp) {
+	case DEC_YV12:
 		return XVID_CSP_YV12;
-	case DEC_420 :
+	case DEC_420:
 		return XVID_CSP_I420;
-	case DEC_YUY2 :
+	case DEC_YUY2:
 		return XVID_CSP_YUY2;
-	case DEC_UYVY :
+	case DEC_UYVY:
 		return XVID_CSP_UYVY;
-	case DEC_RGB32 :
+	case DEC_RGB32:
 		return XVID_CSP_VFLIP | XVID_CSP_RGB32;
-	case DEC_RGB24 :
+	case DEC_RGB24:
 		return XVID_CSP_VFLIP | XVID_CSP_RGB24;
-	case DEC_RGB565 :
+	case DEC_RGB565:
 		return XVID_CSP_VFLIP | XVID_CSP_RGB565;
-	case DEC_RGB555 :
+	case DEC_RGB555:
 		return XVID_CSP_VFLIP | XVID_CSP_RGB555;
-	case DEC_RGB32_INV :
+	case DEC_RGB32_INV:
 		return XVID_CSP_RGB32;
-	case DEC_RGB24_INV :
+	case DEC_RGB24_INV:
 		return XVID_CSP_RGB24;
-	case DEC_RGB565_INV :
+	case DEC_RGB565_INV:
 		return XVID_CSP_RGB565;
-	case DEC_RGB555_INV :
+	case DEC_RGB555_INV:
 		return XVID_CSP_RGB555;
-	case DEC_USER :
-		return XVID_CSP_USER;    
-	default :
+	case DEC_USER:
+		return XVID_CSP_USER;
+	default:
 		return -1;
 	}
 }
 
-static int xvid_to_opendivx_enc_csp(int csp)
+static int
+xvid_to_opendivx_enc_csp(int csp)
 {
 
-	switch (csp)
-	{
-	case ENC_CSP_RGB24 : 
+	switch (csp) {
+	case ENC_CSP_RGB24:
 		return XVID_CSP_VFLIP | XVID_CSP_RGB24;
-	case ENC_CSP_YV12 :
+	case ENC_CSP_YV12:
 		return XVID_CSP_YV12;
-	case ENC_CSP_YUY2 :
+	case ENC_CSP_YUY2:
 		return XVID_CSP_YUY2;
-	case ENC_CSP_UYVY :
+	case ENC_CSP_UYVY:
 		return XVID_CSP_UYVY;
-	case ENC_CSP_I420 :
+	case ENC_CSP_I420:
 		return XVID_CSP_I420;
-	default :
+	default:
 		return -1;
 	}
 }

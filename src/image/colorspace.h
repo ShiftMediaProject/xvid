@@ -11,10 +11,15 @@ void colorspace_init(void);
 
 /* input color conversion functions (encoder) */
 
-typedef void (color_inputFunc)(uint8_t *y_out, uint8_t *u_out, uint8_t *v_out,
-							uint8_t *src, int width, int height, int stride);
+typedef void (color_inputFunc) (uint8_t * y_out,
+								uint8_t * u_out,
+								uint8_t * v_out,
+								uint8_t * src,
+								int width,
+								int height,
+								int stride);
 
-typedef color_inputFunc *color_inputFuncPtr;	
+typedef color_inputFunc *color_inputFuncPtr;
 
 extern color_inputFuncPtr rgb555_to_yv12;
 extern color_inputFuncPtr rgb565_to_yv12;
@@ -45,13 +50,18 @@ color_inputFunc yuv_to_yv12_xmm;
 
 
 /* output color conversion functions (decoder) */
- 
-typedef void (color_outputFunc)(uint8_t *dst, int dst_stride,
-							 uint8_t *y_src, uint8_t *v_src,
-							 uint8_t * u_src, int y_stride,
-							 int uv_stride, int width, int height);
 
-typedef color_outputFunc* color_outputFuncPtr;	
+typedef void (color_outputFunc) (uint8_t * dst,
+								 int dst_stride,
+								 uint8_t * y_src,
+								 uint8_t * v_src,
+								 uint8_t * u_src,
+								 int y_stride,
+								 int uv_stride,
+								 int width,
+								 int height);
+
+typedef color_outputFunc *color_outputFuncPtr;
 
 extern color_outputFuncPtr yv12_to_rgb555;
 extern color_outputFuncPtr yv12_to_rgb565;
@@ -79,8 +89,12 @@ color_outputFunc yv12_to_yuyv_mmx;
 color_outputFunc yv12_to_uyvy_mmx;
 
 
-void user_to_yuv_c(uint8_t *y_out, uint8_t *u_out, uint8_t *v_out, int stride,
+void user_to_yuv_c(uint8_t * y_out,
+				   uint8_t * u_out,
+				   uint8_t * v_out,
+				   int stride,
 				   DEC_PICTURE * picture,
-				   int width, int height);
+				   int width,
+				   int height);
 
-#endif /* _COLORSPACE_H_ */
+#endif							/* _COLORSPACE_H_ */

@@ -8,7 +8,9 @@
 
 
 #define DPRINTF_BUF_SZ  1024
-static void dprintf(char *fmt, ...)
+static void
+dprintf(char *fmt,
+		...)
 {
 	va_list args;
 	char buf[DPRINTF_BUF_SZ];
@@ -65,18 +67,17 @@ static void dprintf(char *fmt, ...)
 #define BSWAP(a) __asm mov eax,a __asm bswap eax __asm mov a, eax
 
 // needed for timer.c
-static __inline int64_t read_counter() {
+static __inline int64_t
+read_counter()
+{
 	int64_t ts;
 	uint32_t ts1, ts2;
 
 	__asm {
-		rdtsc
-		mov  ts1, eax
-		mov  ts2, edx
-	}
-	
+	rdtsc mov ts1, eax mov ts2, edx}
+
 	ts = ((uint64_t) ts2 << 32) | ((uint64_t) ts1);
-    
+
 	return ts;
 }
 
@@ -130,48 +131,60 @@ static __inline int64_t read_counter() {
 
 // needed for bitstream.h
 #ifdef ARCH_PPC
-	#define BSWAP(a) __asm__ __volatile__ ( "lwbrx %0,0,%1; eieio" : "=r" (a) : \
+#define BSWAP(a) __asm__ __volatile__ ( "lwbrx %0,0,%1; eieio" : "=r" (a) : \
 		"r" (&(a)), "m" (a));
-	#define EMMS()
+#define EMMS()
 
-	static __inline unsigned long get_tbl(void) {
-		unsigned long tbl;
-		asm volatile("mftb %0" : "=r" (tbl));
-		return tbl;
-	}
-	static __inline unsigned long get_tbu(void) {
-		unsigned long tbl;
-		asm volatile("mftbu %0" : "=r" (tbl));
-		return tbl;
-	}
-	static __inline int64_t read_counter() {
-		unsigned long tb, tu;
-		do {
-			tu = get_tbu();
-			tb = get_tbl();
-		} while(tb != get_tbl());
-		return (((int64_t)tu) << 32) | (int64_t)tb;
-	}
+static __inline unsigned long
+get_tbl(void)
+{
+	unsigned long tbl;
+	asm volatile ("mftb %0":"=r" (tbl));
+
+	return tbl;
+}
+static __inline unsigned long
+get_tbu(void)
+{
+	unsigned long tbl;
+	asm volatile ("mftbu %0":"=r" (tbl));
+
+	return tbl;
+}
+static __inline int64_t
+read_counter()
+{
+	unsigned long tb, tu;
+
+	do {
+		tu = get_tbu();
+		tb = get_tbl();
+	} while (tb != get_tbl());
+	return (((int64_t) tu) << 32) | (int64_t) tb;
+}
 #else
-	#define BSWAP(a) __asm__ ( "bswapl %0\n" : "=r" (a) : "0" (a) )
-	#define EMMS() __asm__("emms\n\t")
+#define BSWAP(a) __asm__ ( "bswapl %0\n" : "=r" (a) : "0" (a) )
+#define EMMS() __asm__("emms\n\t")
 
 
 // needed for timer.c
-static __inline int64_t read_counter() {
-    int64_t ts;
-    uint32_t ts1, ts2;
+static __inline int64_t
+read_counter()
+{
+	int64_t ts;
+	uint32_t ts1, ts2;
 
-    __asm__ __volatile__("rdtsc\n\t":"=a"(ts1), "=d"(ts2));
+	__asm__ __volatile__("rdtsc\n\t":"=a"(ts1),
+						 "=d"(ts2));
 
-    ts = ((uint64_t) ts2 << 32) | ((uint64_t) ts1);
+	ts = ((uint64_t) ts2 << 32) | ((uint64_t) ts1);
 
-    return ts;
+	return ts;
 }
 
 #endif
 
-#else // OTHER OS
+#else							// OTHER OS
 
 #define DEBUG(S)
 #define DEBUG1(S,I)
@@ -190,7 +203,9 @@ static __inline int64_t read_counter() {
 
 // rdtsc command most likely not supported,
 // so just dummy code here
-static __inline int64_t read_counter() {
+static __inline int64_t
+read_counter()
+{
 	return 0;
 }
 
@@ -199,5 +214,4 @@ static __inline int64_t read_counter() {
 
 #endif
 
-#endif // _PORTAB_H_
-
+#endif							// _PORTAB_H_

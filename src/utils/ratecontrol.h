@@ -3,10 +3,12 @@
 
 #include "../portab.h"
 
-typedef struct {
+typedef struct
+{
 	int64_t size;
 	int32_t count;
-} QuantInfo;
+}
+QuantInfo;
 
 typedef struct
 {
@@ -26,24 +28,24 @@ typedef struct
 	int32_t averaging_period;
 	int32_t reaction_delay_factor;
 	int32_t buffer;
-} RateControl;
+}
+RateControl;
 
-void RateControlInit(RateControl *rate_control,
-		     uint32_t target_rate,
-		     uint32_t reaction_delay_factor,
-		     uint32_t averaging_period,
-		     uint32_t buffer, 
-		     int framerate,
-		     int max_quant,
-		     int min_quant);
+void RateControlInit(RateControl * rate_control,
+					 uint32_t target_rate,
+					 uint32_t reaction_delay_factor,
+					 uint32_t averaging_period,
+					 uint32_t buffer,
+					 int framerate,
+					 int max_quant,
+					 int min_quant);
 
-int RateControlGetQ(RateControl *rate_control,
-		    int keyframe);
+int RateControlGetQ(RateControl * rate_control,
+					int keyframe);
 
-void RateControlUpdate(RateControl *rate_control,
-		       int16_t quant,
-		       int frame_size,
-		       int keyframe);
+void RateControlUpdate(RateControl * rate_control,
+					   int16_t quant,
+					   int frame_size,
+					   int keyframe);
 
-#endif /* _RATECONTROL_H_ */
-
+#endif							/* _RATECONTROL_H_ */

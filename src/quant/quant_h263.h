@@ -4,12 +4,12 @@
 #include "../portab.h"
 
 // intra
-typedef void (quanth263_intraFunc)(int16_t * coeff,
-				const int16_t * data,
-				const uint32_t quant,
-				const uint32_t dcscalar);
+typedef void (quanth263_intraFunc) (int16_t * coeff,
+									const int16_t * data,
+									const uint32_t quant,
+									const uint32_t dcscalar);
 
-typedef quanth263_intraFunc* quanth263_intraFuncPtr;	
+typedef quanth263_intraFunc *quanth263_intraFuncPtr;
 
 extern quanth263_intraFuncPtr quant_intra;
 extern quanth263_intraFuncPtr dequant_intra;
@@ -23,11 +23,11 @@ quanth263_intraFunc dequant_intra_mmx;
 quanth263_intraFunc dequant_intra_sse2;
 
 // inter_quant
-typedef uint32_t (quanth263_interFunc)(int16_t *coeff,
-				const int16_t *data,
-				const uint32_t quant);
+typedef uint32_t(quanth263_interFunc) (int16_t * coeff,
+									   const int16_t * data,
+									   const uint32_t quant);
 
-typedef quanth263_interFunc* quanth263_interFuncPtr;	
+typedef quanth263_interFunc *quanth263_interFuncPtr;
 
 extern quanth263_interFuncPtr quant_inter;
 
@@ -36,11 +36,11 @@ quanth263_interFunc quant_inter_mmx;
 quanth263_interFunc quant_inter_sse2;
 
 //inter_dequant
-typedef void (dequanth263_interFunc)(int16_t *coeff,
-				const int16_t *data,
-				const uint32_t quant);
+typedef void (dequanth263_interFunc) (int16_t * coeff,
+									  const int16_t * data,
+									  const uint32_t quant);
 
-typedef dequanth263_interFunc* dequanth263_interFuncPtr;	
+typedef dequanth263_interFunc *dequanth263_interFuncPtr;
 
 extern dequanth263_interFuncPtr dequant_inter;
 
@@ -48,4 +48,4 @@ dequanth263_interFunc dequant_inter_c;
 dequanth263_interFunc dequant_inter_mmx;
 dequanth263_interFunc dequant_inter_sse2;
 
-#endif /* _QUANT_H263_H_ */
+#endif							/* _QUANT_H263_H_ */

@@ -68,18 +68,18 @@
 #define MIN(X, Y) ((X)<(Y)?(X):(Y))
 #define MAX(X, Y) ((X)>(Y)?(X):(Y))
 
-#define TOOSMALL_LIMIT 1 /* skip blocks having a coefficient sum below this value */
+#define TOOSMALL_LIMIT 1		/* skip blocks having a coefficient sum below this value */
 
 /* this isnt pretty, but its better than 20 ifdefs */
 
-void MBTransQuantIntra(const MBParam *pParam,
-					   FRAMEINFO * frame,
-		       MACROBLOCK * pMB,
-		       const uint32_t x_pos,
-		       const uint32_t y_pos,
-		       int16_t data[6*64], 
-		       int16_t qcoeff[6*64])
-			   
+void
+MBTransQuantIntra(const MBParam * pParam,
+				  FRAMEINFO * frame,
+				  MACROBLOCK * pMB,
+				  const uint32_t x_pos,
+				  const uint32_t y_pos,
+				  int16_t data[6 * 64],
+				  int16_t qcoeff[6 * 64])
 {
 
 	uint32_t stride = pParam->edged_width;
@@ -88,88 +88,83 @@ void MBTransQuantIntra(const MBParam *pParam,
 	uint32_t i;
 	uint32_t iQuant = frame->quant;
 	uint8_t *pY_Cur, *pU_Cur, *pV_Cur;
-	IMAGE * pCurrent = &frame->image;
+	IMAGE *pCurrent = &frame->image;
 
 	pY_Cur = pCurrent->y + (y_pos << 4) * stride + (x_pos << 4);
 	pU_Cur = pCurrent->u + (y_pos << 3) * stride2 + (x_pos << 3);
 	pV_Cur = pCurrent->v + (y_pos << 3) * stride2 + (x_pos << 3);
 
 	start_timer();
-	transfer_8to16copy(&data[0*64], pY_Cur,					stride);
-	transfer_8to16copy(&data[1*64], pY_Cur + 8,				stride);
-	transfer_8to16copy(&data[2*64], pY_Cur + next_block,	stride);
-	transfer_8to16copy(&data[3*64], pY_Cur + next_block + 8,stride);
-	transfer_8to16copy(&data[4*64], pU_Cur,					stride2);
-	transfer_8to16copy(&data[5*64], pV_Cur,					stride2);
+	transfer_8to16copy(&data[0 * 64], pY_Cur, stride);
+	transfer_8to16copy(&data[1 * 64], pY_Cur + 8, stride);
+	transfer_8to16copy(&data[2 * 64], pY_Cur + next_block, stride);
+	transfer_8to16copy(&data[3 * 64], pY_Cur + next_block + 8, stride);
+	transfer_8to16copy(&data[4 * 64], pU_Cur, stride2);
+	transfer_8to16copy(&data[5 * 64], pV_Cur, stride2);
 	stop_transfer_timer();
 
 	start_timer();
 	pMB->field_dct = 0;
-	if ((frame->global_flags & XVID_INTERLACING))
-	{
+	if ((frame->global_flags & XVID_INTERLACING)) {
 		pMB->field_dct = MBDecideFieldDCT(data);
 	}
 	stop_interlacing_timer();
 
-	for(i = 0; i < 6; i++)
-	{
+	for (i = 0; i < 6; i++) {
 		uint32_t iDcScaler = get_dc_scaler(iQuant, i < 4);
 
 		start_timer();
-		fdct(&data[i*64]);
+		fdct(&data[i * 64]);
 		stop_dct_timer();
 
-		if (pParam->m_quant_type == H263_QUANT)
-		{
+		if (pParam->m_quant_type == H263_QUANT) {
 			start_timer();
-			quant_intra(&qcoeff[i*64], &data[i*64], iQuant, iDcScaler);
+			quant_intra(&qcoeff[i * 64], &data[i * 64], iQuant, iDcScaler);
 			stop_quant_timer();
 
 			start_timer();
-			dequant_intra(&data[i*64], &qcoeff[i*64], iQuant, iDcScaler);
+			dequant_intra(&data[i * 64], &qcoeff[i * 64], iQuant, iDcScaler);
 			stop_iquant_timer();
-		}
-		else
-		{
+		} else {
 			start_timer();
-			quant4_intra(&qcoeff[i*64], &data[i*64], iQuant, iDcScaler);
+			quant4_intra(&qcoeff[i * 64], &data[i * 64], iQuant, iDcScaler);
 			stop_quant_timer();
 
 			start_timer();
-			dequant4_intra(&data[i*64], &qcoeff[i*64], iQuant, iDcScaler);
+			dequant4_intra(&data[i * 64], &qcoeff[i * 64], iQuant, iDcScaler);
 			stop_iquant_timer();
 		}
 
 		start_timer();
-		idct(&data[i*64]);
+		idct(&data[i * 64]);
 		stop_idct_timer();
 	}
 
-	if (pMB->field_dct)
-	{
+	if (pMB->field_dct) {
 		next_block = stride;
 		stride *= 2;
 	}
 
 	start_timer();
-	transfer_16to8copy(pY_Cur,                  &data[0*64], stride);
-	transfer_16to8copy(pY_Cur + 8,              &data[1*64], stride);
-	transfer_16to8copy(pY_Cur + next_block,     &data[2*64], stride);
-	transfer_16to8copy(pY_Cur + next_block + 8, &data[3*64], stride);
-	transfer_16to8copy(pU_Cur,                  &data[4*64], stride2);
-	transfer_16to8copy(pV_Cur,                  &data[5*64], stride2);
+	transfer_16to8copy(pY_Cur, &data[0 * 64], stride);
+	transfer_16to8copy(pY_Cur + 8, &data[1 * 64], stride);
+	transfer_16to8copy(pY_Cur + next_block, &data[2 * 64], stride);
+	transfer_16to8copy(pY_Cur + next_block + 8, &data[3 * 64], stride);
+	transfer_16to8copy(pU_Cur, &data[4 * 64], stride2);
+	transfer_16to8copy(pV_Cur, &data[5 * 64], stride2);
 	stop_transfer_timer();
 
 }
 
 
-uint8_t MBTransQuantInter(const MBParam *pParam, 
-			  FRAMEINFO * frame,
-			  MACROBLOCK * pMB,
-			  const uint32_t x_pos, const uint32_t y_pos,
-			  int16_t data[6*64], 
-			  int16_t qcoeff[6*64])
-
+uint8_t
+MBTransQuantInter(const MBParam * pParam,
+				  FRAMEINFO * frame,
+				  MACROBLOCK * pMB,
+				  const uint32_t x_pos,
+				  const uint32_t y_pos,
+				  int16_t data[6 * 64],
+				  int16_t qcoeff[6 * 64])
 {
 
 	uint32_t stride = pParam->edged_width;
@@ -180,85 +175,76 @@ uint8_t MBTransQuantInter(const MBParam *pParam,
 	uint8_t *pY_Cur, *pU_Cur, *pV_Cur;
 	uint8_t cbp = 0;
 	uint32_t sum;
-	IMAGE * pCurrent = &frame->image;
-    
+	IMAGE *pCurrent = &frame->image;
+
 	pY_Cur = pCurrent->y + (y_pos << 4) * stride + (x_pos << 4);
 	pU_Cur = pCurrent->u + (y_pos << 3) * stride2 + (x_pos << 3);
 	pV_Cur = pCurrent->v + (y_pos << 3) * stride2 + (x_pos << 3);
 
 	start_timer();
 	pMB->field_dct = 0;
-	if ((frame->global_flags & XVID_INTERLACING))
-	{
+	if ((frame->global_flags & XVID_INTERLACING)) {
 		pMB->field_dct = MBDecideFieldDCT(data);
 	}
 	stop_interlacing_timer();
 
-	for(i = 0; i < 6; i++)
-	{
+	for (i = 0; i < 6; i++) {
 		/* 
 		 *  no need to transfer 8->16-bit
 		 * (this is performed already in motion compensation) 
 		 */
 		start_timer();
-		fdct(&data[i*64]);
+		fdct(&data[i * 64]);
 		stop_dct_timer();
 
-		if (pParam->m_quant_type == 0)
-		{
+		if (pParam->m_quant_type == 0) {
 			start_timer();
-			sum = quant_inter(&qcoeff[i*64], &data[i*64], iQuant);
+			sum = quant_inter(&qcoeff[i * 64], &data[i * 64], iQuant);
 			stop_quant_timer();
-		}
-		else
-		{
+		} else {
 			start_timer();
-			sum = quant4_inter(&qcoeff[i*64], &data[i*64], iQuant);
+			sum = quant4_inter(&qcoeff[i * 64], &data[i * 64], iQuant);
 			stop_quant_timer();
 		}
 
-		if(sum >= TOOSMALL_LIMIT) { // skip block ?
+		if (sum >= TOOSMALL_LIMIT) {	// skip block ?
 
-			if (pParam->m_quant_type == H263_QUANT)
-			{
+			if (pParam->m_quant_type == H263_QUANT) {
 				start_timer();
-				dequant_inter(&data[i*64], &qcoeff[i*64], iQuant);
+				dequant_inter(&data[i * 64], &qcoeff[i * 64], iQuant);
 				stop_iquant_timer();
-			}
-			else
-			{
+			} else {
 				start_timer();
-				dequant4_inter(&data[i*64], &qcoeff[i*64], iQuant);
+				dequant4_inter(&data[i * 64], &qcoeff[i * 64], iQuant);
 				stop_iquant_timer();
 			}
 
 			cbp |= 1 << (5 - i);
 
 			start_timer();
-			idct(&data[i*64]);
+			idct(&data[i * 64]);
 			stop_idct_timer();
 		}
 	}
 
-	if (pMB->field_dct)
-	{
+	if (pMB->field_dct) {
 		next_block = stride;
 		stride *= 2;
 	}
 
 	start_timer();
 	if (cbp & 32)
-		transfer_16to8add(pY_Cur,                  &data[0*64], stride);
+		transfer_16to8add(pY_Cur, &data[0 * 64], stride);
 	if (cbp & 16)
-		transfer_16to8add(pY_Cur + 8,              &data[1*64], stride);
+		transfer_16to8add(pY_Cur + 8, &data[1 * 64], stride);
 	if (cbp & 8)
-		transfer_16to8add(pY_Cur + next_block,     &data[2*64], stride);
+		transfer_16to8add(pY_Cur + next_block, &data[2 * 64], stride);
 	if (cbp & 4)
-		transfer_16to8add(pY_Cur + next_block + 8, &data[3*64], stride);
+		transfer_16to8add(pY_Cur + next_block + 8, &data[3 * 64], stride);
 	if (cbp & 2)
-		transfer_16to8add(pU_Cur,                  &data[4*64], stride2);
+		transfer_16to8add(pU_Cur, &data[4 * 64], stride2);
 	if (cbp & 1)
-		transfer_16to8add(pV_Cur,                  &data[5*64], stride2);
+		transfer_16to8add(pV_Cur, &data[5 * 64], stride2);
 	stop_transfer_timer();
 
 	return cbp;
@@ -269,37 +255,44 @@ uint8_t MBTransQuantInter(const MBParam *pParam,
 /* if sum(diff between field lines) < sum(diff between frame lines), use field dct */
 
 
-uint32_t MBDecideFieldDCT(int16_t data[6*64])
+uint32_t
+MBDecideFieldDCT(int16_t data[6 * 64])
 {
 
-	const uint8_t blocks[] = {0*64, 0*64, 0*64, 0*64, 2*64, 2*64, 2*64, 2*64};
-	const uint8_t lines[]  = {0, 16, 32, 48, 0, 16, 32, 48};
+	const uint8_t blocks[] =
+		{ 0 * 64, 0 * 64, 0 * 64, 0 * 64, 2 * 64, 2 * 64, 2 * 64, 2 * 64 };
+	const uint8_t lines[] = { 0, 16, 32, 48, 0, 16, 32, 48 };
 
 	int frame = 0, field = 0;
 	int i, j;
 
-	for (i=0 ; i<7 ; ++i)
-	{
-		for (j=0 ; j<8 ; ++j)
-		{
-			frame += ABS(data[0*64 + (i+1)*8 + j] - data[0*64 + i*8 + j]);
-			frame += ABS(data[1*64 + (i+1)*8 + j] - data[1*64 + i*8 + j]);
-			frame += ABS(data[2*64 + (i+1)*8 + j] - data[2*64 + i*8 + j]);
-			frame += ABS(data[3*64 + (i+1)*8 + j] - data[3*64 + i*8 + j]);
+	for (i = 0; i < 7; ++i) {
+		for (j = 0; j < 8; ++j) {
+			frame +=
+				ABS(data[0 * 64 + (i + 1) * 8 + j] - data[0 * 64 + i * 8 + j]);
+			frame +=
+				ABS(data[1 * 64 + (i + 1) * 8 + j] - data[1 * 64 + i * 8 + j]);
+			frame +=
+				ABS(data[2 * 64 + (i + 1) * 8 + j] - data[2 * 64 + i * 8 + j]);
+			frame +=
+				ABS(data[3 * 64 + (i + 1) * 8 + j] - data[3 * 64 + i * 8 + j]);
 
-			field += ABS(data[blocks[i+1] + lines[i+1] + j] -\
-				     data[blocks[i  ] + lines[i  ] + j]);
-			field += ABS(data[blocks[i+1] + lines[i+1] + 8 + j] -\
-				     data[blocks[i  ] + lines[i  ] + 8 + j]);
-			field += ABS(data[blocks[i+1] + 64 + lines[i+1] + j] -\
-				     data[blocks[i  ] + 64 + lines[i  ] + j]);
-			field += ABS(data[blocks[i+1] + 64 + lines[i+1] + 8 + j] -\
-				     data[blocks[i  ] + 64 + lines[i  ] + 8 + j]);
+			field +=
+				ABS(data[blocks[i + 1] + lines[i + 1] + j] -
+					data[blocks[i] + lines[i] + j]);
+			field +=
+				ABS(data[blocks[i + 1] + lines[i + 1] + 8 + j] -
+					data[blocks[i] + lines[i] + 8 + j]);
+			field +=
+				ABS(data[blocks[i + 1] + 64 + lines[i + 1] + j] -
+					data[blocks[i] + 64 + lines[i] + j]);
+			field +=
+				ABS(data[blocks[i + 1] + 64 + lines[i + 1] + 8 + j] -
+					data[blocks[i] + 64 + lines[i] + 8 + j]);
 		}
 	}
 
-	if (frame > field)
-	{
+	if (frame > field) {
 		MBFrameToField(data);
 	}
 
@@ -312,63 +305,64 @@ uint32_t MBDecideFieldDCT(int16_t data[6*64])
 #define MOVLINE(X,Y) memcpy(X, Y, sizeof(tmp))
 #define LINE(X,Y)    &data[X*64 + Y*8]
 
-void MBFrameToField(int16_t data[6*64])
+void
+MBFrameToField(int16_t data[6 * 64])
 {
 	int16_t tmp[8];
 
 	/* left blocks */
 
 	// 1=2, 2=4, 4=8, 8=1
-	MOVLINE(tmp,		LINE(0,1));
-	MOVLINE(LINE(0,1),	LINE(0,2));
-	MOVLINE(LINE(0,2),	LINE(0,4));
-	MOVLINE(LINE(0,4),	LINE(2,0));
-	MOVLINE(LINE(2,0),	tmp);
+	MOVLINE(tmp, LINE(0, 1));
+	MOVLINE(LINE(0, 1), LINE(0, 2));
+	MOVLINE(LINE(0, 2), LINE(0, 4));
+	MOVLINE(LINE(0, 4), LINE(2, 0));
+	MOVLINE(LINE(2, 0), tmp);
 
 	// 3=6, 6=12, 12=9, 9=3
-	MOVLINE(tmp,		LINE(0,3));
-	MOVLINE(LINE(0,3),	LINE(0,6));
-	MOVLINE(LINE(0,6),	LINE(2,4));
-	MOVLINE(LINE(2,4),	LINE(2,1));
-	MOVLINE(LINE(2,1),	tmp);
+	MOVLINE(tmp, LINE(0, 3));
+	MOVLINE(LINE(0, 3), LINE(0, 6));
+	MOVLINE(LINE(0, 6), LINE(2, 4));
+	MOVLINE(LINE(2, 4), LINE(2, 1));
+	MOVLINE(LINE(2, 1), tmp);
 
 	// 5=10, 10=5
-	MOVLINE(tmp,		LINE(0,5));
-	MOVLINE(LINE(0,5),	LINE(2,2));
-	MOVLINE(LINE(2,2),	tmp);
+	MOVLINE(tmp, LINE(0, 5));
+	MOVLINE(LINE(0, 5), LINE(2, 2));
+	MOVLINE(LINE(2, 2), tmp);
 
 	// 7=14, 14=13, 13=11, 11=7
-	MOVLINE(tmp,		LINE(0,7));
-	MOVLINE(LINE(0,7),	LINE(2,6));
-	MOVLINE(LINE(2,6),	LINE(2,5));
-	MOVLINE(LINE(2,5),	LINE(2,3));
-	MOVLINE(LINE(2,3),	tmp);
+	MOVLINE(tmp, LINE(0, 7));
+	MOVLINE(LINE(0, 7), LINE(2, 6));
+	MOVLINE(LINE(2, 6), LINE(2, 5));
+	MOVLINE(LINE(2, 5), LINE(2, 3));
+	MOVLINE(LINE(2, 3), tmp);
 
 	/* right blocks */
 
 	// 1=2, 2=4, 4=8, 8=1
-	MOVLINE(tmp,		LINE(1,1));
-	MOVLINE(LINE(1,1),	LINE(1,2));
-	MOVLINE(LINE(1,2),	LINE(1,4));
-	MOVLINE(LINE(1,4),	LINE(3,0));
-	MOVLINE(LINE(3,0),	tmp);
+	MOVLINE(tmp, LINE(1, 1));
+	MOVLINE(LINE(1, 1), LINE(1, 2));
+	MOVLINE(LINE(1, 2), LINE(1, 4));
+	MOVLINE(LINE(1, 4), LINE(3, 0));
+	MOVLINE(LINE(3, 0), tmp);
 
 	// 3=6, 6=12, 12=9, 9=3
-	MOVLINE(tmp,		LINE(1,3));
-	MOVLINE(LINE(1,3),	LINE(1,6));
-	MOVLINE(LINE(1,6),	LINE(3,4));
-	MOVLINE(LINE(3,4),	LINE(3,1));
-	MOVLINE(LINE(3,1),	tmp);
+	MOVLINE(tmp, LINE(1, 3));
+	MOVLINE(LINE(1, 3), LINE(1, 6));
+	MOVLINE(LINE(1, 6), LINE(3, 4));
+	MOVLINE(LINE(3, 4), LINE(3, 1));
+	MOVLINE(LINE(3, 1), tmp);
 
 	// 5=10, 10=5
-	MOVLINE(tmp,		LINE(1,5));
-	MOVLINE(LINE(1,5),	LINE(3,2));
-	MOVLINE(LINE(3,2),	tmp);
+	MOVLINE(tmp, LINE(1, 5));
+	MOVLINE(LINE(1, 5), LINE(3, 2));
+	MOVLINE(LINE(3, 2), tmp);
 
 	// 7=14, 14=13, 13=11, 11=7
-	MOVLINE(tmp,		LINE(1,7));
-	MOVLINE(LINE(1,7),	LINE(3,6));
-	MOVLINE(LINE(3,6),	LINE(3,5));
-	MOVLINE(LINE(3,5),	LINE(3,3));
-	MOVLINE(LINE(3,3),	tmp);
+	MOVLINE(tmp, LINE(1, 7));
+	MOVLINE(LINE(1, 7), LINE(3, 6));
+	MOVLINE(LINE(3, 6), LINE(3, 5));
+	MOVLINE(LINE(3, 5), LINE(3, 3));
+	MOVLINE(LINE(3, 3), tmp);
 }
