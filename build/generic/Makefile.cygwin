@@ -4,7 +4,7 @@
 # 
 # Edit this file to enable/disable optimizations
 #
-# $Id: Makefile.cygwin,v 1.5 2002-09-22 10:31:18 edgomez Exp $
+# $Id: Makefile.cygwin,v 1.6 2002-09-24 22:27:32 edgomez Exp $
 # 
 #############################################################################
 
@@ -44,7 +44,7 @@ CFLAGS += -mno-cygwin
 # CFLAGS += -D_DEBUG_PSNR
 
 # Enable BFrame decoding (still beta)
-# CFLAGS += -DBRAMES_DEC
+# CFLAGS += -DBFRAMES_DEC
 
 LIBDIR = /usr/local/lib
 
