@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.66 2004-08-15 11:28:38 syskin Exp $
+ * $Id: decoder.c,v 1.67 2004-08-16 22:38:06 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -465,40 +465,40 @@ decoder_mb_decode(DECODER * dec,
 	}
 }
 
-static void
+static void __inline
 validate_vector(VECTOR * mv, unsigned int x_pos, unsigned int y_pos, const DECODER * dec)
 {
 	/* clip a vector to valid range 
 	   prevents crashes if bitstream is broken 
 	*/
-	int i;
+	int shift = 5 + dec->quarterpel;
+	int xborder_high = (int)(dec->mb_width - x_pos) << shift;
+	int xborder_low = (-(int)x_pos-1) << shift;
+	int yborder_high = (int)(dec->mb_height - y_pos) << shift;
+	int yborder_low = (-(int)y_pos-1) << shift;
 
-	for (i = 0; i < 4; i++) {
-		
-		int border = (int)(dec->mb_width - x_pos) << (5 + dec->quarterpel);
-		if (mv[i].x > border) {
-			DPRINTF(XVID_DEBUG_MV, "mv.x > max -- %d > %d, MB %d, %d", mv[i].x, border, x_pos, y_pos);
-			mv[i].x = border;
-		} else {
-			border = (-(int)x_pos-1) << (5 + dec->quarterpel);
-			if (mv[i].x < border) {
-				DPRINTF(XVID_DEBUG_MV, "mv.x < min -- %d < %d, MB %d, %d", mv[i].x, border, x_pos, y_pos);
-				mv[i].x = border;
-			}
-		}
+#define CHECK_MV(mv) \
+	do { \
+	if ((mv).x > xborder_high) { \
+		DPRINTF(XVID_DEBUG_MV, "mv.x > max -- %d > %d, MB %d, %d", (mv).x, xborder_high, x_pos, y_pos); \
+		(mv).x = xborder_high; \
+	} else if ((mv).x < xborder_low) { \
+		DPRINTF(XVID_DEBUG_MV, "mv.x < min -- %d < %d, MB %d, %d", (mv).x, xborder_low, x_pos, y_pos); \
+		(mv).x = xborder_low; \
+	} \
+	if ((mv).y > yborder_high) { \
+		DPRINTF(XVID_DEBUG_MV, "mv.y > max -- %d > %d, MB %d, %d", (mv).y, yborder_high, x_pos, y_pos); \
+		(mv).y = yborder_high; \
+	} else if ((mv).y < yborder_low) { \
+		DPRINTF(XVID_DEBUG_MV, "mv.y < min -- %d < %d, MB %d, %d", (mv).y, yborder_low, x_pos, y_pos); \
+		(mv).y = yborder_low; \
+	} \
+	} while (0)
 
-		border = (int)(dec->mb_height - y_pos) << (5 + dec->quarterpel);
-		if (mv[i].y >  border) {
-			DPRINTF(XVID_DEBUG_MV, "mv.y > max -- %d > %d, MB %d, %d", mv[i].y, border, x_pos, y_pos);
-			mv[i].y = border;
-		} else {
-			border = (-(int)y_pos-1) << (5 + dec->quarterpel);
-			if (mv[i].y < border) {
-				DPRINTF(XVID_DEBUG_MV, "mv.y < min -- %d < %d, MB %d, %d", mv[i].y, border, x_pos, y_pos);
-				mv[i].y = border;
-			}
-		}
-	}
+	CHECK_MV(mv[0]);
+	CHECK_MV(mv[1]);
+	CHECK_MV(mv[2]);
+	CHECK_MV(mv[3]);
 }
 
 /* decode an inter macroblock */
