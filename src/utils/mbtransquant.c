@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbtransquant.c,v 1.23 2004-03-22 22:36:24 edgomez Exp $
+ * $Id: mbtransquant.c,v 1.24 2004-04-15 19:44:06 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -183,7 +183,8 @@ dct_quantize_trellis_c(int16_t *const Out,
 					   int Q,
 					   const uint16_t * const Zigzag,
 					   const uint16_t * const QuantMatrix,
-					   int Non_Zero);
+					   int Non_Zero,
+					   int Sum);
 
 /* Quantize all blocks -- Inter mode */
 static __inline uint8_t
@@ -234,7 +235,8 @@ MBQuantInter(const MBParam * pParam,
 			sum = dct_quantize_trellis_c(&qcoeff[i*64], &data[i*64],
 										 pMB->quant, &scan_tables[0][0],
 										 matrix,
-										 63);
+										 63,
+										 sum);
 		}
 		stop_quant_timer();
 
@@ -781,17 +783,6 @@ Find_Last(const int16_t *C, const uint16_t *Zigzag, int i)
 	return -1;
 }
 
-static int __inline
-Compute_Sum(const int16_t *C, int last)
-{
-	int sum = 0;
-
-	while(last--)
-		sum += abs(C[last]);
-
-	return(sum);
-}
-
 /* this routine has been strippen of all debug code */
 static int
 dct_quantize_trellis_c(int16_t *const Out,
@@ -799,7 +790,8 @@ dct_quantize_trellis_c(int16_t *const Out,
 					   int Q,
 					   const uint16_t * const Zigzag,
 					   const uint16_t * const QuantMatrix,
-					   int Non_Zero)
+					   int Non_Zero,
+					   int Sum)
 {
 
 	/* Note: We should search last non-zero coeffs on *real* DCT input coeffs
@@ -822,7 +814,7 @@ dct_quantize_trellis_c(int16_t *const Out,
 	int Last_Node = -1;
 	uint32_t Last_Cost = 0;
 
-	int i, j, sum;
+	int i, j;
 
 	/* source (w/ CBP penalty) */
 	Run_Costs[-1] = 2<<TL_SHIFT;
@@ -1002,23 +994,23 @@ dct_quantize_trellis_c(int16_t *const Out,
 		}
 	}
 
-	/* It seems trellis doesn't give good results... just compute the Out sum
-	 * and quit */
+	/* It seems trellis doesn't give good results... just leave the block untouched
+	 * and return the original sum value */
 	if (Last_Node<0)
-		return Compute_Sum(Out, Non_Zero);
+		return Sum;
 
 	/* reconstruct optimal sequence backward with surviving paths */
 	memset(Out, 0x00, 64*sizeof(*Out));
 	Out[Zigzag[Last_Node]] = Last.Level;
 	i = Last_Node - Last.Run;
-	sum = 0;
+	Sum = 0;
 	while(i>=0) {
 		Out[Zigzag[i]] = Nodes[i].Level;
-		sum += abs(Nodes[i].Level);
+		Sum += abs(Nodes[i].Level);
 		i -= Nodes[i].Run;
 	}
 
-	return sum;
+	return Sum;
 }
 
 /* original version including heavy debugging info */

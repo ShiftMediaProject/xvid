@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_h263_mmx.asm,v 1.3 2004-04-12 15:49:56 edgomez Exp $
+; * $Id: quantize_h263_mmx.asm,v 1.4 2004-04-15 19:44:06 edgomez Exp $
 ; *
 ; ****************************************************************************/
 
@@ -132,15 +132,16 @@ quant_h263_intra_mmx:
   push esi
 
   mov esi, [esp + 4 + 8]     ; data
- 
+  mov ecx,[esp + 4 + 16]     ; dcscalar
   movsx eax, word [esi]      ; data[0]
- 
-  mov ecx,[esp + 4 + 16]         ; dcscalar
+   
+  sar ecx,1                  ; dcscalar /2
   mov edx,eax
-  sar ecx,1
-  add eax,ecx
-  sub edx,ecx
-  cmovl eax,edx             ; +/- dcscalar/2
+  sar edx,31                 ; sgn(data[0])
+  xor ecx,edx                ; *sgn(data[0])
+  sub eax,edx
+  add eax,ecx                ; + (dcscalar/2)*sgn(data[0])
+
   mov ecx, [esp + 4 + 12]    ; quant
   cdq 
   idiv dword [esp + 4 + 16]  ; dcscalar
@@ -624,16 +625,15 @@ dequant_h263_intra_mmx:
   
    ; deal with DC
   mov eax, [esp+ 8]                ; coeff
-  movsx eax,word [eax]
-  mov ecx,2047
-  imul dword [esp+16]              ; dcscalar
+  movd mm1,[esp+16]                ; dcscalar
+  movd mm0,[eax]                   ; coeff[0]
+  pmullw mm0,mm1                   ; * dcscalar
   mov edx, [esp+ 4]                ; data
-  cmp eax,ecx
-  cmovg eax,ecx
-  not ecx
-  cmp eax,ecx
-  cmovl eax,ecx
- 
+  paddsw mm0, mm5                  ; saturate +
+  psubsw mm0, mm5
+  psubsw mm0, mm5                  ; saturate -
+  paddsw mm0, mm5
+  movd eax,mm0
   mov [edx], ax
 
   xor eax, eax                    ; return 0
@@ -711,9 +711,10 @@ dequant_h263_intra_xmm:
   
    ; deal with DC
   mov eax, [esp+ 8]                 ; coeff
-  mov edx, [esp+ 4]                 ; data
+  movd mm1,[esp+16]                 ; dcscalar
   movd mm0, [eax]
-  pmullw mm0, [esp+16]              ; dcscalar
+  pmullw mm0, mm1            
+  mov edx, [esp+ 4]                 ; data
   pminsw mm0,mm4
   pmaxsw mm0,mm5
   movd eax, mm0
@@ -740,7 +741,7 @@ dequant_h263_intra_sse2:
   mov eax, [esp+ 8]                 ; coeff
  
   movd xmm6,ecx                     ; quant
-;  shr ecx,1
+
   shl ecx,31
   pshuflw xmm6,xmm6,0
   pcmpeqw xmm0,xmm0
@@ -798,8 +799,8 @@ dequant_h263_intra_sse2:
 
   mov eax, [esp+ 8]             ; coeff
   movsx eax,word [eax]
-  imul dword [esp+16]            ; dcscalar
-  mov edx, [esp+ 4]              ; data
+  imul dword [esp+16]           ; dcscalar
+  mov edx, [esp+ 4]             ; data
   movd xmm0,eax
   pminsw xmm0,xmm4
   pmaxsw xmm0,xmm5
@@ -807,7 +808,7 @@ dequant_h263_intra_sse2:
   
   mov [edx], ax
 
-  xor eax, eax              ; return 0
+  xor eax, eax                  ; return 0
   ret
 
 ;-----------------------------------------------------------------------------
