@@ -111,19 +111,6 @@
 #define N_VOP	4
 
 
-typedef struct
-{
-	uint32_t bufa;
-	uint32_t bufb;
-	uint32_t buf;
-	uint32_t pos;
-	uint32_t *tail;
-	uint32_t *start;
-	uint32_t length;
-} 
-Bitstream;
-
-
 // header stuff
 int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding,
 						 uint32_t * quant, uint32_t * fcode, uint32_t * intra_dc_threshold);

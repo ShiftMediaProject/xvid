@@ -211,6 +211,7 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 
 	pEnc->mbParam.global_flags = pFrame->general;
 	pEnc->mbParam.motion_flags = pFrame->motion;
+	pEnc->mbParam.hint = &pFrame->hint;
 
 	start_timer();
 	if (image_input(&pEnc->sCurrent, pEnc->mbParam.width, pEnc->mbParam.height, pEnc->mbParam.edged_width,
@@ -402,6 +403,207 @@ static int FrameCodeI(Encoder * pEnc, Bitstream * bs, uint32_t *pBits)
 }
 
 
+#define FCODEBITS	3
+#define MODEBITS	5
+
+void HintedMESet(Encoder * pEnc, int * intra)
+{
+	HINTINFO * hint;
+	Bitstream bs;
+	int length, high;
+	uint32_t x, y;
+
+	hint = pEnc->mbParam.hint;
+
+	if (hint->rawhints)
+	{
+		*intra = hint->mvhint.intra;
+	}
+	else
+	{
+		BitstreamInit(&bs, hint->hintstream, hint->hintlength);
+		*intra = BitstreamGetBit(&bs);
+	}
+
+	if (*intra)
+	{
+		return;
+	}
+
+	pEnc->mbParam.fixed_code = (hint->rawhints) ? hint->mvhint.fcode : BitstreamGetBits(&bs, FCODEBITS);
+
+	length	= pEnc->mbParam.fixed_code + 5;
+	high	= 1 << (length - 1);
+
+	for (y=0 ; y<pEnc->mbParam.mb_height ; ++y)
+	{
+		for (x=0 ; x<pEnc->mbParam.mb_width ; ++x)
+		{
+			MACROBLOCK * pMB = &pEnc->pMBs[x + y * pEnc->mbParam.mb_width];
+			MVBLOCKHINT * bhint = &hint->mvhint.block[x + y * pEnc->mbParam.mb_width];
+			VECTOR pred[4];
+			VECTOR tmp;
+			int dummy[4];
+			int vec;
+
+			pMB->mode = (hint->rawhints) ? bhint->mode : BitstreamGetBits(&bs, MODEBITS);
+
+			if (pMB->mode == MODE_INTER || pMB->mode == MODE_INTER_Q)
+			{
+				tmp.x  = (hint->rawhints) ? bhint->mvs[0].x : BitstreamGetBits(&bs, length);
+				tmp.y  = (hint->rawhints) ? bhint->mvs[0].y : BitstreamGetBits(&bs, length);
+				tmp.x -= (tmp.x >= high) ? high*2 : 0;
+				tmp.y -= (tmp.y >= high) ? high*2 : 0;
+
+				get_pmvdata(pEnc->pMBs, x, y, pEnc->mbParam.mb_width, 0, pred, dummy);
+
+				for (vec=0 ; vec<4 ; ++vec)
+				{
+					pMB->mvs[vec].x  = tmp.x;
+					pMB->mvs[vec].y  = tmp.y;
+					pMB->pmvs[vec].x = pMB->mvs[0].x - pred[0].x;
+					pMB->pmvs[vec].y = pMB->mvs[0].y - pred[0].y;
+				}
+			}
+			else if (pMB->mode == MODE_INTER4V)
+			{
+				for (vec=0 ; vec<4 ; ++vec)
+				{
+					tmp.x  = (hint->rawhints) ? bhint->mvs[vec].x : BitstreamGetBits(&bs, length);
+					tmp.y  = (hint->rawhints) ? bhint->mvs[vec].y : BitstreamGetBits(&bs, length);
+					tmp.x -= (tmp.x >= high) ? high*2 : 0;
+					tmp.y -= (tmp.y >= high) ? high*2 : 0;
+
+					get_pmvdata(pEnc->pMBs, x, y, pEnc->mbParam.mb_width, vec, pred, dummy);
+
+					pMB->mvs[vec].x  = tmp.x;
+					pMB->mvs[vec].y  = tmp.y;
+					pMB->pmvs[vec].x = pMB->mvs[vec].x - pred[0].x;
+					pMB->pmvs[vec].y = pMB->mvs[vec].y - pred[0].y;
+				}
+			}
+			else	// intra / intra_q / stuffing / not_coded
+			{
+				for (vec=0 ; vec<4 ; ++vec)
+				{
+					pMB->mvs[vec].x  = pMB->mvs[vec].y  = 0;
+				}
+			}
+		}
+	}
+}
+
+
+void HintedMEGet(Encoder * pEnc, int intra)
+{
+	HINTINFO * hint;
+	Bitstream bs;
+	uint32_t x, y;
+	int length, high;
+
+	hint = pEnc->mbParam.hint;
+
+	if (hint->rawhints)
+	{
+		hint->mvhint.intra = intra;
+	}
+	else
+	{
+		BitstreamInit(&bs, hint->hintstream, 0);
+		BitstreamPutBit(&bs, intra);
+	}
+
+	if (intra)
+	{
+		if (!hint->rawhints)
+		{
+			BitstreamPad(&bs);
+			hint->hintlength = BitstreamLength(&bs);
+		}
+		return;
+	}
+
+	length	= pEnc->mbParam.fixed_code + 5;
+	high	= 1 << (length - 1);
+
+	if (hint->rawhints)
+	{
+		hint->mvhint.fcode = pEnc->mbParam.fixed_code;
+	}
+	else
+	{
+		BitstreamPutBits(&bs, pEnc->mbParam.fixed_code, FCODEBITS);
+	}
+
+	for (y=0 ; y<pEnc->mbParam.mb_height ; ++y)
+	{
+		for (x=0 ; x<pEnc->mbParam.mb_width ; ++x)
+		{
+			MACROBLOCK * pMB = &pEnc->pMBs[x + y * pEnc->mbParam.mb_width];
+			MVBLOCKHINT * bhint = &hint->mvhint.block[x + y * pEnc->mbParam.mb_width];
+			VECTOR tmp;
+
+			if (hint->rawhints)
+			{
+				bhint->mode = pMB->mode;
+			}
+			else
+			{
+				BitstreamPutBits(&bs, pMB->mode, MODEBITS);
+			}
+
+			if (pMB->mode == MODE_INTER || pMB->mode == MODE_INTER_Q)
+			{
+				tmp.x  = pMB->mvs[0].x;
+				tmp.y  = pMB->mvs[0].y;
+				tmp.x += (tmp.x < 0) ? high*2 : 0;
+				tmp.y += (tmp.y < 0) ? high*2 : 0;
+
+				if (hint->rawhints)
+				{
+					bhint->mvs[0].x = tmp.x;
+					bhint->mvs[0].y = tmp.y;
+				}
+				else
+				{
+					BitstreamPutBits(&bs, tmp.x, length);
+					BitstreamPutBits(&bs, tmp.y, length);
+				}
+			}
+			else if (pMB->mode == MODE_INTER4V)
+			{
+				int vec;
+
+				for (vec=0 ; vec<4 ; ++vec)
+				{
+					tmp.x  = pMB->mvs[vec].x;
+					tmp.y  = pMB->mvs[vec].y;
+					tmp.x += (tmp.x < 0) ? high*2 : 0;
+					tmp.y += (tmp.y < 0) ? high*2 : 0;
+
+					if (hint->rawhints)
+					{
+						bhint->mvs[vec].x = tmp.x;
+						bhint->mvs[vec].y = tmp.y;
+					}
+					else
+					{
+						BitstreamPutBits(&bs, tmp.x, length);
+						BitstreamPutBits(&bs, tmp.y, length);
+					}
+				}
+			}
+		}
+	}
+
+	if (!hint->rawhints)
+	{
+		BitstreamPad(&bs);
+		hint->hintlength = BitstreamLength(&bs);
+	}
+}
+
+
 #define INTRA_THRESHOLD 0.5
 
 static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool force_inter, bool vol_header)
@@ -444,13 +646,26 @@ static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool forc
 	}
 
 	start_timer();
-	bIntra = MotionEstimation(pEnc->pMBs, &pEnc->mbParam, &pEnc->sReference,
-				  &pEnc->vInterH, &pEnc->vInterV,
-				  &pEnc->vInterHV, &pEnc->sCurrent, iLimit);
+	if (pEnc->mbParam.global_flags & XVID_HINTEDME_SET)
+	{
+		HintedMESet(pEnc, &bIntra);
+	}
+	else
+	{
+		bIntra = MotionEstimation(pEnc->pMBs, &pEnc->mbParam, &pEnc->sReference,
+					  &pEnc->vInterH, &pEnc->vInterV,
+					  &pEnc->vInterHV, &pEnc->sCurrent, iLimit);
+	}
 	stop_motion_timer();
 
 	if (bIntra == 1)
+	{
+		if (pEnc->mbParam.global_flags & XVID_HINTEDME_GET)
+		{
+			HintedMEGet(pEnc, 1);
+		}
 		return FrameCodeI(pEnc, bs, pBits);
+	}
 
 	pEnc->mbParam.coding_type = P_VOP;
 
@@ -539,6 +754,11 @@ static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool forc
 	}
 
 	emms();
+
+	if (pEnc->mbParam.global_flags & XVID_HINTEDME_GET)
+	{
+		HintedMEGet(pEnc, 0);
+	}
 
 	if (pEnc->sStat.iMvCount == 0)
 		pEnc->sStat.iMvCount = 1;
