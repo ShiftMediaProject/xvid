@@ -37,7 +37,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.50 2002-06-28 15:14:40 suxen_drol Exp $
+ *  $Id: encoder.c,v 1.51 2002-06-30 10:46:29 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -625,11 +625,11 @@ void queue_image(Encoder * pEnc, XVID_ENC_FRAME * pFrame)
 {
 	if (pEnc->queue_size >= pEnc->mbParam.max_bframes)
 	{
-		DPRINTF("FATAL: QUEUE FULL");
+		DPRINTF(DPRINTF_DEBUG,"FATAL: QUEUE FULL");
 		return;
 	}
 
-	DPRINTF("*** QUEUE bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
+	DPRINTF(DPRINTF_DEBUG,"*** QUEUE bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
 				pEnc->bframenum_head, pEnc->bframenum_tail,
 				pEnc->queue_head, pEnc->queue_tail, pEnc->queue_size);
 
@@ -697,7 +697,7 @@ ipvop_loop:
 			 * frame as a pframe
 			 */
 
-			DPRINTF("*** BFRAME (final frame) bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
+			DPRINTF(DPRINTF_DEBUG,"*** BFRAME (final frame) bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
 				pEnc->bframenum_head, pEnc->bframenum_tail,
 				pEnc->queue_head, pEnc->queue_tail, pEnc->queue_size);
 
@@ -716,7 +716,7 @@ ipvop_loop:
 		}
 
 		
-		DPRINTF("*** BFRAME (flush) bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
+		DPRINTF(DPRINTF_DEBUG,"*** BFRAME (flush) bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
 				pEnc->bframenum_head, pEnc->bframenum_tail,
 				pEnc->queue_head, pEnc->queue_tail, pEnc->queue_size);
 
@@ -738,7 +738,7 @@ ipvop_loop:
 
 		if ((pEnc->global & XVID_GLOBAL_PACKED)) {
 			
-			DPRINTF("*** EMPTY bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
+			DPRINTF(DPRINTF_DEBUG,"*** EMPTY bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
 				pEnc->bframenum_head, pEnc->bframenum_tail,
 				pEnc->queue_head, pEnc->queue_tail, pEnc->queue_size);
 
@@ -808,7 +808,7 @@ bvop_loop:
 
 	} else if (BitstreamPos(&bs) == 0) {
 
-		DPRINTF("*** SKIP bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
+		DPRINTF(DPRINTF_DEBUG,"*** SKIP bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
 				pEnc->bframenum_head, pEnc->bframenum_tail,
 				pEnc->queue_head, pEnc->queue_tail, pEnc->queue_size);
 
@@ -924,7 +924,7 @@ bvop_loop:
 		 * This will be coded as an Intra Frame
 		 */
 
-		DPRINTF("*** IFRAME bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
+		DPRINTF(DPRINTF_DEBUG,"*** IFRAME bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
 				pEnc->bframenum_head, pEnc->bframenum_tail,
 				pEnc->queue_head, pEnc->queue_tail, pEnc->queue_size);
 		
@@ -972,7 +972,7 @@ bvop_loop:
 		 * This will be coded as a Predicted Frame
 		 */
 
-		DPRINTF("*** PFRAME bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
+		DPRINTF(DPRINTF_DEBUG,"*** PFRAME bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
 				pEnc->bframenum_head, pEnc->bframenum_tail,
 				pEnc->queue_head, pEnc->queue_tail, pEnc->queue_size);
 		
@@ -995,7 +995,7 @@ bvop_loop:
 		 * This will be coded as a Bidirectional Frame
 		 */
 
-		DPRINTF("*** BFRAME (store) bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
+		DPRINTF(DPRINTF_DEBUG,"*** BFRAME (store) bf: head=%i tail=%i   queue: head=%i tail=%i size=%i",
 				pEnc->bframenum_head, pEnc->bframenum_tail,
 				pEnc->queue_head, pEnc->queue_tail, pEnc->queue_size);
 
@@ -1335,7 +1335,7 @@ HintedMESet(Encoder * pEnc,
 				tmp.y -= (tmp.y >= high) ? high * 2 : 0;
 
 				get_pmvdata(pEnc->current->mbs, x, y, pEnc->mbParam.mb_width,
-							0, pred, dummy, 0, 0);
+							0, pred, dummy);
 
 				for (vec = 0; vec < 4; ++vec) {
 					pMB->mvs[vec].x = tmp.x;
@@ -1355,7 +1355,7 @@ HintedMESet(Encoder * pEnc,
 					tmp.y -= (tmp.y >= high) ? high * 2 : 0;
 
 					get_pmvdata(pEnc->current->mbs, x, y,
-								pEnc->mbParam.mb_width, vec, pred, dummy, 0, 0);
+								pEnc->mbParam.mb_width, vec, pred, dummy);
 
 					pMB->mvs[vec].x = tmp.x;
 					pMB->mvs[vec].y = tmp.y;

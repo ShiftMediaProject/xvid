@@ -92,12 +92,10 @@ predict_acdc(MACROBLOCK * pMBs,
 			 uint32_t current_quant,
 			 int32_t iDcScaler,
 			 int16_t predictors[8],
-			const unsigned int bound_x,
-			const unsigned int bound_y)
+			const int bound)
 
 {
-	const unsigned bound = (bound_y * mb_width) + bound_x;
-	const unsigned mbpos = (y * mb_width) + x;
+	const int mbpos = (y * mb_width) + x;
 	int16_t *left, *top, *diag, *current;
 
 	int32_t left_quant = current_quant;
@@ -127,7 +125,7 @@ predict_acdc(MACROBLOCK * pMBs,
 	}
 	// top macroblock
 
-	if (mbpos >= bound + mb_width &&
+	if (mbpos >= bound + (int)mb_width &&
 		(pMBs[index - mb_width].mode == MODE_INTRA ||
 		 pMBs[index - mb_width].mode == MODE_INTRA_Q)) {
 
@@ -136,7 +134,7 @@ predict_acdc(MACROBLOCK * pMBs,
 	}
 	// diag macroblock 
 
-	if (x && mbpos >= bound + mb_width + 1 &&
+	if (x && mbpos >= bound + (int)mb_width + 1 &&
 		(pMBs[index - 1 - mb_width].mode == MODE_INTRA ||
 		 pMBs[index - 1 - mb_width].mode == MODE_INTRA_Q)) {
 
@@ -247,12 +245,16 @@ add_acdc(MACROBLOCK * pMB,
 	int16_t *pCurrent = pMB->pred_values[block];
 	uint32_t i;
 
+	DPRINTF(DPRINTF_COEFF,"predictor[0] %i", predictors[0]);
+
 	dct_codes[0] += predictors[0];	// dc prediction
 	pCurrent[0] = dct_codes[0] * iDcScaler;
 
 	if (acpred_direction == 1) {
 		for (i = 1; i < 8; i++) {
 			int level = dct_codes[i] + predictors[i];
+
+			DPRINTF(DPRINTF_COEFF,"predictor[%i] %i",i, predictors[i]);
 
 			dct_codes[i] = level;
 			pCurrent[i] = level;
@@ -261,6 +263,7 @@ add_acdc(MACROBLOCK * pMB,
 	} else if (acpred_direction == 2) {
 		for (i = 1; i < 8; i++) {
 			int level = dct_codes[i * 8] + predictors[i];
+			DPRINTF(DPRINTF_COEFF,"predictor[%i] %i",i*8, predictors[i]);
 
 			dct_codes[i * 8] = level;
 			pCurrent[i + 7] = level;
@@ -385,7 +388,7 @@ MBPrediction(FRAMEINFO * frame,
 			iDcScaler = get_dc_scaler(iQuant, (j < 4) ? 1 : 0);
 
 			predict_acdc(frame->mbs, x, y, mb_width, j, &qcoeff[j * 64],
-						 iQuant, iDcScaler, predictors[j], 0, 0);
+						 iQuant, iDcScaler, predictors[j], 0);
 
 			S += calc_acdc(pMB, j, &qcoeff[j * 64], iDcScaler, predictors[j]);
 
@@ -404,4 +407,183 @@ MBPrediction(FRAMEINFO * frame,
 		pMB->cbp = calc_cbp(qcoeff);
 	}
 
+}
+
+
+
+
+/*
+  get_pmvdata2: get_pmvdata with bounding
+*/
+#define OFFSET(x,y,stride)   ((x)+((y)*(stride)))
+
+int
+get_pmvdata2(const MACROBLOCK * const pMBs,
+			const uint32_t x,
+			const uint32_t y,
+			const uint32_t x_dim,
+			const uint32_t block,
+			VECTOR * const pmv,
+			int32_t * const psad,
+			const int bound)
+{
+	const int mbpos = OFFSET(x, y ,x_dim);
+
+	/*
+	 * pmv are filled with: 
+	 *  [0]: Median (or whatever is correct in a special case)
+	 *  [1]: left neighbour
+	 *  [2]: top neighbour
+	 *  [3]: topright neighbour
+	 * psad are filled with:
+	 *  [0]: minimum of [1] to [3]
+	 *  [1]: left neighbour's SAD (NB:[1] to [3] are actually not needed)  
+	 *  [2]: top neighbour's SAD
+	 *  [3]: topright neighbour's SAD
+	 */
+
+	int xin1, xin2, xin3;
+	int yin1, yin2, yin3;
+	int vec1, vec2, vec3;
+
+	int pos1, pos2, pos3;
+	int num_cand = 0;		// number of candidates
+	int last_cand;			// last candidate
+
+	uint32_t index = x + y * x_dim;
+	const VECTOR zeroMV = { 0, 0 };
+
+	/*
+	 * MODE_INTER, vm18 page 48
+	 * MODE_INTER4V vm18 page 51
+	 *
+	 *  (x,y-1)      (x+1,y-1)
+	 *  [   |   ]    [   |   ]
+	 *  [ 2 | 3 ]    [ 2 |   ]
+	 *
+	 *  (x-1,y)      (x,y)        (x+1,y)
+	 *  [   | 1 ]    [ 0 | 1 ]    [ 0 |   ]
+	 *  [   | 3 ]    [ 2 | 3 ]    [   |   ]
+	 */
+
+	switch (block) {
+	case 0:
+		xin1 = x - 1;
+		yin1 = y;
+		vec1 = 1;				/* left */
+		xin2 = x;
+		yin2 = y - 1;
+		vec2 = 2;				/* top */
+		xin3 = x + 1;
+		yin3 = y - 1;
+		vec3 = 2;				/* top right */
+		break;
+	case 1:
+		xin1 = x;
+		yin1 = y;
+		vec1 = 0;
+		xin2 = x;
+		yin2 = y - 1;
+		vec2 = 3;
+		xin3 = x + 1;
+		yin3 = y - 1;
+		vec3 = 2;
+		break;
+	case 2:
+		xin1 = x - 1;
+		yin1 = y;
+		vec1 = 3;
+		xin2 = x;
+		yin2 = y;
+		vec2 = 0;
+		xin3 = x;
+		yin3 = y;
+		vec3 = 1;
+		break;
+	default:
+		xin1 = x;
+		yin1 = y;
+		vec1 = 2;
+		xin2 = x;
+		yin2 = y;
+		vec2 = 0;
+		xin3 = x;
+		yin3 = y;
+		vec3 = 1;
+	}
+
+	pos1 = OFFSET(xin1, yin1, x_dim);
+	pos2 = OFFSET(xin2, yin2, x_dim);
+	pos3 = OFFSET(xin3, yin3, x_dim);
+
+	// left
+	if (xin1 < 0 || pos1 < bound) {
+		pmv[1] = zeroMV;
+		psad[1] = MV_MAX_ERROR;
+	} else {
+		pmv[1] = pMBs[xin1 + yin1 * x_dim].mvs[vec1];
+		psad[1] = pMBs[xin1 + yin1 * x_dim].sad8[vec1];
+		num_cand++;
+		last_cand = 1;
+	}
+
+	// top
+	if (yin2 < 0 || pos2 < bound) {
+		pmv[2] = zeroMV;
+		psad[2] = MV_MAX_ERROR;
+	} else {
+		pmv[2] = pMBs[xin2 + yin2 * x_dim].mvs[vec2];
+		psad[2] = pMBs[xin2 + yin2 * x_dim].sad8[vec2];
+		num_cand++;
+		last_cand = 2;
+	}
+
+
+	// top right
+	if (yin3 < 0 || pos3 < bound || xin3 >= (int)x_dim) {
+		pmv[3] = zeroMV;
+		psad[3] = MV_MAX_ERROR;
+		//DPRINTF(DPRINTF_MV, "top-right");
+	} else {
+		pmv[3] = pMBs[xin3 + yin3 * x_dim].mvs[vec3];
+		psad[3] = pMBs[xin2 + yin2 * x_dim].sad8[vec3];
+		num_cand++;
+		last_cand = 3;
+	}
+
+	if (num_cand == 1)
+	{
+		/* DPRINTF(DPRINTF_MV,"cand0=(%i,%i), cand1=(%i,%i) cand2=(%i,%i) last=%i",
+			pmv[1].x, pmv[1].y,
+			pmv[2].x, pmv[2].y,
+			pmv[3].x, pmv[3].y, last_cand - 1);
+		*/
+
+		pmv[0] = pmv[last_cand];
+		psad[0] = psad[last_cand];
+		return 0;
+	}
+
+	/* DPRINTF(DPRINTF_MV,"cand0=(%i,%i), cand1=(%i,%i) cand2=(%i,%i)",
+		pmv[1].x, pmv[1].y,
+		pmv[2].x, pmv[2].y,
+		pmv[3].x, pmv[3].y);*/
+
+	if ((MVequal(pmv[1], pmv[2])) && (MVequal(pmv[1], pmv[3]))) {
+		pmv[0] = pmv[1];
+		psad[0] = MIN(MIN(psad[1], psad[2]), psad[3]);
+		return 1;
+	}
+
+	/* median,minimum */
+
+	pmv[0].x =
+		MIN(MAX(pmv[1].x, pmv[2].x),
+			MIN(MAX(pmv[2].x, pmv[3].x), MAX(pmv[1].x, pmv[3].x)));
+	pmv[0].y =
+		MIN(MAX(pmv[1].y, pmv[2].y),
+			MIN(MAX(pmv[2].y, pmv[3].y), MAX(pmv[1].y, pmv[3].y)));
+	psad[0] = MIN(MIN(psad[1], psad[2]), psad[3]);
+
+	return 0;
 }

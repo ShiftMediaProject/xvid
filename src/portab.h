@@ -1,24 +1,44 @@
 #ifndef _PORTAB_H_
 #define _PORTAB_H_
 
+
+// debug level masks
+#define DPRINTF_ERROR		0x00000001
+#define DPRINTF_STARTCODE	0x00000002
+#define DPRINTF_HEADER		0x00000004
+#define DPRINTF_TIMECODE	0x00000008
+#define DPRINTF_MB			0x00000010
+#define DPRINTF_COEFF		0x00000020
+#define DPRINTF_MV			0x00000040
+#define DPRINTF_DEBUG		0x80000000
+
+// debug level
+#define DPRINTF_LEVEL		0
+
+
+#define DPRINTF_BUF_SZ  1024
+
+
 #if defined(WIN32)
 
 #include <windows.h>
 #include <stdio.h>
 
-
-#define DPRINTF_BUF_SZ  1024
-static void
-DPRINTF(char *fmt,
+static __inline void
+DPRINTF(int level, char *fmt,
 		...)
 {
-	va_list args;
-	char buf[DPRINTF_BUF_SZ];
+	if ((DPRINTF_LEVEL & level))
+	{
+		va_list args;
+		char buf[DPRINTF_BUF_SZ];
 
-	va_start(args, fmt);
-	vsprintf(buf, fmt, args);
-	OutputDebugString(buf);
-	fprintf(stdout, "%s\n", buf);
+		va_start(args, fmt);
+		vsprintf(buf, fmt, args);
+		OutputDebugString(buf);
+		fprintf(stdout, "%s\n", buf);
+		fflush(stdout);
+	}
 }
 
 
@@ -89,17 +109,19 @@ read_counter()
 
 #include <stdio.h>
 #include <stdarg.h>
-#define DPRINTF_BUF_SZ  1024
-static void
-DPRINTF(char *fmt,
+
+static __inline void
+DPRINTF(int level, char *fmt,
 		...)
 {
-	va_list args;
-	char buf[DPRINTF_BUF_SZ];
+	if ((DPRINTF_LEVEL & level)) {
+		va_list args;
+		char buf[DPRINTF_BUF_SZ];
 
-	va_start(args, fmt);
-	vsprintf(buf, fmt, args);
-	fprintf(stdout, "%s\n", buf);
+		va_start(args, fmt);
+		vsprintf(buf, fmt, args);
+		fprintf(stdout, "%s\n", buf);
+	}
 }
 
 #ifdef _DEBUG
@@ -233,17 +255,19 @@ read_counter()
 
 #include <stdio.h>
 #include <stdarg.h>
-#define DPRINTF_BUF_SZ  1024
-static void
-DPRINTF(char *fmt,
-		...)
-{
-	va_list args;
-	char buf[DPRINTF_BUF_SZ];
 
-	va_start(args, fmt);
-	vsprintf(buf, fmt, args);
-	fprintf(stdout, "%s\n", buf);
+static __inline void
+DPRINTF(int level, char *fmt, ...)
+{
+	if ((DPRINTF_LEVEL & level)) {
+
+		va_list args;
+		char buf[DPRINTF_BUF_SZ];
+
+		va_start(args, fmt);
+		vsprintf(buf, fmt, args);
+		fprintf(stdout, "%s\n", buf);
+	}
 }
 
 

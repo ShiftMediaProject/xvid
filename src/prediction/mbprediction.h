@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the xvid_free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: mbprediction.h,v 1.10 2002-06-28 15:14:40 suxen_drol Exp $
+ *  $Id: mbprediction.h,v 1.11 2002-06-30 10:46:29 suxen_drol Exp $
  *
  *************************************************************************/
 
@@ -80,8 +80,7 @@ void predict_acdc(MACROBLOCK * pMBs,
 				  uint32_t current_quant,
 				  int32_t iDcScaler,
 				  int16_t predictors[8],
-				const unsigned int bound_x,
-				const unsigned int bound_y);
+				const int bound);
 
 
 /* get_pmvdata returns the median predictor and nothing else */
@@ -208,6 +207,18 @@ get_pmv(const MACROBLOCK * const pMBs,
 }
 
 
+
+int
+get_pmvdata2(const MACROBLOCK * const pMBs,
+			const uint32_t x,
+			const uint32_t y,
+			const uint32_t x_dim,
+			const uint32_t block,
+			VECTOR * const pmv,
+			int32_t * const psad,
+			const int bound);
+
+
 /* This is somehow a copy of get_pmv, but returning all MVs and Minimum SAD 
    instead of only Median MV */
 
@@ -218,9 +229,7 @@ get_pmvdata(const MACROBLOCK * const pMBs,
 			const uint32_t x_dim,
 			const uint32_t block,
 			VECTOR * const pmv,
-			int32_t * const psad,
-			const unsigned int bound_x,
-			const unsigned int bound_y)
+			int32_t * const psad)
 {
 
 	/*
@@ -244,12 +253,8 @@ get_pmvdata(const MACROBLOCK * const pMBs,
 	const VECTOR zeroMV = { 0, 0 };
 
 	// first row of blocks (special case)
-	/* if (y == 0 && (block == 0 || block == 1)) { */
-	if (((y == bound_y && x >= bound_x) || (y == bound_y + 1 && x < bound_x))
-		&& (block == 0 || block == 1)) {
-
-		/* if ((x == 0) && (block == 0)) */	// first column, first block
-		if ((x == 0 || (y == bound_y && x == bound_x)) && (block == 0))	// first column, first block
+	if (y == 0 && (block == 0 || block == 1)) {
+		if ((x == 0) && (block == 0)) 	// first column, first block
 		{
 			pmv[0] = pmv[1] = pmv[2] = pmv[3] = zeroMV;
 			psad[0] = 0;
