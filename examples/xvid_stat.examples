@@ -1,0 +1,94 @@
+EXAMPLES for usage of xvid_stat:
+
+**********************************************************************************
+
+EXAMPLE 1                         
+
+$ xvid_stat < cactus.pgm
+
+This calls xvid_stat with standard parameters for the 3 frames from the 
+cactus file from examples directory.
+
+Output should look similar to this: 
+
+Frame     0: intra 1, enctime =   4.7 ms length=  12470 bytes dectime =   4.2 ms PSNR 39.93
+Frame     1: intra 0, enctime =   6.9 ms length=   1369 bytes dectime =   1.8 ms PSNR 40.40
+Frame     2: intra 0, enctime =   6.6 ms length=   3354 bytes dectime =   2.3 ms PSNR 42.03
+Avg. Q6 br 0900 (0.43 bpp) size   5731 (1146 kbps / 0.54 bpp) enc:  164.7 fps, dec:  362.0 fps
+PSNR P(2): 41.22 ( 40.40 , 42.03 ; 0.4698 ) I(1): 39.93 ( 39.93 , 39.93 ; 0.0000 )
+
+
+The lines in detail: 
+For every input frame one line is printed containing the data:
+
+Frame            the frame number, starting with 0
+intra            if the frame was encoded as I-frame (1) or P-frame (0), 
+                 when B-frames are supported, they will get a value of 2 here.
+
+enctime          time for encoding this frame, in milliseconds (1/1000th of a second)
+length           length of the MPEG-4 bitstream generated from this frame (in bytes)
+dectime          time for decoding 
+PSNR             picture signal to noice ratio (a measurement of quality, higher is better)
+
+then in the end, two status lines are printed, these can be used, e.g. for automatic
+quality tests:
+
+Avg.             indicated that we are now talking about average values
+Q6               quality parameter that was used (so here it was quality level 6)
+br 0900          bitrate mode was used with a bitrate of 900kbps the other possibility is "q"
+                 instead of "br", see another example
+size 5731        average size of an encoded frame
+1146 kbps        "real" bitrate that was achieved, it may differ from the bitrate given to the
+                 codec as a parameter, because this is real life
+0.54 bpp         number of bit per pixel for the encoding, useful when comparing videos of 
+                 different size 
+enc: 164.7 fps   speed of encoding in frames per second
+dec: 362.0 fps   speed of decoding in frames per second
+
+******************************************************************************************
+
+EXAMPLE 2 
+
+$ xvid_stat 0 0 6 900 25  < cactus.pgm 
+
+This does exactly the same as above, but parameters   
+quality = 6, 
+bitrate = 900 
+framerate = 25 
+are provided instead of using default value. Output should be the same as in last example.
+Note that first and second parameter are 0, indicating that a PGM file should be read
+(which has a header that includes X and Y dimensions).
+
+******************************************************************************************
+
+$ xvid_stat 0 0 1 8  < cactus.pgm 
+
+Output: 
+
+Frame     0: intra 1, enctime =   4.1 ms length=   8420 bytes dectime =   3.4 ms PSNR 36.36
+Frame     1: intra 0, enctime =   3.0 ms length=    659 bytes dectime =   1.5 ms PSNR 36.36
+Frame     2: intra 0, enctime =   2.7 ms length=    595 bytes dectime =   1.5 ms PSNR 36.43
+Avg. Q1  q 0008 (0.00 bpp) size   3224 ( 644 kbps / 0.31 bpp)enc:  304.3 fps, dec:  467.1 fps
+PSNR P(2): 36.40 ( 36.36 , 36.43 ; 0.0210 ) I(1): 36.36 ( 36.36 , 36.36 ; 0.0000 )
+
+This time, quality 1 is used, so output values are a little different. Since the fourth parameter
+(here 8) is smaller than 32, it is not considered as a bitrate value, but as a fixed quantizer. 
+So in the "Avg." line there is a 
+
+q 0008   meaning "fixed quantizer mode" with quantizer 8. 
+
+
+******************************************************************************************
+
+$ xvid_stat 176 144 5 112  < foreman.qcif  
+
+This switches xvid_stat to RAW instead of PGM mode. The input is expected to be 
+images of dimensions 176*144 in raw YUV 4:2:0 format. (So every image is exactly
+38016 = 176*144 + 88*72 + 88*72  bytes in size). Some reference streams are in
+this format. Note that you MUST give correct dimensions, because they cannot be
+detected from the YUV material.  
+Apart from this, the example uses quality 5 and a bitrate of 112 kbps with video speed 
+of 30 frames per second (this is not encoding or decoding speed, but the speed at 
+which the video would be played. This value is only important for ratecontrol...) 
+
+
