@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_stat.c,v 1.16 2002-11-27 21:09:10 edgomez Exp $
+ * $Id: xvid_stat.c,v 1.17 2002-12-18 20:48:25 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -44,6 +44,7 @@
  *  -q integer     : quality ([0..5])
  *  -d boolean     : save decoder output (0 False*, !=0 True)
  *  -m boolean     : save mpeg4 raw stream (0 False*, !=0 True)
+ *  -mv integer    : Hinted Motion Estimation (0 none, 1 get hints, 2 set hints)
  *  -help          : prints this help message
  *  -quant integer : fixed quantizer (disables -b setting)
  *  (* means default)
@@ -99,7 +100,8 @@ static int write_pgm(char *filename, unsigned char *image);
 static int enc_init(int use_assembler);
 static int enc_stop();
 static int enc_main(unsigned char* image, unsigned char* bitstream,
-					int *streamlength, int* frametype);
+					unsigned char* hints_buffer,
+					long *streamlength, long* frametype, long* hints_size);
 
 /* Decoder related functions */
 static int dec_stop();
@@ -141,6 +143,12 @@ static int const general_presets[7] = {
 /* Maximum number of frames to encode */
 #define ABS_MAXFRAMENR 9999
 
+/* HINTMODEs */
+#define HINT_MODE_NONE 0
+#define HINT_MODE_GET  1
+#define HINT_MODE_SET  2
+#define HINT_FILE "hints.mv"
+
 static int   ARG_BITRATE = 900;
 static int   ARG_QUANTI = 0;
 static int   ARG_QUALITY = 6;
@@ -152,12 +160,19 @@ static char *ARG_INPUTFILE = NULL;
 static int   ARG_INPUTTYPE = 0;
 static int   ARG_SAVEDECOUTPUT = 0;
 static int   ARG_SAVEMPEGSTREAM = 0;
+static int   ARG_HINTMODE = HINT_MODE_NONE;
 static int   XDIM = 0;
 static int   YDIM = 0;
 #define IMAGE_SIZE(x,y) ((x)*(y)*3/2)
 
 #define MAX(A,B) ( ((A)>(B)) ? (A) : (B) )
 #define SMALL_EPS 1e-10
+
+#define LONG_PACK(a,b,c,d) ((long) (((long)(a))<<24) | (((long)(b))<<16) | \
+                                   (((long)(c))<<8)  |((long)(d)))
+
+#define SWAP(a) ( (((a)&0x000000ff)<<24) | (((a)&0x0000ff00)<<8) | \
+                  (((a)&0x00ff0000)>>8)  | (((a)&0xff000000)>>24) )
 
 /****************************************************************************
  *                     Nasty global vars ;-)
@@ -183,16 +198,19 @@ int main(int argc, char *argv[])
 	unsigned char *divx_buffer = NULL;
 	unsigned char *in_buffer = NULL;
 	unsigned char *out_buffer = NULL;
+	unsigned char *hints_buffer = NULL;
 
 	double enctime,dectime;
 	double totalenctime=0.;
 	double totaldectime=0.;
   
 	long totalsize=0;
+	long hints_size;
 	int status;
-  
-	int m4v_size;
-	int frame_type[ABS_MAXFRAMENR];
+	int bigendian;
+
+	long m4v_size;
+	long frame_type[ABS_MAXFRAMENR];
 	int Iframes=0, Pframes=0, use_assembler=0;
 	double framepsnr[ABS_MAXFRAMENR];
   
@@ -203,6 +221,7 @@ int main(int argc, char *argv[])
   
 	FILE *filehandle;
 	FILE *in_file = stdin;
+	FILE *hints_file = NULL;
 
 	printf("xvid_stat - XviD core library test program ");
 	printf("written by Christoph Lampert 2002\n\n");
@@ -260,6 +279,10 @@ int main(int argc, char *argv[])
 			i++;
 			ARG_SAVEMPEGSTREAM = atoi(argv[i]);
 		}
+		else if (strcmp("-mv", argv[i]) == 0 && i < argc - 1 ) {
+			i++;
+			ARG_HINTMODE = atoi(argv[i]);
+		}
 		else if (strcmp("-help", argv[i])) {
 			usage();
 			return(0);
@@ -298,6 +321,37 @@ int main(int argc, char *argv[])
 	if ( ARG_MAXFRAMENR <= 0) {
 		fprintf(stderr,"Wrong number of frames\n");
 		return -1;
+	}
+
+	if ( ARG_HINTMODE != HINT_MODE_NONE &&
+		 ARG_HINTMODE != HINT_MODE_GET &&
+		 ARG_HINTMODE != HINT_MODE_SET)
+		ARG_HINTMODE = HINT_MODE_NONE;
+
+	if( ARG_HINTMODE != HINT_MODE_NONE) {
+		char *rights = "rb";
+
+		/*
+		 * If we are getting hints from core, we will have to write them to
+		 * hint file
+		 */
+		if(ARG_HINTMODE == HINT_MODE_GET)
+			rights = "w+b";
+
+		/* Open the hint file */
+		hints_file = fopen(HINT_FILE, rights);
+		if(hints_file == NULL) {
+			fprintf(stderr, "Error opening input file %s\n", HINT_FILE);
+			return -1;
+		}
+
+		/* Allocate hint memory space, we will be using rawhints */
+		/* NB : Hope 1Mb is enough */
+		if((hints_buffer = malloc(1024*1024)) == NULL) {
+			fprintf(stderr, "Memory allocation error\n");
+			return -1;
+		}
+
 	}
 
 	if ( ARG_INPUTFILE == NULL || strcmp(ARG_INPUTFILE, "stdin") == 0) {
@@ -354,6 +408,11 @@ int main(int argc, char *argv[])
 		goto release_all;
 	}
 
+	totalsize = LONG_PACK('M','P','4','U');
+	if(*((char *)(&totalsize)) == 'M')
+		bigendian = 1;
+	else
+		bigendian = 0;
 
 /*****************************************************************************
  *                            Main loop
@@ -390,11 +449,22 @@ int main(int argc, char *argv[])
  */
 
 /*****************************************************************************
+ *                       Read hints from file
+ ****************************************************************************/
+
+		if(ARG_HINTMODE == HINT_MODE_SET) {
+			fread(&hints_size, 1, sizeof(long), hints_file);
+			hints_size = (!bigendian)?SWAP(hints_size):hints_size;
+			fread(hints_buffer, 1, hints_size, hints_file);
+		}
+
+/*****************************************************************************
  *                       Encode and decode this frame
  ****************************************************************************/
 
 		enctime = msecond();
-		status = enc_main(in_buffer, divx_buffer, &m4v_size, &frame_type[filenr]);
+		status = enc_main(in_buffer, divx_buffer, hints_buffer,
+						  &m4v_size, &frame_type[filenr], &hints_size);
 		enctime = msecond() - enctime;
 
 		totalenctime += enctime;
@@ -402,6 +472,21 @@ int main(int argc, char *argv[])
 
 		printf("Frame %5d: intra %1d, enctime=%6.1f ms, size=%6d bytes ",
 			   (int)filenr, (int)frame_type[filenr], (float)enctime, (int)m4v_size);
+
+/*****************************************************************************
+ *                       Save hints to file
+ ****************************************************************************/
+
+		if(ARG_HINTMODE == HINT_MODE_GET) {
+			hints_size = (!bigendian)?SWAP(hints_size):hints_size;
+			fwrite(&hints_size, 1, sizeof(long), hints_file);
+			hints_size = (!bigendian)?SWAP(hints_size):hints_size;
+			fwrite(hints_buffer, 1, hints_size, hints_file);
+		}
+
+/*****************************************************************************
+ *                       Save stream to file
+ ****************************************************************************/
 
 		if (ARG_SAVEMPEGSTREAM)
 		{
@@ -817,7 +902,8 @@ static int enc_stop()
 }
 
 static int enc_main(unsigned char* image, unsigned char* bitstream,
-					int *streamlength, int* frametype)
+					unsigned char* hints_buffer,
+					long *streamlength, long* frametype, long* hints_size)
 {
 	int xerr;
 
@@ -838,7 +924,23 @@ static int enc_main(unsigned char* image, unsigned char* bitstream,
 	xframe.general = general_presets[ARG_QUALITY];
 	xframe.quant_intra_matrix = xframe.quant_inter_matrix = NULL;
 
+	xframe.hint.hintstream = hints_buffer;
+
+	if(ARG_HINTMODE == HINT_MODE_SET) {
+		xframe.hint.hintlength = *hints_size;
+		xframe.hint.rawhints = 0;
+		xframe.general |= XVID_HINTEDME_SET;
+	}
+
+	if(ARG_HINTMODE == HINT_MODE_GET) {
+		xframe.hint.rawhints = 0;
+		xframe.general |= XVID_HINTEDME_GET;
+	}
+
 	xerr = xvid_encore(enc_handle, XVID_ENC_ENCODE, &xframe, &xstats);
+
+	if(ARG_HINTMODE == HINT_MODE_GET)
+		*hints_size = xframe.hint.hintlength;
 
 	/*
 	 * This is statictical data, e.g. for 2-pass. If you are not
