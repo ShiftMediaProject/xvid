@@ -412,14 +412,15 @@
 #define IDC_BITRATE_ASELECT             1391
 #define IDC_BITRATE_ADV                 1392
 #define IDC_DEC_BRIGHTNESS              1393
+#define IDC_TFF                         1394
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        128
+#define _APS_NEXT_RESOURCE_VALUE        129
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1394
+#define _APS_NEXT_CONTROL_VALUE         1395
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

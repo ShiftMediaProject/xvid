@@ -711,6 +711,10 @@ LRESULT compress(CODEC * codec, ICCOMPRESS * icc)
 	frame.vop_flags |= XVID_VOP_HALFPEL;
 	frame.vop_flags |= XVID_VOP_HQACPRED;
 
+	if (codec->config.interlacing && codec->config.tff)
+		frame.vop_flags |= XVID_VOP_TOPFIELDFIRST;
+
+
 	if (codec->config.vop_debug) 
 		frame.vop_flags |= XVID_VOP_DEBUG;
 

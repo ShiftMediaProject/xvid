@@ -7,14 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#ifdef _MSC_VER
 #include "afxres.h"
-#else
-#include <windows.h>
-#ifndef IDC_STATIC
-#define IDC_STATIC (-1)
-#endif
-#endif
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -552,6 +545,8 @@ BEGIN
     LTEXT           "Quantizer ratio:",IDC_BQUANTRATIO_S,16,150,89,8
     LTEXT           "Quantizer offset:",IDC_BQUANTOFFSET_S,16,164,52,8
     LTEXT           "Quantization type:",IDC_QUANTTYPE_S,16,32,100,8
+    CONTROL         "Top field first",IDC_TFF,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,119,62,56,10
 END
 
 IDD_ZONE DIALOG DISCARDABLE  0, 0, 212, 194
@@ -943,7 +938,15 @@ BEGIN
     IDC_CHROMAME            "Use chroma information to detect motion (slower)."
     IDC_BQUANTOFFSET        "B-frame quantizer offset from last p-frame quantizer; refer to b-frame quant ratio (above)"
     IDC_VHQ                 "VHQ enables an additional search process to increase quality (much slower)."
-    IDC_ZONE_CHROMAOPT     "Interpolates colours in bright/dark areas for achieving a nicer edge impression"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDC_ZONE_CHROMAOPT      "Interpolates colours in bright/dark areas for achieving a nicer edge impression"
+    IDC_ZONE_BVOPTHRESHOLD  "Change the amount of b-frames in this zone. Recommended values are between -20 (almost no b-vops) and 30 (many b-vops).\nThe hardcoded maximum in profile/level will never be exceeded"
+    IDC_LEVEL_PROFILE       "Restrict the usage of MPEG-4 tools and limit the encoded bitrate such that bitstreams are compatible with hardware decoders."
+    IDC_LEVEL_WIDTH         "Suggested VOP width (pixels)"
+    IDC_LEVEL_HEIGHT        "Suggested VOP height (pixels)"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -962,21 +965,12 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDC_LEVEL_PROFILE       "Restrict the usage of MPEG-4 tools and limit the encoded bitrate such that bitstreams are compatible with hardware decoders."
-    IDC_LEVEL_WIDTH         "Suggested VOP width (pixels)"
-    IDC_LEVEL_HEIGHT        "Suggested VOP height (pixels)"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDC_LEVEL_FPS           "Suggested VOP rate (frames-per-second)"
     IDC_LEVEL_VMV           "Video Memory Verifier (VMV):\n\nThe maximum number of macroblocks permitted per VOP."
     IDC_LEVEL_VCV           "Video Complexity Verifier (VCV):\nThe maximum macroblocks decoded per second."
     IDC_LEVEL_VBV           "Video Buffer Verifier (VBV):\n\nThe maximum size of the video decoder buffer. The encoded bitstream but not overflow or underflow this buffer."
     IDC_LEVEL_BITRATE       "Maximum instantaneous bitrate."
     IDC_BITRATE             "The target AVI bitrate, file size, or quantizer."
-    IDC_ZONE_BVOPTHRESHOLD 
-                            "Change the amount of b-frames in this zone. Recommended values are between -20 (almost no b-vops) and 30 (many b-vops).\nThe hardcoded maximum in profile/level will never be exceeded"
     IDC_TRELLISQUANT        "Advanced, high quality quantization mode"
     IDC_BITRATE_S           "Toggle between quantizer, target bitrate, target file size"
 END
@@ -1016,7 +1010,7 @@ END
 
 
 /////////////////////////////////////////////////////////////////////////////
-// English (Australia) resources
+// Englisch (Australien) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENA)
 #ifdef _WIN32
@@ -1049,7 +1043,7 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // English (Australia) resources
+#endif    // Englisch (Australien) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
