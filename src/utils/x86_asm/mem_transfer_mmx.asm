@@ -32,6 +32,8 @@
 ; *
 ; *	History:
 ; *
+; * 04.06.2002  speed enhancement (unroll+overlap). -Skal-
+; *             + added transfer_8to16sub2_mmx/xmm
 ; * 07.01.2002	merge functions from compensate_mmx; rename functions
 ; *	07.11.2001	initial version; (c)2001 peter ross <pross@cs.rmit.edu.au>
 ; *
@@ -52,6 +54,14 @@ bits 32
 
 section .text
 
+cglobal transfer_8to16copy_mmx
+cglobal transfer_8to16copy_mmx
+cglobal transfer_16to8copy_mmx
+cglobal transfer_8to16sub_mmx
+cglobal transfer_8to16sub2_mmx
+cglobal transfer_8to16sub2_xmm
+cglobal transfer_16to8add_mmx
+cglobal transfer8x8_copy_mmx
 
 ;===========================================================================
 ;
@@ -61,41 +71,35 @@ section .text
 ;
 ;===========================================================================
 
+%macro COPY_8_TO_16 1
+  movq mm0, [eax]
+  movq mm1, [eax+edx]
+  movq mm2, mm0
+  movq mm3, mm1
+  punpcklbw mm0, mm7
+  movq [ecx+%1*32], mm0
+  punpcklbw mm1, mm7
+  movq [ecx+%1*32+16], mm1
+  punpckhbw mm2, mm7
+  punpckhbw mm3, mm7
+  lea eax,[eax+2*edx]
+  movq [ecx+%1*32+8], mm2
+  movq [ecx+%1*32+24], mm3
+%endmacro
+
 align 16
-cglobal transfer_8to16copy_mmx
-transfer_8to16copy_mmx
+transfer_8to16copy_mmx:
 
-		push	esi
-		push	edi
+  mov ecx, [esp+ 4] ; Dst
+  mov eax, [esp+ 8] ; Src
+  mov edx, [esp+12] ; Stride
+  pxor mm7,mm7
 
-		mov	edi, [esp + 8 + 4]		; dst
-		mov	esi, [esp + 8 + 8]		; src
-		mov ecx, [esp + 8 + 12]		; stride
-
-		pxor mm7, mm7				; mm7 = zero
-			
-		mov eax, 8
-
-.loop
-		movq mm0, [esi]
-		movq mm1, mm0
-		punpcklbw mm0, mm7		; mm01 = unpack([src])
-		punpckhbw mm1, mm7
-		
-		movq [edi], mm0			; [dst] = mm01
-		movq [edi + 8], mm1
-
-		add edi, 16
-		add esi, ecx
-		dec eax
-		jnz .loop
-
-		pop edi
-		pop esi
-
-		ret
-
-
+  COPY_8_TO_16 0
+  COPY_8_TO_16 1
+  COPY_8_TO_16 2
+  COPY_8_TO_16 3
+  ret
 
 ;===========================================================================
 ;
@@ -105,35 +109,32 @@ transfer_8to16copy_mmx
 ;
 ;===========================================================================
 
+%macro COPY_16_TO_8 1
+  movq mm0, [eax+%1*32]
+  movq mm1, [eax+%1*32+8]
+  packuswb mm0, mm1
+  movq [ecx], mm0
+  movq mm2, [eax+%1*32+16]
+  movq mm3, [eax+%1*32+24]
+  packuswb mm2, mm3
+  movq [ecx+edx], mm2
+%endmacro
+
 align 16
-cglobal transfer_16to8copy_mmx
-transfer_16to8copy_mmx
+transfer_16to8copy_mmx:
 
-		push	esi
-		push	edi
+  mov ecx, [esp+ 4] ; Dst
+  mov eax, [esp+ 8] ; Src
+  mov edx, [esp+12] ; Stride
 
-		mov	edi, [esp + 8 + 4]		; dst
-		mov	esi, [esp + 8 + 8]		; src
-		mov ecx, [esp + 8 + 12]		; stride
-
-		mov eax, 8
-
-.loop
-		movq mm0, [esi]
-		packuswb mm0, [esi + 8]		; mm0 = pack([src])
-		
-		movq [edi], mm0				; [dst] = mm0
-
-		add esi, 16
-		add edi, ecx
-		dec eax
-		jnz .loop
-
-		pop edi
-		pop esi
-
-		ret
-
+  COPY_16_TO_8 0
+  lea ecx,[ecx+2*edx]
+  COPY_16_TO_8 1
+  lea ecx,[ecx+2*edx]
+  COPY_16_TO_8 2
+  lea ecx,[ecx+2*edx]
+  COPY_16_TO_8 3
+  ret
 
 ;===========================================================================
 ;
@@ -155,440 +156,213 @@ transfer_16to8copy_mmx
 ; *
 ; *************************************************************************/
 
+%macro COPY_8_TO_16_SUB 1
+  movq mm0, [eax]      ; cur
+  movq mm2, [eax+edx]
+  movq mm1, mm0
+  movq mm3, mm2
+
+  punpcklbw mm0, mm7
+  punpcklbw mm2, mm7
+  movq mm4, [ebx]      ; ref
+	punpckhbw mm1, mm7
+	punpckhbw mm3, mm7
+  movq mm5, [ebx+edx]  ; ref
+
+  movq mm6, mm4
+  movq [eax], mm4
+  movq [eax+edx], mm5
+  punpcklbw mm4, mm7
+  punpckhbw mm6, mm7
+  psubsw mm0, mm4
+  psubsw mm1, mm6
+  movq mm6, mm5
+  punpcklbw mm5, mm7
+  punpckhbw mm6, mm7
+  psubsw mm2, mm5
+  lea eax,[eax+2*edx]
+  psubsw mm3, mm6
+  lea ebx,[ebx+2*edx]
+
+  movq [ecx+%1*32+ 0], mm0 ; dst
+	movq [ecx+%1*32+ 8], mm1
+	movq [ecx+%1*32+16], mm2
+	movq [ecx+%1*32+24], mm3
+%endmacro
+
 align 16
-cglobal transfer_8to16sub_mmx
-transfer_8to16sub_mmx
-		push	esi
-		push	edi
-		push    ebx
+transfer_8to16sub_mmx:
+  mov ecx, [esp  + 4] ; Dst
+  mov eax, [esp  + 8] ; Cur
+  push ebx
+  mov ebx, [esp+4+12] ; Ref
+  mov edx, [esp+4+16] ; Stride
+  pxor mm7, mm7
 
-		mov	edi, [esp + 12 + 4]		; dct [out]
-		mov	edx, [esp + 12 + 8]		; cur [in/out]
-		mov	esi, [esp + 12 + 12]		; ref [in]
-		mov ecx, [esp + 12 + 16]		; stride [in]
+  COPY_8_TO_16_SUB 0
+  COPY_8_TO_16_SUB 1
+  COPY_8_TO_16_SUB 2
+  COPY_8_TO_16_SUB 3
 
-		mov eax, edx				; cur -> eax
-		mov ebx, esi				; ref -> ebx
-		add eax, ecx				; cur + stride
-		add ebx, ecx				; ref + stride
-		
-		shl ecx, 1
-				
-		pxor mm7, mm7			; mm7 = zero
+  pop ebx
+  ret
 
-		movq mm0, [edx]			; mm01 = [cur]
-		movq mm1, mm0
-		
-		punpcklbw mm0, mm7
-		punpckhbw mm1, mm7
-		
-		movq mm4, [eax]
-		movq mm5, mm4
+;===========================================================================
+;
+; void transfer_8to16sub2_mmx(int16_t * const dct,
+;				uint8_t * const cur,
+;				const uint8_t * ref1,
+;				const uint8_t * ref2,
+;				const uint32_t stride)
+;
+;===========================================================================
 
-		punpcklbw mm4, mm7
-		punpckhbw mm5, mm7
+%macro COPY_8_TO_16_SUB2_MMX 1
+  movq mm0, [eax]      ; cur
+  movq mm2, [eax+edx]
 
-		movq mm2, [esi]			; mm23 = [ref]
-		movq mm3, mm2
+    ; mm4 <- (ref1+ref2+1) / 2
+  movq mm4, [ebx]      ; ref1
+  movq mm1, [esi]      ; ref2
+  movq mm6, mm4
+  movq mm3, mm1
+  punpcklbw mm4, mm7
+  punpcklbw mm1, mm7
+  punpckhbw mm6, mm7
+  punpckhbw mm3, mm7
+  paddusw mm4, mm1
+  paddusw mm6, mm3
+  psrlw mm4,1
+  psrlw mm6,1
+  packuswb mm4, mm6
 
-		movq mm6, [ebx]
+    ; mm5 <- (ref1+ref2+1) / 2
+  movq mm5, [ebx+edx]  ; ref1
+  movq mm1, [esi+edx]  ; ref2
+  movq mm6, mm5
+  movq mm3, mm1
+  punpcklbw mm5, mm7
+  punpcklbw mm1, mm7
+  punpckhbw mm6, mm7
+  punpckhbw mm3, mm7  
+  paddusw mm5, mm1
+  paddusw mm6, mm3
+  lea esi,[esi+2*edx]
+  psrlw mm5,1
+  psrlw mm6,1
+  packuswb mm5, mm6
 
-		movq [edx], mm2			; [cur] = [ref]
-		movq [eax], mm6
 
-		punpcklbw mm2, mm7
-		punpckhbw mm3, mm7
+  movq mm1, mm0
+  movq mm3, mm2
+  punpcklbw mm0, mm7
+  punpcklbw mm2, mm7
+	punpckhbw mm1, mm7
+	punpckhbw mm3, mm7
 
-		psubsw mm0, mm2			; mm01 -= mm23
+  movq mm6, mm4
+  punpcklbw mm4, mm7
+  punpckhbw mm6, mm7
+  psubsw mm0, mm4
+  psubsw mm1, mm6
+  movq mm6, mm5
+  punpcklbw mm5, mm7
+  punpckhbw mm6, mm7
+  psubsw mm2, mm5
+  lea eax,[eax+2*edx]
+  psubsw mm3, mm6
+  lea ebx,[ebx+2*edx]
 
-		movq mm2, mm6
+  movq [ecx+%1*32+ 0], mm0 ; dst
+	movq [ecx+%1*32+ 8], mm1
+	movq [ecx+%1*32+16], mm2
+	movq [ecx+%1*32+24], mm3
+%endmacro
 
-		punpcklbw mm2, mm7
-		punpckhbw mm6, mm7
+align 16
+transfer_8to16sub2_mmx:
+  mov ecx, [esp  + 4] ; Dst
+  mov eax, [esp  + 8] ; Cur
+  push ebx
+  mov ebx, [esp+4+12] ; Ref1
+  push esi
+  mov esi, [esp+8+16] ; Ref2
+  mov edx, [esp+8+20] ; Stride
+  pxor mm7, mm7
 
-		psubsw mm1, mm3
+  COPY_8_TO_16_SUB2_MMX 0
+  COPY_8_TO_16_SUB2_MMX 1
+  COPY_8_TO_16_SUB2_MMX 2
+  COPY_8_TO_16_SUB2_MMX 3
 
-		psubsw mm4, mm2
-		psubsw mm5, mm6
-
-		movq [edi], mm0			; dct[] = mm01
-		movq [edi + 8], mm1
-		movq [edi + 16], mm4
-		movq [edi + 24], mm5
-
-		add edx, ecx
-		add esi, ecx
-		add eax, ecx
-		add ebx, ecx
-
-		movq mm0, [edx]			; mm01 = [cur]
-		movq mm1, mm0
-		
-		punpcklbw mm0, mm7
-		punpckhbw mm1, mm7
-		
-		movq mm4, [eax]
-		movq mm5, mm4
-
-		punpcklbw mm4, mm7
-		punpckhbw mm5, mm7
-
-		movq mm2, [esi]			; mm23 = [ref]
-		movq mm3, mm2
-
-		movq mm6, [ebx]
-
-		movq [edx], mm2			; [cur] = [ref]
-		movq [eax], mm6
-
-		punpcklbw mm2, mm7
-		punpckhbw mm3, mm7
-
-		psubsw mm0, mm2			; mm01 -= mm23
-
-		movq mm2, mm6
-
-		punpcklbw mm2, mm7
-		punpckhbw mm6, mm7
-
-		psubsw mm1, mm3
-
-		psubsw mm4, mm2
-		psubsw mm5, mm6
-
-		movq [edi + 32], mm0			; dct[] = mm01
-		movq [edi + 40], mm1
-		movq [edi + 48], mm4
-		movq [edi + 56], mm5
-
-		add edx, ecx
-		add esi, ecx
-		add eax, ecx
-		add ebx, ecx
-
-		movq mm0, [edx]			; mm01 = [cur]
-		movq mm1, mm0
-		
-		punpcklbw mm0, mm7
-		punpckhbw mm1, mm7
-		
-		movq mm4, [eax]
-		movq mm5, mm4
-
-		punpcklbw mm4, mm7
-		punpckhbw mm5, mm7
-
-		movq mm2, [esi]			; mm23 = [ref]
-		movq mm3, mm2
-
-		movq mm6, [ebx]
-
-		movq [edx], mm2			; [cur] = [ref]
-		movq [eax], mm6
-
-		punpcklbw mm2, mm7
-		punpckhbw mm3, mm7
-
-		psubsw mm0, mm2			; mm01 -= mm23
-
-		movq mm2, mm6
-
-		punpcklbw mm2, mm7
-		punpckhbw mm6, mm7
-
-		psubsw mm1, mm3
-
-		psubsw mm4, mm2
-		psubsw mm5, mm6
-
-		movq [edi + 64], mm0			; dct[] = mm01
-		movq [edi + 72], mm1
-		movq [edi + 80], mm4
-		movq [edi + 88], mm5
-
-		add edx, ecx
-		add esi, ecx
-		add eax, ecx
-		add ebx, ecx
-
-		movq mm0, [edx]			; mm01 = [cur]
-		movq mm1, mm0
-		
-		punpcklbw mm0, mm7
-		punpckhbw mm1, mm7
-		
-		movq mm4, [eax]
-		movq mm5, mm4
-
-		punpcklbw mm4, mm7
-		punpckhbw mm5, mm7
-
-		movq mm2, [esi]			; mm23 = [ref]
-		movq mm3, mm2
-
-		movq mm6, [ebx]
-
-		movq [edx], mm2			; [cur] = [ref]
-		movq [eax], mm6
-
-		punpcklbw mm2, mm7
-		punpckhbw mm3, mm7
-
-		psubsw mm0, mm2			; mm01 -= mm23
-
-		movq mm2, mm6
-
-		punpcklbw mm2, mm7
-		punpckhbw mm6, mm7
-
-		psubsw mm1, mm3
-
-		psubsw mm4, mm2
-		psubsw mm5, mm6
-
-		movq [edi + 96], mm0			; dct[] = mm01
-		movq [edi + 104], mm1
-		movq [edi + 112], mm4
-		movq [edi + 120], mm5
-
-		pop ebx
-		pop edi
-		pop esi
-
-		ret
-
+  pop esi
+  pop ebx
+  ret
 
 ;===========================================================================
 ;
 ; void transfer_8to16sub2_xmm(int16_t * const dct,
-;							  uint8_t * const cur,
-;							  const uint8_t * ref1,
-;							  const uint8_t * ref2,
-;							  const uint32_t stride);
+;				uint8_t * const cur,
+;				const uint8_t * ref1,
+;				const uint8_t * ref2,
+;				const uint32_t stride)
 ;
 ;===========================================================================
 
+%macro COPY_8_TO_16_SUB2_SSE 1
+  movq mm0, [eax]      ; cur
+  movq mm2, [eax+edx]
+  movq mm1, mm0
+  movq mm3, mm2
+
+  punpcklbw mm0, mm7
+  punpcklbw mm2, mm7
+  movq mm4, [ebx]      ; ref1
+  pavgb mm4, [esi]     ; ref2
+	punpckhbw mm1, mm7
+	punpckhbw mm3, mm7
+  movq mm5, [ebx+edx]  ; ref
+  pavgb mm5, [esi+edx] ; ref2
+
+  movq mm6, mm4
+  punpcklbw mm4, mm7
+  punpckhbw mm6, mm7
+  psubsw mm0, mm4
+  psubsw mm1, mm6
+  lea esi,[esi+2*edx]
+  movq mm6, mm5
+  punpcklbw mm5, mm7
+  punpckhbw mm6, mm7
+  psubsw mm2, mm5
+  lea eax,[eax+2*edx]
+  psubsw mm3, mm6
+  lea ebx,[ebx+2*edx]
+
+  movq [ecx+%1*32+ 0], mm0 ; dst
+	movq [ecx+%1*32+ 8], mm1
+	movq [ecx+%1*32+16], mm2
+	movq [ecx+%1*32+24], mm3
+%endmacro
+
 align 16
-cglobal transfer_8to16sub2_xmm
-transfer_8to16sub2_xmm
+transfer_8to16sub2_xmm:
+  mov ecx, [esp  + 4] ; Dst
+  mov eax, [esp  + 8] ; Cur
+  push ebx
+  mov ebx, [esp+4+12] ; Ref1
+  push esi
+  mov esi, [esp+8+16] ; Ref2
+  mov edx, [esp+8+20] ; Stride
+  pxor mm7, mm7
 
-		push edi
-		push esi
-		push ebx
-	
-		mov edi, [esp + 12 +  4] ; edi = &dct
-		mov esi, [esp + 12 +  8] ; esi = &cur
-		mov ebx, [esp + 12 + 12] ; ebx = &ref1
-		mov edx, [esp + 12 + 16] ; edx = &ref2
-		mov eax, [esp + 12 + 20] ; eax = stride
+  COPY_8_TO_16_SUB2_SSE 0
+  COPY_8_TO_16_SUB2_SSE 1
+  COPY_8_TO_16_SUB2_SSE 2
+  COPY_8_TO_16_SUB2_SSE 3
 
-		pxor mm7, mm7	; mm7 = 0
-		shl eax, 1      ; eax = stride<<1
-
-		; Row processing
-		; One row at a time
-		movq mm0, [esi + 0] ; mm0 = cur row
-		movq mm2, [ebx + 0]	; mm2 = ref1 row
-		movq mm3, [edx + 0]	; mm3 = ref2 row
-		movq mm1, mm0	; mm1 = cur row
-
-		pavgb mm2, mm3		; mm2 = (ref1 + ref2 + 1)/2 (== avg)
-		punpcklbw mm0, mm7	; mm0 = cur(3-0) <-> 16bit
-	
-		movq mm3,mm2		; mm3 = avg
-		punpckhbw mm1, mm7	; mm1 = cur(7-4) <-> 16bit
-	
-		punpcklbw mm2, mm7	; mm2 = avg(3-0) <-> 16bit
-		punpckhbw mm3, mm7	; mm3 = avg(7-4) <-> 16bit 
-
-		psubw mm0, mm2		; mm0 = cur(3-0) - avg(3-0)
-		psubw mm1, mm3		; mm1 = cur(7-4) - avg(7-4)
-
-		movq [edi + 0], mm0 ; dct(3-0) = mm0
-		movq [edi + 8], mm1 ; dct(7-4) = mm1
-
-		; Increment all pointers
-		add edi, eax	; edi = &(next dct row)
-
-		; Row processing
-		; One row at a time
-		movq mm0, [esi + 8] ; mm0 = cur row
-		movq mm2, [ebx + 8]	; mm2 = ref1 row
-		movq mm3, [edx + 8]	; mm3 = ref2 row
-		movq mm1, mm0	; mm1 = cur row
-
-		pavgb mm2, mm3		; mm2 = (ref1 + ref2 + 1)/2 (== avg)
-		punpcklbw mm0, mm7	; mm0 = cur(3-0) <-> 16bit
-	
-		movq mm3,mm2		; mm3 = avg
-		punpckhbw mm1, mm7	; mm1 = cur(7-4) <-> 16bit
-	
-		punpcklbw mm2, mm7	; mm2 = avg(3-0) <-> 16bit
-		punpckhbw mm3, mm7	; mm3 = avg(7-4) <-> 16bit 
-
-		psubw mm0, mm2		; mm0 = cur(3-0) - avg(3-0)
-		psubw mm1, mm3		; mm1 = cur(7-4) - avg(7-4)
-
-		movq [edi + 0], mm0 ; dct(3-0) = mm0
-		movq [edi + 8], mm1 ; dct(7-4) = mm1
-
-		; Increment all pointers
-		add edi, eax	; edi = &(next dct row)
-
-		; Row processing
-		; One row at a time
-		movq mm0, [esi + 16] ; mm0 = cur row
-		movq mm2, [ebx + 16]	; mm2 = ref1 row
-		movq mm3, [edx + 16]	; mm3 = ref2 row
-		movq mm1, mm0	; mm1 = cur row
-
-		pavgb mm2, mm3		; mm2 = (ref1 + ref2 + 1)/2 (== avg)
-		punpcklbw mm0, mm7	; mm0 = cur(3-0) <-> 16bit
-	
-		movq mm3,mm2		; mm3 = avg
-		punpckhbw mm1, mm7	; mm1 = cur(7-4) <-> 16bit
-	
-		punpcklbw mm2, mm7	; mm2 = avg(3-0) <-> 16bit
-		punpckhbw mm3, mm7	; mm3 = avg(7-4) <-> 16bit 
-
-		psubw mm0, mm2		; mm0 = cur(3-0) - avg(3-0)
-		psubw mm1, mm3		; mm1 = cur(7-4) - avg(7-4)
-
-		movq [edi + 0], mm0 ; dct(3-0) = mm0
-		movq [edi + 8], mm1 ; dct(7-4) = mm1
-
-		; Increment all pointers
-		add edi, eax	; edi = &(next dct row)
-
-		; Row processing
-		; One row at a time
-		movq mm0, [esi + 24] ; mm0 = cur row
-		movq mm2, [ebx + 24]	; mm2 = ref1 row
-		movq mm3, [edx + 24]	; mm3 = ref2 row
-		movq mm1, mm0	; mm1 = cur row
-
-		pavgb mm2, mm3		; mm2 = (ref1 + ref2 + 1)/2 (== avg)
-		punpcklbw mm0, mm7	; mm0 = cur(3-0) <-> 16bit
-	
-		movq mm3,mm2		; mm3 = avg
-		punpckhbw mm1, mm7	; mm1 = cur(7-4) <-> 16bit
-	
-		punpcklbw mm2, mm7	; mm2 = avg(3-0) <-> 16bit
-		punpckhbw mm3, mm7	; mm3 = avg(7-4) <-> 16bit 
-
-		psubw mm0, mm2		; mm0 = cur(3-0) - avg(3-0)
-		psubw mm1, mm3		; mm1 = cur(7-4) - avg(7-4)
-
-		movq [edi + 0], mm0 ; dct(3-0) = mm0
-		movq [edi + 8], mm1 ; dct(7-4) = mm1
-
-		; Increment all pointers
-		add edi, eax	; edi = &(next dct row)
-
-		; Row processing
-		; One row at a time
-		movq mm0, [esi + 32] ; mm0 = cur row
-		movq mm2, [ebx + 32]	; mm2 = ref1 row
-		movq mm3, [edx + 32]	; mm3 = ref2 row
-		movq mm1, mm0	; mm1 = cur row
-
-		pavgb mm2, mm3		; mm2 = (ref1 + ref2 + 1)/2 (== avg)
-		punpcklbw mm0, mm7	; mm0 = cur(3-0) <-> 16bit
-	
-		movq mm3,mm2		; mm3 = avg
-		punpckhbw mm1, mm7	; mm1 = cur(7-4) <-> 16bit
-	
-		punpcklbw mm2, mm7	; mm2 = avg(3-0) <-> 16bit
-		punpckhbw mm3, mm7	; mm3 = avg(7-4) <-> 16bit 
-
-		psubw mm0, mm2		; mm0 = cur(3-0) - avg(3-0)
-		psubw mm1, mm3		; mm1 = cur(7-4) - avg(7-4)
-
-		movq [edi + 0], mm0 ; dct(3-0) = mm0
-		movq [edi + 8], mm1 ; dct(7-4) = mm1
-
-		; Increment all pointers
-		add edi, eax	; edi = &(next dct row)
-
-		; Row processing
-		; One row at a time
-		movq mm0, [esi + 40] ; mm0 = cur row
-		movq mm2, [ebx + 40]	; mm2 = ref1 row
-		movq mm3, [edx + 40]	; mm3 = ref2 row
-		movq mm1, mm0	; mm1 = cur row
-
-		pavgb mm2, mm3		; mm2 = (ref1 + ref2 + 1)/2 (== avg)
-		punpcklbw mm0, mm7	; mm0 = cur(3-0) <-> 16bit
-	
-		movq mm3,mm2		; mm3 = avg
-		punpckhbw mm1, mm7	; mm1 = cur(7-4) <-> 16bit
-	
-		punpcklbw mm2, mm7	; mm2 = avg(3-0) <-> 16bit
-		punpckhbw mm3, mm7	; mm3 = avg(7-4) <-> 16bit 
-
-		psubw mm0, mm2		; mm0 = cur(3-0) - avg(3-0)
-		psubw mm1, mm3		; mm1 = cur(7-4) - avg(7-4)
-
-		movq [edi + 0], mm0 ; dct(3-0) = mm0
-		movq [edi + 8], mm1 ; dct(7-4) = mm1
-
-		; Increment all pointers
-		add edi, eax	; edi = &(next dct row)
-
-		; Row processing
-		; One row at a time
-		movq mm0, [esi + 48] ; mm0 = cur row
-		movq mm2, [ebx + 48]	; mm2 = ref1 row
-		movq mm3, [edx + 48]	; mm3 = ref2 row
-		movq mm1, mm0	; mm1 = cur row
-
-		pavgb mm2, mm3		; mm2 = (ref1 + ref2 + 1)/2 (== avg)
-		punpcklbw mm0, mm7	; mm0 = cur(3-0) <-> 16bit
-	
-		movq mm3,mm2		; mm3 = avg
-		punpckhbw mm1, mm7	; mm1 = cur(7-4) <-> 16bit
-	
-		punpcklbw mm2, mm7	; mm2 = avg(3-0) <-> 16bit
-		punpckhbw mm3, mm7	; mm3 = avg(7-4) <-> 16bit 
-
-		psubw mm0, mm2		; mm0 = cur(3-0) - avg(3-0)
-		psubw mm1, mm3		; mm1 = cur(7-4) - avg(7-4)
-
-		movq [edi + 0], mm0 ; dct(3-0) = mm0
-		movq [edi + 8], mm1 ; dct(7-4) = mm1
-
-		; Increment all pointers
-		add edi, eax	; edi = &(next dct row)
-
-		; Row processing
-		; One row at a time
-		movq mm0, [esi + 56] ; mm0 = cur row
-		movq mm2, [ebx + 56]	; mm2 = ref1 row
-		movq mm3, [edx + 56]	; mm3 = ref2 row
-		movq mm1, mm0	; mm1 = cur row
-
-		pavgb mm2, mm3		; mm2 = (ref1 + ref2 + 1)/2 (== avg)
-		punpcklbw mm0, mm7	; mm0 = cur(3-0) <-> 16bit
-	
-		movq mm3,mm2		; mm3 = avg
-		punpckhbw mm1, mm7	; mm1 = cur(7-4) <-> 16bit
-	
-		punpcklbw mm2, mm7	; mm2 = avg(3-0) <-> 16bit
-		punpckhbw mm3, mm7	; mm3 = avg(7-4) <-> 16bit 
-
-		psubw mm0, mm2		; mm0 = cur(3-0) - avg(3-0)
-		psubw mm1, mm3		; mm1 = cur(7-4) - avg(7-4)
-
-		movq [edi + 0], mm0 ; dct(3-0) = mm0
-		movq [edi + 8], mm1 ; dct(7-4) = mm1
-
-		; Exit
-
-		pop ebx
-		pop esi
-		pop edi
-	
-		ret
+  pop esi
+  pop ebx
+  ret
 
 ;===========================================================================
 ;
@@ -598,46 +372,41 @@ transfer_8to16sub2_xmm
 ;
 ;===========================================================================
 
+%macro COPY_16_TO_8_ADD 1
+  movq mm0, [ecx]
+  movq mm2, [ecx+edx]
+  movq mm1, mm0
+  movq mm3, mm2
+  punpcklbw mm0, mm7
+  punpcklbw mm2, mm7
+  punpckhbw mm1, mm7
+  punpckhbw mm3, mm7
+  paddsw mm0, [eax+%1*32+ 0]
+  paddsw mm1, [eax+%1*32+ 8]
+  paddsw mm2, [eax+%1*32+16]
+  paddsw mm3, [eax+%1*32+24]
+  packuswb mm0, mm1
+  movq [ecx], mm0
+  packuswb mm2, mm3
+  movq [ecx+edx], mm2
+%endmacro
+
+
 align 16
-cglobal transfer_16to8add_mmx
-transfer_16to8add_mmx
+transfer_16to8add_mmx:
+  mov ecx, [esp+ 4] ; Dst
+  mov eax, [esp+ 8] ; Src
+  mov edx, [esp+12] ; Stride
+  pxor mm7, mm7
 
-		push	esi
-		push	edi
-
-		mov	edi, [esp + 8 + 4]		; dst
-		mov	esi, [esp + 8 + 8]		; src
-		mov ecx, [esp + 8 + 12]		; stride
-
-		pxor mm7, mm7
-
-		mov eax, 8
-
-.loop
-		movq mm0, [edi]			
-		movq mm1, mm0
-		punpcklbw mm0, mm7		; mm23 = unpack([dst])
-		punpckhbw mm1, mm7
-
-		movq mm2, [esi]			; mm01 = [src]
-		movq mm3, [esi + 8]
-
-		paddsw mm0, mm2			; mm01 += mm23
-		paddsw mm1, mm3
-
-		packuswb mm0, mm1		; [dst] = pack(mm01)
-		movq [edi], mm0
-
-		add esi, 16
-		add edi, ecx
-		dec eax
-		jnz .loop
-
-		pop edi
-		pop esi
-
-		ret
-
+  COPY_16_TO_8_ADD 0
+  lea ecx,[ecx+2*edx]
+  COPY_16_TO_8_ADD 1
+  lea ecx,[ecx+2*edx]
+  COPY_16_TO_8_ADD 2
+  lea ecx,[ecx+2*edx]
+  COPY_16_TO_8_ADD 3
+  ret
 
 ;===========================================================================
 ;
@@ -648,52 +417,25 @@ transfer_16to8add_mmx
 ;
 ;===========================================================================
 
+%macro COPY_8_TO_8 0
+  movq mm0, [eax]
+  movq mm1, [eax+edx]
+  movq [ecx], mm0
+  lea eax,[eax+2*edx]
+  movq [ecx+edx], mm1
+%endmacro
+
 align 16
-cglobal transfer8x8_copy_mmx
-transfer8x8_copy_mmx
-		push	esi
-		push	edi
+transfer8x8_copy_mmx:
+  mov ecx, [esp+ 4] ; Dst
+  mov eax, [esp+ 8] ; Src
+  mov edx, [esp+12] ; Stride
 
-		mov	edi, [esp + 8 + 4]		; dst [out]
-		mov	esi, [esp + 8 + 8]		; src [in]
-		mov eax, [esp + 8 + 12]		; stride [in]
-
-		movq mm0, [esi]
-		movq mm1, [esi+eax]
-		movq [edi], mm0
-		movq [edi+eax], mm1
-		
-		add esi, eax
-		add edi, eax
-		add esi, eax
-		add edi, eax
-
-		movq mm0, [esi]
-		movq mm1, [esi+eax]
-		movq [edi], mm0
-		movq [edi+eax], mm1
-		
-		add esi, eax
-		add edi, eax
-		add esi, eax
-		add edi, eax
-
-		movq mm0, [esi]
-		movq mm1, [esi+eax]
-		movq [edi], mm0
-		movq [edi+eax], mm1
-		
-		add esi, eax
-		add edi, eax
-		add esi, eax
-		add edi, eax
-
-		movq mm0, [esi]
-		movq mm1, [esi+eax]
-		movq [edi], mm0
-		movq [edi+eax], mm1
-		
-		pop edi
-		pop esi
-
-		ret
+  COPY_8_TO_8
+  lea ecx,[ecx+2*edx]
+  COPY_8_TO_8
+  lea ecx,[ecx+2*edx]
+  COPY_8_TO_8
+  lea ecx,[ecx+2*edx]
+  COPY_8_TO_8
+  ret
