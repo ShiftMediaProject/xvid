@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.52 2004-04-01 11:11:28 suxen_drol Exp $
+ * $Id: decoder.c,v 1.53 2004-04-10 04:30:07 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -1453,6 +1453,7 @@ decoder_decode(DECODER * dec,
 
 	success = 0;
 	output = 0;
+	if (stats) stats->type = XVID_TYPE_NOTHING;
 	seen_something = 0;
 
 repeat:
