@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.30 2003-06-11 14:10:59 Isibaar Exp $
+ * $Id: xvid.h,v 1.31 2003-07-24 23:35:28 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -34,8 +34,8 @@ extern "C" {
  * Global constants
  ****************************************************************************/
 
-/* API Version : 2.1 */
-#define API_VERSION ((2 << 16) | (1))
+/* API Version : 3.0 */
+#define API_VERSION ((3 << 16) | (0))
 #define XVID_API_UNSTABLE
 
 /* Bitstream Version 
