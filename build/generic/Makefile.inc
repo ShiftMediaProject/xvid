@@ -45,8 +45,9 @@ DIRS = \
 	$(SRCDIR)/quant/*.o \
 	$(SRCDIR)/utils/*.o
 
-
 SRC_INTEL = \
+	$(SRCDIR)/utils/x86_asm/cpuid.asm \
+	\
 	$(SRCDIR)/bitstream/x86_asm/cbp_mmx.asm \
 	$(SRCDIR)/dct/x86_asm/fdct_mmx.asm \
 	$(SRCDIR)/dct/x86_asm/idct_mmx.asm \
@@ -60,10 +61,13 @@ SRC_INTEL = \
 	$(SRCDIR)/motion/x86_asm/sad_mmx.asm \
 	$(SRCDIR)/quant/x86_asm/quantize4_mmx.asm \
 	$(SRCDIR)/quant/x86_asm/quantize_mmx.asm \
-	$(SRCDIR)/utils/x86_asm/cpuid.asm \
-	$(SRCDIR)/utils/x86_asm/mem_transfer_mmx.asm
-
-
+	$(SRCDIR)/utils/x86_asm/mem_transfer_mmx.asm	\
+	\
+	$(SRCDIR)/image/x86_asm/interpolate8x8_xmm.asm	\
+	$(SRCDIR)/motion/x86_asm/sad_xmm.asm \
+	\
+	$(SRCDIR)/image/x86_asm/interpolate8x8_3dn.asm
+	
 DIRS_INTEL = \
 	$(SRCDIR)/bitstream/x86_asm/*.o \
 	$(SRCDIR)/dct/x86_asm/*.o \
