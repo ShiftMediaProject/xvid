@@ -1,0 +1,28 @@
+DirectX 9.0 GCC/G++ compatiblity patch
+===============================================
+
+to apply patch
+--------------
+1. install the microsoft DirectX 9 SDK to /c/DXVCSDK
+2. cd /c/DXVCSDK
+3. patch -p0 < DXVCSDK-9.0.patch
+
+
+to build strmbase
+-----------------
+1. cd /c/DXVCSDK/Samples/MultiMedia/Directshow/BaseClasses
+2. make (this will output strmbase.lib)
+
+
+to build your own apps
+----------------------
+DXTREE = /c/DXVCSDK
+CXXFLAGS += -DRELEASE \
+        -I$(DXTREE)/Include \
+        -I$(DXTREE)/samples/MultiMedia/DirectShow/BaseClasses \
+        -include $(DXTREE)/mingw_dshow_port.h
+LDFLAGS += -L$(DXTREE)/Lib -lstrmiids \
+        $(DXTREE)/samples/Multimedia/DirectShow/BaseClasses/strmbase.lib \
+	-lole32 -loleaut32 -lstdc++
+
+. 
