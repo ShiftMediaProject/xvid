@@ -28,7 +28,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.79 2002-09-04 21:43:46 edgomez Exp $
+ * $Id: encoder.c,v 1.80 2002-09-05 19:34:35 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -102,8 +102,8 @@ image_null(IMAGE * image)
  * Encoder creation
  *
  * This function creates an Encoder instance, it allocates all necessary
- * image buffers (reference, current and bframes) and initialize the internal
- * xvid encoder paremeters according to the XVID_ENC_PARAM input parameter.
+ * image buffers (reference, current) and initialize the internal xvid
+ * encoder paremeters according to the XVID_ENC_PARAM input parameter.
  *
  * The code seems to be very long but is very basic, mainly memory allocation
  * and cleaning code.
