@@ -38,6 +38,7 @@ SHARED_LIB=libxvidcore.$(SHARED_EXTENSION)
 OBJECTS=$(GENERIC_OBJECTS)
 OBJECTS+=$(DIVX4COMPAT_OBJECTS)
 OBJECTS+=$(ASSEMBLY_OBJECTS)
+OBJECTS+=$(DCT_IA64_OBJECTS)
 
 #-----------------------------------------------------------------------------
 # The default rule
@@ -46,34 +47,52 @@ OBJECTS+=$(ASSEMBLY_OBJECTS)
 .SUFFIXES: .$(OBJECT_EXTENSION) .$(ASSEMBLY_EXTENSION) .c
 
 all: platform.inc $(STATIC_LIB) $(SHARED_LIB)
+	@echo
+	@echo "---------------------------------------------------------------"
+	@echo " XviD has been built, you can now run \"# make install\" as root."
+	@echo "---------------------------------------------------------------"
+	@echo
 
 #-----------------------------------------------------------------------------
 # Generic assembly rule
 #-----------------------------------------------------------------------------
 
 .$(ASSEMBLY_EXTENSION).$(OBJECT_EXTENSION):
-	$(AS) $(AFLAGS) $< -o $@
+	@echo -n "Assembling $< ... "
+	@$(AS) $(AFLAGS) $< -o $@
+	@echo "Done"
 
 #-----------------------------------------------------------------------------
 # Generic C rule
 #-----------------------------------------------------------------------------
 
 .c.$(OBJECT_EXTENSION):
-	$(CC) -c $(CFLAGS) $< -o $@
+	@echo -n "Compiling $< ... "
+	@$(CC) -c $(CFLAGS) $< -o $@
+	@echo "Done"
 
 #-----------------------------------------------------------------------------
 # Static Library
 #-----------------------------------------------------------------------------
 
 $(STATIC_LIB): $(OBJECTS)
-	ar rc $(STATIC_LIB) $(OBJECTS)
+	@echo
+	@echo -n "Linking the static library... "
+	@ar rc $(STATIC_LIB) $(OBJECTS)
+	@echo "Done"
+	@echo -n "Generating static library's index... "
+	@$(RANLIB) $(STATIC_LIB)
+	@echo "Done"
 
 #-----------------------------------------------------------------------------
 # Shared Library
 #-----------------------------------------------------------------------------
 
 $(SHARED_LIB): $(OBJECTS)
-	$(CC) $(LDFLAGS) $(OBJECTS) -o $(SHARED_LIB) $(OS_LDFLAGS)
+	@echo
+	@echo -n "Linking the shared library... "
+	@$(CC) $(LDFLAGS) $(OBJECTS) -o $(SHARED_LIB) $(SPECIFIC_LDFLAGS)
+	@echo "Done"
 
 #-----------------------------------------------------------------------------
 # Installation
@@ -106,14 +125,24 @@ platform.inc: platform.inc.in
 .PHONY: distclean clean info list-objects list-targets list-install-path
 
 clean:
-	$(RM) $(OBJECTS)
-	$(RM) $(SHARED_LIB)
-	$(RM) $(STATIC_LIB)
+	@echo -n "Cleaning objects... "
+	@$(RM) $(OBJECTS)
+	@echo "Done"
+	@echo -n "Cleaning static library... "
+	@$(RM) $(STATIC_LIB)
+	@echo "Done"
+	@echo -n "Cleaning shared library... "
+	@$(RM) $(SHARED_LIB)
+	@echo "Done"
+
 
 distclean: clean
-	$(RM) config.log
-	$(RM) platform.inc
-	$(RM) autom4te.cache
+	@echo -n "Cleaning generated files... "
+	@$(RM) libxvidcore.def
+	@$(RM) platform.inc
+	@$(RM) config.log
+	@$(RM) autom4te.cache
+	@echo "Done"
 
 list-objects:
 	@echo

@@ -30,7 +30,8 @@ OBJECT_EXTENSION=@OBJECT_EXTENSION@
 # ============================================================================
 
 CC=@CC@
-CFLAGS=$(ARCHITECTURE) $(BUS) $(ENDIANNESS) $(FEATURES) @CFLAGS@
+SPECIFIC_CFLAGS=@SPECIFIC_CFLAGS@
+CFLAGS=$(ARCHITECTURE) $(BUS) $(ENDIANNESS) $(FEATURES) $(SPECIFIC_CFLAGS) @CFLAGS@
 
 # ============================================================================
 # Assembler
@@ -44,7 +45,8 @@ ASSEMBLY_EXTENSION=@ASSEMBLY_EXTENSION@
 # Linker
 # ============================================================================
 
-OS_LDFLAGS=@OS_LDFLAGS@
+SPECIFIC_LDFLAGS=@SPECIFIC_LDFLAGS@
+RANLIB=@RANLIB@
 
 # ============================================================================
 # Installation
@@ -63,6 +65,8 @@ includedir=@includedir@
 GENERIC_SOURCES=$(@GENERIC_SOURCES@)
 DIVX4COMPAT_SOURCES=$(@DIVX4COMPAT_SOURCES@)
 ASSEMBLY_SOURCES=$(@ASSEMBLY_SOURCES@)
+DCT_IA64_SOURCES=$(@DCT_IA64_SOURCES@)
 GENERIC_OBJECTS=$(@GENERIC_SOURCES@:.c=.@OBJECT_EXTENSION@)
 DIVX4COMPAT_OBJECTS=$(@DIVX4COMPAT_SOURCES@:.c=.@OBJECT_EXTENSION@)
 ASSEMBLY_OBJECTS=$(@ASSEMBLY_SOURCES@:.@ASSEMBLY_EXTENSION@=.@OBJECT_EXTENSION@)
+DCT_IA64_OBJECTS=$(@DCT_IA64_SOURCES@:.@ASSEMBLY_EXTENSION@=.@OBJECT_EXTENSION@)

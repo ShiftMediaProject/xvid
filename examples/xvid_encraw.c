@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.8 2003-02-09 19:32:52 edgomez Exp $
+ * $Id: xvid_encraw.c,v 1.9 2003-02-11 21:56:31 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -554,8 +554,9 @@ static double msecond()
 static void usage()
 {
 
-	fprintf(stderr, "Usage : xvid_stat [OPTIONS]\n");
+	fprintf(stderr, "Usage : xvid_encraw [OPTIONS]\n");
 	fprintf(stderr, "Options :\n");
+	fprintf(stderr, " -asm           : use assembly code\n");
 	fprintf(stderr, " -w integer     : frame width ([1.2048])\n");
 	fprintf(stderr, " -h integer     : frame height ([1.2048])\n");
 	fprintf(stderr, " -b integer     : target bitrate (>0 | default=900kbit)\n");
@@ -564,7 +565,6 @@ static void usage()
 	fprintf(stderr, " -t integer     : input data type (yuv=0, pgm=1)\n");
 	fprintf(stderr, " -n integer     : number of frames to encode\n");
 	fprintf(stderr, " -q integer     : quality ([0..5])\n");
-	fprintf(stderr, " -d boolean     : save decoder output (0 False*, !=0 True)\n");
 	fprintf(stderr, " -m boolean     : save mpeg4 raw stream (0 False*, !=0 True)\n");
 	fprintf(stderr, " -o string      : output container filename (only usefull when -m 1 is used) :\n");
 	fprintf(stderr, "                  When this option is not used : one file per encoded frame\n");
