@@ -39,7 +39,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.71 2002-08-04 22:34:49 edgomez Exp $
+ *  $Id: encoder.c,v 1.72 2002-08-04 23:27:40 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -825,7 +825,7 @@ bvop_loop:
 
 		pFrame->intra = 0;
 
-		BitstreamPutBits(&bs, 0x7f, 8);
+		BitstreamWriteVopHeader(&bs, &pEnc->mbParam, pEnc->current, 0); // write N_VOP
 		BitstreamPad(&bs);
 		pFrame->length = BitstreamLength(&bs);
 		
