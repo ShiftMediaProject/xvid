@@ -4,7 +4,7 @@
  *  - MacroBlock transfer and quantization -
  *
  *  Copyright(C) 2002-2001 Michael Militzer <isibaar@xvid.org>
- *               2002-2001 Peter Ross <pross@cs.rmit.edu.au>
+ *               2002-2001 Peter Ross <pross@xvid.org>
  *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
@@ -29,7 +29,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbtransquant.c,v 1.12 2002-09-05 21:44:11 edgomez Exp $
+ * $Id: mbtransquant.c,v 1.13 2002-09-21 03:07:56 suxen_drol Exp $
  *
  ****************************************************************************/
 

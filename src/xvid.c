@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Native API implementation  -
  *
- *  Copyright(C) 2001-2002 Peter Ross <pross@cs.rmit.edu.au>
+ *  Copyright(C) 2001-2002 Peter Ross <pross@xvid.org>
  *
  *  This program is an implementation of a part of one or more MPEG-4
  *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
@@ -28,7 +28,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.36 2002-09-04 22:08:45 edgomez Exp $
+ * $Id: xvid.c,v 1.37 2002-09-21 03:07:56 suxen_drol Exp $
  *
  ****************************************************************************/
 

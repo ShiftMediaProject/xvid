@@ -2,5 +2,5 @@ authors
 
 
 Michael Militzer <isibaar@xvid.org>
-Peter Ross <pross@cs.rmit.edu.au>
+Peter Ross <pross@xvid.org>
 Christoph Lampert <gruel@web.de>

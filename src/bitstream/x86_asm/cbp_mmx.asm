@@ -33,7 +33,7 @@
 ; *	History:
 ; *
 ; *	14.06.2002	some further tweaks by -Skal-
-; *	24.11.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
+; *	24.11.2001	inital version; (c)2001 peter ross <pross@xvid.org>
 ; *
 ; *************************************************************************/
 

@@ -53,9 +53,9 @@
  *  26.03.2002  interlacing support - moved transfers outside decode loop
  *  26.12.2001  decoder_mbinter: dequant/idct moved within if(coded) block
  *  22.12.2001  lock based interpolation
- *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
+ *  01.12.2001  inital version; (c)2001 peter ross <pross@xvid.org>
  *
- *  $Id: decoder.c,v 1.37 2002-09-04 03:23:23 h Exp $
+ *  $Id: decoder.c,v 1.38 2002-09-21 03:07:56 suxen_drol Exp $
  *
  *************************************************************************/
 
