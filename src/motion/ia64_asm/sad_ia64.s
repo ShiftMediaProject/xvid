@@ -265,131 +265,382 @@ sad16bi_ia64:
 	.endp sad16bi_ia64#
 
 
-	.common	dev16#,8,8
+
+	
+	
+	
+	
+	
+.text
 	.align 16
 	.global dev16_ia64#
 	.proc dev16_ia64#
+.auto
 dev16_ia64:
-	.prologue
-	zxt4 r33 = r33
-	.save ar.lc, r2
-	mov r2 = ar.lc
+	// renamings for better readability
+	stride = r18
+	pfs = r19			//for saving previous function state
+	cura0 = r20			//address of first 8-byte block of cur
+	cura1 = r21			//address of second 8-byte block of cur
+	mean0 = r22			//registers for calculating the sum in parallel
+	mean1 = r23
+	mean2 = r24
+	mean3 = r25
+	dev0 = r26			//same for the deviation
+	dev1 = r27			
+	dev2 = r28
+	dev3 = r29
+	
 	.body
-	mov r21 = r0
-	mov r8 = r0
-	mov r23 = r32
-	mov r24 = r0
+	alloc pfs = ar.pfs, 2, 38, 0, 40
+
+	mov cura0  = in0
+	mov stride = in1
+	add cura1 = 8, cura0
+	
+	.rotr c[32], psad[8] 		// just using rotating registers to get an array ;-)
+
+.explicit
+{.mmi
+	ld8 c[0] = [cura0], stride	// load them ...
+	ld8 c[1] = [cura1], stride
+	;; 
+}	
+{.mmi	
+	ld8 c[2] = [cura0], stride
+	ld8 c[3] = [cura1], stride
+	;; 
+}
+{.mmi	
+	ld8 c[4] = [cura0], stride
+	ld8 c[5] = [cura1], stride
 	;;
-	mov r25 = r33
-.L50:
-	mov r22 = r0
-	mov r20 = r23
+}
+{.mmi
+	ld8 c[6] = [cura0], stride
+	ld8 c[7] = [cura1], stride
 	;;
-.L54:
-	mov r16 = r20
-	adds r14 = 2, r20
-	adds r15 = 3, r20
+}
+{.mmi	
+	ld8 c[8] = [cura0], stride
+	ld8 c[9] = [cura1], stride
 	;;
-	ld1 r17 = [r16], 1
-	ld1 r18 = [r14]
-	ld1 r19 = [r15]
+}
+{.mmi
+	ld8 c[10] = [cura0], stride
+	ld8 c[11] = [cura1], stride
 	;;
-	ld1 r14 = [r16]
-	add r21 = r17, r21
-	adds r15 = 4, r20
+}
+{.mii
+	ld8 c[12] = [cura0], stride
+	psad1 mean0 = c[0], r0		// get the sum of them ...
+	psad1 mean1 = c[1], r0
+}
+{.mmi
+	ld8 c[13] = [cura1], stride
+	;; 
+	ld8 c[14] = [cura0], stride
+	psad1 mean2 = c[2], r0
+}
+{.mii
+	ld8 c[15] = [cura1], stride
+	psad1 mean3 = c[3], r0
+	;; 
+	psad1 psad[0] = c[4], r0
+}
+{.mmi
+	ld8 c[16] = [cura0], stride
+	ld8 c[17] = [cura1], stride
+	psad1 psad[1] = c[5], r0
 	;;
-	add r21 = r14, r21
-	ld1 r16 = [r15]
-	adds r22 = 8, r22
+}
+{.mii	
+	ld8 c[18] = [cura0], stride
+	psad1 psad[2] = c[6], r0
+	psad1 psad[3] = c[7], r0
+}
+{.mmi	
+	ld8 c[19] = [cura1], stride
+	;; 
+	ld8 c[20] = [cura0], stride
+	psad1 psad[4] = c[8], r0
+}
+{.mii
+	ld8 c[21] = [cura1], stride
+	psad1 psad[5] = c[9], r0
 	;;
-	add r21 = r18, r21
-	adds r14 = 5, r20
-	adds r15 = 6, r20
+	add mean0 = mean0, psad[0]
+}
+{.mmi
+	ld8 c[22] = [cura0], stride
+	ld8 c[23] = [cura1], stride
+	add mean1 = mean1, psad[1]
+	;; 
+}
+{.mii
+	ld8 c[24] = [cura0], stride
+	psad1 psad[0] = c[10], r0
+	psad1 psad[1] = c[11], r0
+}
+{.mmi
+	ld8 c[25] = [cura1], stride
+	;; 
+	ld8 c[26] = [cura0], stride
+	add mean2 = mean2, psad[2]
+}
+{.mii
+	ld8 c[27] = [cura1], stride
+	add mean3 = mean3, psad[3]
+	;; 
+	psad1 psad[2] = c[12], r0
+}
+{.mmi
+	ld8 c[28] = [cura0], stride
+	ld8 c[29] = [cura1], stride
+	psad1 psad[3] = c[13], r0
+	;; 
+}
+{.mii
+	ld8 c[30] = [cura0]
+	psad1 psad[6] = c[14], r0
+	psad1 psad[7] = c[15], r0
+}
+{.mmi
+	ld8 c[31] = [cura1]
+	;; 
+	add mean0 = mean0, psad[0]
+	add mean1 = mean1, psad[1]
+}
+{.mii
+	add mean2 = mean2, psad[4]
+	add mean3 = mean3, psad[5]
 	;;
-	add r21 = r19, r21
-	ld1 r17 = [r14]
-	ld1 r18 = [r15]
+	psad1 psad[0] = c[16], r0
+}
+{.mmi
+	add mean0 = mean0, psad[2]
+	add mean1 = mean1, psad[3]
+	psad1 psad[1] = c[17], r0
 	;;
-	add r21 = r16, r21
-	adds r14 = 7, r20
-	cmp4.geu p6, p7 = 15, r22
+}
+{.mii
+	add mean2 = mean2, psad[6]
+	psad1 psad[2] = c[18], r0
+	psad1 psad[3] = c[19], r0
+}
+{.mmi
+	add mean3 = mean3, psad[7]
+	;; 
+	add mean0 = mean0, psad[0]
+	psad1 psad[4] = c[20], r0
+}
+{.mii
+	add mean1 = mean1, psad[1]
+	psad1 psad[5] = c[21], r0
 	;;
-	add r21 = r17, r21
-	ld1 r15 = [r14]
-	adds r20 = 8, r20
+	psad1 psad[6] = c[22], r0
+}
+{.mmi
+	add mean2 = mean2, psad[2]
+	add mean3 = mean3, psad[3]
+	psad1 psad[7] = c[23], r0
 	;;
-	add r21 = r18, r21
+}
+{.mii
+	add mean0 = mean0, psad[4]
+	psad1 psad[0] = c[24], r0
+	psad1 psad[1] = c[25], r0
+}
+{.mmi
+	add mean1 = mean1, psad[5]
 	;;
-	add r21 = r15, r21
-	(p6) br.cond.dptk .L54
-	adds r24 = 1, r24
-	add r23 = r23, r25
+	add mean2 = mean2, psad[6]
+	psad1 psad[2] = c[26], r0
+}
+{.mii
+	add mean3 = mean3, psad[7]
+	psad1 psad[3] = c[27], r0
+	;; 
+	psad1 psad[4] = c[28], r0
+}
+{.mmi
+	add mean0 = mean0, psad[0]
+	add mean1 = mean1, psad[1]
+	psad1 psad[5] = c[29], r0
 	;;
-	cmp4.geu p6, p7 = 15, r24
-	(p6) br.cond.dptk .L50
-	extr.u r14 = r21, 8, 24
-	mov r23 = r32
-	mov r24 = r0
+}
+{.mii
+	add mean2 = mean2, psad[2]
+	psad1 psad[6] = c[30], r0
+	psad1 psad[7] = c[31], r0
+}
+{.mmi
+	add mean3 = mean3, psad[3]
 	;;
-	mov r21 = r14
-.L60:
-	addl r14 = 3, r0
-	mov r17 = r23
+	add mean0 = mean0, psad[4]
+	add mean1 = mean1, psad[5]
+}
+{.mbb
+	add mean2 = mean2, mean3
+	nop.b 1
+	nop.b 1
 	;;
-	mov ar.lc = r14
+}
+{.mib
+	add mean0 = mean0, psad[6]
+	add mean1 = mean1, psad[7]
+	nop.b 1
 	;;
-.L144:
-	mov r16 = r17
+}
+{.mib
+	add mean0 = mean0, mean1
+	// add mean2 = 127, mean2	// this could make our division more exact, but does not help much
 	;;
-	ld1 r14 = [r16], 1
+}
+{.mib
+	add mean0 = mean0, mean2
 	;;
-	sub r15 = r14, r21
+}
+
+{.mib
+	shr.u mean0 = mean0, 8		// divide them ...
 	;;
-	cmp4.ge p6, p7 = 0, r15
+}
+{.mib
+	mux1 mean0 = mean0, @brcst
+	;; 
+}	
+{.mii
+	nop.m 0
+	psad1 dev0 = c[0], mean0	// and do a sad again ...
+	psad1 dev1 = c[1], mean0
+}
+{.mii
+	nop.m 0
+	psad1 dev2 = c[2], mean0
+	psad1 dev3 = c[3], mean0
+}
+{.mii
+	nop.m 0
+	psad1 psad[0] = c[4], mean0
+	psad1 psad[1] = c[5], mean0
+}
+{.mii
+	nop.m 0
+	psad1 psad[2] = c[6], mean0
+	psad1 psad[3] = c[7], mean0
+}
+{.mii
+	nop.m 0
+	psad1 psad[4] = c[8], mean0
+	psad1 psad[5] = c[9], mean0
+	;; 
+}
+{.mii
+	add dev0 = dev0, psad[0]
+	psad1 psad[6] = c[10], mean0
+	psad1 psad[7] = c[11], mean0
+}
+{.mmi
+	add dev1 = dev1, psad[1]
+
+	add dev2 = dev2, psad[2]
+	psad1 psad[0] = c[12], mean0
+}
+{.mii
+	add dev3 = dev3, psad[3]
+	psad1 psad[1] = c[13], mean0
+	;; 
+	psad1 psad[2] = c[14], mean0
+}
+{.mmi
+	add dev0 = dev0, psad[4]
+	add dev1 = dev1, psad[5]
+	psad1 psad[3] = c[15], mean0
+}
+{.mii
+	add dev2 = dev2, psad[6]
+	psad1 psad[4] = c[16], mean0
+	psad1 psad[5] = c[17], mean0
+}
+{.mmi
+	add dev3 = dev3, psad[7]
+	;; 
+	add dev0 = dev0, psad[0]
+	psad1 psad[6] = c[18], mean0
+}
+{.mii
+	add dev1 = dev1, psad[1]
+	psad1 psad[7] = c[19], mean0
+	
+	psad1 psad[0] = c[20], mean0
+}
+{.mmi	
+	add dev2 = dev2, psad[2]
+	add dev3 = dev3, psad[3]
+	psad1 psad[1] = c[21], mean0
 	;;
-	(p7) add r8 = r8, r15
-	(p6) sub r14 = r21, r14
+}
+{.mii
+	add dev0 = dev0, psad[4]
+	psad1 psad[2] = c[22], mean0
+	psad1 psad[3] = c[23], mean0
+}
+{.mmi
+	add dev1 = dev1, psad[5]
+
+	add dev2 = dev2, psad[6]
+	psad1 psad[4] = c[24], mean0
+}
+{.mii
+	add dev3 = dev3, psad[7]
+	psad1 psad[5] = c[25], mean0
+	;; 
+	psad1 psad[6] = c[26], mean0
+}
+{.mmi
+	add dev0 = dev0, psad[0]
+	add dev1 = dev1, psad[1]
+	psad1 psad[7] = c[27], mean0
+}
+{.mii
+	add dev2 = dev2, psad[2]
+	psad1 psad[0] = c[28], mean0
+	psad1 psad[1] = c[29], mean0
+}
+{.mmi
+	add dev3 = dev3, psad[3]
 	;;
-	(p6) add r8 = r8, r14
-	ld1 r14 = [r16]
+	add dev0 = dev0, psad[4]
+	psad1 psad[2] = c[30], mean0
+}
+{.mii
+	add dev1 = dev1, psad[5]
+	psad1 psad[3] = c[31], mean0
+	;; 
+	add dev2 = dev2, psad[6]
+}
+{.mmi
+	add dev3 = dev3, psad[7]
+	add dev0 = dev0, psad[0]
+	add dev1 = dev1, psad[1]
 	;;
-	sub r15 = r14, r21
-	adds r16 = 2, r17
-	;;
-	cmp4.ge p6, p7 = 0, r15
-	;;
-	(p7) add r8 = r8, r15
-	(p6) sub r14 = r21, r14
-	;;
-	(p6) add r8 = r8, r14
-	ld1 r14 = [r16]
-	;;
-	sub r15 = r14, r21
-	adds r16 = 3, r17
-	;;
-	cmp4.ge p6, p7 = 0, r15
-	adds r17 = 4, r17
-	;;
-	(p7) add r8 = r8, r15
-	(p6) sub r14 = r21, r14
-	;;
-	(p6) add r8 = r8, r14
-	ld1 r14 = [r16]
-	;;
-	sub r15 = r14, r21
-	;;
-	cmp4.ge p6, p7 = 0, r15
-	;;
-	(p7) add r8 = r8, r15
-	(p6) sub r14 = r21, r14
-	;;
-	(p6) add r8 = r8, r14
-	br.cloop.sptk.few .L144
-	adds r24 = 1, r24
-	add r23 = r23, r33
-	;;
-	cmp4.geu p6, p7 = 15, r24
-	(p6) br.cond.dptk .L60
-	mov ar.lc = r2
+}
+{.mii
+	add dev2 = dev2, psad[2]
+	add dev3 = dev3, psad[3]
+	add ret0 = dev0, dev1
+	;; 
+}
+{.mib
+	add dev2 = dev2, dev3
+	nop.i 1
+	nop.b 1
+	;; 
+}
+{.mib
+	add ret0 = ret0, dev2
+	nop.i 1
 	br.ret.sptk.many b0
+}
 	.endp dev16_ia64#
