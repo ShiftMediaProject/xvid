@@ -1,0 +1,29 @@
+In this directory can find some examples how to use XviD MPEG4 codec 
+in your own programs. 
+
+Christoph (gruel@web.de)
+
+
+
+
+* xvid_enc_dec.c
+
+This is a complete example of the XviD-API for encoding and decoding:
+The program reads a file of YUV 4:2:0 images (as greyscale picture in 
+PGM-format) and encodes this sequence to a MPEG4 bytestream. Then it 
+decodes right away. 
+
+* odivx_enc_dec.c
+
+Same program, but using the OpenDivX/DivX4 compatibility API. Wit this 
+you can use source written for DivX4 and simply relink with XviD-corelibrary. 
+
+
+* cactus.pgm.bz2
+
+Example input file for multi_dec_enc.c. A sequence of 3 images, a szene 
+with a cactus moving from right to left. It bzip2-compressed for size 
+reason (half the size of a ZIP-file). Binaries of bunzip2 are available 
+for all major OSes at     http://sources.redhat.com/bzip2/  
+The original source of the cactus image is unknown...
+

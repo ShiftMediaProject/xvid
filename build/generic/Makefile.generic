@@ -1,0 +1,35 @@
+#/**************************************************************************
+# *
+# * generic makefile
+# *
+# * defines:   -DLINUX  -DBIG_ENDIAN
+# *
+# *
+# *************************************************************************/
+
+
+include Makefile.inc
+
+
+CC = gcc -Wall
+CFLAGS =
+
+
+RM = rm -rf
+
+
+all: $(LIB) $(LIBSO)
+
+
+$(LIB): $(SRC:.c=.o)
+	ar rcs $@ $^
+
+
+$(LIBSO): $(SRC:.c=.o)
+	$(CC) $^ -shared -lc -lm -o $@
+
+
+remove-all:
+	$(RM) $(DIRS)
+	$(RM) $(LIB)
+	$(RM) $(LIBSO)
