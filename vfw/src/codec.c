@@ -570,8 +570,7 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 		if (codec->config.packed) 
 			create.global |= XVID_GLOBAL_PACKED;
 
-		if (codec->config.closed_gov) 
-			create.global |= XVID_GLOBAL_CLOSED_GOP;
+		create.global |= XVID_GLOBAL_CLOSED_GOP;
 
 	}
 
@@ -683,12 +682,6 @@ LRESULT compress(CODEC * codec, ICCOMPRESS * icc)
 			frame.quant_intra_matrix = NULL;
 			frame.quant_inter_matrix = NULL;
 		}
-	}
-
-	if ((profiles[codec->config.profile].flags & PROFILE_REDUCED) &&
-		codec->config.reduced_resolution) {
-		frame.vol_flags |= XVID_VOL_REDUCED_ENABLE;
-		frame.vop_flags |= XVID_VOP_REDUCED;	/* XXX: need auto decion mode */
 	}
 
 	if ((profiles[codec->config.profile].flags & PROFILE_QPEL) && codec->config.qpel) {

@@ -203,13 +203,11 @@ static const REG_INT reg_ints[] = {
 	{"tff",						&reg.tff,						0},
 	{"qpel",					&reg.qpel,						0},
 	{"gmc",						&reg.gmc,						0},
-	{"reduced_resolution",		&reg.reduced_resolution,		0},
 	{"use_bvop",				&reg.use_bvop,					1},
 	{"max_bframes",				&reg.max_bframes,				2},
 	{"bquant_ratio",			&reg.bquant_ratio,				150},   /* 100-base float */
 	{"bquant_offset",			&reg.bquant_offset,				100},   /* 100-base float */
 	{"packed",					&reg.packed,					1},
-	{"closed_gov",				&reg.closed_gov,				1},
 
 	/* aspect ratio */
 	{"ar_mode",					&reg.ar_mode,					0},
@@ -270,7 +268,7 @@ static const REG_INT reg_ints[] = {
 	{"max_pquant",				&reg.max_pquant,				31},
 	{"min_bquant",				&reg.min_bquant,				1},
 	{"max_bquant",				&reg.max_bquant,				31},
-	{"trellis_quant",			&reg.trellis_quant,				0},
+	{"trellis_quant",			&reg.trellis_quant,				1},
 
 	/* debug */
 	{"fourcc_used",				&reg.fourcc_used,				0},
@@ -846,7 +844,6 @@ static void adv_mode(HWND hDlg, int idd, CONFIG * config)
 		EnableDlgWindow(hDlg, IDC_TFF, IsDlgChecked(hDlg, IDC_INTERLACING));
 		EnableDlgWindow(hDlg, IDC_QPEL, profiles[profile].flags&PROFILE_QPEL);
 		EnableDlgWindow(hDlg, IDC_GMC, profiles[profile].flags&PROFILE_GMC);
-		EnableDlgWindow(hDlg, IDC_REDUCED, profiles[profile].flags&PROFILE_REDUCED);
 
 		bvops = (profiles[profile].flags&PROFILE_BVOP) && IsDlgChecked(hDlg, IDC_BVOP);
 		EnableDlgWindow(hDlg, IDC_MAXBFRAMES,	   bvops);
@@ -856,7 +853,6 @@ static void adv_mode(HWND hDlg, int idd, CONFIG * config)
 		EnableDlgWindow(hDlg, IDC_BQUANTRATIO_S,	bvops);
 		EnableDlgWindow(hDlg, IDC_BQUANTOFFSET_S,   bvops);
 		EnableDlgWindow(hDlg, IDC_PACKED,		   bvops);
-		EnableDlgWindow(hDlg, IDC_CLOSEDGOV,		bvops);
 		break;
 
 	case IDD_AR:
@@ -1005,7 +1001,7 @@ static void adv_mode(HWND hDlg, int idd, CONFIG * config)
 			if (vsize > 0) {
 				SetDlgItemInt(hDlg, IDC_BITRATE_VSIZE, vsize, TRUE);
 				/* convert from kbytes to kbits-per-second */
-				SetDlgItemInt(hDlg, IDC_BITRATE_VRATE, ((__int64)vsize * 8 * 128) / (duration * 125), TRUE);
+				SetDlgItemInt(hDlg, IDC_BITRATE_VRATE, (int)((__int64)vsize * 8 * 128) / (duration * 125), TRUE);
 			}else{
 				SetDlgItemText(hDlg, IDC_BITRATE_VSIZE, "Overflow");
 				SetDlgItemText(hDlg, IDC_BITRATE_VRATE, "Overflow");
@@ -1065,14 +1061,12 @@ static void adv_upload(HWND hDlg, int idd, CONFIG * config)
 		CheckDlg(hDlg, IDC_TFF, config->tff);
 		CheckDlg(hDlg, IDC_QPEL, config->qpel);
   		CheckDlg(hDlg, IDC_GMC, config->gmc);
-		CheckDlg(hDlg, IDC_REDUCED, config->reduced_resolution);
 		CheckDlg(hDlg, IDC_BVOP, config->use_bvop);
 
 		SetDlgItemInt(hDlg, IDC_MAXBFRAMES, config->max_bframes, FALSE);
 		set_dlgitem_float(hDlg, IDC_BQUANTRATIO, config->bquant_ratio);
 		set_dlgitem_float(hDlg, IDC_BQUANTOFFSET, config->bquant_offset);
 		CheckDlg(hDlg, IDC_PACKED, config->packed);
-		CheckDlg(hDlg, IDC_CLOSEDGOV, config->closed_gov);
 
 		break;
 	case IDD_AR:
@@ -1214,14 +1208,12 @@ static void adv_download(HWND hDlg, int idd, CONFIG * config)
 		config->tff = IsDlgChecked(hDlg, IDC_TFF);
 		config->qpel = IsDlgChecked(hDlg, IDC_QPEL);
 		config->gmc = IsDlgChecked(hDlg, IDC_GMC);
-		config->reduced_resolution = IsDlgChecked(hDlg, IDC_REDUCED);
 
 		config->use_bvop = IsDlgChecked(hDlg, IDC_BVOP);
 		config->max_bframes = config_get_uint(hDlg, IDC_MAXBFRAMES, config->max_bframes);
 		config->bquant_ratio = get_dlgitem_float(hDlg, IDC_BQUANTRATIO, config->bquant_ratio);
 		config->bquant_offset = get_dlgitem_float(hDlg, IDC_BQUANTOFFSET, config->bquant_offset);
 		config->packed = IsDlgChecked(hDlg, IDC_PACKED);
-		config->closed_gov = IsDlgChecked(hDlg, IDC_CLOSEDGOV);
 		break;
 
 	case IDD_AR:
@@ -1711,6 +1703,9 @@ static void main_insert_zone(HWND hDlg, zone_t * s, int i, BOOL insert)
 
 	if (s->greyscale)
 		strcat(tmp, "G ");
+
+	if (s->chroma_opt)
+		strcat(tmp, "O ");
 
 	if (s->chroma_opt)
 		strcat(tmp, "C ");
