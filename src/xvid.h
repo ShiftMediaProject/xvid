@@ -26,7 +26,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.21 2002-10-24 10:56:07 suxen_drol Exp $
+ * $Id: xvid.h,v 1.22 2002-11-04 12:50:24 suxen_drol Exp $
  *
  *****************************************************************************/
 
@@ -60,7 +60,7 @@ extern "C" {
  * You can use it to check if the host XviD library API is the same as the one
  * you used to build you client program. If versions mismatch, then it is
  * highly possible that your application will segfault because the host XviD
- * library and your application use structure fields in different ways.
+ * library and your application use different structures.
  * 
  */
 
@@ -73,7 +73,7 @@ extern "C" {
 
 
 /**
- * \defgroup error_grp Error codes used by XviD API entry points.
+ * \defgroup error_grp Error codes returned by XviD API entry points.
  * @{
  */
 
@@ -85,10 +85,9 @@ extern "C" {
  *                              this point of the code. Clean all instances you
  *                              already created and exit the program cleanly.
  * <li>xvid_encore or xvid_decore : something was wrong and en/decoding
- *                                  operation has not been completed 
- *                                 sucessfully. At your option, you can
- *                                 stop the en/decoding process or just ignore
- *                                 and go on.
+ *                                  operation was not completed sucessfully.
+ *                                  you can stop the en/decoding process or just 
+ *									ignore and go on.
  * <li>xvid_stop : you can safely ignore it if you call this function at the
  *                 end of your program.
  * </ul>
@@ -102,14 +101,12 @@ extern "C" {
 
 #define XVID_ERR_MEMORY  1 /**< Operation failed.
 			    *
- * No memory was available on the host system, this is probably time to kill
- * some unuseful programs (WinSpyWare, KDE, GNOME</trollinside>) in order to
- * use XviD.
+ * Insufficent memory was available on the host system.
  */
 
 #define XVID_ERR_FORMAT  2 /**< Operation failed.
 			    *
- * The format of the parameters, input stream were wrong.
+ * The format of the parameters or input stream were incorrect.
  */
 
 /** @} */
@@ -125,18 +122,20 @@ extern "C" {
  * @{
  */
 
-#define XVID_CSP_RGB24  0  /**< Input/output frame uses the RGB24 colorspace format */
-#define XVID_CSP_YV12   1  /**< Input/output frame uses the YV12 colorspace format */
-#define XVID_CSP_YUY2   2  /**< Input/output frame uses the YUV2 colorspace format */
-#define XVID_CSP_UYVY   3  /**< Input/output frame uses the UYVY colorspace format */
-#define XVID_CSP_I420   4  /**< Input/output frame uses the I420 colorspace format */
-#define XVID_CSP_RGB555 10 /**< Input/output frame uses the RGB555 colorspace format */
-#define XVID_CSP_RGB565 11 /**< Input/output frame uses the RGB565 colorspace format */
-#define XVID_CSP_USER   12 /**< Input/output frame uses the USER colorspace format
-                            *
-                            * XviD will not perform any colorspace conversion. The
-                            * output will be the native MPEG4 YV12 colorspace. Up to
-                            * the client application to convert it to a usable format. */
+#define XVID_CSP_RGB24  0  /**< 24-bit RGB colorspace (b,g,r packed) */
+#define XVID_CSP_YV12   1  /**< YV12 colorspace (y,v,u planar) */
+#define XVID_CSP_YUY2   2  /**< YUY2 colorspace (y,u,y,v packed) */
+#define XVID_CSP_UYVY   3  /**< UYVY colorspace (u,y,v,y packed) */
+#define XVID_CSP_I420   4  /**< I420 colorsapce (y,u,v planar) */
+#define XVID_CSP_RGB555 10 /**< 16-bit RGB555 colorspace */
+#define XVID_CSP_RGB565 11 /**< 16-bit RGB565 colorspace */
+#define XVID_CSP_USER   12 /**< user colorspace format, where the image buffer points
+                            *   to a DEC_PICTURE (y,u,v planar) structure.
+							*
+							*   For encoding, image is read from the DEC_PICTURE
+							*   parameter values. For decoding, the DEC_PICTURE 
+                            *   parameters are set, pointing to the internal XviD
+                            *   image buffer. */
 #define XVID_CSP_EXTERN 1004 /**< Special colorspace used for slice rendering
                               *
                               * The application provides an external buffer to XviD.
@@ -144,11 +143,11 @@ extern "C" {
                               * buffer, no need to specify this is a speed boost feature.
                               * This feature is only used by mplayer at the moment, refer
                               * to mplayer code to see how it can be used. */
-#define XVID_CSP_YVYU   1002 /**< Input/output frame uses the YVYU colorspace format */
-#define XVID_CSP_RGB32  1000 /**< Input/output frame uses the RGB32 colorspace format */
-#define XVID_CSP_NULL   9999 /**< Input/output frame uses the NULL colorspace format */
+#define XVID_CSP_YVYU   1002 /**< YVYU colorspace (y,v,y,u packed) */
+#define XVID_CSP_RGB32  1000 /**< 32-bit RGB colorspace (b,g,r,a packed) */
+#define XVID_CSP_NULL   9999 /**< NULL colorspace; no conversion is performed */
 
-#define XVID_CSP_VFLIP  0x80000000 /**< Flips input/output frames */
+#define XVID_CSP_VFLIP  0x80000000 /**< (flag) Flip frame vertically during conversion */
 
 /** @} */
 
@@ -188,7 +187,7 @@ extern "C" {
 #define XVID_CPU_SSE      0x00000004 /**< use/has SSE (pentium3) instruction set */
 #define XVID_CPU_SSE2     0x00000008 /**< use/has SSE2 (pentium4) instruction set */
 #define XVID_CPU_3DNOW    0x00000010 /**< use/has 3dNOW (k6-2) instruction set */
-#define XVID_CPU_3DNOWEXT 0x00000020 /**< use/has 3dNOW-ext (???) instruction set */
+#define XVID_CPU_3DNOWEXT 0x00000020 /**< use/has 3dNOW-ext (athlon) instruction set */
 #define XVID_CPU_TSC      0x00000040 /**< has TimeStampCounter instruction */
 
 /** @} */
@@ -199,7 +198,7 @@ extern "C" {
  */
 
 #define XVID_CPU_IA64     0x00000080 /**< Forces ia64 optimized code usage
-				      *
+ *
  * This flags allow client applications to force IA64 optimized functions.
  * This feature is considered exeperimental and should be treated as is.
  */
@@ -248,8 +247,7 @@ extern "C" {
 				  * library
 				  */
 		int core_build;  /**< [out]
-				  * \todo Still unused at the moment, what do we
-				  * do with that ?
+				  * \todo Unused.
 				  */
 	}
 	XVID_INIT_PARAM;
@@ -292,7 +290,7 @@ extern "C" {
  * \defgroup decoder_grp Decoder related functions and structures.
  *
  *  This part describes all the structures/functions from XviD's API needed for
- *  decoding a MPEG4 compliant stream.
+ *  decoding a MPEG4 compliant streams.
  *  @{
  */
 
@@ -367,9 +365,8 @@ extern "C" {
 #define XVID_DEC_CREATE		1 /**< Creates a decoder instance
 				   *
  * This operation constant is used by a client application in order to create
- * a decoder instance. All instances are independant from each other, so
- * client application can use safely various threads, each decoding a
- * different MPEG4 bitstream.
+ * a decoder instance. Decoder instances are independant from each other, and
+ * can be safely threaded.
  */
 
 #define XVID_DEC_DESTROY	2 /**< Destroys a decoder instance
@@ -394,10 +391,10 @@ extern "C" {
  * This is the XviD's decoder entry point. The possible operations are
  * described in the \ref decops_grp section.
  *
- * \param handle Todo
- * \param opt Todo
- * \param param1 Todo
- * \param param2 Todo
+ * \param handle Decoder instance handle.
+ * \param opt Decoder option constant
+ * \param param1 Used to pass a XVID_DEC_PARAM or XVID_DEC_FRAME structure
+ * \param param2 Reserved for future use.
  */
 
 	int xvid_decore(void *handle,
@@ -438,26 +435,26 @@ extern "C" {
  * This flag forces XviD to use MPEG4 quantization type */
 #define XVID_HALFPEL			0x00000040 /**< Halfpel motion estimation
 											*
-* informs  xvid  to perform  a  half pixel  motion estimation. */
+* informs xvid to perform a half pixel  motion estimation. */
 #define XVID_ADAPTIVEQUANT		0x00000080/**< Adaptive quantization
 											*
-* informs  xvid  to perform  an  adaptative quantization using a Luminance
+* informs xvid to perform an adaptative quantization using a Luminance
 * masking algorithm */
-#define XVID_LUMIMASKING		0x00000100/**< Lumiomasking flag
+#define XVID_LUMIMASKING		0x00000100/**< Lumimasking flag
 											*
-* \deprecated Please do not use this flag anymore */
+											* \deprecated This flag is no longer used. */
 #define XVID_LATEINTRA			0x00000200/**< Unknown
 											*
-* ??? */
+											* \deprecated This flag is no longer used. */
 #define XVID_INTERLACING		0x00000400/**< MPEG4 interlacing mode.
 											*
-* Switches MPEG4 interlacing mode */
-#define XVID_TOPFIELDFIRST		0x00000800/**<
-											*
-* */
+											* Enables interlacing encoding mode */
+#define XVID_TOPFIELDFIRST		0x00000800/**< Unknown
+                                            *
+											* \deprecated This flag is no longer used. */
 #define XVID_ALTERNATESCAN		0x00001000/**<
 											*
-* */
+											* \deprecated This flag is no longer used. */
 #define XVID_HINTEDME_GET		0x00002000/**< Gets Motion vector data from ME system.
 											*
 * informs  xvid to  return  Motion Estimation vectors from the ME encoder
@@ -490,9 +487,9 @@ extern "C" {
 											*
 * This flags forces XviD to discard chroma data, this is not mpeg4 greyscale
 * mode, it simply drops chroma MBs using cbp == 0 for these blocks */
-#define XVID_GRAYSCALE			XVID_GREYSCALE /**< XVID_GREYSCALE alia for US speakerss
+#define XVID_GRAYSCALE			XVID_GREYSCALE /**< XVID_GREYSCALE alias 
 											*
-* Same as above */
+* United States locale support. */
 
 /** @} */
 
@@ -514,8 +511,8 @@ extern "C" {
 */
 #define PMV_HALFPELREFINE16 	0x00020000/**< Turns on halfpel refinement step
 											*
-* After normal  diamond  search, an  extra halfpel refinement step is  performed.  Should always be used if
-* XVID_HALFPEL is  on, because it  gives a rather big  increase in quality.
+* After normal diamond search, an extra halfpel refinement step is  performed. Should always be used if
+* XVID_HALFPEL is on, because it gives a rather big increase in quality.
 */
 #define PMV_EXTSEARCH16 		0x00040000/**< Extends search for 16x16 blocks
 											*
@@ -531,7 +528,7 @@ extern "C" {
 */
 #define PMV_QUICKSTOP16	   		0x00100000/**< Dynamic ME thresholding
 											*
-* like  EARLYSTOP,   but  not   even  halfpel refinement is  done. Normally worse  quality, so it  defaults to
+* like  EARLYSTOP, but not even halfpel refinement is  done. Normally worse quality, so it defaults to
 * off. Might be removed, too.
 */
 #define PMV_UNRESTRICTED16   	0x00200000/**< Not implemented
@@ -684,7 +681,7 @@ extern "C" {
 											* Frame quantizer :
 											* <ul>
 											* <li> 0 (zero) : Then the  rate controler chooses the right quantizer
-											*                 for you.  Tipically used in ABR encoding or first pass of a VBR
+											*                 for you.  Typically used in ABR encoding, or first pass of a VBR
 											*                 encoding session.
 											* <li> !=  0  :  Then you  force  the  encoder  to use  this  specific
 											*                  quantizer   value.     It   is   clamped    in   the   interval
@@ -727,13 +724,13 @@ extern "C" {
 								  * Header bytes in the resulting MPEG4 stream */
 		int kblks;               /**< [out]
 								  *
-								  * Number of MacroBlocks coded as Intra blocks */
+								  * Number of intra macro blocks  */
 		int mblks;               /**< [out]
 								  *
-								  * Number of MacroBlocks coded as Inter blocks */
+								  * Number of inter macro blocks */
 		int ublks;               /**< [out]
 								  *
-								  * Number of MacroBlocks coded as skipped blocks */
+								  * Number of skipped macro blocks */
 	}
 	XVID_ENC_STATS;
 
@@ -759,9 +756,7 @@ extern "C" {
 #define XVID_ENC_CREATE		1 /**< Creates a decoder instance
 				   *
  * This operation constant is used by a client application in order to create
- * an encoder instance. All instances are independant from each other, so
- * client application can use safely various threads, each encoding a
- * different set of frames.
+ * an encoder instance. Encoder instances are independant from each other.
  */
 
 #define XVID_ENC_DESTROY	2 /**< Destroys a encoder instance
@@ -785,10 +780,10 @@ extern "C" {
  * This is the XviD's encoder entry point. The possible operations are
  * described in the \ref encops_grp section.
  *
- * \param handle Todo
- * \param opt Todo
- * \param param1 Todo
- * \param param2 Todo
+ * \param handle Encoder instance handle
+ * \param opt Encoder option constant
+ * \param param1 Used to pass XVID_ENC_PARAM or XVID_ENC_FRAME structures.
+ * \param param2 Optionally used to pass the XVID_ENC_STATS structure.
  */
 	int xvid_encore(void *handle,
 					int opt,
