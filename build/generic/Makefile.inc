@@ -74,8 +74,11 @@ SRC_PPC = \
 	$(SRCDIR)/bitstream/ppc_asm/cbp_ppc.s
 
 SRC_ALTIVEC = \
-	$(SRCDIR)/bitstream/ppc_asm/cbp_altivec.s
+	$(SRCDIR)/bitstream/ppc_asm/cbp_altivec.s \
+	$(SRCDIR)/dct/ppc_asm/fdct_altivec.s \
+	$(SRCDIR)/dct/ppc_asm/idct_altivec.s
 
 
 DIRS_PPC = \
-	$(SRCDIR)/bitstream/ppc_asm/*.o
+	$(SRCDIR)/bitstream/ppc_asm/*.o \
+	$(SRCDIR)/dct/ppc_asm/*.o
