@@ -15,9 +15,9 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 #
-#    $Id: cbp_ppc.s,v 1.6 2002-03-22 13:05:45 canard Exp $
+#    $Id: cbp_ppc.s,v 1.7 2002-03-22 13:39:01 canard Exp $
 #    $Source: /home/xvid/cvs_copy/cvs-server-root/xvid/xvidcore/src/bitstream/ppc_asm/cbp_ppc.s,v $
-#    $Date: 2002-03-22 13:05:45 $
+#    $Date: 2002-03-22 13:39:01 $
 #    $Author: canard $
 #
 #    This is my first PPC ASM attempt. So I might do nasty things.
@@ -67,12 +67,8 @@ calc_cbp_ppc:
 	mr 6,9
 .loop2:
 	# coeffs is a matrix of 16 bits cells
-	lha 4,2(6)
-	lha 5,4(6)
-	or 4,5,4
-	lha 5,6(6)
-	or 4,5,4
-	lha 5,8(6)
+	lwz 4,2(6)
+	lwz 5,6(6)
 	# or. updates CR0
 	or. 4,5,4
 	# testing bit 2 (is zero) of CR0
@@ -80,10 +76,8 @@ calc_cbp_ppc:
 	addi 6,6,8
 	bdnz .loop2
 	# latest line coeffs 
-	lha 4,2(6)
-	lha 5,4(6)
-	or 4,5,4
-	lha 5,6(6)
+	lwz 4,2(6)
+	lhz 5,6(6)
 	# or. updates CR0
 	or. 4,5,4
 	# testing bit 2 (is zero) of CR0
