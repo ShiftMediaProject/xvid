@@ -20,7 +20,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.15 2004-04-20 19:47:00 edgomez Exp $
+ * $Id: xvid_decraw.c,v 1.16 2004-07-17 11:42:46 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -635,6 +635,10 @@ dec_init(int use_assembler, int debug_level)
 
 	xvid_gbl_init_t   xvid_gbl_init;
 	xvid_dec_create_t xvid_dec_create;
+
+	/* Reset the structure with zeros */
+	memset(&xvid_gbl_init, 0, sizeof(xvid_gbl_init_t));
+	memset(&xvid_dec_create, 0, sizeof(xvid_dec_create_t));
 
 	/*------------------------------------------------------------------------
 	 * XviD core initialization
