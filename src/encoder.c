@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: encoder.c,v 1.100 2003-05-28 16:51:08 edgomez Exp $
+ *  $Id: encoder.c,v 1.101 2003-07-28 12:36:20 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -1638,7 +1638,7 @@ FrameCodeI(Encoder * pEnc,
 
 	set_timecodes(pEnc->current,pEnc->reference,pEnc->mbParam.fbase);
 
-	BitstreamPadAlways(bs);
+	BitstreamPad(bs);
 	BitstreamWriteVopHeader(bs, &pEnc->mbParam, pEnc->current, 1);
 
 	*pBits = BitstreamPos(bs);
@@ -1785,7 +1785,7 @@ FrameCodeP(Encoder * pEnc,
 	set_timecodes(pEnc->current,pEnc->reference,pEnc->mbParam.fbase);
 	if (vol_header)
 	{	BitstreamWriteVolHeader(bs, &pEnc->mbParam, pEnc->current);
-		BitstreamPadAlways(bs);
+		BitstreamPad(bs);
 	}
 
 	BitstreamWriteVopHeader(bs, &pEnc->mbParam, pEnc->current, 1);
