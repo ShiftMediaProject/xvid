@@ -104,7 +104,7 @@ BOOL CALLBACK enum_tooltips(HWND hWnd, LPARAM lParam)
 /* MPEG-4 PROFILES/LEVELS ============================================================== */
 /* ===================================================================================== */
 
-
+#define DXN_PROFILES
 
 /* default vbv_occupancy is (64/170)*vbv_buffer_size */
 
@@ -290,7 +290,7 @@ static const REG_INT reg_ints[] = {
 };
 
 static const REG_STR reg_strs[] = {
-	{"profile",					reg.profile_name,				"AS @ L5"},
+	{"profile",					reg.profile_name,				"(unrestricted)"},
 	{"stats",					reg.stats,						CONFIG_2PASS_FILE},
 };
 
