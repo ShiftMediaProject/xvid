@@ -55,7 +55,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: decoder.c,v 1.31 2002-07-18 00:07:04 chenm001 Exp $
+ *  $Id: decoder.c,v 1.32 2002-07-19 11:15:21 albeu Exp $
  *
  *************************************************************************/
 
@@ -493,6 +493,9 @@ decoder_iframe(DECODER * dec,
 			decoder_mbintra(dec, mb, x, y, acpred_flag, cbp, bs, quant,
 							intra_dc_threshold, bound);
 		}
+		if(dec->out_frm)
+		  output_slice(&dec->cur, dec->edged_width,dec->width,dec->out_frm,0,y,dec->mb_width);
+
 	}
 
 }
@@ -556,6 +559,7 @@ decoder_pframe(DECODER * dec,
 
 	uint32_t x, y;
 	uint32_t bound;
+	int cp_mb, st_mb;
 
 	start_timer();
 	image_setedges(&dec->refn[0], dec->edged_width, dec->edged_height,
@@ -565,6 +569,7 @@ decoder_pframe(DECODER * dec,
 	bound = 0;
 
 	for (y = 0; y < dec->mb_height; y++) {
+		cp_mb = st_mb = 0;
 		for (x = 0; x < dec->mb_width; x++) {
 			MACROBLOCK *mb;
 
@@ -592,6 +597,7 @@ decoder_pframe(DECODER * dec,
 				uint32_t cbp;
 				uint32_t intra;
 
+				cp_mb++;
 				mcbpc = get_mcbpc_inter(bs);
 				mb->mode = mcbpc & 7;
 				cbpc = (mcbpc >> 4);
@@ -718,10 +724,16 @@ decoder_pframe(DECODER * dec,
 								 dec->refn[0].v +
 								 (8 * y) * dec->edged_width / 2 + (8 * x),
 								 dec->edged_width / 2);
-
 				stop_transfer_timer();
+				if(dec->out_frm && cp_mb > 0) {
+				  output_slice(&dec->cur, dec->edged_width,dec->width,dec->out_frm,st_mb,y,cp_mb);
+				  cp_mb = 0;
+				}
+				st_mb = x+1;
 			}
 		}
+		if(dec->out_frm && cp_mb > 0)
+		  output_slice(&dec->cur, dec->edged_width,dec->width,dec->out_frm,st_mb,y,cp_mb);
 	}
 }
 
@@ -1281,6 +1293,8 @@ decoder_decode(DECODER * dec,
 	uint32_t vop_type;
 
 	start_global_timer();
+
+	dec->out_frm = (frame->colorspace == XVID_CSP_EXTERN) ? frame->image : NULL;
 
 	BitstreamInit(&bs, frame->bitstream, frame->length);
 

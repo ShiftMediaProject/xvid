@@ -28,7 +28,7 @@
 *               ToDo ? : when BFRAMES is defined, the API_VERSION should not
 *                        be the same (3.0 ?)
 *
-*  $Id: xvid.h,v 1.14 2002-07-12 12:26:24 suxen_drol Exp $
+*  $Id: xvid.h,v 1.15 2002-07-19 11:15:21 albeu Exp $
 *
 *****************************************************************************/
 
@@ -37,7 +37,7 @@
 #define _XVID_H_
 
 #ifdef __cplusplus
-*  $Id: xvid.h,v 1.14 2002-07-12 12:26:24 suxen_drol Exp $
+*  $Id: xvid.h,v 1.15 2002-07-19 11:15:21 albeu Exp $
 #endif
 
 /*****************************************************************************
@@ -73,6 +73,7 @@
 
 
 /*****************************************************************************
+ *  Initialization constants
  ****************************************************************************/
 
 /* CPU flags for XVID_INIT_PARAM.cpu_flags */
@@ -154,6 +155,14 @@
 		int stride_y, stride_u,stride_v;
 	} XVID_DEC_PICTURE;
 
+
+/*****************************************************************************
+ * Decoder entry point
+ ****************************************************************************/
+
+/* decoder options */
+#define XVID_DEC_DECODE		0
+#define XVID_DEC_CREATE		1
 #define XVID_DEC_DESTROY	2
 
 	int xvid_decore(void *handle,

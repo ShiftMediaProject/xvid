@@ -3,6 +3,7 @@
 
 #include "../portab.h"
 #include "colorspace.h"
+#include "../xvid.h"
 
 #define EDGE_SIZE  32
 
@@ -79,5 +80,8 @@ float image_mad(const IMAGE * img1,
 				uint32_t stride,
 				uint32_t width,
 				uint32_t height);
+
+void __inline
+output_slice(IMAGE * cur, int edged_width, int width, XVID_DEC_PICTURE* out_frm, int mbx, int mby,int mbl);
 
 #endif							/* _IMAGE_H_ */
