@@ -643,6 +643,11 @@ static void apply_zone_modifiers(xvid_enc_frame_t * frame, CONFIG * config, int 
 		frame->vop_flags |= XVID_VOP_CHROMAOPT;
 	}
 
+	if (config->zones[i].cartoon_mode) {
+		frame->vop_flags |= XVID_VOP_CARTOON;
+		frame->motion |= XVID_ME_DETECT_STATIC_MOTION;
+	}
+
 	if ((profiles[config->profile].flags & PROFILE_BVOP) && config->use_bvop) {
 		frame->bframe_threshold = config->zones[i].bvop_threshold;
 	}
@@ -735,11 +740,6 @@ LRESULT compress(CODEC * codec, ICCOMPRESS * icc)
 
 	if (codec->config.chromame)
 		frame.motion |= XVID_ME_CHROMA_PVOP + XVID_ME_CHROMA_BVOP;
-
-	if (codec->config.cartoon_mode) {
-		frame.vop_flags |= XVID_VOP_CARTOON;
-		frame.motion |= XVID_ME_DETECT_STATIC_MOTION;
-	}
 
 	if (codec->config.turbo)
  		frame.motion |= XVID_ME_FASTREFINE16 | XVID_ME_FASTREFINE8 | 

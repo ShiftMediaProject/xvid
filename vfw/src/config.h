@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: config.h,v 1.4 2004-07-18 12:45:57 syskin Exp $
+ * $Id: config.h,v 1.5 2005-01-08 12:28:48 syskin Exp $
  *
  ****************************************************************************/
 #ifndef _CONFIG_H_
@@ -93,6 +93,7 @@ typedef struct
 	unsigned int greyscale;
 	unsigned int chroma_opt;
 	unsigned int bvop_threshold;
+	unsigned int cartoon_mode;
 } zone_t;
 
 
@@ -172,7 +173,6 @@ typedef struct
 	int vhq_mode;
 	int vhq_bframe;
 	int chromame;
-	int cartoon_mode;
 	int turbo;
 	int max_key_interval;
 	int frame_drop_ratio;

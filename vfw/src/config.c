@@ -259,7 +259,6 @@ static const REG_INT reg_ints[] = {
 	{"vhq_mode",				&reg.vhq_mode,					1},
 	{"vhq_bframe",				&reg.vhq_bframe,				0},
 	{"chromame",				&reg.chromame,					1},
-	{"cartoon_mode",			&reg.cartoon_mode,				0},
 	{"turbo",					&reg.turbo,						0},
 	{"max_key_interval",		&reg.max_key_interval,			300},
 	{"frame_drop_ratio",		&reg.frame_drop_ratio,			0},
@@ -305,6 +304,7 @@ static const REG_INT reg_zone[] = {
 	{"zone%i_greyscale",		&stmp.greyscale,				0},
 	{"zone%i_chroma_opt",		&stmp.chroma_opt,				0},
 	{"zone%i_bvop_threshold",   &stmp.bvop_threshold,			0},
+	{"zone%i_cartoon_mode",		&stmp.cartoon_mode,				0},
 };
 
 static const BYTE default_qmatrix_intra[] = {
@@ -1136,6 +1136,8 @@ static void adv_upload(HWND hDlg, int idd, CONFIG * config)
 		CheckDlgButton(hDlg, IDC_ZONE_GREYSCALE, config->zones[config->cur_zone].greyscale);
 		CheckDlgButton(hDlg, IDC_ZONE_CHROMAOPT, config->zones[config->cur_zone].chroma_opt);
 
+		CheckDlg(hDlg, IDC_CARTOON, config->zones[config->cur_zone].cartoon_mode);
+
 		SetDlgItemInt(hDlg, IDC_ZONE_BVOPTHRESHOLD, config->zones[config->cur_zone].bvop_threshold, TRUE);
 		break;
 
@@ -1144,7 +1146,6 @@ static void adv_upload(HWND hDlg, int idd, CONFIG * config)
 		SendDlgItemMessage(hDlg, IDC_VHQ, CB_SETCURSEL, config->vhq_mode, 0);
 		CheckDlg(hDlg, IDC_VHQ_BFRAME, config->vhq_bframe);
 		CheckDlg(hDlg, IDC_CHROMAME, config->chromame);
-		CheckDlg(hDlg, IDC_CARTOON, config->cartoon_mode);
 		CheckDlg(hDlg, IDC_TURBO, config->turbo);
 		SetDlgItemInt(hDlg, IDC_FRAMEDROP, config->frame_drop_ratio, FALSE);
 		SetDlgItemInt(hDlg, IDC_MAXKEY, config->max_key_interval, FALSE);
@@ -1320,6 +1321,7 @@ static void adv_download(HWND hDlg, int idd, CONFIG * config)
 		config->zones[config->cur_zone].chroma_opt = IsDlgButtonChecked(hDlg, IDC_ZONE_CHROMAOPT);
 
 		config->zones[config->cur_zone].bvop_threshold = config_get_int(hDlg, IDC_ZONE_BVOPTHRESHOLD, config->zones[config->cur_zone].bvop_threshold);
+		config->zones[config->cur_zone].cartoon_mode = IsDlgChecked(hDlg, IDC_CARTOON);
 		break;
 
 	case IDD_MOTION :
@@ -1327,7 +1329,6 @@ static void adv_download(HWND hDlg, int idd, CONFIG * config)
 		config->vhq_mode = SendDlgItemMessage(hDlg, IDC_VHQ, CB_GETCURSEL, 0, 0);
 		config->vhq_bframe = IsDlgButtonChecked(hDlg, IDC_VHQ_BFRAME);
 		config->chromame = IsDlgChecked(hDlg, IDC_CHROMAME);
-		config->cartoon_mode = IsDlgChecked(hDlg, IDC_CARTOON);
 		config->turbo = IsDlgChecked(hDlg, IDC_TURBO);
 
 		config->frame_drop_ratio = config_get_uint(hDlg, IDC_FRAMEDROP, config->frame_drop_ratio);
