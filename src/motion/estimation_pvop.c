@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_pvop.c,v 1.14 2005-03-03 01:27:07 Isibaar Exp $
+ * $Id: estimation_pvop.c,v 1.15 2005-03-04 22:13:33 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -858,11 +858,19 @@ MotionEstimation(MBParam * const pParam,
 			}
 
 			if(MotionFlags & XVID_ME_DETECT_STATIC_MOTION) {
+				VECTOR *cmpMV;
+				VECTOR staticMV = { 0, 0 };
+				
+				if (current->coding_type == S_VOP) 
+					cmpMV = &pMB->amv;
+				else
+					cmpMV = &staticMV;
+
 				if(x > 0 && y > 0 && x < pParam->mb_width) {
-					if(MVequal((&pMBs[(x-1) + y * pParam->mb_width])->mvs[0], zeroMV) &&
-					   MVequal((&pMBs[x + (y-1) * pParam->mb_width])->mvs[0], zeroMV) &&
-				       MVequal((&pMBs[(x+1) + (y-1) * pParam->mb_width])->mvs[0], zeroMV) &&
-				       MVequal(prevMB->mvs[0], zeroMV)) {
+					if(MVequal((&pMBs[(x-1) + y * pParam->mb_width])->mvs[0], *cmpMV) &&
+					   MVequal((&pMBs[x + (y-1) * pParam->mb_width])->mvs[0], *cmpMV) &&
+				       MVequal((&pMBs[(x+1) + (y-1) * pParam->mb_width])->mvs[0], *cmpMV) &&
+				       MVequal(prevMB->mvs[0], *cmpMV)) {
 						stat_thresh = MAX((&pMBs[(x-1) + y * pParam->mb_width])->sad16,
 								 	  MAX((&pMBs[x + (y-1) * pParam->mb_width])->sad16,
 									  MAX((&pMBs[(x+1) + (y-1) * pParam->mb_width])->sad16,
@@ -876,12 +884,36 @@ MotionEstimation(MBParam * const pParam,
 				}
 			}
 
-			 /* favorize (0,0) vector for cartoons */
-			if ((current->vop_flags & XVID_VOP_CARTOON) &&
-				((sad00 < pMB->quant * 4 * skip_thresh) || (sad00 < stat_thresh))) {
-				ZeroMacroblockP(pMB, sad00);
-				pMB->cbp = 0x3f;
-				continue;
+			 /* favorize (0,0) or global vector for cartoons */
+			if (current->vop_flags & XVID_VOP_CARTOON) {
+				if (current->coding_type == S_VOP) {
+					int32_t iSAD = sad16(pCurrent->y + (x + y * iEdgedWidth) * 16,
+					pGMC->y + 16*y*iEdgedWidth + 16*x, iEdgedWidth, 65536);
+
+					if (Data.chroma) {
+						iSAD += sad8(pCurrent->u + x*8 + y*(iEdgedWidth/2)*8, pGMC->u + 8*y*(iEdgedWidth/2) + 8*x, iEdgedWidth/2);
+						iSAD += sad8(pCurrent->v + (x + y*(iEdgedWidth/2))*8, pGMC->v + 8*y*(iEdgedWidth/2) + 8*x, iEdgedWidth/2);
+					}
+
+					if (iSAD <= stat_thresh) {		/* mode decision GMC */
+						pMB->mode = MODE_INTER;
+						pMB->sad16 = pMB->sad8[0] = pMB->sad8[1] = pMB->sad8[2] = pMB->sad8[3] = iSAD;
+						pMB->mcsel = 1;
+						if (Data.qpel) {
+							pMB->qmvs[0] = pMB->qmvs[1] = pMB->qmvs[2] = pMB->qmvs[3] = pMB->amv;
+							pMB->mvs[0].x = pMB->mvs[1].x = pMB->mvs[2].x = pMB->mvs[3].x = pMB->amv.x/2;
+							pMB->mvs[0].y = pMB->mvs[1].y = pMB->mvs[2].y = pMB->mvs[3].y = pMB->amv.y/2;
+						} else
+							pMB->mvs[0] = pMB->mvs[1] = pMB->mvs[2] = pMB->mvs[3] = pMB->amv;
+						
+						continue;
+					}
+				}
+				else if (sad00 < stat_thresh) {
+					ZeroMacroblockP(pMB, sad00);
+					pMB->cbp = 0x3f;
+					continue;
+				}
 			}
 
 			SearchP(pRef, pRefH->y, pRefV->y, pRefHV->y, pCurrent, x,
