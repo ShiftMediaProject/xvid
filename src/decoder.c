@@ -32,6 +32,10 @@
  *
  *	History:
  *
+ *  29.03.2002  interlacing fix - compensated block wasn't being used when
+ *              reconstructing blocks, thus artifacts
+ *              interlacing speedup - used transfers to re-interlace
+ *              interlaced decoding should be as fast as progressive now
  *  26.03.2002  interlacing support - moved transfers outside decode loop
  *	26.12.2001	decoder_mbinter: dequant/idct moved within if(coded) block
  *	22.12.2001	block based interpolation
@@ -55,7 +59,6 @@
 #include "dct/fdct.h"
 #include "utils/mem_transfer.h"
 #include "image/interpolate8x8.h"
-#include "utils/mbfunctions.h"
 
 #include "bitstream/mbcoding.h"
 #include "prediction/mbprediction.h"
@@ -151,14 +154,16 @@ void decoder_mbintra(DECODER * dec,
 	DECLARE_ALIGNED_MATRIX(block, 6, 64, int16_t, CACHE_LINE);
 	DECLARE_ALIGNED_MATRIX(data,  6, 64, int16_t, CACHE_LINE);
 
-	const uint32_t stride = dec->edged_width;
+	uint32_t stride = dec->edged_width;
+	uint32_t stride2 = stride / 2;
+	uint32_t next_block = stride * 8;
 	uint32_t i;
 	uint32_t iQuant = pMB->quant;
 	uint8_t *pY_Cur, *pU_Cur, *pV_Cur;
 
 	pY_Cur = dec->cur.y + (y_pos << 4) * stride + (x_pos << 4);
-	pU_Cur = dec->cur.u + (y_pos << 3) * (stride >> 1) + (x_pos << 3);
-	pV_Cur = dec->cur.v + (y_pos << 3) * (stride >> 1) + (x_pos << 3);
+	pU_Cur = dec->cur.u + (y_pos << 3) * stride2 + (x_pos << 3);
+	pV_Cur = dec->cur.v + (y_pos << 3) * stride2 + (x_pos << 3);
 
 	memset(block, 0, 6*64*sizeof(int16_t));		// clear
 
@@ -224,20 +229,19 @@ void decoder_mbintra(DECODER * dec,
 		stop_idct_timer();
 	}
 
-	start_timer();
-	if (dec->interlacing && pMB->field_dct)
+	if (pMB->field_dct)
 	{
-		MBFieldToFrame(data);
+		next_block = stride;
+		stride *= 2;
 	}
-	stop_interlacing_timer();
 
 	start_timer();
 	transfer_16to8copy(pY_Cur,                  &data[0*64], stride);
 	transfer_16to8copy(pY_Cur + 8,              &data[1*64], stride);
-	transfer_16to8copy(pY_Cur + 8 * stride,     &data[2*64], stride);
-	transfer_16to8copy(pY_Cur + 8 + 8 * stride, &data[3*64], stride);
-	transfer_16to8copy(pU_Cur,                  &data[4*64], stride / 2);
-	transfer_16to8copy(pV_Cur,                  &data[5*64], stride / 2);
+	transfer_16to8copy(pY_Cur + next_block,     &data[2*64], stride);
+	transfer_16to8copy(pY_Cur + 8 + next_block, &data[3*64], stride);
+	transfer_16to8copy(pU_Cur,                  &data[4*64], stride2);
+	transfer_16to8copy(pV_Cur,                  &data[5*64], stride2);
 	stop_transfer_timer();
 }
 
@@ -267,16 +271,17 @@ void decoder_mbinter(DECODER * dec,
 	DECLARE_ALIGNED_MATRIX(block,6, 64, int16_t, CACHE_LINE);
 	DECLARE_ALIGNED_MATRIX(data, 6, 64, int16_t, CACHE_LINE);
 
-	const uint32_t stride = dec->edged_width;
-	const uint32_t stride2 = dec->edged_width / 2;
+	uint32_t stride = dec->edged_width;
+	uint32_t stride2 = stride / 2;
+	uint32_t next_block = stride * 8;
 	uint32_t i;
 	uint32_t iQuant = pMB->quant;
 	uint8_t *pY_Cur, *pU_Cur, *pV_Cur;
 	int uv_dx, uv_dy;
 
 	pY_Cur = dec->cur.y + (y_pos << 4) * stride + (x_pos << 4);
-	pU_Cur = dec->cur.u + (y_pos << 3) * (stride >> 1) + (x_pos << 3);
-	pV_Cur = dec->cur.v + (y_pos << 3) * (stride >> 1) + (x_pos << 3);
+	pU_Cur = dec->cur.u + (y_pos << 3) * stride2 + (x_pos << 3);
+	pV_Cur = dec->cur.v + (y_pos << 3) * stride2 + (x_pos << 3);
 
 	if (pMB->mode == MODE_INTER || pMB->mode == MODE_INTER_Q)
 	{
@@ -332,12 +337,11 @@ void decoder_mbinter(DECODER * dec,
 		}
 	}
 
-	start_timer();
 	if (pMB->field_dct)
 	{
-		MBFieldToFrame(data);
+		next_block = stride;
+		stride *= 2;
 	}
-	stop_interlacing_timer();
 
 	start_timer();
 	if (cbp & 32)
@@ -345,13 +349,13 @@ void decoder_mbinter(DECODER * dec,
 	if (cbp & 16)
 		transfer_16to8add(pY_Cur + 8,              &data[1*64], stride);
 	if (cbp & 8)
-		transfer_16to8add(pY_Cur + 8 * stride,     &data[2*64], stride);
+		transfer_16to8add(pY_Cur + next_block,     &data[2*64], stride);
 	if (cbp & 4)
-		transfer_16to8add(pY_Cur + 8 + 8 * stride, &data[3*64], stride);
+		transfer_16to8add(pY_Cur + 8 + next_block, &data[3*64], stride);
 	if (cbp & 2)
-		transfer_16to8add(pU_Cur,                  &data[4*64], stride / 2);
+		transfer_16to8add(pU_Cur,                  &data[4*64], stride2);
 	if (cbp & 1)
-		transfer_16to8add(pV_Cur,                  &data[5*64], stride / 2);
+		transfer_16to8add(pV_Cur,                  &data[5*64], stride2);
 	stop_transfer_timer();
 }
 
