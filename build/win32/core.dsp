@@ -600,6 +600,10 @@ SOURCE=..\..\src\quant\quant_h263.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\src\quant\quant_matrix.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\src\quant\quant_mpeg4.c
 # End Source File
 # End Group
