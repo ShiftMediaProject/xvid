@@ -53,7 +53,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: decoder.c,v 1.28 2002-07-12 00:49:59 chenm001 Exp $
+ *  $Id: decoder.c,v 1.29 2002-07-15 00:26:38 chenm001 Exp $
  *
  *************************************************************************/
 
@@ -1121,15 +1121,14 @@ decoder_bframe(DECODER * dec,
 			// the last P_VOP is skip macroblock ?
 			if (last_mb->mode == MODE_NOT_CODED) {
 				//DEBUG2("Skip MB in B-frame at (X,Y)=!",x,y);
-				mb->mb_type = MODE_NOT_CODED;
 				mb->cbp = 0;
 #ifdef BFRAMES_DEC_DEBUG
+				mb->mb_type = MODE_NOT_CODED;
 	BFRAME_DEBUG
 #endif
 				mb->mb_type = MODE_FORWARD;
 				mb->mvs[1].x = mb->mvs[2].x = mb->mvs[3].x = mb->mvs[0].x;
 				mb->mvs[1].y = mb->mvs[2].y = mb->mvs[3].y = mb->mvs[0].y;
-				mb->quant = 8;
 
 				decoder_bf_mbinter(dec, mb, x, y, mb->cbp, bs, quant, 1);
 				continue;
