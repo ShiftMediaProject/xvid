@@ -36,7 +36,7 @@
  *               support for EXTENDED API
  *  - 22.08.2001 fixed bug in iDQtab
  *
- *  $Id: encoder.h,v 1.17 2002-08-07 10:09:00 chl Exp $
+ *  $Id: encoder.h,v 1.18 2002-09-03 17:24:26 chl Exp $
  *
  ****************************************************************************/
 
@@ -112,10 +112,8 @@ typedef struct
 
 	HINTINFO *hint;
 
-#ifdef BFRAMES
 	uint32_t m_seconds;
 	uint32_t m_ticks;
-#endif
 
 }
 MBParam;
@@ -132,10 +130,8 @@ typedef struct
 	uint32_t fcode;
 	uint32_t bcode;
 
-#ifdef BFRAMES
 	uint32_t seconds;
 	uint32_t ticks;
-#endif
 
 	IMAGE image;
 
