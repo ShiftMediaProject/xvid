@@ -6,7 +6,7 @@ dnl Copyright(C) 2003 Edouard Gomez <ed.gomez@free.fr>
 dnl
 dnl ==========================================================================
 
-AC_INIT([XviD], [1.0.0 rc3], [xvid-devel@xvid.org])
+AC_INIT([XviD], [1.0.0 rc4], [xvid-devel@xvid.org])
 AC_CONFIG_SRCDIR(configure.in)
 
 dnl Do not forget to increase that when needed.
@@ -162,9 +162,7 @@ if test x"$assembly" = x"yes" ; then
 		;;	
 		powerpc)
 		AC_MSG_RESULT(PowerPC)
-		dnl ATM the ppc port is out of date 
-		dnl ARCHITECTURE="PPC"
-		ARCHITECTURE="GENERIC"
+		ARCHITECTURE="PPC"
 		;;
 		ia64)
 		AC_MSG_RESULT(ia64)
@@ -382,24 +380,89 @@ fi
 dnl
 dnl PPC
 dnl
-
+dnl With the PPC platform we do not use assembly language, we better keep with
+dnl intrinsic altivec functions and types as they are supported by both Apple
+dnl and GNU gcc with very slight changes to code which can be sumed up by:
+dnl
+dnl Apple:
+dnl  - compile with the option -faltivec
+dnl  - define vectors with parentheses vec = (0,0,0,0)
+dnl GNU
+dnl  - compile with -maltivec -mabi=altivec
+dnl  - include <altivec.h> before using intrincic
+dnl  - define vectors with vec = {0,0,0,0}
+dnl
+dnl * The compile time option will be "injected" into SPECIFIC_CFLAGS variable
+dnl * The need for altivec.h will also be injected into SPECIFIC_CFLAGS through
+dnl   a -DHAVE_ALTIVEC_H
+dnl * The vector definition is handled in portab.h thx to
+dnl   HAVE_PARENTHESES/BRACES_ALTIVEC_DECL
+dnl
+PPC_ALTIVEC_SOURCES=""
 if test "$ARCHITECTURE" = "PPC" ; then
    AS="\$(CC)"
-   AFLAGS="-c"
-   ASSEMBLY_EXTENSION="s"
-   ASSEMBLY_SOURCES="SRC_PPC"
-   AC_MSG_CHECKING([for Altivec support])
-   cat > conftest.S << EOF
-         .text
-         vxor 0,0,0
+   AFLAGS=""
+   ASSEMBLY_EXTENSION=".s"
+   ASSEMBLY_SOURCES=""
+
+   AC_MSG_CHECKING([for altivec.h])
+cat > conftest.c << EOF
+#include <altivec.h>
+int main() { return(0); }
 EOF
-   if $CC -c conftest.S 2>/dev/null 1>/dev/null ; then
+   if $CC -faltivec -c conftest.c 2>/dev/null 1>/dev/null || \
+      $CC -maltivec -mabi=altivec -c conftest.c 2>/dev/null 1>/dev/null ; then
         AC_MSG_RESULT(yes)
-        SPECIFIC_CFLAGS="$SPECIFIC_CFLAGS -DARCH_IS_PPC_ALTIVEC"
-        ASSEMBLY_SOURCES="SRC_ALTIVEC"
+        SPECIFIC_CFLAGS="$SPECIFIC_CFLAGS -DHAVE_ALTIVEC_H"
+	TEMP_ALTIVEC="-DHAVE_ALTIVEC_H"
    else
         AC_MSG_RESULT(no)
+	TEMP_ALTIVEC=""
    fi
+
+   AC_MSG_CHECKING([for Altivec compiler support])
+cat > conftest.c << EOF
+#ifdef HAVE_ALTIVEC_H
+#include <altivec.h>
+#endif
+
+int main()
+{
+  vector unsigned int vartest2 = (vector unsigned int)(0);
+  vector unsigned int vartest3 = (vector unsigned int)(1);
+  vartest2 = vec_add(vartest2, vartest3);
+  return(0);
+}
+EOF
+   if $CC $TEMP_ALTIVEC -faltivec -c conftest.c 2>/dev/null 1>/dev/null ; then
+        AC_MSG_RESULT([yes (Apple)])
+        SPECIFIC_CFLAGS="$SPECIFIC_CFLAGS -faltivec -DHAVE_ALTIVEC_PARENTHESES_DECL $TEMP_ALTIVEC"
+	PPC_ALTIVEC_SOURCES="SRC_PPC_ALTIVEC"
+   else
+cat > conftest.c << EOF
+#ifdef HAVE_ALTIVEC_H
+#include <altivec.h>
+#endif
+
+int main()
+{
+  vector unsigned int vartest2 = (vector unsigned int){0};
+  vector unsigned int vartest3 = (vector unsigned int){1};
+  vartest2 = vec_add(vartest2, vartest3);
+  return(0);
+}
+EOF
+   if $CC $TEMP_ALTIVEC -maltivec -mabi=altivec -c conftest.c 2>/dev/null 1>/dev/null ; then
+        AC_MSG_RESULT([yes (GNU)])
+        SPECIFIC_CFLAGS="$SPECIFIC_CFLAGS -maltivec -mabi=altivec -DHAVE_ALTIVEC_BRACES_DECL $TEMP_ALTIVEC"
+	PPC_ALTIVEC_SOURCES="SRC_PPC_ALTIVEC"
+   else
+	AC_MSG_RESULT([no (ppc support won't be compiled in)])
+	dnl Only C code can be compiled :-(
+	ARCHITECTURE="GENERIC"
+   fi
+   fi
+
    rm -f conftest.*
 fi
 
@@ -490,6 +553,7 @@ AC_SUBST(CFLAGS)
 AC_SUBST(SPECIFIC_LDFLAGS)
 AC_SUBST(SPECIFIC_CFLAGS)
 AC_SUBST(DCT_IA64_SOURCES)
+AC_SUBST(PPC_ALTIVEC_SOURCES)
 AC_SUBST(RANLIB)
 AC_SUBST(API_MAJOR)
 AC_SUBST(API_MINOR)

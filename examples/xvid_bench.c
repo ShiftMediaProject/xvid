@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.12 2004-04-02 21:29:21 edgomez Exp $
+ * $Id: xvid_bench.c,v 1.13 2004-04-05 20:36:36 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -120,6 +120,9 @@ CPU cpu_list[] =
   , { "SSE2  ", XVID_CPU_SSE2 | XVID_CPU_MMX }
   , { "3DNOW ", XVID_CPU_3DNOW }
   , { "3DNOWE", XVID_CPU_3DNOW | XVID_CPU_3DNOWEXT }
+#endif
+#ifdef ARCH_IS_PPC
+  , { "ALTIVEC", XVID_CPU_ALTIVEC }
 #endif
 //, { "IA64  ", XVID_CPU_IA64 }  
 //, { "TSC   ", XVID_CPU_TSC }

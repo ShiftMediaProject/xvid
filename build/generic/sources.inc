@@ -91,11 +91,11 @@ SRC_IA64_IDCT_GCC = \
 SRC_IA64_IDCT_ECC = \
 	dct/ia64_asm/idct_ia64_ecc.s
 
-SRC_PPC = \
-	bitstream/ppc_asm/cbp_ppc.s
-
-SRC_ALTIVEC = \
-	bitstream/ppc_asm/cbp_altivec.s \
-	dct/ppc_asm/fdct_altivec.s \
-	dct/ppc_asm/idct_altivec.s \
-	motion/ppc_asm/sad_altivec.s
+SRC_PPC_ALTIVEC = \
+	utils/ppc_asm/altivec_trigger.c \
+	utils/ppc_asm/mem_transfer_altivec.c \
+	motion/ppc_asm/sad_altivec.c \
+	dct/ppc_asm/idct_altivec.c \
+	image/ppc_asm/interpolate8x8_altivec.c \
+	image/ppc_asm/colorspace_altivec.c \
+	quant/ppc_asm/quant_h263_altivec.c

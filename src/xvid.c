@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.49 2004-04-01 11:11:28 suxen_drol Exp $
+ * $Id: xvid.c,v 1.50 2004-04-05 20:36:36 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -52,10 +52,9 @@
 unsigned int xvid_debug = 0; /* xvid debug mask */
 #endif
 
-#if defined(ARCH_IS_IA32)
-#if defined(_MSC_VER)
+#if defined(ARCH_IS_IA32) && defined(_MSC_VER)
 #	include <windows.h>
-#else
+#elif defined(ARCH_IS_IA32) || defined(ARCH_IS_PPC)
 #	include <signal.h>
 #	include <setjmp.h>
 
@@ -78,41 +77,50 @@ unsigned int xvid_debug = 0; /* xvid debug mask */
  *   0 : SIGILL was *not* signalled
  *   1 : SIGILL was signalled
  */
-
-int
+#if defined(ARCH_IS_IA32) && defined(_MSC_VER)
+static int
 sigill_check(void (*func)())
 {
-#if defined(_MSC_VER)
 	_try {
 		func();
-	}
-	_except(EXCEPTION_EXECUTE_HANDLER) {
+	} _except(EXCEPTION_EXECUTE_HANDLER) {
 
 		if (_exception_code() == STATUS_ILLEGAL_INSTRUCTION)
-			return 1;
+			return(1);
 	}
-	return 0;
-#else
-    void * old_handler;
+	return(0);
+}
+#elif defined(ARCH_IS_IA32) || defined(ARCH_IS_PPC)
+static int
+sigill_check(void (*func)())
+{
+    void *old_handler;
     int jmpret;
 
-
+    /* Set our SIGILL handler */
     old_handler = signal(SIGILL, sigill_handler);
-    if (old_handler == SIG_ERR)
-    {
-        return -1;
+
+    /* Check for error */
+    if (old_handler == SIG_ERR) {
+        return(-1);
     }
 
-    jmpret = setjmp(mark);
-    if (jmpret == 0)
-    {
+    /* Save stack context, so if func triggers a SIGILL, we can still roll
+	 * back to a valid CPU state */
+	jmpret = setjmp(mark);
+
+	/* If setjmp returned directly, then its returned value is 0, and we still
+	 * have to test the passed func. Otherwise it means the stack context has
+	 * been restored by a longjmp() call, which in our case happens only in the
+	 * signal handler */
+    if (jmpret == 0) {
         func();
     }
 
+    /* Restore old signal handler */
     signal(SIGILL, old_handler);
 
-    return jmpret;
-#endif
+    return(jmpret);
 }
 #endif
 
@@ -134,9 +142,8 @@ detect_cpu_flags()
 #endif
 
 #if defined(ARCH_IS_PPC)
-#if defined(ARCH_IS_PPC_ALTIVEC)
-	cpu_flags |= XVID_CPU_ALTIVEC;
-#endif
+	if (!sigill_check(altivec_trigger))
+		cpu_flags |= XVID_CPU_ALTIVEC;
 #endif
 
 	return cpu_flags;
@@ -536,28 +543,62 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 #endif
 
 #if defined(ARCH_IS_PPC)
-	if ((cpu_flags & XVID_CPU_ASM))
-	{
-		calc_cbp = calc_cbp_ppc;
-	}
-
-	if ((cpu_flags & XVID_CPU_ALTIVEC))
-	{
-		calc_cbp = calc_cbp_altivec;
-		fdct = fdct_altivec;
-		idct = idct_altivec;
-		sadInit = sadInit_altivec;
-		sad16 = sad16_altivec;
-		sad8 = sad8_altivec;
-		dev16 = dev16_altivec;
-	}
+	if ((cpu_flags & XVID_CPU_ALTIVEC)) {
+          /* sad operators */
+	  sad16 = sad16_altivec_c;
+	  sad16bi = sad16bi_altivec_c;
+	  sad8 = sad8_altivec_c;
+	  dev16 = dev16_altivec_c;
+          
+          sse8_16bit = sse8_16bit_altivec_c;
+          
+          /* mem transfer */
+          transfer_8to16copy = transfer_8to16copy_altivec_c;
+          transfer_16to8copy = transfer_16to8copy_altivec_c;
+          transfer_8to16sub = transfer_8to16sub_altivec_c;
+          transfer_8to16subro = transfer_8to16subro_altivec_c;
+          transfer_8to16sub2 = transfer_8to16sub2_altivec_c;
+          transfer_16to8add = transfer_16to8add_altivec_c;
+          transfer8x8_copy = transfer8x8_copy_altivec_c;
+           
+          /* Inverse DCT */
+          idct = idct_altivec_c;
+          
+          /* Interpolation */
+          interpolate8x8_halfpel_h = interpolate8x8_halfpel_h_altivec_c;
+          interpolate8x8_halfpel_v = interpolate8x8_halfpel_v_altivec_c;
+          interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_altivec_c;
+          
+          interpolate8x8_avg2 = interpolate8x8_avg2_altivec_c;
+          interpolate8x8_avg4 = interpolate8x8_avg4_altivec_c;
+          
+          interpolate8x8_6tap_lowpass_h = interpolate8x8_6tap_lowpass_h_altivec_c;
+          
+          /* Colorspace conversion */
+          bgra_to_yv12 = bgra_to_yv12_altivec_c;
+          abgr_to_yv12 = abgr_to_yv12_altivec_c;
+          rgba_to_yv12 = rgba_to_yv12_altivec_c;
+          argb_to_yv12 = argb_to_yv12_altivec_c;
+          
+          yuyv_to_yv12 = yuyv_to_yv12_altivec_c;
+          uyvy_to_yv12 = uyvy_to_yv12_altivec_c;
+          
+          yv12_to_yuyv = yv12_to_yuyv_altivec_c;
+          yv12_to_uyvy = yv12_to_uyvy_altivec_c;
+          
+          /* Quantization */
+          quant_h263_intra = quant_h263_intra_altivec_c;
+          quant_h263_inter = quant_h263_inter_altivec_c;
+          dequant_h263_intra = dequant_h263_intra_altivec_c;
+          dequant_h263_inter = dequant_h263_inter_altivec_c;
+        }
 #endif
 
 #if defined(_DEBUG)
     xvid_debug = init->debug;
 #endif
 
-    return 0;
+    return(0);
 }
 
 

@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: interpolate8x8.h,v 1.11 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: interpolate8x8.h,v 1.12 2004-04-05 20:36:36 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -120,12 +120,23 @@ INTERPOLATE8X8 interpolate8x8_halfpel_v_ia64;
 INTERPOLATE8X8 interpolate8x8_halfpel_hv_ia64;
 #endif
 
+#ifdef ARCH_IS_PPC
+INTERPOLATE8X8 interpolate8x8_halfpel_h_altivec_c;
+INTERPOLATE8X8 interpolate8x8_halfpel_v_altivec_c;
+INTERPOLATE8X8 interpolate8x8_halfpel_hv_altivec_c;
+#endif
+
 INTERPOLATE8X8_AVG2 interpolate8x8_avg2_c;
 INTERPOLATE8X8_AVG4 interpolate8x8_avg4_c;
 
 #ifdef ARCH_IS_IA32
 INTERPOLATE8X8_AVG2 interpolate8x8_avg2_mmx;
 INTERPOLATE8X8_AVG4 interpolate8x8_avg4_mmx;
+#endif
+
+#ifdef ARCH_IS_PPC
+INTERPOLATE8X8_AVG2 interpolate8x8_avg2_altivec_c;
+INTERPOLATE8X8_AVG4 interpolate8x8_avg4_altivec_c;
 #endif
 
 INTERPOLATE_LOWPASS interpolate8x8_lowpass_h_c;
@@ -143,6 +154,10 @@ INTERPOLATE8X8_6TAP_LOWPASS interpolate8x8_6tap_lowpass_v_c;
 #ifdef ARCH_IS_IA32
 INTERPOLATE8X8_6TAP_LOWPASS interpolate8x8_6tap_lowpass_h_mmx;
 INTERPOLATE8X8_6TAP_LOWPASS interpolate8x8_6tap_lowpass_v_mmx;
+#endif
+
+#ifdef ARCH_IS_PPC
+INTERPOLATE8X8_6TAP_LOWPASS interpolate8x8_6tap_lowpass_h_altivec_c;
 #endif
 
 static __inline void
