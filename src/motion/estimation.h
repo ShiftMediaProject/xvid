@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation.h,v 1.2 2004-03-22 22:36:24 edgomez Exp $
+ * $Id: estimation.h,v 1.3 2004-04-20 06:10:39 syskin Exp $
  *
  ****************************************************************************/
 
@@ -47,7 +47,7 @@
 
 #define BITS_MULT				16
 
-#define INITIAL_SKIP_THRESH		10
+#define INITIAL_SKIP_THRESH		5
 #define FINAL_SKIP_THRESH		50
 #define MAX_SAD00_FOR_SKIP		20
 #define MAX_CHROMA_SAD_FOR_SKIP	22
@@ -78,8 +78,6 @@ typedef struct
 	int temp[4];				/* temporary space */
 	unsigned int dir;			/* 'direction', set when better vector is found */
 	int chromaX, chromaY, chromaSAD; /* info to make ChromaSAD faster */
-	VECTOR currentQMV2;			/* extra vector for SubpelRefine_fast */
-	int32_t iMinSAD2;			/* extra SAD value for SubpelRefine_fast */
 
 	/* general fields */
 	int max_dx, min_dx, max_dy, min_dy; /* maximum range */
@@ -94,7 +92,7 @@ typedef struct
 	uint32_t lambda8;			/* as above - for inter4v mode */
 	uint32_t iEdgedWidth;		/* picture's stride */
 	uint32_t iFcode;			/* current fcode */
-	
+
 	int qpel;					/* if we're coding in qpel mode */
 	int qpel_precision;			/* if X and Y are in qpel precision (refinement probably) */
 	int chroma;					/* should we include chroma SAD? */
@@ -150,10 +148,10 @@ MainSearchFunc(int x, int y, SearchData * const Data,
 MainSearchFunc xvid_me_DiamondSearch, xvid_me_AdvDiamondSearch, xvid_me_SquareSearch;
 
 void
-xvid_me_SubpelRefine(SearchData * const data, CheckFunc * const CheckCandidate);
+xvid_me_SubpelRefine(SearchData * const data, CheckFunc * const CheckCandidate, int dir);
 
-void
-SubpelRefine_Fast(SearchData * data, CheckFunc * CheckCandidate);
+void 
+FullRefine_Fast(SearchData * data, CheckFunc * CheckCandidate, int direction);
 
 void
 xvid_me_ModeDecision_RD(SearchData * const Data,

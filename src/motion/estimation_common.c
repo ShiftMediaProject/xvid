@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_common.c,v 1.3 2004-04-05 20:36:36 edgomez Exp $
+ * $Id: estimation_common.c,v 1.4 2004-04-20 06:10:40 syskin Exp $
  *
  ****************************************************************************/
 
@@ -351,97 +351,150 @@ xvid_me_DiamondSearch(int x, int y, SearchData * const data,
 }
 
 void
-xvid_me_SubpelRefine(SearchData * const data, CheckFunc * const CheckCandidate)
+xvid_me_SubpelRefine(SearchData * const data, CheckFunc * const CheckCandidate, int dir)
 {
 /* Do a half-pel or q-pel refinement */
 	const VECTOR centerMV = data->qpel_precision ? *data->currentQMV : *data->currentMV;
 
-	CHECK_CANDIDATE(centerMV.x, centerMV.y - 1, 0);
-	CHECK_CANDIDATE(centerMV.x + 1, centerMV.y - 1, 0);
-	CHECK_CANDIDATE(centerMV.x + 1, centerMV.y, 0);
-	CHECK_CANDIDATE(centerMV.x + 1, centerMV.y + 1, 0);
-	CHECK_CANDIDATE(centerMV.x, centerMV.y + 1, 0);
-	CHECK_CANDIDATE(centerMV.x - 1, centerMV.y + 1, 0);
-	CHECK_CANDIDATE(centerMV.x - 1, centerMV.y, 0);
-	CHECK_CANDIDATE(centerMV.x - 1, centerMV.y - 1, 0);
+	CHECK_CANDIDATE(centerMV.x, centerMV.y - 1, dir);
+	CHECK_CANDIDATE(centerMV.x + 1, centerMV.y - 1, dir);
+	CHECK_CANDIDATE(centerMV.x + 1, centerMV.y, dir);
+	CHECK_CANDIDATE(centerMV.x + 1, centerMV.y + 1, dir);
+	CHECK_CANDIDATE(centerMV.x, centerMV.y + 1, dir);
+	CHECK_CANDIDATE(centerMV.x - 1, centerMV.y + 1, dir);
+	CHECK_CANDIDATE(centerMV.x - 1, centerMV.y, dir);
+	CHECK_CANDIDATE(centerMV.x - 1, centerMV.y - 1, dir);
+}
+
+#define CHECK_CANDIDATE_2ndBEST(X, Y, DIR) { \
+	*data->iMinSAD = s_best2; \
+	CheckCandidate((X),(Y), data, direction); \
+	if (data->iMinSAD[0] < s_best) { \
+		s_best2 = s_best; \
+		s_best = data->iMinSAD[0]; \
+		v_best2 = v_best; \
+		v_best.x = X; v_best.y = Y; \
+		dir = DIR; \
+	} else if (data->iMinSAD[0] < s_best2) { \
+		s_best2 = data->iMinSAD[0]; \
+		v_best2.x = X; v_best2.y = Y; \
+	} \
 }
 
 void
-SubpelRefine_Fast(SearchData * data, CheckFunc * CheckCandidate)
+FullRefine_Fast(SearchData * data, CheckFunc * CheckCandidate, int direction)
 {
-/* Do a fast q-pel refinement */
-	VECTOR centerMV;
-	VECTOR second_best;
-	int best_sad = *data->iMinSAD;
-	int xo, yo, xo2, yo2;
-	int size = 2;
-	data->iMinSAD2 = 0;
+/* Do a fast h-pel and then q-pel refinement */
+	
+	int32_t s_best = data->iMinSAD[0], s_best2 = 256*4096;
+	VECTOR v_best, v_best2;
+	int dir = 0, xo2, yo2, best_halfpel, b_cbp;
 
-	/* check all halfpixel positions near our best halfpel position */
-	centerMV = *data->currentQMV;
-	*data->iMinSAD = 256 * 4096;
+	int xo = 2*data->currentMV[0].x, yo = 2*data->currentMV[0].y;
+	
+	data->currentQMV[0].x = v_best.x = xo;
+	data->currentQMV[0].y = v_best.y = yo;
 
-	CHECK_CANDIDATE(centerMV.x, centerMV.y - size, 0);
-	CHECK_CANDIDATE(centerMV.x + size, centerMV.y - size, 0);
-	CHECK_CANDIDATE(centerMV.x + size, centerMV.y, 0);
-	CHECK_CANDIDATE(centerMV.x + size, centerMV.y + size, 0);
+	data->qpel_precision = 1;
 
-	CHECK_CANDIDATE(centerMV.x, centerMV.y + size, 0);
-	CHECK_CANDIDATE(centerMV.x - size, centerMV.y + size, 0);
-	CHECK_CANDIDATE(centerMV.x - size, centerMV.y, 0);
-	CHECK_CANDIDATE(centerMV.x - size, centerMV.y - size, 0);
+	/* halfpel refinement: check 8 neighbours, but keep the second best SAD as well */
+	CHECK_CANDIDATE_2ndBEST(xo - 2,	yo,		1+16+64);
+	CHECK_CANDIDATE_2ndBEST(xo + 2,	yo,		2+32+128);
+	CHECK_CANDIDATE_2ndBEST(xo,		yo - 2,	4+16+32);
+	CHECK_CANDIDATE_2ndBEST(xo,		yo + 2,	8+64+128);
+	CHECK_CANDIDATE_2ndBEST(xo - 2,	yo - 2,	1+4+16+32+64);
+	CHECK_CANDIDATE_2ndBEST(xo + 2,	yo - 2,	2+4+16+32+128);
+	CHECK_CANDIDATE_2ndBEST(xo - 2,	yo + 2,	1+8+16+64+128);
+	CHECK_CANDIDATE_2ndBEST(xo + 2,	yo + 2,	2+8+32+64+128);
 
-	second_best = *data->currentQMV;
+	xo = v_best.x; yo = v_best.y, b_cbp = data->cbp[0];
 
-	/* after second_best has been found, go back to the vector we began with */
+	/* we need all 8 neighbours *of best hpel position found above* checked for 2nd best
+		let's check the missing ones */
 
-	data->currentQMV[0] = centerMV;
-	*data->iMinSAD = best_sad;
+	/* on rare occasions, 1st best and 2nd best are far away, and 2nd best is not 1st best's neighbour.
+		to simplify stuff, we'll forget that evil 2nd best and make a full search for a new 2nd best */
+	/* todo. we should check the missing neighbours first, maybe they'll give us 2nd best which is even better
+		than the infamous one. in that case, we will not have to re-check the other neighbours */
 
-	xo = centerMV.x;
-	yo = centerMV.y;
-	xo2 = second_best.x;
-	yo2 = second_best.y;
+	if (abs(v_best.x - v_best2.x) > 2 || abs(v_best.y - v_best2.y) > 2) { /* v_best2 is useless */
+		data->iMinSAD[0] = 256*4096;
+		dir = ~0; /* all */
+	} else {
+		data->iMinSAD[0] = s_best2;
+		data->currentQMV[0] = v_best2;
+	}
 
-	data->iMinSAD2 = 256 * 4096;
+	if (dir & 1) CHECK_CANDIDATE(	xo - 2,	yo,		direction);
+	if (dir & 2) CHECK_CANDIDATE(	xo + 2,	yo,		direction);
+	if (dir & 4) CHECK_CANDIDATE(	xo,		yo - 2,	direction);
+	if (dir & 8) CHECK_CANDIDATE(	xo,		yo + 2,	direction);
+	if (dir & 16) CHECK_CANDIDATE(	xo - 2,	yo - 2,	direction);
+	if (dir & 32) CHECK_CANDIDATE(	xo + 2,	yo - 2,	direction);
+	if (dir & 64) CHECK_CANDIDATE(	xo - 2,	yo + 2,	direction);
+	if (dir & 128) CHECK_CANDIDATE(	xo + 2,	yo + 2,	direction);
+
+	/* read the position of 2nd best */
+	v_best2 = data->currentQMV[0];
+
+	/* after second_best has been found, go back to best vector */
+
+	data->currentQMV[0].x = xo;
+	data->currentQMV[0].y = yo;
+	data->cbp[0] = b_cbp;
+
+	data->currentMV[0].x = xo/2;
+	data->currentMV[0].y = yo/2;
+	data->iMinSAD[0] = best_halfpel = s_best;
+
+	xo2 = v_best2.x;
+	yo2 = v_best2.y;
+	s_best2 = 256*4096;
 
 	if (yo == yo2) {
-		CHECK_CANDIDATE((xo+xo2)>>1, yo, 0);
-		CHECK_CANDIDATE(xo, yo-1, 0);
-		CHECK_CANDIDATE(xo, yo+1, 0);
+		CHECK_CANDIDATE_2ndBEST((xo+xo2)>>1, yo, 0);
+		CHECK_CANDIDATE_2ndBEST(xo, yo-1, 0);
+		CHECK_CANDIDATE_2ndBEST(xo, yo+1, 0);
+		data->currentQMV[0] = v_best;
+		data->iMinSAD[0] = s_best;
 
-		if(best_sad <= data->iMinSAD2) return;
+		if(best_halfpel <= s_best2) return;
 
-		if(data->currentQMV[0].x == data->currentQMV2.x) {
-			CHECK_CANDIDATE((xo+xo2)>>1, yo-1, 0);
-			CHECK_CANDIDATE((xo+xo2)>>1, yo+1, 0);
+		if(data->currentQMV[0].x == v_best2.x) {
+			CHECK_CANDIDATE((xo+xo2)>>1, yo-1, direction);
+			CHECK_CANDIDATE((xo+xo2)>>1, yo+1, direction);
 		} else {
 			CHECK_CANDIDATE((xo+xo2)>>1,
-				(data->currentQMV[0].x == xo) ? data->currentQMV[0].y : data->currentQMV2.y, 0);
+				(data->currentQMV[0].x == xo) ? data->currentQMV[0].y : v_best2.y, direction);
 		}
 		return;
 	}
 
 	if (xo == xo2) {
-		CHECK_CANDIDATE(xo, (yo+yo2)>>1, 0);
-		CHECK_CANDIDATE(xo-1, yo, 0);
-		CHECK_CANDIDATE(xo+1, yo, 0);
+		CHECK_CANDIDATE_2ndBEST(xo, (yo+yo2)>>1, 0);
+		CHECK_CANDIDATE_2ndBEST(xo-1, yo, 0);
+		CHECK_CANDIDATE_2ndBEST(xo+1, yo, 0);
+		data->currentQMV[0] = v_best;
+		data->iMinSAD[0] = s_best;
 
-		if(best_sad <= data->iMinSAD2) return;
+		if(best_halfpel <= s_best2) return;
 
-		if(data->currentQMV[0].y == data->currentQMV2.y) {
-			CHECK_CANDIDATE(xo-1, (yo+yo2)>>1, 0);
-			CHECK_CANDIDATE(xo+1, (yo+yo2)>>1, 0);
+		if(data->currentQMV[0].y == v_best2.y) {
+			CHECK_CANDIDATE(xo-1, (yo+yo2)>>1, direction);
+			CHECK_CANDIDATE(xo+1, (yo+yo2)>>1, direction);
 		} else {
-			CHECK_CANDIDATE((data->currentQMV[0].y == yo) ? data->currentQMV[0].x : data->currentQMV2.x, (yo+yo2)>>1, 0);
+			CHECK_CANDIDATE((data->currentQMV[0].y == yo) ? data->currentQMV[0].x : v_best2.x, (yo+yo2)>>1, direction);
 		}
 		return;
 	}
 
-	CHECK_CANDIDATE(xo, (yo+yo2)>>1, 0);
-	CHECK_CANDIDATE((xo+xo2)>>1, yo, 0);
+	CHECK_CANDIDATE_2ndBEST(xo, (yo+yo2)>>1, 0);
+	CHECK_CANDIDATE_2ndBEST((xo+xo2)>>1, yo, 0);
+	data->currentQMV[0] = v_best;
+	data->iMinSAD[0] = s_best;
 
-	if(best_sad <= data->iMinSAD2) return;
+	if(best_halfpel <= s_best2) return;
 
-	CHECK_CANDIDATE((xo+xo2)>>1, (yo+yo2)>>1, 0);
+	CHECK_CANDIDATE((xo+xo2)>>1, (yo+yo2)>>1, direction);
+
 }

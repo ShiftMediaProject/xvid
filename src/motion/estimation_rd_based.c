@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_rd_based.c,v 1.2 2004-03-22 22:36:24 edgomez Exp $
+ * $Id: estimation_rd_based.c,v 1.3 2004-04-20 06:10:40 syskin Exp $
  *
  ****************************************************************************/
 
@@ -312,7 +312,7 @@ findRD_inter(SearchData * const Data,
 		xvid_me_SquareSearch(Data->currentMV->x, Data->currentMV->y, Data, 255, CheckCandidateRD16);
 
 	if (MotionFlags&XVID_ME_HALFPELREFINE16_RD)
-		xvid_me_SubpelRefine(Data, CheckCandidateRD16);
+		xvid_me_SubpelRefine(Data, CheckCandidateRD16, 0);
 
 	if (Data->qpel) {
 		if (MotionFlags&(XVID_ME_EXTSEARCH_RD | XVID_ME_HALFPELREFINE16_RD)) { /* there was halfpel-precision search */
@@ -326,8 +326,12 @@ findRD_inter(SearchData * const Data,
 			get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, x, y, 4,
 					pParam->width, pParam->height, Data->iFcode, 2, 0);
 		}
-		if (MotionFlags&XVID_ME_QUARTERPELREFINE16_RD)
-			xvid_me_SubpelRefine(Data, CheckCandidateRD16);
+		if (MotionFlags & XVID_ME_QUARTERPELREFINE16_RD) {
+			if (MotionFlags & XVID_ME_FASTREFINE16)
+				FullRefine_Fast(Data, CheckCandidateRD16, 0);
+			else 
+				xvid_me_SubpelRefine(Data, CheckCandidateRD16, 0);
+		}
 	}
 
 	if (MotionFlags&XVID_ME_CHECKPREDICTION_RD) { /* let's check vector equal to prediction */
@@ -390,10 +394,14 @@ findRD_inter4v(SearchData * const Data,
 		}
 
 		if (Data8->qpel) {
+			int bsad = Data8->iMinSAD[0];
+			int bx = Data8->currentQMV->x;
+			int by = Data8->currentQMV->y;
+
+			Data8->currentMV->x = Data8->currentQMV->x/2;
+			Data8->currentMV->y = Data8->currentQMV->y/2;
+
 			if (MotionFlags&XVID_ME_HALFPELREFINE8_RD || (MotionFlags&XVID_ME_EXTSEARCH8 && MotionFlags&XVID_ME_EXTSEARCH_RD)) { /* halfpixel motion search follows */
-				int32_t s = *Data8->iMinSAD;
-				Data8->currentMV->x = Data8->currentQMV->x/2;
-				Data8->currentMV->y = Data8->currentQMV->y/2;
 				Data8->qpel_precision = 0;
 				get_range(&Data8->min_dx, &Data8->max_dx, &Data8->min_dy, &Data8->max_dy, 2*x + (i&1), 2*y + (i>>1), 3,
 							pParam->width, pParam->height, Data8->iFcode - 1, 1, 0);
@@ -405,11 +413,12 @@ findRD_inter4v(SearchData * const Data,
 					xvid_me_SquareSearch(Data8->currentMV->x, Data8->currentMV->x, Data8, 255, CheckCandidateRD8);
 
 				if (MotionFlags & XVID_ME_HALFPELREFINE8_RD)
-					xvid_me_SubpelRefine(Data8, CheckCandidateRD8);
+					xvid_me_SubpelRefine(Data8, CheckCandidateRD8, 0);
 
-				if(s > *Data8->iMinSAD) { /* we have found a better match */
-					Data8->currentQMV->x = 2*Data8->currentMV->x;
-					Data8->currentQMV->y = 2*Data8->currentMV->y;
+				if(bsad > *Data8->iMinSAD) { /* we have found a better match */
+					bx = Data8->currentQMV->x = 2*Data8->currentMV->x;
+					by = Data8->currentQMV->y = 2*Data8->currentMV->y;
+					bsad = Data8->iMinSAD[0];
 				}
 
 				Data8->qpel_precision = 1;
@@ -417,8 +426,19 @@ findRD_inter4v(SearchData * const Data,
 							pParam->width, pParam->height, Data8->iFcode, 2, 0);
 
 			}
-			if (MotionFlags & XVID_ME_QUARTERPELREFINE8_RD)
-				xvid_me_SubpelRefine(Data8, CheckCandidateRD8);
+
+			if (MotionFlags & XVID_ME_QUARTERPELREFINE8_RD) {
+				if (MotionFlags & XVID_ME_FASTREFINE8)
+					FullRefine_Fast(Data8, CheckCandidateRD8, 0);
+				else xvid_me_SubpelRefine(Data8, CheckCandidateRD8, 0);
+			}
+
+			if (bsad <= Data->iMinSAD[0]) { 
+				/* we have not found a better match */
+				Data8->iMinSAD[0] = bsad;
+				Data8->currentQMV->x = bx;
+				Data8->currentQMV->y = by;
+			}
 
 		} else { /* not qpel */
 
@@ -426,7 +446,7 @@ findRD_inter4v(SearchData * const Data,
 				xvid_me_SquareSearch(Data8->currentMV->x, Data8->currentMV->x, Data8, 255, CheckCandidateRD8);
 
 			if (MotionFlags & XVID_ME_HALFPELREFINE8_RD)
-				xvid_me_SubpelRefine(Data8, CheckCandidateRD8); /* halfpel refinement */
+				xvid_me_SubpelRefine(Data8, CheckCandidateRD8, 0); /* halfpel refinement */
 		}
 
 		/* checking vector equal to predicion */
