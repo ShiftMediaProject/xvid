@@ -32,6 +32,8 @@
 ; *
 ; *	History:
 ; *
+; * 24.02.2002	sse2 quant_intra / dequant_intra (have to use movdqu ???)
+; * 17.04.2002	sse2 quant_inter / dequant_inter
 ; * 26.12.2001	minor bug fixes, dequant saturate, further optimization
 ; * 19.11.2001  quant_inter_mmx now returns sum of abs. coefficient values
 ; *	04.11.2001	nasm version; (c)2001 peter ross <pross@cs.rmit.edu.au>
@@ -61,6 +63,7 @@ section .data
 align 16
 
 plus_one times 8	dw	 1
+
 
 ;===========================================================================
 ;
@@ -377,6 +380,111 @@ align ALIGN
 
 ;===========================================================================
 ;
+; void quant_intra_sse2(int16_t * coeff, 
+;					const int16_t const * data,
+;					const uint32_t quant,
+;					const uint32_t dcscalar);
+;
+;===========================================================================
+
+align ALIGN
+cglobal quant_intra_sse2
+quant_intra_sse2
+
+		push	esi
+		push	edi
+
+		mov		edi, [esp + 8 + 4]			; coeff
+		mov		esi, [esp + 8 + 8]			; data
+		mov		eax, [esp + 8 + 12]			; quant
+
+		xor		ecx, ecx
+		cmp		al, 1
+		jz		near .qas2_q1loop
+
+.qas2_not1
+		movq	mm7, [mmx_div + eax*8 - 8]
+		movq2dq	xmm7, mm7
+		movlhps	xmm7, xmm7
+
+align 16
+.qas2_loop
+		movdqa	xmm0, [esi + ecx*8]			; xmm0 = [1st]
+		movdqa	xmm3, [esi + ecx*8 + 16]	; xmm3 = [2nd]
+		pxor	xmm1, xmm1
+		pxor	xmm4, xmm4
+		pcmpgtw	xmm1, xmm0
+		pcmpgtw	xmm4, xmm3
+		pxor	xmm0, xmm1
+		pxor	xmm3, xmm4
+		psubw	xmm0, xmm1
+		psubw	xmm3, xmm4
+		pmulhw	xmm0, xmm7
+		pmulhw	xmm3, xmm7
+		pxor	xmm0, xmm1
+		pxor	xmm3, xmm4
+		psubw	xmm0, xmm1
+		psubw	xmm3, xmm4
+		movdqa	[edi + ecx*8], xmm0
+		movdqa	[edi + ecx*8 + 16], xmm3
+		
+		add		ecx, 4
+		cmp		ecx, 16
+		jnz 	.qas2_loop 
+
+.qas2_done	
+		mov 	ecx, [esp + 8 + 16]	; dcscalar
+		mov 	edx, ecx
+		movsx 	eax, word [esi]
+		shr 	edx, 1
+		cmp		eax, 0
+		jg		.qas2_gtzero
+
+		sub		eax, edx
+		jmp		short .qas2_mul
+.qas2_gtzero
+		add		eax, edx
+.qas2_mul
+		cdq
+		idiv	ecx
+		
+		mov		[edi], ax
+
+		pop		edi
+		pop		esi
+
+		ret		
+
+align 16
+.qas2_q1loop
+		movdqa	xmm0, [esi + ecx*8]			; xmm0 = [1st]
+		movdqa	xmm3, [esi + ecx*8 + 16]	; xmm3 = [2nd]
+		pxor	xmm1, xmm1
+		pxor	xmm4, xmm4
+		pcmpgtw	xmm1, xmm0
+		pcmpgtw	xmm4, xmm3
+		pxor	xmm0, xmm1
+		pxor	xmm3, xmm4
+		psubw	xmm0, xmm1
+		psubw	xmm3, xmm4
+		psrlw	xmm0, 1
+		psrlw	xmm3, 1
+		pxor	xmm0, xmm1
+		pxor	xmm3, xmm4
+		psubw	xmm0, xmm1
+		psubw	xmm3, xmm4
+		movdqa	[edi + ecx*8], xmm0
+		movdqa	[edi + ecx*8 + 16], xmm3
+
+		add		ecx, 4
+		cmp		ecx, 16
+		jnz		.qas2_q1loop
+		jmp		near .qas2_done
+
+
+
+;===========================================================================
+;
 ; uint32_t quant_inter_mmx(int16_t * coeff,
 ;					const int16_t const * data,
 ;					const uint32_t quant);
@@ -508,45 +616,45 @@ cglobal quant_inter_sse2
 		movlhps	xmm6, xmm6					; duplicate into high 8 bytes
 
 		cmp		al, 1
-		jnz		.not1
-		jmp		.q1loop
+		jz		near .qes2_q1loop
 
-.not1
+.qes2_not1
 		movq	mm0, [mmx_div + eax*8 - 8]	; divider
 		movq2dq	xmm7, mm0
 		movlhps	xmm7, xmm7
 
 align 16
-.loop
+.qes2_loop
 		movdqa	xmm0, [esi + ecx*8]			; xmm0 = [1st]
 		movdqa	xmm3, [esi + ecx*8 + 16]	; xmm3 = [2nd]
-		pxor	xmm1, xmm1					; xmm1 = 0
+		pxor	xmm1, xmm1
 		pxor	xmm4, xmm4
-		pcmpgtw	xmm1, xmm0					; xmm1 = (0 > xmm0)
+		pcmpgtw	xmm1, xmm0
 		pcmpgtw	xmm4, xmm3
-		pxor	xmm0, xmm1					; xmm0 = |xmm0|
+		pxor	xmm0, xmm1
 		pxor	xmm3, xmm4
-		psubw	xmm0, xmm1					; displace
+		psubw	xmm0, xmm1
 		psubw	xmm3, xmm4
-		psubusw	xmm0, xmm6					; xmm0 -= sub (unsigned, dont go < 0)
+		psubusw	xmm0, xmm6
 		psubusw	xmm3, xmm6
-		pmulhw	xmm0, xmm7					; xmm0 = (xmm0 / 2Q) >> 16
+		pmulhw	xmm0, xmm7
 		pmulhw	xmm3, xmm7
-		paddw	xmm5, xmm0					; sum += xmm0
-		pxor	xmm0, xmm1					; xmm0 *= sign(xmm0)
+		paddw	xmm5, xmm0
+		pxor	xmm0, xmm1
 		paddw	xmm5, xmm3
 		pxor	xmm3, xmm4
-		psubw	xmm0, xmm1					; undisplace
+		psubw	xmm0, xmm1
 		psubw	xmm3, xmm4
 		movdqa	[edi + ecx*8], xmm0
 		movdqa	[edi + ecx*8 + 16], xmm3
 
 		add		ecx, 4	
 		cmp		ecx, 16
-		jnz		.loop
+		jnz		.qes2_loop
 
-.done
-		pmaddwd xmm5, [plus_one]
+.qes2_done
+		movdqu	xmm6, [plus_one]
+		pmaddwd xmm5, xmm6
 		movhlps	xmm6, xmm5
 		paddd	xmm5, xmm6
 		movdq2q	mm0, xmm5
@@ -562,35 +670,34 @@ align 16
 		ret
 
 align 16
-.q1loop
-		movq	mm0, [esi + 8*ecx]		; mm0 = [1st]
-		movq	mm3, [esi + 8*ecx+ 8]		; 
-		pxor	mm1, mm1		; mm1 = 0
-		pxor	mm4, mm4		;
-		pcmpgtw	mm1, mm0		; mm1 = (0 > mm0)
-		pcmpgtw	mm4, mm3		; 
-		pxor	mm0, mm1		; mm0 = |mm0|
-		pxor	mm3, mm4		; 
-		psubw	mm0, mm1		; displace
-		psubw	mm3, mm4		; 
-		psubusw	mm0, mm6		; mm0 -= sub (unsigned, dont go < 0)
-		psubusw	mm3, mm6		;
-		psrlw	mm0, 1			; mm0 >>= 1   (/2)
-		psrlw	mm3, 1			;
-		paddw	mm5, mm0		; sum += mm0
-		pxor	mm0, mm1		; mm0 *= sign(mm0)
-		paddw	mm5, mm3		;
-		pxor	mm3, mm4		;
-		psubw	mm0, mm1		; undisplace
-		psubw	mm3, mm4
-		movq	[edi + 8*ecx], mm0
-		movq	[edi + 8*ecx + 8], mm3
+.qes2_q1loop
+		movdqa	xmm0, [esi + ecx*8]			; xmm0 = [1st]
+		movdqa	xmm3, [esi + ecx*8 + 16]	; xmm3 = [2nd]
+		pxor	xmm1, xmm1
+		pxor	xmm4, xmm4
+		pcmpgtw	xmm1, xmm0
+		pcmpgtw	xmm4, xmm3
+		pxor	xmm0, xmm1
+		pxor	xmm3, xmm4
+		psubw	xmm0, xmm1
+		psubw	xmm3, xmm4
+		psubusw	xmm0, xmm6
+		psubusw	xmm3, xmm6
+		psrlw	xmm0, 1
+		psrlw	xmm3, 1
+		paddw	xmm5, xmm0
+		pxor	xmm0, xmm1
+		paddw	xmm5, xmm3
+		pxor	xmm3, xmm4
+		psubw	xmm0, xmm1
+		psubw	xmm3, xmm4
+		movdqa	[edi + ecx*8], xmm0
+		movdqa	[edi + ecx*8 + 16], xmm3
 		
-		add ecx,2
-		cmp ecx,16
-		jnz	.q1loop
-
-		jmp	.done
+		add		ecx,4
+		cmp		ecx,16
+		jnz		.qes2_q1loop
+		jmp		.qes2_done
 		
 		
 		
@@ -695,6 +802,113 @@ align ALIGN
 		pop	esi
 		ret
 %endif
+
+
+
+;===========================================================================
+;
+; void dequant_intra_sse2(int16_t *data,
+;					const int16_t const *coeff,
+;					const uint32_t quant,
+;					const uint32_t dcscalar);
+;
+;===========================================================================
+
+align 16
+cglobal dequant_intra_sse2
+dequant_intra_sse2
+
+		push	esi
+		push	edi
+
+		mov		edi, [esp + 8 + 4]			; data
+		mov		esi, [esp + 8 + 8]			; coeff
+		mov		eax, [esp + 8 + 12]			; quant
+
+		movq	mm6, [mmx_add + eax*8 - 8]
+		movq	mm7, [mmx_mul + eax*8 - 8]
+		movq2dq	xmm6, mm6
+		movq2dq	xmm7, mm7
+		movlhps	xmm6, xmm6
+		movlhps	xmm7, xmm7
+
+		xor		eax, eax
+
+align 16
+.das2_loop
+		movdqa	xmm0, [esi + eax*8]
+		movdqa	xmm3, [esi + eax*8 + 16]
+		pxor	xmm1, xmm1
+		pxor	xmm4, xmm4
+		pcmpgtw	xmm1, xmm0
+		pcmpgtw	xmm4, xmm3
+		pxor	xmm2, xmm2
+		pxor	xmm5, xmm5
+		pcmpeqw	xmm2, xmm0
+		pcmpeqw	xmm5, xmm3
+		pandn   xmm2, xmm6
+		pandn   xmm5, xmm6
+		pxor	xmm0, xmm1
+		pxor	xmm3, xmm4
+		psubw	xmm0, xmm1
+		psubw	xmm3, xmm4
+		pmullw	xmm0, xmm7
+		pmullw	xmm3, xmm7
+		paddw	xmm0, xmm2
+		paddw	xmm3, xmm5
+		pxor	xmm0, xmm1
+		pxor	xmm3, xmm4
+		psubw	xmm0, xmm1
+		psubw	xmm3, xmm4
+
+%ifdef SATURATE
+		movdqu	xmm2, [sse2_pos_2047]
+		movdqu	xmm4, [sse2_neg_2048]
+		pminsw	xmm0, xmm2
+		pminsw	xmm3, xmm2
+		pmaxsw	xmm0, xmm4
+		pmaxsw	xmm3, xmm4
+%endif
+
+		movdqa	[edi + eax*8], xmm0
+		movdqa	[edi + eax*8 + 16], xmm3
+
+		add		eax, 4
+		cmp		eax, 16
+		jnz		near .das2_loop
+
+		mov		ax, [esi]					; ax = data[0]
+		imul	ax, [esp + 8 + 16]			; eax = data[0] * dcscalar
+
+%ifdef SATURATE
+		cmp		ax, -2048
+		jl		.das2_set_n2048
+		cmp		ax, 2047
+		jg		.das2_set_2047
+%endif
+		mov		[edi], ax
+
+		pop		edi
+		pop		esi
+		ret
+
+%ifdef SATURATE
+align 16
+.das2_set_n2048
+		mov		word [edi], -2048
+		pop		edi
+		pop		esi
+		ret
+	
+align 16
+.das2_set_2047
+		mov		word [edi], 2047
+		pop		edi
+		pop		esi
+		ret
+%endif
+
+
 
 ;===========================================================================
 ;
@@ -801,7 +1015,7 @@ dequant_inter_sse2
 		xor eax, eax
 
 align 16
-.loop
+.des2_loop
 		movdqa	xmm0, [esi + eax*8]			; xmm0 = [coeff]
 		movdqa	xmm3, [esi + eax*8 + 16]
 		pxor	xmm1, xmm1
@@ -828,8 +1042,8 @@ align 16
 		psubw	xmm3, xmm4
 
 %ifdef SATURATE
-		movdqa	xmm2, [sse2_pos_2047]
-		movdqa	xmm4, [sse2_neg_2048]
+		movdqu	xmm2, [sse2_pos_2047]
+		movdqu	xmm4, [sse2_neg_2048]
 		pminsw	xmm0, xmm2
 		pminsw	xmm3, xmm2
 		pmaxsw	xmm0, xmm4
@@ -841,7 +1055,7 @@ align 16
 
 		add eax, 4
 		cmp eax, 16
-		jnz	near .loop
+		jnz	near .des2_loop
 
 		pop 	edi
 		pop 	esi

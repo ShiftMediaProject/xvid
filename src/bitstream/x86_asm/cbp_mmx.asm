@@ -32,6 +32,7 @@
 ; *
 ; *	History:
 ; *
+; * 24.04.2002	had to use sse2's movdqu instead of movdqa (???)
 ; * 17.04.2002  sse2 stuff
 ; * 22.03.2002      0.01          ; Min Chen <chenm001@163.com>
 ; *                               ; use 386 cpu's 'BTS' to replace 'cbp |= 1 << (edx-1)'
@@ -154,7 +155,7 @@ calc_cbp_sse2
 				push	esi
 
 				mov     esi, [esp + 4 + 4]		; coeff
-				movdqa	xmm7, [ignore_dc]		; mask to ignore dc value
+				movdqu	xmm7, [ignore_dc]		; mask to ignore dc value
 
 				xor		eax, eax				; cbp = 0
 				pxor	xmm6, xmm6				; zeroes to help psadbw
