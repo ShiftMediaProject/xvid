@@ -37,6 +37,8 @@
  *	22.12.2001	removed some compiler warnings
  *	16.12.2001	inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
+ * $Id: divx4.c,v 1.10 2002-04-28 20:03:14 edgomez Exp $
+ *
  *************************************************************************/
 
 #include <stdlib.h>
