@@ -39,7 +39,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.54 2002-07-11 00:15:59 chenm001 Exp $
+ *  $Id: encoder.c,v 1.55 2002-07-12 12:26:23 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -212,7 +212,6 @@ encoder_create(XVID_ENC_PARAM * pParam)
 	if (pParam->max_key_interval == 0)
 		pParam->max_key_interval = 10 * pParam->fincr / pParam->fbase;
 
-
 	pEnc = (Encoder *) xvid_malloc(sizeof(Encoder), CACHE_LINE);
 	if (pEnc == NULL)
 		return XVID_ERR_MEMORY;
@@ -236,6 +235,10 @@ encoder_create(XVID_ENC_PARAM * pParam)
 	pEnc->mbParam.fincr = pParam->fincr;
 
 	pEnc->mbParam.m_quant_type = H263_QUANT;
+
+#ifdef _SMP
+	pEnc->mbParam.num_threads = MIN(pParam->num_threads, MAXNUMTHREADS);
+#endif
 
 	pEnc->sStat.fMvPrevSigma = -1;
 
@@ -1595,20 +1598,18 @@ FrameCodeP(Encoder * pEnc,
 	} else {
 
 #ifdef _SMP
-		if (NUMTHREADS > 1)
-			bIntra =
-				SMP_MotionEstimation(&pEnc->mbParam, pEnc->current, pEnc->reference,
-							 &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV,
-							 iLimit);
-		else
+	if (pEnc->mbParam.num_threads > 1)
+		bIntra =
+			SMP_MotionEstimation(&pEnc->mbParam, pEnc->current, pEnc->reference,
+						 &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV,
+						 iLimit);
+	else
 #endif
-
-                bIntra =
-                         MotionEstimation(&pEnc->mbParam, pEnc->current, pEnc->reference,
-                                                    &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV,
-                                                    iLimit);
-		
-	
+		bIntra =
+			MotionEstimation(&pEnc->mbParam, pEnc->current, pEnc->reference,
+                         &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV,
+                         iLimit);
+			
 	}
 	stop_motion_timer();
 

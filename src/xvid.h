@@ -28,7 +28,7 @@
 *               ToDo ? : when BFRAMES is defined, the API_VERSION should not
 *                        be the same (3.0 ?)
 *
-*  $Id: xvid.h,v 1.13 2002-06-23 03:58:32 suxen_drol Exp $
+*  $Id: xvid.h,v 1.14 2002-07-12 12:26:24 suxen_drol Exp $
 *
 *****************************************************************************/
 
@@ -37,7 +37,7 @@
 #define _XVID_H_
 
 #ifdef __cplusplus
-*  $Id: xvid.h,v 1.13 2002-06-23 03:58:32 suxen_drol Exp $
+*  $Id: xvid.h,v 1.14 2002-07-12 12:26:24 suxen_drol Exp $
 #endif
 
 /*****************************************************************************
@@ -245,6 +245,9 @@
 		int bquant_ratio;		/* bframe quantizer multipier (percentage).
 								 * used only when bquant < 1
 								 * eg. 200 = x2 multiplier
+								 * quant = ((past_quant + future_quant) * bquant_ratio)/200
+								 */
+		int frame_drop_ratio;   /* frame dropping: 0=drop none... 100=drop all */
 #endif
 		void *handle;			/* [out] encoder instance handle */
 	}

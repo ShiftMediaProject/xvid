@@ -36,7 +36,7 @@
  *               support for EXTENDED API
  *  - 22.08.2001 fixed bug in iDQtab
  *
- *  $Id: encoder.h,v 1.13 2002-06-24 09:53:17 suxen_drol Exp $
+ *  $Id: encoder.h,v 1.14 2002-07-12 12:26:23 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -91,6 +91,10 @@ typedef struct
 	/* frame rate increment & base */
 	uint32_t fincr;
 	uint32_t fbase;
+
+#ifdef _SMP
+	int num_threads;
+#endif
 
 #ifdef BFRAMES
 	int max_bframes;
