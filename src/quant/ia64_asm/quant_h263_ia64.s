@@ -1,3 +1,18 @@
+//*******************************************************************************
+//*										*
+//*	functions quant_inter and dequant_inter have been softwarepipelined	*
+//*	use was made of the pmpyshr2 instruction				*
+//*										*
+//*	by Christian Engel and Hans-Joachim Daniels				*
+//*	christian.engel@ira.uka.de hans-joachim.daniels@ira.uka.de		*
+//*										*
+//*	This was made for the ia64 DivX laboratory (yes, it was really called	*
+//*	this way, originally OpenDivX was intendet, but died shortly before our	*
+//*	work started (you will probably already know ...))			*
+//*	at the Universitat Karlsruhe (TH) held between April and July 2002	*
+//* 	http://www.info.uni-karlsruhe.de/~rubino/ia64p/				*
+//*										*
+//*******************************************************************************
 	.file	"quant_h263_ia64.s"
 	.pred.safe_across_calls p1-p5,p16-p63
 		.section	.rodata
@@ -348,23 +363,23 @@ quant_inter_ia64:
 .L58:
 	.pred.rel "clear", p29, p37
 	.pred.rel "mutex", p29, p37
-	
+
 									//pipeline stage
 {.mmi
-	(p[0]) 		ld2 ac1[0]   = [r15],2				//   0		acL=acLevel = data[i];	
+	(p[0]) 		ld2 ac1[0]   = [r15],2				//   0		acL=acLevel = data[i];
 	(p[LL+1]) 	sub ac2[0]   = r0, ac1[LL+1]			//   LL+1	ac2=-acLevel
 	(p[LL]) 	sxt2 ac1[LL] = ac1[LL]				//   LL
 }
-{.mmi	
-	(p[LL+1]) 	cmp4.le cmp1[0], cmp1neg[0] = r0, ac1[LL+1]	//   LL+1	cmp1 = (0<=acLevel)  ;   cmp1neg = !(0<=acLevel)	
-	(p[LL+4]) 	cmp4.le cmp2[0], cmp2neg[0] = r20, ac2[3]	//   LL+4	cmp2 = (quant_m_2 < acLevel)  ; cmp2neg = !(quant_m_2 < acLevel) 
-	(cmp1[1])    	sub ac2[1]   = ac1[LL+2], r21			//   LL+2	acLevel = acLevel - quant_d_2;	
+{.mmi
+	(p[LL+1]) 	cmp4.le cmp1[0], cmp1neg[0] = r0, ac1[LL+1]	//   LL+1	cmp1 = (0<=acLevel)  ;   cmp1neg = !(0<=acLevel)
+	(p[LL+4]) 	cmp4.le cmp2[0], cmp2neg[0] = r20, ac2[3]	//   LL+4	cmp2 = (quant_m_2 < acLevel)  ; cmp2neg = !(quant_m_2 < acLevel)
+	(cmp1[1])    	sub ac2[1]   = ac1[LL+2], r21			//   LL+2	acLevel = acLevel - quant_d_2;
 }
 {.mmi
 	(cmp2neg[1])	mov ac2[4] = r0					//   LL+5	if (acLevel < quant_m_2) acLevel=0;
 	(cmp1neg[1]) 	sub ac2[1]   = ac2[1], r21			//   LL+2	acLevel = ac2 - quant_d_2;
 	(p[LL+3]) 	sxt2 ac2[2]   = ac2[2]				//   LL+3
-}	
+}
 {.mmi
 	.pred.rel "mutex", p34, p42
 	(cmp1[6]) 	mov ac3[0] = ac2[6]				//   LL+7	ac3 = acLevel;
