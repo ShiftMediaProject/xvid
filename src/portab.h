@@ -110,7 +110,7 @@ static __inline int64_t read_counter() {
 
 // needed for bitstream.h
 #ifdef ARCH_PPC
-	#define BSWAP(a) __asm__ ( "lwbrx %0,0,%1; eieio" : "=r" (a) : \
+	#define BSWAP(a) __asm__ __volatile__ ( "lwbrx %0,0,%1; eieio" : "=r" (a) : \
 		"r" (&(a)), "m" (a));
 	#define EMMS()
 
@@ -127,8 +127,8 @@ static __inline int64_t read_counter() {
 	static __inline int64_t read_counter() {
 		unsigned long tb, tu;
 		do {
-			tb = get_tbl();
 			tu = get_tbu();
+			tb = get_tbl();
 		} while(tb != get_tbl());
 		return (((int64_t)tu) << 32) | (int64_t)tb;
 	}

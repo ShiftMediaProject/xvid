@@ -344,5 +344,5 @@ idct_altivec:
 	la 1,368(1)
 	blr
 .Lfe1:
-	.size	 idct_vec,.Lfe1-idct_vec
+	.size	 idct_altivec,.Lfe1-idct_altivec
 	.ident	"GCC: (GNU) 2.95.3 20010111 (BLL/AltiVec prerelease/franzo/20010111)"
