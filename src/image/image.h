@@ -29,10 +29,21 @@ void image_interpolate(const IMAGE * refn,
 float image_psnr(IMAGE *orig_image, IMAGE *recon_image,
               uint16_t stride, uint16_t width, uint16_t height);
 
+
 int image_input(IMAGE * image, uint32_t width, int height, uint32_t edged_width,
 			uint8_t * src, int csp);
 
 int image_output(IMAGE * image, uint32_t width, int height, uint32_t edged_width,
 			uint8_t * dst, uint32_t dst_stride, int csp);
+
+
+
+int image_dump_yuvpgm(IMAGE * image, 
+				uint32_t edged_width, 
+			    uint32_t width, uint32_t height,
+			   char * filename);
+
+float image_mad(const IMAGE * img1, const IMAGE * img2, uint32_t stride,
+					uint32_t width, uint32_t height);
 
 #endif /* _IMAGE_H_ */

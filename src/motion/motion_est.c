@@ -2,6 +2,7 @@
  *
  *  Modifications:
  *
+ *	14.04.2002 added MotionEstimationBVOP()
  *  02.04.2002 add EPZS(^2) as ME algorithm, use PMV_USESQUARES to choose between 
  *             EPZS and EPZS^2
  *  08.02.2002 split up PMVfast into three routines: PMVFast, PMVFast_MainLoop
@@ -40,6 +41,7 @@
 #include "../prediction/mbprediction.h"
 #include "../global.h"
 #include "../utils/timer.h"
+#include "motion.h"
 #include "sad.h"
 
 // very large value
@@ -67,11 +69,6 @@
 // fast ((A)/2)*2
 #define EVEN(A)		(((A)<0?(A)+1:(A)) & ~1)
 
-
-#define MIN(X, Y) ((X)<(Y)?(X):(Y))
-#define MAX(X, Y) ((X)>(Y)?(X):(Y))
-#define ABS(X)    (((X)>0)?(X):-(X))
-#define SIGN(X)   (((X)>0)?1:-1)
 
 int32_t PMVfastSearch16(
 					const uint8_t * const pRef,
@@ -221,90 +218,6 @@ static __inline uint32_t calc_delta_8(const int32_t dx, const int32_t dy, const 
 
 
 
-/* calculate the min/max range (in halfpixels)
-	relative to the _MACROBLOCK_ position
-*/
-
-static void __inline get_range(
-	int32_t * const min_dx, int32_t * const max_dx,
-	int32_t * const min_dy, int32_t * const max_dy,
-	const uint32_t x, const uint32_t y, 
-	const uint32_t block_sz,					// block dimension, 8 or 16
-	const uint32_t width, const uint32_t height,
-	const uint32_t fcode)
-{
-
-	const int search_range = 32 << (fcode - 1);
-	const int high = search_range - 1;
-	const int low = -search_range;
-
-	// convert full-pixel measurements to half pixel
-	const int hp_width = 2 * width;
-	const int hp_height = 2 * height;
-	const int hp_edge = 2 * block_sz;
-	const int hp_x = 2 * (x) * block_sz;		// we need _right end_ of block, not x-coordinate
-	const int hp_y = 2 * (y) * block_sz;		// same for _bottom end_
-
-	*max_dx = MIN(high,	hp_width - hp_x);
-	*max_dy = MIN(high,	hp_height - hp_y);
-	*min_dx = MAX(low,	-(hp_edge + hp_x));
-	*min_dy = MAX(low,	-(hp_edge + hp_y));
-
-}
-
-
-/*
- * getref: calculate reference image pointer 
- * the decision to use interpolation h/v/hv or the normal image is
- * based on dx & dy.
- */
-
-static __inline const uint8_t * get_ref(
-	const uint8_t * const refn,
-	const uint8_t * const refh,
-	const uint8_t * const refv,
-	const uint8_t * const refhv,
-	const uint32_t x, const uint32_t y,
-	const uint32_t block,					// block dimension, 8 or 16
-	const int32_t dx, const int32_t dy,
-	const uint32_t stride)
-{
-
-	switch ( ((dx&1)<<1) + (dy&1) )		// ((dx%2)?2:0)+((dy%2)?1:0)
-	{
-	case 0  : return refn + (x*block+dx/2) + (y*block+dy/2)*stride;
-	case 1  : return refv + (x*block+dx/2) + (y*block+(dy-1)/2)*stride;
-	case 2  : return refh + (x*block+(dx-1)/2) + (y*block+dy/2)*stride;
-	default : 
-	case 3  : return refhv + (x*block+(dx-1)/2) + (y*block+(dy-1)/2)*stride;
-	}
-
-}
-
-
-/* This is somehow a copy of get_ref, but with MV instead of X,Y */
-
-static __inline const uint8_t * get_ref_mv(
-	const uint8_t * const refn,
-	const uint8_t * const refh,
-	const uint8_t * const refv,
-	const uint8_t * const refhv,
-	const uint32_t x, const uint32_t y,
-	const uint32_t block,			// block dimension, 8 or 16
-	const VECTOR* mv,	// measured in half-pel!
-	const uint32_t stride)
-{
-
-	switch ( (((mv->x)&1)<<1) + ((mv->y)&1) )
-	{
-	case 0  : return refn + (x*block+(mv->x)/2) + (y*block+(mv->y)/2)*stride;
-    	case 1  : return refv + (x*block+(mv->x)/2) + (y*block+((mv->y)-1)/2)*stride;
-	case 2  : return refh + (x*block+((mv->x)-1)/2) + (y*block+(mv->y)/2)*stride;
-	default : 
-	case 3  : return refhv + (x*block+((mv->x)-1)/2) + (y*block+((mv->y)-1)/2)*stride;
-	}
-
-}
 
 #ifndef SEARCH16
 #define SEARCH16	PMVfastSearch16
@@ -1970,3 +1883,127 @@ EPZS8_Terminate_without_Refine:
 	return iMinSAD;
 }
 
+
+
+
+
+/* ***********************************************************
+	bvop motion estimation 
+// TODO: need to incorporate prediction here (eg. sad += calc_delta_16)
+***************************************************************/
+
+/*
+void MotionEstimationBVOP(
+			MBParam * const pParam,
+			FRAMEINFO * const frame,
+
+			// forward (past) reference 
+			const MACROBLOCK * const f_mbs,
+		    const IMAGE * const f_ref,
+			const IMAGE * const f_refH,
+		    const IMAGE * const f_refV,
+			const IMAGE * const f_refHV,
+			// backward (future) reference
+			const MACROBLOCK * const b_mbs,
+		    const IMAGE * const b_ref,
+			const IMAGE * const b_refH,
+		    const IMAGE * const b_refV,
+			const IMAGE * const b_refHV)
+{
+    const uint32_t mb_width = pParam->mb_width;
+    const uint32_t mb_height = pParam->mb_height;
+	const int32_t edged_width = pParam->edged_width;
+ 
+	int32_t i,j;
+
+	int32_t f_sad16;
+	int32_t b_sad16;
+	int32_t i_sad16;
+	int32_t d_sad16;
+	int32_t best_sad;
+
+	VECTOR pmv_dontcare;
+
+	// note: i==horizontal, j==vertical
+    for (j = 0; j < mb_height; j++)
+	{
+		for (i = 0; i < mb_width; i++)
+		{
+			MACROBLOCK *mb = &frame->mbs[i + j*mb_width];
+			const MACROBLOCK *f_mb = &f_mbs[i + j*mb_width];
+			const MACROBLOCK *b_mb = &b_mbs[i + j*mb_width];
+
+			if (b_mb->mode == MODE_INTER
+				&& b_mb->cbp == 0
+				&& b_mb->mvs[0].x == 0
+				&& b_mb->mvs[0].y == 0)
+			{
+				mb->mode = MB_IGNORE;
+				mb->mvs[0].x = 0;
+				mb->mvs[0].y = 0;
+				mb->b_mvs[0].x = 0;
+				mb->b_mvs[0].y = 0;
+				continue;
+			}
+
+
+			// forward search
+			f_sad16 = SEARCH16(f_ref->y, f_refH->y, f_refV->y, f_refHV->y,
+						&frame->image, 
+						i, j, 
+						frame->motion_flags,  frame->quant, frame->fcode,
+						pParam, 
+						f_mbs, 
+						&mb->mvs[0], &pmv_dontcare);	// ignore pmv
+
+			// backward search
+			b_sad16 = SEARCH16(b_ref->y, b_refH->y, b_refV->y, b_refHV->y, 
+						&frame->image, 
+						i, j, 
+						frame->motion_flags,  frame->quant, frame->bcode,
+						pParam, 
+						b_mbs, 
+						&mb->b_mvs[0], &pmv_dontcare);  // ignore pmv
+
+			// interpolate search (simple, but effective)
+			i_sad16 = sad16bi_c(
+					frame->image.y + i*16 + j*16*edged_width, 
+					get_ref(f_ref->y, f_refH->y, f_refV->y, f_refHV->y,
+						i, j, 16, mb->mvs[0].x, mb->mvs[0].y, edged_width),
+					get_ref(b_ref->y, b_refH->y, b_refV->y, b_refHV->y,
+						i, j, 16, mb->b_mvs[0].x, mb->b_mvs[0].x, edged_width),
+					edged_width);
+
+			// TODO: direct search
+			// predictor + range of [-32,32]
+			d_sad16 = 65535;
+		
+			
+			if (f_sad16 < b_sad16)
+			{
+				best_sad = f_sad16;
+				mb->mode = MB_FORWARD;
+			}
+			else
+			{
+				best_sad = b_sad16;
+				mb->mode = MB_BACKWARD;
+			}
+				
+			if (i_sad16 < best_sad)
+			{
+				best_sad = i_sad16;
+				mb->mode = MB_INTERPOLATE;
+			}
+
+			if (d_sad16 < best_sad)
+			{
+				best_sad = d_sad16;
+				mb->mode = MB_DIRECT;
+			}
+
+		}
+	}
+}
+
+*/

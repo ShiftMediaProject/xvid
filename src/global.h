@@ -4,7 +4,7 @@
 #include "xvid.h"
 #include "portab.h"
 
-/* --- macroblock stuff --- */
+/* --- macroblock modes --- */
 
 #define MODE_INTER		0
 #define MODE_INTER_Q	1
@@ -13,6 +13,14 @@
 #define MODE_INTRA_Q	4
 #define MODE_STUFFING	7
 #define MODE_NOT_CODED	16
+
+/* --- bframe specific --- */
+
+#define MODE_DIRECT			0
+#define MODE_INTERPOLATE	1
+#define MODE_BACKWARD		2
+#define MODE_FORWARD		3
+
 
 typedef struct
 {
@@ -54,6 +62,11 @@ typedef struct
 	int dquant;
 	int cbp;
 
+	// bframe stuff
+
+	VECTOR b_mvs[4];
+	VECTOR b_pmvs[4];
+
 } MACROBLOCK;
 
 static __inline int8_t get_dc_scaler(int32_t quant, uint32_t lum)
@@ -87,5 +100,14 @@ static __inline int8_t get_dc_scaler(int32_t quant, uint32_t lum)
 
     return dc_scaler;
 }
+
+
+// useful macros
+
+#define MIN(X, Y) ((X)<(Y)?(X):(Y))
+#define MAX(X, Y) ((X)>(Y)?(X):(Y))
+#define ABS(X)    (((X)>0)?(X):-(X))
+#define SIGN(X)   (((X)>0)?1:-1)
+
 
 #endif /* _GLOBAL_H_ */

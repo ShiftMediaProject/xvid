@@ -30,6 +30,19 @@ extern TRANSFER_8TO16SUB_PTR transfer_8to16sub;
 TRANSFER_8TO16SUB transfer_8to16sub_c;
 TRANSFER_8TO16SUB transfer_8to16sub_mmx;
 
+// transfer8to16sub2
+typedef void (TRANSFER_8TO16SUB2)(int16_t * const dct,
+				uint8_t * const cur,
+				const uint8_t * ref1,
+				const uint8_t * ref2,
+				const uint32_t stride);
+typedef TRANSFER_8TO16SUB2* TRANSFER_8TO16SUB2_PTR;
+
+extern TRANSFER_8TO16SUB2_PTR transfer_8to16sub2;
+TRANSFER_8TO16SUB2 transfer_8to16sub2_c;
+//TRANSFER_8TO16SUB2 transfer_8to16sub2_mmx;
+
+
 // transfer16to8add
 typedef void (TRANSFER_16TO8ADD)(uint8_t * const dst,
 					const int16_t * const src,

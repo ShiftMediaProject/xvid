@@ -1,3 +1,5 @@
+// 14.04.2002	added FrameCodeB()
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -814,3 +816,130 @@ static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool forc
 
 	return 0;					 // inter
 }
+
+
+
+/*
+static void FrameCodeB(Encoder * pEnc, FRAMEINFO * frame, Bitstream * bs, uint32_t *pBits)
+{
+    int16_t dct_codes[6][64];
+    int16_t qcoeff[6][64];
+    uint32_t x, y;
+	VECTOR forward;
+	VECTOR backward;
+
+    IMAGE *f_ref = &pEnc->reference->image;
+	IMAGE *b_ref = &pEnc->current->image;
+
+	// forward 
+	image_setedges(f_ref, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height, pEnc->mbParam.width, pEnc->mbParam.height);
+	start_timer();
+	image_interpolate(f_ref, &pEnc->f_refh, &pEnc->f_refv, &pEnc->f_refhv,
+		pEnc->mbParam.edged_width, pEnc->mbParam.edged_height, 0);
+	stop_inter_timer();
+
+	// backward
+	image_setedges(b_ref, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height, pEnc->mbParam.width, pEnc->mbParam.height);
+    start_timer();
+	image_interpolate(b_ref, &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV,
+		pEnc->mbParam.edged_width, pEnc->mbParam.edged_height, 0);
+	stop_inter_timer();
+
+	start_timer();
+	MotionEstimationBVOP(&pEnc->mbParam, frame, 
+		pEnc->reference->mbs, f_ref, &pEnc->f_refh, &pEnc->f_refv, &pEnc->f_refhv,
+		pEnc->current->mbs, b_ref, &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV);
+
+	stop_motion_timer();
+	
+	if (test_quant_type(&pEnc->mbParam, pEnc->current))
+	{
+		BitstreamWriteVolHeader(bs, pEnc->mbParam.width, pEnc->mbParam.height, pEnc->mbParam.quant_type);
+	}
+
+    frame->coding_type = B_VOP;
+    BitstreamWriteVopHeader(bs, B_VOP, frame->tick, 0,
+			frame->quant, frame->fcode, frame->bcode);
+
+    *pBits = BitstreamPos(bs);
+
+    pEnc->sStat.iTextBits = 0;
+    pEnc->sStat.iMvSum = 0;
+    pEnc->sStat.iMvCount = 0;
+	pEnc->sStat.kblks = pEnc->sStat.mblks = pEnc->sStat.ublks = 0;
+
+
+    for (y = 0; y < pEnc->mbParam.mb_height; y++)
+	{
+		// reset prediction
+
+		forward.x = 0;
+		forward.y = 0;
+		backward.x = 0;
+		backward.y = 0;
+
+		for (x = 0; x < pEnc->mbParam.mb_width; x++)
+		{
+			MACROBLOCK * f_mb = &pEnc->reference->mbs[x + y * pEnc->mbParam.mb_width];
+			MACROBLOCK * b_mb = &pEnc->current->mbs[x + y * pEnc->mbParam.mb_width];
+			MACROBLOCK * mb = &frame->mbs[x + y * pEnc->mbParam.mb_width];
+
+			// decoder ignores mb when refence block is INTER(0,0), CBP=0 
+			if (mb->mode == MODE_NOT_CODED)
+			{
+				mb->mvs[0].x = 0;
+				mb->mvs[0].y = 0;
+				continue;
+			}
+
+			MBMotionCompensationBVOP(&pEnc->mbParam, mb, x, y, &frame->image,
+					f_ref, &pEnc->f_refh, &pEnc->f_refv, &pEnc->f_refhv, 
+					b_ref, &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV, 
+					dct_codes);
+	
+			mb->quant = frame->quant;
+			mb->cbp = MBTransQuantInter(&pEnc->mbParam, frame, x, y, dct_codes, qcoeff);
+			//mb->cbp = MBTransQuantBVOP(&pEnc->mbParam, x, y, dct_codes, qcoeff, &frame->image, frame->quant);
+
+
+			if ((mb->mode == MODE_INTERPOLATE || mb->mode == MODE_DIRECT) &&
+				mb->cbp == 0 &&
+				mb->mvs[0].x == 0 && 
+				mb->mvs[0].y == 0)
+			{
+				mb->mode = 5;  // skipped
+			}
+
+			if (mb->mode == MODE_INTERPOLATE || mb->mode == MODE_FORWARD)
+			{
+				mb->pmvs[0].x = mb->mvs[0].x - forward.x;
+				mb->pmvs[0].y = mb->mvs[0].y - forward.y;
+				forward.x = mb->mvs[0].x;
+				forward.y = mb->mvs[0].y;
+			}
+			
+			if (mb->mode == MODE_INTERPOLATE || mb->mode == MODE_BACKWARD)
+			{
+				mb->b_pmvs[0].x = mb->b_mvs[0].x - backward.x;
+				mb->b_pmvs[0].y = mb->b_mvs[0].y - backward.y;
+				backward.x = mb->b_mvs[0].x;
+				backward.y = mb->b_mvs[0].y;
+			}
+
+//			printf("[%i %i] M=%i CBP=%i MVX=%i MVY=%i %i,%i  %i,%i\n", x, y, pMB->mode, pMB->cbp, pMB->mvs[0].x, bmb->pmvs[0].x, bmb->pmvs[0].y, forward.x, forward.y);
+
+			start_timer();			
+			MBCodingBVOP(frame, mb, qcoeff, bs, &pEnc->sStat);
+			stop_coding_timer();
+		}
+	}
+
+	emms();
+
+	// TODO: dynamic fcode/bcode ???
+
+	*pBits = BitstreamPos(bs) - *pBits;
+
+}
+
+*/

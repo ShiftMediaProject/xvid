@@ -99,6 +99,7 @@ int xvid_init(void *handle, int opt, void *param1, void *param2)
 	transfer_8to16copy = transfer_8to16copy_c;
 	transfer_16to8copy = transfer_16to8copy_c;
 	transfer_8to16sub = transfer_8to16sub_c;
+	transfer_8to16sub2 = transfer_8to16sub2_c;
 	transfer_16to8add = transfer_16to8add_c;
 	transfer8x8_copy = transfer8x8_copy_c;
 
@@ -126,6 +127,7 @@ int xvid_init(void *handle, int opt, void *param1, void *param2)
 
 	calc_cbp = calc_cbp_c;
 	sad16 = sad16_c;
+	sad16bi = sad16bi_c;
 	sad8 = sad8_c;
 	dev16 = dev16_c;
 

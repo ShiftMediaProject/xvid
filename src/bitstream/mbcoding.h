@@ -21,4 +21,11 @@ int get_coeff(Bitstream * bs, int *run, int *last, int intra, int short_video_he
 void get_intra_block(Bitstream * bs, int16_t * block, int direction, int coeff);
 void get_inter_block(Bitstream * bs, int16_t * block);
 
+void MBCodingBVOP(const MACROBLOCK * mb, 
+				  const int16_t qcoeff[6*64],
+				  const int16_t fcode,
+				  const int16_t bcode,
+				  Bitstream * bs, 
+				  Statistics * pStat);
+
 #endif /* _MB_CODING_H_ */

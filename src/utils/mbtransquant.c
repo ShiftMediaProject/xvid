@@ -266,7 +266,6 @@ uint8_t MBTransQuantInter(const MBParam *pParam,
 
 /* if sum(diff between field lines) < sum(diff between frame lines), use field dct */
 
-#define ABS(X) (X)<0 ? -(X) : (X)
 
 uint32_t MBDecideFieldDCT(int16_t data[6*64])
 {

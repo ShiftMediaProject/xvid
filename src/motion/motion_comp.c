@@ -1,7 +1,10 @@
+// 14.04.2002	bframe compensation
+
 #include "../encoder.h"
 #include "../utils/mbfunctions.h"
 #include "../image/interpolate8x8.h"
 #include "../utils/timer.h"
+#include "motion.h"
 
 #define ABS(X) (((X)>0)?(X):-(X))
 #define SIGN(X) (((X)>0)?1:-1)
@@ -145,3 +148,201 @@ void MBMotionCompensation(
 
 	}
 }
+
+
+
+void MBMotionCompensationBVOP(
+			MBParam * pParam,
+			MACROBLOCK * const mb,
+		    const uint32_t i,
+			const uint32_t j,
+			IMAGE * const cur,
+		    const IMAGE * const f_ref,
+			const IMAGE * const f_refh,
+		    const IMAGE * const f_refv,
+			const IMAGE * const f_refhv,
+		    const IMAGE * const b_ref,
+			const IMAGE * const b_refh,
+		    const IMAGE * const b_refv,
+			const IMAGE * const b_refhv,
+		    int16_t dct_codes[][64])
+{
+	static const uint32_t roundtab[16] =
+		{ 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2 };
+
+	const int32_t edged_width = pParam->edged_width;
+	int32_t dx, dy;
+	int32_t b_dx, b_dy;
+	int x = i;
+	int y = j;
+
+
+
+	switch(mb->mode)
+	{
+	case MODE_FORWARD :
+		dx = mb->mvs[0].x;
+		dy = mb->mvs[0].y;
+
+		transfer_8to16sub_c(
+			dct_codes[0],
+			cur->y + (j*16)*edged_width + (i*16),
+			get_ref(f_ref->y, f_refh->y, f_refv->y, f_refhv->y,
+							i*16, j*16, 1, dx, dy, edged_width), 
+			edged_width);
+
+		transfer_8to16sub(
+			dct_codes[1],
+			cur->y + (j*16)*edged_width + (i*16+8),
+			get_ref(f_ref->y, f_refh->y, f_refv->y, f_refhv->y,
+							i*16+8, j*16, 1, dx, dy, edged_width), 
+			edged_width);
+
+		transfer_8to16sub_c(
+			dct_codes[2],
+			cur->y + (j*16+8)*edged_width + (i*16),
+			get_ref(f_ref->y, f_refh->y, f_refv->y, f_refhv->y,
+							i*16, j*16+8, 1, dx, dy, edged_width), 
+			edged_width);
+
+		transfer_8to16sub(
+			dct_codes[3],
+			cur->y + (j*16+8)*edged_width + (i*16+8),
+			get_ref(f_ref->y, f_refh->y, f_refv->y, f_refhv->y,
+							i*16+8, j*16+8, 1, dx, dy, edged_width), 
+			edged_width);
+
+
+		dx = (dx & 3) ? (dx >> 1) | 1 : dx / 2;
+		dy = (dy & 3) ? (dy >> 1) | 1 : dy / 2;
+
+		/* uv-image-based compensation */
+		compensate8x8_halfpel(dct_codes[4], cur->u, f_ref->u, f_refh->u, f_refv->u, f_refhv->u,
+								8*i, 8*j, dx, dy, edged_width/2);
+		compensate8x8_halfpel(dct_codes[5], cur->v, f_ref->v, f_refh->v, f_refv->v, f_refhv->v,
+								8*i, 8*j, dx, dy, edged_width/2);		
+
+		break;
+
+	case MODE_BACKWARD :
+		b_dx = mb->b_mvs[0].x;
+		b_dy = mb->b_mvs[0].y;
+
+		transfer_8to16sub_c(
+			dct_codes[0],
+			cur->y + (j*16)*edged_width + (i*16),
+			get_ref(b_ref->y, b_refh->y, b_refv->y, b_refhv->y,
+							i*16, j*16, 1, b_dx, b_dy, edged_width), 
+			edged_width);
+
+		transfer_8to16sub(
+			dct_codes[1],
+			cur->y + (j*16)*edged_width + (i*16+8),
+			get_ref(b_ref->y, b_refh->y, b_refv->y, b_refhv->y,
+							i*16+8, j*16, 1, b_dx, b_dy, edged_width), 
+			edged_width);
+
+		transfer_8to16sub_c(
+			dct_codes[2],
+			cur->y + (j*16+8)*edged_width + (i*16),
+			get_ref(b_ref->y, b_refh->y, b_refv->y, b_refhv->y,
+							i*16, j*16+8, 1, b_dx, b_dy, edged_width), 
+			edged_width);
+
+		transfer_8to16sub(
+			dct_codes[3],
+			cur->y + (j*16+8)*edged_width + (i*16+8),
+			get_ref(b_ref->y, b_refh->y, b_refv->y, b_refhv->y,
+							i*16+8, j*16+8, 1, b_dx, b_dy, edged_width), 
+			edged_width);
+
+		b_dx = (b_dx & 3) ? (b_dx >> 1) | 1 : b_dx / 2;
+		b_dy = (b_dy & 3) ? (b_dy >> 1) | 1 : b_dy / 2;
+
+		/* uv-image-based compensation */
+		compensate8x8_halfpel(dct_codes[4], cur->u, 
+					b_ref->u, b_refh->u, b_refv->u, b_refhv->u,
+					8*i, 8*j, b_dx, b_dy, edged_width/2);
+		compensate8x8_halfpel(dct_codes[5], cur->v, 
+					b_ref->v, b_refh->v, b_refv->v, b_refhv->v,
+					8*i, 8*j, b_dx, b_dy, edged_width/2);		
+
+		break;
+
+
+	case MODE_INTERPOLATE :
+		dx = mb->mvs[0].x;
+		dy = mb->mvs[0].y;
+		b_dx = mb->b_mvs[0].x;
+		b_dy = mb->b_mvs[0].y;
+
+		transfer_8to16sub2_c(
+				dct_codes[0], 
+				cur->y + (i*16) + (j*16)*edged_width, 
+				get_ref(f_ref->y, f_refh->y, f_refv->y, f_refhv->y, 
+							16*i, 16*j, 1, dx, dy, edged_width),
+				get_ref(b_ref->y, b_refh->y, b_refv->y, b_refhv->y, 
+							16*i, 16*j, 1, b_dx, b_dy, edged_width),
+				edged_width);
+		
+		transfer_8to16sub2_c(
+				dct_codes[1], 
+				cur->y + (i*16+8) + (j*16)*edged_width, 
+				get_ref(f_ref->y, f_refh->y, f_refv->y, f_refhv->y, 
+							16*i+8, 16*j, 1, dx, dy, edged_width),
+				get_ref(b_ref->y, b_refh->y, b_refv->y, b_refhv->y, 
+							16*i+8, 16*j, 1, b_dx, b_dy, edged_width),
+				edged_width);
+
+		transfer_8to16sub2_c(
+				dct_codes[2], 
+				cur->y + (i*16) + (j*16+8)*edged_width, 
+				get_ref(f_ref->y, f_refh->y, f_refv->y, f_refhv->y, 
+							16*i, 16*j+8, 1, dx, dy, edged_width),
+				get_ref(b_ref->y, b_refh->y, b_refv->y, b_refhv->y, 
+							16*i, 16*j+8, 1, b_dx, b_dy, edged_width),
+				edged_width);
+
+		transfer_8to16sub2_c(
+				dct_codes[3], 
+				cur->y + (i*16+8) + (j*16+8)*edged_width, 
+				get_ref(f_ref->y, f_refh->y, f_refv->y, f_refhv->y, 
+							16*i + 8, 16*j + 8, 1, dx, dy, edged_width),
+				get_ref(b_ref->y, b_refh->y, b_refv->y, b_refhv->y, 
+							16*i + 8, 16*j + 8, 1, b_dx, b_dy, edged_width),
+				edged_width);
+
+
+		dx = (dx & 3) ? (dx >> 1) | 1 : dx / 2;
+		dy = (dy & 3) ? (dy >> 1) | 1 : dy / 2;
+
+		b_dx = (b_dx & 3) ? (b_dx >> 1) | 1 : b_dx / 2;
+		b_dy = (b_dy & 3) ? (b_dy >> 1) | 1 : b_dy / 2;
+
+		transfer_8to16sub2_c(
+				dct_codes[4], 
+				cur->u + (y*8)*edged_width/2 + (x*8), 
+				get_ref(f_ref->u, f_refh->u, f_refv->u, f_refhv->u, 
+							8*i, 8*j, 1, dx, dy, edged_width/2),
+				get_ref(b_ref->u, b_refh->u, b_refv->u, b_refhv->u, 
+							8*i, 8*j, 1, b_dx, b_dy, edged_width/2),
+				edged_width/2);
+
+		transfer_8to16sub2_c(
+				dct_codes[5], 
+				cur->v + (y*8)*edged_width/2 + (x*8), 
+				get_ref(f_ref->v, f_refh->v, f_refv->v, f_refhv->v, 
+							8*i, 8*j, 1, dx, dy, edged_width/2),
+				get_ref(b_ref->v, b_refh->v, b_refv->v, b_refhv->v, 
+							8*i, 8*j, 1, b_dx, b_dy, edged_width/2),
+				edged_width/2);
+				
+		break;
+
+	case MODE_DIRECT :
+		// todo
+		break;
+	}
+	
+}
+

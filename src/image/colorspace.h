@@ -2,7 +2,7 @@
 #define _COLORSPACE_H
 
 #include "../portab.h"
-
+#include "../divx4.h"
 
 /* initialize tables */
 
@@ -77,5 +77,10 @@ color_outputFunc yv12_to_rgb24_mmx;
 color_outputFunc yv12_to_rgb32_mmx;
 color_outputFunc yv12_to_yuyv_mmx;
 color_outputFunc yv12_to_uyvy_mmx;
+
+
+void user_to_yuv_c(uint8_t *y_out, uint8_t *u_out, uint8_t *v_out, int stride,
+				   DEC_PICTURE * picture,
+				   int width, int height);
 
 #endif /* _COLORSPACE_H_ */
