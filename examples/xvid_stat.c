@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_stat.c,v 1.6 2002-09-14 23:54:17 edgomez Exp $
+ * $Id: xvid_stat.c,v 1.7 2002-09-15 20:22:01 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -150,6 +150,7 @@ static int   ARG_SAVEDECOUTPUT = 0;
 static int   ARG_SAVEMPEGSTREAM = 0;
 static int   XDIM = 0;
 static int   YDIM = 0;
+#define IMAGE_SIZE(x,y) ((x)*(y)*3/2)
 
 #define MAX(A,B) ( ((A)>(B)) ? (A) : (B) )
 #define SMALL_EPS 1e-10
@@ -271,16 +272,12 @@ int main(int argc, char *argv[])
  *                            Arguments checking
  ****************************************************************************/
 
-	if ( ARG_INPUTTYPE == 0 &&
-		 ((XDIM <= 0) || (XDIM >= 2048) || (YDIM <=0) || (YDIM >= 2048)) ) {
+	if (XDIM <= 0 || XDIM >= 2048 || YDIM <=0 || YDIM >= 2048 ) {
 		fprintf(stderr,
-				"Wrong frame sizes width=%d height=%d, trying PGM header infos\n",
+				"Trying to retreive width and height from PGM header\n",
 				XDIM,
 				YDIM);
 		ARG_INPUTTYPE = 1; /* pgm */
-	}
-	else {
-		YDIM = YDIM*3/2; /* YUV */
 	}
   
 	if ( ARG_QUALITY < 0 || ARG_QUALITY > 6) {
@@ -318,25 +315,22 @@ int main(int argc, char *argv[])
 	if (ARG_INPUTTYPE) {
 		if (read_pgmheader(in_file)) {
 			fprintf(stderr, "Wrong input format, I want YUV encapsulated in PGM\n");
-			return -11;
+			return -1;
 		}
 	}
 
 	/* now we know the sizes, so allocate memory */
 
-	in_buffer = (unsigned char *) malloc(XDIM*YDIM);	
+	in_buffer = (unsigned char *) malloc(IMAGE_SIZE(XDIM,YDIM));
 	if (!in_buffer)
 		goto free_all_memory;
 
 	/* this should really be enough memory ! */
-	divx_buffer = (unsigned char *) malloc(XDIM*YDIM*2);
+	divx_buffer = (unsigned char *) malloc(IMAGE_SIZE(XDIM,YDIM)*2);
 	if (!divx_buffer)
 		goto free_all_memory;	
     
-	/* PGM is YUV 4:2:0 format, so real image height is *2/3 of PGM picture */
-	YDIM = YDIM*2/3; 
-    
-	out_buffer = (unsigned char *) malloc(XDIM*YDIM*4);	
+	out_buffer = (unsigned char *) malloc(IMAGE_SIZE(XDIM,YDIM)*4);	
 	if (!out_buffer)
 		goto free_all_memory;	
 
@@ -428,7 +422,7 @@ int main(int argc, char *argv[])
  *             Analyse the decoded frame and compare to original
  ****************************************************************************/
       
-		framepsnr[filenr] = PSNR(XDIM,YDIM, in_buffer, XDIM, out_buffer, XDIM );
+		framepsnr[filenr] = PSNR(XDIM,YDIM, in_buffer, XDIM, out_buffer, XDIM);
 	
 		printf("dectime =%6.1f ms PSNR %5.2f\n",dectime, framepsnr[filenr]);
 
@@ -657,6 +651,7 @@ static int read_pgmheader(FILE* handle)
 
 	if ( (bytes < 2) || (dummy[0] != 'P') || (dummy[1] != '5' ))
    		return 1;
+
 	fscanf(handle,"%d %d %d",&xsize,&ysize,&depth); 
 	if ( (xsize > 1440) || (ysize > 2880 ) || (depth != 255) )
 	{
@@ -666,7 +661,7 @@ static int read_pgmheader(FILE* handle)
 	if ( (XDIM==0) || (YDIM==0) )
 	{
 		XDIM=xsize;
-		YDIM=ysize;
+		YDIM=ysize*2/3;
 	}
 
 	return 0;
@@ -677,29 +672,36 @@ static int read_pgmdata(FILE* handle, unsigned char *image)
 	int i;
 	char dummy;
 	
-	unsigned char* buff1_ptr2 = image + XDIM*YDIM;
-	unsigned char* buff1_ptr3 = image + XDIM*YDIM + XDIM/2*YDIM/2; 
+	unsigned char *y = image;
+	unsigned char *u = image + XDIM*YDIM;
+	unsigned char *v = image + XDIM*YDIM + XDIM/2*YDIM/2; 
 
-	fread(image,XDIM*YDIM,1, handle);	// read Y component of picture
+	/* read Y component of picture */
+	fread(y, 1, XDIM*YDIM, handle);
  
 	for (i=0;i<YDIM/2;i++)
 	{
-		fread(buff1_ptr2,XDIM/2,1,handle);        // read U
-		buff1_ptr2 += XDIM/2;
-		fread(buff1_ptr3,XDIM/2,1,handle);      	 // read V
-		buff1_ptr3 += XDIM/2;
+		/* read U */
+		fread(u, 1, XDIM/2, handle);
+
+		/* read V */
+		fread(v, 1, XDIM/2, handle);
+
+		/* Update pointers */
+		u += XDIM/2;
+		v += XDIM/2;
 	}
-	fread(&dummy,1,1,handle);	//  I don't know why, but this seems needed
+
+    /*  I don't know why, but this seems needed */
+	fread(&dummy, 1, 1, handle);
+
 	return 0;
 }
 
 static int read_yuvdata(FILE* handle, unsigned char *image)
 {
    
-	unsigned char* buff1_ptr2 = image + XDIM*YDIM;
-	unsigned char* buff1_ptr3 = image + XDIM*YDIM + XDIM/2*YDIM/2; 
-
-	if (fread(image,XDIM,YDIM*3/2,handle) != (unsigned int)YDIM*3/2) 
+	if (fread(image, 1, IMAGE_SIZE(XDIM, YDIM), handle) != IMAGE_SIZE(XDIM, YDIM)) 
 		return 1;
 	else	
 		return 0;
@@ -707,14 +709,39 @@ static int read_yuvdata(FILE* handle, unsigned char *image)
 
 static int write_pgm(char *filename, unsigned char *image)
 {
+	int loop;
+
+	unsigned char *y = image;
+	unsigned char *u = image + XDIM*YDIM;
+	unsigned char *v = image + XDIM*YDIM + XDIM/2*YDIM/2;
+
 	FILE *filehandle;
-	filehandle=fopen(filename,"wb");
+	filehandle=fopen(filename,"w+b");
 	if (filehandle)
 	{
-		fprintf(filehandle,"P5\n\n");		// 
-		fprintf(filehandle,"%d %d 255\n",XDIM,YDIM*3/2);
-		fwrite(image, XDIM*YDIM*3/2, 1 ,filehandle);
+		/* Write header */
+		fprintf(filehandle,"P5\n\n%d %d 255\n", XDIM,YDIM*3/2);
+
+		/* Write Y data */
+		fwrite(y, 1, XDIM*YDIM, filehandle);
+
+		for(loop=0; loop<YDIM/2; loop++)
+		{
+			/* Write U scanline */
+			fwrite(u, 1, XDIM/2, filehandle);
+
+			/* Write V scanline */
+			fwrite(v, 1, XDIM/2, filehandle);
+
+			/* Update pointers */
+			u += XDIM/2;
+			v += XDIM/2;
+
+		}
+
+		/* Close file */
 		fclose(filehandle);
+
 		return 0;
 	}
 	else
@@ -765,8 +792,8 @@ static int enc_init(int use_assembler)
     xparam.rc_averaging_period = 100;
     xparam.rc_buffer = 10;
 	xparam.rc_bitrate = ARG_BITRATE*1000; 
-	xparam.min_quantizer = 1;
-	xparam.max_quantizer = 31;
+	xparam.min_quantizer = ARG_MINQUANT;
+	xparam.max_quantizer = ARG_MAXQUANT;
 	xparam.max_key_interval = (int)ARG_FRAMERATE*10;
 
 	/* I use a small value here, since will not encode whole movies, but short clips */
