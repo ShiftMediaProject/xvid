@@ -4,7 +4,7 @@
 # 
 # Edit this file to enable/disable optimizations
 #
-# $Id: Makefile.linux,v 1.5 2002-07-09 21:39:19 chl Exp $
+# $Id: Makefile.linux,v 1.6 2002-07-19 09:56:59 edgomez Exp $
 # 
 #############################################################################
 
@@ -65,6 +65,7 @@ else
       # To detect non ANSI C code (xvid is not ANSI C (yet?))
   # CFLAGS += -pedantic
 
+
   # General Optimization options
       # Optimize code for size (implies -O2)
   CFLAGS += -Os
@@ -80,7 +81,14 @@ else
       # Generates Position Independant Code depending on your nasm version,
       # this could generate shared libraries that segfault because of a nasm
       # bug
-  # CFLAGS += -fPIC
+  CFLAGS += -fPIC
+
+  # Debugging and Profiling options
+     # Writes debugging symbols in object files
+  # CFLAGS += -g
+     # Includes profiling code in generated code, don't forget to disable
+     # -fomit-frame-pointer as these 2 options are exclusive.
+  # CFLAGS += -p
 
 
   # Architecture options : Valid for every gcc version
@@ -107,7 +115,7 @@ else
   # CFLAGS += -march=athlon-xp -mcpu=athlon-xp
   # CFLAGS += -march=athlon-mp -mcpu=athlon-mp
 
-  # Architecture specific optimization for every gcc
+  # x86 specific optimization for every gcc
       # Aligns the stack to 2^4=16bytes boundaries in each function
       # Local variables should be aligned and make the code faster
       # some gcc versions (3.0.4) have problems with this option
