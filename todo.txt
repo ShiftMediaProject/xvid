@@ -2,29 +2,38 @@
 |                         ToDo List for Stable Tree                          |
 |                                                                            |
 +----------------------------------------------------------------------------+
-$Id: todo.txt,v 1.7 2002-09-07 17:26:31 edgomez Exp $
+$Id: todo.txt,v 1.8 2002-09-22 17:08:17 edgomez Exp $
 
 
 
-This ToDo list is not definitive :
+This ToDo list is for the first official release, once it is completed we
+will test the source tree on all supported platforms and fix last bugs.
+
 
 ++ Remove alpha code from stable tree
+-----------------------------------------------------------------------------
 
-* Find a co maintainer - [IN PROGRESS]
 * Remove all BFrames stuff from encoder - [DONE]
-* Remove all BFrames stuff from decoder - [RFC]
+* Remove all BFrames stuff from decoder - [DONE]
+  + Kept in stable tree.
 * Remove all SMP stuff - [DONE]
 * Remove all field-ME functions [TODO]
 
 
 ++ Fixes
-
+-----------------------------------------------------------------------------
 * Add all legal headers (same headers all over the sources) - [DONE]
 * Sort out who has main copyrigths on files - [TODO]
-* Check core reentrancy - [IN PROGRESS] (Problems detected in custom matrices and get_mv code)
-* Check the small mem problems reported by valgrind [TODO]
+* Check core reentrancy - [IN PROGRESS]
+  + Problems detected in custom matrices, get_mv code, and function pointers.
+* Check the small mem problems reported by valgrind [DONE]
+  + None detected in stable tree :-)
+* Rewrite portab.h in a better way [DONE]
+  + Needs to be tested (and probably fixed) on all platforms/compilers
 
-++ ???
 
+++ Other
+-----------------------------------------------------------------------------
 * Add automatic ChangeLog Generator - [DONE]
-  -> Thanks to rockbox' script http://rockbox.haxx.se/
+  + Thanks to rockbox' script http://rockbox.haxx.se/
+* Find a co maintainer - [IN PROGRESS]
