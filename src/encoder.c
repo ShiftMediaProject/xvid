@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: encoder.c,v 1.97 2003-04-04 03:15:59 Isibaar Exp $
+ *  $Id: encoder.c,v 1.98 2003-04-08 11:04:06 syskin Exp $
  *
  ****************************************************************************/
 
@@ -1016,7 +1016,7 @@ bvop_loop:
 		mode = MEanalysis(&pEnc->reference->image, pEnc->current,
 					&pEnc->mbParam, pEnc->mbParam.iMaxKeyInterval,
 					(/*mode < 0*/1/*hack*/) ? pEnc->iFrameNum : 0,
-					bframes_count++, pFrame->bframe_threshold);
+					bframes_count++, 0 /*pFrame->bframe_threshold*/);
 	}
 
 	if (mode == I_VOP) {
