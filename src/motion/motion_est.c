@@ -173,7 +173,7 @@ MotionEstimation(MBParam * const pParam,
 
 	const VECTOR zeroMV = { 0, 0 };
 
-	long long time;
+	int64_t time;
 	int32_t x, y;
 	int32_t iIntra = 0;
 	VECTOR pmv;
