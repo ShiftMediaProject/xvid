@@ -39,7 +39,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.68 2002-07-31 18:19:49 chl Exp $
+ *  $Id: encoder.c,v 1.69 2002-08-01 12:53:45 chl Exp $
  *
  ****************************************************************************/
 
@@ -1577,7 +1577,7 @@ FrameCodeP(Encoder * pEnc,
 	DECLARE_ALIGNED_MATRIX(qcoeff, 6, 64, int16_t, CACHE_LINE);
 
 	int iLimit;
-	int x, y;
+	int x, y, k;
 	int iSearchRange;
 	int bIntra;
 	
