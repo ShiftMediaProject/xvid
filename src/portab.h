@@ -52,7 +52,7 @@
  *  exception also makes it possible to release a modified version which
  *  carries forward this exception.
  *
- * $Id: portab.h,v 1.38 2002-11-26 23:44:10 edgomez Exp $
+ * $Id: portab.h,v 1.39 2002-11-26 23:50:57 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -212,14 +212,14 @@
  | msvc unknown architecture
  *---------------------------------------------------------------------------*/
 #    else
-/* ANSI C version of BSWAP, and POSIX clock() for timer */
+/* ANSI C version of BSWAP */
 #define BSWAP(x) \
  x = ((((x) & 0xff000000) >> 24) | \
      (((x) & 0x00ff0000) >>  8) | \
      (((x) & 0x0000ff00) <<  8) | \
      (((x) & 0x000000ff) << 24))
 
-#define EMMS() clock()
+#define EMMS()
 #    endif
 
 
@@ -355,14 +355,14 @@
  | XviD + gcc unsupported Architecture
  *---------------------------------------------------------------------------*/
 #    else
-/* ANSI C version of BSWAP, and POSIX clock() for timer */
+/* ANSI C version of BSWAP */
 #define BSWAP(x) \
  x = ((((x) & 0xff000000) >> 24) | \
      (((x) & 0x00ff0000) >>  8) | \
      (((x) & 0x0000ff00) <<  8) | \
      (((x) & 0x000000ff) << 24))
 
-#define EMMS() clock()
+#define EMMS()
 #    endif /* Architecture checking */
 
 /*****************************************************************************
