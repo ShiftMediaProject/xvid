@@ -139,6 +139,7 @@ distclean: clean
 	@$(RM) libxvidcore.def
 	@$(RM) platform.inc
 	@$(RM) config.log
+	@$(RM) config.status
 	@$(RM) autom4te.cache
 	@echo "Done"
 
