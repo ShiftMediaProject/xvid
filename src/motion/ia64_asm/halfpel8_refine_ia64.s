@@ -125,7 +125,7 @@ Halfpel8_Refine_ia64:
 
 	// Save important registers
 	
-	alloc pfs = ar.pfs, 17, 75, 4, 96
+	alloc pfs = ar.pfs, 18, 74, 4, 96
 	mov prsave = pr
 
 	// Naming registers for better readability
@@ -139,14 +139,15 @@ Halfpel8_Refine_ia64:
 	y = in6
 	currMV = in7
 	iMinSAD = in8
-	pmv = in9
-	min_dx = in10
-	max_dx = in11
-	min_dy = in12
-	max_dy = in13
-	iFcode = in14
-	iQuant = in15
-	iEdgedWidth = in16
+	dx = in9
+	dy = in10
+	min_dx = in11
+	max_dx = in12
+	min_dy = in13
+	max_dy = in14
+	iFcode = in15
+	iQuant = in16
+	iEdgedWidth = in17
 
 	iSAD = r17
 	backupX = r18
@@ -166,12 +167,10 @@ Halfpel8_Refine_ia64:
 	nob64m1 = r127
 	const7 = r126
 	nob56m02 = r125
-	dx = r124
-	dy = r123
-	oldX = r122
-	oldY = r121
+	oldX = r124
+	oldY = r123
 
-	.rotr	inregisters[17], refaa[3], refab[3], cur[8], ref0a[9], ref0b[9], ref1a[9], mpr[9], ref2a[8], ref2b[8], component[2], sc[2], tabaddress[2]
+	.rotr	inregisters[18], refaa[3], refab[3], cur[8], ref0a[9], ref0b[9], ref1a[9], mpr[9], ref2a[8], ref2b[8], component[2], sc[2], tabaddress[2]
 
 	fx = f8
 	fy = f9
@@ -215,8 +214,16 @@ Halfpel8_Refine_ia64:
 	ld4 iMinSAD = [sp], 8
 	;;
 	sxt4 iMinSAD = iMinSAD
-	ld8 pmv = [sp], 8
+
+	
+	ld4 dx = [sp], 8
 	;; 
+	sxt4 dx = dx
+	
+	ld4 dy = [sp], 8
+	;;
+	sxt4 dy = dy
+	
 	ld4 min_dx = [sp], 8
 	;; 
 	sxt4 min_dx = min_dx
@@ -253,7 +260,7 @@ Halfpel8_Refine_ia64:
 	setf.sig fQuant = iQuant
 	
 	ld4 iEdgedWidth = [sp]
-	add sp = -80, sp
+	add sp = -88, sp
 	 
 
 
@@ -639,14 +646,6 @@ Halfpel8_Refine_ia64:
 	// ref2b[] now contains right position values
 	// mpr[] not needed any more
 
-
-	ld4 dx = [pmv], 4	//+ sizeof(int)
-	;; 
-	sxt4 dx = dx
-	ld4 dy = [pmv]
-	;;
-	sxt4 dy = dy
-	;;
 
 		
 	// Let's SAD
