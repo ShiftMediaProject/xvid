@@ -151,7 +151,12 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 	pEnc->current->mbs = NULL;
 	pEnc->reference->mbs = NULL;
 
+#ifdef _DEBUG
+#ifdef WIN32
 OutputDebugString("malloc mbs");
+#endif
+#endif 
+
 	if ((pEnc->current->mbs = xvid_malloc(sizeof(MACROBLOCK) * pEnc->mbParam.mb_width * pEnc->mbParam.mb_height, CACHE_LINE)) == NULL ||
 		(pEnc->reference->mbs = xvid_malloc(sizeof(MACROBLOCK) * pEnc->mbParam.mb_width * pEnc->mbParam.mb_height, CACHE_LINE)) == NULL)
 	{
@@ -174,8 +179,11 @@ OutputDebugString("malloc mbs");
 	image_null(&pEnc->vInterHV);
 	image_null(&pEnc->vInterHVf);
 	
-
+#ifdef _DEBUG
+#ifdef WIN32
 OutputDebugString("malloc images");
+#endif
+#endif
 	if (
 #ifdef _DEBUG
 		image_create(&pEnc->sOriginal, pEnc->mbParam.edged_width, pEnc->mbParam.edged_height) < 0 ||
