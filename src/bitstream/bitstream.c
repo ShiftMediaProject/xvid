@@ -76,7 +76,9 @@ log2bin(uint32_t value)
 	return n;
 #else
 	__asm {
-	bsr eax, value inc eax}
+		bsr eax, value 
+		inc eax
+	}
 #endif
 }
 
