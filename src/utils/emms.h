@@ -33,9 +33,11 @@
  *
  *  - Mon Jun 17 00:16:13 2002 Added legal header
  *
- *  $Id: emms.h,v 1.3 2002-06-16 22:38:08 edgomez Exp $
+ *  $Id: emms.h,v 1.4 2002-06-26 15:59:51 ia64p Exp $
  *
  ****************************************************************************/
+
+#include "../xvid.h"
 
 #ifndef _EMMS_H_
 #define _EMMS_H_
@@ -60,9 +62,15 @@ emmsFunc emms_mmx;
  * Prototypes
  ****************************************************************************/
 
-#if defined(ARCH_X86)
-/* Returns the cpuid feature flags - defined in x86_asm/cpuid.asm */
-int check_cpu_features(void);
+static int check_cpu_features(void);
+
+#ifdef ARCH_IA64
+int check_cpu_features(void) { return XVID_CPU_IA64; }
+#else
+#ifndef ARCH_X86
+int check_cpu_features(void) { return 0; } /* is 0 an acceptable value? */
 #endif
+#endif
+
 
 #endif
