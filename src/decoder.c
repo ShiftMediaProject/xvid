@@ -42,7 +42,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: decoder.c,v 1.12 2002-04-28 22:12:45 edgomez Exp $
+ *  $Id: decoder.c,v 1.13 2002-04-28 23:35:25 edgomez Exp $
  *
  *************************************************************************/
 
@@ -437,7 +437,7 @@ void get_motion_vector(DECODER *dec, Bitstream *bs, int x, int y, int k, VECTOR 
 	int range = (64 * scale_fac);
 
 	VECTOR pmv[4];
-	uint32_t psad[4];
+	int32_t psad[4];
 
 	int mv_x, mv_y;
 	int pmv_x, pmv_y;
