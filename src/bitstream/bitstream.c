@@ -38,22 +38,24 @@
   ******************************************************************************/
 
  /******************************************************************************
-  *																			   *	
+  *                                                                            *
   *  Revision history:                                                         *
-  *																			   *	
-  *  08.05.2002  add low_delay support for B_VOP decode						   *
+  *                                                                            *
+  *  19.06.2002  Fix a little bug in use custom quant matrix                   *
+  *              MinChen <chenm001@163.com>                                    *
+  *  08.05.2002  add low_delay support for B_VOP decode                        *
   *              MinChen <chenm001@163.com>                                    *
   *  06.05.2002 low_delay                                                      *
   *  06.05.2002 fixed fincr/fbase error                                        *
   *  01.05.2002 added BVOP support to BitstreamWriteVopHeader                  *
   *  15.04.2002 rewrite log2bin use asm386  By MinChen <chenm001@163.com>      *
-  *  26.03.2002 interlacing support											   *
-  *  03.03.2002 qmatrix writing												   *
-  *  03.03.2002 merged BITREADER and BITWRITER								   *
-  *	 30.02.2002	intra_dc_threshold support									   *
-  *	 04.12.2001	support for additional headers								   *
-  *	 16.12.2001	inital version                                           	   *
-  *																			   *
+  *  26.03.2002 interlacing support                                            *
+  *  03.03.2002 qmatrix writing                                                *
+  *  03.03.2002 merged BITREADER and BITWRITER                                 *
+  *      30.02.2002     intra_dc_threshold support                             *
+  *      04.12.2001     support for additional headers                         *
+  *      16.12.2001     inital version                                         *
+  *
   ******************************************************************************/
 
 
@@ -108,6 +110,7 @@ bs_get_matrix(Bitstream * bs,
 		matrix[scan_tables[0][i++]] = value;
 	}
 	while (value != 0 && i < 64);
+        i--;    // fix little bug at coeff not full
 
 	while (i < 64) {
 		matrix[scan_tables[0][i++]] = last;
