@@ -130,7 +130,6 @@ sad16_sse2
 
 %if sad_debug<>0
                 mov     edi,[esp + 3*4 + 4]
-cglobal sad16_sse2
                 mov     esi,[esp + 3*4 + 8]
 %endif
 
@@ -349,7 +348,6 @@ dev16_sse2
 
                 mov     esi, [esp + 4*4 + 4]      ; cur
                 mov     ebx, [esp + 4*4 + 8]      ; stride
-cglobal dev16_sse2
                 mov     edi, buffer
 
 %if dev_debug=1
