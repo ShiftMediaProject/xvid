@@ -1,8 +1,9 @@
 +----------------------------------------------------------------------------+
 |                         ToDo List for Stable Tree                          |
 |                                                                            |
-| $Id: todo.txt,v 1.4 2002-09-04 20:32:33 edgomez Exp $                                                                       |
 +----------------------------------------------------------------------------+
+$Id: todo.txt,v 1.5 2002-09-04 21:06:39 edgomez Exp $
+
 
 
 This ToDo list is not definitive :
@@ -20,3 +21,7 @@ This ToDo list is not definitive :
 * Add all legal headers (same headers all over the sources) - [TODO]
 * Sort out who has main copyrigths on files - [TODO]
 * Check core reentrancy - [TODO]
+
+++ ???
+
+* Add automatic ChangeLog Generator - [TODO]
