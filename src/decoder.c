@@ -53,7 +53,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: decoder.c,v 1.27 2002-07-11 00:15:59 chenm001 Exp $
+ *  $Id: decoder.c,v 1.28 2002-07-12 00:49:59 chenm001 Exp $
  *
  *************************************************************************/
 
@@ -1339,9 +1339,11 @@ decoder_decode(DECODER * dec,
 		return XVID_ERR_FAIL;
 	}
 
+#ifdef BFRAMES_DEC_DEBUG
 	if (frame->length != BitstreamPos(&bs) / 8){
 		DEBUG2("InLen/UseLen",frame->length, BitstreamPos(&bs) / 8);
 	}
+#endif
 	frame->length = BitstreamPos(&bs) / 8;
 
 
