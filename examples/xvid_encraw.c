@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.14 2004-04-02 21:29:21 edgomez Exp $
+ * $Id: xvid_encraw.c,v 1.15 2004-06-10 18:13:42 chl Exp $
  *
  ****************************************************************************/
 
@@ -949,6 +949,13 @@ enc_init(int use_assembler)
 		rc2pass2.version = XVID_VERSION;
 		rc2pass2.filename = ARG_PASS2;
 		rc2pass2.bitrate = ARG_BITRATE;
+
+/*		An example of activating VBV could look like this 
+		rc2pass2.vbv_size     =  3145728;
+		rc2pass2.vbv_initial  =  2359296;
+		rc2pass2.vbv_maxrate  =  4000000;
+		rc2pass2.vbv_peakrate = 10000000;
+*/
 
 		plugins[xvid_enc_create.num_plugins].func = xvid_plugin_2pass2;
 		plugins[xvid_enc_create.num_plugins].param = &rc2pass2;

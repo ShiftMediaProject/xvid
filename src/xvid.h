@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.39 2004-05-21 14:40:15 edgomez Exp $
+ * $Id: xvid.h,v 1.40 2004-06-10 18:13:42 chl Exp $
  *
  ****************************************************************************/
 
@@ -73,7 +73,7 @@ extern "C" {
  * doesnt hurt but not increasing it could cause difficulty for decoders in the
  * future
  */
-#define XVID_BS_VERSION 34
+#define XVID_BS_VERSION 35
 
 /*****************************************************************************
  * error codes
@@ -525,6 +525,12 @@ typedef struct {
 								   *      0 for 1<distance<kfthreshold */
 
 	int container_frame_overhead; /* [in] How many bytes the controller has to compensate per frame due to container format overhead */
+
+	int vbv_size;
+	int vbv_initial;
+	int vbv_maxrate;
+	int vbv_peakrate;
+
 }xvid_plugin_2pass2_t;
 
 /*****************************************************************************
