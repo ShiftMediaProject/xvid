@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.112 2004-12-09 04:20:44 syskin Exp $
+ * $Id: encoder.c,v 1.113 2004-12-10 01:31:20 syskin Exp $
  *
  ****************************************************************************/
 
@@ -1673,7 +1673,7 @@ FrameCodeP(Encoder * pEnc,
 			pMB->field_pred = 0;
 
 			if (pMB->cbp != 0) {
-					MBTransQuantInter(&pEnc->mbParam, current, pMB, x, y,
+				pMB->cbp = MBTransQuantInter(&pEnc->mbParam, current, pMB, x, y,
 									  dct_codes, qcoeff);
 			}
 
