@@ -30,7 +30,7 @@ typedef struct
 	uint32_t edged_height;
 	
 	IMAGE cur;
-	IMAGE refn;
+	IMAGE refn[2];
 	IMAGE refh;
 	IMAGE refv;
 	IMAGE refhv;

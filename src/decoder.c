@@ -32,6 +32,7 @@
  *
  *	History:
  *
+ *  22.04.2002  add some B-frame decode support;  chenm001 <chenm001@163.com>
  *  29.03.2002  interlacing fix - compensated block wasn't being used when
  *              reconstructing blocks, thus artifacts
  *              interlacing speedup - used transfers to re-interlace
@@ -95,9 +96,18 @@ int decoder_create(XVID_DEC_PARAM * param)
 		return XVID_ERR_MEMORY;
 	}
 
-	if (image_create(&dec->refn, dec->edged_width, dec->edged_height))
+	if (image_create(&dec->refn[0], dec->edged_width, dec->edged_height))
 	{
 		image_destroy(&dec->cur, dec->edged_width, dec->edged_height);
+		xvid_free(dec);
+		return XVID_ERR_MEMORY;
+	}
+	// add by chenm001 <chenm001@163.com>
+	// for support B-frame to reference last 2 frame
+	if (image_create(&dec->refn[1], dec->edged_width, dec->edged_height))
+	{
+		image_destroy(&dec->cur, dec->edged_width, dec->edged_height);
+		image_destroy(&dec->refn[0], dec->edged_width, dec->edged_height);
 		xvid_free(dec);
 		return XVID_ERR_MEMORY;
 	}
@@ -119,7 +129,7 @@ int decoder_create(XVID_DEC_PARAM * param)
 int decoder_destroy(DECODER * dec)
 {
 	xvid_free(dec->mbs);
-	image_destroy(&dec->refn, dec->edged_width, dec->edged_height);
+	image_destroy(&dec->refn[0], dec->edged_width, dec->edged_height);
 	image_destroy(&dec->cur, dec->edged_width, dec->edged_height);
 	xvid_free(dec);
 
@@ -299,12 +309,12 @@ void decoder_mbinter(DECODER * dec,
 	}
 
 	start_timer();
-	interpolate8x8_switch(dec->cur.y, dec->refn.y, 16*x_pos,     16*y_pos    , pMB->mvs[0].x, pMB->mvs[0].y, stride,  rounding);
-	interpolate8x8_switch(dec->cur.y, dec->refn.y, 16*x_pos + 8, 16*y_pos    , pMB->mvs[1].x, pMB->mvs[1].y, stride,  rounding);
-	interpolate8x8_switch(dec->cur.y, dec->refn.y, 16*x_pos,     16*y_pos + 8, pMB->mvs[2].x, pMB->mvs[2].y, stride,  rounding);
-	interpolate8x8_switch(dec->cur.y, dec->refn.y, 16*x_pos + 8, 16*y_pos + 8, pMB->mvs[3].x, pMB->mvs[3].y, stride,  rounding);
-	interpolate8x8_switch(dec->cur.u, dec->refn.u, 8*x_pos,      8*y_pos,      uv_dx,         uv_dy,         stride2, rounding);
-	interpolate8x8_switch(dec->cur.v, dec->refn.v, 8*x_pos,      8*y_pos,      uv_dx,         uv_dy,         stride2, rounding);
+	interpolate8x8_switch(dec->cur.y, dec->refn[0].y, 16*x_pos,     16*y_pos    , pMB->mvs[0].x, pMB->mvs[0].y, stride,  rounding);
+	interpolate8x8_switch(dec->cur.y, dec->refn[0].y, 16*x_pos + 8, 16*y_pos    , pMB->mvs[1].x, pMB->mvs[1].y, stride,  rounding);
+	interpolate8x8_switch(dec->cur.y, dec->refn[0].y, 16*x_pos,     16*y_pos + 8, pMB->mvs[2].x, pMB->mvs[2].y, stride,  rounding);
+	interpolate8x8_switch(dec->cur.y, dec->refn[0].y, 16*x_pos + 8, 16*y_pos + 8, pMB->mvs[3].x, pMB->mvs[3].y, stride,  rounding);
+	interpolate8x8_switch(dec->cur.u, dec->refn[0].u, 8*x_pos,      8*y_pos,      uv_dx,         uv_dy,         stride2, rounding);
+	interpolate8x8_switch(dec->cur.v, dec->refn[0].v, 8*x_pos,      8*y_pos,      uv_dx,         uv_dy,         stride2, rounding);
 	stop_comp_timer();
 
 	for (i = 0; i < 6; i++)
@@ -471,10 +481,8 @@ void decoder_pframe(DECODER * dec, Bitstream * bs, int rounding, int quant, int 
 
 	uint32_t x, y;
 
-	image_swap(&dec->cur, &dec->refn);
-	
 	start_timer();
-	image_setedges(&dec->refn, dec->edged_width, dec->edged_height, dec->width, dec->height, dec->interlacing);
+	image_setedges(&dec->refn[0], dec->edged_width, dec->edged_height, dec->width, dec->height, dec->interlacing);
 	stop_edges_timer();
 
 	for (y = 0; y < dec->mb_height; y++)
@@ -590,27 +598,27 @@ void decoder_pframe(DECODER * dec, Bitstream * bs, int rounding, int quant, int 
 				start_timer();
 
 				transfer8x8_copy(dec->cur.y + (16*y)*dec->edged_width + (16*x), 
-						 dec->refn.y + (16*y)*dec->edged_width + (16*x), 
+						 dec->refn[0].y + (16*y)*dec->edged_width + (16*x), 
 						 dec->edged_width);
 
 				transfer8x8_copy(dec->cur.y + (16*y)*dec->edged_width + (16*x+8), 
-						 dec->refn.y + (16*y)*dec->edged_width + (16*x+8), 
+						 dec->refn[0].y + (16*y)*dec->edged_width + (16*x+8), 
 						 dec->edged_width);
 
 				transfer8x8_copy(dec->cur.y + (16*y+8)*dec->edged_width + (16*x), 
-						 dec->refn.y + (16*y+8)*dec->edged_width + (16*x), 
+						 dec->refn[0].y + (16*y+8)*dec->edged_width + (16*x), 
 						 dec->edged_width);
 					
 				transfer8x8_copy(dec->cur.y + (16*y+8)*dec->edged_width + (16*x+8), 
-						 dec->refn.y + (16*y+8)*dec->edged_width + (16*x+8), 
+						 dec->refn[0].y + (16*y+8)*dec->edged_width + (16*x+8), 
 						 dec->edged_width);
 
 				transfer8x8_copy(dec->cur.u + (8*y)*dec->edged_width/2 + (8*x), 
-						 dec->refn.u + (8*y)*dec->edged_width/2 + (8*x), 
+						 dec->refn[0].u + (8*y)*dec->edged_width/2 + (8*x), 
 						 dec->edged_width/2);
 
 				transfer8x8_copy(dec->cur.v + (8*y)*dec->edged_width/2 + (8*x), 
-						 dec->refn.v + (8*y)*dec->edged_width/2 + (8*x), 
+						 dec->refn[0].v + (8*y)*dec->edged_width/2 + (8*x), 
 						 dec->edged_width/2);
 
 				stop_transfer_timer();
@@ -627,12 +635,22 @@ int decoder_decode(DECODER * dec, XVID_DEC_FRAME * frame)
 	uint32_t quant;
 	uint32_t fcode;
 	uint32_t intra_dc_threshold;
+	uint32_t vop_type;
 
 	start_global_timer();
 	
 	BitstreamInit(&bs, frame->bitstream, frame->length);
 
-	switch (BitstreamReadHeaders(&bs, dec, &rounding, &quant, &fcode, &intra_dc_threshold))
+	// add by chenm001 <chenm001@163.com>
+	// for support B-frame to reference last 2 frame
+	vop_type=BitstreamReadHeaders(&bs, dec, &rounding, &quant, &fcode, &intra_dc_threshold);
+
+	if (vop_type==I_VOP || vop_type==P_VOP){
+		image_swap(&dec->refn[0], &dec->refn[1]);
+		image_swap(&dec->cur, &dec->refn[0]);
+	}
+
+	switch (vop_type)
 	{
 	case P_VOP :
 		decoder_pframe(dec, &bs, rounding, quant, fcode, intra_dc_threshold);

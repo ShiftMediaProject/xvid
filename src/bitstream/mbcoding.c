@@ -107,7 +107,7 @@ void init_vlc_tables(void)
 				uint32_t run = l;
 			
 				if((abs(level) <= max_level_ptr[run]) &&
-				   (run <= max_run_ptr[abs(level)])) { // level < max_level and run < max_run
+				   (run <= (uint32_t)max_run_ptr[abs(level)])) { // level < max_level and run < max_run
 													   
 						vlc[intra]->code = 0;
 						vlc[intra]->len = 0;
@@ -120,7 +120,7 @@ void init_vlc_tables(void)
 						level += max_level_ptr[run];
 
 					if((abs(level) <= max_level_ptr[run]) &&
-					   (run <= max_run_ptr[abs(level)])) {
+					   (run <= (uint32_t) max_run_ptr[abs(level)])) {
 						
 						vlc[intra]->code = 0x06;
 						vlc[intra]->len = 8;
@@ -135,7 +135,7 @@ void init_vlc_tables(void)
 					run -= max_run_ptr[abs(level)] + 1; // and change run
 
 					if((abs(level) <= max_level_ptr[run]) &&
-					   (run <= max_run_ptr[abs(level)])) {
+					   (run <= (uint32_t) max_run_ptr[abs(level)])) {
 						
 						vlc[intra]->code = 0x0e;
 						vlc[intra]->len = 9;
