@@ -26,7 +26,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.20 2002-10-21 23:13:53 edgomez Exp $
+ * $Id: xvid.h,v 1.21 2002-10-24 10:56:07 suxen_drol Exp $
  *
  *****************************************************************************/
 
@@ -750,7 +750,7 @@ extern "C" {
  * @{
  */
 
-#define XVID_ENC_DECODE		0 /**< Encodes a frame
+#define XVID_ENC_ENCODE		0 /**< Encodes a frame
 				   *
  * This operation constant is used when client application wants to encode a
  * frame. Client application must also fill XVID_ENC_FRAME appropriately.
