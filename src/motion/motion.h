@@ -28,7 +28,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: motion.h,v 1.14 2002-09-06 16:59:47 chl Exp $
+ *  $Id: motion.h,v 1.15 2002-09-07 09:12:21 chl Exp $
  *
  ***************************************************************************/
 
@@ -357,41 +357,6 @@ SMP_MotionEstimation(MBParam * const pParam,
 				 const IMAGE * const pRefHV,
 				 const uint32_t iLimit);
 #endif
-
-
-void MotionEstimationBVOP(MBParam * const pParam,
-						  FRAMEINFO * const frame,
-						  // forward (past) reference 
-						  const int32_t time_bp,
-						  const int32_t time_pp,
-						  const MACROBLOCK * const f_mbs,
-						  const IMAGE * const f_ref,
-						  const IMAGE * const f_refH,
-						  const IMAGE * const f_refV,
-						  const IMAGE * const f_refHV,
-						  // backward (future) reference
-						  const MACROBLOCK * const b_mbs,
-						  const IMAGE * const b_ref,
-						  const IMAGE * const b_refH,
-						  const IMAGE * const b_refV,
-						  const IMAGE * const b_refHV);
-
-void MBMotionCompensationBVOP(MBParam * pParam,
-							  MACROBLOCK * const mb,
-							  const uint32_t i,
-							  const uint32_t j,
-							  IMAGE * const cur,
-							  const IMAGE * const f_ref,
-							  const IMAGE * const f_refh,
-							  const IMAGE * const f_refv,
-							  const IMAGE * const f_refhv,
-							  const IMAGE * const b_ref,
-							  const IMAGE * const b_refh,
-							  const IMAGE * const b_refv,
-							  const IMAGE * const b_refhv,
-							  int16_t * dct_codes);
-
-
 
 typedef int32_t(Halfpel8_RefineFunc) (const uint8_t * const pRef,
 				      const uint8_t * const pRefH,
