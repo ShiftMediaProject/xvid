@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: driverproc.c,v 1.5 2004-05-26 05:23:03 syskin Exp $
+ * $Id: driverproc.c,v 1.6 2004-07-15 11:53:46 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -60,7 +60,7 @@ BOOL WINAPI DllMain(
 
 	case DRV_LOAD :
 	case DRV_FREE :
-		return DRV_OK;
+		return DRVCNF_OK;
 
 	case DRV_OPEN :
 		DPRINTF("DRV_OPEN");
@@ -70,7 +70,7 @@ BOOL WINAPI DllMain(
 			
 			if (icopen != NULL && icopen->fccType != ICTYPE_VIDEO)
 			{
-				return DRV_CANCEL;
+				return DRVCNF_CANCEL;
 			}
 
 			codec = malloc(sizeof(CODEC));
@@ -116,26 +116,27 @@ BOOL WINAPI DllMain(
 		clean_dll_bindings(codec);
         status_destroy_always(&codec->status);
 		free(codec);
-		return DRV_OK;
+		return DRVCNF_OK;
 
 	case DRV_DISABLE :
 	case DRV_ENABLE :
-		return DRV_OK;
+		return DRVCNF_OK;
 
 	case DRV_INSTALL :
 	case DRV_REMOVE :
-		return DRV_OK;
+		return DRVCNF_OK;
 
 	case DRV_QUERYCONFIGURE :
 	case DRV_CONFIGURE :
-		return DRV_CANCEL;
+		return DRVCNF_CANCEL;
 
 
 	/* info */
 
 	case ICM_GETINFO :
 		DPRINTF("ICM_GETINFO");
-		{
+		
+		if (lParam1 && lParam2 >= sizeof(ICINFO)) {
 			ICINFO *icinfo = (ICINFO *)lParam1;
 
 			icinfo->fccType = ICTYPE_VIDEO;
@@ -153,6 +154,8 @@ BOOL WINAPI DllMain(
 						
 			return lParam2; /* size of struct */
 		}
+
+		return 0;	/* error */
 		
 		/* state control */
 
