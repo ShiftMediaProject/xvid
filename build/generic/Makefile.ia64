@@ -12,23 +12,25 @@
 # *************************************************************************/
 
 
-include Makefile.inc
-
 CC = gcc
 #CC=ecc
 #CC = /opt/experimental/bin/gcc 	# that's where SuSE installs gcc3
 
-CFLAGS = -DARCH_IA64 -DLINUX
+include Makefile.inc
+
+
+CFLAGS = -DARCH_IA64 -DLINUX  #-D_PROFILING_
 CFLAGSWP =
 LIBDIR = /usr/local/lib
 
 ifeq ($(CC),ecc)
-    CFLAGS+= -O3 -ip
+    CFLAGS+= -O9 -ip
     CFLAGS+= -I/opt/intel/compiler50/ia32/include -I/opt/intel/compiler50/ia32/substitute_headers/
 
 else
-    CFLAGS += -Wall -O3 -funroll-loops -ffast-math
+    CFLAGS += -Wall -O9 -funroll-loops -ffast-math
     CFLAGS += -fstrict-aliasing -fpic -fomit-frame-pointer
+   #CFLAGS += -fprofile-arcs -ftest-coverage
 endif
 
 AS = $(CC)
