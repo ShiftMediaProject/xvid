@@ -940,8 +940,11 @@ static void adv_mode(HWND hDlg, int idd, CONFIG * config)
 			/* step 2: calculate audio_size (kbytes)*/
 			if (audio_type!=NO_AUDIO) {
 				if (audio_mode==0) {
-					audio_size = (int)( (1000.0 * duration * audio_rate) / (8.0*1024) );
-					SetDlgItemInt(hDlg, IDC_BITRATE_ASIZE, audio_size, TRUE);
+					int new_audio_size = (int)( (1000.0 * duration * audio_rate) / (8.0*1024) );
+					
+					/* this check is needed to avoid a loop */
+					if (new_audio_size!=audio_size)
+						SetDlgItemInt(hDlg, IDC_BITRATE_ASIZE, new_audio_size, TRUE);
 				}else{
 					int tmp_rate = (int)( (audio_size * 8.0 * 1024) / (1000.0 * duration) );
 					SetDlgItemInt(hDlg, IDC_BITRATE_ARATE, tmp_rate, TRUE);

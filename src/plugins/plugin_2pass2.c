@@ -25,7 +25,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: plugin_2pass2.c,v 1.5 2004-06-12 13:53:19 edgomez Exp $
+ * $Id: plugin_2pass2.c,v 1.6 2005-01-09 20:26:42 edgomez Exp $
  *
  *****************************************************************************/
 
@@ -857,7 +857,7 @@ rc_2pass2_after(rc_2pass2_t * rc, xvid_plg_data_t * data)
 		rc->KFoverflow -= rc->KFoverflow_partial;
 	}
 
-	rc->overflow += (s->error = s->desired_length - data->length);
+	s->error = s->desired_length - data->length;
 	rc->real_total += data->length;
 
 	DPRINTF(XVID_DEBUG_RC, "[xvid rc] -- frame:%d type:%c quant:%d stats:%d scaled:%d desired:%d actual:%d error:%d overflow:%.2f\n",
