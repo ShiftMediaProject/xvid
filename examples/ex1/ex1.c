@@ -2,12 +2,14 @@
 * This file is a example for how to use the xvid core to compress YUV file
 *
 *
+* 0.01a   27.05.2002    chenm001<chenm001@163.com>
+*                       fix a little bug for BFRAMES define locate
 * 0.01    23.05.2002    chenm001<chenm001@163.com>
 *                       the BFRAME option must be match to core compile option
 *******************************************************************************/
 
-#include "ex1.h"
 #define BFRAMES 
+#include "ex1.h"
 
 int Encode(char *, int, int, char *);
 int Decode(char *, int, int, char *);
