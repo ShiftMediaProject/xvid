@@ -28,7 +28,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.81 2002-09-05 21:02:19 chl Exp $
+ * $Id: encoder.c,v 1.82 2002-09-08 16:38:03 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -889,7 +889,7 @@ FrameCodeP(Encoder * pEnc,
 	DECLARE_ALIGNED_MATRIX(qcoeff, 6, 64, int16_t, CACHE_LINE);
 
 	int iLimit;
-	int x, y, k;
+	int x, y;
 	int iSearchRange;
 	int bIntra;
 	
