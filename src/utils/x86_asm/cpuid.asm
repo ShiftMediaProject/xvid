@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: cpuid.asm,v 1.5 2004-03-22 22:36:24 edgomez Exp $
+; * $Id: cpuid.asm,v 1.6 2004-07-10 17:42:18 edgomez Exp $
 ; *
 ; ***************************************************************************/
 
@@ -99,6 +99,8 @@ check_cpu_features:
   push edi
   push ebp
 
+  sub esp, 12             ; Stack space for vendor name
+  
   xor ebp, ebp
 
 	; CPUID command ?
@@ -118,9 +120,9 @@ check_cpu_features:
 	; get vendor string, used later
   xor eax, eax
   cpuid
-  mov [esp-12], ebx       ; vendor string
-  mov [esp-12+4], edx
-  mov [esp-12+8], ecx
+  mov [esp], ebx       ; vendor string
+  mov [esp+4], edx
+  mov [esp+8], ecx
   test eax, eax
 
   jz near .cpu_quit
@@ -151,7 +153,7 @@ check_cpu_features:
 
  ; AMD cpu ?
   lea esi, [vendorAMD]
-  lea edi, [esp-12]
+  lea edi, [esp]
   mov ecx, 12
   cld
   repe cmpsb
@@ -169,6 +171,8 @@ check_cpu_features:
 .cpu_quit:
 
   mov eax, ebp
+
+  add esp, 12
 
   pop ebp
   pop edi
