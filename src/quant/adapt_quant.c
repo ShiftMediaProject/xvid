@@ -68,21 +68,19 @@ adaptive_quantization(unsigned char *buf,
 	static float *quant;
 	unsigned char *ptr;
 	float *val;
-	float global = 0.;
-	uint32_t mid_range = 0;
+	float global = 0., maxval = 0.;
 
-	const float DarkAmpl = 14 / 2;
-	const float BrightAmpl = 10 / 2;
-	const float DarkThres = 70;
-	const float BrightThres = 200;
+	const float DarkThres = 0.25;
+	const float DarkAmpl = 7.0;
+	
+	const float BrightThres = 4.0;
+	const float BrightAmpl = 5.0;
 
-	const float GlobalDarkThres = 60;
-	const float GlobalBrightThres = 170;
+	const char LowestVal = 10;
 
-	const float MidRangeThres = 20;
-	const float UpperLimit = 200;
-	const float LowerLimit = 25;
-
+	const float GlobalBrightThres = 220.0;
+	const float GlobalDarkThres = 20.0;
+	float global_quant = 1.0;
 
 	if (!quant)
 		if (!(quant = (float *) malloc(mb_width * mb_height * sizeof(float))))
@@ -102,32 +100,35 @@ adaptive_quantization(unsigned char *buf,
 
 			for (i = 0; i < 16; i++)
 				for (j = 0; j < 16; j++)
+				{
+					if( ptr[i * stride + j] < LowestVal )
+						ptr[i * stride + j] = 0;
 					val[k * mb_width + l] += ptr[i * stride + j];
+				}
 			val[k * mb_width + l] /= 256.;
-			global +=val[k * mb_width + l];
-
-			if ((val[k * mb_width + l] > LowerLimit) &&
-				(val[k * mb_width + l] < UpperLimit))
-				mid_range++;
+			global += val[k * mb_width + l];
+			if( val[k * mb_width + l] > maxval )
+				maxval = val[k * mb_width + l];
 		}
 	}
 
-	global /=mb_width * mb_height;
+	global /= mb_width * mb_height;
+	maxval /= global;
+	if( global < GlobalDarkThres )
+		global_quant *= -1.0;
+	else if ( global < GlobalBrightThres )
+		global_quant = 0.0;
 
-	if (((global <GlobalBrightThres) &&(global >GlobalDarkThres))
-		|| (mid_range < MidRangeThres)) {
-		for (k = 0; k < mb_height; k++) {
-			for (l = 0; l < mb_width; l++)	// do this for all macroblocks individually 
-			{
-				if (val[k * mb_width + l] < DarkThres)
-					quant[k * mb_width + l] +=
-						DarkAmpl * (DarkThres -
-									val[k * mb_width + l]) / DarkThres;
-				else if (val[k * mb_width + l] > BrightThres)
-					quant[k * mb_width + l] +=
-						BrightAmpl * (val[k * mb_width + l] -
-									  BrightThres) / (255 - BrightThres);
-			}
+	for (k = 0; k < mb_height; k++) {
+		for (l = 0; l < mb_width; l++)	// do this for all macroblocks individually 
+		{
+			val[k * mb_width + l] /= global;
+			if (val[k * mb_width + l] < DarkThres)
+				quant[k * mb_width + l] += global_quant +
+					DarkAmpl * (DarkThres - val[k * mb_width + l]) / DarkThres;
+			else if (val[k * mb_width + l] > BrightThres)
+				quant[k * mb_width + l] += global_quant +
+					BrightAmpl * (val[k * mb_width + l] - BrightThres) / (maxval - BrightThres);
 		}
 	}
 	free(val);
