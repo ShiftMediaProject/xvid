@@ -44,8 +44,11 @@ bits 32
 %define SHIFT_FRW_ROW   BITS_FRW_ACC + 17
 %define RND_FRW_ROW     262144 * (BITS_FRW_ACC - 1)       ; 1 << (SHIFT_FRW_ROW-1)
 
-
+%ifdef FORMAT_COFF
+section .data data
+%else
 section .data data align=16
+%endif
 
 align 16
 
