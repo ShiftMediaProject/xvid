@@ -438,7 +438,7 @@ BitstreamReadHeaders(Bitstream * bs,
 	uint32_t coding_type;
 	uint32_t start_code;
 	uint32_t time_incr = 0;
-	int32_t time_increment;
+	int32_t time_increment = 0;
 	int resize = 0;
 
 	do {

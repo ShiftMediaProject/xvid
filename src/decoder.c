@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.48 2003-02-17 23:33:12 edgomez Exp $
+ * $Id: decoder.c,v 1.49 2003-02-19 21:59:30 edgomez Exp $
  *
  ****************************************************************************/
 
@@ -1748,7 +1748,7 @@ decoder_decode(DECODER * dec,
 	uint32_t fcode_backward;
 	uint32_t intra_dc_threshold;
 	WARPPOINTS gmc_warp;
-	uint32_t vop_type;
+	int vop_type;
 	int success = 0;
 	int output = 0;
 	int seen_something = 0;
@@ -1807,7 +1807,7 @@ repeat:
 	DPRINTF(DPRINTF_HEADER, "vop_type=%i,  packed=%i,  time=%lli,  time_pp=%i,  time_bp=%i", 
 							vop_type,	dec->packed_mode, dec->time, dec->time_pp, dec->time_bp);
 
-	if (vop_type == - 1)
+	if (vop_type == -1)
 	{
 		if (success) goto done;
 		emms();
