@@ -78,14 +78,14 @@ void SMP_correct_pmv(int x, int y, int iWcount, MACROBLOCK* pMBs)
 		
 	case MODE_INTER:
 	case MODE_INTER_Q:
-		pmv = get_pmv(pMBs, x, y, iWcount, 0);   
+		pmv = get_pmv2(pMBs, iWcount, 0, x, y, 0);   
 		pMB->pmvs[0].x = pMB->mvs[0].x - pmv.x;
 		pMB->pmvs[0].y = pMB->mvs[0].y - pmv.y;
 		break;
 				
 	case MODE_INTER4V:
 		for (k=0;k<4;k++) {
-			pmv = get_pmv(pMBs, x, y, iWcount, k);   
+			pmv = get_pmv2(pMBs, iWcount, 0, x, y, k);   
 			pMB->pmvs[k].x = pMB->mvs[k].x - pmv.x;
 			pMB->pmvs[k].y = pMB->mvs[k].y - pmv.y;
 		}
