@@ -284,7 +284,7 @@ int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding, uin
 
 				}
 
-				if (dec->interlacing = BitstreamGetBit(bs))
+				if ((dec->interlacing = BitstreamGetBit(bs)))
 				{
 					DEBUG("vol: interlacing");
 				}
@@ -518,11 +518,11 @@ int BitstreamReadHeaders(Bitstream * bs, DECODER * dec, uint32_t * rounding, uin
 
 				if (dec->interlacing)
 				{
-					if (dec->top_field_first = BitstreamGetBit(bs))
+					if ((dec->top_field_first = BitstreamGetBit(bs)))
 					{
 						DEBUG("vop: top_field_first");
 					}
-					if (dec->alternate_vertical_scan = BitstreamGetBit(bs))
+					if ((dec->alternate_vertical_scan = BitstreamGetBit(bs)))
 					{
 						DEBUG("vop: alternate_vertical_scan");
 					}
