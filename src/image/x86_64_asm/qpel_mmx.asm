@@ -21,7 +21,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: qpel_mmx.asm,v 1.1 2005-01-05 23:02:15 edgomez Exp $
+; * $Id: qpel_mmx.asm,v 1.2 2005-01-06 23:48:08 edgomez Exp $
 ; *
 ; *************************************************************************/
 
@@ -772,8 +772,8 @@ xvid_H_Pass_Avrg_Up_8_Add_x86_64:
   V_MIX %3, rdi, r9
 %endif
 
-  movd rax, %3
-  mov [rdi], rax
+  movd eax, %3
+  mov [rdi], eax
 
 %if (%4==0)
   add rdi, rbp
