@@ -32,6 +32,8 @@
  *
  *  History:
  *
+ *	22.06.2002	added primative N_VOP support
+ *				#define BFRAMES_DEC now enables Minchenm's bframe decoder
  *  08.05.2002  add low_delay support for B_VOP decode
  *              MinChen <chenm001@163.com>
  *  05.05.2002  fix some B-frame decode problem
@@ -47,7 +49,7 @@
  *  22.12.2001  lock based interpolation
  *  01.12.2001  inital version; (c)2001 peter ross <pross@cs.rmit.edu.au>
  *
- *  $Id: decoder.c,v 1.20 2002-06-14 13:21:13 Isibaar Exp $
+ *  $Id: decoder.c,v 1.21 2002-06-22 07:23:09 suxen_drol Exp $
  *
  *************************************************************************/
 
@@ -1250,17 +1252,21 @@ decoder_decode(DECODER * dec,
 		break;
 
 	case B_VOP:
-#ifdef BFRAMES
+#ifdef BFRAMES_DEC
 		if (dec->time_pp > dec->time_bp) {
 			DEBUG1("B_VOP  Time=", dec->time);
 			decoder_bframe(dec, &bs, quant, fcode_forward, fcode_backward);
 		} else {
 			DEBUG("broken B-frame!");
 		}
+#else
+		image_copy(&dec->cur, &dec->refn[0], dec->edged_width, dec->height);
 #endif
 		break;
 
 	case N_VOP:				// vop not coded
+		// when low_delay==0, N_VOP's should interpolate between the past and future frames
+		image_copy(&dec->cur, &dec->refn[0], dec->edged_width, dec->height);
 		break;
 
 	default:
@@ -1269,13 +1275,13 @@ decoder_decode(DECODER * dec,
 
 	frame->length = BitstreamPos(&bs) / 8;
 
-#ifdef BFRAMES
+#ifdef BFRAMES_DEC
 	// test if no B_VOP
 	if (dec->low_delay) {
 #endif
 		image_output(&dec->cur, dec->width, dec->height, dec->edged_width,
 					 frame->image, frame->stride, frame->colorspace);
-#ifdef BFRAMES
+#ifdef BFRAMES_DEC
 	} else {
 		if (dec->frames >= 1) {
 			start_timer();

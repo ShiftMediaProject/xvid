@@ -37,7 +37,7 @@
  *             MinChen <chenm001@163.com>
  *  14.04.2002 added FrameCodeB()
  *
- *  $Id: encoder.c,v 1.44 2002-06-20 14:05:57 suxen_drol Exp $
+ *  $Id: encoder.c,v 1.45 2002-06-22 07:23:10 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -609,10 +609,9 @@ void inc_frame_num(Encoder * pEnc)
 	pEnc->iFrameNum++;
 	pEnc->mbParam.m_ticks += pEnc->mbParam.fincr;
 	if (pEnc->mbParam.m_ticks > pEnc->mbParam.fbase) {
-		pEnc->mbParam.m_seconds++;
-		pEnc->mbParam.m_ticks = 0;
+		pEnc->mbParam.m_seconds = pEnc->mbParam.m_ticks % pEnc->mbParam.fbase;
+		pEnc->mbParam.m_ticks = pEnc->mbParam.m_ticks % pEnc->mbParam.fbase;
 	}
-
 }
 #endif
 
