@@ -47,8 +47,6 @@
 #define ARG_FRAMERATE 25
 #define ARG_BITRATE 900
 
-int QUALITY =5;
-
 int XDIM=0;
 int YDIM=0;	// will be set when reading first image
 int filenr = 0;
@@ -135,15 +133,11 @@ int enc_init()
 	        xparam.fbase = (int)(FRAMERATE_INCR * ARG_FRAMERATE);
 	}
 	xparam.bitrate = ARG_BITRATE*1000; 
-	xparam.rc_period = 2000;
-	xparam.rc_reaction_period = 10;
-	xparam.rc_reaction_ratio = 20;
-	xparam.min_quantizer = 1;
+	xparam.rc_buffersize = 2048000; // amount of data you have to buffer for continous
+								    // playback in a streaming app (in bytes)
+	xparam.min_quantizer = 2;		
 	xparam.max_quantizer = 31;
 	xparam.max_key_interval = (int)ARG_FRAMERATE*10;
-	xparam.motion_search = QUALITY;
-	xparam.lum_masking = 0;	// Luminance Masking is still under development
-	xparam.quant_type = 0;	// 0=h.263, 1=mpeg4
 
 	xerr = xvid_encore(NULL, XVID_ENC_CREATE, &xparam, NULL);
 	enchandle=xparam.handle;
@@ -164,13 +158,24 @@ int  enc_main(unsigned char* image, unsigned char* bitstream, int *streamlength)
 	XVID_ENC_FRAME xframe;
 	XVID_ENC_STATS xstats;
 
+	// general features
+	xframe.general = XVID_H263QUANT; // we use h.263 quantisation
+//	xframe.general = XVID_MPEGQUANT; // MPEG quantization
+
+	xframe.general |= XVID_HALFPEL; // halfpel precision
+	xframe.general |= XVID_INTER4V; // four motion vector mode
+
+	// motion estimation (pmvfast) settings
+	xframe.motion = PMV_HALFPELREFINE16 | PMV_EARLYSTOP16 |
+					PMV_HALFPELDIAMOND8 | PMV_EARLYSTOP8;
+
 	xframe.bitstream = bitstream;
 	xframe.length = -1; 	// this is written by the routine
 
 	xframe.image = image;
-        xframe.colorspace = XVID_CSP_YV12;	// defined in <xvid.h>
+    xframe.colorspace = XVID_CSP_YV12;	// defined in <xvid.h>
 
-        xframe.intra = -1; // let the codec decide between I-frame (1) and P-frame (0)
+    xframe.intra = -1; // let the codec decide between I-frame (1) and P-frame (0)
 	xframe.quant = 0;
 //        xframe.quant = QUANTI;	// is quant != 0, use a fixed quant (and ignore bitrate)
 
