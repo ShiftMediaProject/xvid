@@ -62,8 +62,6 @@ BEGIN
                     WS_TABSTOP,143,65,43,10
     EDITTEXT        IDC_FRAMEDROP,112,96,75,12,ES_AUTOHSCROLL | ES_NUMBER
     EDITTEXT        IDC_MAXKEY,112,116,76,12,ES_AUTOHSCROLL | ES_NUMBER
-    CONTROL         "Cartoon Mode",IDC_CARTOON,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,13,143,61,10
     LTEXT           "Motion search precision:",IDC_STATIC,14,20,80,12,
                     SS_CENTERIMAGE
     LTEXT           "VHQ mode:",IDC_STATIC,14,39,38,8
@@ -72,7 +70,7 @@ BEGIN
     LTEXT           "Maximum I-frame interval:",IDC_STATIC,14,117,80,12,
                     SS_CENTERIMAGE
     GROUPBOX        "Motion Precision",IDC_STATIC,7,7,193,77
-    GROUPBOX        "Other",IDC_STATIC,7,79,193,84
+    GROUPBOX        "Other",IDC_STATIC,7,79,193,67
     CONTROL         "Use VHQ for bframes too",IDC_VHQ_BFRAME,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,14,52,95,10
 END
@@ -584,6 +582,8 @@ BEGIN
     RTEXT           "X",IDC_ZONE_MAX,140,74,54,8
     LTEXT           "X",IDC_ZONE_MIN,18,74,54,8
     GROUPBOX        "Static",IDC_STATIC,7,107,198,80
+    CONTROL         "Cartoon Mode",IDC_CARTOON,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,121,124,61,10
 END
 
 IDD_LEVEL DIALOG DISCARDABLE  0, 0, 212, 215
