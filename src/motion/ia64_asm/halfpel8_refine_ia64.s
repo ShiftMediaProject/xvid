@@ -181,8 +181,8 @@ Halfpel8_Refine_ia64:
 	fdyd2 = f13
 	foffset = f14
 	fydiEdgedWidth = f15
-	fQuant = f16
-	fmv = f17
+	fQuant = f32
+	fmv = f33
 
 	n = p16
 	h = p17
