@@ -3,7 +3,7 @@
 # This file builds the configure script and copies all needed files
 # provided by automake/libtoolize
 #
-# $Id: bootstrap.sh,v 1.3 2003-02-20 23:40:48 edgomez Exp $
+# $Id: bootstrap.sh,v 1.4 2003-02-26 21:04:40 edgomez Exp $
 
 
 ##############################################################################
@@ -11,9 +11,13 @@
 ##############################################################################
 
 # Find a suitable autoconf
-AUTOCONF=`which autoconf2.50`
+AUTOCONF="autoconf2.50"
+$AUTOCONF --version 2>/dev/null 1>/dev/null
+
 if [ $? -ne 0 ] ; then
-    AUTOCONF=`which autoconf`
+    AUTOCONF="autoconf"
+	$AUTOCONF --version 2>/dev/null 1>/dev/null
+
     if [ $? -ne 0 ] ; then
         echo "Autoconf not found"
         exit -1
