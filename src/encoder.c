@@ -352,57 +352,6 @@ static __inline void CodeIntraMB(Encoder *pEnc, MACROBLOCK *pMB) {
 }
 
 
-static int FrameCodeI(Encoder * pEnc, Bitstream * bs, uint32_t *pBits)
-{
-
-	DECLARE_ALIGNED_MATRIX(dct_codes, 6, 64, int16_t, CACHE_LINE);
-	DECLARE_ALIGNED_MATRIX(qcoeff,    6, 64, int16_t, CACHE_LINE);
-
-	uint16_t x, y;
-
-	pEnc->iFrameNum = 0;
-	pEnc->mbParam.rounding_type = 1;
-	pEnc->mbParam.coding_type = I_VOP;
-
-	BitstreamWriteVolHeader(bs, &pEnc->mbParam);
-	BitstreamWriteVopHeader(bs, &pEnc->mbParam);
-
-	*pBits = BitstreamPos(bs);
-
-	pEnc->sStat.iTextBits = 0;
-	pEnc->sStat.kblks = pEnc->mbParam.mb_width * pEnc->mbParam.mb_height;
-	pEnc->sStat.mblks = pEnc->sStat.ublks = 0;
-
-	for (y = 0; y < pEnc->mbParam.mb_height; y++)
-		for (x = 0; x < pEnc->mbParam.mb_width; x++)
-		{
-			MACROBLOCK *pMB = &pEnc->pMBs[x + y * pEnc->mbParam.mb_width];
-
-			CodeIntraMB(pEnc, pMB);
-
-			MBTransQuantIntra(&pEnc->mbParam, pMB, x, y, dct_codes, qcoeff, &pEnc->sCurrent);
-
-			start_timer();
-			MBPrediction(&pEnc->mbParam, x, y, pEnc->mbParam.mb_width, qcoeff, pEnc->pMBs);
-			stop_prediction_timer();
-
-			start_timer();
-			MBCoding(&pEnc->mbParam, pMB, qcoeff, bs, &pEnc->sStat);
-			stop_coding_timer();
-		}
-
-	emms();
-
-	*pBits = BitstreamPos(bs) - *pBits;
-	pEnc->sStat.fMvPrevSigma = -1;
-	pEnc->sStat.iMvSum = 0;
-	pEnc->sStat.iMvCount = 0;
-	pEnc->mbParam.fixed_code = 2;
-
-	return 1;					 // intra
-}
-
-
 #define FCODEBITS	3
 #define MODEBITS	5
 
@@ -604,6 +553,62 @@ void HintedMEGet(Encoder * pEnc, int intra)
 }
 
 
+static int FrameCodeI(Encoder * pEnc, Bitstream * bs, uint32_t *pBits)
+{
+
+	DECLARE_ALIGNED_MATRIX(dct_codes, 6, 64, int16_t, CACHE_LINE);
+	DECLARE_ALIGNED_MATRIX(qcoeff,    6, 64, int16_t, CACHE_LINE);
+
+	uint16_t x, y;
+
+	pEnc->iFrameNum = 0;
+	pEnc->mbParam.rounding_type = 1;
+	pEnc->mbParam.coding_type = I_VOP;
+
+	BitstreamWriteVolHeader(bs, &pEnc->mbParam);
+	BitstreamWriteVopHeader(bs, &pEnc->mbParam);
+
+	*pBits = BitstreamPos(bs);
+
+	pEnc->sStat.iTextBits = 0;
+	pEnc->sStat.kblks = pEnc->mbParam.mb_width * pEnc->mbParam.mb_height;
+	pEnc->sStat.mblks = pEnc->sStat.ublks = 0;
+
+	for (y = 0; y < pEnc->mbParam.mb_height; y++)
+		for (x = 0; x < pEnc->mbParam.mb_width; x++)
+		{
+			MACROBLOCK *pMB = &pEnc->pMBs[x + y * pEnc->mbParam.mb_width];
+
+			CodeIntraMB(pEnc, pMB);
+
+			MBTransQuantIntra(&pEnc->mbParam, pMB, x, y, dct_codes, qcoeff, &pEnc->sCurrent);
+
+			start_timer();
+			MBPrediction(&pEnc->mbParam, x, y, pEnc->mbParam.mb_width, qcoeff, pEnc->pMBs);
+			stop_prediction_timer();
+
+			start_timer();
+			MBCoding(&pEnc->mbParam, pMB, qcoeff, bs, &pEnc->sStat);
+			stop_coding_timer();
+		}
+
+	emms();
+
+	*pBits = BitstreamPos(bs) - *pBits;
+	pEnc->sStat.fMvPrevSigma = -1;
+	pEnc->sStat.iMvSum = 0;
+	pEnc->sStat.iMvCount = 0;
+	pEnc->mbParam.fixed_code = 2;
+
+	if (pEnc->mbParam.global_flags & XVID_HINTEDME_GET)
+	{
+		HintedMEGet(pEnc, 1);
+	}
+
+	return 1;					 // intra
+}
+
+
 #define INTRA_THRESHOLD 0.5
 
 static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool force_inter, bool vol_header)
@@ -660,10 +665,6 @@ static int FrameCodeP(Encoder * pEnc, Bitstream * bs, uint32_t *pBits, bool forc
 
 	if (bIntra == 1)
 	{
-		if (pEnc->mbParam.global_flags & XVID_HINTEDME_GET)
-		{
-			HintedMEGet(pEnc, 1);
-		}
 		return FrameCodeI(pEnc, bs, pBits);
 	}
 
