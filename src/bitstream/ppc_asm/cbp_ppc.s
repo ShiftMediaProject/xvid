@@ -15,9 +15,9 @@
 #    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 #
-#    $Id: cbp_ppc.s,v 1.2 2002-03-22 11:29:20 canard Exp $
+#    $Id: cbp_ppc.s,v 1.3 2002-03-22 11:32:47 canard Exp $
 #    $Source: /home/xvid/cvs_copy/cvs-server-root/xvid/xvidcore/src/bitstream/ppc_asm/cbp_ppc.s,v $
-#    $Date: 2002-03-22 11:29:20 $
+#    $Date: 2002-03-22 11:32:47 $
 #    $Author: canard $
 #
 #    This is my first PPC ASM program. So I might do nasty things.
@@ -75,12 +75,12 @@ calc_cbp_ppc:
 	# or. updates CR0
 	or. 4,5,4
 	# testing bit 2 (is zero) of CR0
-	bc 4,2,.cbp
+	bf 2,.cbp
 	addi 6,6,8
 	# subic. updates CR0
 	subic. 7,7,1
 	# testing bit 0 (is negative) of CR0
-	bc 12,0,.lastcoeffs
+	bt 0,.lastcoeffs
 	b .loop2
 .lastcoeffs:
 	lha 4,2(6)
@@ -90,7 +90,7 @@ calc_cbp_ppc:
 	# or. updates CR0
 	or. 4,5,4
 	# testing bit 2 (is zero) of CR0
-	bc 12,2,.newline
+	bt 2,.newline
 .cbp:
 	li 4,1
 	slw 4,4,8
@@ -100,6 +100,6 @@ calc_cbp_ppc:
 	addi 9,9,128
 	# updates CR0, blabla
 	subic. 8,8,1
-	bc 4,0,.loop
+	bf 0,.loop
 .end:
 	blr
