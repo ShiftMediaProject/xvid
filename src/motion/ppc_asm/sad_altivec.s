@@ -8,7 +8,7 @@ sad16_altivec:
 	stwu %r1,-48(%r1)
 	addi %r9,%r4,16
 	lvx %v13,0,%r4
-	vspltisw %v15,0
+	vxor %v15,%v15,%v15
 	lvx %v0,0,%r9
 	rlwinm %r5,%r5,0,0,27
 	lvx %v1,0,%r3
@@ -224,7 +224,7 @@ sad8_altivec:
 	stwu %r1,-16(%r1)
 	srwi %r5,%r5,4
 	lvx %v6,0,%r4
-	vspltisw %v2,0
+	vxor %v2,%v2,%v2
 	slwi %r8,%r5,4
 	lvx %v10,0,%r3
 	add %r9,%r8,%r4
@@ -321,7 +321,7 @@ sad8_altivec:
 dev16_altivec:
 	stwu %r1,-16(%r1)
 	lvx %v13,0,%r3
-	vspltisw %v15,0
+	vxor %v15,%v15,%v15
 	rlwinm %r4,%r4,0,0,27
 	add %r3,%r3,%r4
 	vspltisb %v1,14
