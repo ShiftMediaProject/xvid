@@ -4,7 +4,7 @@
 # 
 # Edit this file to enable/disable optimizations
 #
-# $Id: Makefile.linux,v 1.7 2002-09-04 20:14:45 edgomez Exp $
+# $Id: Makefile.linux,v 1.8 2002-09-22 10:19:51 edgomez Exp $
 # 
 #############################################################################
 
@@ -36,13 +36,13 @@ AFLAGS = -f elf
 CFLAGS += -DARCH_X86
 CFLAGS += -DLINUX
 
-# Enable multithreaded ME (experimental), other routines to follow
-# CFLAGS += -D_SMP
-
 # Enable some experimental/debugging code
 #   (Use only if you know what you're doing !)
     # PSNR during encoding
 # CFLAGS += -D_DEBUG_PSNR
+
+# Enable BFrame decoding (still beta)
+# CFLAGS += -DBRAMES_DEC
 
 LIBDIR = /usr/local/lib
 
