@@ -450,12 +450,16 @@ BitstreamReadHeaders(Bitstream * bs,
 
 			READ_MARKER();
 
-			//DPRINTF("time_inc_bits %i", dec->time_inc_bits);
-			//DPRINTF("vop_time_incr %i", BitstreamShowBits(bs, dec->time_inc_bits));
 			if (dec->time_inc_bits) {
-				//BitstreamSkip(bs, dec->time_inc_bits);    // vop_time_increment
 				time_increment = (BitstreamGetBits(bs, dec->time_inc_bits));	// vop_time_increment
 			}
+
+			/* 
+			DPRINTF("%c %i:%i", 
+				coding_type == I_VOP ? 'I' : coding_type == P_VOP ? 'P' : 'B',
+				time_incr, time_increment);
+			*/
+
 			if (coding_type != B_VOP) {
 				dec->last_time_base = dec->time_base;
 				dec->time_base += time_incr;
@@ -476,6 +480,7 @@ BitstreamReadHeaders(Bitstream * bs,
 
 			if (!BitstreamGetBit(bs))	// vop_coded
 			{
+				//DPRINTF("**NOT CODED**");
 				return N_VOP;
 			}
 
