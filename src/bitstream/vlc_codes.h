@@ -632,20 +632,25 @@ static VLC **coeff_vlc[4] = {
 	coeff_inter_last1,
 };
 
-static const VLC mcbpc_I[4] = {
-	{1, 1}, {1, 3}, {2, 3}, {3, 3}
+/* MCBPC Indexing by cbpc in first two bits, mode in last two.
+ CBPC as in table 4/H.263, MB type (mode): 3 = 01, 4 = 10.
+ Example: cbpc = 01 and mode = 4 gives index = 0110 = 6. */
+
+static VLC mcbpc_intra_tab[15] = {
+    {0x01, 9}, {0x01, 1}, {0x01, 4}, {0x00, 0},
+    {0x00, 0}, {0x01, 3}, {0x01, 6}, {0x00, 0},
+    {0x00, 0}, {0x02, 3}, {0x02, 6}, {0x00, 0},
+    {0x00, 0}, {0x03, 3}, {0x03, 6}
 };
 
-static const VLC mcbpc_P_intra[4] = {
-	{3, 5}, {4, 8}, {3, 8}, {3, 7}
-};
+/* MCBPC inter.
+   Addressing: 5 bit ccmmm (cc = CBPC, mmm = mode (1-4 binary)) */
 
-static const VLC mcbpc_P_inter[4] = {
-	{1, 1}, {3, 4}, {2, 4}, {5, 6}
-};
-
-static const VLC mcbpc_P_inter4v[4] = {
-	{2, 3}, {5, 7}, {4, 7}, {5, 8}
+static VLC mcbpc_inter_tab[29] = {
+    {1, 1}, {3, 3}, {2, 3}, {3, 5}, {4, 6}, {1, 9}, {0, 0}, {0, 0},
+    {3, 4}, {7, 7}, {5, 7}, {4, 8}, {4, 9}, {0, 0}, {0, 0}, {0, 0},
+    {2, 4}, {6, 7}, {4, 7}, {3, 8}, {3, 9}, {0, 0}, {0, 0}, {0, 0},
+    {5, 6}, {5, 9}, {5, 8}, {3, 7}, {2, 9}
 };
 
 static const VLC cbpy_tab[16] = {
