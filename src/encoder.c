@@ -82,7 +82,7 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 		pParam->bitrate = 900000;
 
 	if (pParam->rc_buffersize <= 0)
-		pParam->rc_buffersize = pParam->bitrate * pParam->fbase;
+		pParam->rc_buffersize = 16;
 
 	if ((pParam->min_quantizer <= 0) || (pParam->min_quantizer > 31))
 		pParam->min_quantizer = 1;
@@ -183,8 +183,8 @@ int encoder_create(XVID_ENC_PARAM * pParam)
 
 	if (pParam->bitrate)
 	{
-		RateControlInit(pParam->bitrate, pParam->rc_buffersize, pParam->fbase, pParam->width,
-				pParam->height, pParam->max_quantizer, pParam->min_quantizer);
+		RateControlInit(pParam->bitrate, pParam->rc_buffersize, pParam->fbase * 100 / pParam->fincr,
+				pParam->max_quantizer, pParam->min_quantizer);
 	}
 
 	create_vlc_tables();
