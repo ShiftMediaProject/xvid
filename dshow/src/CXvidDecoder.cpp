@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.cpp,v 1.2 2004-03-22 23:35:11 edgomez Exp $
+ * $Id: CXvidDecoder.cpp,v 1.3 2004-04-01 11:11:28 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -726,6 +726,8 @@ HRESULT CXvidDecoder::Transform(IMediaSample *pIn, IMediaSample *pOut)
 */
 	if (g_config.nFilmEffect)
 		m_frame.general |= XVID_FILMEFFECT;
+
+	m_frame.brightness = g_config.nBrightness;
 
 	m_frame.output.csp &= ~XVID_CSP_VFLIP;
 	m_frame.output.csp |= rgb_flip^(g_config.nFlipVideo ? XVID_CSP_VFLIP : 0);

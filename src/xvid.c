@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Native API implementation  -
  *
- *  Copyright(C) 2001-2003 Peter Ross <pross@xvid.org>
+ *  Copyright(C) 2001-2004 Peter Ross <pross@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.48 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: xvid.c,v 1.49 2004-04-01 11:11:28 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -229,6 +229,9 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 	interpolate8x8_avg2 = interpolate8x8_avg2_c;
 	interpolate8x8_avg4 = interpolate8x8_avg4_c;
 
+	/* postprocessing */
+	image_brightness = image_brightness_c;
+
 	/* reduced resolution */
 	copy_upsampled_8x8_16to8 = xvid_Copy_Upsampled_8x8_16To8_C;
 	add_upsampled_8x8_16to8 = xvid_Add_Upsampled_8x8_16To8_C;
@@ -351,6 +354,9 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 
 		interpolate8x8_avg2 = interpolate8x8_avg2_mmx;
 		interpolate8x8_avg4 = interpolate8x8_avg4_mmx;
+
+		/* postprocessing */
+		image_brightness = image_brightness_mmx;
 
 		/* reduced resolution */
 		copy_upsampled_8x8_16to8 = xvid_Copy_Upsampled_8x8_16To8_mmx;

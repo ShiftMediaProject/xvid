@@ -4,7 +4,7 @@
  *  - Decoder Module -
  *
  *  Copyright(C) 2002      MinChen <chenm001@163.com>
- *               2002-2003 Peter Ross <pross@xvid.org>
+ *               2002-2004 Peter Ross <pross@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.51 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: decoder.c,v 1.52 2004-04-01 11:11:28 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -1364,13 +1364,14 @@ void decoder_output(DECODER * dec, IMAGE * img, MACROBLOCK * mbs,
 	if (dec->cartoon_mode)
 		frame->general &= ~XVID_FILMEFFECT;
 
-	if (frame->general & (XVID_DEBLOCKY|XVID_DEBLOCKUV|XVID_FILMEFFECT) && mbs != NULL)	/* post process */
+	if ((frame->general & (XVID_DEBLOCKY|XVID_DEBLOCKUV|XVID_FILMEFFECT) || frame->brightness!=0) 
+		&& mbs != NULL)	/* post process */
 	{
 		/* note: image is stored to tmp */
 		image_copy(&dec->tmp, img, dec->edged_width, dec->height);
 		image_postproc(&dec->postproc, &dec->tmp, dec->edged_width, 
 					   mbs, dec->mb_width, dec->mb_height, dec->mb_width,
-					   frame->general, dec->frames, (coding_type == B_VOP));
+					   frame->general, frame->brightness, dec->frames, (coding_type == B_VOP));
 		img = &dec->tmp;
 	}
 

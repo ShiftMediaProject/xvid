@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: postprocessing.c,v 1.2 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: postprocessing.c,v 1.3 2004-04-01 11:11:28 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -32,6 +32,10 @@
 #include "image.h"
 #include "../utils/emms.h"
 #include "postprocessing.h"
+
+/* function pointers */
+IMAGEBRIGHTNESS_PTR image_brightness;
+
 
 /* Some useful (and fast) macros
    Note that the MIN/MAX macros assume signed shift - if your compiler
@@ -51,7 +55,7 @@ void init_postproc(XVID_POSTPROC *tbls)
 void
 image_postproc(XVID_POSTPROC *tbls, IMAGE * img, int edged_width,
 				const MACROBLOCK * mbs, int mb_width, int mb_height, int mb_stride,
-				int flags, int frame_num, int bvop)
+				int flags, int brightness, int frame_num, int bvop)
 {
 	const int edged_width2 = edged_width /2;
 	int i,j;
@@ -103,6 +107,10 @@ image_postproc(XVID_POSTPROC *tbls, IMAGE * img, int edged_width,
 	{
 		add_noise(tbls, img->y, img->y, edged_width, mb_width*16,
 				  mb_height*16, frame_num % 3, tbls->prev_quant);
+	}
+
+	if (brightness != 0) {
+		image_brightness(img->y, edged_width, mb_width*16, mb_height*16, brightness);
 	}
 }
 
@@ -368,5 +376,19 @@ void add_noise(XVID_POSTPROC *tbls, uint8_t *dst, uint8_t *src, int stride, int 
 
 		dst += stride;
 		src += stride;
+	}
+}
+
+
+void image_brightness_c(uint8_t *dst, int stride, int width, int height, int offset)
+{
+	int x,y;
+
+	for(y = 0; y < height; y++)
+	{
+		for(x = 0; x < width; x++)
+		{
+			dst[y*stride + x] = CLIP( dst[y*stride + x] + offset, 0, 255);
+		}
 	}
 }

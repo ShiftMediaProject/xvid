@@ -78,7 +78,7 @@ HWND g_hTooltip;
 static int g_use_bitrate = 1;
 
 
-int pp_dy, pp_duv, pp_dr, pp_fe; /* decoder options */
+int pp_brightness, pp_dy, pp_duv, pp_dr, pp_fe; /* decoder options */
 
 /* enumerates child windows, assigns tooltips */
 BOOL CALLBACK enum_tooltips(HWND hWnd, LPARAM lParam)
@@ -276,6 +276,7 @@ static const REG_INT reg_ints[] = {
 	{"display_status",			&reg.display_status,			1},
 	
 	/* decoder, shared with dshow */
+	{"Brightness",				&pp_brightness,					0},
 	{"Deblock_Y",				&pp_dy,							0},
 	{"Deblock_UV",				&pp_duv,						0},
 	{"Dering",					&pp_dr,							0},
@@ -806,6 +807,11 @@ static void adv_init(HWND hDlg, int idd, CONFIG * config)
 		SendDlgItemMessage(hDlg, IDC_FOURCC, CB_ADDSTRING, 0, (LPARAM)"DIVX");
 		SendDlgItemMessage(hDlg, IDC_FOURCC, CB_ADDSTRING, 0, (LPARAM)"DX50");
 		break;
+
+	case IDD_DEC :
+		SendDlgItemMessage(hDlg, IDC_DEC_BRIGHTNESS, TBM_SETRANGE, (WPARAM)TRUE, (LPARAM)MAKELONG(-96, 96));
+		SendDlgItemMessage(hDlg, IDC_DEC_BRIGHTNESS, TBM_SETTICFREQ, (WPARAM)16, (LPARAM)0);
+		break;
 	}
 }
 
@@ -1162,6 +1168,7 @@ static void adv_upload(HWND hDlg, int idd, CONFIG * config)
 		break;
 
 	case IDD_DEC :
+		SendDlgItemMessage(hDlg, IDC_DEC_BRIGHTNESS, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)pp_brightness);
 		CheckDlg(hDlg, IDC_DEC_DY,	pp_dy);
 		CheckDlg(hDlg, IDC_DEC_DUV,	pp_duv);
 		CheckDlg(hDlg, IDC_DEC_DR,	pp_dr);
@@ -1348,6 +1355,7 @@ static void adv_download(HWND hDlg, int idd, CONFIG * config)
 		break;
 
 	case IDD_DEC :
+		pp_brightness = SendDlgItemMessage(hDlg, IDC_DEC_BRIGHTNESS, TBM_GETPOS, (WPARAM)NULL, (LPARAM)NULL);
 		pp_dy = IsDlgChecked(hDlg, IDC_DEC_DY);
 		pp_duv = IsDlgChecked(hDlg, IDC_DEC_DUV);
 		pp_dr = IsDlgChecked(hDlg, IDC_DEC_DR);

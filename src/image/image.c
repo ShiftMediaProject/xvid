@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Image management functions -
  *
- *  Copyright(C) 2001-2003 Peter Ross <pross@xvid.org>
+ *  Copyright(C) 2001-2004 Peter Ross <pross@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.c,v 1.27 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: image.c,v 1.28 2004-04-01 11:11:28 suxen_drol Exp $
  *
  ****************************************************************************/
 
