@@ -249,8 +249,15 @@ Interpolate8x8qpel(const int x, const int y, const uint32_t block, const uint32_
 	ref1 = GetReferenceB(halfpel_x, halfpel_y, dir, data);
 	ref1 += 8 * (block&1) + 8 * (block>>1) * iEdgedWidth;
 	switch( ((x&1)<<1) + (y&1) ) {
-	case 0: // pure halfpel position
-		return (uint8_t *) ref1;
+	case 3: // x and y in qpel resolution - the "corners" (top left/right and
+			// bottom left/right) during qpel refinement
+		ref2 = GetReferenceB(halfpel_x, y - halfpel_y, dir, data);
+		ref3 = GetReferenceB(x - halfpel_x, halfpel_y, dir, data);
+		ref4 = GetReferenceB(x - halfpel_x, y - halfpel_y, dir, data);
+		ref2 += 8 * (block&1) + 8 * (block>>1) * iEdgedWidth;
+		ref3 += 8 * (block&1) + 8 * (block>>1) * iEdgedWidth;
+		ref4 += 8 * (block&1) + 8 * (block>>1) * iEdgedWidth;
+		interpolate8x8_avg4(Reference, ref1, ref2, ref3, ref4, iEdgedWidth, rounding);
 		break;
 
 	case 1: // x halfpel, y qpel - top or bottom during qpel refinement
@@ -265,16 +272,9 @@ Interpolate8x8qpel(const int x, const int y, const uint32_t block, const uint32_
 		interpolate8x8_avg2(Reference, ref1, ref2, iEdgedWidth, rounding, 8);
 		break;
 
-	default: // x and y in qpel resolution - the "corners" (top left/right and
-			 // bottom left/right) during qpel refinement
-		ref2 = GetReferenceB(halfpel_x, y - halfpel_y, dir, data);
-		ref3 = GetReferenceB(x - halfpel_x, halfpel_y, dir, data);
-		ref4 = GetReferenceB(x - halfpel_x, y - halfpel_y, dir, data);
-		ref2 += 8 * (block&1) + 8 * (block>>1) * iEdgedWidth;
-		ref3 += 8 * (block&1) + 8 * (block>>1) * iEdgedWidth;
-		ref4 += 8 * (block&1) + 8 * (block>>1) * iEdgedWidth;
-		interpolate8x8_avg4(Reference, ref1, ref2, ref3, ref4, iEdgedWidth, rounding);
-		break;
+	default: // pure halfpel position
+		return (uint8_t *) ref1;
+	
 	}
 	return Reference;
 }
@@ -319,7 +319,7 @@ Interpolate16x16qpel(const int x, const int y, const uint32_t dir, const SearchD
 		interpolate8x8_avg2(Reference+8*iEdgedWidth+8, ref1+8*iEdgedWidth+8, ref2+8*iEdgedWidth+8, iEdgedWidth, rounding, 8);
 		break;
 
-	case 0: // pure halfpel position
+	default: // pure halfpel position
 		return (uint8_t *) ref1;
 	}
 	return Reference;
@@ -355,7 +355,7 @@ CheckCandidate16(const int x, const int y, const int Direction, int * const dir,
 	data->temp[1] += (data->lambda8 * t * (data->temp[1] + NEIGH_8X8_BIAS))>>10;
 
 	if (data->chroma) sad += ChromaSAD((xc >> 1) + roundtab_79[xc & 0x3],
-										(yc >> 1) + roundtab_79[yc & 0x3], data);
+									   (yc >> 1) + roundtab_79[yc & 0x3], data);
 
 	if (sad < data->iMinSAD[0]) {
 		data->iMinSAD[0] = sad;
@@ -405,7 +405,7 @@ CheckCandidate32(const int x, const int y, const int Direction, int * const dir,
 	uint32_t t;
 	const uint8_t * Reference;
 
-	if ( (!(x&1) && x !=0) || (!(y&1) && y !=0) || //non-zero integer value
+	if ( (!(x&1) && x !=0) || (!(y&1) && y !=0) || //non-zero even value
 		(x > data->max_dx) || (x < data->min_dx)
 		|| (y > data->max_dy) || (y < data->min_dy) ) return;
 
@@ -440,8 +440,8 @@ CheckCandidate16no4v(const int x, const int y, const int Direction, int * const 
 	uint32_t t;
 	VECTOR * current;
 
-	if ( (x > data->max_dx) | ( x < data->min_dx)
-		| (y > data->max_dy) | (y < data->min_dy) ) return;
+	if ( (x > data->max_dx) || ( x < data->min_dx)
+		|| (y > data->max_dy) || (y < data->min_dy) ) return;
 
 	if (data->rrv && (!(x&1) && x !=0) | (!(y&1) && y !=0) ) return; //non-zero even value
 
@@ -506,8 +506,9 @@ CheckCandidateInt(const int xf, const int yf, const int Direction, int * const d
 	const uint8_t *ReferenceF, *ReferenceB;
 	VECTOR *current;
 
-	if ( (xf > data->max_dx) || (xf < data->min_dx)
-		|| (yf > data->max_dy) || (yf < data->min_dy) ) return;
+	if ((xf > data->max_dx) || (xf < data->min_dx) ||
+		(yf > data->max_dy) || (yf < data->min_dy))
+		return;
 
 	if (!data->qpel_precision) {
 		ReferenceF = GetReference(xf, yf, data);
@@ -565,10 +566,11 @@ CheckCandidateDirect(const int x, const int y, const int Direction, int * const 
 			data->directmvB[k].y
 			: mvs.y - data->referencemv[k].y);
 
-		if ( (mvs.x > data->max_dx) || (mvs.x < data->min_dx)
-			|| (mvs.y > data->max_dy) || (mvs.y < data->min_dy)
-			|| (b_mvs.x > data->max_dx) || (b_mvs.x < data->min_dx)
-			|| (b_mvs.y > data->max_dy) || (b_mvs.y < data->min_dy) ) return;
+		if ((mvs.x > data->max_dx)   || (mvs.x < data->min_dx)   ||
+			(mvs.y > data->max_dy)   || (mvs.y < data->min_dy)   ||
+			(b_mvs.x > data->max_dx) || (b_mvs.x < data->min_dx) ||
+			(b_mvs.y > data->max_dy) || (b_mvs.y < data->min_dy) )
+			return;
 
 		if (data->qpel) {
 			xcf += mvs.x/2; ycf += mvs.y/2;
@@ -610,7 +612,7 @@ CheckCandidateDirectno4v(const int x, const int y, const int Direction, int * co
 	const uint8_t *ReferenceB;
 	VECTOR mvs, b_mvs;
 
-	if (( x > 31) | ( x < -32) | ( y > 31) | (y < -32)) return;
+	if (( x > 31) || ( x < -32) || ( y > 31) || (y < -32)) return;
 
 	mvs.x = data->directmvF[0].x + x;
 	b_mvs.x = ((x == 0) ?
@@ -622,10 +624,10 @@ CheckCandidateDirectno4v(const int x, const int y, const int Direction, int * co
 		data->directmvB[0].y
 		: mvs.y - data->referencemv[0].y);
 
-	if ( (mvs.x > data->max_dx) | (mvs.x < data->min_dx)
-		| (mvs.y > data->max_dy) | (mvs.y < data->min_dy)
-		| (b_mvs.x > data->max_dx) | (b_mvs.x < data->min_dx)
-		| (b_mvs.y > data->max_dy) | (b_mvs.y < data->min_dy) ) return;
+	if ( (mvs.x > data->max_dx) || (mvs.x < data->min_dx)
+		|| (mvs.y > data->max_dy) || (mvs.y < data->min_dy)
+		|| (b_mvs.x > data->max_dx) || (b_mvs.x < data->min_dx)
+		|| (b_mvs.y > data->max_dy) || (b_mvs.y < data->min_dy) ) return;
 
 	if (data->qpel) {
 		xcf = 4*(mvs.x/2); ycf = 4*(mvs.y/2);
@@ -950,21 +952,22 @@ SkipDecisionP(const IMAGE * current, const IMAGE * reference,
 							const uint32_t stride, const uint32_t iQuant, int rrv)
 
 {
+	int offset = (x + y*stride)*8;
 	if(!rrv) {
-		uint32_t sadC = sad8(current->u + x*8 + y*stride*8,
-						reference->u + x*8 + y*stride*8, stride);
+		uint32_t sadC = sad8(current->u + offset,
+						reference->u + offset, stride);
 		if (sadC > iQuant * MAX_CHROMA_SAD_FOR_SKIP) return 0;
-		sadC += sad8(current->v + (x + y*stride)*8,
-						reference->v + (x + y*stride)*8, stride);
+		sadC += sad8(current->v + offset,
+						reference->v + offset, stride);
 		if (sadC > iQuant * MAX_CHROMA_SAD_FOR_SKIP) return 0;
 		return 1;
 
 	} else {
-		uint32_t sadC = sad16(current->u + x*16 + y*stride*16,
-						reference->u + x*16 + y*stride*16, stride, 256*4096);
+		uint32_t sadC = sad16(current->u + 2*offset,
+						reference->u + 2*offset, stride, 256*4096);
 		if (sadC > iQuant * MAX_CHROMA_SAD_FOR_SKIP*4) return 0;
-		sadC += sad16(current->v + (x + y*stride)*16,
-						reference->v + (x + y*stride)*16, stride, 256*4096);
+		sadC += sad16(current->v + 2*offset,
+						reference->v + 2*offset, stride, 256*4096);
 		if (sadC > iQuant * MAX_CHROMA_SAD_FOR_SKIP*4) return 0;
 		return 1;
 	}
@@ -1177,13 +1180,12 @@ ModeDecision(const uint32_t iQuant, SearchData * const Data,
 	int mode = MODE_INTER;
 
 	if (!(GlobalFlags & XVID_MODEDECISION_BITS)) { //normal, fast, SAD-based mode decision
-//		int intra = 0;
 		int sad;
 		int InterBias = MV16_INTER_BIAS;
 		if (inter4v == 0 || Data->iMinSAD[0] < Data->iMinSAD[1] + Data->iMinSAD[2] +
 			Data->iMinSAD[3] + Data->iMinSAD[4] + IMV16X16 * (int32_t)iQuant) {
-				mode = 0; //inter
-				sad = Data->iMinSAD[0];
+			mode = MODE_INTER;
+			sad = Data->iMinSAD[0];
 		} else {
 			mode = MODE_INTER4V;
 			sad = Data->iMinSAD[1] + Data->iMinSAD[2] +
@@ -1210,7 +1212,7 @@ ModeDecision(const uint32_t iQuant, SearchData * const Data,
 				dev16(Data->Cur + 8*Data->iEdgedWidth, Data->iEdgedWidth) +
 				dev16(Data->Cur+8+8*Data->iEdgedWidth, Data->iEdgedWidth);
 
-			if (deviation < (sad - InterBias))  return MODE_INTRA;// intra
+			if (deviation < (sad - InterBias)) return MODE_INTRA;
 		}
 		return mode;
 
@@ -1231,8 +1233,8 @@ ModeDecision(const uint32_t iQuant, SearchData * const Data,
 		if (bits == 0) return MODE_INTER; // quick stop
 
 		if (inter4v) {
-			int inter4v = CountMBBitsInter4v(Data, pMB, pMBs, x, y, pParam, MotionFlags, backup);
-			if (inter4v < bits) { Data->iMinSAD[0] = bits = inter4v; mode = MODE_INTER4V; }
+			int bits_inter4v = CountMBBitsInter4v(Data, pMB, pMBs, x, y, pParam, MotionFlags, backup);
+			if (bits_inter4v < bits) { Data->iMinSAD[0] = bits = bits_inter4v; mode = MODE_INTER4V; }
 		}
 
 
@@ -1290,8 +1292,7 @@ SearchP(const IMAGE * const pRef,
 
 	if (pMB->dquant != NO_CHANGE) inter4v = 0;
 
-	for(i = 0; i < 5; i++)
-		Data->currentMV[i].x = Data->currentMV[i].y = 0;
+	memset(Data->currentMV, 0, 5*sizeof(VECTOR));
 
 	if (Data->qpel) Data->predMV = get_qpmv2(pMBs, pParam->mb_width, 0, x, y, 0);
 	else Data->predMV = pmv[0];
@@ -1713,9 +1714,9 @@ SkipDecisionB(const IMAGE * const pCur,
 
 	for (k = 0; k < 4; k++) {
 		dy += Data->directmvF[k].y / div;
-		dx += Data->directmvF[0].x / div;
-		b_dy += Data->directmvB[0].y / div;
-		b_dx += Data->directmvB[0].x / div;
+		dx += Data->directmvF[k].x / div;
+		b_dy += Data->directmvB[k].y / div;
+		b_dx += Data->directmvB[k].x / div;
 	}
 
 	dy = (dy >> 3) + roundtab_76[dy & 0xf];
@@ -1735,7 +1736,13 @@ SkipDecisionB(const IMAGE * const pCur,
 					b_Ref->v + (y*8 + b_dy/2) * stride + x*8 + b_dx/2,
 					stride);
 
-	if (sum < 2 * MAX_CHROMA_SAD_FOR_SKIP * pMB->quant) pMB->mode = MODE_DIRECT_NONE_MV; //skipped
+	if (sum < 2 * MAX_CHROMA_SAD_FOR_SKIP * pMB->quant) {
+		pMB->mode = MODE_DIRECT_NONE_MV; //skipped
+		for (k = 0; k < 4; k++) { 
+			pMB->qmvs[k] = pMB->mvs[k];
+			pMB->b_qmvs[k] = pMB->b_mvs[k];
+		}
+	}
 }
 
 static __inline uint32_t
