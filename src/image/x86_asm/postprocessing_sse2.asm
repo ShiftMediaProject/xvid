@@ -42,28 +42,6 @@ BITS 32
 	%endif
 %endmacro
 
-%macro FILLBYTES 2
-	
-	mov [%1], %2
-	mov [%1 + 1], %2
-	mov [%1 + 2], %2
-	mov [%1 + 3], %2
-	mov [%1 + 4], %2
-	mov [%1 + 5], %2
-	mov [%1 + 6], %2
-	mov [%1 + 7], %2
-	mov [%1 + 8], %2
-	mov [%1 + 9], %2
-	mov [%1 + 10], %2
-	mov [%1 + 11], %2
-	mov [%1 + 12], %2
-	mov [%1 + 13], %2
-	mov [%1 + 14], %2
-	mov [%1 + 15], %2
-
-%endmacro
-
-
 ;===========================================================================
 ; read only data
 ;===========================================================================
@@ -77,9 +55,6 @@ SECTION .rodata align=16
 xmm_0x80:
 	times 16 db 0x80
 
-offset_xmm:
-	times 16 db 0x00
-
 ;=============================================================================
 ; Code
 ;=============================================================================
@@ -88,57 +63,79 @@ SECTION .text
 
 cglobal image_brightness_sse2
 
-
 ;//////////////////////////////////////////////////////////////////////
 ;// image_brightness_sse2
 ;//////////////////////////////////////////////////////////////////////
 
-align 16
+%macro CREATE_OFFSET_VECTOR 2
+  mov [%1 +  0], %2
+  mov [%1 +  1], %2
+  mov [%1 +  2], %2
+  mov [%1 +  3], %2
+  mov [%1 +  4], %2
+  mov [%1 +  5], %2
+  mov [%1 +  6], %2
+  mov [%1 +  7], %2
+  mov [%1 +  8], %2
+  mov [%1 +  9], %2
+  mov [%1 + 10], %2
+  mov [%1 + 11], %2
+  mov [%1 + 12], %2
+  mov [%1 + 13], %2
+  mov [%1 + 14], %2
+  mov [%1 + 15], %2
+%endmacro
+
+ALIGN 16
 image_brightness_sse2:
 
-	push esi
-	push edi
+  push esi
+  push edi    ; 8 bytes offset for push
+  sub esp, 32 ; 32 bytes for local data (16bytes will be used, 16bytes more to align correctly mod 16)
 
-	movdqa xmm6, [xmm_0x80]
+  movdqa xmm6, [xmm_0x80]
 
-	mov eax, [esp+8+20] ; offset	
-	
-	FILLBYTES offset_xmm, al
+  ; Create a offset...offset vector
+  mov eax, [esp+8+32+20] ; brightness offset value	
+  mov edx, esp           ; edx will be esp aligned mod 16
+  add edx, 15            ; edx = esp + 15
+  and edx, ~15           ; edx = (esp + 15)&(~15)
+  CREATE_OFFSET_VECTOR edx, al
+  movdqa xmm7, [edx]
 
-	movdqa xmm7, [offset_xmm]	
-
-	mov edx, [esp+8+4]  ; Dst
-	mov ecx, [esp+8+8]  ; stride
-	mov esi, [esp+8+12] ; width
-	mov edi, [esp+8+16] ; height
+  mov edx, [esp+8+32+4]  ; Dst
+  mov ecx, [esp+8+32+8]  ; stride
+  mov esi, [esp+8+32+12] ; width
+  mov edi, [esp+8+32+16] ; height
 
 .yloop
-	xor	eax, eax
+  xor eax, eax
 
 .xloop
-	movdqa xmm0, [edx + eax]
-	movdqa xmm1, [edx + eax + 16]	; xmm0 = [dst]
+  movdqa xmm0, [edx + eax]
+  movdqa xmm1, [edx + eax + 16] ; xmm0 = [dst]
 
-	paddb xmm0, xmm6				; unsigned -> signed domain
-	paddb xmm1, xmm6
-	paddsb xmm0, xmm7
-	paddsb xmm1, xmm7				; xmm0 += offset
-	psubb xmm0, xmm6
-	psubb xmm1, xmm6				; signed -> unsigned domain
+  paddb xmm0, xmm6              ; unsigned -> signed domain
+  paddb xmm1, xmm6
+  paddsb xmm0, xmm7
+  paddsb xmm1, xmm7             ; xmm0 += offset
+  psubb xmm0, xmm6
+  psubb xmm1, xmm6              ; signed -> unsigned domain
 
-	movdqa [edx + eax], xmm0
-	movdqa [edx + eax + 16], xmm1	; [dst] = xmm0
+  movdqa [edx + eax], xmm0
+  movdqa [edx + eax + 16], xmm1 ; [dst] = xmm0
 
-	add	eax,32
-	cmp	eax,esi	
-	jl .xloop
+  add eax,32
+  cmp eax,esi	
+  jl .xloop
 
-	add edx, ecx				; dst += stride
-	sub edi, 1
-	jg .yloop
+  add edx, ecx                  ; dst += stride
+  sub edi, 1
+  jg .yloop
 
-	pop edi
-	pop esi
+  add esp, 32
+  pop edi
+  pop esi
 
-	ret
+  ret
 ;//////////////////////////////////////////////////////////////////////
