@@ -1,69 +1,37 @@
-/**************************************************************************
+/*****************************************************************************
  *
- *	XVID MPEG-4 VIDEO CODEC
- *	motion estimation 
+ *  XVID MPEG-4 VIDEO CODEC
+ *  - Motion Estimation module -
  *
- *	This program is an implementation of a part of one or more MPEG-4
- *	Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
- *	to use this software module in hardware or software products are
- *	advised that its use may infringe existing patents or copyrights, and
- *	any such use would be at such party's own risk.  The original
- *	developer of this software module and his/her company, and subsequent
- *	editors and their companies, will have no liability for use of this
- *	software or modifications or derivatives thereof.
+ *  Copyright(C) 2002 Christoph Lampert <gruel@web.de>
+ *  Copyright(C) 2002 Michael Militzer <michael@xvid.org>
+ *  Copyright(C) 2002 Edouard Gomez <ed.gomez@wanadoo.fr>
+ *  Copyright(C) 2002 chenm001 <chenm001@163.com>
  *
- *	This program is free software; you can redistribute it and/or modify
- *	it under the terms of the GNU General Public License as published by
- *	the Free Software Foundation; either version 2 of the License, or
- *	(at your option) any later version.
+ *  This program is an implementation of a part of one or more MPEG-4
+ *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
+ *  to use this software module in hardware or software products are
+ *  advised that its use may infringe existing patents or copyrights, and
+ *  any such use would be at such party's own risk.  The original
+ *  developer of this software module and his/her company, and subsequent
+ *  editors and their companies, will have no liability for use of this
+ *  software or modifications or derivatives thereof.
  *
- *	This program is distributed in the hope that it will be useful,
- *	but WITHOUT ANY WARRANTY; without even the implied warranty of
- *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *	GNU General Public License for more details.
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
  *
- *	You should have received a copy of the GNU General Public License
- *	along with this program; if not, write to the Free Software
- *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
  *************************************************************************/
-
-/**************************************************************************
- *
- *  Modifications:
- *
- *	01.05.2002	updated MotionEstimationBVOP
- *	25.04.2002 partial prevMB conversion
- *  22.04.2002 remove some compile warning by chenm001 <chenm001@163.com>
- *  14.04.2002 added MotionEstimationBVOP()
- *  02.04.2002 add EPZS(^2) as ME algorithm, use PMV_USESQUARES to choose between 
- *             EPZS and EPZS^2
- *  08.02.2002 split up PMVfast into three routines: PMVFast, PMVFast_MainLoop
- *             PMVFast_Refine to support multiple searches with different start points
- *  07.01.2002 uv-block-based interpolation
- *  06.01.2002 INTER/INTRA-decision is now done before any SEARCH8 (speedup)
- *             changed INTER_BIAS to 150 (as suggested by suxen_drol)
- *             removed halfpel refinement step in PMVfastSearch8 + quality=5
- *             added new quality mode = 6 which performs halfpel refinement
- *             filesize difference between quality 5 and 6 is smaller than 1%
- *             (Isibaar)
- *  31.12.2001 PMVfastSearch16 and PMVfastSearch8 (gruel)
- *  30.12.2001 get_range/MotionSearchX simplified; blue/green bug fix
- *  22.12.2001 commented best_point==99 check
- *  19.12.2001 modified get_range (purple bug fix)
- *  15.12.2001 moved pmv displacement from mbprediction
- *  02.12.2001 motion estimation/compensation split (Isibaar)
- *  16.11.2001 rewrote/tweaked search algorithms; pross@cs.rmit.edu.au
- *  10.11.2001 support for sad16/sad8 functions
- *  28.08.2001 reactivated MODE_INTER4V for EXT_MODE
- *  24.08.2001 removed MODE_INTER4V_Q, disabled MODE_INTER4V for EXT_MODE
- *  22.08.2001 added MODE_INTER4V_Q			
- *  20.08.2001 added pragma to get rid of internal compiler error with VC6
- *             idea by Cyril. Thanks.
- *
- *  Michael Militzer <isibaar@videocoding.de>
- *
- **************************************************************************/
 
 #include <assert.h>
 #include <stdio.h>
