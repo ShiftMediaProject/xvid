@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: cpuid.asm,v 1.8 2004-08-22 11:46:10 edgomez Exp $
+; * $Id: cpuid.asm,v 1.9 2004-08-29 10:02:38 edgomez Exp $
 ; *
 ; ***************************************************************************/
 
@@ -28,15 +28,15 @@ BITS 32
 %macro cglobal 1
 	%ifdef PREFIX
 		%ifdef MARK_FUNCS
-			global _%1:function
-			%define %1 _%1:function
+			global _%1:function %1.endfunc-%1
+			%define %1 _%1:function %1.endfunc-%1
 		%else
 			global _%1
 			%define %1 _%1
 		%endif
 	%else
 		%ifdef MARK_FUNCS
-			global %1:function
+			global %1:function %1.endfunc-%1
 		%else
 			global %1
 		%endif
@@ -189,6 +189,7 @@ check_cpu_features:
   pop ebx
 
   ret
+.endfunc
 
 ; sse/sse2 operating support detection routines
 ; these will trigger an invalid instruction signal if not supported.
@@ -197,6 +198,7 @@ cglobal sse_os_trigger
 sse_os_trigger:
   xorps xmm0, xmm0
   ret
+.endfunc
 
 
 ALIGN 16
@@ -204,6 +206,7 @@ cglobal sse2_os_trigger
 sse2_os_trigger:
   xorpd xmm0, xmm0
   ret
+.endfunc
 
 
 ; enter/exit mmx state
@@ -212,6 +215,7 @@ cglobal emms_mmx
 emms_mmx:
   emms
   ret
+.endfunc
 
 ; faster enter/exit mmx state
 ALIGN 16
@@ -219,3 +223,6 @@ cglobal emms_3dn
 emms_3dn:
   femms
   ret
+.endfunc
+
+

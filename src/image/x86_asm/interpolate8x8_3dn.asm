@@ -28,15 +28,15 @@ BITS 32
 %macro cglobal 1
 	%ifdef PREFIX
 		%ifdef MARK_FUNCS
-			global _%1:function
-			%define %1 _%1:function
+			global _%1:function %1.endfunc-%1
+			%define %1 _%1:function %1.endfunc-%1
 		%else
 			global _%1
 			%define %1 _%1
 		%endif
 	%else
 		%ifdef MARK_FUNCS
-			global %1:function
+			global %1:function %1.endfunc-%1
 		%else
 			global %1
 		%endif
@@ -137,6 +137,7 @@ interpolate8x8_halfpel_h_3dn:
   lea ecx, [ecx+2*edx]
   COPY_H_3DN_RND1
   ret
+.endfunc
 
 
 ;-----------------------------------------------------------------------------
@@ -213,6 +214,7 @@ interpolate8x8_halfpel_v_3dn:
   lea ecx, [ecx+2*edx]
   COPY_V_3DN_RND1
   ret
+.endfunc
 
 
 ;-----------------------------------------------------------------------------
@@ -352,3 +354,5 @@ interpolate8x8_halfpel_hv_3dn
   add ecx, edx
   COPY_HV_3DN_RND1
   ret
+.endfunc
+
