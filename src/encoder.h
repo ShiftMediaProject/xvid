@@ -52,6 +52,10 @@ typedef struct
 	uint32_t mb_width;
 	uint32_t mb_height;
 
+	/* frame rate increment & base */
+	uint32_t fincr;
+	uint32_t fbase;
+
     /* rounding type; alternate 0-1 after each interframe */
 	/* 1 <= fixed_code <= 4
 	   automatically adjusted using motion vector statistics inside
@@ -63,6 +67,11 @@ typedef struct
 	uint32_t m_fcode;
 
 	HINTINFO * hint;
+
+#ifdef BFRAMES
+	uint32_t m_seconds;
+	uint32_t m_ticks;
+#endif
 
 } MBParam;
 
@@ -78,7 +87,10 @@ typedef struct
     uint32_t fcode;
 	uint32_t bcode;
 
-	uint32_t tick;
+#ifdef BFRAMES
+	uint32_t seconds;
+	uint32_t ticks;
+#endif
 
 	IMAGE image;
 
@@ -122,6 +134,20 @@ typedef struct
     IMAGE vInterHV;
 	IMAGE vInterHVf;
 
+#ifdef BFRAMES
+	/* constants */
+	int max_bframes;
+	int bquant_ratio;
+	/* vars */
+	int bframenum_head;
+	int bframenum_tail;
+	int flush_bframes;
+
+	FRAMEINFO ** bframes;
+    IMAGE f_refh;
+    IMAGE f_refv;
+    IMAGE f_refhv;
+#endif
     Statistics sStat;
 }
 Encoder;

@@ -23,8 +23,8 @@ void get_inter_block(Bitstream * bs, int16_t * block);
 
 void MBCodingBVOP(const MACROBLOCK * mb, 
 				  const int16_t qcoeff[6*64],
-				  const int16_t fcode,
-				  const int16_t bcode,
+				  const int32_t fcode,
+				  const int32_t bcode,
 				  Bitstream * bs, 
 				  Statistics * pStat);
 

@@ -2,6 +2,7 @@
  *
  *  Modifications:
  *
+ *	01.05.2002	updated MotionEstimationBVOP
  *	25.04.2002 partial prevMB conversion
  *  22.04.2002 remove some compile warning by chenm001 <chenm001@163.com>
  *  14.04.2002 added MotionEstimationBVOP()
@@ -2038,7 +2039,7 @@ EPZS8_Terminate_without_Refine:
 // TODO: need to incorporate prediction here (eg. sad += calc_delta_16)
 ***************************************************************/
 
-/*
+
 void MotionEstimationBVOP(
 			MBParam * const pParam,
 			FRAMEINFO * const frame,
@@ -2060,7 +2061,7 @@ void MotionEstimationBVOP(
     const uint32_t mb_height = pParam->mb_height;
 	const int32_t edged_width = pParam->edged_width;
  
-	int32_t i,j;
+	uint32_t i,j;
 
 	int32_t f_sad16;
 	int32_t b_sad16;
@@ -2084,7 +2085,7 @@ void MotionEstimationBVOP(
 				&& b_mb->mvs[0].x == 0
 				&& b_mb->mvs[0].y == 0)
 			{
-				mb->mode = MB_IGNORE;
+				mb->mode = MODE_NOT_CODED;
 				mb->mvs[0].x = 0;
 				mb->mvs[0].y = 0;
 				mb->b_mvs[0].x = 0;
@@ -2099,7 +2100,7 @@ void MotionEstimationBVOP(
 						i, j, 
 						frame->motion_flags,  frame->quant, frame->fcode,
 						pParam, 
-						f_mbs, 
+						f_mbs, f_mbs /* todo */,
 						&mb->mvs[0], &pmv_dontcare);	// ignore pmv
 
 			// backward search
@@ -2108,7 +2109,7 @@ void MotionEstimationBVOP(
 						i, j, 
 						frame->motion_flags,  frame->quant, frame->bcode,
 						pParam, 
-						b_mbs, 
+						b_mbs, b_mbs, /* todo */
 						&mb->b_mvs[0], &pmv_dontcare);  // ignore pmv
 
 			// interpolate search (simple, but effective)
@@ -2128,28 +2129,26 @@ void MotionEstimationBVOP(
 			if (f_sad16 < b_sad16)
 			{
 				best_sad = f_sad16;
-				mb->mode = MB_FORWARD;
+				mb->mode = MODE_FORWARD;
 			}
 			else
 			{
 				best_sad = b_sad16;
-				mb->mode = MB_BACKWARD;
+				mb->mode = MODE_BACKWARD;
 			}
 				
 			if (i_sad16 < best_sad)
 			{
 				best_sad = i_sad16;
-				mb->mode = MB_INTERPOLATE;
+				mb->mode = MODE_INTERPOLATE;
 			}
 
 			if (d_sad16 < best_sad)
 			{
 				best_sad = d_sad16;
-				mb->mode = MB_DIRECT;
+				mb->mode = MODE_DIRECT;
 			}
 
 		}
 	}
 }
-
-*/
