@@ -19,7 +19,7 @@
 #include "portab.h"
 #include "global.h"
 #include "image/image.h"
-
+#include "utils/ratecontrol.h"
 
 #define H263_QUANT	0
 #define MPEG4_QUANT	1
@@ -30,8 +30,8 @@ typedef uint32_t bool;
 
 typedef enum
 {
-    I_VOP = 0,
-    P_VOP = 1,
+	I_VOP = 0,
+	P_VOP = 1,
 	B_VOP = 2
 }
 VOP_TYPE;
@@ -44,8 +44,8 @@ VOP_TYPE;
 
 typedef struct
 {
-    uint32_t width;
-    uint32_t height;
+	uint32_t width;
+	uint32_t height;
 
 	uint32_t edged_width;
 	uint32_t edged_height;
@@ -60,10 +60,10 @@ typedef struct
 	int max_bframes;
 #endif
 
-    /* rounding type; alternate 0-1 after each interframe */
+	/* rounding type; alternate 0-1 after each interframe */
 	/* 1 <= fixed_code <= 4
 	   automatically adjusted using motion vector statistics inside
-	 */
+	*/
 
 	/* vars that not "quite" frame independant */
 	uint32_t m_quant_type;
@@ -82,13 +82,13 @@ typedef struct
 
 typedef struct
 {
-    uint32_t quant;
+	uint32_t quant;
 	uint32_t motion_flags;	
 	uint32_t global_flags;
 
 	VOP_TYPE coding_type;
-    uint32_t rounding_type;
-    uint32_t fcode;
+	uint32_t rounding_type;
+	uint32_t fcode;
 	uint32_t bcode;
 
 #ifdef BFRAMES
@@ -104,10 +104,10 @@ typedef struct
 
 typedef struct
 {
-    int iTextBits;
-    float fMvPrevSigma;
-    int iMvSum;
-    int iMvCount;
+	int iTextBits;
+	float fMvPrevSigma;
+	int iMvSum;
+	int iMvCount;
 	int kblks;
 	int mblks;
 	int ublks;
@@ -118,10 +118,10 @@ Statistics;
 
 typedef struct
 {
-    MBParam mbParam;
+	MBParam mbParam;
 
-    int iFrameNum;
-    int iMaxKeyInterval;
+	int iFrameNum;
+	int iMaxKeyInterval;
 	int bitrate;
 
 	// images
@@ -132,10 +132,10 @@ typedef struct
 #ifdef _DEBUG
 	IMAGE sOriginal;
 #endif
-    IMAGE vInterH;
-    IMAGE vInterV;
+	IMAGE vInterH;
+	IMAGE vInterV;
 	IMAGE vInterVf;
-    IMAGE vInterHV;
+	IMAGE vInterHV;
 	IMAGE vInterHVf;
 
 #ifdef BFRAMES
@@ -147,11 +147,12 @@ typedef struct
 	int flush_bframes;
 
 	FRAMEINFO ** bframes;
-    IMAGE f_refh;
-    IMAGE f_refv;
-    IMAGE f_refhv;
+	IMAGE f_refh;
+	IMAGE f_refv;
+	IMAGE f_refhv;
 #endif
-    Statistics sStat;
+	Statistics sStat;
+	RateControl rate_control;
 }
 Encoder;
 
@@ -167,28 +168,28 @@ int encoder_encode(Encoder * pEnc, XVID_ENC_FRAME * pFrame, XVID_ENC_STATS * pRe
 		
 static __inline uint8_t get_fcode(uint16_t sr)
 {
-    if (sr <= 16)
+	if (sr <= 16)
 		return 1;
 
-    else if (sr <= 32) 
+	else if (sr <= 32) 
 		return 2;
 
-    else if (sr <= 64)
+	else if (sr <= 64)
 		return 3;
 
-    else if (sr <= 128)
+	else if (sr <= 128)
 		return 4;
 
-    else if (sr <= 256)
+	else if (sr <= 256)
 		return 5;
 
-    else if (sr <= 512)
+	else if (sr <= 512)
 		return 6;
 
-    else if (sr <= 1024)
+	else if (sr <= 1024)
 		return 7;
 
-    else
+	else
 		return 0;
 }
 
