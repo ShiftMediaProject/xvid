@@ -1,0 +1,38 @@
+directx 9.0 software development kit update (summer 2003)
+gnu c compiler compatiblity patch
+===============================================
+
+this patch has been tested with gcc-3.2.3
+
+note: the only change between the 9.0 and "9.0 update"
+sdks is a directory name change (MultiMedia becomes C++).
+
+to apply patch
+--------------
+1. install the microsoft DirectX SDK to /c/DXVCSDK
+
+	dx90updatesdk.exe
+	size: 190,991,976 bytes
+	md5: ed328da4033e18124801265ee91f690e
+
+2. cd /c/DXVCSDK
+3. patch -p0 < dxvcsdk-9.0-update.patch
+
+
+to build strmbase
+-----------------
+1. cd /c/DXVCSDK/Samples/C++/Directshow/BaseClasses
+2. make (this will output strmbase.lib)
+
+
+to build your own apps
+----------------------
+DXTREE = /c/DXVCSDK
+CXXFLAGS += -DRELEASE \
+        -I$(DXTREE)/Include \
+        -I$(DXTREE)/samples/C++/DirectShow/BaseClasses \
+        -include $(DXTREE)/mingw_dshow_port.h
+LDFLAGS += -L$(DXTREE)/Lib -lstrmiids \
+        $(DXTREE)/samples/C++/DirectShow/BaseClasses/strmbase.lib \
+	-lole32 -loleaut32 -lstdc++
+
