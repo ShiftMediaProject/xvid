@@ -27,6 +27,7 @@ The XviD package currently consists of three parts:
 3) Licensing:
 ------------
 
-- XviD is licensed as a whole under the terms of the GNU General Public
-  License. This is true for all files belonging to XviD except for those
-  which specifically carry a different license header.
+- XviD is licensed as a whole under the terms of the XviD license
+  described in the file LICENSE This is true for all files belonging
+  to XviD except for those which specifically carry a different
+  license header.
