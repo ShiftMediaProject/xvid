@@ -24,7 +24,7 @@
  *
  *  - Mon Jun 17 13:04:15 2002 Added legal header
  *
- *  $Id: ratecontrol.c,v 1.19 2003-02-15 15:22:19 edgomez Exp $
+ *  $Id: ratecontrol.c,v 1.20 2003-04-04 03:16:09 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -121,8 +121,13 @@ RateControlUpdate(RateControl * rate_control,
 	double quality_scale, base_quality, target_quality;
 	int32_t rtn_quant;
 
+	if(keyframe > 2)
+		return;
+
 	rate_control->frames++;
 	rate_control->total_size += frame_size;
+
+	rate_control->rtn_quant = quant;
 
 	deviation =
 		(int64_t) ((double) rate_control->total_size -
@@ -145,7 +150,7 @@ RateControlUpdate(RateControl * rate_control,
 		if (rate_control->sequence_quality < 0.1)
 			rate_control->sequence_quality = 0.1;
 
-		if (!keyframe) {
+		if (keyframe != 1) {
 			reaction_delay_factor =
 				(double) rate_control->reaction_delay_factor;
 			rate_control->avg_framesize -=
@@ -207,5 +212,5 @@ RateControlUpdate(RateControl * rate_control,
 static int
 get_initial_quant(int bpp)
 {
-	return 5;
+	return 8;
 }
