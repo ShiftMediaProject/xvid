@@ -1,41 +1,37 @@
-;------------------------------------------------------------------------------
+;/*****************************************************************************
+; *
+; *  XVID MPEG-4 VIDEO CODEC
+; *	 mmx yuv planar to rgb conversion
+; *
+; * Copyright (C) 2001 - Michael Militzer <isibaar@xvid.org>
+; *
+; *  This program is an implementation of a part of one or more MPEG-4
+; *  Video tools as specified in ISO/IEC 14496-2 standard.  Those intending
+; *  to use this software module in hardware or software products are
+; *  advised that its use may infringe existing patents or copyrights, and
+; *  any such use would be at such party's own risk.  The original
+; *  developer of this software module and his/her company, and subsequent
+; *  editors and their companies, will have no liability for use of this
+; *  software or modifications or derivatives thereof.
+; *
+; *  This program is free software; you can redistribute it and/or modify
+; *  it under the terms of the GNU General Public License as published by
+; *  the Free Software Foundation; either version 2 of the License, or
+; *  (at your option) any later version.
+; *
+; *  This program is distributed in the hope that it will be useful,
+; *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+; *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; *  GNU General Public License for more details.
+; *
+; *  You should have received a copy of the GNU General Public License
+; *  along with this program; if not, write to the Free Software
+; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+; *
+; * $Id: yv12_to_rgb32_mmx.asm,v 1.3 2002-09-06 17:48:58 chl Exp $
+; *
+; ****************************************************************************/
 ;
-;  This file is part of XviD, a free MPEG-4 video encoder/decoder
-;
-;  XviD is free software; you can redistribute it and/or modify it
-;  under the terms of the GNU General Public License as published by
-;  the Free Software Foundation; either version 2 of the License, or
-;  (at your option) any later version.
-;
-;  XviD is distributed in the hope that it will be useful, but
-;  WITHOUT ANY WARRANTY; without even the implied warranty of
-;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;  GNU General Public License for more details.
-;
-;  You should have received a copy of the GNU General Public License
-;  along with this program; if not, write to the Free Software
-;  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-;
-;------------------------------------------------------------------------------
-;------------------------------------------------------------------------------
-;
-;  yuv_to_rgb32.asm, MMX optimized color conversion
-;
-;  Copyright (C) 2001 - Michael Militzer <isibaar@xvid.org>
-;
-;  For more information visit the XviD homepage: http://www.xvid.org
-;
-;------------------------------------------------------------------------------
-;------------------------------------------------------------------------------
-;
-;  Revision history :
-;
-;  13.12.2001 initial version  (Isibaar)
-;  23.07.2002 Thread safe version (edgomez)
-;
-; $Id: yv12_to_rgb32_mmx.asm,v 1.2 2002-07-23 16:19:22 edgomez Exp $
-; 
-;------------------------------------------------------------------------------
 ;------------------------------------------------------------------------------
 ; NB:	n contrary to the c implementation this code does the conversion
 ;      using direct calculations. Input data width must be a multiple of 8
