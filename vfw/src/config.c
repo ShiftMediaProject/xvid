@@ -1428,7 +1428,7 @@ static BOOL CALLBACK adv_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 					HANDLE hFile;
 					DWORD filesize;
 				
-					if ((hFile = CreateFile(filename, GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0)) == INVALID_HANDLE_VALUE ||
+					if ((hFile = CreateFile(filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0)) == INVALID_HANDLE_VALUE ||
 						(filesize = GetFileSize(hFile, NULL)) == INVALID_FILE_SIZE) {
 						MessageBox(hDlg, "Could not get file size", "Error", 0);
 					}else{
