@@ -91,6 +91,10 @@ int16_t *get_intra_matrix(void) {
 	return intra_matrix;
 }
 
+int16_t *get_inter_matrix(void) {
+	return inter_matrix;
+}
+
 uint8_t *get_default_intra_matrix(void) {
 	return default_intra_matrix;
 }
