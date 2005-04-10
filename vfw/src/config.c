@@ -1777,7 +1777,7 @@ static void main_mode(HWND hDlg, CONFIG * config)
 		wsprintf(buf, "%i kbps", DEFAULT_MIN_KBPS);
 		SetDlgItemText(hDlg, IDC_BITRATE_MIN, buf);
 
-		max = profiles[profile].max_bitrate;
+		max = profiles[profile].max_bitrate / 1000;
 		if (max == 0) max = DEFAULT_MAX_KBPS;
 		wsprintf(buf, "%i kbps", max);
 		SetDlgItemText(hDlg, IDC_BITRATE_MAX, buf);
