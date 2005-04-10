@@ -78,7 +78,7 @@ END
 IDD_MAIN DIALOGEX 0, 0, 225, 255
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "XviD Configuration"
-FONT 8, "MS Shell Dlg"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     COMBOBOX        IDC_PROFILE,88,16,91,200,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
@@ -834,8 +834,8 @@ BEGIN
                     WS_TABSTOP
     EDITTEXT        IDC_BITRATE_ASIZE,95,188,75,12,ES_AUTOHSCROLL
     PUSHBUTTON      "...",IDC_BITRATE_ASELECT,178,188,20,12
-    CONTROL         "Average bitrate:",IDC_BITRATE_AMODE_RATE,"Button",
-                    BS_AUTORADIOBUTTON,15,175,66,10
+    CONTROL         "Avg. bitrate (kbps):",IDC_BITRATE_AMODE_RATE,"Button",
+                    BS_AUTORADIOBUTTON,15,175,75,10
     GROUPBOX        "Video",IDC_STATIC,5,75,200,132
     GROUPBOX        "Audio",IDC_STATIC,5,148,200,59
     CONTROL         "Size (kbytes):",IDC_BITRATE_AMODE_SIZE,"Button",
@@ -848,7 +848,8 @@ BEGIN
     GROUPBOX        "Container:",IDC_STATIC,5,35,200,172
     LTEXT           "Overhead (kbytes):",IDC_STATIC,15,61,61,10,
                     SS_CENTERIMAGE
-    LTEXT           "Average bitrate:",IDC_STATIC,15,136,51,8,SS_CENTERIMAGE
+    LTEXT           "Average bitrate (kbps):",IDC_STATIC,15,136,72,8,
+                    SS_CENTERIMAGE
     CTEXT           "hours",IDC_STATIC,15,90,30,8
     CTEXT           "minutes",IDC_STATIC,52,90,30,8
     CTEXT           "seconds",IDC_STATIC,88,90,30,8
