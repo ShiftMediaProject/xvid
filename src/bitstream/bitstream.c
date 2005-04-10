@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.c,v 1.49 2005-03-27 03:59:42 suxen_drol Exp $
+ * $Id: bitstream.c,v 1.50 2005-04-10 00:27:25 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -1085,8 +1085,8 @@ BitstreamWriteVolHeader(Bitstream * const bs,
         vol_type_ind = VIDOBJLAY_TYPE_ART_SIMPLE;
     }
 
-	if ((pParam->vol_flags & XVID_VOL_QUARTERPEL) ||
-        (pParam->vol_flags & XVID_VOL_GMC)) {
+    if ((pParam->vol_flags & (XVID_VOL_MPEGQUANT|XVID_VOL_QUARTERPEL|XVID_VOL_GMC|XVID_VOL_INTERLACING)) ||
+         pParam->max_bframes>0) {
         vol_type_ind = VIDOBJLAY_TYPE_ASP;
     }
 
