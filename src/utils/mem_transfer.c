@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mem_transfer.c,v 1.12 2004-12-19 13:16:50 syskin Exp $
+ * $Id: mem_transfer.c,v 1.13 2005-04-11 14:33:26 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -257,12 +257,15 @@ transfer8x8_copy_c(uint8_t * const dst,
 				   const uint8_t * const src,
 				   const uint32_t stride)
 {
-	uint32_t j;
+	uint32_t j, i;
 
-	for (j = 0; j < 8; j++) {
-		uint32_t *d= (uint32_t*)(dst + j*stride);
-		const uint32_t *s = (const uint32_t*)(src + j*stride);
-		*(d+0) = *(s+0);
-		*(d+1) = *(s+1);
+	for (j = 0; j < 8; ++j) {
+	    uint8_t *d = dst + j*stride;
+		const uint8_t *s = src + j*stride;
+
+		for (i = 0; i < 8; ++i)
+		{
+			*d++ = *s++;
+		}
 	}
 }
