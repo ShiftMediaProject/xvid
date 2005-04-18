@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.15 2005-01-05 23:02:15 edgomez Exp $
+ * $Id: xvid_bench.c,v 1.16 2005-04-18 08:31:42 Skal Exp $
  *
  ****************************************************************************/
 
@@ -81,7 +81,7 @@ double gettime_usec()
 #else
 	clock_t clk;
 	clk = clock();
-	return clk * 1000000 / CLOCKS_PER_SEC;
+	return clk * 1000. / CLOCKS_PER_SEC;  /* clock() returns time in Milliseconds */
 #endif
 }
 
