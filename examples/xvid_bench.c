@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.16 2005-04-18 08:31:42 Skal Exp $
+ * $Id: xvid_bench.c,v 1.17 2005-05-17 15:40:11 Skal Exp $
  *
  ****************************************************************************/
 
@@ -65,7 +65,9 @@
 #define M_PI		3.14159265358979323846
 #endif
 
-const int speed_ref = 100;  /* on slow machines, decrease this value */
+int speed_ref = 100;  /* on slow machines, decrease this value */
+int verbose = 0;
+unsigned int cpu_mask;
 
 /*********************************************************************
  * misc
@@ -257,13 +259,8 @@ static unsigned long crc32tab[256] = {
 };
 
 uint32_t
-calc_crc(uint8_t *mem, int len, uint32_t initial)
+calc_crc(uint8_t *mem, int len, uint32_t crc)
 {
-
-	register unsigned int crc;
-
-	crc = initial;
-
 	while( len >= 8) {
 		DO8(mem, crc);
 		len -= 8;
@@ -274,8 +271,7 @@ calc_crc(uint8_t *mem, int len, uint32_t initial)
 		len--;
 	}
 
-	return(crc);
-
+	return crc;
 }
 
 /*********************************************************************
@@ -1318,7 +1314,7 @@ void test_dct_saturation(int Min, int Max)
  * measure raw decoding speed
  *********************************************************************/
 
-void test_dec(const char *name, int width, int height, int with_chksum)
+void test_dec(const char *name, int width, int height, int ref_chksum)
 {
 	FILE *f = 0;
 	void *dechandle = 0;
@@ -1329,22 +1325,23 @@ void test_dec(const char *name, int width, int height, int with_chksum)
 	double t = 0.;
 	int nb = 0;
 	uint8_t *buf = 0;
-	uint8_t *rgb_out = 0;
+	uint8_t *yuv_out = 0;
 	int buf_size, pos;
 	uint32_t chksum = 0;
+	int bps = (width+31) & ~31;
 
 	memset(&xinit, 0, sizeof(xinit));
-	xinit.cpu_flags = XVID_CPU_MMX | XVID_CPU_FORCE;
+	xinit.cpu_flags = cpu_mask;
 	xinit.version = XVID_VERSION;
 	xvid_global(NULL, 0, &xinit, NULL);
 
 	memset(&xparam, 0, sizeof(xparam));
-	xparam.width = width;
+	xparam.width  = width;
 	xparam.height = height;
 	xparam.version = XVID_VERSION;
 	xerr = xvid_decore(NULL, XVID_DEC_CREATE, &xparam, NULL);
 	if (xerr==XVID_ERR_FAIL) {
-		printf("can't init decoder (err=%d)\n", xerr);
+		printf("ERROR: can't init decoder (err=%d)\n", xerr);
 		return;
 	}
 	dechandle = xparam.handle;
@@ -1352,27 +1349,26 @@ void test_dec(const char *name, int width, int height, int with_chksum)
 
 	f = fopen(name, "rb");
 	if (f==0) {
-		printf( "can't open file '%s'\n", name);
+		printf( "ERROR: can't open file '%s'\n", name);
 		return;
 	}
 	fseek(f, 0, SEEK_END);
 	buf_size = ftell(f);
 	fseek(f, 0, SEEK_SET);
 	if (buf_size<=0) {
-		printf("error while stating file\n");
+		printf("ERROR: error while stating file\n");
 		goto End;
 	}
-	else printf( "Input size: %d\n", buf_size);
 
-	buf = malloc(buf_size); /* should be enuf' */
-	rgb_out = calloc(4, width*height);  /* <-room for _RGB24 */
-	if (buf==0 || rgb_out==0) {
-		printf( "malloc failed!\n" );
+	buf = malloc(buf_size);
+	yuv_out = calloc(1, bps*height*3/2 + 15);
+	if (buf==0 || yuv_out==0) {
+		printf( "ERROR: malloc failed!\n" );
 		goto End;
 	}
 
 	if (fread(buf, buf_size, 1, f)!=1) {
-		printf( "file-read failed\n" );
+		printf( "ERROR: file-read failed\n" );
 		goto End;
 	}
 
@@ -1380,41 +1376,57 @@ void test_dec(const char *name, int width, int height, int with_chksum)
 	pos = 0;
 	t = -gettime_usec();
 	while(1) {
+	  int y;
+
 		memset(&xframe, 0, sizeof(xframe));
 		xframe.version = XVID_VERSION;
 		xframe.bitstream = buf + pos;
 		xframe.length = buf_size - pos;
-		xframe.output.plane[0] = rgb_out;
-		xframe.output.stride[0] = width;
-		xframe.output.csp = XVID_CSP_BGR;
+		xframe.output.plane[0] = (uint8_t*)(((size_t)yuv_out + 15) & ~15);
+		xframe.output.plane[1] = xframe.output.plane[0] + bps*height;
+		xframe.output.plane[2] = xframe.output.plane[1] + bps/2;
+		xframe.output.stride[0] = bps;
+		xframe.output.stride[1] = bps;
+		xframe.output.stride[2] = bps;
+		xframe.output.csp = XVID_CSP_I420;
 		xerr = xvid_decore(dechandle, XVID_DEC_DECODE, &xframe, 0);
+		if (xerr<0) {
+			printf("ERROR: decoding failed for frame #%d (err=%d)!\n", nb, xerr);
+			break;
+		}
+		else if (xerr==0)
+		  break;
+    else if (verbose>0) printf("#%d %d\n", nb, xerr );
+
+		pos += xerr;
 		nb++;
-		pos += xframe.length;
-		if (with_chksum) {
-			int k = width*height;
-			uint32_t *ptr = (uint32_t *)rgb_out;
-			while(k-->0) chksum += *ptr++;
+
+    for(y=0; y<height/2; ++y) {
+		  chksum = calc_crc(xframe.output.plane[0] + (2*y+0)*bps, width, chksum);
+			chksum = calc_crc(xframe.output.plane[0] + (2*y+1)*bps, width, chksum);
+			chksum = calc_crc(xframe.output.plane[1] + y*bps, width/2, chksum);
+			chksum = calc_crc(xframe.output.plane[2] + y*bps, width/2, chksum);
 		}
 		if (pos==buf_size)
 			break;
-		if (xerr==XVID_ERR_FAIL) {
-			printf("decoding failed for frame #%d (err=%d)!\n", nb, xerr);
-			break;
-		}
 	}
 	t += gettime_usec();
-	if (t>0.)
-		printf( "%d frames decoded in %.3f s -> %.1f FPS\n", nb, t*1.e-6f, (float)(nb*1.e6f/t) );
-	if (with_chksum)
-		printf("checksum: 0x%.8x\n", chksum);
+	if (ref_chksum==0) {
+	  if (t>0.)
+		  printf( "%d frames decoded in %.3f s -> %.1f FPS   Checksum:0x%.8x\n", nb, t*1.e-6f, (float)(nb*1.e6f/t), chksum );
+  }
+  else {    
+		printf("FPS:%.1f Checksum: 0x%.8x Expected:0x%.8x | %s\n", 
+		  t>0. ? (float)(nb*1.e6f/t) : 0.f, chksum, ref_chksum, (chksum==ref_chksum) ? "OK" : "ERROR");
+  }
 
  End:
-	if (rgb_out!=0) free(rgb_out);
+	if (yuv_out!=0) free(yuv_out);
 	if (buf!=0) free(buf);
 	if (dechandle!=0) {
 		xerr= xvid_decore(dechandle, XVID_DEC_DESTROY, NULL, NULL);
 		if (xerr==XVID_ERR_FAIL)
-			printf("destroy-decoder failed (err=%d)!\n", xerr);
+			printf("ERROR: destroy-decoder failed (err=%d)!\n", xerr);
 	}
 	if (f!=0) fclose(f);
 }
@@ -1581,10 +1593,61 @@ void test_quant_bug()
  * main
  *********************************************************************/
 
-int main(int argc, char *argv[])
+static void arg_missing(const char *opt)
 {
-	int what = 0;
-	if (argc>1) what = atoi(argv[1]);
+  printf( "missing argument after option '%s'\n", opt);
+  exit(-1);
+}
+
+int main(int argc, const char *argv[])
+{
+	int c, what = 0;
+	int width, height;
+	uint32_t chksum = 0;
+  const char * test_bitstream = 0;
+
+	cpu_mask = 0;  // default => will use autodectect
+	for(c=1; c<argc; ++c)
+	{
+	  if (!strcmp(argv[c], "-v")) verbose++;
+	  else if (!strcmp(argv[c], "-c"))      cpu_mask = 0 /* PLAIN_C */ | XVID_CPU_FORCE;
+	  else if (!strcmp(argv[c], "-mmx"))    cpu_mask = XVID_CPU_MMX    | XVID_CPU_FORCE;
+	  else if (!strcmp(argv[c], "-mmxext")) cpu_mask = XVID_CPU_MMXEXT | XVID_CPU_MMX | XVID_CPU_FORCE;
+	  else if (!strcmp(argv[c], "-sse2"))   cpu_mask = XVID_CPU_SSE2   | XVID_CPU_MMX | XVID_CPU_FORCE;
+	  else if (!strcmp(argv[c], "-3dnow"))  cpu_mask = XVID_CPU_3DNOW  | XVID_CPU_FORCE;
+	  else if (!strcmp(argv[c], "-3dnowe")) cpu_mask = XVID_CPU_3DNOW  | XVID_CPU_3DNOWEXT | XVID_CPU_FORCE;
+	  else if (!strcmp(argv[c], "-altivec")) cpu_mask = XVID_CPU_ALTIVEC | XVID_CPU_FORCE;
+	  else if (!strcmp(argv[c], "-spd")) {
+      if (++c==argc) arg_missing( argv[argc-1] );
+      speed_ref = atoi(argv[c]);
+    }
+	  else if (argv[c][0]!='-') {
+	    what = atoi(argv[c]);
+	    if (what==9) {
+	      if (c+4>argc) {
+	        printf("usage: %s %d bitstream width height (checksum)\n", argv[0], what);
+	        exit(-1);
+        }
+        test_bitstream = argv[++c];
+	      width  = atoi(argv[++c]);
+	      height = atoi(argv[++c]);
+	      if (c+1<argc && argv[c+1][0]!='-') {
+	        if (sscanf(argv[c+1], "0x%x", &chksum)!=1) {
+	          printf( "can't read checksum value.\n" );
+	          exit(-1);
+          }
+          else c++;
+        }
+//        printf( "[%s] %dx%d (0x%.8x)\n", test_bitstream, width, height, chksum);
+      }
+    }
+    else {
+      printf( "unrecognized option '%s'\n", argv[c]);
+      exit(-1);
+    }
+  }
+
+
 	if (what==0 || what==1) test_dct();
 	if (what==0 || what==2) test_mb();
 	if (what==0 || what==3) test_sad();
@@ -1603,17 +1666,8 @@ int main(int argc, char *argv[])
 	}
 	if (what==8) test_dct_saturation(-256, 255);
 
-	if (what==9) {
-		int width, height;
-		if (argc<5) {
-			printf("usage: %s %d [bitstream] [width] [height]\n", argv[0], what);
-			return 1;
-		}
-		width = atoi(argv[3]);
-		height = atoi(argv[4]);
-		test_dec(argv[2], width, height, (argc>5));
-	}
-
+	if (test_bitstream)
+	  test_dec(test_bitstream, width, height, chksum);
 	if (what==-1) {
 		test_dct_precision_diffs();
 		test_bugs1();
