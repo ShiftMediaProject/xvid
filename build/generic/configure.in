@@ -562,6 +562,48 @@ if test "$enable_gnuprofile" = "yes" ; then
 fi
 
 dnl ==========================================================================
+dnl Some gcc flags can't be used for gcc >= 3.4.0 
+dnl ==========================================================================
+
+if test "$GCC" = "yes" ; then
+cat << EOF > test.c
+#include <stdio.h>
+int main(int argc, char **argv)
+{
+	if (*argv[[1]] == 'M') {
+		printf("%d", __GNUC__);
+	}
+	if (*argv[[1]] == 'm') {
+		printf("%d", __GNUC_MINOR__);
+	}
+	return 0;
+}
+EOF
+	$CC -o gcc-ver test.c
+	
+	GCC_MAJOR=`./gcc-ver M`
+	GCC_MINOR=`./gcc-ver m`
+
+	rm -f test.c
+	rm -f gcc-ver
+
+	# GCC 4.x
+	if test $GCC_MAJOR -gt 3 ; then
+		CFLAGS=`echo $CFLAGS | sed s,"-mcpu","-mtune",g`
+		CFLAGS=`echo $CFLAGS | sed s,'-freduce-all-givs','',g`
+		CFLAGS=`echo $CFLAGS | sed s,'-fmove-all-movables','',g`
+		CFLAGS=`echo $CFLAGS | sed s,'-fnew-ra','',g`
+		CFLAGS=`echo $CFLAGS | sed s,'-fwritable-strings','',g`
+	fi
+
+	# GCC 3.4.x
+	if test $GCC_MAJOR -eq 3 && $GCC_MINOR -gt 3 ; then
+		CFLAGS=`echo $CFLAGS | sed s,"-mcpu","-mtune",g`
+	fi
+fi
+
+
+dnl ==========================================================================
 dnl
 dnl Substitions
 dnl
