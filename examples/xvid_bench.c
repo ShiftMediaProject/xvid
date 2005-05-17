@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.17 2005-05-17 15:40:11 Skal Exp $
+ * $Id: xvid_bench.c,v 1.18 2005-05-17 21:03:32 Skal Exp $
  *
  ****************************************************************************/
 
@@ -1588,6 +1588,59 @@ void test_quant_bug()
 	}
 #endif
 }
+/*********************************************************************/
+
+static uint32_t __inline log2bin_v1(uint32_t value)
+{
+  int n = 0;
+  while (value) {
+    value >>= 1;
+    n++;
+  }
+  return n;
+}
+
+static const uint8_t log2_tab_16[256] =  { 0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4 };
+
+static uint32_t __inline log2bin_v2(uint32_t value)
+{
+  int n = 0;
+  if (value & 0xffff0000) {
+    value >>= 16;
+    n += 16;
+  }
+  if (value & 0xff00) {
+    value >>= 8;
+    n += 8;
+  }
+  if (value & 0xf0) {
+    value >>= 4;
+    n += 4;
+  }
+ return n + log2_tab_16[value];
+}
+
+void test_log2bin()
+{
+	const int nb_tests = 3000*speed_ref;
+  int n, crc1=0, crc2=0;
+  uint32_t s, s0;
+  double t1, t2;
+
+  t1 = gettime_usec();
+  s0 = (int)(t1*31.241);
+  for(s=s0, n=0; n<nb_tests; ++n, s=(s*12363+31)&0x7fffffff)
+    crc1 += log2bin_v1(s);
+  t1 = (gettime_usec()-t1) / nb_tests;
+
+  t2 = gettime_usec();
+  for(s=s0, n=0; n<nb_tests; ++n, s=(s*12363+31)&0x7fffffff)
+    crc2 += log2bin_v2(s);
+  t2 = (gettime_usec() - t2) / nb_tests;
+  printf( "log2bin_v1: %.3f sec  crc=%d\n", t1, crc1 );
+  printf( "log2bin_v2: %.3f sec  crc=%d\n", t2, crc2 );
+  if (crc1!=crc2) printf( " CRC ERROR !\n" );
+}
 
 /*********************************************************************
  * main
@@ -1655,6 +1708,8 @@ int main(int argc, const char *argv[])
 	if (what==0 || what==5) test_quant();
 	if (what==0 || what==6) test_cbp();
 	if (what==0 || what==10) test_sse();
+	if (what==0 || what==11) test_log2bin();
+
 
 	if (what==7) {
 		test_IEEE1180_compliance(-256, 255, 1);

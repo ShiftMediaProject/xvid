@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.h,v 1.20 2004-12-05 13:56:13 syskin Exp $
+ * $Id: bitstream.h,v 1.21 2005-05-17 21:03:32 Skal Exp $
  *
  ****************************************************************************/
 
@@ -148,6 +148,18 @@ void BitstreamWriteVopHeader(Bitstream * const bs,
 void BitstreamWriteUserData(Bitstream * const bs,
 							uint8_t * data,
 							const int length);
+void
+BitstreamWriteEndOfSequence(Bitstream * const bs);
+
+void
+BitstreamWriteGroupOfVopHeader(Bitstream * const bs,
+                               const MBParam * pParam,
+                               uint32_t is_closed_gov);
+
+void write_video_packet_header(Bitstream * const bs,
+                               const MBParam * pParam,
+                               const FRAMEINFO * const frame,
+                               int mbnum);
 
 /* initialise bitstream structure */
 

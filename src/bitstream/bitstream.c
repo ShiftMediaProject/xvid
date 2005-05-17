@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.c,v 1.50 2005-04-10 00:27:25 suxen_drol Exp $
+ * $Id: bitstream.c,v 1.51 2005-05-17 21:03:32 Skal Exp $
  *
  ****************************************************************************/
 
@@ -33,18 +33,25 @@
 #include "mbcoding.h"
 
 
-static uint32_t __inline
-log2bin(uint32_t value)
+static const uint8_t log2_tab_16[256] =  { 0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4 };
+ 
+static uint32_t __inline log2bin(uint32_t value)
 {
-	int n = 0;
-
-	while (value) {
-		value >>= 1;
-		n++;
-	}
-	return n;
+  int n = 0;
+  if (value & 0xffff0000) {
+    value >>= 16;
+    n += 16;
+  }
+  if (value & 0xff00) {
+    value >>= 8;
+    n += 8;
+  }
+  if (value & 0xf0) {
+    value >>= 4;
+    n += 4;
+  }
+ return n + log2_tab_16[value];
 }
-
 
 static const uint32_t intra_dc_threshold_table[] = {
 	32,							/* never use */
@@ -1400,4 +1407,63 @@ BitstreamWriteUserData(Bitstream * const bs,
 		BitstreamPutBits(bs, data[i], 8);
 	}
 
+}
+
+/*
+ * Group of VOP
+ */
+void
+BitstreamWriteGroupOfVopHeader(Bitstream * const bs,
+                               const MBParam * pParam,
+                               uint32_t is_closed_gov)
+{
+  int64_t time = (pParam->m_stamp + (pParam->fbase/2)) / pParam->fbase;
+  int hours, minutes, seconds;
+
+  /* compute time_code */
+  seconds = time % 60; time /= 60;
+  minutes = time % 60; time /= 60;
+  hours = time % 24; /* don't overflow */
+      
+  BitstreamPutBits(bs, GRPOFVOP_START_CODE, 32);
+  BitstreamPutBits(bs, hours, 5);
+  BitstreamPutBits(bs, minutes, 6);
+  BitstreamPutBit(bs, 1);
+  BitstreamPutBits(bs, seconds, 6);
+  BitstreamPutBits(bs, is_closed_gov, 1);
+  BitstreamPutBits(bs, 0, 1); /* broken_link */
+}
+
+/*
+ * End of Sequence
+ */
+void
+BitstreamWriteEndOfSequence(Bitstream * const bs)
+{
+    BitstreamPadAlways(bs);
+    BitstreamPutBits(bs, VISOBJSEQ_STOP_CODE, 32);
+}
+
+/*
+ * Video Packet (resync marker)
+ */
+
+void write_video_packet_header(Bitstream * const bs,
+                               const MBParam * pParam,
+                               const FRAMEINFO * const frame,
+                               int mbnum)
+{
+    const int mbnum_bits = log2bin(pParam->mb_width *  pParam->mb_height - 1);
+    uint32_t nbitsresyncmarker;
+    int addbits=0;
+    if (frame->coding_type != I_VOP)
+        addbits = frame->fcode -1;
+    if (frame->coding_type == B_VOP)
+        addbits = MAX(frame->fcode, frame->bcode)-1;
+    BitstreamPadAlways(bs);
+    nbitsresyncmarker = NUMBITS_VP_RESYNC_MARKER + addbits;
+    BitstreamPutBits(bs, RESYNC_MARKER, nbitsresyncmarker);
+    BitstreamPutBits(bs, mbnum, mbnum_bits);
+    BitstreamPutBits(bs, frame->quant, 5);
+    BitstreamPutBit(bs, 0); /* hec */
 }

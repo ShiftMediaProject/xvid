@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.69 2005-03-27 03:59:41 suxen_drol Exp $
+ * $Id: decoder.c,v 1.70 2005-05-17 21:03:32 Skal Exp $
  *
  ****************************************************************************/
 
@@ -73,12 +73,20 @@ decoder_resize(DECODER * dec)
 
 	image_destroy(&dec->gmc, dec->edged_width, dec->edged_height);
 
-	if (dec->last_mbs)
-		xvid_free(dec->last_mbs);
-	if (dec->mbs)
-		xvid_free(dec->mbs);
-	if (dec->qscale)
-		xvid_free(dec->qscale);
+  image_null(&dec->cur);
+  image_null(&dec->refn[0]);
+  image_null(&dec->refn[1]);
+  image_null(&dec->tmp);
+  image_null(&dec->qtmp);
+  image_null(&dec->gmc);
+
+
+  xvid_free(dec->last_mbs);
+  xvid_free(dec->mbs);
+  xvid_free(dec->qscale);
+  dec->last_mbs = NULL;
+  dec->mbs = NULL;
+  dec->qscale = NULL;
 
 	/* realloc */
 	dec->mb_width = (dec->width + 15) / 16;
@@ -87,80 +95,27 @@ decoder_resize(DECODER * dec)
 	dec->edged_width = 16 * dec->mb_width + 2 * EDGE_SIZE;
 	dec->edged_height = 16 * dec->mb_height + 2 * EDGE_SIZE;
 
-	if (image_create(&dec->cur, dec->edged_width, dec->edged_height)) {
-		xvid_free(dec);
-		return XVID_ERR_MEMORY;
-	}
-
-	if (image_create(&dec->refn[0], dec->edged_width, dec->edged_height)) {
-		image_destroy(&dec->cur, dec->edged_width, dec->edged_height);
-		xvid_free(dec);
-		return XVID_ERR_MEMORY;
-	}
-
-	/* Support B-frame to reference last 2 frame */
-	if (image_create(&dec->refn[1], dec->edged_width, dec->edged_height)) {
-		image_destroy(&dec->cur, dec->edged_width, dec->edged_height);
-		image_destroy(&dec->refn[0], dec->edged_width, dec->edged_height);
-		xvid_free(dec);
-		return XVID_ERR_MEMORY;
-	}
-	if (image_create(&dec->tmp, dec->edged_width, dec->edged_height)) {
-		image_destroy(&dec->cur, dec->edged_width, dec->edged_height);
-		image_destroy(&dec->refn[0], dec->edged_width, dec->edged_height);
-		image_destroy(&dec->refn[1], dec->edged_width, dec->edged_height);
-		xvid_free(dec);
-		return XVID_ERR_MEMORY;
-	}
-
-	if (image_create(&dec->qtmp, dec->edged_width, dec->edged_height)) {
-		image_destroy(&dec->cur, dec->edged_width, dec->edged_height);
-		image_destroy(&dec->refn[0], dec->edged_width, dec->edged_height);
-		image_destroy(&dec->refn[1], dec->edged_width, dec->edged_height);
-		image_destroy(&dec->tmp, dec->edged_width, dec->edged_height);
-		xvid_free(dec);
-		return XVID_ERR_MEMORY;
-	}
-
-	if (image_create(&dec->gmc, dec->edged_width, dec->edged_height)) {
-		image_destroy(&dec->qtmp, dec->edged_width, dec->edged_height);
-		image_destroy(&dec->cur, dec->edged_width, dec->edged_height);
-		image_destroy(&dec->refn[0], dec->edged_width, dec->edged_height);
-		image_destroy(&dec->refn[1], dec->edged_width, dec->edged_height);
-		image_destroy(&dec->tmp, dec->edged_width, dec->edged_height);
-		xvid_free(dec);
-		return XVID_ERR_MEMORY;
-	}
+	if (   image_create(&dec->cur, dec->edged_width, dec->edged_height) 
+	    || image_create(&dec->refn[0], dec->edged_width, dec->edged_height)
+	    || image_create(&dec->refn[1], dec->edged_width, dec->edged_height) 	/* Support B-frame to reference last 2 frame */
+	    || image_create(&dec->tmp, dec->edged_width, dec->edged_height)
+	    || image_create(&dec->qtmp, dec->edged_width, dec->edged_height)
+      || image_create(&dec->gmc, dec->edged_width, dec->edged_height) )
+    goto memory_error;
 
 	dec->mbs =
 		xvid_malloc(sizeof(MACROBLOCK) * dec->mb_width * dec->mb_height,
 					CACHE_LINE);
-	if (dec->mbs == NULL) {
-		image_destroy(&dec->cur, dec->edged_width, dec->edged_height);
-		image_destroy(&dec->refn[0], dec->edged_width, dec->edged_height);
-		image_destroy(&dec->refn[1], dec->edged_width, dec->edged_height);
-		image_destroy(&dec->tmp, dec->edged_width, dec->edged_height);
-		image_destroy(&dec->qtmp, dec->edged_width, dec->edged_height);
-		xvid_free(dec);
-		return XVID_ERR_MEMORY;
-	}
+	if (dec->mbs == NULL)
+	  goto memory_error;
 	memset(dec->mbs, 0, sizeof(MACROBLOCK) * dec->mb_width * dec->mb_height);
 
 	/* For skip MB flag */
 	dec->last_mbs =
 		xvid_malloc(sizeof(MACROBLOCK) * dec->mb_width * dec->mb_height,
 					CACHE_LINE);
-	if (dec->last_mbs == NULL) {
-		xvid_free(dec->mbs);
-		image_destroy(&dec->cur, dec->edged_width, dec->edged_height);
-		image_destroy(&dec->refn[0], dec->edged_width, dec->edged_height);
-		image_destroy(&dec->refn[1], dec->edged_width, dec->edged_height);
-		image_destroy(&dec->tmp, dec->edged_width, dec->edged_height);
-		image_destroy(&dec->qtmp, dec->edged_width, dec->edged_height);
-		xvid_free(dec);
-		return XVID_ERR_MEMORY;
-	}
-
+	if (dec->last_mbs == NULL)
+	  goto memory_error;
 	memset(dec->last_mbs, 0, sizeof(MACROBLOCK) * dec->mb_width * dec->mb_height);
 
 	/* nothing happens if that fails */
@@ -171,6 +126,19 @@ decoder_resize(DECODER * dec)
 		memset(dec->qscale, 0, sizeof(int) * dec->mb_width * dec->mb_height);
 
 	return 0;
+
+memory_error:
+        /* Most structures were deallocated / nullifieded, so it should be safe */
+        /* decoder_destroy(dec) minus the write_timer */
+  xvid_free(dec->mbs);
+  image_destroy(&dec->cur, dec->edged_width, dec->edged_height);
+  image_destroy(&dec->refn[0], dec->edged_width, dec->edged_height);
+  image_destroy(&dec->refn[1], dec->edged_width, dec->edged_height);
+  image_destroy(&dec->tmp, dec->edged_width, dec->edged_height);
+  image_destroy(&dec->qtmp, dec->edged_width, dec->edged_height);
+
+  xvid_free(dec);
+  return XVID_ERR_MEMORY;
 }
 
 
