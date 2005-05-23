@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.18 2005-05-17 21:03:32 Skal Exp $
+ * $Id: xvid_bench.c,v 1.19 2005-05-23 09:29:43 Skal Exp $
  *
  ****************************************************************************/
 
@@ -1600,7 +1600,7 @@ static uint32_t __inline log2bin_v1(uint32_t value)
   return n;
 }
 
-static const uint8_t log2_tab_16[256] =  { 0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4 };
+static const uint8_t log2_tab_16[16] =  { 0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4 };
 
 static uint32_t __inline log2bin_v2(uint32_t value)
 {
@@ -1637,8 +1637,75 @@ void test_log2bin()
   for(s=s0, n=0; n<nb_tests; ++n, s=(s*12363+31)&0x7fffffff)
     crc2 += log2bin_v2(s);
   t2 = (gettime_usec() - t2) / nb_tests;
+
   printf( "log2bin_v1: %.3f sec  crc=%d\n", t1, crc1 );
   printf( "log2bin_v2: %.3f sec  crc=%d\n", t2, crc2 );
+  if (crc1!=crc2) printf( " CRC ERROR !\n" );
+}
+
+/*********************************************************************/
+
+static void __inline old_gcd(int *num, int *den)
+{
+ int i = *num;
+  while (i > 1) {   
+    if (*num % i == 0 && *den % i == 0) {
+      *num /= i;   
+      *den /= i;
+      i = *num;
+      continue;
+    }
+    i--;
+  }
+}
+
+static uint32_t gcd(int num, int den)
+{
+  int tmp;
+  while( (tmp=num%den) ) { num = den; den = tmp; }
+  return den;
+}
+static void __inline new_gcd(int *num, int *den)
+{
+  const int div = gcd(*num, *den);
+  if (num) {
+    *num /= div;
+    *den /= div;
+  }
+}
+
+void test_gcd()
+{
+	const int nb_tests = 10*speed_ref;
+  int i;
+  uint32_t crc1=0, crc2=0;
+  uint32_t n0, n, d0, d;
+  double t1, t2;
+
+  t1 = gettime_usec();
+  n0 = 0xfffff & (int)(t1*31.241);
+  d0 = 0xfffff & (int)( ((n0*4123)%17) | 1 );
+  for(n=n0, d=d0, i=0; i<nb_tests; ++i) {
+    old_gcd(&n, &d);
+    crc1 = (((crc1>>4)^d) + ((crc1<<2)^n) ) & 0xffffff;
+    n = d;
+    d = (d*12363+31) & 0xffff;
+    d |= !d;
+  }
+  t1 = (gettime_usec()-t1) / nb_tests;
+
+  t2 = gettime_usec();
+  for(n=n0, d=d0, i=0; i<nb_tests; ++i) {
+    new_gcd(&n, &d);
+    crc2 = (((crc2>>4)^d) + ((crc2<<2)^n) ) & 0xffffff;
+    n = d;
+    d = (d*12363+31) & 0xffff;
+    d |= !d;
+  }
+  t2 = (gettime_usec() - t2) / nb_tests;
+
+  printf( "old_gcd: %.3f sec  crc=%d\n", t1, crc1 );
+  printf( "new_gcd: %.3f sec  crc=%d\n", t2, crc2 );
   if (crc1!=crc2) printf( " CRC ERROR !\n" );
 }
 
@@ -1709,6 +1776,7 @@ int main(int argc, const char *argv[])
 	if (what==0 || what==6) test_cbp();
 	if (what==0 || what==10) test_sse();
 	if (what==0 || what==11) test_log2bin();
+	if (what==0 || what==12) test_gcd();
 
 
 	if (what==7) {
@@ -1750,206 +1818,4 @@ int main(int argc, const char *argv[])
 	return 0;
 }
 
-/*********************************************************************
- * 'Reference' output (except for timing) on an Athlon XP 2200+
- *********************************************************************/
-
-/* as of 2002-01-07, there's a problem with MMX mpeg4-quantization */
-/* as of 2003-11-30, the problem is still here */
-
-/*********************************************************************
-
-
- ===== test fdct/idct =====
-PLAINC -  2.867 usec       PSNR=13.291  MSE=3.000 
-MMX    -  -0.211 usec       PSNR=9.611  MSE=7.000 
-MMXEXT -  -0.256 usec       PSNR=9.611  MSE=7.000 
-3DNOW  -  2.855 usec       PSNR=13.291  MSE=3.000 
-3DNOWE -  1.429 usec       PSNR=13.291  MSE=3.000 
-
- ===  test block motion ===
-PLAINC - interp- h-round0 0.538 usec       crc32=0x115381ba 
-PLAINC -           round1 0.527 usec       crc32=0x2b1f528f 
-PLAINC - interp- v-round0 0.554 usec       crc32=0x423cdcc7 
-PLAINC -           round1 0.551 usec       crc32=0x42202efe 
-PLAINC - interp-hv-round0 1.041 usec       crc32=0xd198d387 
-PLAINC -           round1 1.038 usec       crc32=0x9ecfd921 
- --- 
-MMX    - interp- h-round0 0.051 usec       crc32=0x115381ba 
-MMX    -           round1 0.053 usec       crc32=0x2b1f528f 
-MMX    - interp- v-round0 0.048 usec       crc32=0x423cdcc7 
-MMX    -           round1 0.048 usec       crc32=0x42202efe 
-MMX    - interp-hv-round0 0.074 usec       crc32=0xd198d387 
-MMX    -           round1 0.073 usec       crc32=0x9ecfd921 
- --- 
-MMXEXT - interp- h-round0 0.020 usec       crc32=0x115381ba 
-MMXEXT -           round1 0.025 usec       crc32=0x2b1f528f 
-MMXEXT - interp- v-round0 0.016 usec       crc32=0x423cdcc7 
-MMXEXT -           round1 0.024 usec       crc32=0x42202efe 
-MMXEXT - interp-hv-round0 0.037 usec       crc32=0xd198d387 
-MMXEXT -           round1 0.037 usec       crc32=0x9ecfd921 
- --- 
-3DNOW  - interp- h-round0 0.020 usec       crc32=0x115381ba 
-3DNOW  -           round1 0.029 usec       crc32=0x2b1f528f 
-3DNOW  - interp- v-round0 0.016 usec       crc32=0x423cdcc7 
-3DNOW  -           round1 0.024 usec       crc32=0x42202efe 
-3DNOW  - interp-hv-round0 0.038 usec       crc32=0xd198d387 
-3DNOW  -           round1 0.039 usec       crc32=0x9ecfd921 
- --- 
-3DNOWE - interp- h-round0 0.020 usec       crc32=0x115381ba 
-3DNOWE -           round1 0.024 usec       crc32=0x2b1f528f 
-3DNOWE - interp- v-round0 0.016 usec       crc32=0x423cdcc7 
-3DNOWE -           round1 0.021 usec       crc32=0x42202efe 
-3DNOWE - interp-hv-round0 0.037 usec       crc32=0xd198d387 
-3DNOWE -           round1 0.036 usec       crc32=0x9ecfd921 
- --- 
-
- ======  test SAD ======
-PLAINC - sad8    0.505 usec       sad=3776 
-PLAINC - sad16   1.941 usec       sad=27214 
-PLAINC - sad16bi 4.925 usec       sad=26274 
-PLAINC - dev16   4.254 usec       sad=3344 
- --- 
-MMX    - sad8    0.036 usec       sad=3776 
-MMX    - sad16   0.107 usec       sad=27214 
-MMX    - sad16bi 0.259 usec       sad=26274 
-MMX    - dev16   0.187 usec       sad=3344 
- --- 
-MMXEXT - sad8    0.016 usec       sad=3776 
-MMXEXT - sad16   0.050 usec       sad=27214 
-MMXEXT - sad16bi 0.060 usec       sad=26274 
-MMXEXT - dev16   0.086 usec       sad=3344 
- --- 
-3DNOW  - sad8    0.506 usec       sad=3776 
-3DNOW  - sad16   1.954 usec       sad=27214 
-3DNOW  - sad16bi 0.119 usec       sad=26274 
-3DNOW  - dev16   4.252 usec       sad=3344 
- --- 
-3DNOWE - sad8    0.017 usec       sad=3776 
-3DNOWE - sad16   0.038 usec       sad=27214 
-3DNOWE - sad16bi 0.052 usec       sad=26274 
-3DNOWE - dev16   0.067 usec       sad=3344 
- --- 
-
- ===  test transfer ===
-PLAINC - 8to16     0.603 usec       crc32=0x115814bb 
-PLAINC - 16to8     1.077 usec       crc32=0xee7ccbb4 
-PLAINC - 8to8      0.679 usec       crc32=0xd37b3295 
-PLAINC - 16to8add  1.341 usec       crc32=0xdd817bf4 
-PLAINC - 8to16sub  1.566 usec       crc32(1)=0xa1e07163 crc32(2)=0xd86c5d23  
-PLAINC - 8to16sub2 2.206 usec       crc32=0x99b6c4c7 
- --- 
-MMX    - 8to16     -0.025 usec       crc32=0x115814bb 
-MMX    - 16to8     -0.049 usec       crc32=0xee7ccbb4 
-MMX    - 8to8      0.014 usec       crc32=0xd37b3295 
-MMX    - 16to8add  0.011 usec       crc32=0xdd817bf4 
-MMX    - 8to16sub  0.108 usec       crc32(1)=0xa1e07163 crc32(2)=0xd86c5d23  
-MMX    - 8to16sub2 0.164 usec       crc32=0x99b6c4c7 
- --- 
-MMXEXT - 8to16     -0.054 usec       crc32=0x115814bb 
-MMXEXT - 16to8     0.010 usec       crc32=0xee7ccbb4 
-MMXEXT - 8to8      0.015 usec       crc32=0xd37b3295 
-MMXEXT - 16to8add  0.008 usec       crc32=0xdd817bf4 
-MMXEXT - 8to16sub  0.263 usec       crc32(1)=0xa1e07163 crc32(2)=0xd86c5d23  
-MMXEXT - 8to16sub2 0.178 usec       crc32=0x99b6c4c7 
- --- 
-3DNOW  - 8to16     0.666 usec       crc32=0x115814bb 
-3DNOW  - 16to8     1.078 usec       crc32=0xee7ccbb4 
-3DNOW  - 8to8      0.665 usec       crc32=0xd37b3295 
-3DNOW  - 16to8add  1.365 usec       crc32=0xdd817bf4 
-3DNOW  - 8to16sub  1.356 usec       crc32(1)=0xa1e07163 crc32(2)=0xd86c5d23  
-3DNOW  - 8to16sub2 2.098 usec       crc32=0x99b6c4c7 
- --- 
-3DNOWE - 8to16     -0.024 usec       crc32=0x115814bb 
-3DNOWE - 16to8     0.010 usec       crc32=0xee7ccbb4 
-3DNOWE - 8to8      0.014 usec       crc32=0xd37b3295 
-3DNOWE - 16to8add  0.016 usec       crc32=0xdd817bf4 
-3DNOWE - 8to16sub  -0.000 usec       crc32(1)=0xa1e07163 crc32(2)=0xd86c5d23  
-3DNOWE - 8to16sub2 -0.031 usec       crc32=0x99b6c4c7 
- --- 
-
- =====  test quant =====
-PLAINC -   quant_mpeg_intra 98.631 usec       crc32=0xfd6a21a4 
-PLAINC -   quant_mpeg_inter 104.876 usec       crc32=0xf6de7757 
-PLAINC - dequant_mpeg_intra 50.285 usec       crc32=0x2def7bc7 
-PLAINC - dequant_mpeg_inter 58.316 usec       crc32=0xd878c722 
-PLAINC -   quant_h263_intra 33.803 usec       crc32=0x2eba9d43 
-PLAINC -   quant_h263_inter 45.411 usec       crc32=0xbd315a7e 
-PLAINC - dequant_h263_intra 39.302 usec       crc32=0x9841212a 
-PLAINC - dequant_h263_inter 44.124 usec       crc32=0xe7df8fba 
- --- 
-MMX    -   quant_mpeg_intra 4.273 usec       crc32=0xdacabdb6 | ERROR
-MMX    -   quant_mpeg_inter 3.576 usec       crc32=0x72883ab6 | ERROR
-MMX    - dequant_mpeg_intra 3.793 usec       crc32=0x2def7bc7 
-MMX    - dequant_mpeg_inter 4.808 usec       crc32=0xd878c722 
-MMX    -   quant_h263_intra 2.881 usec       crc32=0x2eba9d43 
-MMX    -   quant_h263_inter 2.550 usec       crc32=0xbd315a7e 
-MMX    - dequant_h263_intra 2.974 usec       crc32=0x9841212a 
-MMX    - dequant_h263_inter 2.906 usec       crc32=0xe7df8fba 
- --- 
-MMXEXT -   quant_mpeg_intra 4.221 usec       crc32=0xfd6a21a4 
-MMXEXT -   quant_mpeg_inter 4.339 usec       crc32=0xf6de7757 
-MMXEXT - dequant_mpeg_intra 3.802 usec       crc32=0x2def7bc7 
-MMXEXT - dequant_mpeg_inter 4.821 usec       crc32=0xd878c722 
-MMXEXT -   quant_h263_intra 2.884 usec       crc32=0x2eba9d43 
-MMXEXT -   quant_h263_inter 2.554 usec       crc32=0xbd315a7e 
-MMXEXT - dequant_h263_intra 2.728 usec       crc32=0x9841212a 
-MMXEXT - dequant_h263_inter 2.611 usec       crc32=0xe7df8fba 
- --- 
-3DNOW  -   quant_mpeg_intra 98.512 usec       crc32=0xfd6a21a4 
-3DNOW  -   quant_mpeg_inter 104.873 usec       crc32=0xf6de7757 
-3DNOW  - dequant_mpeg_intra 50.219 usec       crc32=0x2def7bc7 
-3DNOW  - dequant_mpeg_inter 58.254 usec       crc32=0xd878c722 
-3DNOW  -   quant_h263_intra 33.778 usec       crc32=0x2eba9d43 
-3DNOW  -   quant_h263_inter 41.998 usec       crc32=0xbd315a7e 
-3DNOW  - dequant_h263_intra 39.344 usec       crc32=0x9841212a 
-3DNOW  - dequant_h263_inter 43.607 usec       crc32=0xe7df8fba 
- --- 
-3DNOWE -   quant_mpeg_intra 98.490 usec       crc32=0xfd6a21a4 
-3DNOWE -   quant_mpeg_inter 104.889 usec       crc32=0xf6de7757 
-3DNOWE - dequant_mpeg_intra 3.277 usec       crc32=0x2def7bc7 
-3DNOWE - dequant_mpeg_inter 4.485 usec       crc32=0xd878c722 
-3DNOWE -   quant_h263_intra 1.882 usec       crc32=0x2eba9d43 
-3DNOWE -   quant_h263_inter 2.246 usec       crc32=0xbd315a7e 
-3DNOWE - dequant_h263_intra 3.457 usec       crc32=0x9841212a 
-3DNOWE - dequant_h263_inter 3.275 usec       crc32=0xe7df8fba 
- --- 
-
- =====  test cbp =====
-PLAINC -   calc_cbp#1 0.168 usec       cbp=0x15
-PLAINC -   calc_cbp#2 0.168 usec       cbp=0x38
-PLAINC -   calc_cbp#3 0.157 usec       cbp=0x0f
-PLAINC -   calc_cbp#4 0.235 usec       cbp=0x05
- --- 
-MMX    -   calc_cbp#1 0.070 usec       cbp=0x15
-MMX    -   calc_cbp#2 0.062 usec       cbp=0x38
-MMX    -   calc_cbp#3 0.062 usec       cbp=0x0f
-MMX    -   calc_cbp#4 0.061 usec       cbp=0x05
- --- 
-MMXEXT -   calc_cbp#1 0.062 usec       cbp=0x15
-MMXEXT -   calc_cbp#2 0.061 usec       cbp=0x38
-MMXEXT -   calc_cbp#3 0.061 usec       cbp=0x0f
-MMXEXT -   calc_cbp#4 0.061 usec       cbp=0x05
- --- 
-3DNOW  -   calc_cbp#1 0.168 usec       cbp=0x15
-3DNOW  -   calc_cbp#2 0.168 usec       cbp=0x38
-3DNOW  -   calc_cbp#3 0.157 usec       cbp=0x0f
-3DNOW  -   calc_cbp#4 0.238 usec       cbp=0x05
- --- 
-3DNOWE -   calc_cbp#1 0.049 usec       cbp=0x15
-3DNOWE -   calc_cbp#2 0.049 usec       cbp=0x38
-3DNOWE -   calc_cbp#3 0.049 usec       cbp=0x0f
-3DNOWE -   calc_cbp#4 0.049 usec       cbp=0x05
- --- 
-
-
-NB: If a function isn't optimised for a specific set of intructions,
-    a C function is used instead. So don't panic if some functions
-    may appear to be slow.
-
-NB: MMX mpeg4 quantization is known to have very small errors (+/-1 magnitude)
-    for 1 or 2 coefficients a block. This is mainly caused by the fact the unit
-    test goes far behind the usual limits of real encoding. Please do not report
-    this error to the developers
-
-*********************************************************************/
+/*********************************************************************/

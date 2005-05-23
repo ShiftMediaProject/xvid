@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.h,v 1.21 2005-05-17 21:03:32 Skal Exp $
+ * $Id: bitstream.h,v 1.22 2005-05-23 09:29:43 Skal Exp $
  *
  ****************************************************************************/
 
@@ -146,8 +146,9 @@ void BitstreamWriteVopHeader(Bitstream * const bs,
 							 unsigned int quant);
 
 void BitstreamWriteUserData(Bitstream * const bs,
-							uint8_t * data,
-							const int length);
+							const char *data,
+							const unsigned int length);
+
 void
 BitstreamWriteEndOfSequence(Bitstream * const bs);
 

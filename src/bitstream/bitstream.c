@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.c,v 1.51 2005-05-17 21:03:32 Skal Exp $
+ * $Id: bitstream.c,v 1.52 2005-05-23 09:29:43 Skal Exp $
  *
  ****************************************************************************/
 
@@ -33,7 +33,7 @@
 #include "mbcoding.h"
 
 
-static const uint8_t log2_tab_16[256] =  { 0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4 };
+static const uint8_t log2_tab_16[16] =  { 0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4 };
  
 static uint32_t __inline log2bin(uint32_t value)
 {
@@ -194,7 +194,6 @@ read_video_packet_header(Bitstream *bs,
 				DPRINTF(XVID_DEBUG_HEADER,"fcode_backward %i\n", *fcode_backward);
 			}
 		}
-
 	}
 
 	if (dec->newpred_enable)
@@ -550,16 +549,9 @@ BitstreamReadHeaders(Bitstream * bs,
 			dec->time_inc_resolution = BitstreamGetBits(bs, 16);	/* vop_time_increment_resolution */
 			DPRINTF(XVID_DEBUG_HEADER,"vop_time_increment_resolution %i\n", dec->time_inc_resolution);
 
-#if 0
-			dec->time_inc_resolution--;
-#endif
-
 			if (dec->time_inc_resolution > 0) {
 				dec->time_inc_bits = MAX(log2bin(dec->time_inc_resolution-1), 1);
 			} else {
-#if 0
-				dec->time_inc_bits = 0;
-#endif
 				/* for "old" xvid compatibility, set time_inc_bits = 1 */
 				dec->time_inc_bits = 1;
 			}
@@ -1188,12 +1180,12 @@ BitstreamWriteVolHeader(Bitstream * const bs,
 
 	WRITE_MARKER();
 
-    if (pParam->fincr>0) {
-		BitstreamPutBit(bs, 1);		/* fixed_vop_rate = 1 */
-		BitstreamPutBits(bs, pParam->fincr, MAX(log2bin(pParam->fbase-1),1));	/* fixed_vop_time_increment */
-    }else{
-        BitstreamPutBit(bs, 0);		/* fixed_vop_rate = 0 */
-    }
+  if (pParam->fincr>0) {
+    BitstreamPutBit(bs, 1);		/* fixed_vop_rate = 1 */
+    BitstreamPutBits(bs, pParam->fincr, MAX(log2bin(pParam->fbase-1),1));	/* fixed_vop_time_increment */
+  }else{
+    BitstreamPutBit(bs, 0);		/* fixed_vop_rate = 0 */
+  }
 
 	WRITE_MARKER();
 	BitstreamPutBits(bs, pParam->width, 13);	/* width */
@@ -1259,7 +1251,7 @@ BitstreamWriteVolHeader(Bitstream * const bs,
 	BitstreamPadAlways(bs); /* next_start_code(); */
 
 	/* divx5 userdata string */
-#define DIVX5_ID "DivX503b1393"
+#define DIVX5_ID ((char *)"DivX503b1393")
   if ((pParam->global_flags & XVID_GLOBAL_DIVX5_USERDATA)) {
     BitstreamWriteUserData(bs, DIVX5_ID, strlen(DIVX5_ID));
   	if (pParam->max_bframes > 0 && (pParam->global_flags & XVID_GLOBAL_PACKED))
@@ -1395,8 +1387,8 @@ BitstreamWriteVopHeader(
 
 void
 BitstreamWriteUserData(Bitstream * const bs,
-						uint8_t * data,
-						const int length)
+						const char *data,
+						const unsigned int length)
 {
 	int i;
 
@@ -1455,13 +1447,15 @@ void write_video_packet_header(Bitstream * const bs,
 {
     const int mbnum_bits = log2bin(pParam->mb_width *  pParam->mb_height - 1);
     uint32_t nbitsresyncmarker;
-    int addbits=0;
-    if (frame->coding_type != I_VOP)
-        addbits = frame->fcode -1;
-    if (frame->coding_type == B_VOP)
-        addbits = MAX(frame->fcode, frame->bcode)-1;
+
+    if (frame->coding_type == I_VOP)
+      nbitsresyncmarker = NUMBITS_VP_RESYNC_MARKER;  /* 16 zeros followed by a 1. */
+    else if (frame->coding_type == P_VOP)
+      nbitsresyncmarker = NUMBITS_VP_RESYNC_MARKER-1 + frame->fcode;
+    else /* B_VOP */
+      nbitsresyncmarker = MAX(NUMBITS_VP_RESYNC_MARKER, NUMBITS_VP_RESYNC_MARKER-1 + MAX(frame->fcode, frame->bcode));
+
     BitstreamPadAlways(bs);
-    nbitsresyncmarker = NUMBITS_VP_RESYNC_MARKER + addbits;
     BitstreamPutBits(bs, RESYNC_MARKER, nbitsresyncmarker);
     BitstreamPutBits(bs, mbnum, mbnum_bits);
     BitstreamPutBits(bs, frame->quant, 5);

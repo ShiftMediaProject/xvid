@@ -7,7 +7,7 @@
 # This file builds the configure script and copies all needed files
 # provided by automake/libtoolize
 #
-# $Id: bootstrap.sh,v 1.6 2004-05-21 14:40:15 edgomez Exp $
+# $Id: bootstrap.sh,v 1.7 2005-05-23 09:29:43 Skal Exp $
 
 
 ##############################################################################
@@ -80,3 +80,4 @@ $LIBTOOLIZE -f -c 1>/dev/null 2>&1
 echo "Removing files that are not needed"
 rm -rf autom4* 1>/dev/null 2>&1 
 rm -rf ltmain.sh 1>/dev/null 2>&1 
+rm -rf *.m4 1>/dev/null 2>&1

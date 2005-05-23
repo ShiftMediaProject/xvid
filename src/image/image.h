@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.h,v 1.13 2004-04-01 11:11:28 suxen_drol Exp $
+ * $Id: image.h,v 1.14 2005-05-23 09:29:43 Skal Exp $
  *
  ****************************************************************************/
 
@@ -108,7 +108,7 @@ int image_output(IMAGE * image,
 				 int height,
 				 uint32_t edged_width,
 				 uint8_t * dst[4],
-				 uint32_t dst_stride[4],
+				 int dst_stride[4],
 				 int csp,
 				 int interlaced);
 

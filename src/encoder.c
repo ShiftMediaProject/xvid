@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.117 2005-03-27 03:59:42 suxen_drol Exp $
+ * $Id: encoder.c,v 1.118 2005-05-23 09:29:43 Skal Exp $
  *
  ****************************************************************************/
 
@@ -85,20 +85,31 @@ static void FrameCodeB(Encoder * pEnc,
 /*
  * Simplify the "fincr/fbase" fraction
 */
+static int
+gcd(int a, int b)
+{
+	int r ;
+
+	if (b > a) {
+		r = a;
+		a = b;
+		b = r;
+	}
+
+	while ((r = a % b)) {
+		a = b;
+		b = r;
+	}
+	return b;
+}
+
 static void
 simplify_time(int *inc, int *base)
 {
 	/* common factor */
-	int i = *inc;
-	while (i > 1) {
-		if (*inc % i == 0 && *base % i == 0) {
-			*inc /= i;
-			*base /= i;
-			i = *inc;
-			continue;
-		}
-		i--;
-	}
+	const int s = gcd(*inc, *base);
+  *inc  /= s;
+  *base /= s;
 
 	if (*base > 65535 || *inc > 65535) {
 		int *biggest;
@@ -114,8 +125,8 @@ simplify_time(int *inc, int *base)
 		}
 		
 		div = ((float)*biggest)/((float)65535);
-		*biggest = (int)(((float)*biggest)/div);
-		*other = (int)(((float)*other)/div);
+		*biggest = (unsigned int)(((float)*biggest)/div);
+		*other = (unsigned int)(((float)*other)/div);
 	}
 }
 
@@ -161,8 +172,8 @@ enc_create(xvid_enc_create_t * create)
 	pEnc->mbParam.fincr = MAX(create->fincr, 0);
 	pEnc->mbParam.fbase = create->fincr <= 0 ? 25 : create->fbase;
 	if (pEnc->mbParam.fincr>0)
-		simplify_time(&pEnc->mbParam.fincr, &pEnc->mbParam.fbase);
-
+		simplify_time((int*)&pEnc->mbParam.fincr, (int*)&pEnc->mbParam.fbase);
+  
 	/* zones */
 	if(create->num_zones > 0) {
 		pEnc->num_zones = create->num_zones;
@@ -874,24 +885,6 @@ set_timecodes(FRAMEINFO* pCur,FRAMEINFO *pRef, int32_t time_base)
 #endif
 }
 
-static int
-gcd(int a, int b)
-{
-	int r ;
-
-	if (b > a) {
-		r = a;
-		a = b;
-		b = r;
-	}
-
-	while ((r = a % b)) {
-		a = b;
-		b = r;
-	}
-	return b;
-}
-
 static void
 simplify_par(int *par_width, int *par_height)
 {
@@ -1155,7 +1148,7 @@ repeat:
 	type = frame->type;
 	pEnc->current->quant = frame->quant;
 
-	call_plugins(pEnc, pEnc->current, NULL, XVID_PLG_BEFORE, &type, &pEnc->current->quant, stats);
+	call_plugins(pEnc, pEnc->current, NULL, XVID_PLG_BEFORE, &type, (int*)&pEnc->current->quant, stats);
 
 	if (type > 0){ 	/* XVID_TYPE_?VOP */
 		type = type2coding(type);	/* convert XVID_TYPE_?VOP to bitstream coding type */

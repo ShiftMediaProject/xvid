@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.70 2005-05-17 21:03:32 Skal Exp $
+ * $Id: decoder.c,v 1.71 2005-05-23 09:29:43 Skal Exp $
  *
  ****************************************************************************/
 
@@ -1123,7 +1123,7 @@ decoder_bframe(DECODER * dec,
 			MACROBLOCK *mb = &dec->mbs[y * dec->mb_width + x];
 			MACROBLOCK *last_mb = &dec->last_mbs[y * dec->mb_width + x];
 			const int fcode_max = (fcode_forward>fcode_backward) ? fcode_forward : fcode_backward;
-			uint32_t intra_dc_threshold; /* fake variable */
+			int32_t intra_dc_threshold; /* fake variable */
 
 			if (check_resync_marker(bs, fcode_max  - 1)) {
 				int bound = read_video_packet_header(bs, dec, fcode_max - 1, &quant,
