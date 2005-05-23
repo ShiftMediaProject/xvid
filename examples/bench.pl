@@ -70,10 +70,9 @@ $extra_arg = "";
 
 sub check_bin
 {
-  if (!exists $bin_made{$_[0]}) { 
-    my_system( "make $_[0]" ); 
-    $bin_made{$_[0]} = 1;
-  }
+  # force re-build of binary (better safe than sorry)
+  my_system( "rm -f $_[0]" );
+  my_system( "make $_[0]" ); 
 }
 sub check_file
 {
@@ -157,7 +156,7 @@ sub Do_Dec_Benches
       }
       else { printf "can't open core bench log file '$log_file'\n"; };
       if ($output =~ /ERROR/) {
-        print "ERROR detected in ouput:\n   $output\n";
+        print "ERROR detected in ouput, while decoding [$bitstream]:\n   $output\n";
         $Err++;
         next;
       }

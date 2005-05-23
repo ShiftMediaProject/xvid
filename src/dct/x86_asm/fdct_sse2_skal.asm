@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: fdct_sse2_skal.asm,v 1.5 2004-08-29 10:02:38 edgomez Exp $
+; * $Id: fdct_sse2_skal.asm,v 1.6 2005-05-23 12:06:02 Skal Exp $
 ; *
 ; ***************************************************************************/
 
@@ -74,36 +74,6 @@ BITS 32
 ;
 ;  * Some more details at: http://skal.planet-d.net/coding/dct.html
 ;
-;
-;//////////////////////////////////////////////////////////////////////
-;
-;  == Mean square errors ==
-;   0.000 0.001 0.001 0.002 0.000 0.002 0.001 0.000    [0.001]
-;   0.035 0.029 0.032 0.032 0.031 0.032 0.034 0.035    [0.032]
-;   0.026 0.028 0.027 0.027 0.025 0.028 0.028 0.025    [0.027]
-;   0.037 0.032 0.031 0.030 0.028 0.029 0.026 0.031    [0.030]
-;   0.000 0.001 0.001 0.002 0.000 0.002 0.001 0.001    [0.001]
-;   0.025 0.024 0.022 0.022 0.022 0.022 0.023 0.023    [0.023]
-;   0.026 0.028 0.025 0.028 0.030 0.025 0.026 0.027    [0.027]
-;   0.021 0.020 0.020 0.022 0.020 0.022 0.017 0.019    [0.020]
-;  
-;  == Abs Mean errors ==
-;   0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000    [0.000]
-;   0.020 0.001 0.003 0.003 0.000 0.004 0.002 0.003    [0.002]
-;   0.000 0.001 0.001 0.001 0.001 0.004 0.000 0.000    [0.000]
-;   0.027 0.001 0.000 0.002 0.002 0.002 0.001 0.000    [0.003]
-;   0.000 0.000 0.000 0.000 0.000 0.001 0.000 0.001    [-0.000]
-;   0.001 0.003 0.001 0.001 0.002 0.001 0.000 0.000    [-0.000]
-;   0.000 0.002 0.002 0.001 0.001 0.002 0.001 0.000    [-0.000]
-;   0.000 0.002 0.001 0.002 0.001 0.002 0.001 0.001    [-0.000]
-;
-;  =========================
-;  Peak error:   1.0000
-;  Peak MSE:     0.0365
-;  Overall MSE:  0.0201
-;  Peak ME:      0.0265
-;  Overall ME:   0.0006
-;
 ;-----------------------------------------------------------------------------
 ;
 ;                          -=IDCT=-
@@ -111,38 +81,6 @@ BITS 32
 ; A little slower than fdct, because the final stages (butterflies and
 ; descaling) require some unpairable shifting and packing, all on
 ; the same CPU unit.
-;
-;   THIS IDCT IS NOT IEEE-COMPLIANT: IT WILL FAIL THE [-300,300]
-;   INPUT RANGE TEST (because of overflow). But the [-256,255] one
-;   is OK, and I'm fine with it (for now;)
-;
-;  == Mean square errors ==
-;   0.007 0.006 0.005 0.007 0.006 0.007 0.005 0.007    [0.006]
-;   0.006 0.008 0.007 0.007 0.007 0.008 0.008 0.008    [0.007]
-;   0.008 0.008 0.008 0.008 0.007 0.009 0.010 0.007    [0.008]
-;   0.007 0.007 0.006 0.007 0.008 0.007 0.006 0.008    [0.007]
-;   0.007 0.006 0.006 0.006 0.006 0.005 0.006 0.006    [0.006]
-;   0.008 0.007 0.006 0.008 0.007 0.008 0.009 0.009    [0.008]
-;   0.008 0.006 0.010 0.008 0.008 0.008 0.007 0.007    [0.008]
-;   0.007 0.006 0.006 0.007 0.007 0.006 0.006 0.007    [0.006]
-;  
-;  == Abs Mean errors ==
-;   0.001 0.000 0.000 0.001 0.001 0.000 0.000 0.000    [0.000]
-;   0.000 0.002 0.002 0.000 0.001 0.001 0.000 0.002    [0.000]
-;   0.001 0.002 0.001 0.001 0.001 0.001 0.000 0.001    [-0.001]
-;   0.000 0.002 0.000 0.000 0.001 0.000 0.000 0.001    [-0.000]
-;   0.000 0.001 0.001 0.001 0.000 0.001 0.000 0.001    [0.000]
-;   0.000 0.001 0.001 0.001 0.001 0.000 0.001 0.000    [0.000]
-;   0.001 0.001 0.002 0.001 0.001 0.002 0.001 0.001    [0.001]
-;   0.000 0.000 0.001 0.000 0.000 0.000 0.000 0.000    [0.000]
-;
-;  =========================
-;
-;  Peak error:   1.0000
-;  Peak MSE:     0.0096
-;  Overall MSE:  0.0070
-;  Peak ME:      0.0024
-;  Overall ME:   0.0001
 ;
 ;-----------------------------------------------------------------------------
 
@@ -166,7 +104,7 @@ sqrt2:   times 8 dw 0x5a82    ; 0.5/sqrt(2)
 ; Inverse DCT tables
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+align 16
 iTab1:
   dw 0x4000, 0x539f, 0x4000, 0x22a3
   dw 0x4000, 0xdd5d, 0x4000, 0xac61
@@ -207,22 +145,20 @@ iTab4:
   dw 0x3b21, 0x14c3, 0x979e, 0xc4df
   dw 0x14c3, 0x587e, 0x587e, 0x979e
 
-  ; the original rounding trick is by
-  ; Michel Lespinasse (hi Walken!) <walken@zoy.org>
+align 16
+Walken_Idct_Rounders:
+  dd  65536, 65536, 65536, 65536
+  dd   3597,  3597,  3597,  3597
+  dd   2260,  2260,  2260,  2260
+  dd   1203,  1203,  1203,  1203
+  dd      0,     0,     0,     0
+  dd    120,   120,   120,   120
+  dd    512,   512,   512,   512
+  dd    512,   512,   512,   512
 
-ALIGN 16
-Idct_Rnd0: dd  65535, 65535, 65535, 65535
-Idct_Rnd1: dd   3612,  3612,  3612,  3612
-Idct_Rnd2: dd   2271,  2271,  2271,  2271
-Idct_Rnd3: dd   1203,  1203,  1203,  1203
-Idct_Rnd4: dd   1023,  1023,  1023,  1023
-Idct_Rnd5: dd    102,   102,   102,   102
-Idct_Rnd6: dd    398,   398,   398,   398
-Idct_Rnd7: dd    469,   469,   469,   469
-
-Idct_Sparse_Rnd0: times 4 dw  (65535>>11)
-Idct_Sparse_Rnd1: times 4 dw  ( 3612>>11)
-Idct_Sparse_Rnd2: times 4 dw  ( 2271>>11)
+  times 8 dw  (65536>>11)
+  times 8 dw  ( 3597>>11)
+  times 8 dw  ( 2260>>11)
   ; other rounders are zero...
 
 ;-----------------------------------------------------------------------------
@@ -284,7 +220,6 @@ Rounder1:  dw  1,1,1,1, 1,1,1,1
 SECTION .text
 
 cglobal idct_sse2_skal
-cglobal idct_sse2_sparse_skal
 cglobal fdct_sse2_skal
 
 ;-----------------------------------------------------------------------------
@@ -295,8 +230,9 @@ cglobal fdct_sse2_skal
 
   movdqa  xmm0, [ecx+%1*16]     ; xmm0 = [01234567]
 
-  pshuflw xmm0, xmm0, 11011000b ; [0213]
-  pshufhw xmm0, xmm0, 11011000b ; [02134657]
+  pshuflw xmm0, xmm0, 11011000b ; [02134567]  ; these two shufflings could be
+  pshufhw xmm0, xmm0, 11011000b ; [02134657]  ; integrated in zig-zag orders
+
   pshufd  xmm4, xmm0, 00000000b ; [02020202]
   pshufd  xmm5, xmm0, 10101010b ; [46464646]
   pshufd  xmm6, xmm0, 01010101b ; [13131313]
@@ -318,6 +254,7 @@ cglobal fdct_sse2_skal
   psrad   xmm4, %4        ; => out [7654]
 
   packssdw xmm6, xmm4     ; [01237654]
+
   pshufhw xmm6, xmm6, 00011011b ; [01234567]
 
   movdqa  [ecx+%1*16], xmm6
@@ -330,14 +267,14 @@ cglobal fdct_sse2_skal
 
 %macro iLLM_PASS 1  ; %1: src/dst
 
-  movdqa xmm0, [tan3]    ; t3-1
-  movdqa xmm3, [%1+16*3] ; x3
+  movdqa xmm0, [tan3]     ; t3-1
+  movdqa xmm3, [%1+16*3]  ; x3
   movdqa xmm1, xmm0       ; t3-1
-  movdqa xmm5, [%1+16*5] ; x5
+  movdqa xmm5, [%1+16*5]  ; x5
 
-  movdqa xmm4, [tan1]    ; t1
-  movdqa xmm6, [%1+16*1] ; x1
-  movdqa xmm7, [%1+16*7] ; x7
+  movdqa xmm4, [tan1]     ; t1
+  movdqa xmm6, [%1+16*1]  ; x1
+  movdqa xmm7, [%1+16*7]  ; x7
   movdqa xmm2, xmm4       ; t1
 
   pmulhw xmm0, xmm3       ; x3*(t3-1)
@@ -373,9 +310,9 @@ cglobal fdct_sse2_skal
   paddsw xmm0, xmm0       ; 2.(t1+t2) = b1
   paddsw xmm4, xmm4       ; 2.(t1-t2) = b2
 
-  movdqa xmm7, [tan2]    ; t2
-  movdqa xmm3, [%1+2*16] ; x2
-  movdqa xmm6, [%1+6*16] ; x6
+  movdqa xmm7, [tan2]     ; t2
+  movdqa xmm3, [%1+2*16]  ; x2
+  movdqa xmm6, [%1+6*16]  ; x6
   movdqa xmm5, xmm7       ; t2
 
   pmulhw xmm7, xmm6       ; x6*t2
@@ -385,33 +322,37 @@ cglobal fdct_sse2_skal
   psubsw xmm5, xmm6       ; x2*t2-x6 = tm26
 
 
-  ; use:xmm3,xmm5,xmm6,xmm7   frozen: xmm0,xmm4,xmm1,xmm2
+   ; use:xmm3,xmm5,xmm6,xmm7   frozen: xmm0,xmm4,xmm1,xmm2
 
   movdqa xmm3, [%1+0*16] ; x0
   movdqa xmm6, [%1+4*16] ; x4
 
+  movdqa [%1   ], xmm2  ; we spill 1 reg to perform safe butterflies
+
+  movdqa xmm2, xmm3
   psubsw xmm3, xmm6   ; x0-x4 = tm04
-  paddsw xmm6, xmm6   ; 2.x4
-  paddsw xmm6, xmm3   ; x0+x4 = tp04
+  paddsw xmm6, xmm2   ; x0+x4 = tp04
 
-  psubsw xmm3, xmm5   ; tm04-tm26 = a2
-  psubsw xmm6, xmm7   ; tp04-tp26 = a3
-  paddsw xmm5, xmm5   ; 2.tm26
-  paddsw xmm7, xmm7   ; 2.tp26
-  paddsw xmm5, xmm3   ; tm04+tm26 = a1
-  paddsw xmm7, xmm6   ; tp04+tp26 = a0
+  movdqa xmm2, xmm6
+  psubsw xmm6, xmm7
+  paddsw xmm7, xmm2
+  movdqa xmm2, xmm3
+  psubsw xmm3, xmm5
+  paddsw xmm5, xmm2
 
-  psubsw xmm5, xmm0   ; a1-b1
-  psubsw xmm3, xmm4   ; a2-b2
-  paddsw xmm0, xmm0   ; 2.b1
-  paddsw xmm4, xmm4   ; 2.b2
-  paddsw xmm0, xmm5   ; a1+b1
-  paddsw xmm4, xmm3   ; a2+b2
+  movdqa xmm2, xmm5
+  psubsw xmm5, xmm0
+  paddsw xmm0, xmm2
+  movdqa xmm2, xmm3
+  psubsw xmm3, xmm4
+  paddsw xmm4, xmm2
 
-  psraw  xmm5, 6     ; out6
-  psraw  xmm3, 6     ; out5
-  psraw  xmm0, 6     ; out1
-  psraw  xmm4, 6     ; out2
+  movdqa xmm2, [%1]
+
+  psraw  xmm5, 6      ; out6
+  psraw  xmm3, 6      ; out5
+  psraw  xmm0, 6      ; out1
+  psraw  xmm4, 6      ; out2
 
   movdqa [%1+6*16], xmm5
   movdqa [%1+5*16], xmm3
@@ -427,35 +368,19 @@ cglobal fdct_sse2_skal
   paddsw xmm1, xmm0   ; a0+b0
   paddsw xmm2, xmm4   ; a3+b3
 
-  psraw  xmm1, 6     ; out0
-  psraw  xmm7, 6     ; out7
-  psraw  xmm2, 6     ; out3
-  psraw  xmm6, 6     ; out4
+  psraw  xmm1, 6      ; out0
+  psraw  xmm7, 6      ; out7
+  psraw  xmm2, 6      ; out3
+  psraw  xmm6, 6      ; out4
+
+    ; store result
 
   movdqa [%1+0*16], xmm1
   movdqa [%1+3*16], xmm2
   movdqa [%1+4*16], xmm6
   movdqa [%1+7*16], xmm7
+
 %endmacro
-
-;-----------------------------------------------------------------------------
-; Function idct (the straight forward version)
-;-----------------------------------------------------------------------------
-
-ALIGN 16
-idct_sse2_skal:
-  mov ecx, [esp+4]
-  iMTX_MULT  0, iTab1, Idct_Rnd0, 11
-  iMTX_MULT  1, iTab2, Idct_Rnd1, 11
-  iMTX_MULT  2, iTab3, Idct_Rnd2, 11
-  iMTX_MULT  3, iTab4, Idct_Rnd3, 11
-  iMTX_MULT  4, iTab1, Idct_Rnd4, 11
-  iMTX_MULT  5, iTab4, Idct_Rnd5, 11
-  iMTX_MULT  6, iTab3, Idct_Rnd6, 11
-  iMTX_MULT  7, iTab2, Idct_Rnd7, 11
-  iLLM_PASS ecx+0
-  ret
-.endfunc
 
 ;-----------------------------------------------------------------------------
 ; Helper macro TEST_ROW (test a null row)
@@ -473,62 +398,59 @@ idct_sse2_skal:
 ;-----------------------------------------------------------------------------
 ; Function idct (this one skips null rows)
 ;-----------------------------------------------------------------------------
+; IEEE1180 and Walken compatible version
 
-ALIGN 16
-idct_sse2_sparse_skal:
+align 16
+idct_sse2_skal:
 
   mov ecx, [esp+ 4]  ; Src
 
   TEST_ROW ecx, .Row0_Round
-  iMTX_MULT  0, iTab1, Idct_Rnd0, 11
+  iMTX_MULT  0, iTab1, Walken_Idct_Rounders + 16*0, 11
   jmp .Row1
 .Row0_Round
-  movq mm0, [Idct_Sparse_Rnd0]
-  movq [ecx  ], mm0
-  movq [ecx+8], mm0
+  movdqa xmm0, [Walken_Idct_Rounders + 16*8 + 8*0]
+  movdqa [ecx  ], xmm0
 
 .Row1
   TEST_ROW ecx+16, .Row1_Round
-  iMTX_MULT  1, iTab2, Idct_Rnd1, 11
+  iMTX_MULT  1, iTab2, Walken_Idct_Rounders + 16*1, 11
   jmp .Row2
 .Row1_Round
-  movq mm0, [Idct_Sparse_Rnd1]
-  movq [ecx+16  ], mm0
-  movq [ecx+16+8], mm0
+  movdqa xmm0, [Walken_Idct_Rounders + 16*8 + 16*1]
+  movdqa [ecx+16  ], xmm0
 
 .Row2
   TEST_ROW ecx+32, .Row2_Round
-  iMTX_MULT  2, iTab3, Idct_Rnd2, 11
+  iMTX_MULT  2, iTab3, Walken_Idct_Rounders + 16*2, 11
   jmp .Row3
 .Row2_Round
-  movq mm0, [Idct_Sparse_Rnd2]
-  movq [ecx+32  ], mm0
-  movq [ecx+32+8], mm0
+  movdqa xmm0, [Walken_Idct_Rounders + 16*8 + 16*2]
+  movdqa [ecx+32  ], xmm0
 
 .Row3
   TEST_ROW ecx+48, .Row4
-  iMTX_MULT  3, iTab4, Idct_Rnd3, 11
-  jmp .Row4
+  iMTX_MULT  3, iTab4, Walken_Idct_Rounders + 16*3, 11
 
 .Row4
   TEST_ROW ecx+64, .Row5
-  iMTX_MULT  4, iTab1, Idct_Rnd4, 11
-  jmp .Row5
+  iMTX_MULT  4, iTab1, Walken_Idct_Rounders + 16*4, 11
 
 .Row5
   TEST_ROW ecx+80, .Row6
-  iMTX_MULT  5, iTab4, Idct_Rnd5, 11
+  iMTX_MULT  5, iTab4, Walken_Idct_Rounders + 16*5, 11
 
 .Row6
   TEST_ROW ecx+96, .Row7
-  iMTX_MULT  6, iTab3, Idct_Rnd6, 11
+  iMTX_MULT  6, iTab3, Walken_Idct_Rounders + 16*6, 11
 
 .Row7
   TEST_ROW ecx+112, .End
-  iMTX_MULT  7, iTab2, Idct_Rnd7, 11
+  iMTX_MULT  7, iTab2, Walken_Idct_Rounders + 16*7, 11
 .End
 
-  iLLM_PASS ecx+0
+  iLLM_PASS ecx
+
   ret
 .endfunc
 

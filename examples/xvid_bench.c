@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.19 2005-05-23 09:29:43 Skal Exp $
+ * $Id: xvid_bench.c,v 1.20 2005-05-23 12:06:02 Skal Exp $
  *
  ****************************************************************************/
 
@@ -1733,7 +1733,7 @@ int main(int argc, const char *argv[])
 	  else if (!strcmp(argv[c], "-c"))      cpu_mask = 0 /* PLAIN_C */ | XVID_CPU_FORCE;
 	  else if (!strcmp(argv[c], "-mmx"))    cpu_mask = XVID_CPU_MMX    | XVID_CPU_FORCE;
 	  else if (!strcmp(argv[c], "-mmxext")) cpu_mask = XVID_CPU_MMXEXT | XVID_CPU_MMX | XVID_CPU_FORCE;
-	  else if (!strcmp(argv[c], "-sse2"))   cpu_mask = XVID_CPU_SSE2   | XVID_CPU_MMX | XVID_CPU_FORCE;
+	  else if (!strcmp(argv[c], "-sse2"))   cpu_mask = XVID_CPU_SSE2   | XVID_CPU_MMXEXT | XVID_CPU_MMX | XVID_CPU_FORCE;
 	  else if (!strcmp(argv[c], "-3dnow"))  cpu_mask = XVID_CPU_3DNOW  | XVID_CPU_FORCE;
 	  else if (!strcmp(argv[c], "-3dnowe")) cpu_mask = XVID_CPU_3DNOW  | XVID_CPU_3DNOWEXT | XVID_CPU_FORCE;
 	  else if (!strcmp(argv[c], "-altivec")) cpu_mask = XVID_CPU_ALTIVEC | XVID_CPU_FORCE;

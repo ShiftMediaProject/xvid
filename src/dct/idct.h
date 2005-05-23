@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: idct.h,v 1.11 2005-01-05 23:02:15 edgomez Exp $
+ * $Id: idct.h,v 1.12 2005-05-23 12:06:02 Skal Exp $
  *
  ****************************************************************************/
 
@@ -41,7 +41,7 @@ idctFunc simple_idct_c;		/* Michael Niedermayer */
 idctFunc idct_mmx;			/* AP-992, Peter Gubanov, Michel Lespinasse */
 idctFunc idct_xmm;			/* AP-992, Peter Gubanov, Michel Lespinasse */
 idctFunc idct_3dne;			/* AP-992, Peter Gubanov, Michel Lespinasse, Jaan Kalda */
-idctFunc idct_sse2_skal;	/* Skal's one, not IEEE 1180 compliant for range [-300..300[ */
+idctFunc idct_sse2_skal;	/* Skal's one, IEEE 1180 compliant */
 idctFunc idct_sse2_dmitry;	/* Dmitry Rozhdestvensky */
 idctFunc simple_idct_mmx;	/* Michael Niedermayer; expects permutated data */
 idctFunc simple_idct_mmx2;	/* Michael Niedermayer */
