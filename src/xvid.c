@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.62 2005-04-04 23:49:37 edgomez Exp $
+ * $Id: xvid.c,v 1.63 2005-05-23 12:06:02 Skal Exp $
  *
  ****************************************************************************/
 
@@ -509,9 +509,9 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 		sad16    = sad16_sse2;
 		dev16    = dev16_sse2;
 
-		/* DCT operators
-		 * no iDCT because it's not "Walken matching" */
+		/* DCT operators */
 		fdct = fdct_sse2_skal;
+ 		/* idct = idct_sse2_skal; */   /* Is now IEEE1180 and Walken compliant. Disabled until fully tested. */
 
 		/* postprocessing */
 		image_brightness = image_brightness_sse2;
