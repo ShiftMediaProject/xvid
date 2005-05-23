@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.c,v 1.30 2004-12-05 13:56:13 syskin Exp $
+ * $Id: image.c,v 1.31 2005-05-23 09:29:43 Skal Exp $
  *
  ****************************************************************************/
 
@@ -717,7 +717,7 @@ image_output(IMAGE * image,
 			 int height,
 			 uint32_t edged_width,
 			 uint8_t * dst[4],
-			 uint32_t dst_stride[4],
+			 int dst_stride[4],
 			 int csp,
 			 int interlacing)
 {

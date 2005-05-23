@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbtransquant.c,v 1.27 2004-12-19 12:49:05 edgomez Exp $
+ * $Id: mbtransquant.c,v 1.28 2005-05-23 09:29:43 Skal Exp $
  *
  ****************************************************************************/
 
@@ -774,7 +774,7 @@ dct_quantize_trellis_c(int16_t *const Out,
 	 * helps. */
 	typedef struct { int16_t Run, Level; } NODE;
 
-	NODE Nodes[65], Last;
+	NODE Nodes[65], Last = { 0, 0};
 	uint32_t Run_Costs0[64+1];
 	uint32_t * const Run_Costs = Run_Costs0 + 1;
 

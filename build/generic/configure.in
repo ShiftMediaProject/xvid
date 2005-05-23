@@ -265,7 +265,14 @@ SPECIFIC_LDFLAGS=""
 SPECIFIC_CFLAGS=""
 PRE_SHARED_LIB=""
 case "$target_os" in
-     *bsd*|linux*|irix*|solaris*)
+     linux*|solaris*)
+	AC_MSG_RESULT([ok])
+	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
+	SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR).\$(API_MINOR)"
+	SPECIFIC_LDFLAGS="-Wl,-soname,libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR) -shared -Wl,--version-script=libxvidcore.ld -lc -lm"
+	SPECIFIC_CFLAGS="-fPIC"
+	;;
+     *bsd*|irix*)
 	AC_MSG_RESULT([ok])
 	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
 	SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR).\$(API_MINOR)"
@@ -588,7 +595,7 @@ EOF
 	rm -f gcc-ver
 
 	# GCC 4.x
-	if test $GCC_MAJOR -gt 3 ; then
+	if test "${GCC_MAJOR}" -gt 3 ; then
 		CFLAGS=`echo $CFLAGS | sed s,"-mcpu","-mtune",g`
 		CFLAGS=`echo $CFLAGS | sed s,'-freduce-all-givs','',g`
 		CFLAGS=`echo $CFLAGS | sed s,'-fmove-all-movables','',g`
@@ -597,7 +604,7 @@ EOF
 	fi
 
 	# GCC 3.4.x
-	if test $GCC_MAJOR -eq 3 && $GCC_MINOR -gt 3 ; then
+	if test "${GCC_MAJOR}" -eq 3 && test "${GCC_MINOR}" -gt 3 ; then
 		CFLAGS=`echo $CFLAGS | sed s,"-mcpu","-mtune",g`
 	fi
 fi

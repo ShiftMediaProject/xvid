@@ -129,6 +129,7 @@ $(STATIC_LIB): $(BUILD_DIR) $(OBJECTS)
 $(SHARED_LIB): $(BUILD_DIR) $(OBJECTS)
 	@echo "  L: $(@F)"
 	@$(INSTALL) -m 644 libxvidcore.def $(BUILD_DIR)/libxvidcore.def
+	@$(INSTALL) -m 644 libxvidcore.ld $(BUILD_DIR)/libxvidcore.ld
 	@cd $(BUILD_DIR) && $(CC) $(LDFLAGS) $(OBJECTS) -o $(PRE_SHARED_LIB) $(SPECIFIC_LDFLAGS)
 
 #-----------------------------------------------------------------------------
@@ -139,9 +140,9 @@ install: $(BUILD_DIR)/$(STATIC_LIB) $(BUILD_DIR)/$(SHARED_LIB)
 	@echo "  D: $(libdir)"
 	@$(INSTALL) -d $(DESTDIR)$(libdir)
 	@echo "  I: $(libdir)/$(SHARED_LIB)"
-	@$(INSTALL) -m 755 $(BUILD_DIR)/$(SHARED_LIB) $(DESTDIR)$(libdir)/$(SHARED_LIB)
+	@$(INSTALL) -m 644 $(BUILD_DIR)/$(SHARED_LIB) $(DESTDIR)$(libdir)/$(SHARED_LIB)
 	@echo "  I: $(libdir)/$(STATIC_LIB)"
-	@$(INSTALL) -m 755 $(BUILD_DIR)/$(STATIC_LIB) $(DESTDIR)$(libdir)/$(STATIC_LIB)
+	@$(INSTALL) -m 644 $(BUILD_DIR)/$(STATIC_LIB) $(DESTDIR)$(libdir)/$(STATIC_LIB)
 	@echo "  D: $(includedir)"
 	@$(INSTALL) -d $(DESTDIR)$(includedir)
 	@echo "  I: $(includedir)/xvid.h"

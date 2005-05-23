@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_common.c,v 1.11 2005-03-14 00:47:08 Isibaar Exp $
+ * $Id: estimation_common.c,v 1.12 2005-05-23 09:29:43 Skal Exp $
  *
  ****************************************************************************/
 
@@ -389,8 +389,8 @@ FullRefine_Fast(SearchData * data, CheckFunc * CheckCandidate, int direction)
 
 	int xo = 2*data->currentMV[0].x, yo = 2*data->currentMV[0].y;
 	
-	data->currentQMV[0].x = v_best.x = xo;
-	data->currentQMV[0].y = v_best.y = yo;
+	data->currentQMV[0].x = v_best.x = v_best2.x = xo;
+	data->currentQMV[0].y = v_best.y = v_best2.y = yo;
 
 	data->qpel_precision = 1;
 

@@ -2,7 +2,7 @@
 #
 # XviD examples Makefile
 #
-# $Id: Makefile,v 1.7 2004-03-22 22:36:23 edgomez Exp $
+# $Id: Makefile,v 1.8 2005-05-23 09:29:43 Skal Exp $
 #
 #############################################################################
 
@@ -31,7 +31,7 @@ xvid_decraw.o: xvid_decraw.c
 	$(CC) $(CFLAGS) $(HDIR) -c $<
 
 xvid_bench: xvid_bench.o
-	$(CC) -o $@ $< $(LDFLAGS) 
+	$(CC) -o $@ $< ../build/generic/=build/libxvidcore.a -lc -lm
 
 xvid_bench.o: xvid_bench.c
 	$(CC) $(CFLAGS) $(HDIR) -c $<
