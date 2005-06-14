@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.20 2005-05-23 12:06:02 Skal Exp $
+ * $Id: xvid_bench.c,v 1.21 2005-06-14 13:58:21 Skal Exp $
  *
  ****************************************************************************/
 
@@ -527,7 +527,7 @@ for(tst=0; tst<nb_tests; ++tst) {         \
 }                                         \
 emms();                                   \
 t = (gettime_usec()-t -overhead) / nb_tests;\
-s = calc_crc((uint8_t*)(DST), sizeof((DST)), CRC32_INITIAL)
+s = calc_crc((uint8_t*)(DST), 8*32*sizeof((DST)[0]), CRC32_INITIAL)
 
 #define TEST_TRANSFER(FUNC, DST, SRC)         \
 TEST_TRANSFER_BEGIN(DST);                 \
@@ -553,7 +553,7 @@ for(tst=0; tst<nb_tests; ++tst) {         \
 }                                         \
 emms();                                   \
 t = (gettime_usec()-t -overhead) / nb_tests;\
-s = calc_crc((uint8_t*)(DST), sizeof((DST)), CRC32_INITIAL)
+s = calc_crc((uint8_t*)(DST), 8*32*sizeof((DST)[0]), CRC32_INITIAL)
 
 #define TEST_TRANSFER2(FUNC, DST, SRC, R1)    \
 TEST_TRANSFER2_BEGIN(DST,SRC);            \
@@ -570,8 +570,14 @@ void test_transfer()
 	const int nb_tests = 4000*speed_ref;
 	int i;
 	CPU *cpu;
-	uint8_t  Src8[8*32], Dst8[8*32], Ref1[8*32], Ref2[8*32];
-	int16_t Src16[8*32], Dst16[8*32];
+//	uint8_t  Src8[8*32], Dst8[8*32], Ref1[8*32], Ref2[8*32];
+//	int16_t Src16[8*32], Dst16[8*32];
+  DECLARE_ALIGNED_MATRIX(Src8, 8, 32, uint8_t, CACHE_LINE);
+  DECLARE_ALIGNED_MATRIX(Dst8, 8, 32, uint8_t, CACHE_LINE);
+  DECLARE_ALIGNED_MATRIX(Ref1, 8, 32, uint8_t, CACHE_LINE);
+  DECLARE_ALIGNED_MATRIX(Ref2, 8, 32, uint8_t, CACHE_LINE);
+  DECLARE_ALIGNED_MATRIX(Src16, 8, 32, uint16_t, CACHE_LINE);
+  DECLARE_ALIGNED_MATRIX(Dst16, 8, 32, uint16_t, CACHE_LINE);
 
 	printf( "\n ===  test transfer ===\n" );
 
@@ -606,8 +612,8 @@ void test_transfer()
 		TEST_TRANSFER2(transfer_8to16sub, Dst16, Src8, Ref1);
 		{
 			int s1, s2;
-			s1 = calc_crc((uint8_t*)Dst16, sizeof(Dst16), CRC32_INITIAL);
-			s2 = calc_crc((uint8_t*)Src8, sizeof(Src8), CRC32_INITIAL);
+			s1 = calc_crc((uint8_t*)Dst16, 8*32*sizeof(Dst16[0]), CRC32_INITIAL);
+			s2 = calc_crc((uint8_t*)Src8, 8*32*sizeof(Src8[0]), CRC32_INITIAL);
 			printf("%s - 8to16sub  %.3f usec       crc32(1)=0x%08x crc32(2)=0x%08x %s %s\n",
 				   cpu->name, t, s1, s2,
 				   (s1!=0xa1e07163)?"| ERROR1": "",
