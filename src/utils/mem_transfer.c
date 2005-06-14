@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mem_transfer.c,v 1.13 2005-04-11 14:33:26 Isibaar Exp $
+ * $Id: mem_transfer.c,v 1.14 2005-06-14 13:58:21 Skal Exp $
  *
  ****************************************************************************/
 
@@ -39,6 +39,7 @@ TRANSFER_16TO8ADD_PTR  transfer_16to8add;
 
 TRANSFER8X8_COPY_PTR transfer8x8_copy;
 
+#define USE_REFERENCE_C
 
 /*****************************************************************************
  *
@@ -65,12 +66,11 @@ transfer_8to16copy_c(int16_t * const dst,
 					 const uint8_t * const src,
 					 uint32_t stride)
 {
-	uint32_t i, j;
-
+	int i, j;
 	for (j = 0; j < 8; j++) {
 		for (i = 0; i < 8; i++) {
 			dst[j * 8 + i] = (int16_t) src[j * stride + i];
-		}
+    }
 	}
 }
 
@@ -88,10 +88,11 @@ transfer_16to8copy_c(uint8_t * const dst,
 					 const int16_t * const src,
 					 uint32_t stride)
 {
-	uint32_t i, j;
+	int i, j;
 
 	for (j = 0; j < 8; j++) {
 		for (i = 0; i < 8; i++) {
+#ifdef USE_REFERENCE_C
 			int16_t pixel = src[j * 8 + i];
 
 			if (pixel < 0) {
@@ -100,7 +101,12 @@ transfer_16to8copy_c(uint8_t * const dst,
 				pixel = 255;
 			}
 			dst[j * stride + i] = (uint8_t) pixel;
-		}
+#else
+			const int16_t pixel = src[j * 8 + i];
+			const uint8_t value = (uint8_t)( (pixel&~255) ? (-pixel)>>(8*sizeof(pixel)-1) : pixel );
+			dst[j*stride + i] = value;
+#endif
+    }
 	}
 }
 
@@ -124,12 +130,12 @@ transfer_8to16sub_c(int16_t * const dct,
 					const uint8_t * ref,
 					const uint32_t stride)
 {
-	uint32_t i, j;
+	int i, j;
 
 	for (j = 0; j < 8; j++) {
 		for (i = 0; i < 8; i++) {
-			uint8_t c = cur[j * stride + i];
-			uint8_t r = ref[j * stride + i];
+			const uint8_t c = cur[j * stride + i];
+			const uint8_t r = ref[j * stride + i];
 
 			cur[j * stride + i] = r;
 			dct[j * 8 + i] = (int16_t) c - (int16_t) r;
@@ -144,12 +150,12 @@ transfer_8to16subro_c(int16_t * const dct,
 					const uint8_t * ref,
 					const uint32_t stride)
 {
-	uint32_t i, j;
+	int i, j;
 
 	for (j = 0; j < 8; j++) {
 		for (i = 0; i < 8; i++) {
-			uint8_t c = cur[j * stride + i];
-			uint8_t r = ref[j * stride + i];
+			const uint8_t c = cur[j * stride + i];
+			const uint8_t r = ref[j * stride + i];
 			dct[j * 8 + i] = (int16_t) c - (int16_t) r;
 		}
 	}
@@ -182,12 +188,8 @@ transfer_8to16sub2_c(int16_t * const dct,
 
 	for (j = 0; j < 8; j++) {
 		for (i = 0; i < 8; i++) {
-			uint8_t c = cur[j * stride + i];
-			int r = (ref1[j * stride + i] + ref2[j * stride + i] + 1) / 2;
-
-			if (r > 255) {
-				r = 255;
-			}
+			const uint8_t c = cur[j * stride + i];
+			const uint8_t r = (ref1[j * stride + i] + ref2[j * stride + i] + 1) >> 1;
 			cur[j * stride + i] = r;
 			dct[j * 8 + i] = (int16_t) c - (int16_t) r;
 		}
@@ -205,8 +207,8 @@ transfer_8to16sub2ro_c(int16_t * const dct,
 
 	for (j = 0; j < 8; j++) {
 		for (i = 0; i < 8; i++) {
-			uint8_t c = cur[j * stride + i];
-			int r = (ref1[j * stride + i] + ref2[j * stride + i] + 1) / 2;
+			const uint8_t c = cur[j * stride + i];
+			const uint8_t r = (ref1[j * stride + i] + ref2[j * stride + i] + 1) >> 1;
 			dct[j * 8 + i] = (int16_t) c - (int16_t) r;
 		}
 	}
@@ -227,10 +229,11 @@ transfer_16to8add_c(uint8_t * const dst,
 					const int16_t * const src,
 					uint32_t stride)
 {
-	uint32_t i, j;
+	int i, j;
 
 	for (j = 0; j < 8; j++) {
 		for (i = 0; i < 8; i++) {
+#ifdef USE_REFERENCE_C
 			int16_t pixel = (int16_t) dst[j * stride + i] + src[j * 8 + i];
 
 			if (pixel < 0) {
@@ -239,6 +242,12 @@ transfer_16to8add_c(uint8_t * const dst,
 				pixel = 255;
 			}
 			dst[j * stride + i] = (uint8_t) pixel;
+#else
+      const int16_t pixel = (int16_t) dst[j * stride + i] + src[j * 8 + i];
+			const uint8_t value = (uint8_t)( (pixel&~255) ? (-pixel)>>(8*sizeof(pixel)-1) : pixel );
+			dst[j*stride + i] = value;
+#endif
+
 		}
 	}
 }
@@ -257,7 +266,7 @@ transfer8x8_copy_c(uint8_t * const dst,
 				   const uint8_t * const src,
 				   const uint32_t stride)
 {
-	uint32_t j, i;
+	int j, i;
 
 	for (j = 0; j < 8; ++j) {
 	    uint8_t *d = dst + j*stride;
