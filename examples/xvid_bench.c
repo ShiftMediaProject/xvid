@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.21 2005-06-14 13:58:21 Skal Exp $
+ * $Id: xvid_bench.c,v 1.22 2005-06-15 06:07:28 Skal Exp $
  *
  ****************************************************************************/
 
@@ -112,41 +112,27 @@ typedef struct {
 	unsigned int cpu;
 } CPU;
 
-CPU cpu_list[] = 
-{ { "PLAINC", 0 }
+CPU cpu_list[] = {
+	{ "PLAINC ", 0 },
 #ifdef ARCH_IS_IA32
-  , { "MMX   ", XVID_CPU_MMX }
-  , { "MMXEXT", XVID_CPU_MMXEXT | XVID_CPU_MMX }
-  , { "SSE2  ", XVID_CPU_SSE2 | XVID_CPU_MMX }
-  , { "3DNOW ", XVID_CPU_3DNOW }
-  , { "3DNOWE", XVID_CPU_3DNOW | XVID_CPU_3DNOWEXT }
+	{ "MMX    ", XVID_CPU_MMX },
+	{ "MMXEXT ", XVID_CPU_MMXEXT | XVID_CPU_MMX },
+	{ "SSE2   ", XVID_CPU_SSE2 | XVID_CPU_MMX },
+	{ "3DNOW  ", XVID_CPU_3DNOW },
+	{ "3DNOWE ", XVID_CPU_3DNOW | XVID_CPU_3DNOWEXT },
 #endif
 #ifdef ARCH_IS_PPC
-  , { "ALTIVEC", XVID_CPU_ALTIVEC }
+	{ "ALTIVEC", XVID_CPU_ALTIVEC },
 #endif
 #ifdef ARCH_IS_X86_64
-  , { "X86_64", XVID_CPU_ASM}
+	{ "X86_64 ", XVID_CPU_ASM},
 #endif
-//, { "IA64  ", XVID_CPU_IA64 }  
-//, { "TSC   ", XVID_CPU_TSC }
-  , { 0, 0 } };
-
-CPU  cpu_short_list[] =
-{ { "PLAINC", 0 }
-#ifdef ARCH_IS_IA32
-  , { "MMX   ", XVID_CPU_MMX }
-//, { "MMXEXT", XVID_CPU_MMXEXT | XVID_CPU_MMX }
+#ifdef ARCH_IS_IA64
+//	{ "IA64   ", XVID_CPU_IA64 },
 #endif
-//, { "IA64  ", XVID_CPU_IA64 }
-  , { 0, 0 } };
-
-CPU cpu_short_list2[] = 
-{ { "PLAINC", 0 }
-#ifdef ARCH_IS_IA32
-  , { "MMX   ", XVID_CPU_MMX }
-  , { "SSE2  ", XVID_CPU_SSE2 | XVID_CPU_MMX }
-#endif
-  , { 0, 0 } };
+//	{ "TSC    ", XVID_CPU_TSC },
+	{ 0, 0 }
+};
 
 
 int init_cpu(CPU *cpu)
@@ -272,6 +258,44 @@ calc_crc(uint8_t *mem, int len, uint32_t crc)
 	}
 
 	return crc;
+}
+
+void byte_swap(uint8_t *mem, int len, int element_size) {
+#ifdef ARCH_IS_BIG_ENDIAN
+	int i;
+
+	if(element_size == 1) {
+		/* No need to swap */
+	} else if(element_size == 2) {
+		uint8_t temp[2];
+		
+		for(i=0; i < (len/2); i++ ) {
+			temp[0] = mem[0];
+			temp[1] = mem[1];
+			mem[0] = temp[1];
+			mem[1] = temp[0];
+
+			mem += 2;
+		}
+	} else if(element_size == 4) {
+		uint8_t temp[4];
+		
+		for(i=0; i < (len/4); i++ ) {
+			temp[0] = mem[0];
+			temp[1] = mem[1];
+			temp[2] = mem[2];
+			temp[3] = mem[3];
+			mem[0] = temp[3];
+			mem[1] = temp[2];
+			mem[2] = temp[1];
+			mem[3] = temp[0];
+
+			mem += 4;
+		}
+	} else {
+		printf("ERROR: byte_swap unsupported element_size(%u)\n", element_size);
+	}
+#endif
 }
 
 /*********************************************************************
@@ -527,6 +551,7 @@ for(tst=0; tst<nb_tests; ++tst) {         \
 }                                         \
 emms();                                   \
 t = (gettime_usec()-t -overhead) / nb_tests;\
+byte_swap((uint8_t*)(DST), 8*32*sizeof((DST)[0]), sizeof((DST)[0]));  \
 s = calc_crc((uint8_t*)(DST), 8*32*sizeof((DST)[0]), CRC32_INITIAL)
 
 #define TEST_TRANSFER(FUNC, DST, SRC)         \
@@ -553,6 +578,7 @@ for(tst=0; tst<nb_tests; ++tst) {         \
 }                                         \
 emms();                                   \
 t = (gettime_usec()-t -overhead) / nb_tests;\
+byte_swap((uint8_t*)(DST), 8*32*sizeof((DST)[0]), sizeof((DST)[0]));  \
 s = calc_crc((uint8_t*)(DST), 8*32*sizeof((DST)[0]), CRC32_INITIAL)
 
 #define TEST_TRANSFER2(FUNC, DST, SRC, R1)    \
@@ -642,7 +668,8 @@ for(s=CRC32_INITIAL,qm=1; qm<=255; ++qm) {              \
   for(q=1; q<=max_Q; ++q) {                 \
 	for(tst=0; tst<nb_tests; ++tst)         \
 	  (FUNC)((DST), (SRC), q, mpeg_quant_matrices);              \
-	s = calc_crc((uint8_t*)(DST), 64*sizeof(int16_t), s); \
+	byte_swap((uint8_t*)(DST), 64*sizeof((DST)[0]), sizeof((DST)[0]));  \
+	s = calc_crc((uint8_t*)(DST), 64*sizeof((DST)[0]), s); \
   }                                         \
   emms();                                   \
 }                                           \
@@ -657,7 +684,8 @@ for(s=CRC32_INITIAL,qm=1; qm<=255; ++qm) {              \
   for(q=1; q<=max_Q; ++q) {                 \
 	for(tst=0; tst<nb_tests; ++tst)         \
 	  (FUNC)((DST), (SRC), q, q, mpeg_quant_matrices);           \
-	s = calc_crc((uint8_t*)(DST), 64*sizeof(int16_t), s); \
+	byte_swap((uint8_t*)(DST), 64*sizeof((DST)[0]), sizeof((DST)[0]));  \
+	s = calc_crc((uint8_t*)(DST), 64*sizeof((DST)[0]), s); \
   }                                         \
   emms();                                   \
 }                                           \
