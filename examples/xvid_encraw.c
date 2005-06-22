@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.16 2004-11-19 09:41:06 chl Exp $
+ * $Id: xvid_encraw.c,v 1.17 2005-06-22 06:18:14 Skal Exp $
  *
  ****************************************************************************/
 
@@ -151,6 +151,7 @@ static int ARG_MAXBFRAMES = 0;
 static int ARG_PACKED = 0;
 static int ARG_DEBUG = 0;
 static int ARG_VOPDEBUG = 0;
+static int ARG_GREYSCALE = 0;
 static int ARG_GMC = 0;
 static int ARG_INTERLACING = 0;
 static int ARG_QPEL = 0;
@@ -344,7 +345,11 @@ main(int argc,
 			ARG_OUTPUTFILE = argv[i];
 		} else if (strcmp("-vop_debug", argv[i]) == 0) {
 			ARG_VOPDEBUG = 1;
-		} else if (strcmp("-qpel", argv[i]) == 0) {
+		} 
+		else if (strcmp("-grey", argv[i]) == 0) {
+			ARG_GREYSCALE = 1;
+		} 
+		else if (strcmp("-qpel", argv[i]) == 0) {
 			ARG_QPEL = 1;
 		} else if (strcmp("-gmc", argv[i]) == 0) {
 			ARG_GMC = 1;
@@ -702,6 +707,7 @@ usage()
 	fprintf(stderr, " -interlaced     : use interlaced encoding (this is NOT a deinterlacer!)\n");
 	fprintf(stderr, " -packed         : packed mode\n");
 	fprintf(stderr, " -closed_gop     : closed GOP mode\n");
+	fprintf(stderr, " -grey           : grey scale coding (chroma is discarded)\n");
 	fprintf(stderr, " -lumimasking    : use lumimasking algorithm\n");
 	fprintf(stderr, " -stats          : print stats about encoded frames\n");
 	fprintf(stderr, " -debug          : activates xvidcore internal debugging output\n");
@@ -1110,6 +1116,10 @@ enc_main(unsigned char *image,
 
     if (ARG_VOPDEBUG) {
         xvid_enc_frame.vop_flags |= XVID_VOP_DEBUG;
+    }
+
+    if (ARG_GREYSCALE) {
+        xvid_enc_frame.vop_flags |= XVID_VOP_GREYSCALE;
     }
 
 	/* Frame type -- let core decide for us */
