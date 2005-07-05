@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.17 2005-06-22 06:18:14 Skal Exp $
+ * $Id: xvid_encraw.c,v 1.18 2005-07-05 20:39:52 chl Exp $
  *
  ****************************************************************************/
 
@@ -239,7 +239,7 @@ main(int argc,
 	int stats_type;
 	int stats_quant;
 	int stats_length;
-	int use_assembler = 0;
+	int use_assembler = 1;  // this default changed!
 
 	int input_num;
 	int output_num;
@@ -266,6 +266,8 @@ main(int argc,
 
 		if (strcmp("-asm", argv[i]) == 0) {
 			use_assembler = 1;
+		} else if (strcmp("-noasm", argv[i]) == 0) {
+			use_assembler = 0;
 		} else if (strcmp("-w", argv[i]) == 0 && i < argc - 1) {
 			i++;
 			XDIM = atoi(argv[i]);
@@ -701,6 +703,7 @@ usage()
     fprintf(stderr, "\n");
 	fprintf(stderr, "Other options\n");
 	fprintf(stderr, " -asm            : use assembly optmized code\n");
+	fprintf(stderr, " -noasm            : do not use assembly optmized code\n");
 	fprintf(stderr, " -quality integer: quality ([0..%d])\n", ME_ELEMENTS - 1);
 	fprintf(stderr, " -qpel           : use quarter pixel ME\n");
 	fprintf(stderr, " -gmc            : use global motion compensation\n");
