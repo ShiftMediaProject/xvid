@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.18 2005-07-05 20:39:52 chl Exp $
+ * $Id: xvid_encraw.c,v 1.19 2005-07-05 20:55:12 chl Exp $
  *
  ****************************************************************************/
 
@@ -155,6 +155,7 @@ static int ARG_GREYSCALE = 0;
 static int ARG_GMC = 0;
 static int ARG_INTERLACING = 0;
 static int ARG_QPEL = 0;
+static int ARG_VHQMODE = 0;
 static int ARG_CLOSED_GOP = 0;
 
 #ifndef READ_PNM
@@ -314,6 +315,9 @@ main(int argc,
 		} else if (strcmp("-quality", argv[i]) == 0 && i < argc - 1) {
 			i++;
 			ARG_QUALITY = atoi(argv[i]);
+		} else if (strcmp("-vhqmode", argv[i]) == 0 && i < argc - 1) {
+			i++;
+			ARG_VHQMODE = atoi(argv[i]);
 		} else if (strcmp("-framerate", argv[i]) == 0 && i < argc - 1) {
 			i++;
 			ARG_FRAMERATE = (float) atof(argv[i]);
@@ -705,6 +709,7 @@ usage()
 	fprintf(stderr, " -asm            : use assembly optmized code\n");
 	fprintf(stderr, " -noasm            : do not use assembly optmized code\n");
 	fprintf(stderr, " -quality integer: quality ([0..%d])\n", ME_ELEMENTS - 1);
+	fprintf(stderr, " -vhqmode integer: level of Rate-Distorsion optimizations ([0..4]) (default=0)\n");
 	fprintf(stderr, " -qpel           : use quarter pixel ME\n");
 	fprintf(stderr, " -gmc            : use global motion compensation\n");
 	fprintf(stderr, " -interlaced     : use interlaced encoding (this is NOT a deinterlacer!)\n");
@@ -1142,6 +1147,41 @@ enc_main(unsigned char *image,
 	if (ARG_QPEL && (xvid_enc_frame.vop_flags & XVID_VOP_INTER4V))
 		xvid_enc_frame.motion |= XVID_ME_QUARTERPELREFINE8;
 
+	switch (ARG_VHQMODE) /* this is the same code as for vfw */
+	{
+	case 1: /* VHQ_MODE_DECISION */
+		xvid_enc_frame.vop_flags |= XVID_VOP_MODEDECISION_RD;
+		break;
+
+	case 2: /* VHQ_LIMITED_SEARCH */
+		xvid_enc_frame.vop_flags |= XVID_VOP_MODEDECISION_RD;
+		xvid_enc_frame.motion |= XVID_ME_HALFPELREFINE16_RD;
+		xvid_enc_frame.motion |= XVID_ME_QUARTERPELREFINE16_RD;
+		break;
+
+	case 3: /* VHQ_MEDIUM_SEARCH */
+		xvid_enc_frame.vop_flags |= XVID_VOP_MODEDECISION_RD;
+		xvid_enc_frame.motion |= XVID_ME_HALFPELREFINE16_RD;
+		xvid_enc_frame.motion |= XVID_ME_HALFPELREFINE8_RD;
+		xvid_enc_frame.motion |= XVID_ME_QUARTERPELREFINE16_RD;
+		xvid_enc_frame.motion |= XVID_ME_QUARTERPELREFINE8_RD;
+		xvid_enc_frame.motion |= XVID_ME_CHECKPREDICTION_RD;
+		break;
+
+	case 4: /* VHQ_WIDE_SEARCH */
+		xvid_enc_frame.vop_flags |= XVID_VOP_MODEDECISION_RD;
+		xvid_enc_frame.motion |= XVID_ME_HALFPELREFINE16_RD;
+		xvid_enc_frame.motion |= XVID_ME_HALFPELREFINE8_RD;
+		xvid_enc_frame.motion |= XVID_ME_QUARTERPELREFINE16_RD;
+		xvid_enc_frame.motion |= XVID_ME_QUARTERPELREFINE8_RD;
+		xvid_enc_frame.motion |= XVID_ME_CHECKPREDICTION_RD;
+		xvid_enc_frame.motion |= XVID_ME_EXTSEARCH_RD;
+		break;
+
+	default :
+		break;
+	}
+    
 	/* We don't use special matrices */
 	xvid_enc_frame.quant_intra_matrix = NULL;
 	xvid_enc_frame.quant_inter_matrix = NULL;
