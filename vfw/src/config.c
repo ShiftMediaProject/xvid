@@ -866,7 +866,7 @@ static void adv_mode(HWND hDlg, int idd, CONFIG * config)
 		EnableDlgWindow(hDlg, IDC_MAXBFRAMES_S,	 bvops);
 		EnableDlgWindow(hDlg, IDC_BQUANTRATIO_S,	bvops);
 		EnableDlgWindow(hDlg, IDC_BQUANTOFFSET_S,   bvops);
-		EnableDlgWindow(hDlg, IDC_PACKED,		   bvops);
+    EnableDlgWindow(hDlg, IDC_PACKED,		   bvops && !(profiles[profile].flags & PROFILE_DXN));
 		break;
 
 	case IDD_AR:
