@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.118 2005-05-23 09:29:43 Skal Exp $
+ * $Id: encoder.c,v 1.119 2005-08-01 10:53:46 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -173,7 +173,7 @@ enc_create(xvid_enc_create_t * create)
 	pEnc->mbParam.fbase = create->fincr <= 0 ? 25 : create->fbase;
 	if (pEnc->mbParam.fincr>0)
 		simplify_time((int*)&pEnc->mbParam.fincr, (int*)&pEnc->mbParam.fbase);
-  
+
 	/* zones */
 	if(create->num_zones > 0) {
 		pEnc->num_zones = create->num_zones;

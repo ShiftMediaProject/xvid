@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: fdct_sse2_skal.asm,v 1.6 2005-05-23 12:06:02 Skal Exp $
+; * $Id: fdct_sse2_skal.asm,v 1.7 2005-08-01 10:53:46 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -104,7 +104,7 @@ sqrt2:   times 8 dw 0x5a82    ; 0.5/sqrt(2)
 ; Inverse DCT tables
 ;-----------------------------------------------------------------------------
 
-align 16
+ALIGN 16
 iTab1:
   dw 0x4000, 0x539f, 0x4000, 0x22a3
   dw 0x4000, 0xdd5d, 0x4000, 0xac61
@@ -145,7 +145,7 @@ iTab4:
   dw 0x3b21, 0x14c3, 0x979e, 0xc4df
   dw 0x14c3, 0x587e, 0x587e, 0x979e
 
-align 16
+ALIGN 16
 Walken_Idct_Rounders:
   dd  65536, 65536, 65536, 65536
   dd   3597,  3597,  3597,  3597
@@ -400,7 +400,7 @@ cglobal fdct_sse2_skal
 ;-----------------------------------------------------------------------------
 ; IEEE1180 and Walken compatible version
 
-align 16
+ALIGN 16
 idct_sse2_skal:
 
   mov ecx, [esp+ 4]  ; Src

@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.c,v 1.52 2005-05-23 09:29:43 Skal Exp $
+ * $Id: bitstream.c,v 1.53 2005-08-01 10:53:46 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1180,12 +1180,12 @@ BitstreamWriteVolHeader(Bitstream * const bs,
 
 	WRITE_MARKER();
 
-  if (pParam->fincr>0) {
-    BitstreamPutBit(bs, 1);		/* fixed_vop_rate = 1 */
-    BitstreamPutBits(bs, pParam->fincr, MAX(log2bin(pParam->fbase-1),1));	/* fixed_vop_time_increment */
-  }else{
-    BitstreamPutBit(bs, 0);		/* fixed_vop_rate = 0 */
-  }
+    if (pParam->fincr>0) {
+		BitstreamPutBit(bs, 1);		/* fixed_vop_rate = 1 */
+		BitstreamPutBits(bs, pParam->fincr, MAX(log2bin(pParam->fbase-1),1));	/* fixed_vop_time_increment */
+    }else{
+        BitstreamPutBit(bs, 0);		/* fixed_vop_rate = 0 */
+    }
 
 	WRITE_MARKER();
 	BitstreamPutBits(bs, pParam->width, 13);	/* width */

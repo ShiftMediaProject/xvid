@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: qpel.c,v 1.6 2005-07-11 22:10:24 Skal Exp $
+ * $Id: qpel.c,v 1.7 2005-08-01 10:53:46 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -408,42 +408,28 @@ extern uint16_t xvid_Expand_mmx[256][4]; /* 8b -> 64b expansion table */
  * Using Symmetries (and bswap) could reduce further
  * the memory to 7 tables (->14K). */
 #ifdef ARCH_IS_X86_64
-extern int16_t xvid_FIR_1_0_0_0[256][4];
-extern int16_t xvid_FIR_3_1_0_0[256][4];
-extern int16_t xvid_FIR_6_3_1_0[256][4];
-extern int16_t xvid_FIR_14_3_2_1[256][4];
-extern int16_t xvid_FIR_20_6_3_1[256][4];
-extern int16_t xvid_FIR_20_20_6_3[256][4];
-extern int16_t xvid_FIR_23_19_6_3[256][4];
-extern int16_t xvid_FIR_7_20_20_6[256][4];
-extern int16_t xvid_FIR_6_20_20_6[256][4];
-extern int16_t xvid_FIR_6_20_20_7[256][4];
-extern int16_t xvid_FIR_3_6_20_20[256][4];
-extern int16_t xvid_FIR_3_6_19_23[256][4];
-extern int16_t xvid_FIR_1_3_6_20[256][4];
-extern int16_t xvid_FIR_1_2_3_14[256][4];
-extern int16_t xvid_FIR_0_1_3_6[256][4];
-extern int16_t xvid_FIR_0_0_1_3[256][4];
-extern int16_t xvid_FIR_0_0_0_1[256][4];
+#define __SCOPE extern
 #else
-int16_t xvid_FIR_1_0_0_0[256][4];
-int16_t xvid_FIR_3_1_0_0[256][4];
-int16_t xvid_FIR_6_3_1_0[256][4];
-int16_t xvid_FIR_14_3_2_1[256][4];
-int16_t xvid_FIR_20_6_3_1[256][4];
-int16_t xvid_FIR_20_20_6_3[256][4];
-int16_t xvid_FIR_23_19_6_3[256][4];
-int16_t xvid_FIR_7_20_20_6[256][4];
-int16_t xvid_FIR_6_20_20_6[256][4];
-int16_t xvid_FIR_6_20_20_7[256][4];
-int16_t xvid_FIR_3_6_20_20[256][4];
-int16_t xvid_FIR_3_6_19_23[256][4];
-int16_t xvid_FIR_1_3_6_20[256][4];
-int16_t xvid_FIR_1_2_3_14[256][4];
-int16_t xvid_FIR_0_1_3_6[256][4];
-int16_t xvid_FIR_0_0_1_3[256][4];
-int16_t xvid_FIR_0_0_0_1[256][4];
+#define __SCOPE
 #endif
+
+__SCOPE int16_t xvid_FIR_1_0_0_0[256][4];
+__SCOPE int16_t xvid_FIR_3_1_0_0[256][4];
+__SCOPE int16_t xvid_FIR_6_3_1_0[256][4];
+__SCOPE int16_t xvid_FIR_14_3_2_1[256][4];
+__SCOPE int16_t xvid_FIR_20_6_3_1[256][4];
+__SCOPE int16_t xvid_FIR_20_20_6_3[256][4];
+__SCOPE int16_t xvid_FIR_23_19_6_3[256][4];
+__SCOPE int16_t xvid_FIR_7_20_20_6[256][4];
+__SCOPE int16_t xvid_FIR_6_20_20_6[256][4];
+__SCOPE int16_t xvid_FIR_6_20_20_7[256][4];
+__SCOPE int16_t xvid_FIR_3_6_20_20[256][4];
+__SCOPE int16_t xvid_FIR_3_6_19_23[256][4];
+__SCOPE int16_t xvid_FIR_1_3_6_20[256][4];
+__SCOPE int16_t xvid_FIR_1_2_3_14[256][4];
+__SCOPE int16_t xvid_FIR_0_1_3_6[256][4];
+__SCOPE int16_t xvid_FIR_0_0_1_3[256][4];
+__SCOPE int16_t xvid_FIR_0_0_0_1[256][4];
 
 static void Init_FIR_Table(int16_t Tab[][4],
                            int A, int B, int C, int D)

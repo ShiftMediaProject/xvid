@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mem_transfer.c,v 1.14 2005-06-14 13:58:21 Skal Exp $
+ * $Id: mem_transfer.c,v 1.15 2005-08-01 10:53:46 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -70,7 +70,7 @@ transfer_8to16copy_c(int16_t * const dst,
 	for (j = 0; j < 8; j++) {
 		for (i = 0; i < 8; i++) {
 			dst[j * 8 + i] = (int16_t) src[j * stride + i];
-    }
+		}
 	}
 }
 
