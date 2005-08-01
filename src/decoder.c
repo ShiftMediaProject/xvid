@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.71 2005-05-23 09:29:43 Skal Exp $
+ * $Id: decoder.c,v 1.72 2005-08-01 18:37:46 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -443,6 +443,10 @@ validate_vector(VECTOR * mv, unsigned int x_pos, unsigned int y_pos, const DECOD
 	CHECK_MV(mv[3]);
 }
 
+/* Up to this version, chroma rounding was wrong with qpel. 
+ * So we try to be backward compatible to avoid artifacts */
+#define BS_VERSION_BUGGY_CHROMA_ROUNDING 1
+
 /* decode an inter macroblock */
 static void
 decoder_mbinter(DECODER * dec,
@@ -478,8 +482,14 @@ decoder_mbinter(DECODER * dec,
 		uv_dx = mv[0].x;
 		uv_dy = mv[0].y;
 		if (dec->quarterpel) {
-			uv_dx /= 2;
-			uv_dy /= 2;
+			if (dec->bs_version <= BS_VERSION_BUGGY_CHROMA_ROUNDING) {
+				uv_dx = (uv_dx>>1) | (uv_dx&1);
+				uv_dy = (uv_dy>>1) | (uv_dy&1);
+			}
+			else {
+				uv_dx /= 2;
+				uv_dy /= 2;
+			}
 		}
 		uv_dx = (uv_dx >> 1) + roundtab_79[uv_dx & 0x3];
 		uv_dy = (uv_dy >> 1) + roundtab_79[uv_dy & 0x3];
@@ -495,8 +505,18 @@ decoder_mbinter(DECODER * dec,
 	} else {	/* MODE_INTER4V */
 
 		if(dec->quarterpel) {
-			uv_dx = (mv[0].x / 2) + (mv[1].x / 2) + (mv[2].x / 2) + (mv[3].x / 2);
-			uv_dy = (mv[0].y / 2) + (mv[1].y / 2) + (mv[2].y / 2) + (mv[3].y / 2);
+			if (dec->bs_version <= BS_VERSION_BUGGY_CHROMA_ROUNDING) {
+				int z;
+				uv_dx = 0; uv_dy = 0;
+				for (z = 0; z < 4; z++) {
+				  uv_dx += ((mv[z].x>>1) | (mv[z].x&1));
+				  uv_dy += ((mv[z].y>>1) | (mv[z].y&1));
+				}
+			}
+			else {
+				uv_dx = (mv[0].x / 2) + (mv[1].x / 2) + (mv[2].x / 2) + (mv[3].x / 2);
+				uv_dy = (mv[0].y / 2) + (mv[1].y / 2) + (mv[2].y / 2) + (mv[3].y / 2);
+			}
 		} else {
 			uv_dx = mv[0].x + mv[1].x + mv[2].x + mv[3].x;
 			uv_dy = mv[0].y + mv[1].y + mv[2].y + mv[3].y;
@@ -948,10 +968,18 @@ decoder_bf_interpolate_mbinter(DECODER * dec,
 		b_uv_dy = pMB->b_mvs[0].y;
 
 		if (dec->quarterpel) {
-			uv_dx /= 2;
-			uv_dy /= 2;
-			b_uv_dx /= 2;
-			b_uv_dy /= 2;
+			if (dec->bs_version <= BS_VERSION_BUGGY_CHROMA_ROUNDING) {
+				uv_dx = (uv_dx>>1) | (uv_dx&1);
+				uv_dy = (uv_dy>>1) | (uv_dy&1);
+				b_uv_dx = (b_uv_dx>>1) | (b_uv_dx&1);
+				b_uv_dy = (b_uv_dy>>1) | (b_uv_dy&1);
+			}
+			else {
+				uv_dx /= 2;
+				uv_dy /= 2;
+				b_uv_dx /= 2;
+				b_uv_dy /= 2;
+			}
 		}
 
 		uv_dx = (uv_dx >> 1) + roundtab_79[uv_dx & 0x3];
@@ -966,10 +994,18 @@ decoder_bf_interpolate_mbinter(DECODER * dec,
 		b_uv_dy = pMB->b_mvs[0].y + pMB->b_mvs[1].y + pMB->b_mvs[2].y + pMB->b_mvs[3].y;
 
 		if (dec->quarterpel) {
-			uv_dx /= 2;
-			uv_dy /= 2;
-			b_uv_dx /= 2;
-			b_uv_dy /= 2;
+			if (dec->bs_version <= BS_VERSION_BUGGY_CHROMA_ROUNDING) {
+				uv_dx = (uv_dx>>1) | (uv_dx&1);
+				uv_dy = (uv_dy>>1) | (uv_dy&1);
+				b_uv_dx = (b_uv_dx>>1) | (b_uv_dx&1);
+				b_uv_dy = (b_uv_dy>>1) | (b_uv_dy&1);
+			}
+			else {
+				uv_dx /= 2;
+				uv_dy /= 2;
+				b_uv_dx /= 2;
+				b_uv_dy /= 2;
+			}
 		}
 
 		uv_dx = (uv_dx >> 3) + roundtab_76[uv_dx & 0xf];
