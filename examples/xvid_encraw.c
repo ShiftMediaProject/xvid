@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.19 2005-07-05 20:55:12 chl Exp $
+ * $Id: xvid_encraw.c,v 1.20 2005-08-01 10:53:46 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -240,7 +240,7 @@ main(int argc,
 	int stats_type;
 	int stats_quant;
 	int stats_length;
-	int use_assembler = 1;  // this default changed!
+	int use_assembler = 1;
 
 	int input_num;
 	int output_num;
@@ -351,11 +351,9 @@ main(int argc,
 			ARG_OUTPUTFILE = argv[i];
 		} else if (strcmp("-vop_debug", argv[i]) == 0) {
 			ARG_VOPDEBUG = 1;
-		} 
-		else if (strcmp("-grey", argv[i]) == 0) {
+		} else if (strcmp("-grey", argv[i]) == 0) {
 			ARG_GREYSCALE = 1;
-		} 
-		else if (strcmp("-qpel", argv[i]) == 0) {
+		} else if (strcmp("-qpel", argv[i]) == 0) {
 			ARG_QPEL = 1;
 		} else if (strcmp("-gmc", argv[i]) == 0) {
 			ARG_GMC = 1;

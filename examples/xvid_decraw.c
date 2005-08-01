@@ -20,7 +20,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.19 2004-09-04 14:16:24 edgomez Exp $
+ * $Id: xvid_decraw.c,v 1.20 2005-08-01 10:53:46 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -574,21 +574,21 @@ static int write_tga(char *filename, unsigned char *image)
 #else
 	{
 		int i;
-		for (i=0; i<width*height*BPP;i+=BPP) {
+		for (i=0; i<XDIM*YDIM*BPP;i+=BPP) {
 			if (BPP == 1) {
-				fputc(image+i, f);
+				fputc(*(image+i), f);
 			} else if (BPP == 2) {
-				fputc(image+i+1, f);
-				fputc(image+i+0, f);
+				fputc(*(image+i+1), f);
+				fputc(*(image+i+0), f);
 			} else if (BPP == 3) {
-				fputc(image+i+2, f);
-				fputc(image+i+1, f);
-				fputc(image+i+0, f);
+				fputc(*(image+i+2), f);
+				fputc(*(image+i+1), f);
+				fputc(*(image+i+0), f);
 			} else if (BPP == 4) {
-				fputc(image+i+3, f);
-				fputc(image+i+2, f);
-				fputc(image+i+1, f);
-				fputc(image+i+0, f);
+				fputc(*(image+i+3), f);
+				fputc(*(image+i+2), f);
+				fputc(*(image+i+1), f);
+				fputc(*(image+i+0), f);
 			}
 		}
 	}
