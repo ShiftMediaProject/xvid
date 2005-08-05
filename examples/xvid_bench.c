@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.22 2005-06-15 06:07:28 Skal Exp $
+ * $Id: xvid_bench.c,v 1.23 2005-08-05 20:49:23 Skal Exp $
  *
  ****************************************************************************/
 
@@ -905,10 +905,10 @@ void test_sse()
  * test non-zero AC counting
  *********************************************************************/
 
-#define TEST_CBP(FUNC, SRC)               \
+#define TEST_CBP(FUNC, SRC, NB)           \
 t = gettime_usec();                       \
 emms();                                   \
-for(tst=0; tst<nb_tests; ++tst) {         \
+for(tst=0; tst<NB; ++tst) {         \
   cbp = (FUNC)((SRC));                    \
 }                                         \
 emms();                                   \
@@ -917,7 +917,7 @@ t = (gettime_usec()-t ) / nb_tests;
 void test_cbp()
 {
 	const int nb_tests = 10000*speed_ref;
-	int i;
+	int i, n, m;
 	CPU *cpu;
 	DECLARE_ALIGNED_MATRIX(Src1, 6, 64, int16_t, 16);
 	DECLARE_ALIGNED_MATRIX(Src2, 6, 64, int16_t, 16);
@@ -941,19 +941,49 @@ void test_cbp()
 		if (!init_cpu(cpu))
 			continue;
 
-		TEST_CBP(calc_cbp, Src1);
+		TEST_CBP(calc_cbp, Src1, nb_tests);
 		printf("%s -   calc_cbp#1 %.3f usec       cbp=0x%02x %s\n",
 			   cpu->name, t, cbp, (cbp!=0x15)?"| ERROR": "");
-		TEST_CBP(calc_cbp, Src2);
+		TEST_CBP(calc_cbp, Src2, nb_tests);
 		printf("%s -   calc_cbp#2 %.3f usec       cbp=0x%02x %s\n",
 			   cpu->name, t, cbp, (cbp!=0x38)?"| ERROR": "");
-		TEST_CBP(calc_cbp, Src3);
+		TEST_CBP(calc_cbp, Src3, nb_tests);
 		printf("%s -   calc_cbp#3 %.3f usec       cbp=0x%02x %s\n",
 			   cpu->name, t, cbp, (cbp!=0x0f)?"| ERROR": "" );
-		TEST_CBP(calc_cbp, Src4);
+		TEST_CBP(calc_cbp, Src4, nb_tests);
 		printf("%s -   calc_cbp#4 %.3f usec       cbp=0x%02x %s\n",
 			   cpu->name, t, cbp, (cbp!=0x05)?"| ERROR": "" );
 		printf( " --- \n" );
+	}
+
+	for(cpu = cpu_list; cpu->name!=0; ++cpu)  /* bench suggested by Carlo (carlo dot bramix at libero dot it) */
+	{
+		double t;
+		int tst, cbp, err;
+
+		if (!init_cpu(cpu))
+			continue;
+
+    err = 0;
+    for(n=0; n<6; ++n)
+    {
+      for(m=0; m<64; ++m)
+      {
+        for(i=0; i<6*64; ++i)
+          Src1[i] = (i== (m + n*64));
+
+        TEST_CBP(calc_cbp, Src1, 1);
+        if (cbp!= (((m!=0)<<(5-n))))
+        {
+          printf( "%s -   calc_cbp#5: ERROR at pos %d / %d!\n", cpu->name, n, m);
+          err = 1;
+          break;
+        }
+      }
+    }
+    if (!err)
+      printf( " %s -    calc_cbp#5 : OK\n", cpu->name );
+
 	}
 }
 
