@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: driverproc.c,v 1.7 2004-07-25 02:26:57 suxen_drol Exp $
+ * $Id: driverproc.c,v 1.8 2005-09-09 11:34:51 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -147,6 +147,9 @@ BOOL WINAPI DllMain(
 				VIDCF_COMPRESSFRAMES;
 
 			icinfo->dwVersion = 0;
+#if !defined(ICVERSION)
+#define ICVERSION       0x0104
+#endif
 			icinfo->dwVersionICM = ICVERSION;
 			
 			wcscpy(icinfo->szName, XVID_NAME_L); 
