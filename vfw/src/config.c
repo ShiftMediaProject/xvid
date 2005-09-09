@@ -1885,7 +1885,9 @@ BOOL CALLBACK main_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			SetWindowPos(g_hTooltip, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
 			SendMessage(g_hTooltip, TTM_SETDELAYTIME, TTDT_AUTOMATIC, MAKELONG(1500, 0));
+#if (_WIN32_IE >= 0x0300)
 			SendMessage(g_hTooltip, TTM_SETMAXTIPWIDTH, 0, 400);
+#endif
 
 			EnumChildWindows(hDlg, enum_tooltips, 0);
 		}
@@ -1894,7 +1896,12 @@ BOOL CALLBACK main_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		{
 			DWORD ext_style = ListView_GetExtendedListViewStyle(GetDlgItem(hDlg,IDC_ZONES));
-			ext_style |= LVS_EX_FULLROWSELECT | LVS_EX_FLATSB ;
+#if (_WIN32_IE >= 0x0300)
+			ext_style |= LVS_EX_FULLROWSELECT;
+#endif
+#if( _WIN32_IE >= 0x0400 )
+			ext_style |= LVS_EX_FLATSB ;
+#endif
 			ListView_SetExtendedListViewStyle(GetDlgItem(hDlg,IDC_ZONES), ext_style);
 		}
 
