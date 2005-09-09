@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.c,v 1.31 2005-05-23 09:29:43 Skal Exp $
+ * $Id: image.c,v 1.32 2005-09-09 12:18:10 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -1078,9 +1078,9 @@ image_mad(const IMAGE * img1,
 }
 
 void
-output_slice(IMAGE * cur, int std, int width, xvid_image_t* out_frm, int mbx, int mby,int mbl) {
+output_slice(IMAGE * cur, int stride, int width, xvid_image_t* out_frm, int mbx, int mby,int mbl) {
   uint8_t *dY,*dU,*dV,*sY,*sU,*sV;
-  int std2 = std >> 1;
+  int stride2 = stride >> 1;
   int w = mbl << 4, w2,i;
 
   if(w > width)
@@ -1090,24 +1090,24 @@ output_slice(IMAGE * cur, int std, int width, xvid_image_t* out_frm, int mbx, in
   dY = (uint8_t*)out_frm->plane[0] + (mby << 4) * out_frm->stride[0] + (mbx << 4);
   dU = (uint8_t*)out_frm->plane[1] + (mby << 3) * out_frm->stride[1] + (mbx << 3);
   dV = (uint8_t*)out_frm->plane[2] + (mby << 3) * out_frm->stride[2] + (mbx << 3);
-  sY = cur->y + (mby << 4) * std + (mbx << 4);
-  sU = cur->u + (mby << 3) * std2 + (mbx << 3);
-  sV = cur->v + (mby << 3) * std2 + (mbx << 3);
+  sY = cur->y + (mby << 4) * stride + (mbx << 4);
+  sU = cur->u + (mby << 3) * stride2 + (mbx << 3);
+  sV = cur->v + (mby << 3) * stride2 + (mbx << 3);
 
   for(i = 0 ; i < 16 ; i++) {
     memcpy(dY,sY,w);
     dY += out_frm->stride[0];
-    sY += std;
+    sY += stride;
   }
   for(i = 0 ; i < 8 ; i++) {
     memcpy(dU,sU,w2);
     dU += out_frm->stride[1];
-    sU += std2;
+    sU += stride2;
   }
   for(i = 0 ; i < 8 ; i++) {
     memcpy(dV,sV,w2);
     dV += out_frm->stride[2];
-    sV += std2;
+    sV += stride2;
   }
 }
 
