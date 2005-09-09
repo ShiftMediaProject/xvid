@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.h,v 1.14 2005-05-23 09:29:43 Skal Exp $
+ * $Id: image.h,v 1.15 2005-09-09 12:18:10 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -127,7 +127,7 @@ float image_mad(const IMAGE * img1,
 				uint32_t height);
 
 void
-output_slice(IMAGE * cur, int edged_width, int width, xvid_image_t* out_frm, int mbx, int mby,int mbl);
+output_slice(IMAGE * cur, int stride, int width, xvid_image_t* out_frm, int mbx, int mby,int mbl);
 
 
 void
