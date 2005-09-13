@@ -80,6 +80,10 @@ cglobal interpolate8x8_halfpel_h_3dne
 cglobal interpolate8x8_halfpel_v_3dne
 cglobal interpolate8x8_halfpel_hv_3dne
 
+cglobal interpolate8x4_halfpel_h_3dne
+cglobal interpolate8x4_halfpel_v_3dne
+cglobal interpolate8x4_halfpel_hv_3dne
+
 ;-----------------------------------------------------------------------------
 ;
 ; void interpolate8x8_halfpel_h_3dne(uint8_t * const dst,
@@ -406,6 +410,169 @@ ALIGN 16
   lea ecx,[ecx+2*edx]
   COPY_HV_SSE_RND1
   lea ecx,[ecx+2*edx]
+  COPY_HV_SSE_RND1
+  lea ecx,[ecx+2*edx]
+  COPY_HV_SSE_RND1
+  ret
+.endfunc
+
+;-----------------------------------------------------------------------------
+;
+; void interpolate8x4_halfpel_h_3dne(uint8_t * const dst,
+;                       const uint8_t * const src,
+;                       const uint32_t stride,
+;                       const uint32_t rounding);
+;
+;-----------------------------------------------------------------------------
+
+ALIGN 16
+interpolate8x4_halfpel_h_3dne:
+
+  mov eax, [esp+ 8] ; Src
+  mov edx, [esp+12] ; stride
+  dec dword [esp+16]; rounding
+
+  jz .rounding1
+  mov ecx, [esp+ 4] ; Dst
+
+  COPY_H_SSE_RND0 0
+  lea ecx,[ecx+2*edx]
+  COPY_H_SSE_RND0 1
+  ret
+
+.rounding1
+ ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
+  mov ecx, [esp+ 4] ; Dst
+  movq mm7, [mmx_one]
+  COPY_H_SSE_RND1
+  lea ecx, [ecx+2*edx]
+  COPY_H_SSE_RND1
+  ret
+.endfunc
+
+;-----------------------------------------------------------------------------
+;
+; void interpolate8x4_halfpel_v_3dne(uint8_t * const dst,
+;                       const uint8_t * const src,
+;                       const uint32_t stride,
+;                       const uint32_t rounding);
+;
+;-----------------------------------------------------------------------------
+
+ALIGN 16
+interpolate8x4_halfpel_v_3dne:
+
+  mov eax, [esp+ 8] ; Src
+  mov edx, [esp+12] ; stride
+  dec dword [esp+16]; rounding
+
+    ; we process 2 line at a time
+
+  jz .rounding1
+  pxor mm2,mm2
+  movq mm0, [eax]
+  movq mm1, [eax+edx]
+  por mm2, [eax+2*edx]      ; Something like preload (pipelining)
+  mov ecx, [esp+ 4] ; Dst
+  lea eax, [eax+2*edx]
+  pxor mm4, mm4
+  pavgb mm0, mm1
+  pavgb mm1, mm2
+  movq [byte ecx], mm0
+  movq [ecx+edx], mm1
+  
+  pxor mm6, mm6
+  add eax, edx
+  lea ecx, [ecx+2*edx]
+  movq mm3, [byte eax]
+  por mm4, [eax+edx]
+  lea eax, [eax+2*edx]
+  pavgb mm2, mm3
+  pavgb mm3, mm4
+  movq [ecx], mm2
+  movq [ecx+edx], mm3
+  
+  ret
+
+ALIGN 8
+.rounding1
+  pcmpeqb mm0, mm0
+  psubusb mm0, [eax]            ; eax==line0
+  add eax, edx                  ; eax==line1
+  mov ecx, [esp+ 4] ; Dst
+
+  push esi
+
+  pcmpeqb mm1, mm1
+  pcmpeqb mm2, mm2
+  mov esi, mm_minusone
+  psubusb mm1, [byte eax]       ; line1
+  psubusb mm2, [eax+edx]        ; line2
+  lea eax, [eax+2*edx]          ; eax==line3
+  movq mm6, [esi]
+  movq mm7, [esi]
+  pavgb mm0, mm1
+  pavgb mm1, mm2
+  psubusb mm6, mm0
+  psubusb mm7, mm1
+  movq [ecx], mm6               ; store line0
+  movq [ecx+edx], mm7           ; store line1
+  
+  lea ecx, [ecx+2*edx]
+  pcmpeqb mm3, mm3
+  pcmpeqb mm4, mm4
+  psubusb mm3, [eax]            ; line3
+  psubusb mm4, [eax+edx]        ; line4
+  lea eax, [eax+2*edx]          ; eax==line 5
+  pavgb mm2, mm3
+  pavgb mm3, mm4
+  movq mm0, [esi]
+  movq mm1, [esi]
+  psubusb mm0, mm2
+  psubusb mm1, mm3
+  movq [ecx], mm0
+  movq [ecx+edx], mm1
+
+  pop esi
+
+  ret
+
+.endfunc
+
+;-----------------------------------------------------------------------------
+;
+; void interpolate8x4_halfpel_hv_3dne(uint8_t * const dst,
+;                       const uint8_t * const src,
+;                       const uint32_t stride,
+;                       const uint32_t rounding);
+;
+;
+;-----------------------------------------------------------------------------
+
+ALIGN 16
+interpolate8x4_halfpel_hv_3dne:
+  mov eax, [esp+ 8]     ; Src
+  mov edx, [esp+12]     ; stride
+  dec dword [esp+16]    ; rounding
+
+    ; loop invariants: mm2=(i+j+1)/2  and  mm3= i^j
+  movq mm2, [eax]
+  movq mm3, [eax+1]
+  movq mm6, mm2
+  pavgb mm2, mm3
+  pxor mm3, mm6         ; mm2/mm3 ready
+  mov ecx, [esp+ 4]     ; Dst
+  movq mm7, [mmx_one]
+
+  jz near .rounding1
+  lea ebp,[byte ebp]
+  COPY_HV_SSE_RND0
+  lea ecx,[ecx+2*edx]
+  COPY_HV_SSE_RND0
+  ret
+
+ALIGN 16
+.rounding1
   COPY_HV_SSE_RND1
   lea ecx,[ecx+2*edx]
   COPY_HV_SSE_RND1

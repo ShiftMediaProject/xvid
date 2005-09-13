@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: mem_transfer_3dne.asm,v 1.6 2004-08-29 10:02:38 edgomez Exp $
+; * $Id: mem_transfer_3dne.asm,v 1.7 2005-09-13 12:12:15 suxen_drol Exp $
 ; *
 ; ***************************************************************************/
 
@@ -80,6 +80,7 @@ cglobal transfer_8to16subro_3dne
 cglobal transfer_8to16sub2_3dne
 cglobal transfer_16to8add_3dne
 cglobal transfer8x8_copy_3dne
+cglobal transfer8x4_copy_3dne
 
 ;-----------------------------------------------------------------------------
 ;
@@ -431,6 +432,27 @@ transfer8x8_copy_3dne:
   lea ecx,[byte ecx+2*edx]
   COPY_8_TO_8
   lea ecx,[byte ecx+2*edx]
+  COPY_8_TO_8
+  lea ecx,[byte ecx+2*edx]
+  COPY_8_TO_8
+  ret
+.endfunc
+
+;-----------------------------------------------------------------------------
+;
+; void transfer8x4_copy_3dne(uint8_t * const dst,
+;					const uint8_t * const src,
+;					const uint32_t stride);
+;
+;
+;-----------------------------------------------------------------------------
+
+ALIGN 16
+transfer8x4_copy_3dne:
+  mov eax, [esp+ 8] ; Src
+  mov edx, [esp+12] ; Stride
+  mov ecx, [esp+ 4] ; Dst
+
   COPY_8_TO_8
   lea ecx,[byte ecx+2*edx]
   COPY_8_TO_8

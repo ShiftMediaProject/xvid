@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbprediction.c,v 1.16 2004-06-12 13:02:12 edgomez Exp $
+ * $Id: mbprediction.c,v 1.17 2005-09-13 12:12:15 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -522,6 +522,85 @@ get_pmv2(const MACROBLOCK * const mbs,
 	}
 
 	return pmv[last_cand];	/* no point calculating median mv */
+}
+
+VECTOR get_pmv2_interlaced(const MACROBLOCK * const mbs,
+   const int mb_width,
+   const int bound,
+   const int x,
+   const int y,
+   const int block)
+{
+  int lx, ly, lz;   /* left */
+  int tx, ty, tz;   /* top */
+  int rx, ry, rz;   /* top-right */
+  int lpos, tpos, rpos;
+  int num_cand = 0, last_cand = 1;
+
+  VECTOR pmv[4];  /* left neighbour, top neighbour, top-right neighbour */
+
+  lx=x-1; ly=y;   lz=1;
+  tx=x;   ty=y-1; tz=2;
+  rx=x+1; ry=y-1; rz=2;
+
+  lpos=lx+ly*mb_width;
+  rpos=rx+ry*mb_width;
+  tpos=tx+ty*mb_width;
+
+  if(lx>=0 && lpos>=bound) 
+  {
+    num_cand++;
+    if(mbs[lpos].field_pred)
+     pmv[1] = mbs[lpos].mvs_avg;
+    else 
+     pmv[1] = mbs[lpos].mvs[lz];
+  }
+  else 
+  {
+    pmv[1] = zeroMV;
+  }  
+
+  if(tpos>=bound) 
+  {
+    num_cand++;
+    last_cand=2;
+    if(mbs[tpos].field_pred)
+     pmv[2] = mbs[tpos].mvs_avg;
+    else
+     pmv[2] = mbs[tpos].mvs[tz];
+  } 
+  else
+  { 
+    pmv[2] = zeroMV;
+  }
+        
+  if(rx<mb_width && rpos>=bound) 
+  {
+    num_cand++;
+    last_cand = 3;
+    if(mbs[rpos].field_pred)
+     pmv[3] = mbs[rpos].mvs_avg;
+    else
+     pmv[3] = mbs[rpos].mvs[rz];
+  } 
+  else
+  { 
+    pmv[3] = zeroMV;
+  }  
+
+  /* If there're more than one candidate, we return the median vector */
+  if(num_cand>1) 
+  {
+    /* set median */
+    pmv[0].x = MIN(MAX(pmv[1].x, pmv[2].x),
+               MIN(MAX(pmv[2].x, pmv[3].x), MAX(pmv[1].x, pmv[3].x)));
+    pmv[0].y = MIN(MAX(pmv[1].y, pmv[2].y),
+               MIN(MAX(pmv[2].y, pmv[3].y), MAX(pmv[1].y, pmv[3].y)));
+          
+    return pmv[0];
+  }
+
+  return pmv[last_cand];  /* no point calculating median mv */
 }
 
 VECTOR

@@ -32,13 +32,15 @@ Spontaneous contributors:
 -------------------------
 
 Benjamin Herrenschmidt <benh@kernel.crashing.org> (first ppc port attempt)
+Christoph Kuehnel <info@intek-darmstadt.de> (field interlaced decoding)
 Daniel Smith <danielsmith@astroboymail.com> (rc code)
 Dirk Knop <dknop@stud.uni-goettingen.de> (vfw)
 Guillaume Morin <guillaume@morinfr.org> (first ppc port attempt)
 MinChen <chenm001@163.com> (lot of work on early CVS versions)
 
+
 Architecture ports:
 -------------------
-Christoph NÃ¤geli <chn@kbw.ch> (new PPC port)
+Christoph Nägeli <chn@kbw.ch> (new PPC port)
 
-Last edited: $Date: 2005-04-04 23:49:37 $
+Last edited: $Date: 2005-09-13 12:12:15 $

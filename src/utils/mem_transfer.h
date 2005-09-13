@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mem_transfer.h,v 1.16 2005-01-05 23:02:15 edgomez Exp $
+ * $Id: mem_transfer.h,v 1.17 2005-09-13 12:12:15 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -282,6 +282,28 @@ extern TRANSFER8X8_COPY transfer8x8_copy_altivec_c;
 #ifdef ARCH_IS_X86_64
 extern TRANSFER8X8_COPY transfer8x8_copy_x86_64;
 #endif
+
+/*****************************************************************************
+ * transfer8to4 + no op
+ ****************************************************************************/
+
+typedef void (TRANSFER8X4_COPY) (uint8_t * const dst,
+								 const uint8_t * const src,
+								 const uint32_t stride);
+
+typedef TRANSFER8X4_COPY *TRANSFER8X4_COPY_PTR;
+
+/* Our global function pointer - Initialized in xvid.c */
+extern TRANSFER8X4_COPY_PTR transfer8x4_copy;
+
+/* Implemented functions */
+extern TRANSFER8X4_COPY transfer8x4_copy_c;
+
+#ifdef ARCH_IS_IA32
+extern TRANSFER8X4_COPY transfer8x4_copy_mmx;
+extern TRANSFER8X4_COPY transfer8x4_copy_3dne;
+#endif
+
 
 static __inline void
 transfer16x16_copy(uint8_t * const dst,

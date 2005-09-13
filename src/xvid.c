@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.63 2005-05-23 12:06:02 Skal Exp $
+ * $Id: xvid.c,v 1.64 2005-09-13 12:12:15 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -213,6 +213,7 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 	transfer_8to16sub2ro = transfer_8to16sub2ro_c;
 	transfer_16to8add  = transfer_16to8add_c;
 	transfer8x8_copy   = transfer8x8_copy_c;
+	transfer8x4_copy   = transfer8x4_copy_c;
 
 	/* Interlacing functions */
 	MBFieldTest = MBFieldTest_c;
@@ -221,6 +222,10 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 	interpolate8x8_halfpel_h  = interpolate8x8_halfpel_h_c;
 	interpolate8x8_halfpel_v  = interpolate8x8_halfpel_v_c;
 	interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_c;
+
+	interpolate8x4_halfpel_h  = interpolate8x4_halfpel_h_c;
+	interpolate8x4_halfpel_v  = interpolate8x4_halfpel_v_c;
+	interpolate8x4_halfpel_hv = interpolate8x4_halfpel_hv_c;
 
 	interpolate8x8_halfpel_add = interpolate8x8_halfpel_add_c;
 	interpolate8x8_halfpel_h_add = interpolate8x8_halfpel_h_add_c;
@@ -340,6 +345,7 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 		transfer_8to16sub2 = transfer_8to16sub2_mmx;
 		transfer_16to8add  = transfer_16to8add_mmx;
 		transfer8x8_copy   = transfer8x8_copy_mmx;
+		transfer8x4_copy   = transfer8x4_copy_mmx;
 
 		/* Interlacing Functions */
 		MBFieldTest = MBFieldTest_mmx;
@@ -348,6 +354,10 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 		interpolate8x8_halfpel_h  = interpolate8x8_halfpel_h_mmx;
 		interpolate8x8_halfpel_v  = interpolate8x8_halfpel_v_mmx;
 		interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_mmx;
+
+		interpolate8x4_halfpel_h  = interpolate8x4_halfpel_h_mmx;
+		interpolate8x4_halfpel_v  = interpolate8x4_halfpel_v_mmx;
+		interpolate8x4_halfpel_hv = interpolate8x4_halfpel_hv_mmx;
 
 		interpolate8x8_halfpel_add = interpolate8x8_halfpel_add_mmx;
 		interpolate8x8_halfpel_h_add = interpolate8x8_halfpel_h_add_mmx;
@@ -416,6 +426,10 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 		interpolate8x8_halfpel_v  = interpolate8x8_halfpel_v_xmm;
 		interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_xmm;
 		
+		interpolate8x4_halfpel_h  = interpolate8x4_halfpel_h_xmm;
+		interpolate8x4_halfpel_v  = interpolate8x4_halfpel_v_xmm;
+		interpolate8x4_halfpel_hv = interpolate8x4_halfpel_hv_xmm;
+		
 		interpolate8x8_halfpel_add = interpolate8x8_halfpel_add_xmm;
 		interpolate8x8_halfpel_h_add = interpolate8x8_halfpel_h_add_xmm;
 		interpolate8x8_halfpel_v_add = interpolate8x8_halfpel_v_add_xmm;
@@ -452,6 +466,10 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 		interpolate8x8_halfpel_h = interpolate8x8_halfpel_h_3dn;
 		interpolate8x8_halfpel_v = interpolate8x8_halfpel_v_3dn;
 		interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_3dn;
+
+		interpolate8x4_halfpel_h = interpolate8x4_halfpel_h_3dn;
+		interpolate8x4_halfpel_v = interpolate8x4_halfpel_v_3dn;
+		interpolate8x4_halfpel_hv = interpolate8x4_halfpel_hv_3dn;
 	}
 
 	if ((cpu_flags & XVID_CPU_3DNOWEXT)) {
@@ -463,6 +481,7 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 		transfer_8to16subro =  transfer_8to16subro_3dne;
 		transfer_16to8add = transfer_16to8add_3dne;
 		transfer8x8_copy = transfer8x8_copy_3dne;
+		transfer8x4_copy = transfer8x4_copy_3dne;
 
 		if ((cpu_flags & XVID_CPU_MMXEXT)) {
 			/* Inverse DCT */
@@ -475,6 +494,10 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 			interpolate8x8_halfpel_h = interpolate8x8_halfpel_h_3dne;
 			interpolate8x8_halfpel_v = interpolate8x8_halfpel_v_3dne;
 			interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_3dne;
+
+			interpolate8x4_halfpel_h = interpolate8x4_halfpel_h_3dne;
+			interpolate8x4_halfpel_v = interpolate8x4_halfpel_v_3dne;
+			interpolate8x4_halfpel_hv = interpolate8x4_halfpel_hv_3dne;
 
 			/* Quantization */
 			quant_h263_intra = quant_h263_intra_3dne;		/* cmov only */
@@ -511,7 +534,7 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 
 		/* DCT operators */
 		fdct = fdct_sse2_skal;
- 		/* idct = idct_sse2_skal; */   /* Is now IEEE1180 and Walken compliant. Disabled until fully tested. */
+    /* idct = idct_sse2_skal; */   /* Is now IEEE1180 and Walken compliant. Disabled until fully tested. */
 
 		/* postprocessing */
 		image_brightness = image_brightness_sse2;

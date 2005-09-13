@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbprediction.h,v 1.24 2004-06-12 13:02:12 edgomez Exp $
+ * $Id: mbprediction.h,v 1.25 2005-09-13 12:12:15 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -65,6 +65,14 @@ void predict_acdc(MACROBLOCK * pMBs,
 
 VECTOR
 get_pmv2(const MACROBLOCK * const mbs,
+		const int mb_width,
+		const int bound,
+		const int x,
+		const int y,
+		const int block);
+
+VECTOR
+get_pmv2_interlaced(const MACROBLOCK * const mbs,
 		const int mb_width,
 		const int bound,
 		const int x,

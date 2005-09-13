@@ -105,6 +105,10 @@ cglobal interpolate8x8_halfpel_h_mmx
 cglobal interpolate8x8_halfpel_v_mmx
 cglobal interpolate8x8_halfpel_hv_mmx
 
+cglobal interpolate8x4_halfpel_h_mmx
+cglobal interpolate8x4_halfpel_v_mmx
+cglobal interpolate8x4_halfpel_hv_mmx
+
 cglobal interpolate8x8_avg4_mmx
 cglobal interpolate8x8_avg2_mmx
 
@@ -328,6 +332,120 @@ interpolate8x8_halfpel_hv_mmx:
   COPY_HV_MMX
   COPY_HV_MMX
   COPY_HV_MMX
+  COPY_HV_MMX
+  COPY_HV_MMX
+  COPY_HV_MMX
+  COPY_HV_MMX
+
+  pop edi
+  pop esi
+
+  ret
+.endfunc
+
+;-----------------------------------------------------------------------------
+;
+; void interpolate8x4_halfpel_h_mmx(uint8_t * const dst,
+;                       const uint8_t * const src,
+;                       const uint32_t stride,
+;                       const uint32_t rounding);
+;
+;-----------------------------------------------------------------------------
+
+ALIGN 16
+interpolate8x4_halfpel_h_mmx:
+
+  push esi
+  push edi
+  mov eax, [esp + 8 + 16]       ; rounding
+
+  movq mm7, [rounding1_mmx + eax * 8]
+
+  mov edi, [esp + 8 + 4]        ; dst
+  mov esi, [esp + 8 + 8]        ; src
+  mov edx, [esp + 8 + 12]       ; stride
+
+  pxor mm6, mm6                 ; zero
+
+  COPY_H_MMX
+  COPY_H_MMX
+  COPY_H_MMX
+  COPY_H_MMX
+
+  pop edi
+  pop esi
+
+  ret
+.endfunc
+
+
+;-----------------------------------------------------------------------------
+;
+; void interpolate8x4_halfpel_v_mmx(uint8_t * const dst,
+;                       const uint8_t * const src,
+;                       const uint32_t stride,
+;                       const uint32_t rounding);
+;
+;-----------------------------------------------------------------------------
+
+ALIGN 16
+interpolate8x4_halfpel_v_mmx:
+
+  push esi
+  push edi
+
+  mov eax, [esp + 8 + 16]       ; rounding
+
+  movq mm7, [rounding1_mmx + eax * 8]
+
+  mov edi, [esp + 8 + 4]        ; dst
+  mov esi, [esp + 8 + 8]        ; src
+  mov edx, [esp + 8 + 12]       ; stride
+
+  pxor mm6, mm6                 ; zero
+
+
+  COPY_V_MMX
+  COPY_V_MMX
+  COPY_V_MMX
+  COPY_V_MMX
+
+  pop edi
+  pop esi
+
+  ret
+.endfunc
+
+
+;-----------------------------------------------------------------------------
+;
+; void interpolate8x4_halfpel_hv_mmx(uint8_t * const dst,
+;                       const uint8_t * const src,
+;                       const uint32_t stride,
+;                       const uint32_t rounding);
+;
+;
+;-----------------------------------------------------------------------------
+
+ALIGN 16
+interpolate8x4_halfpel_hv_mmx:
+
+  push esi
+  push edi
+
+  mov eax, [esp + 8 + 16]   ; rounding
+
+  movq mm7, [rounding2_mmx + eax * 8]
+
+  mov edi, [esp + 8 + 4]    ; dst
+  mov esi, [esp + 8 + 8]    ; src
+
+  mov eax, 8
+
+  pxor mm6, mm6             ; zero
+
+  mov edx, [esp + 8 + 12]   ; stride
+
   COPY_HV_MMX
   COPY_HV_MMX
   COPY_HV_MMX

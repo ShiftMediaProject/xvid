@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: global.h,v 1.23 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: global.h,v 1.24 2005-09-13 12:12:15 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -220,6 +220,8 @@ typedef struct
 
 	VECTOR amv; /* average motion vectors from GMC  */
 	int32_t mcsel;
+	
+	VECTOR  mvs_avg;      //CK average of field motion vectors
 
 /* This structure has become way to big! What to do? Split it up?   */
 

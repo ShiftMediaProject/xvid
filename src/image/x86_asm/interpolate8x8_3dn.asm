@@ -67,6 +67,10 @@ cglobal interpolate8x8_halfpel_h_3dn
 cglobal interpolate8x8_halfpel_v_3dn
 cglobal interpolate8x8_halfpel_hv_3dn
 
+cglobal interpolate8x4_halfpel_h_3dn
+cglobal interpolate8x4_halfpel_v_3dn
+cglobal interpolate8x4_halfpel_hv_3dn
+
 ;-----------------------------------------------------------------------------
 ;
 ; void interpolate8x8_halfpel_h_3dn(uint8_t * const dst,
@@ -350,6 +354,131 @@ interpolate8x8_halfpel_hv_3dn
   add ecx, edx
   COPY_HV_3DN_RND1
   add ecx, edx
+  COPY_HV_3DN_RND1
+  add ecx, edx
+  COPY_HV_3DN_RND1
+  ret
+.endfunc
+
+;-----------------------------------------------------------------------------
+;
+; void interpolate8x4_halfpel_h_3dn(uint8_t * const dst,
+;                       const uint8_t * const src,
+;                       const uint32_t stride,
+;                       const uint32_t rounding);
+;
+;-----------------------------------------------------------------------------
+
+ALIGN 16
+interpolate8x4_halfpel_h_3dn:
+
+  mov eax, [esp+16] ; rounding
+  mov ecx, [esp+ 4] ; Dst
+  test eax, eax
+  mov eax, [esp+ 8] ; Src
+  mov edx, [esp+12] ; stride
+
+  jnz near .rounding1
+
+  COPY_H_3DN_RND0
+  lea ecx, [ecx+2*edx]
+  COPY_H_3DN_RND0
+  ret
+
+.rounding1
+  ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
+  movq mm7, [mmx_one]
+  COPY_H_3DN_RND1
+  lea ecx, [ecx+2*edx]
+  COPY_H_3DN_RND1
+  ret
+.endfunc
+
+
+;-----------------------------------------------------------------------------
+;
+; void interpolate8x4_halfpel_v_3dn(uint8_t * const dst,
+;                       const uint8_t * const src,
+;                       const uint32_t stride,
+;                       const uint32_t rounding);
+;
+;-----------------------------------------------------------------------------
+
+ALIGN 16
+interpolate8x4_halfpel_v_3dn:
+
+  mov eax, [esp+16] ; rounding
+  mov ecx, [esp+ 4] ; Dst
+  test eax,eax
+  mov eax, [esp+ 8] ; Src
+  mov edx, [esp+12] ; stride
+
+    ; we process 2 line at a time
+
+  jnz near .rounding1
+
+  COPY_V_3DN_RND0
+  lea ecx, [ecx+2*edx]
+  COPY_V_3DN_RND0
+  ret
+
+.rounding1
+ ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
+  movq mm7, [mmx_one]
+  movq mm2, [eax]       ; loop invariant
+  add eax, edx
+
+  COPY_V_3DN_RND1
+  lea ecx, [ecx+2*edx]
+  COPY_V_3DN_RND1
+  ret
+.endfunc
+
+
+;-----------------------------------------------------------------------------
+;
+; void interpolate8x4_halfpel_hv_3dn(uint8_t * const dst,
+;                       const uint8_t * const src,
+;                       const uint32_t stride,
+;                       const uint32_t rounding);
+;
+;
+;-----------------------------------------------------------------------------
+
+; The trick is to correct the result of 'pavgusb' with some combination of the
+; lsb's of the 4 input values i,j,k,l, and their intermediate 'pavgusb' (s and t).
+; The boolean relations are:
+;   (i+j+k+l+3)/4 = (s+t+1)/2 - (ij&kl)&st
+;   (i+j+k+l+2)/4 = (s+t+1)/2 - (ij|kl)&st
+;   (i+j+k+l+1)/4 = (s+t+1)/2 - (ij&kl)|st
+;   (i+j+k+l+0)/4 = (s+t+1)/2 - (ij|kl)|st
+; with  s=(i+j+1)/2, t=(k+l+1)/2, ij = i^j, kl = k^l, st = s^t.
+
+ALIGN 16
+interpolate8x4_halfpel_hv_3dn
+  mov eax, [esp+16] ; rounding
+  mov ecx, [esp+ 4] ; Dst
+  test eax, eax
+  mov eax, [esp+ 8] ; Src
+  mov edx, [esp+12] ; stride
+
+  movq mm7, [mmx_one]
+
+    ; loop invariants: mm2=(i+j+1)/2  and  mm3= i^j
+  movq mm2, [eax]
+  movq mm3, [eax+1]
+  movq mm6, mm2
+  pavgusb mm2, mm3
+  pxor mm3, mm6     ; mm2/mm3 ready
+
+  jnz near .rounding1
+
+  COPY_HV_3DN_RND0
+  add ecx, edx
+  COPY_HV_3DN_RND0
+  ret
+
+.rounding1
   COPY_HV_3DN_RND1
   add ecx, edx
   COPY_HV_3DN_RND1
