@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbcoding.c,v 1.51 2005-04-04 23:49:37 edgomez Exp $
+ * $Id: mbcoding.c,v 1.52 2005-09-13 12:12:15 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -1072,6 +1072,14 @@ get_intra_block(Bitstream * bs,
 			break;
 		}
 		coeff += run;
+		
+#ifdef _DEBUG
+		if(coeff>=64) {
+		  DPRINTF(XVID_DEBUG_ERROR,"error: overflow in coefficient index\n");
+		  return;
+		}
+#endif
+
 		block[scan[coeff]] = level;
 
 		DPRINTF(XVID_DEBUG_COEFF,"block[%i] %i\n", scan[coeff], level);
@@ -1113,6 +1121,13 @@ get_inter_block_h263(
 		}
 		p += run;
 
+#ifdef _DEBUG
+		if(p>=64)	{
+		  DPRINTF(XVID_DEBUG_ERROR,"error: overflow in coefficient index\n");
+		  return;
+		}
+#endif
+
 		if (level < 0) {
 			level = level*quant_m_2 - quant_add;
 			block[scan[p]] = (level >= -2048 ? level : -2048);
@@ -1147,6 +1162,13 @@ get_inter_block_mpeg(
 			break;
 		}
 		p += run;
+
+#ifdef _DEBUG
+		if(p>=64)	{
+		  DPRINTF(XVID_DEBUG_ERROR,"error: overflow in coefficient index\n");
+		  return;
+		}
+#endif
 
 		if (level < 0) {
 			level = ((2 * -level + 1) * matrix[scan[p]] * quant) >> 4;

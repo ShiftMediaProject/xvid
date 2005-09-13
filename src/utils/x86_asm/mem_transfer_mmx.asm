@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: mem_transfer_mmx.asm,v 1.16 2004-12-19 13:16:50 syskin Exp $
+; * $Id: mem_transfer_mmx.asm,v 1.17 2005-09-13 12:12:15 suxen_drol Exp $
 ; *
 ; ***************************************************************************/
 
@@ -74,6 +74,7 @@ cglobal transfer_8to16sub2_xmm
 cglobal transfer_8to16sub2ro_xmm
 cglobal transfer_16to8add_mmx
 cglobal transfer8x8_copy_mmx
+cglobal transfer8x4_copy_mmx
 
 ;-----------------------------------------------------------------------------
 ;
@@ -540,6 +541,27 @@ transfer8x8_copy_mmx:
   lea ecx,[ecx+2*edx]
   COPY_8_TO_8
   lea ecx,[ecx+2*edx]
+  COPY_8_TO_8
+  lea ecx,[ecx+2*edx]
+  COPY_8_TO_8
+  ret
+.endfunc
+
+;-----------------------------------------------------------------------------
+;
+; void transfer8x4_copy_mmx(uint8_t * const dst,
+;					const uint8_t * const src,
+;					const uint32_t stride);
+;
+;
+;-----------------------------------------------------------------------------
+
+ALIGN 16
+transfer8x4_copy_mmx:
+  mov ecx, [esp+ 4] ; Dst
+  mov eax, [esp+ 8] ; Src
+  mov edx, [esp+12] ; Stride
+
   COPY_8_TO_8
   lea ecx,[ecx+2*edx]
   COPY_8_TO_8

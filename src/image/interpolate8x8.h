@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: interpolate8x8.h,v 1.15 2005-01-05 23:02:15 edgomez Exp $
+ * $Id: interpolate8x8.h,v 1.16 2005-09-13 12:12:15 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -33,6 +33,12 @@ typedef void (INTERPOLATE8X8) (uint8_t * const dst,
 							   const uint32_t stride,
 							   const uint32_t rounding);
 typedef INTERPOLATE8X8 *INTERPOLATE8X8_PTR;
+
+typedef void (INTERPOLATE8X4) (uint8_t * const dst,
+							   const uint8_t * const src,
+							   const uint32_t stride,
+							   const uint32_t rounding);
+typedef INTERPOLATE8X4 *INTERPOLATE8X4_PTR;
 
 typedef void (INTERPOLATE8X8_AVG2) (uint8_t *dst,
 									const uint8_t *src1,
@@ -78,6 +84,10 @@ extern INTERPOLATE8X8_PTR interpolate8x8_halfpel_h;
 extern INTERPOLATE8X8_PTR interpolate8x8_halfpel_v;
 extern INTERPOLATE8X8_PTR interpolate8x8_halfpel_hv;
 
+extern INTERPOLATE8X4_PTR interpolate8x4_halfpel_h;
+extern INTERPOLATE8X4_PTR interpolate8x4_halfpel_v;
+extern INTERPOLATE8X4_PTR interpolate8x4_halfpel_hv;
+
 /* These functions do: dst = (dst+interpolate(src) + 1)/2
  * Suitable for direct/interpolated bvop prediction block
  * building w/o the need for intermediate interpolated result
@@ -107,6 +117,11 @@ extern INTERPOLATE8X8_6TAP_LOWPASS_PTR interpolate8x8_6tap_lowpass_v;
 INTERPOLATE8X8 interpolate8x8_halfpel_h_c;
 INTERPOLATE8X8 interpolate8x8_halfpel_v_c;
 INTERPOLATE8X8 interpolate8x8_halfpel_hv_c;
+
+INTERPOLATE8X4 interpolate8x4_halfpel_h_c;
+INTERPOLATE8X4 interpolate8x4_halfpel_v_c;
+INTERPOLATE8X4 interpolate8x4_halfpel_hv_c;
+
 INTERPOLATE8X8 interpolate8x8_halfpel_add_c;
 INTERPOLATE8X8 interpolate8x8_halfpel_h_add_c;
 INTERPOLATE8X8 interpolate8x8_halfpel_v_add_c;
@@ -117,6 +132,10 @@ INTERPOLATE8X8 interpolate8x8_halfpel_h_mmx;
 INTERPOLATE8X8 interpolate8x8_halfpel_v_mmx;
 INTERPOLATE8X8 interpolate8x8_halfpel_hv_mmx;
 
+INTERPOLATE8X4 interpolate8x4_halfpel_h_mmx;
+INTERPOLATE8X4 interpolate8x4_halfpel_v_mmx;
+INTERPOLATE8X4 interpolate8x4_halfpel_hv_mmx;
+
 INTERPOLATE8X8 interpolate8x8_halfpel_add_mmx;
 INTERPOLATE8X8 interpolate8x8_halfpel_h_add_mmx;
 INTERPOLATE8X8 interpolate8x8_halfpel_v_add_mmx;
@@ -125,6 +144,10 @@ INTERPOLATE8X8 interpolate8x8_halfpel_hv_add_mmx;
 INTERPOLATE8X8 interpolate8x8_halfpel_h_xmm;
 INTERPOLATE8X8 interpolate8x8_halfpel_v_xmm;
 INTERPOLATE8X8 interpolate8x8_halfpel_hv_xmm;
+
+INTERPOLATE8X4 interpolate8x4_halfpel_h_xmm;
+INTERPOLATE8X4 interpolate8x4_halfpel_v_xmm;
+INTERPOLATE8X4 interpolate8x4_halfpel_hv_xmm;
 
 INTERPOLATE8X8 interpolate8x8_halfpel_add_xmm;
 INTERPOLATE8X8 interpolate8x8_halfpel_h_add_xmm;
@@ -135,9 +158,17 @@ INTERPOLATE8X8 interpolate8x8_halfpel_h_3dn;
 INTERPOLATE8X8 interpolate8x8_halfpel_v_3dn;
 INTERPOLATE8X8 interpolate8x8_halfpel_hv_3dn;
 
+INTERPOLATE8X4 interpolate8x4_halfpel_h_3dn;
+INTERPOLATE8X4 interpolate8x4_halfpel_v_3dn;
+INTERPOLATE8X4 interpolate8x4_halfpel_hv_3dn;
+
 INTERPOLATE8X8 interpolate8x8_halfpel_h_3dne;
 INTERPOLATE8X8 interpolate8x8_halfpel_v_3dne;
 INTERPOLATE8X8 interpolate8x8_halfpel_hv_3dne;
+
+INTERPOLATE8X4 interpolate8x4_halfpel_h_3dne;
+INTERPOLATE8X4 interpolate8x4_halfpel_v_3dne;
+INTERPOLATE8X4 interpolate8x4_halfpel_hv_3dne;
 #endif
 
 #ifdef ARCH_IS_IA64
@@ -211,6 +242,37 @@ INTERPOLATE8X8_6TAP_LOWPASS interpolate8x8_6tap_lowpass_h_altivec_c;
 INTERPOLATE8X8_6TAP_LOWPASS interpolate8x8_6tap_lowpass_h_x86_64;
 INTERPOLATE8X8_6TAP_LOWPASS interpolate8x8_6tap_lowpass_v_x86_64;
 #endif
+
+static __inline void
+interpolate8x4_switch(uint8_t * const cur,
+					  const uint8_t * const refn,
+					  const uint32_t x,
+					  const uint32_t y,
+					  const int32_t dx,
+					  const int dy,
+					  const uint32_t stride,
+					  const uint32_t rounding)
+{
+
+	const uint8_t * const src = refn + (int)((y + (dy>>1)) * stride + x + (dx>>1));
+	uint8_t * const dst = cur + (int)(y * stride + x);
+
+	switch (((dx & 1) << 1) + (dy & 1))	
+	{ /* ((dx%2)?2:0)+((dy%2)?1:0) */
+	case 0:
+		transfer8x4_copy(dst, src, stride);
+		break;
+	case 1:
+		interpolate8x4_halfpel_v(dst, src, stride, rounding);
+		break;
+	case 2:
+		interpolate8x4_halfpel_h(dst, src, stride, rounding);
+		break;
+	default:
+		interpolate8x4_halfpel_hv(dst, src, stride, rounding);
+		break;
+	}
+}
 
 static __inline void
 interpolate8x8_switch(uint8_t * const cur,

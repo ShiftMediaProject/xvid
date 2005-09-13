@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mem_transfer.c,v 1.15 2005-08-01 10:53:46 Isibaar Exp $
+ * $Id: mem_transfer.c,v 1.16 2005-09-13 12:12:15 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -38,6 +38,7 @@ TRANSFER_8TO16SUB2RO_PTR transfer_8to16sub2ro;
 TRANSFER_16TO8ADD_PTR  transfer_16to8add;
 
 TRANSFER8X8_COPY_PTR transfer8x8_copy;
+TRANSFER8X4_COPY_PTR transfer8x4_copy;
 
 #define USE_REFERENCE_C
 
@@ -276,5 +277,29 @@ transfer8x8_copy_c(uint8_t * const dst,
 		{
 			*d++ = *s++;
 		}
+	}
+}
+
+/*
+ * SRC - the source buffer
+ * DST - the destination buffer
+ *
+ * Then the function does the 8->8 bit transfer and this serie of operations :
+ *
+ *    SRC (8bit) = SRC
+ *    DST (8bit) = SRC
+ */
+void
+transfer8x4_copy_c(uint8_t * const dst,
+				   const uint8_t * const src,
+				   const uint32_t stride)
+{
+	uint32_t j;
+
+	for (j = 0; j < 4; j++) {
+		uint32_t *d= (uint32_t*)(dst + j*stride);
+		const uint32_t *s = (const uint32_t*)(src + j*stride);
+		*(d+0) = *(s+0);
+		*(d+1) = *(s+1);
 	}
 }
