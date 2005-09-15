@@ -4,6 +4,7 @@ SRC_DIR = src
 
 SRC_C = \
 	config.c \
+	debug.c \
 
 SRC_CPP = \
 	Configure.cpp \

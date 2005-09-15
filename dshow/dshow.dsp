@@ -108,6 +108,10 @@ SOURCE=.\src\Configure.cpp
 
 SOURCE=.\src\CXvidDecoder.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\src\debug.c
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
