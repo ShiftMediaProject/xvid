@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.cpp,v 1.14 2005-03-14 01:18:20 Isibaar Exp $
+ * $Id: CXvidDecoder.cpp,v 1.15 2005-09-15 10:52:28 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -826,8 +826,9 @@ repeat :
 			return S_FALSE;
 		} else 
 			if (g_config.aspect_ratio == 0 || g_config.aspect_ratio == 1 && forced_ar == false) {
+        
+      if (stats.type != XVID_TYPE_NOTHING) {  /* dont attempt to set vmr aspect ratio if no frame was returned by decoder */
 			// inspired by minolta! works for VMR 7 + 9
-
 			IMediaSample2 *pOut2 = NULL;
 			AM_SAMPLE2_PROPERTIES outProp2;
 			if (SUCCEEDED(pOut->QueryInterface(IID_IMediaSample2, (void **)&pOut2)) &&
@@ -846,6 +847,7 @@ repeat :
 				}
 				pOut2->Release();
 			}
+      }
 		}
 	}
 	else
