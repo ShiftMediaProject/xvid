@@ -1,3 +1,118 @@
+#########################################################################
+# 1.1.0-<beta3/final tbd> (Bitstream Version 39)
+#########################################################################
+nb: this changelog was prepared manually from xvid.org cvs log.
+
+2005-9-15 10:55:29
+	OutputDebugString cleanup (suxen_drol)
+
+2005-9-15 10:52:28
+	bugfix: support for aspect ratio when decoding unpacked b-frames (suxen_drol)
+
+2005-9-13 12:12:15
+	Field interlaced decoding, contributed by Christoph Kuehnel
+
+2005-9-9 12:18:10
+	msvc6 fails upon "std" function argument name; renamed std to stride as a workaround (suxen_drol)
+
+2005-9-9 11:34:51
+	older mingw platform sdk compatibility (suxen_drol)
+
+2005-8-5 20:49:23
+	Added Carlo's optimized cbp calc function, and bench (slightly edited) 
+	(carlo dot bramix at libero dot it)
+
+2005-8-1 18:37:46
+	workaround for wrong chroma rounding in very old XviD builds (Isibaar)
+
+2005-7-11 22:10:24
+	Fix for x86_64 + gcc 4.1.x
+	patch by Martin Drab <drab at kepler dot fjfi dot cvut dot cz>
+
+2005-7-11 9:25:39
+	disable packed-bframes widget for dxn profile (suxen_drol)
+
+2005-7-5 20:55:12
+	added RD modes using the "-vhqmode [0..4]" switch (as in VfW). (Christoph Lampert)
+	Default currently is 0, but 1 (RD_MODEDECISION) might be a good choice.
+
+2005-7-5 20:39:52
+	made "-asm" default behaviour. This has been annoying me for years... (Christoph Lampert)
+	added "-noasm" switch to disable it.
+
+2005-6-22 6:18:14
+	added the '-grey' option, for GREYSCALE coding. (Pascal Massimino)
+
+2005-6-15 6:7:28
+	fix for crc computation on BIG_ENDIAN platforms. 
+	Patch by Paul Kurucz ( ptk9417 at ritvax dot isc dot rit dot edu )
+
+2005-6-14 13:58:21
+	Aligned local arrays in test_transfer() of xvid_bench.c (Pascal Massimino)
+	+ optimized the C-version of mem_transfer.c. You can activate
+	the new code by commenting out the "#define USE_REFERENCE_C"
+	at the beginning of the source file.
+
+2005-5-23 12:6:2
+	Added IEEE-1180 and Walken-compliant SSE2 Idct. (Pascal Massimino)
+	Disabled by default (line 515 of xvid.c) until proven fully
+	safe. Should give binary-equal results than the mmx and xmm
+	versions.
+
+2005-5-23 9:29:43
+	encoder.c: simplify_time() optimized by Euclid.
+
+	bitstream.c: write_video_packet_header() was buggy and
+	kind of obfuscated, as noticed by Sigdrak at free.fr.
+
+	gcc4 warning removal (Edouard Gomez)
+	- No executable shared objects installed
+	  (Do not install the lib as executable. It's no use as the SO has no
+ 	   main symbol anyway, and the static lib is not runnable anyway.)
+	- Statically link xvid_bench with libxvidcore.a
+	- New autoconf garbage removal
+	- Quotes in configure.in
+
+2005-5-17 21:3:32
+	encoder.c: better error handling upon MEM_ERROR
+	bitstream.c: faster log2bin (xvid_bench.c updated)
+	bitstream.c: added unused functions:
+	BitstreamWriteEndOfSequence()
+	BitstreamWriteGroupOfVopHeader()
+	write_video_packet_header()
+	Original input: sigdrak at free.fr and Angela Belda. Thanks.
+
+2005-5-17 15:55:24
+	GCC4 support added (thx to Edouard Gomez)
+
+2005-5-17 15:40:11
+	Added a verification bench 'bench.pl'. (Pascal Massimino)
+	You should customize the 'bench_list.pl' list with
+	the bitstreams you want to check for decoding.
+	Updated 'xvid_bench.c'.
+
+2005-4-18 8:31:42
+	clock() returns time in milliseconds. Thx to Mark L at yahoo dot com.
+	* Writing pointed data is always better than memory
+	   addresses (Patch by GomGom)
+	* Trivial style thingies (Patch by GomGom)
+	* No width and height declared in write_tga bug
+	  (Patch by GomGom, spotted by Paul Kurucz ptk9417 at ritvax.isc.rit.edu)
+
+2005-4-11 14:33:26
+	Fix alignement issue (patch from Alexandre Ganea)
+
+2005-4-10 1:57:45
+	bugfix: correct max bitrate display for slider (suxen_drol)
+	layout: "(kbps)" added to avgerage bitrate labels within calculator dialog (suxen_drol)
+
+2005-4-10 0:27:25
+	improved profile/level id auto-detection (suxen_drol)
+
+
+#########################################################################
+
+
 # Ed.Gomez: This ChangeLog is generated from a personal tree maintained
 # under the arch revision control tool. That's why dates may be skewed. I
 # also removed all my email adresses from the output because they are not
