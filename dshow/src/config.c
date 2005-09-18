@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: config.c,v 1.7 2004-11-22 05:47:26 syskin Exp $
+ * $Id: config.c,v 1.8 2005-09-18 01:34:13 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -53,7 +53,7 @@ void LoadRegistryInfo()
 	REG_GET_N("FlipVideo",  g_config.nFlipVideo, 0)
 	REG_GET_N("Supported_4CC",  g_config.supported_4cc, 0)
 	REG_GET_N("Videoinfo_Compat",  g_config.videoinfo_compat, 0)
-	REG_GET_N("Aspect_Ratio",  g_config.aspect_ratio, 0)
+	REG_GET_N("Decoder_Aspect_Ratio",  g_config.aspect_ratio, 0)
 
 	RegCloseKey(hKey);
 }
@@ -88,7 +88,7 @@ void SaveRegistryInfo()
 	REG_SET_N("FlipVideo", g_config.nFlipVideo);
 	REG_SET_N("Supported_4CC",  g_config.supported_4cc);
 	REG_SET_N("Videoinfo_Compat",  g_config.videoinfo_compat);
-	REG_SET_N("Aspect_Ratio", g_config.aspect_ratio);
+	REG_SET_N("Decoder_Aspect_Ratio", g_config.aspect_ratio);
 
 	RegCloseKey(hKey);
 }
