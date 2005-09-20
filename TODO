@@ -60,6 +60,7 @@ vfw
 * integrated Packed<->ISO converter
 * vfw-ext api to get/set configuration parameters
 * ICM_DECOMPRESSEX_* support
+* warn user before overwriting .pass file
 
 directshow
 * manual aspect ratio setting (1:1, 4:3, 16:9, Custom)
@@ -68,4 +69,4 @@ directshow
 
 
 
-Last edited: $Date: 2004-07-15 11:54:53 $
+Last edited: $Date: 2005-09-20 12:21:59 $
