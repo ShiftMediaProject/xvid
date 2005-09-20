@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.73 2005-09-13 12:12:15 suxen_drol Exp $
+ * $Id: decoder.c,v 1.74 2005-09-20 11:54:11 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -1359,7 +1359,7 @@ decoder_bframe(DECODER * dec,
       MACROBLOCK *mb = &dec->mbs[y * dec->mb_width + x];
       MACROBLOCK *last_mb = &dec->last_mbs[y * dec->mb_width + x];
       const int fcode_max = (fcode_forward>fcode_backward) ? fcode_forward : fcode_backward;
-      uint32_t intra_dc_threshold; /* fake variable */
+      int intra_dc_threshold; /* fake variable */
 
       if (check_resync_marker(bs, fcode_max  - 1)) {
         int bound = read_video_packet_header(bs, dec, fcode_max - 1, &quant,
