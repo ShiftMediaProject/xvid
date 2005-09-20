@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.23 2005-08-05 20:49:23 Skal Exp $
+ * $Id: xvid_bench.c,v 1.24 2005-09-20 11:51:40 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -1447,8 +1447,8 @@ void test_dec(const char *name, int width, int height, int ref_chksum)
 		xframe.bitstream = buf + pos;
 		xframe.length = buf_size - pos;
 		xframe.output.plane[0] = (uint8_t*)(((size_t)yuv_out + 15) & ~15);
-		xframe.output.plane[1] = xframe.output.plane[0] + bps*height;
-		xframe.output.plane[2] = xframe.output.plane[1] + bps/2;
+		xframe.output.plane[1] = (uint8_t*)xframe.output.plane[0] + bps*height;
+		xframe.output.plane[2] = (uint8_t*)xframe.output.plane[1] + bps/2;
 		xframe.output.stride[0] = bps;
 		xframe.output.stride[1] = bps;
 		xframe.output.stride[2] = bps;
@@ -1466,10 +1466,10 @@ void test_dec(const char *name, int width, int height, int ref_chksum)
 		nb++;
 
     for(y=0; y<height/2; ++y) {
-		  chksum = calc_crc(xframe.output.plane[0] + (2*y+0)*bps, width, chksum);
-			chksum = calc_crc(xframe.output.plane[0] + (2*y+1)*bps, width, chksum);
-			chksum = calc_crc(xframe.output.plane[1] + y*bps, width/2, chksum);
-			chksum = calc_crc(xframe.output.plane[2] + y*bps, width/2, chksum);
+		  chksum = calc_crc((uint8_t*)xframe.output.plane[0] + (2*y+0)*bps, width, chksum);
+			chksum = calc_crc((uint8_t*)xframe.output.plane[0] + (2*y+1)*bps, width, chksum);
+			chksum = calc_crc((uint8_t*)xframe.output.plane[1] + y*bps, width/2, chksum);
+			chksum = calc_crc((uint8_t*)xframe.output.plane[2] + y*bps, width/2, chksum);
 		}
 		if (pos==buf_size)
 			break;
