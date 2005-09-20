@@ -20,7 +20,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.20 2005-08-01 10:53:46 Isibaar Exp $
+ * $Id: xvid_decraw.c,v 1.21 2005-09-20 11:19:34 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -72,6 +72,8 @@ static void *dec_handle = NULL;
 #define BUFFER_SIZE (2*1024*1024)
 
 static const int display_buffer_bytes = 0;
+
+#define MIN_USEFUL_BYTES 1
 
 /*****************************************************************************
  *               Local prototypes
@@ -333,7 +335,7 @@ int main(int argc, char *argv[])
 			if (display_buffer_bytes) {
 				printf("Data chunk %d: %d bytes consumed, %d bytes in buffer\n", chunk++, used_bytes, useful_bytes);
 			}
-		} while (xvid_dec_stats.type <= 0 && useful_bytes > 0);
+		} while (xvid_dec_stats.type <= 0 && useful_bytes > MIN_USEFUL_BYTES);
 
 		/* Check if there is a negative number of useful bytes left in buffer
 		 * This means we went too far */
@@ -378,7 +380,7 @@ int main(int argc, char *argv[])
 
 		filenr++;
 
-	} while (useful_bytes>0 || !feof(in_file));
+	} while (useful_bytes>MIN_USEFUL_BYTES || !feof(in_file));
 
 	useful_bytes = 0; /* Empty buffer */
 
