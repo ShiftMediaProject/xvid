@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.24 2005-09-20 11:51:40 suxen_drol Exp $
+ * $Id: xvid_bench.c,v 1.25 2005-09-23 12:53:35 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -923,6 +923,7 @@ void test_cbp()
 	DECLARE_ALIGNED_MATRIX(Src2, 6, 64, int16_t, 16);
 	DECLARE_ALIGNED_MATRIX(Src3, 6, 64, int16_t, 16);
 	DECLARE_ALIGNED_MATRIX(Src4, 6, 64, int16_t, 16);
+  DECLARE_ALIGNED_MATRIX(Src5, 6, 64, int16_t, 16);
 
 	printf( "\n =====  test cbp =====\n" );
 
@@ -931,6 +932,7 @@ void test_cbp()
 		Src2[i] = (i<3*64);               /* half-full */
 		Src3[i] = ((i+32)>3*64);
 		Src4[i] = (i==(3*64+2) || i==(5*64+9));
+    Src5[i] = ieee_rand(0,1) ? -1 : 1;  /* +/- test */
 	}
 
 	for(cpu = cpu_list; cpu->name!=0; ++cpu)
@@ -953,6 +955,9 @@ void test_cbp()
 		TEST_CBP(calc_cbp, Src4, nb_tests);
 		printf("%s -   calc_cbp#4 %.3f usec       cbp=0x%02x %s\n",
 			   cpu->name, t, cbp, (cbp!=0x05)?"| ERROR": "" );
+		TEST_CBP(calc_cbp, Src5, nb_tests);
+		printf("%s -   calc_cbp#4 %.3f usec       cbp=0x%02x %s\n",
+			   cpu->name, t, cbp, (cbp!=0x3f)?"| ERROR": "" );
 		printf( " --- \n" );
 	}
 
