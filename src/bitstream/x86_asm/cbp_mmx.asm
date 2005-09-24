@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: cbp_mmx.asm,v 1.13 2005-08-05 20:49:23 Skal Exp $
+; * $Id: cbp_mmx.asm,v 1.14 2005-09-24 03:10:37 suxen_drol Exp $
 ; *
 ; ***************************************************************************/
 
@@ -129,8 +129,10 @@ calc_cbp_mmx:
   packssdw mm4, mm5
   packssdw mm0, mm2
   packssdw mm4, mm6
-  pcmpgtw mm0, mm6
-  pcmpgtw mm4, mm6
+  pcmpeqw mm0, mm6
+  pcmpeqw mm4, mm6
+  pcmpeqw mm0, mm6
+  pcmpeqw mm4, mm6
   psrlw mm0, 15
   psrlw mm4, 15
   packuswb mm0, mm4
