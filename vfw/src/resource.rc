@@ -773,7 +773,7 @@ END
 IDD_AR DIALOGEX 0, 0, 211, 215
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Aspect Ratio"
-FONT 8, "MS Shell Dlg", 0, 0, 0x1
+FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "Pixel Aspect Ratio",IDC_PAR,"Button",BS_AUTORADIOBUTTON,
                     13,7,73,10,WS_EX_TRANSPARENT
@@ -782,7 +782,7 @@ BEGIN
     EDITTEXT        IDC_PARX,39,58,36,12,ES_NUMBER
     EDITTEXT        IDC_PARY,100,58,36,12,ES_NUMBER
     PUSHBUTTON      "Default",IDC_AR_DEFAULT,156,21,37,11
-    CONTROL         "Picture Aspect Ratio",IDC_AR,"Button",
+    CONTROL         "Display Aspect Ratio",IDC_AR,"Button",
                     BS_AUTORADIOBUTTON,13,81,81,10,WS_EX_TRANSPARENT
     EDITTEXT        IDC_ARX,39,110,36,12,ES_NUMBER
     EDITTEXT        IDC_ARY,100,110,36,12,ES_NUMBER
