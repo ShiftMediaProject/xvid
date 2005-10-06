@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.20 2005-08-01 10:53:46 Isibaar Exp $
+ * $Id: xvid_encraw.c,v 1.21 2005-10-06 18:28:31 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -45,7 +45,10 @@
 #ifndef WIN32
 #include <sys/time.h>
 #else
+#include <windows.h>
+#include <vfw.h>
 #include <time.h>
+#define XVID_AVI_INPUT
 #endif
 
 #include "xvid.h"
@@ -152,10 +155,14 @@ static int ARG_PACKED = 0;
 static int ARG_DEBUG = 0;
 static int ARG_VOPDEBUG = 0;
 static int ARG_GREYSCALE = 0;
+static int ARG_QTYPE = 0;
+static int ARG_QMATRIX = 0;
 static int ARG_GMC = 0;
 static int ARG_INTERLACING = 0;
 static int ARG_QPEL = 0;
+static int ARG_TURBO = 0;
 static int ARG_VHQMODE = 0;
+static int ARG_BVHQ = 0;
 static int ARG_CLOSED_GOP = 0;
 
 #ifndef READ_PNM
@@ -181,6 +188,13 @@ static char filepath[256] = "./";
 
 /* Internal structures (handles) for encoding and decoding */
 static void *enc_handle = NULL;
+
+static unsigned char qmatrix_intra[64];
+static unsigned char qmatrix_inter[64];
+
+#ifdef XVID_AVI_INPUT
+static PAVISTREAM avi_stream = NULL;
+#endif
 
 /*****************************************************************************
  *               Local prototypes
@@ -339,6 +353,26 @@ main(int argc,
 		} else if (strcmp("-frames", argv[i]) == 0 && i < argc - 1) {
 			i++;
 			ARG_MAXFRAMENR = atoi(argv[i]);
+		} else if (strcmp("-qtype", argv[i]) == 0 && i < argc - 1) {
+			i++;
+			ARG_QTYPE = atoi(argv[i]);
+		} else if (strcmp("-qmatrix", argv[i]) == 0 && i < argc - 1) {
+			FILE *fp = fopen(argv[++i], "rb");
+			if (fp == NULL) {
+				fprintf(stderr, "Error opening input file %s\n", argv[i]);
+				return (-1);
+			}			
+			fseek(fp, 0, SEEK_END);
+			if (ftell(fp) != 128) {
+				fprintf(stderr, "Unexpected size of input file %s\n", argv[i]);
+				return (-1);
+			}			
+
+			fseek(fp, 0, SEEK_SET);
+			fread(qmatrix_intra, 1, 64, fp);
+			fread(qmatrix_inter, 1, 64, fp);
+
+			ARG_QMATRIX = 1;
 		} else if (strcmp("-save", argv[i]) == 0) {
 			ARG_SAVEMPEGSTREAM = 1;
 			ARG_SAVEINDIVIDUAL = 1;
@@ -353,8 +387,12 @@ main(int argc,
 			ARG_VOPDEBUG = 1;
 		} else if (strcmp("-grey", argv[i]) == 0) {
 			ARG_GREYSCALE = 1;
+		} else if (strcmp("-bvhq", argv[i]) == 0) {
+			ARG_BVHQ = 1;
 		} else if (strcmp("-qpel", argv[i]) == 0) {
 			ARG_QPEL = 1;
+		} else if (strcmp("-turbo", argv[i]) == 0) {
+			ARG_TURBO = 1;
 		} else if (strcmp("-gmc", argv[i]) == 0) {
 			ARG_GMC = 1;
 		} else if (strcmp("-interlaced", argv[i]) == 0) {
@@ -377,8 +415,9 @@ main(int argc,
 
 	if (XDIM <= 0 || XDIM >= 4096 || YDIM <= 0 || YDIM >= 4096) {
 		fprintf(stderr,
-				"Trying to retreive width and height from PGM header\n");
-		ARG_INPUTTYPE = 1;		/* pgm */
+				"Trying to retrieve width and height from input header\n");
+		if (!ARG_INPUTTYPE)
+			ARG_INPUTTYPE = 1;		/* pgm */
 	}
 
 	if (ARG_QUALITY < 0 ) {
@@ -400,15 +439,52 @@ main(int argc,
 	if (ARG_INPUTFILE == NULL || strcmp(ARG_INPUTFILE, "stdin") == 0) {
 		in_file = stdin;
 	} else {
+#ifdef XVID_AVI_INPUT
+      if (strcmp(ARG_INPUTFILE+(strlen(ARG_INPUTFILE)-3), "avs")==0 ||
+          strcmp(ARG_INPUTFILE+(strlen(ARG_INPUTFILE)-3), "avi")==0 ||
+		  ARG_INPUTTYPE==2)
+      {
+		  AVISTREAMINFO avi_info;
 
-		in_file = fopen(ARG_INPUTFILE, "rb");
-		if (in_file == NULL) {
-			fprintf(stderr, "Error opening input file %s\n", ARG_INPUTFILE);
-			return (-1);
+		  AVIFileInit();
+		  if (AVIStreamOpenFromFile(&avi_stream, ARG_INPUTFILE, streamtypeVIDEO, 0, OF_READ, NULL) != AVIERR_OK) {
+			  fprintf(stderr, "Can't open stream from file '%s'!\n", ARG_INPUTFILE);
+			  AVIFileExit();
+			  return (-1);
+		  }
+
+		  if(AVIStreamInfo(avi_stream, &avi_info, sizeof(AVISTREAMINFO)) != AVIERR_OK) {
+			  fprintf(stderr, "Can't get stream info from file '%s'!\n", ARG_INPUTFILE);
+			  AVIStreamRelease(avi_stream);
+			  AVIFileExit();
+			  return (-1);
+		  }
+
+	      if (avi_info.fccHandler != MAKEFOURCC('Y', 'V', '1', '2')) {
+			  fprintf(stderr, "Unsupported input colorspace! Only YV12 is supported!\n");
+			  AVIStreamRelease(avi_stream);
+		      AVIFileExit();
+              return (-1);
+		  }
+
+		  XDIM = avi_info.rcFrame.right - avi_info.rcFrame.left;
+		  YDIM = avi_info.rcFrame.bottom - avi_info.rcFrame.top;
+ 		  ARG_FRAMERATE = (float) avi_info.dwRate / (float) avi_info.dwScale;
+
+		  ARG_INPUTTYPE = 2;
+    }
+    else
+#endif
+		{
+			in_file = fopen(ARG_INPUTFILE, "rb");
+			if (in_file == NULL) {
+				fprintf(stderr, "Error opening input file %s\n", ARG_INPUTFILE);
+				return (-1);
+			}
 		}
 	}
 
-	if (ARG_INPUTTYPE) {
+	if (ARG_INPUTTYPE==1) {
 #ifndef READ_PNM
 		if (read_pgmheader(in_file)) {
 #else
@@ -477,7 +553,14 @@ main(int argc,
 		}
 
 		if (!result) {
-			if (ARG_INPUTTYPE) {
+#ifdef XVID_AVI_INPUT
+			if (ARG_INPUTTYPE==2) {
+				/* read avs/avi data (YUV-format) */
+				if(AVIStreamRead(avi_stream, input_num, 1, in_buffer, IMAGE_SIZE(XDIM, YDIM), NULL, NULL ) != AVIERR_OK)
+					result = 1;
+			} else
+#endif
+				if (ARG_INPUTTYPE==1) {
 				/* read PGM data (YUV-format) */
 #ifndef READ_PNM
 				result = read_pgmdata(in_file, in_buffer);
@@ -578,7 +661,7 @@ main(int argc,
 		input_num++;
 
 		/* Read the header if it's pgm stream */
-		if (!result && ARG_INPUTTYPE)
+		if (!result && (ARG_INPUTTYPE==1))
 #ifndef READ_PNM
  			result = read_pgmheader(in_file);
 #else
@@ -620,6 +703,13 @@ main(int argc,
  ****************************************************************************/
 
   release_all:
+
+#ifdef XVID_AVI_INPUT
+	if (avi_stream) {
+		AVIStreamRelease(avi_stream);
+		AVIFileExit();
+	}
+#endif
 
 	if (enc_handle) {
 		result = enc_stop();
@@ -678,7 +768,11 @@ usage()
 	fprintf(stderr, "Usage : xvid_stat [OPTIONS]\n\n");
 	fprintf(stderr, "Input options:\n");
 	fprintf(stderr, " -i      string : input filename (default=stdin)\n");
+#ifdef XVID_AVI_INPUT
+	fprintf(stderr, " -type   integer: input data type (yuv=0, pgm=1, avi/avs=2)\n");
+#else
 	fprintf(stderr, " -type   integer: input data type (yuv=0, pgm=1)\n");
+#endif
 	fprintf(stderr, " -w      integer: frame width ([1.2048])\n");
 	fprintf(stderr, " -h      integer: frame height ([1.2048])\n");
 	fprintf(stderr, " -frames integer: number of frames to encode\n");
@@ -704,21 +798,24 @@ usage()
     fprintf(stderr, " -max_key_interval integer      : maximum keyframe interval\n");
     fprintf(stderr, "\n");
 	fprintf(stderr, "Other options\n");
-	fprintf(stderr, " -asm            : use assembly optmized code\n");
-	fprintf(stderr, " -noasm            : do not use assembly optmized code\n");
-	fprintf(stderr, " -quality integer: quality ([0..%d])\n", ME_ELEMENTS - 1);
-	fprintf(stderr, " -vhqmode integer: level of Rate-Distorsion optimizations ([0..4]) (default=0)\n");
-	fprintf(stderr, " -qpel           : use quarter pixel ME\n");
-	fprintf(stderr, " -gmc            : use global motion compensation\n");
-	fprintf(stderr, " -interlaced     : use interlaced encoding (this is NOT a deinterlacer!)\n");
-	fprintf(stderr, " -packed         : packed mode\n");
-	fprintf(stderr, " -closed_gop     : closed GOP mode\n");
-	fprintf(stderr, " -grey           : grey scale coding (chroma is discarded)\n");
-	fprintf(stderr, " -lumimasking    : use lumimasking algorithm\n");
-	fprintf(stderr, " -stats          : print stats about encoded frames\n");
-	fprintf(stderr, " -debug          : activates xvidcore internal debugging output\n");
-	fprintf(stderr, " -vop_debug      : print some info directly into encoded frames\n");
-	fprintf(stderr, " -help           : prints this help message\n");
+	fprintf(stderr, " -noasm           : do not use assembly optmized code\n");
+	fprintf(stderr, " -turbo           : use turbo presets for higher encoding speed\n");
+	fprintf(stderr, " -quality integer : quality ([0..%d])\n", ME_ELEMENTS - 1);
+	fprintf(stderr, " -vhqmode integer : level of Rate-Distortion optimizations ([0..4]) (default=0)\n");
+	fprintf(stderr, " -bvhq            : use Rate-Distortion optimizations for B-frames too\n");
+	fprintf(stderr, " -qpel            : use quarter pixel ME\n");
+	fprintf(stderr, " -gmc             : use global motion compensation\n");
+	fprintf(stderr, " -qtype   integer : quantization type (H263:0, MPEG4:1) (default=0)\n");
+	fprintf(stderr, " -qmatrix filename: use custom MPEG4 quantization matrix\n");
+	fprintf(stderr, " -interlaced      : use interlaced encoding (this is NOT a deinterlacer!)\n");
+	fprintf(stderr, " -packed          : packed mode\n");
+	fprintf(stderr, " -closed_gop      : closed GOP mode\n");
+	fprintf(stderr, " -grey            : grey scale coding (chroma is discarded)\n");
+	fprintf(stderr, " -lumimasking     : use lumimasking algorithm\n");
+	fprintf(stderr, " -stats           : print stats about encoded frames\n");
+	fprintf(stderr, " -debug           : activates xvidcore internal debugging output\n");
+	fprintf(stderr, " -vop_debug       : print some info directly into encoded frames\n");
+	fprintf(stderr, " -help            : prints this help message\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "NB: You can define %d zones repeating the -z[qw] option as many times as needed.\n", MAX_ZONES);
 	fprintf(stderr, "\n");
@@ -1096,7 +1193,10 @@ enc_main(unsigned char *image,
 	if (image) {
 		xvid_enc_frame.input.plane[0] = image;
 #ifndef READ_PNM
-		xvid_enc_frame.input.csp = XVID_CSP_I420;
+		if (ARG_INPUTTYPE==2)
+			xvid_enc_frame.input.csp = XVID_CSP_YV12;
+		else
+			xvid_enc_frame.input.csp = XVID_CSP_I420;
 		xvid_enc_frame.input.stride[0] = XDIM;
 #else
 		xvid_enc_frame.input.csp = XVID_CSP_BGR;
@@ -1110,6 +1210,8 @@ enc_main(unsigned char *image,
 	xvid_enc_frame.vol_flags = 0;
 	if (ARG_STATS)
 		xvid_enc_frame.vol_flags |= XVID_VOL_EXTRASTATS;
+	if (ARG_QTYPE)
+		xvid_enc_frame.vol_flags |= XVID_VOL_MPEGQUANT;
 	if (ARG_QPEL)
 		xvid_enc_frame.vol_flags |= XVID_VOL_QUARTERPEL;
 	if (ARG_GMC)
@@ -1144,6 +1246,14 @@ enc_main(unsigned char *image,
 		xvid_enc_frame.motion |= XVID_ME_QUARTERPELREFINE16;
 	if (ARG_QPEL && (xvid_enc_frame.vop_flags & XVID_VOP_INTER4V))
 		xvid_enc_frame.motion |= XVID_ME_QUARTERPELREFINE8;
+
+	if (ARG_TURBO)
+		xvid_enc_frame.motion |= XVID_ME_FASTREFINE16 | XVID_ME_FASTREFINE8 | 
+								 XVID_ME_SKIP_DELTASEARCH | XVID_ME_FAST_MODEINTERPOLATE | 
+								 XVID_ME_BFRAME_EARLYSTOP;
+
+	if (ARG_BVHQ) 
+		xvid_enc_frame.vop_flags |= XVID_VOP_RD_BVOP;
 
 	switch (ARG_VHQMODE) /* this is the same code as for vfw */
 	{
@@ -1180,9 +1290,16 @@ enc_main(unsigned char *image,
 		break;
 	}
     
-	/* We don't use special matrices */
-	xvid_enc_frame.quant_intra_matrix = NULL;
-	xvid_enc_frame.quant_inter_matrix = NULL;
+	if (ARG_QMATRIX) {
+		/* We don't use special matrices */
+		xvid_enc_frame.quant_intra_matrix = qmatrix_intra;
+		xvid_enc_frame.quant_inter_matrix = qmatrix_inter;
+	}
+	else {
+		/* We don't use special matrices */
+		xvid_enc_frame.quant_intra_matrix = NULL;
+		xvid_enc_frame.quant_inter_matrix = NULL;
+	}
 
 	/* Encode the frame */
 	ret = xvid_encore(enc_handle, XVID_ENC_ENCODE, &xvid_enc_frame,
