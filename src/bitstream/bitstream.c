@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.c,v 1.53 2005-08-01 10:53:46 Isibaar Exp $
+ * $Id: bitstream.c,v 1.54 2005-10-06 10:46:42 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1076,13 +1076,8 @@ BitstreamWriteVolHeader(Bitstream * const bs,
 	int vol_profile = pParam->profile;
 
 	if ( (pParam->vol_flags & XVID_VOL_QUARTERPEL) ||
-         (pParam->vol_flags & XVID_VOL_GMC) ||
-		 (pParam->vol_flags & XVID_VOL_REDUCED_ENABLE))
+         (pParam->vol_flags & XVID_VOL_GMC))
 		vol_ver_id = 2;
-
-    if ((pParam->vol_flags & XVID_VOL_REDUCED_ENABLE)) {
-        vol_type_ind = VIDOBJLAY_TYPE_ART_SIMPLE;
-    }
 
     if ((pParam->vol_flags & (XVID_VOL_MPEGQUANT|XVID_VOL_QUARTERPEL|XVID_VOL_GMC|XVID_VOL_INTERLACING)) ||
          pParam->max_bframes>0) {
@@ -1242,8 +1237,7 @@ BitstreamWriteVolHeader(Bitstream * const bs,
 
 	if (vol_ver_id != 1) {
 		BitstreamPutBit(bs, 0);		/* newpred_enable */
-		BitstreamPutBit(bs, (pParam->vol_flags & XVID_VOL_REDUCED_ENABLE)?1:0);
-									/* reduced_resolution_vop_enabled */
+		BitstreamPutBit(bs, 0);		/* reduced_resolution_vop_enabled */
 	}
 
 	BitstreamPutBit(bs, 0);		/* scalability */
@@ -1336,9 +1330,6 @@ BitstreamWriteVopHeader(
 
 	if ( (frame->coding_type == P_VOP) || (frame->coding_type == S_VOP) )
 		BitstreamPutBits(bs, frame->rounding_type, 1);
-
-	if ((frame->vol_flags & XVID_VOL_REDUCED_ENABLE))
-		BitstreamPutBit(bs, 0);
 
 	BitstreamPutBits(bs, 0, 3);	/* intra_dc_vlc_threshold */
 

@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.50 2005-04-04 23:49:37 edgomez Exp $
+ * $Id: xvid.h,v 1.51 2005-10-06 10:46:42 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -608,6 +608,7 @@ extern int xvid_encore(void *handle, int opt, void *param1, void *param2);
 #define XVID_VOL_QUARTERPEL     (1<<2) /* enable quarterpel: frames will encoded as quarterpel */
 #define XVID_VOL_GMC            (1<<3) /* enable GMC; frames will be checked for gmc suitability */
 #define XVID_VOL_REDUCED_ENABLE (1<<4) /* enable reduced resolution vops: frames will be checked for rrv suitability */
+									   /* NOTE:  the reduced resolution feature is not supported anymore. This flag will have no effect! */
 #define XVID_VOL_INTERLACING    (1<<5) /* enable interlaced encoding */
 
 
@@ -637,7 +638,7 @@ extern int xvid_encore(void *handle, int opt, void *param1, void *param2);
 
 /* only valid for vol_flags|=XVID_VOL_REDUCED_ENABLED */
 #define XVID_VOP_REDUCED              (1<<11) /* reduced resolution vop */
-
+											  /* NOTE: reduced resolution feature is not supported anymore. This flag will have no effect! */
 
 /*----------------------------------------------------------------------------
  * "Motion" flags
