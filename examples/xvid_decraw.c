@@ -20,7 +20,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.21 2005-09-20 11:19:34 suxen_drol Exp $
+ * $Id: xvid_decraw.c,v 1.22 2005-10-07 15:02:28 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -497,7 +497,7 @@ msecond()
 #else
 	clock_t clk;
 	clk = clock();
-	return(clk * 1000 / CLOCKS_PER_SEC);
+	return(clk * 1000.0 / CLOCKS_PER_SEC);
 #endif
 }
 

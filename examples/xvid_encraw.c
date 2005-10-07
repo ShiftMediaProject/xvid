@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.21 2005-10-06 18:28:31 Isibaar Exp $
+ * $Id: xvid_encraw.c,v 1.22 2005-10-07 15:02:28 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -467,6 +467,8 @@ main(int argc,
               return (-1);
 		  }
 
+      ARG_MAXFRAMENR = min(ARG_MAXFRAMENR, avi_info.dwLength);
+
 		  XDIM = avi_info.rcFrame.right - avi_info.rcFrame.left;
 		  YDIM = avi_info.rcFrame.bottom - avi_info.rcFrame.top;
  		  ARG_FRAMERATE = (float) avi_info.dwRate / (float) avi_info.dwScale;
@@ -754,7 +756,7 @@ msecond()
 	clock_t clk;
 
 	clk = clock();
-	return (clk * 1000 / CLOCKS_PER_SEC);
+	return (clk * 1000.0 / CLOCKS_PER_SEC);
 #endif
 }
 
