@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.cpp,v 1.15 2005-09-15 10:52:28 suxen_drol Exp $
+ * $Id: CXvidDecoder.cpp,v 1.16 2005-10-08 00:58:02 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -82,6 +82,7 @@ const AMOVIESETUP_MEDIATYPE sudInputPinTypes[] =
 	{ &MEDIATYPE_Video, &CLSID_DX50 },
 	{ &MEDIATYPE_Video, &CLSID_DX50_UC },
 	{ &MEDIATYPE_Video, &CLSID_MP4V },
+  { &MEDIATYPE_Video, &CLSID_MP4V_UC },
 };
 
 const AMOVIESETUP_MEDIATYPE sudOutputPinTypes[] =
@@ -395,6 +396,48 @@ HRESULT CXvidDecoder::CheckInputType(const CMediaType * mtIn)
 		}
 		DPRINTF("VIDEOINFOHEADER2 AR: %d:%d", ar_x, ar_y);
 	}
+  else if (*mtIn->FormatType() == FORMAT_MPEG2Video) {
+    MPEG2VIDEOINFO * mpgvi = (MPEG2VIDEOINFO*)mtIn->Format();
+    VIDEOINFOHEADER2 * vih2 = &mpgvi->hdr;
+		hdr = &vih2->bmiHeader;
+		if (g_config.aspect_ratio == 0 || g_config.aspect_ratio == 1) {
+			ar_x = vih2->dwPictAspectRatioX;
+			ar_y = vih2->dwPictAspectRatioY;
+		}
+		DPRINTF("VIDEOINFOHEADER2 AR: %d:%d", ar_x, ar_y);
+
+    /* haali media splitter reports VOL information in the format header */
+
+    if (mpgvi->cbSequenceHeader>0) {
+
+      xvid_dec_stats_t stats;
+	    memset(&stats, 0, sizeof(stats));
+	    stats.version = XVID_VERSION;
+
+	    if (m_create.handle == NULL) {
+		    if (xvid_decore_func == NULL)
+			    return E_FAIL;
+		    if (xvid_decore_func(0, XVID_DEC_CREATE, &m_create, 0) < 0) {
+          DPRINTF("*** XVID_DEC_CREATE error");
+			    return S_FALSE;
+		    }
+	    }
+
+      m_frame.general = 0;
+      m_frame.bitstream = (void*)mpgvi->dwSequenceHeader;
+      m_frame.length = mpgvi->cbSequenceHeader;
+      m_frame.output.csp = XVID_CSP_NULL;
+
+      if (xvid_decore_func(m_create.handle, XVID_DEC_DECODE, &m_frame, &stats) >= 0) {
+        /* honour video dimensions reported in VOL header */
+	      if (stats.type == XVID_TYPE_VOL) {
+          hdr->biWidth = stats.data.vol.width;
+          hdr->biHeight = stats.data.vol.height;
+        }
+      }
+
+    }
+  }
 	else
 	{
 		DPRINTF("Error: Unknown FormatType");
@@ -412,7 +455,7 @@ HRESULT CXvidDecoder::CheckInputType(const CMediaType * mtIn)
 
 	switch(hdr->biCompression)
 	{
-
+  case FOURCC_mp4v:
 	case FOURCC_MP4V:
 		if (!(g_config.supported_4cc & SUPPORT_MP4V)) {
 			CloseLib();
