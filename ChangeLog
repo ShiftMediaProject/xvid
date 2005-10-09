@@ -1,122 +1,557 @@
-#########################################################################
-# 1.1.0-<beta3/final tbd> (Bitstream Version 39)
-#########################################################################
-nb: this changelog was prepared manually from xvid.org cvs log.
-
-2005-9-15 10:55:29
-	OutputDebugString cleanup (suxen_drol)
-
-2005-9-15 10:52:28
-	bugfix: support for aspect ratio when decoding unpacked b-frames (suxen_drol)
-
-2005-9-13 12:12:15
-	Field interlaced decoding, contributed by Christoph Kuehnel
-
-2005-9-9 12:18:10
-	msvc6 fails upon "std" function argument name; renamed std to stride as a workaround (suxen_drol)
-
-2005-9-9 11:34:51
-	older mingw platform sdk compatibility (suxen_drol)
-
-2005-8-5 20:49:23
-	Added Carlo's optimized cbp calc function, and bench (slightly edited) 
-	(carlo dot bramix at libero dot it)
-
-2005-8-1 18:37:46
-	workaround for wrong chroma rounding in very old XviD builds (Isibaar)
-
-2005-7-11 22:10:24
-	Fix for x86_64 + gcc 4.1.x
-	patch by Martin Drab <drab at kepler dot fjfi dot cvut dot cz>
-
-2005-7-11 9:25:39
-	disable packed-bframes widget for dxn profile (suxen_drol)
-
-2005-7-5 20:55:12
-	added RD modes using the "-vhqmode [0..4]" switch (as in VfW). (Christoph Lampert)
-	Default currently is 0, but 1 (RD_MODEDECISION) might be a good choice.
-
-2005-7-5 20:39:52
-	made "-asm" default behaviour. This has been annoying me for years... (Christoph Lampert)
-	added "-noasm" switch to disable it.
-
-2005-6-22 6:18:14
-	added the '-grey' option, for GREYSCALE coding. (Pascal Massimino)
-
-2005-6-15 6:7:28
-	fix for crc computation on BIG_ENDIAN platforms. 
-	Patch by Paul Kurucz ( ptk9417 at ritvax dot isc dot rit dot edu )
-
-2005-6-14 13:58:21
-	Aligned local arrays in test_transfer() of xvid_bench.c (Pascal Massimino)
-	+ optimized the C-version of mem_transfer.c. You can activate
-	the new code by commenting out the "#define USE_REFERENCE_C"
-	at the beginning of the source file.
-
-2005-5-23 12:6:2
-	Added IEEE-1180 and Walken-compliant SSE2 Idct. (Pascal Massimino)
-	Disabled by default (line 515 of xvid.c) until proven fully
-	safe. Should give binary-equal results than the mmx and xmm
-	versions.
-
-2005-5-23 9:29:43
-	encoder.c: simplify_time() optimized by Euclid.
-
-	bitstream.c: write_video_packet_header() was buggy and
-	kind of obfuscated, as noticed by Sigdrak at free.fr.
-
-	gcc4 warning removal (Edouard Gomez)
-	- No executable shared objects installed
-	  (Do not install the lib as executable. It's no use as the SO has no
- 	   main symbol anyway, and the static lib is not runnable anyway.)
-	- Statically link xvid_bench with libxvidcore.a
-	- New autoconf garbage removal
-	- Quotes in configure.in
-
-2005-5-17 21:3:32
-	encoder.c: better error handling upon MEM_ERROR
-	bitstream.c: faster log2bin (xvid_bench.c updated)
-	bitstream.c: added unused functions:
-	BitstreamWriteEndOfSequence()
-	BitstreamWriteGroupOfVopHeader()
-	write_video_packet_header()
-	Original input: sigdrak at free.fr and Angela Belda. Thanks.
-
-2005-5-17 15:55:24
-	GCC4 support added (thx to Edouard Gomez)
-
-2005-5-17 15:40:11
-	Added a verification bench 'bench.pl'. (Pascal Massimino)
-	You should customize the 'bench_list.pl' list with
-	the bitstreams you want to check for decoding.
-	Updated 'xvid_bench.c'.
-
-2005-4-18 8:31:42
-	clock() returns time in milliseconds. Thx to Mark L at yahoo dot com.
-	* Writing pointed data is always better than memory
-	   addresses (Patch by GomGom)
-	* Trivial style thingies (Patch by GomGom)
-	* No width and height declared in write_tga bug
-	  (Patch by GomGom, spotted by Paul Kurucz ptk9417 at ritvax.isc.rit.edu)
-
-2005-4-11 14:33:26
-	Fix alignement issue (patch from Alexandre Ganea)
-
-2005-4-10 1:57:45
-	bugfix: correct max bitrate display for slider (suxen_drol)
-	layout: "(kbps)" added to avgerage bitrate labels within calculator dialog (suxen_drol)
-
-2005-4-10 0:27:25
-	improved profile/level id auto-detection (suxen_drol)
-
-
-#########################################################################
-
-
 # Ed.Gomez: This ChangeLog is generated from a personal tree maintained
 # under the arch revision control tool. That's why dates may be skewed. I
 # also removed all my email adresses from the output because they are not
 # relevant.
+
+2005/10/8 0:58:2, 'suxen_drol'
+	compatibility with haali media splitter:
+	- FORMAT_MPEG2Video support
+	- handle uppercase MP4V fourcc/clsid
+
+2005/10/7 15:2:28, 'suxen_drol'
+	minor xvid_{enc,dec}_raw fixes:
+	- fix clock resolution (thanks yuri khan)
+	- link vfw32.lib for win32 avifile support
+	- honour avifile stream length
+
+2005/10/6 18:28:31, 'Isibaar'
+	- added avi/avs input support
+	- various new options
+
+2005/10/6 10:46:42, 'Isibaar'
+	- Wiped the remainders of RRV encoding support
+	- Marked the RRV flags as obsolete in xvid.h API
+
+2005/10/5 11:20:22, 'suxen_drol'
+	vfw: replace "Picture Aspect Ratio" with "Display Aspect Ratio"
+
+2005/9/24 3:10:37, 'suxen_drol'
+	bugfix: calc_cbp_mmx was ignoring negative coeff case. have replaced "coeff_sum>0" evaluation with "coeff_sum != 0"
+	see http://forum.doom9.org/showthread.php?t=100275 for description of bug.
+
+2005/9/23 12:53:35, 'suxen_drol'
+	+ve/-ve cbp test (to demonstrate fault with current calc_cbp_mmx function
+
+2005/9/20 11:54:11, 'suxen_drol'
+	> > -      uint32_t intra_dc_threshold; /* fake variable */
+	> > +      int intra_dc_threshold; /* fake variable */
+	This patch fixes a warning spotted by gcc 4.0.1, because &intra_dc_threshold
+	is passed to some function which expects a int*, not a uint32_t* (on 64bit this
+	is important, even if this is fake data, the callee could corrupt the stack
+	writing 64bit to a 32bit allocated destination)
+
+2005/9/20 11:51:40, 'suxen_drol'
+	msvc fails on void* arithmetic in xvid_bench.c
+
+2005/9/20 11:19:34, 'suxen_drol'
+	update example documentation to "newer" commandline arguments for encraw/decraw (the arguments were changed ~2003).
+	bugfix: prevent endless loop when useful_bytes==1 within xvid_decraw.c
+
+2005/9/18 1:34:13, 'suxen_drol'
+	renamed dshow "Aspect_Ratio" registry key to "Decoder_Aspect_Ratio", in order to prevent conflict with vfw encoder registry key.
+
+2005/9/15 10:52:28, 'suxen_drol'
+	bugfix: support for aspect ratio when decoding unpacked b-frames
+
+2005/9/15 10:55:29, 'suxen_drol'
+	OutputDebugString cleanup
+
+2005-09-19 19:37:45 GMT	                                	patch-38
+ 
+    Summary:
+      Renamed dshow aspect ratio registry key
+    Revision:
+      xvidcore--head--0.0--patch-38
+ 
+    From pete:
+     * Renamed dshow "Aspect_Ratio" registry key to "Decoder_Aspect_Ratio",
+       in order to prevent conflict with vfw encoder registry key.
+ 
+    modified files:
+     dshow/src/config.c
+
+
+2005-09-15 16:30:59 GMT	                                	patch-37
+
+    Summary:
+      Field interlaced decoding
+    Revision:
+      xvidcore--head--0.0--patch-37
+
+    From Christoph Kuehnel:
+    
+      * decoder.c
+        - Some new defines for DIV
+        - <decoder_mb_decode> modified: had wrong address offsets for
+          interlaced
+        - <decoder_mbinter_field> = new function for interlaced
+        - <get_motion_vector_interlaced> = new function for interlaced
+          motion vector prediction
+        - <decoder_pframe> modified so that it differs between frame and
+          field prediction
+    
+      * global.h
+        - For field motion prediction MACORBLOCK has new member that is the
+          average of field1 and field2 motion vector = <mvs_avg>
+    
+      * xvid.c
+        - For field predicted macroblocks we need new field oriented transfer
+          functions.
+          For colour calculations they may only process 4 lines (one field
+          from the colour macroblock that is 8x8). So I introduced 4 new
+          function pointers:
+          <transfer8x4_copy, interpolate8x4_ ...>
+    
+      * mbcoding.c
+        - _DEBUG code; index is checked against 64
+    
+      * interpolate8x8.[c,h,asm]
+        - New 8x4 functions
+    
+      * mbpredicition.[c,h]
+        - New function <get_pmv2_interlaced> for interlaced prediciton
+          according to spec
+    
+      * mem_transfer.[c,h,asm]
+        - New 8x4 function
+
+    modified files:
+     AUTHORS src/bitstream/mbcoding.c src/decoder.c src/global.h
+     src/image/image.c src/image/image.h src/image/interpolate8x8.c
+     src/image/interpolate8x8.h
+     src/image/x86_asm/interpolate8x8_3dn.asm
+     src/image/x86_asm/interpolate8x8_3dne.asm
+     src/image/x86_asm/interpolate8x8_mmx.asm
+     src/image/x86_asm/interpolate8x8_xmm.asm
+     src/prediction/mbprediction.c src/prediction/mbprediction.h
+     src/utils/mem_transfer.c src/utils/mem_transfer.h
+     src/utils/x86_asm/mem_transfer_3dne.asm
+     src/utils/x86_asm/mem_transfer_mmx.asm src/xvid.c
+     vfw/src/config.c vfw/src/driverproc.c
+
+
+2005-09-15 16:27:07 GMT	                                	patch-36
+
+    Summary:
+      Optimiozed cbp operator on IA32
+    Revision:
+      xvidcore--head--0.0--patch-36
+
+    From carlo dot bramix at libero dot it:
+     - Optimized CBP opeartor for ia32 arch
+
+    modified files:
+     examples/xvid_bench.c src/bitstream/x86_asm/cbp_mmx.asm
+
+
+2005-09-15 16:20:49 GMT	                                	patch-35
+
+    Summary:
+      OutputDebugStream cleanup
+    Revision:
+      xvidcore--head--0.0--patch-35
+
+    From pete:
+     - OutputDebugStream cleanup
+
+    modified files:
+     dshow/dshow.dsp dshow/sources.inc dshow/src/CXvidDecoder.cpp
+     dshow/src/debug.h
+
+
+2005-07-26 23:32:52 GMT	                                	patch-34
+
+    Summary:
+      Long standing error in xvid_decraw for big endian hosts
+    Revision:
+      xvidcore--head--0.0--patch-34
+
+    From ed.gomez, spoted by Paul Kurucz ptk9417 at ritvax.isc.rit.edu
+     * No width and height declared in write_tga bug.
+
+    modified files:
+     examples/xvid_decraw.c
+
+
+2005-07-25 19:45:25 GMT	                                	patch-33
+
+    Summary:
+      Fix big endian tga output for decraw.
+    Revision:
+      xvidcore--head--0.0--patch-33
+
+    From ed.gomez:
+     * Writing pointed data is always better than memory
+       addresses
+
+    modified files:
+     examples/xvid_decraw.c
+
+
+2005-07-14 14:25:43 GMT	                                	patch-32
+
+    Summary:
+      Disable packed-bframes widget for dxn profile
+    Revision:
+      xvidcore--head--0.0--patch-32
+
+    From pete:
+     * Disable packed-bframes widget for dxn profile
+
+    modified files:
+     vfw/src/config.c
+
+
+2005-07-14 14:22:53 GMT	                                	patch-31
+
+    Summary:
+      Fixed qpel for gcc4 and x86_64
+    Revision:
+      xvidcore--head--0.0--patch-31
+
+    From Martin Drab <drab at kepler dot fjfi dot cvut dot cz>
+     * Incomplete type definitions are not supported in GCC4 and newer.
+       This was breaking x86_64.
+    
+    From ed.gomez:
+     * If both generic and x86_64 share 90% of the array declaration,
+       better use an extern macro. Makes teh code clearer.
+
+    modified files:
+     src/image/qpel.c
+
+
+2005-07-14 14:11:24 GMT	                                	patch-30
+
+    Summary:
+      Added VHQ support to xvid_encraw
+    Revision:
+      xvidcore--head--0.0--patch-30
+
+    From skal:
+     * Added VHQ support to xvid_encraw
+
+    modified files:
+     examples/xvid_encraw.c
+
+
+2005-06-26 15:05:01 GMT	                                	patch-29
+
+    Summary:
+      Merge noise
+    Revision:
+      xvidcore--head--0.0--patch-29
+
+    From ed.gomez:
+     - Merge noise forgotten bit. Other small differences exist with
+       the CVS tree, but i consider them to not fullfill the local
+       code style and thus don't fit well...
+
+    modified files:
+     src/dct/idct.h
+
+
+2005-06-26 15:02:05 GMT	                                	patch-28
+
+    Summary:
+      Bench updates
+    Revision:
+      xvidcore--head--0.0--patch-28
+
+    From skal:
+     - Fixed bench for big endian platforms, updated tests
+
+    modified files:
+     examples/bench.pl examples/bench_list.pl examples/xvid_bench.c
+
+
+2005-06-26 14:59:17 GMT	                                	patch-27
+
+    Summary:
+      Optimized C mem transfer functions
+    Revision:
+      xvidcore--head--0.0--patch-27
+
+    From skal:
+     - Optimized C mem transfer funcs, disabled for safety.
+       Enabled by undefining USE_REFERENCE_CODE at the top of
+       the mem_transfer.c file
+
+    modified files:
+     src/utils/mem_transfer.c
+
+
+2005-06-26 14:55:35 GMT	                                	patch-26
+
+    Summary:
+      Optimized gcd
+    Revision:
+      xvidcore--head--0.0--patch-26
+
+    From skal:
+     - Optmized GCD, added test for gcd in xvid_bench
+
+    modified files:
+     examples/xvid_bench.c src/encoder.c
+
+
+2005-06-26 14:51:35 GMT	                                	patch-25
+
+    Summary:
+      Fixed write_video_packet_header
+    Revision:
+      xvidcore--head--0.0--patch-25
+
+    From Sigdrak at free.fr:
+     - Fix write_video_packet_header() which was buggy and kind of obfuscated.
+    
+    From skal:
+     - Fixed log table
+     - Small cleanup
+
+    modified files:
+     src/bitstream/bitstream.c
+
+
+2005-06-26 14:46:23 GMT	                                	patch-24
+
+    Summary:
+      Added greyscale option support in xvid_encraw
+    Revision:
+      xvidcore--head--0.0--patch-24
+
+    Added greyscale option support in xvid_encraw
+    
+
+    modified files:
+     examples/xvid_encraw.c
+
+
+2005-06-26 14:43:42 GMT	                                	patch-23
+
+    Summary:
+      IEEE-1180 SSE2 iDCT implementation
+    Revision:
+      xvidcore--head--0.0--patch-23
+
+    From skal:
+     - Implemented IEEE-1180 SSE2 iDCT. Disabled for safety.
+
+    modified files:
+     src/dct/x86_asm/fdct_sse2_skal.asm src/xvid.c
+
+
+2005-05-18 22:08:12 GMT	                                	patch-22
+
+    Summary:
+      No executable shared objects installed
+    Revision:
+      xvidcore--head--0.0--patch-22
+
+    From ed.gomez:
+     * Do not install the lib as executable. It's no use as the SO has no
+       main symbol anyway, and the static lib is not runnable anyway.
+
+    modified files:
+     build/generic/Makefile
+
+
+2005-05-18 22:05:09 GMT	                                	patch-21
+
+    Summary:
+      Statically link xvid_bench with libxvidcore.a
+    Revision:
+      xvidcore--head--0.0--patch-21
+
+    Statically link xvid_bench with libxvidcore.a
+    
+
+    modified files:
+     examples/Makefile
+
+
+2005-05-18 21:59:27 GMT	                                	patch-20
+
+    Summary:
+      New autoconf garbage removal
+    Revision:
+      xvidcore--head--0.0--patch-20
+
+    New autoconf garbage removal
+    
+
+    modified files:
+     build/generic/bootstrap.sh
+
+
+2005-05-18 21:58:16 GMT	                                	patch-19
+
+    Summary:
+      Quotes in configure.in
+    Revision:
+      xvidcore--head--0.0--patch-19
+
+    Quotes in configure.in
+    
+
+    modified files:
+     build/generic/configure.in
+
+
+2005-05-18 19:40:18 GMT	                                	patch-18
+
+    Summary:
+      Added bitstream helper functions for packets.
+    Revision:
+      xvidcore--head--0.0--patch-18
+
+    From Skal:
+     * Added helper functions for video packets, though they're still unused.
+
+    modified files:
+     src/bitstream/bitstream.c src/bitstream/bitstream.h
+
+
+2005-05-18 19:30:41 GMT	                                	patch-17
+
+    Summary:
+      A few more bench stuff
+    Revision:
+      xvidcore--head--0.0--patch-17
+
+    From Skal:
+     * Added Perl scripts to automate benches.
+     * Worked on xvid_bench tests to cover more code.
+
+    new files:
+     examples/.arch-ids/bench.pl.id
+     examples/.arch-ids/bench_list.pl.id examples/bench.pl
+     examples/bench_list.pl
+
+    modified files:
+     examples/xvid_bench.c
+
+
+2005-05-18 19:22:28 GMT	                                	patch-16
+
+    Summary:
+      Decoder cleanup for memory de/allocation
+    Revision:
+      xvidcore--head--0.0--patch-16
+
+    From Skal:
+     * Memory de/allocation code refactored using goto.
+
+    modified files:
+     src/decoder.c
+
+
+2005-05-11 21:18:41 GMT	                                	patch-15
+
+    Summary:
+      Export only public API for GNU/Linux and Solaris
+    Revision:
+      xvidcore--head--0.0--patch-15
+
+    From ed.gomez:
+     * Use ld version script to hide internal functions.
+
+    new files:
+     build/generic/.arch-ids/libxvidcore.ld.id
+     build/generic/libxvidcore.ld
+
+    modified files:
+     build/generic/Makefile build/generic/configure.in
+
+
+2005-05-11 21:07:00 GMT	                                	patch-14
+
+    Summary:
+      Warnings GCC4
+    Revision:
+      xvidcore--head--0.0--patch-14
+
+    From ed.gomez:
+     * Remove all GCC 4 warnings.
+
+    modified files:
+     src/bitstream/bitstream.c src/bitstream/bitstream.h
+     src/decoder.c src/encoder.c src/image/image.c
+     src/image/image.h src/motion/estimation_common.c
+     src/utils/mbtransquant.c
+
+
+2005-05-11 20:18:49 GMT	                                	patch-13
+
+    Summary:
+      Add support for gcc-4 in configure system
+    Revision:
+      xvidcore--head--0.0--patch-13
+
+    From ed.gomez:
+     * Added gcc 4 detection and CFLAG option filtering for it.
+
+    modified files:
+     build/generic/configure.in
+
+
+2005-05-11 20:07:54 GMT	                                	patch-12
+
+    Summary:
+      
+    Revision:
+      xvidcore--head--0.0--patch-12
+
+    From pete:
+     * bugfix: correct max bitrate display for slider
+       layout: "(kbps)" added to avgerage bitrate labels within calculator
+       dialog
+
+    modified files:
+     vfw/src/config.c vfw/src/resource.rc
+
+
+2005-05-11 20:06:04 GMT	                                	patch-11
+
+    Summary:
+      Fix alignment issue for mem tranfer
+    Revision:
+      xvidcore--head--0.0--patch-11
+
+    From skal:
+     * Fix alignment issue (32 bit reading from non aligned memory)
+       likely for RISC CPUs using the C code.
+
+    modified files:
+     src/utils/mem_transfer.c
+
+
+2005-05-11 20:03:57 GMT	                                	patch-10
+
+    Summary:
+      Get time function right on win32
+    Revision:
+      xvidcore--head--0.0--patch-10
+
+    From Skal:
+     * Get the time function right for win32 (ms precision)
+
+    modified files:
+     examples/xvid_bench.c
+
+
+2005-05-11 20:01:28 GMT	                                	patch-9
+
+    Summary:
+      Better ASP bitstream autodetection
+    Revision:
+      xvidcore--head--0.0--patch-9
+
+    From pete:
+     - Use more flags to determine ASP activation or not.
+
+    modified files:
+     src/bitstream/bitstream.c 
 
 
 #########################################################################
