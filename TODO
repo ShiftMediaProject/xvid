@@ -1,27 +1,36 @@
 TODO
 ====
 
-This file lists the TODO items stll pending for the next release.
+This file lists the TODO items
 
-
-Active Items to work on:
-------------------------
-
-* update vfw & dshow decoder frontends
-  - GUI isn't perfect for vfw
+Outstanding items:
+------------------
+xvidcore
+* MMX MPEG4 quantization precision.
 * update/fix CBR plugin
   - misses target bitrate, bitrate burst in static motion/high motion
     transitions
-* bug hunting (ed.gomez/syskin)
-  - xvidcore is still a place where bugs feel confortable
-* docbook writing (every developer should contribute)
-  - New API has to be documented.
-* MMX MPEG4 quantization is unprecise. This is probably an inherent
-  problem in some MMX opcode precision.
+
+examples
+* profile/level support within xvid_encraw
+
+vfw
+* integrated Packed<->ISO converter
+* vfw-ext api to get/set configuration parameters
+* ICM_DECOMPRESSEX_* support
+* warn user before overwriting .pass file
+* improve ergonomics of user interface
+* user settings management
+
+directshow
+* manual aspect ratio setting (1:1, 4:3, 16:9, Custom)
+* option to display libxvidcore version and bitstream ontop of video
+  hopefuly, using smooth fonts, not image_printf().
 
 
-Already completed items:
-------------------------
+
+Completed items:
+----------------
 
 * remove divx4 api (ed.gomez)
 * remove VOP_TYPE enumerations (peter)
@@ -48,25 +57,8 @@ Already completed items:
 * vfw and dshow link dynamically to xvidcore.dll (syskin)
 * vfw bitrate calculator (peter)
 * dshow configure from command line (peter)
+* bug hunting (ed.gomez/syskin)
+* video buffer verifier (christoph)
 
 
-
-ideas for v1.1 and beyond
--------------------------
-libxvidcore
-* video buffer verifier
-
-vfw
-* integrated Packed<->ISO converter
-* vfw-ext api to get/set configuration parameters
-* ICM_DECOMPRESSEX_* support
-* warn user before overwriting .pass file
-
-directshow
-* manual aspect ratio setting (1:1, 4:3, 16:9, Custom)
-* option to display libxvidcore version and bitstream ontop of video
-  hopefuly, using smooth fonts, not image_printf().
-
-
-
-Last edited: $Date: 2005-09-20 12:21:59 $
+Last edited: $Date: 2005-10-09 07:38:33 $
