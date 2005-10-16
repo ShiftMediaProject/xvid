@@ -10,7 +10,7 @@
 #define IDD_RC_2PASS2                   104
 #define IDD_CREDITS                     105
 #define IDD_CPU                         106
-#define IDD_DEBUG                       107
+#define IDD_ENC                         107
 #define IDD_QUANTMATRIX                 108
 #define IDD_ABOUT                       109
 #define IDD_2PASSALT                    110
@@ -29,6 +29,7 @@
 #define IDD_BITRATE                     127
 #define IDD_LICENSE                     129
 #define IDR_GPL                         131
+#define IDD_COMMON                      132
 #define WIZ_CYDLG                       140
 #define PROP_MIN_CYDLG                  144
 #define PROP_SM_CYDLG                   188
@@ -40,11 +41,9 @@
 #define WIZ_CXDLG                       276
 #define IDC_MODE                        1000
 #define IDC_SLIDER                      1001
-#define IDC_VALUE                       1002
-#define IDC_SLIDER_STATIC               1003
-#define IDC_VALUE_STATIC                1004
-#define IDC_ADVANCED                    1005
-#define IDC_DECODER                     1006
+#define IDC_QUALITY                     1002
+#define IDC_QUALITY_ADV                 1005
+#define IDC_OTHER                       1006
 #define IDC_DEFAULTS                    1007
 #define IDC_PROFILE                     1008
 #define IDC_MOTION                      1009
@@ -314,8 +313,6 @@
 #define IDC_ZONE_CHROMAOPT              1280
 #define IDC_ZONE_BVOPTHRESHOLD_ENABLE   1281
 #define IDC_ZONE_BVOPTHRESHOLD          1282
-#define IDC_VALUE_LABEL                 1283
-#define IDC_SLIDER_LABEL                1284
 #define IDC_ZONE_MODE_WEIGHT            1285
 #define IDC_ZONE_MODE_QUANT             1287
 #define IDC_QUANTTYPE_S                 1290
@@ -432,7 +429,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        132
+#define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1405
 #define _APS_NEXT_SYMED_VALUE           101

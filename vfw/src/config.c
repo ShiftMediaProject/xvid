@@ -153,6 +153,15 @@ const profile_t profiles[] =
 };
 
 
+const quality_t quality_table[] = 
+{
+    /* name                 |  m  vhq  bf cme  tbo  kfi  fdr  | iquant pquant bquant trellis */
+  { "Real-time",               1,  0,  0,  0,  0,  300,  0,     1, 31, 1, 31, 1, 31,   0   },
+  { QUALITY_GENERAL_STRING,    6,  1,  0,  1,  0,  300,  0,     1, 31, 1, 31, 1, 31,   1   },
+};
+
+const int quality_table_num = sizeof(quality_table)/sizeof(quality_t);
+
 typedef struct {
 	char * name;
 	float value;
@@ -261,22 +270,22 @@ static const REG_INT reg_ints[] = {
 	{"audio_size",				&reg.audio_size,				0},
 
 	/* motion */
-	{"motion_search",			&reg.motion_search,				6},
-	{"vhq_mode",				&reg.vhq_mode,					1},
-	{"vhq_bframe",				&reg.vhq_bframe,				0},
-	{"chromame",				&reg.chromame,					1},
-	{"turbo",					&reg.turbo,						0},
-	{"max_key_interval",		&reg.max_key_interval,			300},
-	{"frame_drop_ratio",		&reg.frame_drop_ratio,			0},
+	{"motion_search",			&reg.quality_user.motion_search,				6},
+	{"vhq_mode",				&reg.quality_user.vhq_mode,					1},
+	{"vhq_bframe",				&reg.quality_user.vhq_bframe,				0},
+	{"chromame",				&reg.quality_user.chromame,					1},
+	{"turbo",					&reg.quality_user.turbo,						0},
+	{"max_key_interval",		&reg.quality_user.max_key_interval,			300},
+	{"frame_drop_ratio",		&reg.quality_user.frame_drop_ratio,			0},
 
 	/* quant */
-	{"min_iquant",				&reg.min_iquant,				1},
-	{"max_iquant",				&reg.max_iquant,				31},
-	{"min_pquant",				&reg.min_pquant,				1},
-	{"max_pquant",				&reg.max_pquant,				31},
-	{"min_bquant",				&reg.min_bquant,				1},
-	{"max_bquant",				&reg.max_bquant,				31},
-	{"trellis_quant",			&reg.trellis_quant,				1},
+	{"min_iquant",				&reg.quality_user.min_iquant,				1},
+	{"max_iquant",				&reg.quality_user.max_iquant,				31},
+	{"min_pquant",				&reg.quality_user.min_pquant,				1},
+	{"max_pquant",				&reg.quality_user.max_pquant,				31},
+	{"min_bquant",				&reg.quality_user.min_bquant,				1},
+	{"max_bquant",				&reg.quality_user.max_bquant,				31},
+	{"trellis_quant",			&reg.quality_user.trellis_quant,				1},
 
 	/* debug */
 	{"fourcc_used",				&reg.fourcc_used,				0},
@@ -296,6 +305,7 @@ static const REG_INT reg_ints[] = {
 
 static const REG_STR reg_strs[] = {
 	{"profile",					reg.profile_name,				"(unrestricted)"},
+  {"quality",         reg.quality_name,       QUALITY_GENERAL_STRING},
 	{"stats",					reg.stats,						CONFIG_2PASS_FILE},
 };
 
@@ -383,10 +393,19 @@ void config_reg_get(CONFIG * config)
 		}
 	}
 
+  /* find profile table index */
 	reg.profile = 0;
 	for (i=0; i<sizeof(profiles)/sizeof(profile_t); i++) {
 		if (lstrcmpi(profiles[i].name, reg.profile_name) == 0) {
 			reg.profile = i;
+		}
+	}
+
+  /* find quality table index */
+	reg.quality = quality_table_num;
+	for (i=0; i<quality_table_num; i++) {
+		if (lstrcmpi(quality_table[i].name, reg.quality_name) == 0) {
+			reg.quality = i;
 		}
 	}
 
@@ -456,6 +475,8 @@ void config_reg_set(CONFIG * config)
 
 	/* set string values */
 	strcpy(reg.profile_name, profiles[reg.profile].name);
+  strcpy(reg.quality_name, 
+    reg.quality<quality_table_num ? quality_table[reg.quality].name : QUALITY_USER_STRING);
 	for (i=0 ; i<sizeof(reg_strs)/sizeof(REG_STR); i++) {
 		RegSetValueEx(hKey, reg_strs[i].reg_value, 0, REG_SZ, reg_strs[i].config_str, lstrlen(reg_strs[i].config_str)+1);
 	}
@@ -815,7 +836,7 @@ static void adv_init(HWND hDlg, int idd, CONFIG * config)
 		SendDlgItemMessage(hDlg, IDC_VHQ, CB_ADDSTRING, 0, (LPARAM)"4 - Wide Search");
 		break;
 
-	case IDD_DEBUG :
+	case IDD_ENC :
 		/* force threads disabled */
 		EnableWindow(GetDlgItem(hDlg, IDC_NUMTHREADS_STATIC), FALSE);
 		EnableWindow(GetDlgItem(hDlg, IDC_NUMTHREADS), FALSE);
@@ -1077,7 +1098,7 @@ static void adv_mode(HWND hDlg, int idd, CONFIG * config)
 		EnableDlgWindow(hDlg, IDC_ZONE_BVOPTHRESHOLD, bvops);
 		break;
 
-	case IDD_DEBUG :
+	case IDD_COMMON :
 		cpu_force			= IsDlgChecked(hDlg, IDC_CPU_FORCE);
 		EnableDlgWindow(hDlg, IDC_CPU_MMX,		cpu_force);
 		EnableDlgWindow(hDlg, IDC_CPU_MMXEXT,	cpu_force);
@@ -1184,26 +1205,52 @@ static void adv_upload(HWND hDlg, int idd, CONFIG * config)
 		break;
 
 	case IDD_MOTION :
-		SendDlgItemMessage(hDlg, IDC_MOTION, CB_SETCURSEL, config->motion_search, 0);
-		SendDlgItemMessage(hDlg, IDC_VHQ, CB_SETCURSEL, config->vhq_mode, 0);
-		CheckDlg(hDlg, IDC_VHQ_BFRAME, config->vhq_bframe);
-		CheckDlg(hDlg, IDC_CHROMAME, config->chromame);
-		CheckDlg(hDlg, IDC_TURBO, config->turbo);
-		SetDlgItemInt(hDlg, IDC_FRAMEDROP, config->frame_drop_ratio, FALSE);
-		SetDlgItemInt(hDlg, IDC_MAXKEY, config->max_key_interval, FALSE);
+    {
+    const int userdef = (config->quality==quality_table_num);
+    const quality_t* quality_preset = userdef ? &config->quality_user : &quality_table[config->quality];
+
+		SendDlgItemMessage(hDlg, IDC_MOTION, CB_SETCURSEL, quality_preset->motion_search, 0);
+		SendDlgItemMessage(hDlg, IDC_VHQ, CB_SETCURSEL, quality_preset->vhq_mode, 0);
+		CheckDlg(hDlg, IDC_VHQ_BFRAME, quality_preset->vhq_bframe);
+		CheckDlg(hDlg, IDC_CHROMAME, quality_preset->chromame);
+		CheckDlg(hDlg, IDC_TURBO, quality_preset->turbo);
+		SetDlgItemInt(hDlg, IDC_FRAMEDROP, quality_preset->frame_drop_ratio, FALSE);
+		SetDlgItemInt(hDlg, IDC_MAXKEY, quality_preset->max_key_interval, FALSE);
+
+    EnableDlgWindow(hDlg, IDC_MOTION,     userdef);
+    EnableDlgWindow(hDlg, IDC_VHQ,        userdef);
+    EnableDlgWindow(hDlg, IDC_VHQ_BFRAME, userdef);
+    EnableDlgWindow(hDlg, IDC_CHROMAME,   userdef);
+    EnableDlgWindow(hDlg, IDC_TURBO,      userdef);
+    EnableDlgWindow(hDlg, IDC_FRAMEDROP,  userdef);
+    EnableDlgWindow(hDlg, IDC_MAXKEY,     userdef);
 		break;
+    }
 
 	case IDD_QUANT :
-		SetDlgItemInt(hDlg, IDC_MINIQUANT, config->min_iquant, FALSE);
-		SetDlgItemInt(hDlg, IDC_MAXIQUANT, config->max_iquant, FALSE);
-		SetDlgItemInt(hDlg, IDC_MINPQUANT, config->min_pquant, FALSE);
-		SetDlgItemInt(hDlg, IDC_MAXPQUANT, config->max_pquant, FALSE);
-		SetDlgItemInt(hDlg, IDC_MINBQUANT, config->min_bquant, FALSE);
-		SetDlgItemInt(hDlg, IDC_MAXBQUANT, config->max_bquant, FALSE);
-		CheckDlg(hDlg, IDC_TRELLISQUANT, config->trellis_quant);
-		break;
+    {
+    const int userdef = (config->quality==quality_table_num);
+    const quality_t* quality_preset = userdef ? &config->quality_user : &quality_table[config->quality];
 
-	case IDD_DEBUG :
+    SetDlgItemInt(hDlg, IDC_MINIQUANT, quality_preset->min_iquant, FALSE);
+		SetDlgItemInt(hDlg, IDC_MAXIQUANT, quality_preset->max_iquant, FALSE);
+		SetDlgItemInt(hDlg, IDC_MINPQUANT, quality_preset->min_pquant, FALSE);
+		SetDlgItemInt(hDlg, IDC_MAXPQUANT, quality_preset->max_pquant, FALSE);
+		SetDlgItemInt(hDlg, IDC_MINBQUANT, quality_preset->min_bquant, FALSE);
+		SetDlgItemInt(hDlg, IDC_MAXBQUANT, quality_preset->max_bquant, FALSE);
+		CheckDlg(hDlg, IDC_TRELLISQUANT, quality_preset->trellis_quant);
+
+    EnableDlgWindow(hDlg, IDC_MINIQUANT, userdef);
+    EnableDlgWindow(hDlg, IDC_MAXIQUANT, userdef);
+    EnableDlgWindow(hDlg, IDC_MINPQUANT, userdef);
+    EnableDlgWindow(hDlg, IDC_MAXPQUANT, userdef);
+    EnableDlgWindow(hDlg, IDC_MINBQUANT, userdef);
+    EnableDlgWindow(hDlg, IDC_MAXBQUANT, userdef);
+    EnableDlgWindow(hDlg, IDC_TRELLISQUANT, userdef);
+		break;
+    }
+
+	case IDD_COMMON :
 		CheckDlg(hDlg, IDC_CPU_MMX, (config->cpu & XVID_CPU_MMX));
 		CheckDlg(hDlg, IDC_CPU_MMXEXT, (config->cpu & XVID_CPU_MMXEXT));
 		CheckDlg(hDlg, IDC_CPU_SSE, (config->cpu & XVID_CPU_SSE));
@@ -1213,11 +1260,12 @@ static void adv_upload(HWND hDlg, int idd, CONFIG * config)
 
 		CheckRadioButton(hDlg, IDC_CPU_AUTO, IDC_CPU_FORCE,
 			config->cpu & XVID_CPU_FORCE ? IDC_CPU_FORCE : IDC_CPU_AUTO );
-
-		SetDlgItemInt(hDlg, IDC_NUMTHREADS, config->num_threads, FALSE);
-
-		SendDlgItemMessage(hDlg, IDC_FOURCC, CB_SETCURSEL, config->fourcc_used, 0);
 		set_dlgitem_hex(hDlg, IDC_DEBUG, config->debug);
+    break;
+
+  case IDD_ENC:
+		SetDlgItemInt(hDlg, IDC_NUMTHREADS, config->num_threads, FALSE);
+		SendDlgItemMessage(hDlg, IDC_FOURCC, CB_SETCURSEL, config->fourcc_used, 0);
 		CheckDlg(hDlg, IDC_VOPDEBUG, config->vop_debug);
 		CheckDlg(hDlg, IDC_DISPLAY_STATUS, config->display_status);
 		break;
@@ -1365,36 +1413,40 @@ static void adv_download(HWND hDlg, int idd, CONFIG * config)
 		break;
 
 	case IDD_MOTION :
-		config->motion_search = SendDlgItemMessage(hDlg, IDC_MOTION, CB_GETCURSEL, 0, 0);
-		config->vhq_mode = SendDlgItemMessage(hDlg, IDC_VHQ, CB_GETCURSEL, 0, 0);
-		config->vhq_bframe = IsDlgButtonChecked(hDlg, IDC_VHQ_BFRAME);
-		config->chromame = IsDlgChecked(hDlg, IDC_CHROMAME);
-		config->turbo = IsDlgChecked(hDlg, IDC_TURBO);
+    if (config->quality==quality_table_num) {
+      config->quality_user.motion_search = SendDlgItemMessage(hDlg, IDC_MOTION, CB_GETCURSEL, 0, 0);
+		  config->quality_user.vhq_mode = SendDlgItemMessage(hDlg, IDC_VHQ, CB_GETCURSEL, 0, 0);
+		  config->quality_user.vhq_bframe = IsDlgButtonChecked(hDlg, IDC_VHQ_BFRAME);
+		  config->quality_user.chromame = IsDlgChecked(hDlg, IDC_CHROMAME);
+		  config->quality_user.turbo = IsDlgChecked(hDlg, IDC_TURBO);
 
-		config->frame_drop_ratio = config_get_uint(hDlg, IDC_FRAMEDROP, config->frame_drop_ratio);
+		  config->quality_user.frame_drop_ratio = config_get_uint(hDlg, IDC_FRAMEDROP, config->quality_user.frame_drop_ratio);
 
-		config->max_key_interval = config_get_uint(hDlg, IDC_MAXKEY, config->max_key_interval);
+		  config->quality_user.max_key_interval = config_get_uint(hDlg, IDC_MAXKEY, config->quality_user.max_key_interval);
+    }
 		break;
 
 	case IDD_QUANT :
-		config->min_iquant = config_get_uint(hDlg, IDC_MINIQUANT, config->min_iquant);
-		config->max_iquant = config_get_uint(hDlg, IDC_MAXIQUANT, config->max_iquant);
-		config->min_pquant = config_get_uint(hDlg, IDC_MINPQUANT, config->min_pquant);
-		config->max_pquant = config_get_uint(hDlg, IDC_MAXPQUANT, config->max_pquant);
-		config->min_bquant = config_get_uint(hDlg, IDC_MINBQUANT, config->min_bquant);
-		config->max_bquant = config_get_uint(hDlg, IDC_MAXBQUANT, config->max_bquant);
+    if (config->quality==quality_table_num) {
+		  config->quality_user.min_iquant = config_get_uint(hDlg, IDC_MINIQUANT, config->quality_user.min_iquant);
+		  config->quality_user.max_iquant = config_get_uint(hDlg, IDC_MAXIQUANT, config->quality_user.max_iquant);
+		  config->quality_user.min_pquant = config_get_uint(hDlg, IDC_MINPQUANT, config->quality_user.min_pquant);
+		  config->quality_user.max_pquant = config_get_uint(hDlg, IDC_MAXPQUANT, config->quality_user.max_pquant);
+		  config->quality_user.min_bquant = config_get_uint(hDlg, IDC_MINBQUANT, config->quality_user.min_bquant);
+		  config->quality_user.max_bquant = config_get_uint(hDlg, IDC_MAXBQUANT, config->quality_user.max_bquant);
 
-		CONSTRAINVAL(config->min_iquant, 1, 31);
-		CONSTRAINVAL(config->max_iquant, config->min_iquant, 31);
-		CONSTRAINVAL(config->min_pquant, 1, 31);
-		CONSTRAINVAL(config->max_pquant, config->min_pquant, 31);
-		CONSTRAINVAL(config->min_bquant, 1, 31);
-		CONSTRAINVAL(config->max_bquant, config->min_bquant, 31);
+		  CONSTRAINVAL(config->quality_user.min_iquant, 1, 31);
+		  CONSTRAINVAL(config->quality_user.max_iquant, config->quality_user.min_iquant, 31);
+		  CONSTRAINVAL(config->quality_user.min_pquant, 1, 31);
+		  CONSTRAINVAL(config->quality_user.max_pquant, config->quality_user.min_pquant, 31);
+		  CONSTRAINVAL(config->quality_user.min_bquant, 1, 31);
+		  CONSTRAINVAL(config->quality_user.max_bquant, config->quality_user.min_bquant, 31);
 
-		config->trellis_quant = IsDlgChecked(hDlg, IDC_TRELLISQUANT);
+		  config->quality_user.trellis_quant = IsDlgChecked(hDlg, IDC_TRELLISQUANT);
+    }
 		break;
 
-	case IDD_DEBUG :
+	case IDD_COMMON :
 		config->cpu = 0;
 		config->cpu |= IsDlgChecked(hDlg, IDC_CPU_MMX)	  ? XVID_CPU_MMX : 0;
 		config->cpu |= IsDlgChecked(hDlg, IDC_CPU_MMXEXT)   ? XVID_CPU_MMXEXT : 0;
@@ -1403,11 +1455,12 @@ static void adv_download(HWND hDlg, int idd, CONFIG * config)
 		config->cpu |= IsDlgChecked(hDlg, IDC_CPU_3DNOW)	? XVID_CPU_3DNOW : 0;
 		config->cpu |= IsDlgChecked(hDlg, IDC_CPU_3DNOWEXT) ? XVID_CPU_3DNOWEXT : 0;
 		config->cpu |= IsDlgChecked(hDlg, IDC_CPU_FORCE)	? XVID_CPU_FORCE : 0;
+    config->debug = get_dlgitem_hex(hDlg, IDC_DEBUG, config->debug);
+    break;
 
+  case IDD_ENC :
 		config->num_threads = config_get_uint(hDlg, IDC_NUMTHREADS, config->num_threads);
-
 		config->fourcc_used = SendDlgItemMessage(hDlg, IDC_FOURCC, CB_GETCURSEL, 0, 0);
-		config->debug = get_dlgitem_hex(hDlg, IDC_DEBUG, config->debug);
 		config->vop_debug = IsDlgChecked(hDlg, IDC_VOPDEBUG);
 		config->display_status = IsDlgChecked(hDlg, IDC_DISPLAY_STATUS);
 		break;
@@ -1813,6 +1866,7 @@ static void main_upload(HWND hDlg, CONFIG * config)
 
 	SendDlgItemMessage(hDlg, IDC_PROFILE, CB_SETCURSEL, config->profile, 0);
 	SendDlgItemMessage(hDlg, IDC_MODE, CB_SETCURSEL, config->mode, 0);
+  SendDlgItemMessage(hDlg, IDC_QUALITY, CB_SETCURSEL, config->quality, 0);
 
 	g_use_bitrate = config->use_2pass_bitrate;
 
@@ -1833,6 +1887,7 @@ static void main_download(HWND hDlg, CONFIG * config)
 {
 	config->profile = SendDlgItemMessage(hDlg, IDC_PROFILE, CB_GETCURSEL, 0, 0);
 	config->mode = SendDlgItemMessage(hDlg, IDC_MODE, CB_GETCURSEL, 0, 0);
+  config->quality = SendDlgItemMessage(hDlg, IDC_QUALITY, CB_GETCURSEL, 0, 0);
 
 	if (g_use_bitrate) {
 		config->bitrate = config_get_uint(hDlg, IDC_BITRATE, config->bitrate);
@@ -1852,8 +1907,8 @@ static const int pass1_dlgs[] = { IDD_RC_2PASS1 };
 static const int pass2_dlgs[] = { IDD_RC_2PASS2 };
 static const int bitrate_dlgs[] = { IDD_BITRATE };
 static const int zone_dlgs[] = { IDD_ZONE };
-static const int decoder_dlgs[] = { IDD_DEC };
-static const int adv_dlgs[] = { IDD_MOTION, IDD_QUANT, IDD_DEBUG};
+static const int quality_dlgs[] = { IDD_MOTION, IDD_QUANT };
+static const int other_dlgs[] = { IDD_ENC, IDD_DEC, IDD_COMMON };
 
 
 BOOL CALLBACK main_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1876,6 +1931,10 @@ BOOL CALLBACK main_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #ifdef _DEBUG
 		SendDlgItemMessage(hDlg, IDC_MODE, CB_ADDSTRING, 0, (LPARAM)"Null test speed");
 #endif
+
+		for (i=0; i<quality_table_num; i++)
+			SendDlgItemMessage(hDlg, IDC_QUALITY, CB_ADDSTRING, 0, (LPARAM)quality_table[i].name);
+    SendDlgItemMessage(hDlg, IDC_QUALITY, CB_ADDSTRING, 0, (LPARAM)QUALITY_USER_STRING);
 
 		InitCommonControls();
 
@@ -1995,9 +2054,9 @@ BOOL CALLBACK main_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				main_upload(hDlg, config);
 				break;
 
-			case IDC_DECODER :
+			case IDC_OTHER :
 				main_download(hDlg, config);
-				adv_dialog(hDlg, config, decoder_dlgs, sizeof(decoder_dlgs)/sizeof(int));
+				adv_dialog(hDlg, config, other_dlgs, sizeof(other_dlgs)/sizeof(int));
 				main_mode(hDlg, config);
 				break;
 
@@ -2071,9 +2130,23 @@ BOOL CALLBACK main_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 				break;
 
-			case IDC_ADVANCED :
+			case IDC_QUALITY_ADV :
 				main_download(hDlg, config);
-				adv_dialog(hDlg, config, adv_dlgs, sizeof(adv_dlgs)/sizeof(int));
+
+        if (config->quality < quality_table_num) {
+          int result = MessageBox(hDlg, 
+            "The built-in quality presets are read-only. Would you like to copy the values\n"
+            "of the selected preset into the \"" QUALITY_USER_STRING "\" preset for editing?", 
+            "Question", MB_YESNOCANCEL|MB_DEFBUTTON2|MB_ICONQUESTION);
+
+          if (result==0 || result==IDCANCEL) break;
+          if (result==IDYES) {
+            memcpy(&config->quality_user, &quality_table[config->quality], sizeof(quality_t));
+            config->quality = quality_table_num;
+          }
+        }
+				adv_dialog(hDlg, config, quality_dlgs, sizeof(quality_dlgs)/sizeof(int));
+        SendDlgItemMessage(hDlg, IDC_QUALITY, CB_SETCURSEL, config->quality, 0);
 				break;
 
 			case IDC_DEFAULTS :
