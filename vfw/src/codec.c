@@ -423,6 +423,8 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 	xvid_plugin_2pass2_t pass2;
 	int i;
 	HANDLE hFile;
+  const quality_t* quality_preset = (codec->config.quality==quality_table_num) ?
+    &codec->config.quality_user : &quality_table[codec->config.quality];
 
 	CONFIG tmpCfg; /* if we want to alter config to suit our needs, it shouldn't be visible to user later */
 	memcpy(&tmpCfg, &codec->config, sizeof(CONFIG));
@@ -556,14 +558,14 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 	create.fincr = codec->fincr;
 	create.fbase = codec->fbase;
 
-	create.max_key_interval = codec->config.max_key_interval;
+	create.max_key_interval = quality_preset->max_key_interval;
 
-	create.min_quant[0] = codec->config.min_iquant;
-	create.max_quant[0] = codec->config.max_iquant;
-	create.min_quant[1] = codec->config.min_pquant;
-	create.max_quant[1] = codec->config.max_pquant;
-	create.min_quant[2] = codec->config.min_bquant;
-	create.max_quant[2] = codec->config.max_bquant;
+	create.min_quant[0] = quality_preset->min_iquant;
+	create.max_quant[0] = quality_preset->max_iquant;
+	create.min_quant[1] = quality_preset->min_pquant;
+	create.max_quant[1] = quality_preset->max_pquant;
+	create.min_quant[2] = quality_preset->min_bquant;
+	create.max_quant[2] = quality_preset->max_bquant;
 
 	if ((profiles[codec->config.profile].flags & PROFILE_BVOP) && codec->config.use_bvop) {
 
@@ -593,7 +595,7 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
   if ((profiles[codec->config.profile].flags & PROFILE_DXN))
     create.global |= XVID_GLOBAL_DIVX5_USERDATA;
 
-	create.frame_drop_ratio = codec->config.frame_drop_ratio;
+	create.frame_drop_ratio = quality_preset->frame_drop_ratio;
 
 	create.num_threads = codec->config.num_threads;
 
@@ -681,6 +683,8 @@ LRESULT compress(CODEC * codec, ICCOMPRESS * icc)
 	xvid_enc_frame_t frame;
 	xvid_enc_stats_t stats;
 	int length;
+  const quality_t* quality_preset = (codec->config.quality==quality_table_num) ?
+    &codec->config.quality_user : &quality_table[codec->config.quality];
 	
 	memset(&frame, 0, sizeof(frame));
 	frame.version = XVID_VERSION;
@@ -746,29 +750,29 @@ LRESULT compress(CODEC * codec, ICCOMPRESS * icc)
 	if (codec->config.vop_debug) 
 		frame.vop_flags |= XVID_VOP_DEBUG;
 
-	if (codec->config.trellis_quant) {
+	if (quality_preset->trellis_quant) {
 		frame.vop_flags |= XVID_VOP_TRELLISQUANT;
 	}
 
   if ((profiles[codec->config.profile].flags & PROFILE_4MV)) {
-	  if (codec->config.motion_search > 4)
+	  if (quality_preset->motion_search > 4)
 		  frame.vop_flags |= XVID_VOP_INTER4V;
   }
 
-	if (codec->config.chromame)
+	if (quality_preset->chromame)
 		frame.motion |= XVID_ME_CHROMA_PVOP + XVID_ME_CHROMA_BVOP;
 
-	if (codec->config.turbo)
+	if (quality_preset->turbo)
  		frame.motion |= XVID_ME_FASTREFINE16 | XVID_ME_FASTREFINE8 | 
 						XVID_ME_SKIP_DELTASEARCH | XVID_ME_FAST_MODEINTERPOLATE | 
 						XVID_ME_BFRAME_EARLYSTOP;
 
-	frame.motion |= pmvfast_presets[codec->config.motion_search];
+	frame.motion |= pmvfast_presets[quality_preset->motion_search];
 
-	if (codec->config.vhq_bframe) frame.vop_flags |= XVID_VOP_RD_BVOP;
+	if (quality_preset->vhq_bframe) frame.vop_flags |= XVID_VOP_RD_BVOP;
 
 
-	switch (codec->config.vhq_mode)
+	switch (quality_preset->vhq_mode)
 	{
 	case VHQ_MODE_DECISION :
 		frame.vop_flags |= XVID_VOP_MODEDECISION_RD;
@@ -826,7 +830,7 @@ LRESULT compress(CODEC * codec, ICCOMPRESS * icc)
 	}
 
 	// force keyframe spacing in 2-pass 1st pass
-	if (codec->config.motion_search == 0)
+	if (quality_preset->motion_search == 0)
 		frame.type = XVID_TYPE_IVOP;
 
 	/* frame-based stuff */

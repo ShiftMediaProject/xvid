@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: config.h,v 1.7 2005-03-27 03:59:42 suxen_drol Exp $
+ * $Id: config.h,v 1.8 2005-10-16 00:00:04 suxen_drol Exp $
  *
  ****************************************************************************/
 #ifndef _CONFIG_H_
@@ -97,6 +97,32 @@ typedef struct
 } zone_t;
 
 
+/* this structure represents a quality preset. it encapsulates
+   options from the motion and quantizer config pages. */
+#define QUALITY_GENERAL_STRING  "General purpose"
+#define QUALITY_USER_STRING   	"(User defined)"
+typedef struct {
+  char * name;
+  /* motion */
+  int motion_search;
+	int vhq_mode;
+	int vhq_bframe;
+	int chromame;
+	int turbo;
+	int max_key_interval;
+	int frame_drop_ratio;
+
+	/* quant */
+	int min_iquant;
+	int max_iquant;
+	int min_pquant;
+	int max_pquant;
+	int min_bquant;
+	int max_bquant;
+	int trellis_quant;
+} quality_t;
+
+
 typedef struct
 {
 /********** ATTENTION **********/
@@ -111,6 +137,10 @@ typedef struct
 	/* profile  */
 	char profile_name[MAX_PATH];
 	int profile;			/* used internally; *not* written to registry */
+
+  /* quality preset */
+	char quality_name[MAX_PATH];
+	int quality;			/* used internally; *not* written to registry */
 
 	int quant_type;
 	BYTE qmatrix_intra[64];
@@ -166,23 +196,8 @@ typedef struct
 	int audio_rate;
 	int audio_size;
 
-	/* motion */
-	int motion_search;
-	int vhq_mode;
-	int vhq_bframe;
-	int chromame;
-	int turbo;
-	int max_key_interval;
-	int frame_drop_ratio;
-
-	/* quant */
-	int min_iquant;
-	int max_iquant;
-	int min_pquant;
-	int max_pquant;
-	int min_bquant;
-	int max_bquant;
-	int trellis_quant;
+  /* user defined quality settings */
+  quality_t quality_user;
 
 	/* debug */
 	int num_threads;
@@ -266,6 +281,9 @@ typedef struct
 
 
 extern const profile_t profiles[];
+
+extern const quality_t quality_table[];
+extern const int quality_table_num; /* number of elements in quality table */
 
 
 void config_reg_get(CONFIG * config);

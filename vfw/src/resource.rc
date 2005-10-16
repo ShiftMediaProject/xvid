@@ -78,7 +78,7 @@ END
 IDD_MAIN DIALOGEX 0, 0, 225, 255
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "XviD Configuration"
-FONT 8, "MS Shell Dlg", 0, 0, 0x1
+FONT 8, "MS Shell Dlg"
 BEGIN
     COMBOBOX        IDC_PROFILE,88,16,91,200,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
@@ -98,9 +98,8 @@ BEGIN
     PUSHBUTTON      "Add",IDC_ADD,16,182,36,12
     PUSHBUTTON      "Remove",IDC_REMOVE,56,182,36,12
     PUSHBUTTON      "Zone Options...",IDC_EDIT,155,182,57,12
-    PUSHBUTTON      "Advanced Options...",IDC_ADVANCED,71,210,84,12
     PUSHBUTTON      "Load Defaults",IDC_DEFAULTS,7,238,64,13
-    PUSHBUTTON      "Decoder Options",IDC_DECODER,81,238,64,13
+    PUSHBUTTON      "Other Options...",IDC_OTHER,81,238,64,13
     DEFPUSHBUTTON   "OK",IDOK,156,238,64,13
     GROUPBOX        "Main Settings",IDC_STATIC,7,3,212,202
     LTEXT           "Encoding type:",IDC_STATIC,14,34,70,12,SS_CENTERIMAGE
@@ -109,6 +108,10 @@ BEGIN
     RTEXT           "X",IDC_BITRATE_MAX,125,70,84,8
     GROUPBOX        "Zones",IDC_STATIC,7,98,212,107
     GROUPBOX        "More",IDC_STATIC,7,200,212,29
+    COMBOBOX        IDC_QUALITY,86,210,92,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    PUSHBUTTON      "more...",IDC_QUALITY_ADV,182,210,28,12
+    LTEXT           "Quality preset:",IDC_STATIC,12,210,70,12,SS_CENTERIMAGE
 END
 
 IDD_QUANT DIALOG DISCARDABLE  0, 0, 212, 212
@@ -176,39 +179,20 @@ BEGIN
     GROUPBOX        "Curve compression",IDC_STATIC,7,156,197,51
 END
 
-IDD_DEBUG DIALOG DISCARDABLE  0, 0, 212, 212
+IDD_ENC DIALOG DISCARDABLE  0, 0, 212, 212
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Debug"
+CAPTION "Encoder"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "Automatically detect optimizations",IDC_CPU_AUTO,"Button",
-                    BS_AUTORADIOBUTTON | WS_GROUP,16,20,121,10
-    CONTROL         "Force optimizations",IDC_CPU_FORCE,"Button",
-                    BS_AUTORADIOBUTTON,16,33,76,10
-    CONTROL         "MMX",IDC_CPU_MMX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
-                    28,44,33,10
-    CONTROL         "Integer SSE",IDC_CPU_MMXEXT,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,28,57,54,10
-    CONTROL         "SSE",IDC_CPU_SSE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
-                    28,68,30,10
-    CONTROL         "SSE2",IDC_CPU_SSE2,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,28,81,34,10
-    CONTROL         "3DNow!",IDC_CPU_3DNOW,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,28,92,42,10
-    CONTROL         "3DNow! 2",IDC_CPU_3DNOWEXT,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,28,105,48,10
-    EDITTEXT        IDC_NUMTHREADS,128,132,75,12,ES_AUTOHSCROLL | ES_NUMBER
-    COMBOBOX        IDC_FOURCC,128,148,76,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
+    EDITTEXT        IDC_NUMTHREADS,127,32,75,12,ES_AUTOHSCROLL | ES_NUMBER
+    COMBOBOX        IDC_FOURCC,127,13,76,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
-    EDITTEXT        IDC_DEBUG,128,164,76,12,ES_AUTOHSCROLL
     CONTROL         "Print debug info on each frame",IDC_VOPDEBUG,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,8,180,113,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,51,113,10
     CONTROL         "Display encoding status",IDC_DISPLAY_STATUS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,8,194,91,10
-    GROUPBOX        "Performance optimizations",IDC_STATIC,8,4,196,120
-    LTEXT           "Number of threads:",IDC_NUMTHREADS_STATIC,8,134,61,8
-    LTEXT           "FourCC used:",IDC_STATIC,8,150,80,8,SS_CENTERIMAGE
-    LTEXT           "OutputDebugString debug level:",IDC_STATIC,8,166,104,12
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,64,91,10
+    LTEXT           "Number of threads:",IDC_NUMTHREADS_STATIC,7,34,61,8
+    LTEXT           "FourCC used:",IDC_STATIC,7,15,80,8,SS_CENTERIMAGE
 END
 
 IDD_QUANTMATRIX DIALOG DISCARDABLE  0, 0, 288, 149
@@ -622,7 +606,7 @@ END
 
 IDD_DEC DIALOG DISCARDABLE  0, 0, 212, 212
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Decoder Options"
+CAPTION "Decoder"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "Deblocking Y",IDC_DEC_DY,"Button",BS_AUTOCHECKBOX | 
@@ -773,7 +757,7 @@ END
 IDD_AR DIALOGEX 0, 0, 211, 215
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Aspect Ratio"
-FONT 8, "MS Shell Dlg"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL         "Pixel Aspect Ratio",IDC_PAR,"Button",BS_AUTORADIOBUTTON,
                     13,7,73,10,WS_EX_TRANSPARENT
@@ -866,6 +850,32 @@ BEGIN
     PUSHBUTTON      "OK",IDOK,172,218,84,14
     EDITTEXT        IDC_LICENSE_TEXT,2,2,426,212,ES_MULTILINE | 
                     ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
+END
+
+IDD_COMMON DIALOG DISCARDABLE  0, 0, 212, 212
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Common"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Automatically detect optimizations",IDC_CPU_AUTO,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,16,20,121,10
+    CONTROL         "Force optimizations",IDC_CPU_FORCE,"Button",
+                    BS_AUTORADIOBUTTON,16,33,76,10
+    CONTROL         "MMX",IDC_CPU_MMX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    28,44,33,10
+    CONTROL         "Integer SSE",IDC_CPU_MMXEXT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,28,57,54,10
+    CONTROL         "SSE",IDC_CPU_SSE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    28,68,30,10
+    CONTROL         "SSE2",IDC_CPU_SSE2,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,28,81,34,10
+    CONTROL         "3DNow!",IDC_CPU_3DNOW,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,28,92,42,10
+    CONTROL         "3DNow! 2",IDC_CPU_3DNOWEXT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,28,105,48,10
+    EDITTEXT        IDC_DEBUG,127,133,76,12,ES_AUTOHSCROLL
+    GROUPBOX        "Performance optimizations",-1,8,4,196,120
+    LTEXT           "OutputDebugString debug level:",-1,7,135,104,12
 END
 
 
