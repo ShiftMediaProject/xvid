@@ -104,7 +104,7 @@ BOOL CALLBACK enum_tooltips(HWND hWnd, LPARAM lParam)
 /* MPEG-4 PROFILES/LEVELS ============================================================== */
 /* ===================================================================================== */
 
-#define DXN_PROFILES
+#define EXTRA_PROFILES
 
 /* default vbv_occupancy is (64/170)*vbv_buffer_size */
 
@@ -130,26 +130,26 @@ const profile_t profiles[] =
   { "ARTS @ L4",        0x94,  352, 288, 30, 16,  792,  396,  11880, 100,  80*16368, 16384, 2000000,        0, -1, PROFILE_ARTS },
 #endif
 
-  { "AS @ L0",          0xf0,  176, 144, 30,  1,  297,   99,   2970, 100,  10*16368,  2048,  128000,        0, -1, PROFILE_AS },
-  { "AS @ L1",          0xf1,  176, 144, 30,  4,  297,   99,   2970, 100,  10*16368,  2048,  128000,        0, -1, PROFILE_AS },
-  { "AS @ L2",          0xf2,  352, 288, 15,  4, 1188,  396,   5940, 100,  40*16368,  4096,  384000,        0, -1, PROFILE_AS },
-  { "AS @ L3",          0xf3,  352, 288, 30,  4, 1188,  396,  11880, 100,  40*16368,  4096,  768000,        0, -1, PROFILE_AS },
+  { "Advanced Simple @ L0",          0xf0,  176, 144, 30,  1,  297,   99,   2970, 100,  10*16368,  2048,  128000,        0, -1, PROFILE_AS },
+  { "Advanced Simple @ L1",          0xf1,  176, 144, 30,  4,  297,   99,   2970, 100,  10*16368,  2048,  128000,        0, -1, PROFILE_AS },
+  { "Advanced Simple @ L2",          0xf2,  352, 288, 15,  4, 1188,  396,   5940, 100,  40*16368,  4096,  384000,        0, -1, PROFILE_AS },
+  { "Advanced Simple @ L3",          0xf3,  352, 288, 30,  4, 1188,  396,  11880, 100,  40*16368,  4096,  768000,        0, -1, PROFILE_AS },
  /*  ISMA Profile 1, (ASP) @ L3b (CIF, 1.5 Mb/s) CIF(352x288), 30fps, 1.5Mbps max ??? */
-  { "AS @ L4",          0xf4,  352, 576, 30,  4, 2376,  792,  23760,  50,  80*16368,  8192, 3000000,        0, -1, PROFILE_AS },
-  { "AS @ L5",          0xf5,  720, 576, 30,  4, 4860, 1620,  48600,  25, 112*16368, 16384, 8000000,        0, -1, PROFILE_AS },
+  { "Advanced Simple @ L4",          0xf4,  352, 576, 30,  4, 2376,  792,  23760,  50,  80*16368,  8192, 3000000,        0, -1, PROFILE_AS },
+  { "Advanced Simple @ L5",          0xf5,  720, 576, 30,  4, 4860, 1620,  48600,  25, 112*16368, 16384, 8000000,        0, -1, PROFILE_AS },
 
-#ifdef DXN_PROFILES
-//	information provided by DivXNetworks, USA.
-//  "DivX Certified Profile Compatibility v1.1", February 2005
-  { "DXN Handheld",     0x00,  176, 144, 15,  1,  198,   99,   1485, 100,   32*8192,    -1,  537600,   800000,  0, PROFILE_ADAPTQUANT|PROFILE_DXN },
-  { "DXN Portable NTSC",0x00,  352, 240, 30,  1,  990,  330,  36000, 100,  384*8192,    -1, 4854000,  8000000,  1, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_DXN },
-  { "DXN Portable PAL", 0x00,  352, 288, 25,  1, 1188,  396,  36000, 100,  384*8192,    -1, 4854000,  8000000,  1, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_DXN },
-  { "DXN HT NTSC",      0x00,  720, 480, 30,  1, 4050, 1350,  40500, 100,  384*8192,    -1, 4854000,  8000000,  1, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_INTERLACE|PROFILE_DXN },
-  { "DXN HT PAL",       0x00,  720, 576, 25,  1, 4860, 1620,  40500, 100,  384*8192,    -1, 4854000,  8000000,  1, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_INTERLACE|PROFILE_DXN },
-  { "DXN HDTV",         0x00, 1280, 720, 30,  1,10800, 3600, 108000, 100,  768*8192,    -1, 9708400, 16000000,  2, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_INTERLACE|PROFILE_DXN },
+#ifdef EXTRA_PROFILES
+  { "Handheld",			 0x00,  176, 144, 15,  1,  198,   99,   1485, 100,   32*8192,    -1,  537600,   800000,  0, PROFILE_ADAPTQUANT|PROFILE_EXTRA },
+  { "Portable NTSC",	 0x00,  352, 240, 30,  1,  990,  330,  36000, 100,  384*8192,    -1, 4854000,  8000000,  1, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_EXTRA },
+  { "Portable PAL",		 0x00,  352, 288, 25,  1, 1188,  396,  36000, 100,  384*8192,    -1, 4854000,  8000000,  1, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_EXTRA },
+  { "Home Theatre NTSC", 0x00,  720, 480, 30,  1, 4050, 1350,  40500, 100,  384*8192,    -1, 4854000,  8000000,  1, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_INTERLACE|PROFILE_EXTRA },
+  { "Home Theatre PAL",  0x00,  720, 576, 25,  1, 4860, 1620,  40500, 100,  384*8192,    -1, 4854000,  8000000,  1, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_INTERLACE|PROFILE_EXTRA },
+  { "Cinema Plus NTSC",	 0x00,  720, 480, 30,  1, 4050, 1350,  40500, 100,  384*8192,    -1, 4854000,  8000000,  3, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_MPEGQUANT|PROFILE_INTERLACE|PROFILE_QPEL|PROFILE_EXTRA },
+  { "Cinema Plus PAL",	 0x00,  720, 576, 25,  1, 4860, 1620,  40500, 100,  384*8192,    -1, 4854000,  8000000,  3, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_MPEGQUANT|PROFILE_INTERLACE|PROFILE_QPEL|PROFILE_EXTRA },
+  { "HDTV",				 0x00, 1280, 720, 30,  1,10800, 3600, 108000, 100,  768*8192,    -1, 9708400, 16000000,  2, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_INTERLACE|PROFILE_EXTRA },
 #endif
 
-  { "(unrestricted)",   0x00,    0,   0,  0,  0,    0,    0,      0, 100,   0*16368,    -1,       0,        0, -1, 0xffffffff & ~PROFILE_DXN },
+  { "(unrestricted)",   0x00,    0,   0,  0,  0,    0,    0,      0, 100,   0*16368,    -1,       0,        0, -1, 0xffffffff & ~PROFILE_EXTRA },
 };
 
 
@@ -887,7 +887,7 @@ static void adv_mode(HWND hDlg, int idd, CONFIG * config)
 		EnableDlgWindow(hDlg, IDC_MAXBFRAMES_S,	 bvops);
 		EnableDlgWindow(hDlg, IDC_BQUANTRATIO_S,	bvops);
 		EnableDlgWindow(hDlg, IDC_BQUANTOFFSET_S,   bvops);
-		EnableDlgWindow(hDlg, IDC_PACKED,		   bvops && !(profiles[profile].flags & PROFILE_DXN));
+		EnableDlgWindow(hDlg, IDC_PACKED,		   bvops && !(profiles[profile].flags & PROFILE_EXTRA));
 		break;
 
 	case IDD_AR:

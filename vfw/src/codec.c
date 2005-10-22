@@ -570,7 +570,7 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 	if ((profiles[codec->config.profile].flags & PROFILE_BVOP) && codec->config.use_bvop) {
 
     /* dxn: prevent bframes usage if interlacing is selected */
-    if (!((profiles[codec->config.profile].flags & PROFILE_DXN) && codec->config.interlacing)) {
+    if (!((profiles[codec->config.profile].flags & PROFILE_EXTRA) && codec->config.interlacing)) {
       create.max_bframes = codec->config.max_bframes;
 		  create.bquant_ratio = codec->config.bquant_ratio;
 		  create.bquant_offset = codec->config.bquant_offset;
@@ -581,10 +581,10 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 		  create.global |= XVID_GLOBAL_CLOSED_GOP;
 
       /* dxn: restrict max bframes and enable packed bframes */
-      if ((profiles[codec->config.profile].flags & PROFILE_DXN)) {
+      if ((profiles[codec->config.profile].flags & PROFILE_EXTRA)) {
 
-        if (create.max_bframes > profiles[codec->config.profile].dxn_max_bframes)
-          create.max_bframes = profiles[codec->config.profile].dxn_max_bframes;
+        if (create.max_bframes > profiles[codec->config.profile].xvid_max_bframes)
+          create.max_bframes = profiles[codec->config.profile].xvid_max_bframes;
 
         create.global |= XVID_GLOBAL_PACKED;
       }
@@ -592,7 +592,7 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 	}
 
   /* dxn: always write divx5 userdata */
-  if ((profiles[codec->config.profile].flags & PROFILE_DXN))
+  if ((profiles[codec->config.profile].flags & PROFILE_EXTRA))
     create.global |= XVID_GLOBAL_DIVX5_USERDATA;
 
 	create.frame_drop_ratio = quality_preset->frame_drop_ratio;
@@ -721,7 +721,7 @@ LRESULT compress(CODEC * codec, ICCOMPRESS * icc)
 		frame.vol_flags |= XVID_VOL_INTERLACING;
 
   /* dxn: force 1:1 picture aspect ration */
-  if ((profiles[codec->config.profile].flags & PROFILE_DXN)) {
+  if ((profiles[codec->config.profile].flags & PROFILE_EXTRA)) {
     frame.par = XVID_PAR_11_VGA;
   } else if (codec->config.ar_mode == 0) { /* PAR */
 		if (codec->config.display_aspect_ratio != 5) {
