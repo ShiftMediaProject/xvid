@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: config.h,v 1.8 2005-10-16 00:00:04 suxen_drol Exp $
+ * $Id: config.h,v 1.9 2005-10-22 22:32:44 Isibaar Exp $
  *
  ****************************************************************************/
 #ifndef _CONFIG_H_
@@ -243,8 +243,8 @@ typedef struct REG_STR
 #define PROFILE_INTERLACE	0x00000008
 #define PROFILE_QPEL		0x00000010
 #define PROFILE_GMC			0x00000020
-#define PROFILE_4MV     0x00000040
-#define PROFILE_DXN     0x00000080
+#define PROFILE_4MV		    0x00000040
+#define PROFILE_EXTRA       0x00000080
 
 
 static const int PARS[][2] = {
@@ -269,13 +269,13 @@ typedef struct
 	int max_objects;
 	int total_vmv_buffer_sz;	/* macroblock memory; when BVOPS=false, vmv = 2*vcv; when BVOPS=true,  vmv = 3*vcv*/
 	int max_vmv_buffer_sz;		/* max macroblocks per vop */
-	int vcv_decoder_rate;	/* macroblocks decoded per second */
-	int max_acpred_mbs;	/* percentage */ 
+	int vcv_decoder_rate;		/* macroblocks decoded per second */
+	int max_acpred_mbs;			/* percentage */ 
 	int max_vbv_size;			/*	max vbv size (bits) 16368 bits */
-	int max_video_packet_length; /* bits */
+	int max_video_packet_length;/* bits */
 	int max_bitrate;			/* bits per second */
-  int vbv_peakrate;     /* max bits over anyone second period; 0=don't care */
-  int dxn_max_bframes;  /* dxn: max consecutive bframes */
+    int vbv_peakrate;			/* max bits over anyone second period; 0=don't care */
+    int xvid_max_bframes;		/* xvid: max consecutive bframes */
 	unsigned int flags;
 } profile_t;
 
