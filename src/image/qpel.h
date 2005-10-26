@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: qpel.h,v 1.6 2005-01-05 23:02:15 edgomez Exp $
+ * $Id: qpel.h,v 1.7 2005-10-26 12:38:34 Skal Exp $
  *
  ****************************************************************************/
 
@@ -136,13 +136,8 @@ interpolate16x16_quarterpel(uint8_t * const cur,
 	Ops = xvid_QP_Funcs;
 	quads = (dx&3) | ((dy&3)<<2);
 
-	x_int = xRef/4;
-	if (xRef < 0 && xRef % 4)
-		x_int--;
-
-	y_int	 = yRef/4;
-	if (yRef < 0 && yRef % 4)
-		y_int--;
+	x_int = xRef >> 2;
+	y_int = yRef >> 2;
 
 	dst = cur + y * stride + x;
 	src = refn + y_int * (int)stride + x_int;
@@ -240,13 +235,8 @@ interpolate16x16_add_quarterpel(uint8_t * const cur,
 	Ops_Copy = xvid_QP_Funcs;
 	quads = (dx&3) | ((dy&3)<<2);
 
-	x_int = xRef/4;
-	if (xRef < 0 && xRef % 4)
-		x_int--;
-
-	y_int	 = yRef/4;
-	if (yRef < 0 && yRef % 4)
-		y_int--;
+	x_int = xRef >> 2;
+	y_int = yRef >> 2;
 
 	dst = cur + y * stride + x;
 	src = refn + y_int * (int)stride + x_int;
@@ -344,13 +334,8 @@ interpolate16x8_quarterpel(uint8_t * const cur,
 	Ops = xvid_QP_Funcs;
 	quads = (dx&3) | ((dy&3)<<2);
 
-	x_int = xRef/4;
-	if (xRef < 0 && xRef % 4)
-		x_int--;
-
-	y_int	 = yRef/4;
-	if (yRef < 0 && yRef % 4)
-		y_int--;
+	x_int = xRef >> 2;
+	y_int = yRef >> 2;
 
 	dst = cur + y * stride + x;
 	src = refn + y_int * (int)stride + x_int;
@@ -444,13 +429,8 @@ interpolate8x8_quarterpel(uint8_t * const cur,
 	Ops = xvid_QP_Funcs;
 	quads = (dx&3) | ((dy&3)<<2);
 
-	x_int = xRef/4;
-	if (xRef < 0 && xRef % 4)
-		x_int--;
-
-	y_int	 = yRef/4;
-	if (yRef < 0 && yRef % 4)
-		y_int--;
+	x_int = xRef >> 2;
+	y_int = yRef >> 2;
 
 	dst = cur + y * stride + x;
 	src = refn + y_int * (int)stride + x_int;
@@ -545,13 +525,8 @@ interpolate8x8_add_quarterpel(uint8_t * const cur,
 	Ops_Copy = xvid_QP_Funcs;
 	quads = (dx&3) | ((dy&3)<<2);
 
-	x_int = xRef/4;
-	if (xRef < 0 && xRef % 4)
-		x_int--;
-
-	y_int	 = yRef/4;
-	if (yRef < 0 && yRef % 4)
-		y_int--;
+	x_int = xRef >> 2;
+	y_int = yRef >> 2;
 
 	dst = cur + y * stride + x;
 	src = refn + y_int * (int)stride + x_int;
