@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.25 2005-09-23 12:53:35 suxen_drol Exp $
+ * $Id: xvid_bench.c,v 1.26 2005-10-26 12:38:33 Skal Exp $
  *
  ****************************************************************************/
 
@@ -518,6 +518,41 @@ void test_mb()
 			   (iCrc!=8107)?"| ERROR": "" );
 #endif
 
+    /* New functions for field prediction by CK 1.10.2005 */
+#pragma NEW8X4
+		TEST_MB(interpolate8x4_halfpel_h, 0);
+		printf("%s - interpfield-h -round0 %.3f usec       crc32=0x%08x %s\n",
+			   cpu->name, t, iCrc,
+			   (iCrc!=0x9538d6df)?"| ERROR": "" );
+
+		TEST_MB(interpolate8x4_halfpel_h, 1);
+		printf("%s -                round1 %.3f usec       crc32=0x%08x %s\n",
+			   cpu->name, t, iCrc,
+			   (iCrc!=0xde5f1db4)?"| ERROR": "" );
+
+
+		TEST_MB(interpolate8x4_halfpel_v, 0);
+		printf("%s - interpfield- v-round0 %.3f usec       crc32=0x%08x %s\n",
+			   cpu->name, t, iCrc,
+			   (iCrc!=0xea5a69ef)?"| ERROR": "" );
+
+		TEST_MB(interpolate8x4_halfpel_v, 1);
+		printf("%s -                round1 %.3f usec       crc32=0x%08x %s\n",
+			   cpu->name, t, iCrc,
+			   (iCrc!=0x4f10ec0f)?"| ERROR": "" );
+
+
+		TEST_MB(interpolate8x4_halfpel_hv, 0);
+		printf("%s - interpfield-hv-round0 %.3f usec       crc32=0x%08x %s\n",
+			   cpu->name, t, iCrc,
+			   (iCrc!=0xf97ee367)?"| ERROR": "" );
+
+		TEST_MB(interpolate8x4_halfpel_hv, 1);
+		printf("%s -                round1 %.3f usec       crc32=0x%08x %s\n",
+			   cpu->name, t, iCrc,
+			   (iCrc!=0xb6a9f581)?"| ERROR": "" );
+/* End of 8x4 functions */
+
 		printf( " --- \n" );
 	}
 }
@@ -624,6 +659,14 @@ void test_transfer()
 		printf( "%s - 16to8     %.3f usec       crc32=0x%08x %s\n",
 				cpu->name, t, s,
 				(s!=0xee7ccbb4)?"| ERROR": "");
+
+    /* New functions for field prediction by CK 1.10.2005 */
+#pragma NEW8X4
+		TEST_TRANSFER(transfer8x4_copy, Dst8, Src8);
+		printf("%s - 8to4      %.3f usec       crc32=0x%08x %s\n",
+			   cpu->name, t, s,
+			   (s!=0xbb9c3db5)?"| ERROR": "");
+/* End of new functions */
 
 		TEST_TRANSFER(transfer8x8_copy, Dst8, Src8);
 		printf("%s - 8to8      %.3f usec       crc32=0x%08x %s\n",
@@ -1779,6 +1822,51 @@ void test_gcd()
 }
 
 /*********************************************************************
+ * test compiler
+ *********************************************************************/
+
+void test_compiler() {
+  int nb_err = 0;
+  int32_t v;
+  if (sizeof(uint16_t)<2) {
+    printf( "ERROR: sizeof(uint16_t)<2!\n" );
+    nb_err++;
+  }
+  if (sizeof(int16_t)<2) {
+    printf( "ERROR: sizeof(int16_t)<2!\n" );
+    nb_err++;
+  }
+  if (sizeof(uint8_t)!=1) {
+    printf( "ERROR: sizeof(uint8_t)!=1!\n" );
+    nb_err++;
+  }
+  if (sizeof(int8_t)!=1) {
+    printf( "ERROR: sizeof(uint8_t)!=1!\n" );
+    nb_err++;
+  }
+  if (sizeof(uint32_t)<4) {
+    printf( "ERROR: sizeof(uint8_t)<4!\n" );
+    nb_err++;
+  }
+  if (sizeof(int32_t)<4) {
+    printf( "ERROR: sizeof(uint32_t)<4!\n" );
+    nb_err++;
+  }
+         /* yes, i know, this test is silly. But better be safe than sorry. :) */
+  for(v=1000; v>=0; v--) {
+    if ( (v>>2) != v/4)
+      nb_err++;
+  }
+  for(v=-1000; v!=-1; v++) {
+    if ( (v>>2) != (v/4)-!!(v%4))
+      nb_err++;
+  }
+  if (nb_err!=0) {
+    printf( "ERROR! please post your platform/compiler specs to xvid-devel@xvid.org !\n" );
+  }
+}
+
+/*********************************************************************
  * main
  *********************************************************************/
 
@@ -1846,6 +1934,7 @@ int main(int argc, const char *argv[])
 	if (what==0 || what==10) test_sse();
 	if (what==0 || what==11) test_log2bin();
 	if (what==0 || what==12) test_gcd();
+	if (what==0 || what==13) test_compiler();
 
 
 	if (what==7) {
