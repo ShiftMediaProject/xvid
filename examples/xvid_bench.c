@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.26 2005-10-26 12:38:33 Skal Exp $
+ * $Id: xvid_bench.c,v 1.27 2005-11-03 05:44:07 Skal Exp $
  *
  ****************************************************************************/
 
@@ -1829,27 +1829,27 @@ void test_compiler() {
   int nb_err = 0;
   int32_t v;
   if (sizeof(uint16_t)<2) {
-    printf( "ERROR: sizeof(uint16_t)<2!\n" );
+    printf( "ERROR: sizeof(uint16_t)<2 !!\n" );
     nb_err++;
   }
   if (sizeof(int16_t)<2) {
-    printf( "ERROR: sizeof(int16_t)<2!\n" );
+    printf( "ERROR: sizeof(int16_t)<2 !!\n" );
     nb_err++;
   }
   if (sizeof(uint8_t)!=1) {
-    printf( "ERROR: sizeof(uint8_t)!=1!\n" );
+    printf( "ERROR: sizeof(uint8_t)!=1 !!\n" );
     nb_err++;
   }
   if (sizeof(int8_t)!=1) {
-    printf( "ERROR: sizeof(uint8_t)!=1!\n" );
+    printf( "ERROR: sizeof(int8_t)!=1 !!\n" );
     nb_err++;
   }
   if (sizeof(uint32_t)<4) {
-    printf( "ERROR: sizeof(uint8_t)<4!\n" );
+    printf( "ERROR: sizeof(uint32_t)<4 !!\n" );
     nb_err++;
   }
   if (sizeof(int32_t)<4) {
-    printf( "ERROR: sizeof(uint32_t)<4!\n" );
+    printf( "ERROR: sizeof(int32_t)<4 !!\n" );
     nb_err++;
   }
          /* yes, i know, this test is silly. But better be safe than sorry. :) */
