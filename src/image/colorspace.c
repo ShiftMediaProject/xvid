@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: colorspace.c,v 1.10 2004-04-12 14:05:08 edgomez Exp $
+ * $Id: colorspace.c,v 1.11 2005-11-22 10:23:01 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -38,7 +38,6 @@ packedFuncPtr bgra_to_yv12;
 packedFuncPtr abgr_to_yv12;
 packedFuncPtr rgba_to_yv12;
 packedFuncPtr argb_to_yv12;
-packedFuncPtr yuv_to_yv12;
 packedFuncPtr yuyv_to_yv12;
 packedFuncPtr uyvy_to_yv12;
 
@@ -60,7 +59,6 @@ packedFuncPtr yv12_to_bgra;
 packedFuncPtr yv12_to_abgr;
 packedFuncPtr yv12_to_rgba;
 packedFuncPtr yv12_to_argb;
-packedFuncPtr yv12_to_yuv;
 packedFuncPtr yv12_to_yuyv;
 packedFuncPtr yv12_to_uyvy;
 
@@ -77,11 +75,11 @@ packedFuncPtr yv12_to_uyvyi;
 planarFuncPtr yv12_to_yv12;
 
 
-int32_t RGB_Y_tab[256];
-int32_t B_U_tab[256];
-int32_t G_U_tab[256];
-int32_t G_V_tab[256];
-int32_t R_V_tab[256];
+static int32_t RGB_Y_tab[256];
+static int32_t B_U_tab[256];
+static int32_t G_U_tab[256];
+static int32_t G_V_tab[256];
+static int32_t R_V_tab[256];
 
 
 

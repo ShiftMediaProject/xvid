@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbprediction.c,v 1.17 2005-09-13 12:12:15 suxen_drol Exp $
+ * $Id: mbprediction.c,v 1.18 2005-11-22 10:23:01 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -84,7 +84,7 @@ predict_acdc(MACROBLOCK * pMBs,
 	int *acpred_direction = &pMBs[index].acpred_directions[block];
 	uint32_t i;
 
-	left = top = diag = current = 0;
+	left = top = diag = current = NULL;
 
 	/* grab left,top and diag macroblocks */
 
@@ -94,7 +94,7 @@ predict_acdc(MACROBLOCK * pMBs,
 		(pMBs[index - 1].mode == MODE_INTRA ||
 		 pMBs[index - 1].mode == MODE_INTRA_Q)) {
 
-		left = pMBs[index - 1].pred_values[0];
+		left = (int16_t*)pMBs[index - 1].pred_values[0];
 		left_quant = pMBs[index - 1].quant;
 	}
 	/* top macroblock */
@@ -103,7 +103,7 @@ predict_acdc(MACROBLOCK * pMBs,
 		(pMBs[index - mb_width].mode == MODE_INTRA ||
 		 pMBs[index - mb_width].mode == MODE_INTRA_Q)) {
 
-		top = pMBs[index - mb_width].pred_values[0];
+		top = (int16_t*)pMBs[index - mb_width].pred_values[0];
 		top_quant = pMBs[index - mb_width].quant;
 	}
 	/* diag macroblock */
@@ -112,10 +112,10 @@ predict_acdc(MACROBLOCK * pMBs,
 		(pMBs[index - 1 - mb_width].mode == MODE_INTRA ||
 		 pMBs[index - 1 - mb_width].mode == MODE_INTRA_Q)) {
 
-		diag = pMBs[index - 1 - mb_width].pred_values[0];
+		diag = (int16_t*)pMBs[index - 1 - mb_width].pred_values[0];
 	}
 
-	current = pMBs[index].pred_values[0];
+	current = (int16_t*)pMBs[index].pred_values[0];
 
 	/* now grab pLeft, pTop, pDiag _blocks_ */
 
@@ -219,7 +219,7 @@ add_acdc(MACROBLOCK * pMB,
 		 const int bsversion)
 {
 	uint8_t acpred_direction = pMB->acpred_directions[block];
-	int16_t *pCurrent = pMB->pred_values[block];
+	int16_t *pCurrent = (int16_t*)pMB->pred_values[block];
 	uint32_t i;
 
 	DPRINTF(XVID_DEBUG_COEFF,"predictor[0] %i\n", predictors[0]);
@@ -270,14 +270,14 @@ S1 = sum of all (qcoeff - prediction)
 S2 = sum of all qcoeff
 */
 
-int
+static int
 calc_acdc_coeff(MACROBLOCK * pMB,
 		  uint32_t block,
 		  int16_t qcoeff[64],
 		  uint32_t iDcScaler,
 		  int16_t predictors[8])
 {
-	int16_t *pCurrent = pMB->pred_values[block];
+	int16_t *pCurrent = (int16_t*)pMB->pred_values[block];
 	uint32_t i;
 	int S1 = 0, S2 = 0;
 
@@ -327,7 +327,7 @@ calc_acdc_coeff(MACROBLOCK * pMB,
 
 /* returns the bits *saved* if prediction is enabled */
 
-int
+static int
 calc_acdc_bits(MACROBLOCK * pMB,
 		  uint32_t block,
 		  int16_t qcoeff[64],
@@ -335,7 +335,7 @@ calc_acdc_bits(MACROBLOCK * pMB,
 		  int16_t predictors[8])
 {
 	const int direction = pMB->acpred_directions[block];
-	int16_t *pCurrent = pMB->pred_values[block];
+	int16_t *pCurrent = (int16_t*)pMB->pred_values[block];
 	int16_t tmp[8];
 	unsigned int i;
 	int Z1, Z2;
@@ -386,7 +386,7 @@ calc_acdc_bits(MACROBLOCK * pMB,
 
 /* apply predictors[] to qcoeff */
 
-void
+static void
 apply_acdc(MACROBLOCK * pMB,
 		   uint32_t block,
 		   int16_t qcoeff[64],

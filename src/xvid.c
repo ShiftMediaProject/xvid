@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.64 2005-09-13 12:12:15 suxen_drol Exp $
+ * $Id: xvid.c,v 1.65 2005-11-22 10:23:01 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -126,7 +126,7 @@ sigill_check(void (*func)())
 
 /* detect cpu flags  */
 static unsigned int
-detect_cpu_flags()
+detect_cpu_flags(void)
 {
 	/* enable native assembly optimizations by default */
 	unsigned int cpu_flags = XVID_CPU_ASM;
@@ -183,7 +183,7 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 	idct = idct_int32;
 
 	/* Only needed on PPC Altivec archs */
-	sadInit = 0;
+	sadInit = NULL;
 
 	/* Restore FPU context : emms_c is a nop functions */
 	emms = emms_c;

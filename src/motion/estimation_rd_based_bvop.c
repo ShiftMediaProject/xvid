@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_rd_based_bvop.c,v 1.8 2004-12-19 14:05:55 syskin Exp $
+ * $Id: estimation_rd_based_bvop.c,v 1.9 2005-11-22 10:23:01 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -63,7 +63,7 @@ Block_CalcBits_BVOP(int16_t * const coeff,
 	int bits;
 	int distortion = 0;
 
-	fdct(data);
+	fdct((short * const)data);
 
 	if (quant_type) sum = quant_h263_inter(coeff, data, quant, mpeg_quant_matrices);
 	else sum = quant_mpeg_inter(coeff, data, quant, mpeg_quant_matrices);
@@ -115,7 +115,7 @@ Block_CalcBits_BVOP_direct(int16_t * const coeff,
 	int bits;
 	int distortion = 0;
 
-	fdct(data);
+	fdct((short * const)data);
 
 	if (quant_type) sum = quant_h263_inter(coeff, data, quant, mpeg_quant_matrices);
 	else sum = quant_mpeg_inter(coeff, data, quant, mpeg_quant_matrices);

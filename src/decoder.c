@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.74 2005-09-20 11:54:11 suxen_drol Exp $
+ * $Id: decoder.c,v 1.75 2005-11-22 10:23:01 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -316,7 +316,7 @@ decoder_mbintra(DECODER * dec,
     stop_iquant_timer();
 
     start_timer();
-    idct(&data[i * 64]);
+    idct((short * const)&data[i * 64]);
     stop_idct_timer();
 
   }
@@ -406,7 +406,7 @@ decoder_mb_decode(DECODER * dec,
 
       /* iDCT */
       start_timer();
-      idct(&data[0]);
+      idct((short * const)&data[0]);
       stop_idct_timer();
 
       /* Add this residual to the predicted block */
@@ -1485,7 +1485,7 @@ decoder_bframe(DECODER * dec,
 }
 
 /* perform post processing if necessary, and output the image */
-void decoder_output(DECODER * dec, IMAGE * img, MACROBLOCK * mbs,
+static void decoder_output(DECODER * dec, IMAGE * img, MACROBLOCK * mbs,
           xvid_dec_frame_t * frame, xvid_dec_stats_t * stats,
           int coding_type, int quant)
 {

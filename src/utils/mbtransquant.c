@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbtransquant.c,v 1.28 2005-05-23 09:29:43 Skal Exp $
+ * $Id: mbtransquant.c,v 1.29 2005-11-22 10:23:01 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -90,12 +90,12 @@ MBfDCT(const MBParam * const pParam,
 
 	/* Perform DCT */
 	start_timer();
-	fdct(&data[0 * 64]);
-	fdct(&data[1 * 64]);
-	fdct(&data[2 * 64]);
-	fdct(&data[3 * 64]);
-	fdct(&data[4 * 64]);
-	fdct(&data[5 * 64]);
+	fdct((short * const)&data[0 * 64]);
+	fdct((short * const)&data[1 * 64]);
+	fdct((short * const)&data[2 * 64]);
+	fdct((short * const)&data[3 * 64]);
+	fdct((short * const)&data[4 * 64]);
+	fdct((short * const)&data[5 * 64]);
 	stop_dct_timer();
 }
 
@@ -105,12 +105,12 @@ MBiDCT(int16_t data[6 * 64],
 	   const uint8_t cbp)
 {
 	start_timer();
-	if(cbp & (1 << (5 - 0))) idct(&data[0 * 64]);
-	if(cbp & (1 << (5 - 1))) idct(&data[1 * 64]);
-	if(cbp & (1 << (5 - 2))) idct(&data[2 * 64]);
-	if(cbp & (1 << (5 - 3))) idct(&data[3 * 64]);
-	if(cbp & (1 << (5 - 4))) idct(&data[4 * 64]);
-	if(cbp & (1 << (5 - 5))) idct(&data[5 * 64]);
+	if(cbp & (1 << (5 - 0))) idct((short * const)&data[0 * 64]);
+	if(cbp & (1 << (5 - 1))) idct((short * const)&data[1 * 64]);
+	if(cbp & (1 << (5 - 2))) idct((short * const)&data[2 * 64]);
+	if(cbp & (1 << (5 - 3))) idct((short * const)&data[3 * 64]);
+	if(cbp & (1 << (5 - 4))) idct((short * const)&data[4 * 64]);
+	if(cbp & (1 << (5 - 5))) idct((short * const)&data[5 * 64]);
 	stop_idct_timer();
 }
 

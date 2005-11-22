@@ -19,11 +19,13 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: qpel.c,v 1.7 2005-08-01 10:53:46 Isibaar Exp $
+ * $Id: qpel.c,v 1.8 2005-11-22 10:23:01 suxen_drol Exp $
  *
  ****************************************************************************/
 
 #ifndef XVID_AUTO_INCLUDE
+
+#include <stdio.h>
 
 #include "../portab.h"
 #include "qpel.h"
@@ -197,8 +199,8 @@ static const int32_t FIR_Tab_16[17][16] = {
 /* Global scope hooks
  ****************************************************************************/
 
-XVID_QP_FUNCS *xvid_QP_Funcs = 0;
-XVID_QP_FUNCS *xvid_QP_Add_Funcs = 0;
+XVID_QP_FUNCS *xvid_QP_Funcs = NULL;
+XVID_QP_FUNCS *xvid_QP_Add_Funcs = NULL;
 
 /* Reference plain C impl. declaration
  ****************************************************************************/
@@ -392,27 +394,45 @@ XVID_QP_FUNCS xvid_QP_Add_Funcs_x86_64 = {
 /* tables for ASM
  ****************************************************************************/
 
+
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
+/* These symbols will be used outsie this file, so tell the compiler
+ * they're global. Only ia32 will define them in this file, x86_64
+ * will do in the assembly files */
+extern uint16_t xvid_Expand_mmx[256][4]; /* 8b -> 64b expansion table */
+
+extern int16_t xvid_FIR_1_0_0_0[256][4];
+extern int16_t xvid_FIR_3_1_0_0[256][4];
+extern int16_t xvid_FIR_6_3_1_0[256][4];
+extern int16_t xvid_FIR_14_3_2_1[256][4];
+extern int16_t xvid_FIR_20_6_3_1[256][4];
+extern int16_t xvid_FIR_20_20_6_3[256][4];
+extern int16_t xvid_FIR_23_19_6_3[256][4];
+extern int16_t xvid_FIR_7_20_20_6[256][4];
+extern int16_t xvid_FIR_6_20_20_6[256][4];
+extern int16_t xvid_FIR_6_20_20_7[256][4];
+extern int16_t xvid_FIR_3_6_20_20[256][4];
+extern int16_t xvid_FIR_3_6_19_23[256][4];
+extern int16_t xvid_FIR_1_3_6_20[256][4];
+extern int16_t xvid_FIR_1_2_3_14[256][4];
+extern int16_t xvid_FIR_0_1_3_6[256][4];
+extern int16_t xvid_FIR_0_0_1_3[256][4];
+extern int16_t xvid_FIR_0_0_0_1[256][4];
+#endif
+
+/* Arrays definitions, according to the target platform */
 #ifdef ARCH_IS_IA32
 uint16_t xvid_Expand_mmx[256][4]; /* 8b -> 64b expansion table */
 #endif
 
-#ifdef ARCH_IS_X86_64
-extern uint16_t xvid_Expand_mmx[256][4]; /* 8b -> 64b expansion table */
-#endif
-
-/* Alternate way of filtering (cf. USE_TABLES flag in qpel_mmx.asm)
- *
- * 17 tables, 2K each => 34K
- * Mirroring can be acheived composing 11 basic tables
- * (for instance: (23,19,-6,3)=(20,20,-6,3)+(3,-1,0,0)
- * Using Symmetries (and bswap) could reduce further
- * the memory to 7 tables (->14K). */
-#ifdef ARCH_IS_X86_64
-#define __SCOPE extern
-#else
+#if !defined(ARCH_IS_X86_64)
+/* Only ia32 will use these tables outside this file so mark them
+* static for all other archs */
+#if defined(ARCH_IS_IA32)
 #define __SCOPE
+#else
+#define __SCOPE static
 #endif
-
 __SCOPE int16_t xvid_FIR_1_0_0_0[256][4];
 __SCOPE int16_t xvid_FIR_3_1_0_0[256][4];
 __SCOPE int16_t xvid_FIR_6_3_1_0[256][4];
@@ -430,6 +450,7 @@ __SCOPE int16_t xvid_FIR_1_2_3_14[256][4];
 __SCOPE int16_t xvid_FIR_0_1_3_6[256][4];
 __SCOPE int16_t xvid_FIR_0_0_1_3[256][4];
 __SCOPE int16_t xvid_FIR_0_0_0_1[256][4];
+#endif
 
 static void Init_FIR_Table(int16_t Tab[][4],
                            int A, int B, int C, int D)
@@ -444,7 +465,7 @@ static void Init_FIR_Table(int16_t Tab[][4],
 }
 
 
-void xvid_Init_QP()
+void xvid_Init_QP(void)
 {
 #ifdef ARCH_IS_IA32
 	int i;
