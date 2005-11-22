@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: emms.c,v 1.10 2005-02-01 11:46:32 suxen_drol Exp $
+ * $Id: emms.c,v 1.11 2005-11-22 10:23:01 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -43,6 +43,6 @@ emmsFuncPtr emms;
 
 /* The no op wrapper for non MMX platforms */
 void
-emms_c()
+emms_c(void)
 {
 }

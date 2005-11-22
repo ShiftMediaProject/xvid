@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.c,v 1.54 2005-10-06 10:46:42 Isibaar Exp $
+ * $Id: bitstream.c,v 1.55 2005-11-22 10:23:01 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -65,7 +65,7 @@ static const uint32_t intra_dc_threshold_table[] = {
 };
 
 
-void
+static void
 bs_get_matrix(Bitstream * bs,
 			  uint8_t * matrix)
 {

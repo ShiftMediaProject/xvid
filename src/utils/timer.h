@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: timer.h,v 1.10 2004-03-22 22:36:24 edgomez Exp $
+ * $Id: timer.h,v 1.11 2005-11-22 10:23:01 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -32,97 +32,97 @@
 
 uint64_t count_frames;
 
-extern void start_timer();
-extern void start_global_timer();
-extern void stop_dct_timer();
-extern void stop_idct_timer();
-extern void stop_motion_timer();
-extern void stop_comp_timer();
-extern void stop_edges_timer();
-extern void stop_inter_timer();
-extern void stop_quant_timer();
-extern void stop_iquant_timer();
-extern void stop_conv_timer();
-extern void stop_transfer_timer();
-extern void stop_coding_timer();
-extern void stop_prediction_timer();
-extern void stop_interlacing_timer();
-extern void stop_global_timer();
-extern void init_timer();
-extern void write_timer();
+extern void start_timer(void);
+extern void start_global_timer(void);
+extern void stop_dct_timer(void);
+extern void stop_idct_timer(void);
+extern void stop_motion_timer(void);
+extern void stop_comp_timer(void);
+extern void stop_edges_timer(void);
+extern void stop_inter_timer(void);
+extern void stop_quant_timer(void);
+extern void stop_iquant_timer(void);
+extern void stop_conv_timer(void);
+extern void stop_transfer_timer(void);
+extern void stop_coding_timer(void);
+extern void stop_prediction_timer(void);
+extern void stop_interlacing_timer(void);
+extern void stop_global_timer(void);
+extern void init_timer(void);
+extern void write_timer(void);
 
 #else
 
 static __inline void
-start_timer()
+start_timer(void)
 {
 }
 static __inline void
-start_global_timer()
+start_global_timer(void)
 {
 }
 static __inline void
-stop_dct_timer()
+stop_dct_timer(void)
 {
 }
 static __inline void
-stop_idct_timer()
+stop_idct_timer(void)
 {
 }
 static __inline void
-stop_motion_timer()
+stop_motion_timer(void)
 {
 }
 static __inline void
-stop_comp_timer()
+stop_comp_timer(void)
 {
 }
 static __inline void
-stop_edges_timer()
+stop_edges_timer(void)
 {
 }
 static __inline void
-stop_inter_timer()
+stop_inter_timer(void)
 {
 }
 static __inline void
-stop_quant_timer()
+stop_quant_timer(void)
 {
 }
 static __inline void
-stop_iquant_timer()
+stop_iquant_timer(void)
 {
 }
 static __inline void
-stop_conv_timer()
+stop_conv_timer(void)
 {
 }
 static __inline void
-stop_transfer_timer()
+stop_transfer_timer(void)
 {
 }
 static __inline void
-init_timer()
+init_timer(void)
 {
 }
 static __inline void
-write_timer()
+write_timer(void)
 {
 }
 static __inline void
-stop_coding_timer()
+stop_coding_timer(void)
 {
 }
 static __inline void
-stop_interlacing_timer()
+stop_interlacing_timer(void)
 {
 }
 static __inline void
-stop_prediction_timer()
+stop_prediction_timer(void)
 {
 }
 static __inline void
-stop_global_timer()
+stop_global_timer(void)
 {
 }
 

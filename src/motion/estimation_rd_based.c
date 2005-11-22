@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_rd_based.c,v 1.12 2004-12-18 12:06:43 syskin Exp $
+ * $Id: estimation_rd_based.c,v 1.13 2005-11-22 10:23:01 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -64,7 +64,7 @@ Block_CalcBits(	int16_t * const coeff,
 	int bits;
 	int distortion = 0;
 
-	fdct(data);
+	fdct((short * const)data);
 
 	if (quant_type) sum = quant_h263_inter(coeff, data, quant, mpeg_quant_matrices);
 	else sum = quant_mpeg_inter(coeff, data, quant, mpeg_quant_matrices);
@@ -121,7 +121,7 @@ Block_CalcBitsIntra(MACROBLOCK * pMB,
 	unsigned int distortion = 0;
 	const uint32_t iDcScaler = get_dc_scaler(quant, block < 4);
 
-	fdct(coeff);
+	fdct((short * const)coeff);
 
 	if (quant_type) {
 		quant_h263_intra(qcoeff, coeff, quant, iDcScaler, mpeg_quant_matrices);
@@ -135,7 +135,7 @@ Block_CalcBitsIntra(MACROBLOCK * pMB,
 				quant, iDcScaler, predictors, 0);
 	
 	direction = pMB->acpred_directions[block];
-	pCurrent = pMB->pred_values[block];
+	pCurrent = (int16_t*)pMB->pred_values[block];
 
 	/* store current coeffs to pred_values[] for future prediction */
 	pCurrent[0] = qcoeff[0] * iDcScaler;

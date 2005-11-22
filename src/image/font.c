@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: font.c,v 1.6 2004-05-31 21:36:23 edgomez Exp $
+ * $Id: font.c,v 1.7 2005-11-22 10:23:01 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -561,7 +561,8 @@ static const char ascii91[6][FONT_WIDTH*FONT_HEIGHT] = {
 
 #define FONT_ZOOM	4
 
-void draw_num(IMAGE * img, const int stride, const int height,
+static void
+draw_num(IMAGE * img, const int stride, const int height,
 			  const char * font, const int x, const int y)
 {
 	int i, j;

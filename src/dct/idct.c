@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: idct.c,v 1.8 2004-08-22 13:16:12 edgomez Exp $
+ * $Id: idct.c,v 1.9 2005-11-22 10:23:01 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -371,7 +371,7 @@ idct_int32(short *const block)
 
 
 void
-idct_int32_init()
+idct_int32_init(void)
 {
 	int i;
 

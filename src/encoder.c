@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.119 2005-08-01 10:53:46 Isibaar Exp $
+ * $Id: encoder.c,v 1.120 2005-11-22 10:23:01 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -203,7 +203,7 @@ enc_create(xvid_enc_create_t * create)
 
 		memset(&pinfo, 0, sizeof(xvid_plg_info_t));
 		pinfo.version = XVID_VERSION;
-		if (create->plugins[n].func(0, XVID_PLG_INFO, &pinfo, 0) >= 0) {
+		if (create->plugins[n].func(NULL, XVID_PLG_INFO, &pinfo, NULL) >= 0) {
 			pEnc->mbParam.plugin_flags |= pinfo.flags;
 		}
 
@@ -220,7 +220,7 @@ enc_create(xvid_enc_create_t * create)
 		pcreate.param = create->plugins[n].param;
 
 		pEnc->plugins[n].func = NULL;   /* disable plugins that fail */
-		if (create->plugins[n].func(0, XVID_PLG_CREATE, &pcreate, &pEnc->plugins[n].param) >= 0) {
+		if (create->plugins[n].func(NULL, XVID_PLG_CREATE, &pcreate, &pEnc->plugins[n].param) >= 0) {
 			pEnc->plugins[n].func = create->plugins[n].func;
 		}
 	}
@@ -522,7 +522,7 @@ enc_create(xvid_enc_create_t * create)
   xvid_err_memory0:
 	for (n=0; n<pEnc->num_plugins;n++) {
 		if (pEnc->plugins[n].func) {
-			pEnc->plugins[n].func(pEnc->plugins[n].param, XVID_PLG_DESTROY, 0, 0);
+			pEnc->plugins[n].func(pEnc->plugins[n].param, XVID_PLG_DESTROY, NULL, NULL);
 		}
 	}
 	xvid_free(pEnc->plugins);
@@ -627,7 +627,7 @@ enc_destroy(Encoder * pEnc)
 
 		for (i=0; i<pEnc->num_plugins;i++) {
 			if (pEnc->plugins[i].func) {
-				pEnc->plugins[i].func(pEnc->plugins[i].param, XVID_PLG_DESTROY, &pdestroy, 0);
+				pEnc->plugins[i].func(pEnc->plugins[i].param, XVID_PLG_DESTROY, &pdestroy, NULL);
 			}
 		}
 		xvid_free(pEnc->plugins);
@@ -787,7 +787,7 @@ static void call_plugins(Encoder * pEnc, FRAMEINFO * frame, IMAGE * original,
 	for (i=0; i<(unsigned int)pEnc->num_plugins;i++) {
 		emms();
 		if (pEnc->plugins[i].func) {
-			if (pEnc->plugins[i].func(pEnc->plugins[i].param, opt, &data, 0) < 0) {
+			if (pEnc->plugins[i].func(pEnc->plugins[i].param, opt, &data, NULL) < 0) {
 				continue;
 			}
 		}
@@ -1010,7 +1010,7 @@ repeat:
 			}
 
 			FrameCodeB(pEnc, pEnc->bframes[pEnc->bframenum_head], &bs);
-			call_plugins(pEnc, pEnc->bframes[pEnc->bframenum_head], &pEnc->sOriginal2, XVID_PLG_AFTER, 0, 0, stats);
+			call_plugins(pEnc, pEnc->bframes[pEnc->bframenum_head], &pEnc->sOriginal2, XVID_PLG_AFTER, NULL, NULL, stats);
 			pEnc->bframenum_head++;
 
 			goto done;
@@ -1042,7 +1042,7 @@ repeat:
 
 			/* add the not-coded length to the reference frame size */
 			pEnc->current->length += (BitstreamPos(&bs) - bits) / 8;
-			call_plugins(pEnc, pEnc->current, &pEnc->sOriginal, XVID_PLG_AFTER, 0, 0, stats);
+			call_plugins(pEnc, pEnc->current, &pEnc->sOriginal, XVID_PLG_AFTER, NULL, NULL, stats);
 
 			/* flush complete: reset counters */
 			pEnc->flush_bframes = 0;
@@ -1070,7 +1070,7 @@ repeat:
 				pEnc->queue_head, pEnc->queue_tail, pEnc->queue_size);
 
 			if (!(pEnc->mbParam.global_flags & XVID_GLOBAL_PACKED) && pEnc->mbParam.max_bframes > 0) {
-				call_plugins(pEnc, pEnc->current, &pEnc->sOriginal, XVID_PLG_AFTER, 0, 0, stats);
+				call_plugins(pEnc, pEnc->current, &pEnc->sOriginal, XVID_PLG_AFTER, NULL, NULL, stats);
 			}
 
 			/* if the very last frame is to be b-vop, we must change it to a p-vop */
@@ -1099,7 +1099,7 @@ repeat:
 
 
 				if ((pEnc->mbParam.global_flags & XVID_GLOBAL_PACKED) && pEnc->bframenum_tail==0) {
-					call_plugins(pEnc, pEnc->current, &pEnc->sOriginal, XVID_PLG_AFTER, 0, 0, stats);
+					call_plugins(pEnc, pEnc->current, &pEnc->sOriginal, XVID_PLG_AFTER, NULL, NULL, stats);
 				}else{
 					pEnc->flush_bframes = 1;
 					goto done;
@@ -1223,7 +1223,7 @@ repeat:
 	if (!(pEnc->mbParam.global_flags & XVID_GLOBAL_PACKED) && pEnc->mbParam.max_bframes > 0)
 	{
 		if (pEnc->current->stamp > 0) {
-			call_plugins(pEnc, pEnc->reference, &pEnc->sOriginal, XVID_PLG_AFTER, 0, 0, stats);
+			call_plugins(pEnc, pEnc->reference, &pEnc->sOriginal, XVID_PLG_AFTER, NULL, NULL, stats);
 		}
 		else
 			stats->type = XVID_TYPE_NOTHING;
@@ -1346,7 +1346,7 @@ repeat:
 
 		if ( FrameCodeP(pEnc, &bs) == 0 ) {
 			/* N-VOP, we mustn't code b-frames yet */
-			call_plugins(pEnc, pEnc->current, &pEnc->sOriginal, XVID_PLG_AFTER, 0, 0, stats);
+			call_plugins(pEnc, pEnc->current, &pEnc->sOriginal, XVID_PLG_AFTER, NULL, NULL, stats);
 			goto done;
 		}
 	}
@@ -1367,7 +1367,7 @@ repeat:
 
 	/* packed or no-bframes or no-bframes-queued: output stats */
 	if ((pEnc->mbParam.global_flags & XVID_GLOBAL_PACKED) || pEnc->mbParam.max_bframes == 0 ) {
-		call_plugins(pEnc, pEnc->current, &pEnc->sOriginal, XVID_PLG_AFTER, 0, 0, stats);
+		call_plugins(pEnc, pEnc->current, &pEnc->sOriginal, XVID_PLG_AFTER, NULL, NULL, stats);
 	}
 
 	/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
