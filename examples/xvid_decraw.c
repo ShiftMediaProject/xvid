@@ -20,7 +20,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.22 2005-10-07 15:02:28 suxen_drol Exp $
+ * $Id: xvid_decraw.c,v 1.23 2005-11-25 12:07:01 chl Exp $
  *
  ****************************************************************************/
 
@@ -625,7 +625,7 @@ static int write_pnm(char *filename, unsigned char *image)
 
 	if (BPP == 1) {
 		int i;
-		fprintf(f, "P5\n#xvid\n%i %i\n255\n", XDIM, YDIM*3/2);
+		fprintf(f, "P5\n%i %i\n255\n", XDIM, YDIM*3/2);
 
 		fwrite(image, 1, XDIM*YDIM, f);
 
