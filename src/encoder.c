@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.120 2005-11-22 10:23:01 suxen_drol Exp $
+ * $Id: encoder.c,v 1.121 2005-12-09 04:45:35 syskin Exp $
  *
  ****************************************************************************/
 
@@ -235,6 +235,14 @@ enc_create(xvid_enc_create_t * create)
 		pEnc->temp_dquants = (int *) xvid_malloc(pEnc->mbParam.mb_width *
 						pEnc->mbParam.mb_height * sizeof(int), CACHE_LINE);
 		if (pEnc->temp_dquants==NULL)
+			goto xvid_err_memory1a;
+	}
+
+	/* temp lambdas */
+	if (pEnc->mbParam.plugin_flags & XVID_REQLAMBDA) {
+		pEnc->temp_lambda = (float *) xvid_malloc(pEnc->mbParam.mb_width *
+						pEnc->mbParam.mb_height * 6 * sizeof(float), CACHE_LINE);
+		if (pEnc->temp_lambda == NULL)
 			goto xvid_err_memory1a;
 	}
 
@@ -519,6 +527,10 @@ enc_create(xvid_enc_create_t * create)
 		xvid_free(pEnc->temp_dquants);
 	}
 
+	if(pEnc->mbParam.plugin_flags & XVID_REQLAMBDA) {
+		xvid_free(pEnc->temp_lambda);
+	}
+
   xvid_err_memory0:
 	for (n=0; n<pEnc->num_plugins;n++) {
 		if (pEnc->plugins[n].func) {
@@ -651,7 +663,7 @@ enc_destroy(Encoder * pEnc)
 static void call_plugins(Encoder * pEnc, FRAMEINFO * frame, IMAGE * original,
 						 int opt, int * type, int * quant, xvid_enc_stats_t * stats)
 {
-	unsigned int i, j;
+	unsigned int i, j, k;
 	xvid_plg_data_t data;
 
 	/* set data struct */
@@ -712,7 +724,16 @@ static void call_plugins(Encoder * pEnc, FRAMEINFO * frame, IMAGE * original,
 			data.dquant_stride = pEnc->mbParam.mb_width;
 			memset(data.dquant, 0, data.mb_width*data.mb_height);
 		}
-	
+
+		if(pEnc->mbParam.plugin_flags & XVID_REQLAMBDA) {
+			int block = 0;
+			data.lambda = pEnc->temp_lambda;
+			for(i = 0;i < pEnc->mbParam.mb_height; i++)
+				for(j = 0;j < pEnc->mbParam.mb_width; j++)
+					for (k = 0; k < 6; k++) 
+						data.lambda[block++] = 1.0f;
+		}
+
 	} else { /* XVID_PLG_AFTER */
 		if ((pEnc->mbParam.plugin_flags & XVID_REQORIGINAL)) {
 			data.original.csp = XVID_CSP_PLANAR;
@@ -816,6 +837,23 @@ static void call_plugins(Encoder * pEnc, FRAMEINFO * frame, IMAGE * original,
 				frame->mbs[j*pEnc->mbParam.mb_width + i].dquant = 0;
 			}
 		}
+
+		if (pEnc->mbParam.plugin_flags & XVID_REQLAMBDA) {
+			for (j = 0; j < pEnc->mbParam.mb_height; j++)
+				for (i = 0; i < pEnc->mbParam.mb_width; i++)
+					for (k = 0; k < 6; k++) {
+						frame->mbs[j*pEnc->mbParam.mb_width + i].lambda[k] = 
+							(int) ((float)(1<<LAMBDA_EXP) * data.lambda[6 * (j * data.mb_width + i) + k]);
+			}
+		} else {
+			for (j = 0; j<pEnc->mbParam.mb_height; j++)
+				for (i = 0; i<pEnc->mbParam.mb_width; i++)
+					for (k = 0; k < 6; k++) {
+						frame->mbs[j*pEnc->mbParam.mb_width + i].lambda[k] = 1<<LAMBDA_EXP;
+			}
+		}
+
+
 		frame->mbs[0].quant = data.quant; /* FRAME will not affect the quant in stats */
 	}
 
@@ -1872,7 +1910,7 @@ FrameCodeB(Encoder * pEnc,
 	}
 
 	frame->coding_type = B_VOP;
-	call_plugins(pEnc, pEnc->current, NULL, XVID_PLG_FRAME, NULL, NULL, NULL);
+	call_plugins(pEnc, frame, NULL, XVID_PLG_FRAME, NULL, NULL, NULL);
 
 	start_timer();
 	MotionEstimationBVOP(&pEnc->mbParam, frame,

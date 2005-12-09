@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.h,v 1.28 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: encoder.h,v 1.29 2005-12-09 04:45:35 syskin Exp $
  *
  ****************************************************************************/
 
@@ -34,6 +34,9 @@
 /*****************************************************************************
  * Constants
  ****************************************************************************/
+
+/* lambda base exponential. 1<<LAMBDA_EXP is the neutral lambda */
+#define LAMBDA_EXP		6
 
 /*****************************************************************************
  * Types
@@ -174,6 +177,10 @@ typedef struct
     /* dquant */
 
     int * temp_dquants;
+
+    /* lambda */
+
+    float * temp_lambda;
 
 	/* images */
 

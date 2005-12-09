@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbtransquant.c,v 1.29 2005-11-22 10:23:01 suxen_drol Exp $
+ * $Id: mbtransquant.c,v 1.30 2005-12-09 04:45:35 syskin Exp $
  *
  ****************************************************************************/
 
@@ -183,7 +183,8 @@ dct_quantize_trellis_c(int16_t *const Out,
 					   const uint16_t * const Zigzag,
 					   const uint16_t * const QuantMatrix,
 					   int Non_Zero,
-					   int Sum);
+					   int Sum,
+					   int Lambda_Mod);
 
 /* Quantize all blocks -- Inter mode */
 static __inline uint8_t
@@ -235,7 +236,8 @@ MBQuantInter(const MBParam * pParam,
 										 pMB->quant, &scan_tables[0][0],
 										 matrix,
 										 63,
-										 sum);
+										 sum,
+										 pMB->lambda[i]);
 		}
 		stop_quant_timer();
 
@@ -764,7 +766,8 @@ dct_quantize_trellis_c(int16_t *const Out,
 					   const uint16_t * const Zigzag,
 					   const uint16_t * const QuantMatrix,
 					   int Non_Zero,
-					   int Sum)
+					   int Sum,
+					   int Lambda_Mod)
 {
 
 	/* Note: We should search last non-zero coeffs on *real* DCT input coeffs
@@ -779,7 +782,7 @@ dct_quantize_trellis_c(int16_t *const Out,
 	uint32_t * const Run_Costs = Run_Costs0 + 1;
 
 	/* it's 1/lambda, actually */
-	const int Lambda = Trellis_Lambda_Tabs[Q-1];
+	const int Lambda = (Lambda_Mod*Trellis_Lambda_Tabs[Q-1])>>LAMBDA_EXP;
 
 	int Run_Start = -1;
 	uint32_t Min_Cost = 2<<TL_SHIFT;
