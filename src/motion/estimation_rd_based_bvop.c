@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_rd_based_bvop.c,v 1.9 2005-11-22 10:23:01 suxen_drol Exp $
+ * $Id: estimation_rd_based_bvop.c,v 1.10 2005-12-09 04:45:35 syskin Exp $
  *
  ****************************************************************************/
 
@@ -503,7 +503,9 @@ ModeDecision_BVOP_RD(SearchData * const Data_d,
 	f_rd = b_rd = i_rd = d_rd = best_rd = 256*4096;
 
 	for (i = 0; i < 6; i++) {
-		int lam = (LAMBDA*iQuant*iQuant)/(ref_quant*(ref_quant+1)); /* re-calculate as if it was p-frame's quant +.5 */
+		/* re-calculate as if it was p-frame's quant +.5 */
+		int lam = (pMB->lambda[i]*LAMBDA*iQuant*iQuant)/(ref_quant*(ref_quant+1));
+		lam >>= LAMBDA_EXP;
 		Data_d->lambda[i] = lam;
 		Data_b->lambda[i] = lam;
 		Data_f->lambda[i] = lam;

@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: global.h,v 1.24 2005-09-13 12:12:15 suxen_drol Exp $
+ * $Id: global.h,v 1.25 2005-12-09 04:45:35 syskin Exp $
  *
  ****************************************************************************/
 
@@ -212,6 +212,9 @@ typedef struct
 
 	int dquant;
 	int cbp;
+
+	/* lambda for these blocks */
+	int lambda[6];
 
 	/* bframe stuff */
 

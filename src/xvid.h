@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.52 2005-11-22 10:53:10 suxen_drol Exp $
+ * $Id: xvid.h,v 1.53 2005-12-09 04:45:35 syskin Exp $
  *
  ****************************************************************************/
 
@@ -361,6 +361,7 @@ typedef struct {
 #define XVID_REQORIGINAL (1<<0) /* plugin requires a copy of the original (uncompressed) image */
 #define XVID_REQPSNR     (1<<1) /* plugin requires psnr between the uncompressed and compressed image*/
 #define XVID_REQDQUANTS  (1<<2) /* plugin requires access to the dquant table */
+#define XVID_REQLAMBDA   (1<<3) /* plugin requires access to the lambda table */
 
 
 typedef struct
@@ -425,6 +426,9 @@ typedef struct
 	int vop_flags;          /* [in,out] */
 	int vol_flags;          /* [in,out] */
 	int motion_flags;       /* [in,out] */
+
+	/* Lambda table for HVSPlugins */
+	float * lambda;         /* [in,out] six floats for each macroblock. read, multiply, write back */
 
 /* Deprecated, use the stats field instead.
  * Will disapear before 1.0 */
