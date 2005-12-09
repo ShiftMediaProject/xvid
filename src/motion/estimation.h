@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation.h,v 1.12 2005-03-14 00:47:07 Isibaar Exp $
+ * $Id: estimation.h,v 1.13 2005-12-09 04:39:49 syskin Exp $
  *
  ****************************************************************************/
 
@@ -41,7 +41,8 @@
 
 /* vector map (vlc delta size) smoother parameters ! float !*/
 #define NEIGH_TEND_16X16		0.6
-#define NEIGH_TEND_8X8			0.6
+#define NEIGH_TEND_8X8			1.5
+
 #define NEIGH_8X8_BIAS			40
 
 #define BITS_MULT				16

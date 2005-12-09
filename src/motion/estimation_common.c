@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_common.c,v 1.12 2005-05-23 09:29:43 Skal Exp $
+ * $Id: estimation_common.c,v 1.13 2005-12-09 04:39:49 syskin Exp $
  *
  ****************************************************************************/
 
@@ -55,10 +55,10 @@ const uint32_t roundtab_79[4] =
 { 0, 1, 0, 0 };
 
 const int xvid_me_lambda_vec16[32] =
-	{     0    ,(int)(0.5 * NEIGH_TEND_16X16 + 0.5),
-	(int)(1.0*NEIGH_TEND_16X16 + 0.5), (int)(1.5*NEIGH_TEND_16X16 + 0.5),
-	(int)(2.0*NEIGH_TEND_16X16 + 0.5), (int)(2.5*NEIGH_TEND_16X16 + 0.5),
-	(int)(5.0*NEIGH_TEND_16X16 + 0.5), (int)(7.0*NEIGH_TEND_16X16 + 0.5),
+	{     0    ,(int)(1.0 * NEIGH_TEND_16X16 + 0.5),
+	(int)(2.0*NEIGH_TEND_16X16 + 0.5), (int)(3.0*NEIGH_TEND_16X16 + 0.5),
+	(int)(4.0*NEIGH_TEND_16X16 + 0.5), (int)(5.0*NEIGH_TEND_16X16 + 0.5),
+	(int)(6.0*NEIGH_TEND_16X16 + 0.5), (int)(7.0*NEIGH_TEND_16X16 + 0.5),
 	(int)(8.0*NEIGH_TEND_16X16 + 0.5), (int)(9.0*NEIGH_TEND_16X16 + 0.5),
 	(int)(10.0*NEIGH_TEND_16X16 + 0.5), (int)(11.0*NEIGH_TEND_16X16 + 0.5),
 	(int)(12.0*NEIGH_TEND_16X16 + 0.5), (int)(13.0*NEIGH_TEND_16X16 + 0.5),
