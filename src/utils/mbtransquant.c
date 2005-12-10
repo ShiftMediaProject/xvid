@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbtransquant.c,v 1.30 2005-12-09 04:45:35 syskin Exp $
+ * $Id: mbtransquant.c,v 1.31 2005-12-10 05:20:35 syskin Exp $
  *
  ****************************************************************************/
 
@@ -758,6 +758,8 @@ Find_Last(const int16_t *C, const uint16_t *Zigzag, int i)
 	return -1;
 }
 
+#define TRELLIS_MIN_EFFORT	3
+
 /* this routine has been strippen of all debug code */
 static int
 dct_quantize_trellis_c(int16_t *const Out,
@@ -796,8 +798,8 @@ dct_quantize_trellis_c(int16_t *const Out,
 	Run_Costs[-1] = 2<<TL_SHIFT;
 
 	Non_Zero = Find_Last(Out, Zigzag, Non_Zero);
-	if (Non_Zero<0)
-		return 0; /* Sum is zero if there are only zero coeffs */
+	if (Non_Zero < TRELLIS_MIN_EFFORT) 
+		Non_Zero = TRELLIS_MIN_EFFORT;
 
 	for(i=0; i<=Non_Zero; i++) {
 		const int q = ((Q*QuantMatrix[Zigzag[i]])>>4);
