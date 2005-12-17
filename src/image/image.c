@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.c,v 1.32 2005-09-09 12:18:10 suxen_drol Exp $
+ * $Id: image.c,v 1.33 2005-12-17 11:24:32 syskin Exp $
  *
  ****************************************************************************/
 
@@ -249,12 +249,7 @@ image_interpolate(const IMAGE * refn,
 {
 	const uint32_t offset = EDGE_SIZE2 * (edged_width + 1); /* we only interpolate half of the edge area */
 	const uint32_t stride_add = 7 * edged_width;
-#if 0
-	const uint32_t edged_width2 = edged_width / 2;
-	const uint32_t edged_height2 = edged_height / 2;
-	const uint32_t offset2 = EDGE_SIZE2 * (edged_width2 + 1);
-	const uint32_t stride_add2 = 7 * edged_width2;
-#endif
+
 	uint8_t *n_ptr, *h_ptr, *v_ptr, *hv_ptr;
 	uint32_t x, y;
 
@@ -333,123 +328,6 @@ image_interpolate(const IMAGE * refn,
 			n_ptr += stride_add;
 		}
 	}
-/*
-#ifdef BFRAMES
-	n_ptr = refn->u;
-	h_ptr = refh->u;
-	v_ptr = refv->u;
-	hv_ptr = refhv->u;
-
-	n_ptr -= offset2;
-	h_ptr -= offset2;
-	v_ptr -= offset2;
-	hv_ptr -= offset2;
-
-	for (y = 0; y < edged_height2; y += 8) {
-		for (x = 0; x < edged_width2; x += 8) {
-			interpolate8x8_halfpel_h(h_ptr, n_ptr, edged_width2, rounding);
-			interpolate8x8_halfpel_v(v_ptr, n_ptr, edged_width2, rounding);
-			interpolate8x8_halfpel_hv(hv_ptr, n_ptr, edged_width2, rounding);
-
-			n_ptr += 8;
-			h_ptr += 8;
-			v_ptr += 8;
-			hv_ptr += 8;
-		}
-		h_ptr += stride_add2;
-		v_ptr += stride_add2;
-		hv_ptr += stride_add2;
-		n_ptr += stride_add2;
-	}
-
-	n_ptr = refn->v;
-	h_ptr = refh->v;
-	v_ptr = refv->v;
-	hv_ptr = refhv->v;
-
-	n_ptr -= offset2;
-	h_ptr -= offset2;
-	v_ptr -= offset2;
-	hv_ptr -= offset2;
-
-	for (y = 0; y < edged_height2; y = y + 8) {
-		for (x = 0; x < edged_width2; x = x + 8) {
-			interpolate8x8_halfpel_h(h_ptr, n_ptr, edged_width2, rounding);
-			interpolate8x8_halfpel_v(v_ptr, n_ptr, edged_width2, rounding);
-			interpolate8x8_halfpel_hv(hv_ptr, n_ptr, edged_width2, rounding);
-
-			n_ptr += 8;
-			h_ptr += 8;
-			v_ptr += 8;
-			hv_ptr += 8;
-		}
-		h_ptr += stride_add2;
-		v_ptr += stride_add2;
-		hv_ptr += stride_add2;
-		n_ptr += stride_add2;
-	}
-#endif
-*/
-	/*
-	   interpolate_halfpel_h(
-	   refh->y - offset,
-	   refn->y - offset,
-	   edged_width, edged_height,
-	   rounding);
-
-	   interpolate_halfpel_v(
-	   refv->y - offset,
-	   refn->y - offset,
-	   edged_width, edged_height,
-	   rounding);
-
-	   interpolate_halfpel_hv(
-	   refhv->y - offset,
-	   refn->y - offset,
-	   edged_width, edged_height,
-	   rounding);
-	 */
-
-	/* uv-image-based compensation
-	   offset = EDGE_SIZE2 * (edged_width / 2 + 1);
-
-	   interpolate_halfpel_h(
-	   refh->u - offset,
-	   refn->u - offset,
-	   edged_width / 2, edged_height / 2,
-	   rounding);
-
-	   interpolate_halfpel_v(
-	   refv->u - offset,
-	   refn->u - offset,
-	   edged_width / 2, edged_height / 2,
-	   rounding);
-
-	   interpolate_halfpel_hv(
-	   refhv->u - offset,
-	   refn->u - offset,
-	   edged_width / 2, edged_height / 2,
-	   rounding);
-
-
-	   interpolate_halfpel_h(
-	   refh->v - offset,
-	   refn->v - offset,
-	   edged_width / 2, edged_height / 2,
-	   rounding);
-
-	   interpolate_halfpel_v(
-	   refv->v - offset,
-	   refn->v - offset,
-	   edged_width / 2, edged_height / 2,
-	   rounding);
-
-	   interpolate_halfpel_hv(
-	   refhv->v - offset,
-	   refn->v - offset,
-	   edged_width / 2, edged_height / 2,
-	   rounding);
-	 */
 }
 
 
