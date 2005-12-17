@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.c,v 1.34 2005-12-17 12:04:52 syskin Exp $
+ * $Id: image.c,v 1.35 2005-12-17 13:57:15 syskin Exp $
  *
  ****************************************************************************/
 
@@ -255,7 +255,7 @@ image_interpolate(const uint8_t * refn,
 
 	n_ptr = (uint8_t*)refn;
 	h_ptr = refh;
-	v_ptr = refhv;
+	v_ptr = refv;
 
 	n_ptr -= offset;
 	h_ptr -= offset;
