@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.c,v 1.33 2005-12-17 11:24:32 syskin Exp $
+ * $Id: image.c,v 1.34 2005-12-17 12:04:52 syskin Exp $
  *
  ****************************************************************************/
 
@@ -236,12 +236,11 @@ image_setedges(IMAGE * image,
 	}
 }
 
-/* bframe encoding requires image-based u,v interpolation */
 void
-image_interpolate(const IMAGE * refn,
-				  IMAGE * refh,
-				  IMAGE * refv,
-				  IMAGE * refhv,
+image_interpolate(const uint8_t * refn,
+				  uint8_t * refh,
+				  uint8_t * refv,
+				  uint8_t * refhv,
 				  uint32_t edged_width,
 				  uint32_t edged_height,
 				  uint32_t quarterpel,
@@ -250,13 +249,13 @@ image_interpolate(const IMAGE * refn,
 	const uint32_t offset = EDGE_SIZE2 * (edged_width + 1); /* we only interpolate half of the edge area */
 	const uint32_t stride_add = 7 * edged_width;
 
-	uint8_t *n_ptr, *h_ptr, *v_ptr, *hv_ptr;
+	uint8_t *n_ptr;
+	uint8_t *h_ptr, *v_ptr, *hv_ptr;
 	uint32_t x, y;
 
-
-	n_ptr = refn->y;
-	h_ptr = refh->y;
-	v_ptr = refv->y;
+	n_ptr = (uint8_t*)refn;
+	h_ptr = refh;
+	v_ptr = refhv;
 
 	n_ptr -= offset;
 	h_ptr -= offset;
@@ -285,8 +284,8 @@ image_interpolate(const IMAGE * refn,
 			n_ptr += stride_add;
 		}
 
-		h_ptr = refh->y + (edged_height - EDGE_SIZE - EDGE_SIZE2)*edged_width - EDGE_SIZE2;
-		hv_ptr = refhv->y + (edged_height - EDGE_SIZE - EDGE_SIZE2)*edged_width - EDGE_SIZE2;
+		h_ptr = refh + (edged_height - EDGE_SIZE - EDGE_SIZE2)*edged_width - EDGE_SIZE2;
+		hv_ptr = refhv + (edged_height - EDGE_SIZE - EDGE_SIZE2)*edged_width - EDGE_SIZE2;
 
 		for (y = 0; y < (edged_height - EDGE_SIZE); y = y + 8) {
 			hv_ptr -= stride_add;
@@ -302,7 +301,7 @@ image_interpolate(const IMAGE * refn,
 		}
 	} else {
 
-		hv_ptr = refhv->y;
+		hv_ptr = refhv;
 		hv_ptr -= offset;
 
 		for (y = 0; y < (edged_height - EDGE_SIZE); y += 8) {

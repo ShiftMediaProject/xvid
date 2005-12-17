@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.121 2005-12-09 04:45:35 syskin Exp $
+ * $Id: encoder.c,v 1.122 2005-12-17 12:04:52 syskin Exp $
  *
  ****************************************************************************/
 
@@ -1592,8 +1592,8 @@ FrameCodeP(Encoder * pEnc,
 	if ((current->vop_flags & XVID_VOP_HALFPEL)) {
 		if (reference->is_interpolated != current->rounding_type) {
 			start_timer();
-			image_interpolate(pRef, &pEnc->vInterH, &pEnc->vInterV,
-							  &pEnc->vInterHV, pParam->edged_width,
+			image_interpolate(pRef->y, pEnc->vInterH.y, pEnc->vInterV.y,
+							  pEnc->vInterHV.y, pParam->edged_width,
 							  pParam->edged_height,
 							  (pParam->vol_flags & XVID_VOL_QUARTERPEL),
 							  current->rounding_type);
@@ -1885,7 +1885,7 @@ FrameCodeB(Encoder * pEnc,
 
 	if (pEnc->reference->is_interpolated != 0) {
 		start_timer();
-		image_interpolate(f_ref, &pEnc->f_refh, &pEnc->f_refv, &pEnc->f_refhv,
+		image_interpolate(f_ref->y, pEnc->f_refh.y, pEnc->f_refv.y, pEnc->f_refhv.y,
 						  pEnc->mbParam.edged_width, pEnc->mbParam.edged_height,
 						  (pEnc->mbParam.vol_flags & XVID_VOL_QUARTERPEL), 0);
 		stop_inter_timer();
@@ -1902,7 +1902,7 @@ FrameCodeB(Encoder * pEnc,
 
 	if (pEnc->current->is_interpolated != 0) {
 		start_timer();
-		image_interpolate(b_ref, &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV,
+		image_interpolate(b_ref->y, pEnc->vInterH.y, pEnc->vInterV.y, pEnc->vInterHV.y,
 						pEnc->mbParam.edged_width, pEnc->mbParam.edged_height,
 						(pEnc->mbParam.vol_flags & XVID_VOL_QUARTERPEL), 0);
 		stop_inter_timer();
