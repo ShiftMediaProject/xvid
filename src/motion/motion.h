@@ -26,7 +26,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: motion.h,v 1.23 2004-12-05 13:01:27 syskin Exp $
+ *  $Id: motion.h,v 1.24 2005-12-18 06:52:12 syskin Exp $
  *
  ***************************************************************************/
 
@@ -52,7 +52,7 @@ extern const uint32_t roundtab_79[4];
 
 /** MotionEstimation **/
 
-bool MotionEstimation(MBParam * const pParam,
+void MotionEstimation(MBParam * const pParam,
 					FRAMEINFO * const current,
 					FRAMEINFO * const reference,
 					const IMAGE * const pRefH,
