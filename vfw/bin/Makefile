@@ -9,7 +9,7 @@
 # Requires GNU Make because of shell expansion performed at a bad time with
 # other make programs (even using := variable assignments)
 #
-# $Id: Makefile,v 1.4 2005-04-04 23:49:37 edgomez Exp $
+# $Id: Makefile,v 1.5 2005-12-18 02:55:54 syskin Exp $
 ##############################################################################
 
 include sources.inc
@@ -36,7 +36,6 @@ CFLAGS += -O2
 CFLAGS += -fstrength-reduce
 CFLAGS += -finline-functions
 CFLAGS += -fgcse
-CFLAGS += -freduce-all-givs
 CFLAGS += -ffast-math
 
 ##############################################################################
