@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.75 2005-11-22 10:23:01 suxen_drol Exp $
+ * $Id: decoder.c,v 1.76 2005-12-24 01:06:20 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -466,7 +466,8 @@ decoder_mbinter(DECODER * dec,
         const uint32_t cbp,
         Bitstream * bs,
         const uint32_t rounding,
-        const int ref)
+        const int ref,
+		const int bvop)
 {
   uint32_t stride = dec->edged_width;
   uint32_t stride2 = stride / 2;
@@ -487,13 +488,13 @@ decoder_mbinter(DECODER * dec,
 
   start_timer();
 
-  if (pMB->mode != MODE_INTER4V) { /* INTER, INTER_Q, NOT_CODED, FORWARD, BACKWARD */
+  if ((pMB->mode != MODE_INTER4V) || (bvop)) { /* INTER, INTER_Q, NOT_CODED, FORWARD, BACKWARD */
 
     uv_dx = mv[0].x;
     uv_dy = mv[0].y;
     if (dec->quarterpel) {
 			if (dec->bs_version <= BS_VERSION_BUGGY_CHROMA_ROUNDING) {
-  			uv_dx = (uv_dx>>1) | (uv_dx&1);
+  				uv_dx = (uv_dx>>1) | (uv_dx&1);
 				uv_dy = (uv_dy>>1) | (uv_dy&1);
 			}
 			else {
@@ -581,7 +582,8 @@ decoder_mbinter_field(DECODER * dec,
         const uint32_t cbp,
         Bitstream * bs,
         const uint32_t rounding,
-        const int ref)
+        const int ref,
+		const int bvop)
 {
   uint32_t stride = dec->edged_width;
   uint32_t stride2 = stride / 2;
@@ -605,7 +607,7 @@ decoder_mbinter_field(DECODER * dec,
 
   start_timer();
 
-  if(pMB->mode!=MODE_INTER4V)   /* INTER, INTER_Q, NOT_CODED, FORWARD, BACKWARD */
+  if((pMB->mode!=MODE_INTER4V) || (bvop))   /* INTER, INTER_Q, NOT_CODED, FORWARD, BACKWARD */
   { 
     /* Prepare top field vector */
     uvtop_dx = DIV2ROUND(mv[0].x);
@@ -1063,9 +1065,9 @@ decoder_pframe(DECODER * dec,
 
         /* See how to decode */
         if(!mb->field_pred)
-         decoder_mbinter(dec, mb, x, y, cbp, bs, rounding, 0);
+         decoder_mbinter(dec, mb, x, y, cbp, bs, rounding, 0, 0);
         else 
-         decoder_mbinter_field(dec, mb, x, y, cbp, bs, rounding, 0);
+         decoder_mbinter_field(dec, mb, x, y, cbp, bs, rounding, 0, 0);
 
       } else if (gmc_warp) {  /* a not coded S(GMC)-VOP macroblock */
         mb->mode = MODE_NOT_CODED_GMC;
@@ -1086,7 +1088,7 @@ decoder_pframe(DECODER * dec,
         mb->field_pred=0; /* (!) */
 
         decoder_mbinter(dec, mb, x, y, 0, bs, 
-                                rounding, 0);
+                                rounding, 0, 0);
 
         if(dec->out_frm && cp_mb > 0) {
           output_slice(&dec->cur, dec->edged_width,dec->width,dec->out_frm,st_mb,y,cp_mb);
@@ -1188,24 +1190,30 @@ decoder_bf_interpolate_mbinter(DECODER * dec,
     b_uv_dy = (b_uv_dy >> 1) + roundtab_79[b_uv_dy & 0x3];
 
   } else {
-    uv_dx = pMB->mvs[0].x + pMB->mvs[1].x + pMB->mvs[2].x + pMB->mvs[3].x;
-    uv_dy = pMB->mvs[0].y + pMB->mvs[1].y + pMB->mvs[2].y + pMB->mvs[3].y;
-    b_uv_dx = pMB->b_mvs[0].x + pMB->b_mvs[1].x + pMB->b_mvs[2].x + pMB->b_mvs[3].x;
-    b_uv_dy = pMB->b_mvs[0].y + pMB->b_mvs[1].y + pMB->b_mvs[2].y + pMB->b_mvs[3].y;
-
-    if (dec->quarterpel) {
-      if (dec->bs_version <= BS_VERSION_BUGGY_CHROMA_ROUNDING) {
-				uv_dx = (uv_dx>>1) | (uv_dx&1);
-				uv_dy = (uv_dy>>1) | (uv_dy&1);
-				b_uv_dx = (b_uv_dx>>1) | (b_uv_dx&1);
-				b_uv_dy = (b_uv_dy>>1) | (b_uv_dy&1);
+	  if (dec->quarterpel) { /* for qpel the /2 shall be done before summation. We've done it right in the encoder in the past. */
+							 /* TODO: figure out if we ever did it wrong on the encoder side. If yes, add some workaround */
+		if (dec->bs_version <= BS_VERSION_BUGGY_CHROMA_ROUNDING) {
+			int z;
+			uv_dx = 0; uv_dy = 0;
+			b_uv_dx = 0; b_uv_dy = 0;
+			for (z = 0; z < 4; z++) {
+			  uv_dx += ((pMB->mvs[z].x>>1) | (pMB->mvs[z].x&1));
+			  uv_dy += ((pMB->mvs[z].y>>1) | (pMB->mvs[z].y&1));
+			  b_uv_dx += ((pMB->b_mvs[z].x>>1) | (pMB->b_mvs[z].x&1));
+			  b_uv_dy += ((pMB->b_mvs[z].y>>1) | (pMB->b_mvs[z].y&1));
 			}
-			else {
-        uv_dx /= 2;
-        uv_dy /= 2;
-        b_uv_dx /= 2;
-        b_uv_dy /= 2;
-      }
+		}
+		else {
+			uv_dx = (pMB->mvs[0].x / 2) + (pMB->mvs[1].x / 2) + (pMB->mvs[2].x / 2) + (pMB->mvs[3].x / 2);
+			uv_dy = (pMB->mvs[0].y / 2) + (pMB->mvs[1].y / 2) + (pMB->mvs[2].y / 2) + (pMB->mvs[3].y / 2);
+			b_uv_dx = (pMB->b_mvs[0].x / 2) + (pMB->b_mvs[1].x / 2) + (pMB->b_mvs[2].x / 2) + (pMB->b_mvs[3].x / 2);
+			b_uv_dy = (pMB->b_mvs[0].y / 2) + (pMB->b_mvs[1].y / 2) + (pMB->b_mvs[2].y / 2) + (pMB->b_mvs[3].y / 2);
+		} 
+	} else {
+      uv_dx = pMB->mvs[0].x + pMB->mvs[1].x + pMB->mvs[2].x + pMB->mvs[3].x;
+      uv_dy = pMB->mvs[0].y + pMB->mvs[1].y + pMB->mvs[2].y + pMB->mvs[3].y;
+      b_uv_dx = pMB->b_mvs[0].x + pMB->b_mvs[1].x + pMB->b_mvs[2].x + pMB->b_mvs[3].x;
+      b_uv_dy = pMB->b_mvs[0].y + pMB->b_mvs[1].y + pMB->b_mvs[2].y + pMB->b_mvs[3].y;
     }
 
     uv_dx = (uv_dx >> 3) + roundtab_76[uv_dx & 0xf];
@@ -1384,7 +1392,7 @@ decoder_bframe(DECODER * dec,
       if (last_mb->mode == MODE_NOT_CODED) {
         mb->cbp = 0;
         mb->mode = MODE_FORWARD;
-        decoder_mbinter(dec, mb, x, y, mb->cbp, bs, 0, 1);
+        decoder_mbinter(dec, mb, x, y, mb->cbp, bs, 0, 1, 1);
         continue;
       }
 
@@ -1467,14 +1475,14 @@ decoder_bframe(DECODER * dec,
         get_b_motion_vector(bs, &mb->mvs[0], fcode_backward, dec->p_bmv, dec, x, y);
         dec->p_bmv = mb->mvs[1] = mb->mvs[2] = mb->mvs[3] = mb->mvs[0];
 
-        decoder_mbinter(dec, mb, x, y, mb->cbp, bs, 0, 0);
+        decoder_mbinter(dec, mb, x, y, mb->cbp, bs, 0, 0, 1);
         break;
 
       case MODE_FORWARD:
         get_b_motion_vector(bs, &mb->mvs[0], fcode_forward, dec->p_fmv, dec, x, y);
         dec->p_fmv = mb->mvs[1] = mb->mvs[2] = mb->mvs[3] = mb->mvs[0];
 
-        decoder_mbinter(dec, mb, x, y, mb->cbp, bs, 0, 1);
+        decoder_mbinter(dec, mb, x, y, mb->cbp, bs, 0, 1, 1);
         break;
 
       default:
