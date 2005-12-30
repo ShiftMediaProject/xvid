@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.76 2005-12-24 01:06:20 Isibaar Exp $
+ * $Id: decoder.c,v 1.77 2005-12-30 14:04:49 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -195,6 +195,8 @@ decoder_create(xvid_dec_create_t * create)
   dec->low_delay = 0;
   dec->packed_mode = 0;
   dec->time_inc_resolution = 1; /* until VOL header says otherwise */
+
+  dec->bs_version = 0xffff; /* Initialize to very high value -> assume bugfree stream */
 
   dec->fixed_dimensions = (dec->width > 0 && dec->height > 0);
 
