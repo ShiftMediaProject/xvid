@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.22 2005-10-07 15:02:28 suxen_drol Exp $
+ * $Id: xvid_encraw.c,v 1.23 2006-01-17 19:06:25 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -128,7 +128,7 @@ static xvid_enc_zone_t ZONES[MAX_ZONES];
 static int NUM_ZONES = 0;
 
 /* Maximum number of frames to encode */
-#define ABS_MAXFRAMENR 9999
+#define ABS_MAXFRAMENR -1 /* no limit */
 
 static int ARG_STATS = 0;
 static int ARG_DUMP = 0;
@@ -431,7 +431,7 @@ main(int argc,
 		return (-1);
 	}
 
-	if (ARG_MAXFRAMENR <= 0) {
+	if (ARG_MAXFRAMENR == 0) {
 		fprintf(stderr, "Wrong number of frames\n");
 		return (-1);
 	}
@@ -445,6 +445,12 @@ main(int argc,
 		  ARG_INPUTTYPE==2)
       {
 		  AVISTREAMINFO avi_info;
+		  FILE *avi_fp = fopen(ARG_INPUTFILE, "rb");
+		  if (avi_fp == NULL) {
+			  fprintf(stderr, "Couldn't open file '%s'!\n", ARG_INPUTFILE);
+			  return (-1);
+		  }
+		  fclose(avi_fp);
 
 		  AVIFileInit();
 		  if (AVIStreamOpenFromFile(&avi_stream, ARG_INPUTFILE, streamtypeVIDEO, 0, OF_READ, NULL) != AVIERR_OK) {
@@ -467,7 +473,11 @@ main(int argc,
               return (-1);
 		  }
 
-      ARG_MAXFRAMENR = min(ARG_MAXFRAMENR, avi_info.dwLength);
+		  
+          if (ARG_MAXFRAMENR<0)
+			ARG_MAXFRAMENR = avi_info.dwLength;
+		  else
+			ARG_MAXFRAMENR = min(ARG_MAXFRAMENR, avi_info.dwLength);
 
 		  XDIM = avi_info.rcFrame.right - avi_info.rcFrame.left;
 		  YDIM = avi_info.rcFrame.bottom - avi_info.rcFrame.top;
@@ -550,7 +560,7 @@ main(int argc,
 		char *type;
 		int sse[3];
 
-		if (input_num >= ARG_MAXFRAMENR) {
+		if (input_num >= ARG_MAXFRAMENR && ARG_MAXFRAMENR > 0) {
 			result = 1;
 		}
 
