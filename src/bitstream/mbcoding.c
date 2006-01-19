@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbcoding.c,v 1.52 2005-09-13 12:12:15 suxen_drol Exp $
+ * $Id: mbcoding.c,v 1.53 2006-01-19 22:25:23 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -572,12 +572,18 @@ CodeBlockInter(const FRAMEINFO * const frame,
 #endif
 		}
 	}
+
+	bits = BitstreamPos(bs);
+
 	/* code motion vector(s) if motion is local  */
 	if (!pMB->mcsel)
 		for (i = 0; i < (pMB->mode == MODE_INTER4V ? 4 : 1); i++) {
 			CodeVector(bs, pMB->pmvs[i].x, frame->fcode);
 			CodeVector(bs, pMB->pmvs[i].y, frame->fcode);
 		}
+
+	bits = BitstreamPos(bs) - bits;
+	pStat->iMVBits += bits;
 
 	bits = BitstreamPos(bs);
 
@@ -746,6 +752,7 @@ MBCodingBVOP(const FRAMEINFO * const frame,
 		}
 	}
 
+	bits = BitstreamPos(bs);
 
 	switch (mb->mode) {
 		case MODE_INTERPOLATE:
@@ -762,6 +769,7 @@ MBCodingBVOP(const FRAMEINFO * const frame,
 			CodeVector(bs, mb->pmvs[3].y, 1);	/* prediction is always (0,0) */
 		default: break;
 	}
+	pStat->iMVBits += BitstreamPos(bs) - bits;
 
 	bits = BitstreamPos(bs);
 	for (i = 0; i < 6; i++) {

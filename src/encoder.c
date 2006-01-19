@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.122 2005-12-17 12:04:52 syskin Exp $
+ * $Id: encoder.c,v 1.123 2006-01-19 22:25:18 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1494,6 +1494,7 @@ FrameCodeI(Encoder * pEnc,
 	BitstreamWriteVopHeader(bs, &pEnc->mbParam, pEnc->current, 1, pEnc->current->mbs[0].quant);
 
 	pEnc->current->sStat.iTextBits = 0;
+	pEnc->current->sStat.iMVBits = 0;
 	pEnc->current->sStat.kblks = mb_width * mb_height;
 	pEnc->current->sStat.mblks = pEnc->current->sStat.ublks = 0;
 
@@ -1603,7 +1604,8 @@ FrameCodeP(Encoder * pEnc,
 	}
 
 	current->sStat.iTextBits = current->sStat.iMvSum = current->sStat.iMvCount =
-		current->sStat.kblks = current->sStat.mblks = current->sStat.ublks = 0;
+		current->sStat.kblks = current->sStat.mblks = current->sStat.ublks = 
+		current->sStat.iMVBits = 0;
 
 	current->coding_type = P_VOP;
 
@@ -1926,6 +1928,7 @@ FrameCodeB(Encoder * pEnc,
 	BitstreamWriteVopHeader(bs, &pEnc->mbParam, frame, 1, frame->quant);
 
 	frame->sStat.iTextBits = 0;
+	frame->sStat.iMVBits = 0;
 	frame->sStat.iMvSum = 0;
 	frame->sStat.iMvCount = 0;
 	frame->sStat.kblks = frame->sStat.mblks = frame->sStat.ublks = 0;

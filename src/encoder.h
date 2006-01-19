@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.h,v 1.29 2005-12-09 04:45:35 syskin Exp $
+ * $Id: encoder.h,v 1.30 2006-01-19 22:25:18 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -113,6 +113,7 @@ typedef struct
 	int mblks;
 	int ublks;
 	int gblks;
+	int iMVBits;
 } Statistics;
 
 
