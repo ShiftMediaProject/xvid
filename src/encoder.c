@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.123 2006-01-19 22:25:18 Isibaar Exp $
+ * $Id: encoder.c,v 1.124 2006-02-15 20:58:43 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1384,7 +1384,9 @@ repeat:
 
 		if ( FrameCodeP(pEnc, &bs) == 0 ) {
 			/* N-VOP, we mustn't code b-frames yet */
-			call_plugins(pEnc, pEnc->current, &pEnc->sOriginal, XVID_PLG_AFTER, NULL, NULL, stats);
+			if ((pEnc->mbParam.global_flags & XVID_GLOBAL_PACKED) || 
+				 pEnc->mbParam.max_bframes == 0)
+				call_plugins(pEnc, pEnc->current, &pEnc->sOriginal, XVID_PLG_AFTER, NULL, NULL, stats);
 			goto done;
 		}
 	}
@@ -1797,7 +1799,7 @@ FrameCodeP(Encoder * pEnc,
 		(pParam->frame_drop_ratio * mb_width * mb_height) / 100 &&
 		( (pEnc->bframenum_head >= pEnc->bframenum_tail) || !(pEnc->mbParam.global_flags & XVID_GLOBAL_CLOSED_GOP)) )
 	{
-		current->sStat.kblks = current->sStat.mblks = 0;
+		current->sStat.kblks = current->sStat.mblks = current->sStat.iTextBits = 0;
 		current->sStat.ublks = mb_width * mb_height;
 
 		BitstreamReset(bs);
