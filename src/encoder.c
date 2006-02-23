@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.124 2006-02-15 20:58:43 Isibaar Exp $
+ * $Id: encoder.c,v 1.125 2006-02-23 07:22:43 syskin Exp $
  *
  ****************************************************************************/
 
@@ -722,7 +722,7 @@ static void call_plugins(Encoder * pEnc, FRAMEINFO * frame, IMAGE * original,
 		if ((pEnc->mbParam.plugin_flags & XVID_REQDQUANTS)) {
 			data.dquant = pEnc->temp_dquants;
 			data.dquant_stride = pEnc->mbParam.mb_width;
-			memset(data.dquant, 0, data.mb_width*data.mb_height);
+			memset(data.dquant, 0, data.mb_width*data.mb_height*sizeof(int));
 		}
 
 		if(pEnc->mbParam.plugin_flags & XVID_REQLAMBDA) {
