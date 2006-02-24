@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.23 2006-01-17 19:06:25 Isibaar Exp $
+ * $Id: xvid_encraw.c,v 1.24 2006-02-24 10:39:23 syskin Exp $
  *
  ****************************************************************************/
 
@@ -164,6 +164,7 @@ static int ARG_TURBO = 0;
 static int ARG_VHQMODE = 0;
 static int ARG_BVHQ = 0;
 static int ARG_CLOSED_GOP = 0;
+static int ARG_THREADS = 0;
 
 #ifndef READ_PNM
 #define IMAGE_SIZE(x,y) ((x)*(y)*3/2)
@@ -397,6 +398,9 @@ main(int argc,
 			ARG_GMC = 1;
 		} else if (strcmp("-interlaced", argv[i]) == 0) {
 		 	ARG_INTERLACING = 1;
+		} else if (strcmp("-threads", argv[i]) == 0) {
+			i++;
+			ARG_THREADS = atoi(argv[i]);
 		} else if (strcmp("-closed_gop", argv[i]) == 0) {
 			ARG_CLOSED_GOP = 1;
 		} else if (strcmp("-help", argv[i])) {
@@ -1117,8 +1121,7 @@ enc_init(int use_assembler)
 	}
 #endif
 
-	/* No fancy thread tests */
-	xvid_enc_create.num_threads = 0;
+	xvid_enc_create.num_threads = ARG_THREADS;
 
 	/* Frame rate - Do some quick float fps = fincr/fbase hack */
 	if ((ARG_FRAMERATE - (int) ARG_FRAMERATE) < SMALL_EPS) {
