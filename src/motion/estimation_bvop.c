@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.23 2005-03-14 00:47:07 Isibaar Exp $
+ * $Id: estimation_bvop.c,v 1.24 2006-02-24 08:46:22 syskin Exp $
  *
  ****************************************************************************/
 
@@ -1092,4 +1092,195 @@ MotionEstimationBVOP(MBParam * const pParam,
 
 	frame->fcode = getMinFcode(MVmaxF);
 	frame->bcode = getMinFcode(MVmaxB);
+}
+
+
+
+void
+SMPMotionEstimationBVOP(SMPmotionData * h)
+{
+	const MBParam * const pParam = h->pParam;
+	const FRAMEINFO * const frame = h->current;
+	const int32_t time_bp = h->time_bp;
+	const int32_t time_pp = h->time_pp;
+	/* forward (past) reference */
+	const MACROBLOCK * const f_mbs = h->f_mbs;
+	const IMAGE * const f_ref = h->fRef;
+	const IMAGE * const f_refH = h->fRefH;
+	const IMAGE * const f_refV = h->fRefV;
+	const IMAGE * const f_refHV = h->fRefHV;
+	/* backward (future) reference */
+	const FRAMEINFO * const b_reference = h->reference;
+	const IMAGE * const b_ref = h->pRef;
+	const IMAGE * const b_refH = h->pRefH;
+	const IMAGE * const b_refV = h->pRefV;
+	const IMAGE * const b_refHV = h->pRefHV;
+
+	int y_step = h->y_step;
+	int start_y = h->start_y;
+	int * complete_count_self = h->complete_count_self;
+	const int * complete_count_above = h->complete_count_above;
+	int max_mbs;
+	int current_mb = 0;
+
+	uint32_t i, j;
+	int32_t best_sad = 256*4096;
+	uint32_t skip_sad;
+	int fb_thresh;
+	const MACROBLOCK * const b_mbs = b_reference->mbs;
+
+	VECTOR f_predMV, b_predMV;
+
+	int MVmaxF = 0, MVmaxB = 0;
+	const int32_t TRB = time_pp - time_bp;
+	const int32_t TRD = time_pp;
+	DECLARE_ALIGNED_MATRIX(dct_space, 3, 64, int16_t, CACHE_LINE);
+
+	/* some pre-inintialized data for the rest of the search */
+	SearchData Data_d, Data_f, Data_b, Data_i;
+	memset(&Data_d, 0, sizeof(SearchData));
+
+	Data_d.iEdgedWidth = pParam->edged_width;
+	Data_d.qpel = pParam->vol_flags & XVID_VOL_QUARTERPEL ? 1 : 0;
+	Data_d.rounding = 0;
+	Data_d.chroma = frame->motion_flags & XVID_ME_CHROMA_BVOP;
+	Data_d.iQuant = frame->quant;
+	Data_d.quant_sq = frame->quant*frame->quant;
+	Data_d.dctSpace = dct_space;
+	Data_d.quant_type = !(pParam->vol_flags & XVID_VOL_MPEGQUANT);
+	Data_d.mpeg_quant_matrices = pParam->mpeg_quant_matrices;
+
+	Data_d.RefQ = h->RefQ;
+
+	memcpy(&Data_f, &Data_d, sizeof(SearchData));
+	memcpy(&Data_b, &Data_d, sizeof(SearchData));
+	memcpy(&Data_i, &Data_d, sizeof(SearchData));
+
+	Data_f.iFcode = Data_i.iFcode = frame->fcode;
+	Data_b.iFcode = Data_i.bFcode = frame->bcode;
+
+	max_mbs = 0;
+
+	for (j = start_y; j < pParam->mb_height; j += y_step) {
+		if (j == 0) max_mbs = pParam->mb_width; /* we can process all blocks of the first row */
+
+		f_predMV = b_predMV = zeroMV;	/* prediction is reset at left boundary */
+
+		for (i = 0; i < pParam->mb_width; i++) {
+			MACROBLOCK * const pMB = frame->mbs + i + j * pParam->mb_width;
+			const MACROBLOCK * const b_mb = b_mbs + i + j * pParam->mb_width;
+			pMB->mode = -1;
+
+			initialize_searchData(&Data_d, &Data_f, &Data_b, &Data_i,
+					  i, j, f_ref, f_refH->y, f_refV->y, f_refHV->y,
+					  b_ref, b_refH->y, b_refV->y, b_refHV->y,
+					  &frame->image, b_mb);
+
+			if (current_mb >= max_mbs) {
+				/* we ME-ed all macroblocks we safely could. grab next portion */
+				int above_count = *complete_count_above; /* sync point */
+				if (above_count == pParam->mb_width) {
+					/* full line above is ready */
+					above_count = pParam->mb_width+1;
+					if (j < pParam->mb_height-y_step) {
+						/* this is not last line, grab a portion of MBs from the next line too */
+						above_count += MAX(0, complete_count_above[1] - 1);
+					}
+				}
+
+				max_mbs = current_mb + above_count - i - 1;
+				
+				if (current_mb >= max_mbs) {
+					/* current workload is zero */
+					i--;
+					sched_yield();
+					continue;
+				}
+			}
+
+/* special case, if collocated block is SKIPed in P-VOP: encoding is forward (0,0), cpb=0 without further ado */
+			if (b_reference->coding_type != S_VOP)
+				if (b_mb->mode == MODE_NOT_CODED) {
+					pMB->mode = MODE_NOT_CODED;
+					pMB->mvs[0] = pMB->b_mvs[0] = zeroMV;
+					pMB->sad16 = 0;
+					*complete_count_self = i+1;
+					current_mb++;
+					continue;
+				}
+
+/* direct search comes first, because it (1) checks for SKIP-mode
+	and (2) sets very good predictions for forward and backward search */
+			skip_sad = SearchDirect_initial(i, j, frame->motion_flags, TRB, TRD, pParam, pMB, 
+											b_mb, &best_sad, &Data_d);
+
+			if (pMB->mode == MODE_DIRECT_NONE_MV) {
+				pMB->sad16 = best_sad;
+				pMB->cbp = 0;
+				*complete_count_self = i+1;
+				current_mb++;
+				continue;
+			}
+
+			SearchBF_initial(i, j, frame->motion_flags, frame->fcode, pParam, pMB,
+						&f_predMV, &best_sad, MODE_FORWARD, &Data_f, Data_d.currentMV[1]);
+
+			SearchBF_initial(i, j, frame->motion_flags, frame->bcode, pParam, pMB,
+						&b_predMV, &best_sad, MODE_BACKWARD, &Data_b, Data_d.currentMV[2]);
+
+			if (frame->motion_flags&XVID_ME_BFRAME_EARLYSTOP)
+				fb_thresh = best_sad;
+			else
+				fb_thresh = best_sad + (best_sad>>1);
+
+			if (Data_f.iMinSAD[0] <= fb_thresh)
+				SearchBF_final(i, j, frame->motion_flags, pParam, &best_sad, &Data_f);
+
+			if (Data_b.iMinSAD[0] <= fb_thresh)
+				SearchBF_final(i, j, frame->motion_flags, pParam, &best_sad, &Data_b);
+
+			SearchInterpolate_initial(i, j, frame->motion_flags, pParam, &f_predMV, &b_predMV, &best_sad,
+								  &Data_i, Data_f.currentMV[0], Data_b.currentMV[0]);
+
+			if (((Data_i.iMinSAD[0] < best_sad +(best_sad>>3)) && !(frame->motion_flags&XVID_ME_FAST_MODEINTERPOLATE))
+				|| Data_i.iMinSAD[0] <= best_sad)
+
+				SearchInterpolate_final(i, j, frame->motion_flags, pParam, &best_sad, &Data_i);
+			
+			if (Data_d.iMinSAD[0] <= 2*best_sad)
+				if ((!(frame->motion_flags&XVID_ME_SKIP_DELTASEARCH) && (best_sad > 750))
+					|| (best_sad > 1000))
+				
+					SearchDirect_final(frame->motion_flags, b_mb, &best_sad, &Data_d);
+
+			/* final skip decision */
+			if ( (skip_sad < 2 * Data_d.iQuant * MAX_SAD00_FOR_SKIP )
+				&& ((100*best_sad)/(skip_sad+1) > FINAL_SKIP_THRESH) ) {
+
+				Data_d.chromaSAD = 0; /* green light for chroma check */
+
+				SkipDecisionB(pMB, &Data_d);
+				
+				if (pMB->mode == MODE_DIRECT_NONE_MV) { /* skipped? */
+					pMB->sad16 = skip_sad;
+					pMB->cbp = 0;
+					*complete_count_self = i+1;
+					current_mb++;
+					continue;
+				}
+			}
+
+			if (frame->vop_flags & XVID_VOP_RD_BVOP) 
+				ModeDecision_BVOP_RD(&Data_d, &Data_b, &Data_f, &Data_i, 
+					pMB, b_mb, &f_predMV, &b_predMV, frame->motion_flags, pParam, i, j, best_sad);
+			else
+				ModeDecision_BVOP_SAD(&Data_d, &Data_b, &Data_f, &Data_i, pMB, b_mb, &f_predMV, &b_predMV);
+
+			*complete_count_self = i+1;
+			current_mb++;
+		}
+
+		complete_count_self++;
+		complete_count_above++;
+	}
 }
