@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.126 2006-02-24 08:46:22 syskin Exp $
+ * $Id: encoder.c,v 1.127 2006-02-24 14:18:59 syskin Exp $
  *
  ****************************************************************************/
 
@@ -1709,6 +1709,8 @@ FrameCodeP(Encoder * pEnc,
 
 	if (pEnc->num_threads > 0) {
 		/* multithreaded motion estimation - dispatch threads */
+
+		void * status;
 		int rows_per_thread = (pParam->mb_height + pEnc->num_threads - 1)/pEnc->num_threads;
 
 		for (k = 0; k < pEnc->num_threads; k++) {
@@ -1726,10 +1728,25 @@ FrameCodeP(Encoder * pEnc,
 			pEnc->motionData[k].RefQ = pEnc->vInterH.u + 16*k*pParam->edged_width;
 		}
 
-		for (k = 0; k < pEnc->num_threads; k++) {
+		for (k = 1; k < pEnc->num_threads; k++) {
 			pthread_create(&pEnc->motionData[k].handle, NULL, 
 				(void*)MotionEstimateSMP, (void*)&pEnc->motionData[k]);
 		}
+
+		MotionEstimateSMP(&pEnc->motionData[0]);
+
+		for (k = 1; k < pEnc->num_threads; k++) {
+			pthread_join(pEnc->motionData[k].handle, &status);
+		}
+
+		current->fcode = 0;
+		for (k = 0; k < pEnc->num_threads; k++) {
+			current->sStat.iMvSum += pEnc->motionData[k].mvSum;
+			current->sStat.iMvCount += pEnc->motionData[k].mvCount;
+			if (pEnc->motionData[k].minfcode > current->fcode)
+				current->fcode = pEnc->motionData[k].minfcode;
+		}
+
 	} else {
 		/* regular ME */
 
@@ -1745,14 +1762,6 @@ FrameCodeP(Encoder * pEnc,
 	BitstreamWriteVopHeader(bs, &pEnc->mbParam, current, 1, current->mbs[0].quant);
 
 	for (y = 0; y < mb_height; y++) {
-
-		if (pEnc->num_threads > 0) {
-			/* in multithreaded encoding, only proceed with a row of macroblocks 
-				if ME finished with that row */
-			while (pEnc->motionData[y%pEnc->num_threads].complete_count_self[y/pEnc->num_threads] != mb_width)
-				sched_yield();
-		}
-
 		for (x = 0; x < mb_width; x++) {
 			MACROBLOCK *pMB = &current->mbs[x + y * pParam->mb_width];
 			int skip_possible;
@@ -1860,18 +1869,6 @@ FrameCodeP(Encoder * pEnc,
 			/* ordinary case: normal coded INTER/INTER4V block */
 			MBCoding(current, pMB, qcoeff, bs, &pEnc->current->sStat);
 			stop_coding_timer();
-		}
-	}
-
-	if (pEnc->num_threads > 0) {
-		void * status;
-		for (k = 0; k < pEnc->num_threads; k++) {
-			pthread_join(pEnc->motionData[k].handle, &status);
-		}
-
-		for (k = 0; k < pEnc->num_threads; k++) {
-			current->sStat.iMvSum += pEnc->motionData[k].mvSum;
-			current->sStat.iMvCount += pEnc->motionData[k].mvCount;
 		}
 	}
 
@@ -2005,7 +2002,9 @@ FrameCodeB(Encoder * pEnc,
 
 	frame->fcode = frame->bcode = pEnc->current->fcode;
 
+	start_timer();
 	if (pEnc->num_threads > 0) {
+		void * status;
 		int k;
 		/* multithreaded motion estimation - dispatch threads */
 		int rows_per_thread = (pEnc->mbParam.mb_height + pEnc->num_threads - 1)/pEnc->num_threads;
@@ -2031,12 +2030,25 @@ FrameCodeB(Encoder * pEnc,
 			pEnc->motionData[k].RefQ = pEnc->vInterH.u + 16*k*pEnc->mbParam.edged_width;
 		}
 
-		for (k = 0; k < pEnc->num_threads; k++) {
+		for (k = 1; k < pEnc->num_threads; k++) {
 			pthread_create(&pEnc->motionData[k].handle, NULL, 
 				(void*)SMPMotionEstimationBVOP, (void*)&pEnc->motionData[k]);
 		}
+		
+		SMPMotionEstimationBVOP(&pEnc->motionData[0]);
+
+		for (k = 1; k < pEnc->num_threads; k++) {
+			pthread_join(pEnc->motionData[k].handle, &status);
+		}
+
+		frame->fcode = frame->bcode = 0;
+		for (k = 0; k < pEnc->num_threads; k++) {
+			if (pEnc->motionData[k].minfcode > frame->fcode)
+				frame->fcode = pEnc->motionData[k].minfcode;
+			if (pEnc->motionData[k].minbcode > frame->bcode)
+				frame->bcode = pEnc->motionData[k].minbcode;
+		}
 	} else {
-		start_timer();
 		MotionEstimationBVOP(&pEnc->mbParam, frame,
 							 ((int32_t)(pEnc->current->stamp - frame->stamp)),				/* time_bp */
 							 ((int32_t)(pEnc->current->stamp - pEnc->reference->stamp)), 	/* time_pp */
@@ -2044,8 +2056,8 @@ FrameCodeB(Encoder * pEnc,
 							 &pEnc->f_refh, &pEnc->f_refv, &pEnc->f_refhv,
 							 pEnc->current, b_ref, &pEnc->vInterH,
 							 &pEnc->vInterV, &pEnc->vInterHV);
-		stop_motion_timer();
 	}
+	stop_motion_timer();
 
 	set_timecodes(frame, pEnc->reference,pEnc->mbParam.fbase);
 	BitstreamWriteVopHeader(bs, &pEnc->mbParam, frame, 1, frame->quant);
@@ -2059,14 +2071,6 @@ FrameCodeB(Encoder * pEnc,
 	frame->sStat.kblks = frame->sStat.ublks = 0;
 
 	for (y = 0; y < pEnc->mbParam.mb_height; y++) {
-
-		if (pEnc->num_threads > 0) {
-			/* in multithreaded encoding, only proceed with a row of macroblocks 
-				if ME finished with that row */
-			while (pEnc->motionData[y%pEnc->num_threads].complete_count_self[y/pEnc->num_threads] != pEnc->mbParam.mb_width)
-				sched_yield();
-		}
-
 		for (x = 0; x < pEnc->mbParam.mb_width; x++) {
 			MACROBLOCK * const mb = &frame->mbs[x + y * pEnc->mbParam.mb_width];
 
@@ -2110,15 +2114,6 @@ FrameCodeB(Encoder * pEnc,
 			stop_coding_timer();
 		}
 	}
-
-	if (pEnc->num_threads > 0) {
-		void * status;
-		int k;
-		for (k = 0; k < pEnc->num_threads; k++) {
-			pthread_join(pEnc->motionData[k].handle, &status);
-		}
-	}
-
 	emms();
 
 	BitstreamPadAlways(bs); /* next_start_code() at the end of VideoObjectPlane() */
