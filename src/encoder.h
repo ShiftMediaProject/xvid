@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.h,v 1.30 2006-01-19 22:25:18 Isibaar Exp $
+ * $Id: encoder.h,v 1.31 2006-02-24 08:46:22 syskin Exp $
  *
  ****************************************************************************/
 
@@ -78,11 +78,6 @@ typedef struct
 	int par;
 	int par_width;
 	int par_height;
-
-#ifdef _SMP
-	int num_threads;
-#endif
-
 
 	int iMaxKeyInterval;
 	int max_bframes;
@@ -160,6 +155,8 @@ typedef struct
 } FRAMEINFO;
 
 
+#include "motion/motion_smp.h"
+
 typedef struct
 {
 	MBParam mbParam;
@@ -217,6 +214,10 @@ typedef struct
     /* closed_gop fixup temporary storage */
 	int closed_bframenum; /* == -1 if there is no fixup intended */
     QUEUEINFO closed_qframe;	/* qFrame, only valid when >= 0 */
+
+	/* multithreaded stuff */
+	int num_threads;			/* number of additional threads */
+	SMPmotionData * motionData;	/* data structures used to pass all thread-specific data */
 
 	int m_framenum; /* debug frame num counter; unlike iFrameNum, does not reset at ivop */
 

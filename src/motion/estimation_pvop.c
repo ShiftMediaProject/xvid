@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_pvop.c,v 1.18 2005-12-18 06:52:12 syskin Exp $
+ * $Id: estimation_pvop.c,v 1.19 2006-02-24 08:46:22 syskin Exp $
  *
  ****************************************************************************/
 
@@ -39,6 +39,8 @@
 #include "motion.h"
 #include "sad.h"
 #include "motion_inlines.h"
+#include "motion_smp.h"
+
 
 static const int xvid_me_lambda_vec8[32] =
 	{     0    ,(int)(1.0 * NEIGH_TEND_8X8 + 0.5),
@@ -981,3 +983,176 @@ MotionEstimation(MBParam * const pParam,
 	current->sStat.iMvSum = mvSum;
 	current->sStat.iMvCount = mvCount;
 }
+
+void
+MotionEstimateSMP(SMPmotionData * h)
+{
+	const MBParam * const pParam = h->pParam;
+	const FRAMEINFO * const current = h->current;
+	const FRAMEINFO * const reference = h->reference;
+	const IMAGE * const pRefH = h->pRefH;
+	const IMAGE * const pRefV = h->pRefV;
+	const IMAGE * const pRefHV = h->pRefHV;
+	const IMAGE * const pGMC = h->pGMC;
+	uint32_t MotionFlags = MakeGoodMotionFlags(current->motion_flags,
+												current->vop_flags,
+												current->vol_flags);
+
+	MACROBLOCK *const pMBs = current->mbs;
+	const IMAGE *const pCurrent = &current->image;
+	const IMAGE *const pRef = &reference->image;
+
+	const uint32_t mb_width = pParam->mb_width;
+	const uint32_t mb_height = pParam->mb_height;
+	const uint32_t iEdgedWidth = pParam->edged_width;
+	int stat_thresh = 0;
+	int MVmax = 0, mvSum = 0, mvCount = 0;
+	int y_step = h->y_step;
+	int start_y = h->start_y;
+
+	uint32_t x, y;
+	int sad00;
+	int skip_thresh = INITIAL_SKIP_THRESH * \
+		(current->vop_flags & XVID_VOP_MODEDECISION_RD ? 2:1);
+	int block = start_y*mb_width;
+	int * complete_count_self = h->complete_count_self;
+	const int * complete_count_above = h->complete_count_above;
+	int max_mbs;
+	int current_mb = 0;
+
+	/* some pre-initialized thingies for SearchP */
+	DECLARE_ALIGNED_MATRIX(dct_space, 3, 64, int16_t, CACHE_LINE);
+	SearchData Data;
+	memset(&Data, 0, sizeof(SearchData));
+	Data.iEdgedWidth = iEdgedWidth;
+	Data.iFcode = current->fcode;
+	Data.rounding = pParam->m_rounding_type;
+	Data.qpel = (current->vol_flags & XVID_VOL_QUARTERPEL ? 1:0);
+	Data.chroma = MotionFlags & XVID_ME_CHROMA_PVOP;
+	Data.dctSpace = dct_space;
+	Data.quant_type = !(pParam->vol_flags & XVID_VOL_MPEGQUANT);
+	Data.mpeg_quant_matrices = pParam->mpeg_quant_matrices;
+
+	/* todo: sort out temp memory space */
+	Data.RefQ = h->RefQ;
+	if (sadInit) (*sadInit) ();
+
+	max_mbs = 0;
+
+	for (y = start_y; y < mb_height; y += y_step)	{
+		if (y == 0) max_mbs = mb_width; /* we can process all blocks of the first row */
+
+		for (x = 0; x < mb_width; x++)	{
+			
+			MACROBLOCK *pMB, *prevMB;
+			int skip;
+
+			pMB = &pMBs[block];
+			prevMB = &reference->mbs[block];
+
+			pMB->sad16 =
+				sad16v(pCurrent->y + (x + y * iEdgedWidth) * 16,
+							pRef->y + (x + y * iEdgedWidth) * 16,
+							pParam->edged_width, pMB->sad8);
+
+			sad00 = 4*MAX(MAX(pMB->sad8[0], pMB->sad8[1]), MAX(pMB->sad8[2], pMB->sad8[3]));
+
+			if (Data.chroma) {
+				Data.chromaSAD = sad8(pCurrent->u + x*8 + y*(iEdgedWidth/2)*8,
+									pRef->u + x*8 + y*(iEdgedWidth/2)*8, iEdgedWidth/2)
+								+ sad8(pCurrent->v + (x + y*(iEdgedWidth/2))*8,
+									pRef->v + (x + y*(iEdgedWidth/2))*8, iEdgedWidth/2);
+				pMB->sad16 += Data.chromaSAD;
+				sad00 += Data.chromaSAD;
+			}
+
+			if (current_mb >= max_mbs) {
+				/* we ME-ed all macroblocks we safely could. grab next portion */
+				int above_count = *complete_count_above; /* sync point */
+				if (above_count == mb_width) {
+					/* full line above is ready */
+					above_count = mb_width+1;
+					if (y < mb_height-y_step) {
+						/* this is not last line, grab a portion of MBs from the next line too */
+						above_count += MAX(0, complete_count_above[1] - 1);
+					}
+				}
+
+				max_mbs = current_mb + above_count - x - 1;
+				
+				if (current_mb >= max_mbs) {
+					/* current workload is zero */
+					x--;
+					sched_yield();
+					continue;
+				}
+			}
+
+			skip = InitialSkipDecisionP(sad00, pParam, current, pMB, prevMB, x, y, &Data, pGMC, 
+										pCurrent, pRef, MotionFlags);
+			if (current_mb >= max_mbs) {
+				/* we ME-ed all macroblocks we safely could. grab next portion */
+				int above_count = *complete_count_above; /* sync point */
+				if (above_count == mb_width) {
+					/* full line above is ready */
+					above_count = mb_width+1;
+					if (y < mb_height-y_step) {
+						/* this is not last line, grab a portion of MBs from the next line too */
+						above_count += MAX(0, complete_count_above[1] - 1);
+					}
+				}
+
+				max_mbs = current_mb + above_count - x - 1;
+				
+				if (current_mb >= max_mbs) {
+					/* current workload is zero */
+					x--;
+					sched_yield();
+					continue;
+				}
+			}
+
+			if (skip) {
+				current_mb++;
+				block++;
+				*complete_count_self = x+1;
+				continue;
+			}
+
+			SearchP(pRef, pRefH->y, pRefV->y, pRefHV->y, pCurrent, x,
+					y, MotionFlags, current->vop_flags,
+					&Data, pParam, pMBs, reference->mbs, pMB);
+
+			if (current->vop_flags & XVID_VOP_MODEDECISION_RD)
+				xvid_me_ModeDecision_RD(&Data, pMB, pMBs, x, y, pParam,
+								MotionFlags, current->vop_flags, current->vol_flags,
+								pCurrent, pRef, pGMC, current->coding_type);
+
+			else if (current->vop_flags & XVID_VOP_FAST_MODEDECISION_RD)
+				xvid_me_ModeDecision_Fast(&Data, pMB, pMBs, x, y, pParam,
+								MotionFlags, current->vop_flags, current->vol_flags,
+								pCurrent, pRef, pGMC, current->coding_type);
+			else
+				ModeDecision_SAD(&Data, pMB, pMBs, x, y, pParam,
+								MotionFlags, current->vop_flags, current->vol_flags,
+								pCurrent, pRef, pGMC, current->coding_type, sad00);
+
+			*complete_count_self = x+1;
+
+			current_mb++;
+			block++;
+
+			motionStatsPVOP(&MVmax, &mvCount, &mvSum, pMB, Data.qpel);
+			
+		}
+		block += (y_step-1)*pParam->mb_width;
+		complete_count_self++;
+		complete_count_above++;
+	}
+
+	h->MVmax = MVmax;
+	h->mvSum = mvSum;
+	h->mvCount = mvCount;
+}
+
+
