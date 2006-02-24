@@ -292,6 +292,9 @@ static const REG_INT reg_ints[] = {
 	{"debug",					&reg.debug,						0x0},
 	{"vop_debug",				&reg.vop_debug,					0},
 	{"display_status",			&reg.display_status,			1},
+
+	/* smp */
+	{"num_threads",				&reg.num_threads,				0},
 	
 	/* decoder, shared with dshow */
 	{"Brightness",				&pp_brightness,					0},
@@ -373,7 +376,6 @@ void config_reg_get(CONFIG * config)
 	}
 
 	reg.cpu = info.cpu_flags;
-	reg.num_threads = info.num_threads;
 
 	RegOpenKeyEx(XVID_REG_KEY, XVID_REG_PARENT "\\" XVID_REG_CHILD, 0, KEY_READ, &hKey);
 
@@ -837,10 +839,6 @@ static void adv_init(HWND hDlg, int idd, CONFIG * config)
 		break;
 
 	case IDD_ENC :
-		/* force threads disabled */
-		EnableWindow(GetDlgItem(hDlg, IDC_NUMTHREADS_STATIC), FALSE);
-		EnableWindow(GetDlgItem(hDlg, IDC_NUMTHREADS), FALSE);
-
 		SendDlgItemMessage(hDlg, IDC_FOURCC, CB_ADDSTRING, 0, (LPARAM)"XVID");
 		SendDlgItemMessage(hDlg, IDC_FOURCC, CB_ADDSTRING, 0, (LPARAM)"DIVX");
 		SendDlgItemMessage(hDlg, IDC_FOURCC, CB_ADDSTRING, 0, (LPARAM)"DX50");
