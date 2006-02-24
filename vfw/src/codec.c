@@ -630,6 +630,9 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 
 LRESULT compress_end(CODEC * codec)
 {
+  if (codec==NULL)
+    return ICERR_OK;
+
 	if (codec->m_hdll != NULL) {
 		if (codec->ehandle != NULL) {
 			codec->xvid_encore_func(codec->ehandle, XVID_ENC_DESTROY, NULL, NULL);
