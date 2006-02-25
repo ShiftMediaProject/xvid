@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_pvop.c,v 1.19 2006-02-24 08:46:22 syskin Exp $
+ * $Id: estimation_pvop.c,v 1.20 2006-02-25 01:20:41 syskin Exp $
  *
  ****************************************************************************/
 
@@ -1149,6 +1149,8 @@ MotionEstimateSMP(SMPmotionData * h)
 		complete_count_self++;
 		complete_count_above++;
 	}
+
+	h->minfcode = getMinFcode(MVmax);
 
 	h->MVmax = MVmax;
 	h->mvSum = mvSum;
