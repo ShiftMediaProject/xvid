@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.24 2006-02-24 08:46:22 syskin Exp $
+ * $Id: estimation_bvop.c,v 1.25 2006-02-25 01:20:41 syskin Exp $
  *
  ****************************************************************************/
 
@@ -1123,7 +1123,7 @@ SMPMotionEstimationBVOP(SMPmotionData * h)
 	int max_mbs;
 	int current_mb = 0;
 
-	uint32_t i, j;
+	int32_t i, j;
 	int32_t best_sad = 256*4096;
 	uint32_t skip_sad;
 	int fb_thresh;
@@ -1278,9 +1278,13 @@ SMPMotionEstimationBVOP(SMPmotionData * h)
 
 			*complete_count_self = i+1;
 			current_mb++;
+			maxMotionBVOP(&MVmaxF, &MVmaxB, pMB, Data_d.qpel);
 		}
 
 		complete_count_self++;
 		complete_count_above++;
 	}
+
+	h->minfcode = getMinFcode(MVmaxF);
+	h->minbcode = getMinFcode(MVmaxB);
 }
