@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.67 2006-01-09 00:39:43 Isibaar Exp $
+ * $Id: xvid.c,v 1.68 2006-02-25 04:41:12 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -714,11 +714,19 @@ xvid_gbl_info(xvid_gbl_info_t * info)
 	info->actual_version = XVID_VERSION;
 	info->build = "xvid-1.2.0-dev";
 	info->cpu_flags = detect_cpu_flags();
+  info->num_threads = 0;
 
-#if defined(_SMP) && defined(WIN32)
-	info->num_threads = pthread_num_processors_np();;
-#else
-	info->num_threads = 0;
+#if defined(WIN32)
+  {
+    DWORD dwProcessAffinityMask, dwSystemAffinityMask;
+    if (GetProcessAffinityMask(GetCurrentProcess(), &dwProcessAffinityMask, &dwSystemAffinityMask)) {
+      int i;      
+      for(i=0; i<32; i++) {
+        if ((dwProcessAffinityMask & (1<<i)))
+          info->num_threads++;
+      }
+    }
+  }
 #endif
 
 	return 0;
