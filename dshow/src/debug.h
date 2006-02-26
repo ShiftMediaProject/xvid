@@ -7,17 +7,7 @@
 extern "C" {
 #endif
 
-static __inline void OutputDebugStringf(char *fmt, ...)
-{
-	va_list args;
-	char buf[256];
-
-	va_start(args, fmt);
-	vsprintf(buf, fmt, args);
-	strcat(buf, "\n");
-	OutputDebugString(buf);
-	va_end(args);
-}
+void OutputDebugStringf(char *fmt, ...);
 
 #ifdef _DEBUG
 #define DPRINTF OutputDebugStringf
