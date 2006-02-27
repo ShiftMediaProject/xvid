@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_pvop.c,v 1.20 2006-02-25 01:20:41 syskin Exp $
+ * $Id: estimation_pvop.c,v 1.21 2006-02-27 00:24:02 syskin Exp $
  *
  ****************************************************************************/
 
@@ -1016,7 +1016,7 @@ MotionEstimateSMP(SMPmotionData * h)
 		(current->vop_flags & XVID_VOP_MODEDECISION_RD ? 2:1);
 	int block = start_y*mb_width;
 	int * complete_count_self = h->complete_count_self;
-	const int * complete_count_above = h->complete_count_above;
+	const volatile int * complete_count_above = h->complete_count_above;
 	int max_mbs;
 	int current_mb = 0;
 
@@ -1047,6 +1047,29 @@ MotionEstimateSMP(SMPmotionData * h)
 			MACROBLOCK *pMB, *prevMB;
 			int skip;
 
+			if (current_mb >= max_mbs) {
+				/* we ME-ed all macroblocks we safely could. grab next portion */
+				int above_count = *complete_count_above; /* sync point */
+				if (above_count == mb_width) {
+					/* full line above is ready */
+					above_count = mb_width+1;
+					if (y < mb_height-y_step) {
+						/* this is not last line, grab a portion of MBs from the next line too */
+						above_count += MAX(0, complete_count_above[1] - 1);
+					}
+				}
+
+				max_mbs = current_mb + above_count - x - 1;
+				
+				if (current_mb >= max_mbs) {
+					/* current workload is zero */
+					x--;
+					sched_yield();
+					continue;
+				}
+			}
+
+
 			pMB = &pMBs[block];
 			prevMB = &reference->mbs[block];
 
@@ -1066,51 +1089,8 @@ MotionEstimateSMP(SMPmotionData * h)
 				sad00 += Data.chromaSAD;
 			}
 
-			if (current_mb >= max_mbs) {
-				/* we ME-ed all macroblocks we safely could. grab next portion */
-				int above_count = *complete_count_above; /* sync point */
-				if (above_count == mb_width) {
-					/* full line above is ready */
-					above_count = mb_width+1;
-					if (y < mb_height-y_step) {
-						/* this is not last line, grab a portion of MBs from the next line too */
-						above_count += MAX(0, complete_count_above[1] - 1);
-					}
-				}
-
-				max_mbs = current_mb + above_count - x - 1;
-				
-				if (current_mb >= max_mbs) {
-					/* current workload is zero */
-					x--;
-					sched_yield();
-					continue;
-				}
-			}
-
 			skip = InitialSkipDecisionP(sad00, pParam, current, pMB, prevMB, x, y, &Data, pGMC, 
 										pCurrent, pRef, MotionFlags);
-			if (current_mb >= max_mbs) {
-				/* we ME-ed all macroblocks we safely could. grab next portion */
-				int above_count = *complete_count_above; /* sync point */
-				if (above_count == mb_width) {
-					/* full line above is ready */
-					above_count = mb_width+1;
-					if (y < mb_height-y_step) {
-						/* this is not last line, grab a portion of MBs from the next line too */
-						above_count += MAX(0, complete_count_above[1] - 1);
-					}
-				}
-
-				max_mbs = current_mb + above_count - x - 1;
-				
-				if (current_mb >= max_mbs) {
-					/* current workload is zero */
-					x--;
-					sched_yield();
-					continue;
-				}
-			}
 
 			if (skip) {
 				current_mb++;
