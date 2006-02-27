@@ -22,7 +22,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: motion_smp.h,v 1.3 2006-02-27 00:22:31 syskin Exp $
+ * $Id: motion_smp.h,v 1.4 2006-02-27 12:16:04 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -31,16 +31,15 @@
 
 #ifdef WIN32
 
-# include <winbase.h>
 # include <windows.h>
 # define pthread_t				HANDLE
 # define pthread_create(t,u,f,d) *(t)=CreateThread(NULL,0,f,d,0,NULL)
 # define pthread_join(t,s)		{ WaitForSingleObject(t,INFINITE); \
 									CloseHandle(t); } 
 # define sched_yield()			Sleep(0);
-static int pthread_num_processors_np() 
+static __inline int pthread_num_processors_np() 
 {
-	unsigned int p_aff, s_aff, r = 0;
+	DWORD p_aff, s_aff, r = 0;
 	GetProcessAffinityMask(GetCurrentProcess(), &p_aff, &s_aff);
 	for(; p_aff != 0; p_aff>>=1) r += p_aff&1;
 	return r;
