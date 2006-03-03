@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.127 2006-02-24 14:18:59 syskin Exp $
+ * $Id: encoder.c,v 1.128 2006-03-03 11:54:58 syskin Exp $
  *
  ****************************************************************************/
 
@@ -662,6 +662,9 @@ enc_destroy(Encoder * pEnc)
 		xvid_free(pEnc->temp_dquants);
 	}
 
+	if ((pEnc->mbParam.plugin_flags & XVID_REQLAMBDA)) {
+		xvid_free(pEnc->temp_lambda);
+	}
 
 	if (pEnc->num_plugins>0) {
 		xvid_plg_destroy_t pdestroy;
@@ -2034,7 +2037,7 @@ FrameCodeB(Encoder * pEnc,
 			pthread_create(&pEnc->motionData[k].handle, NULL, 
 				(void*)SMPMotionEstimationBVOP, (void*)&pEnc->motionData[k]);
 		}
-		
+
 		SMPMotionEstimationBVOP(&pEnc->motionData[0]);
 
 		for (k = 1; k < pEnc->num_threads; k++) {
