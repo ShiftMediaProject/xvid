@@ -545,6 +545,26 @@ AC_CHECK_HEADERS(
 
 dnl ==========================================================================
 dnl
+dnl Check for pthread
+dnl
+dnl ==========================================================================
+
+AC_CHECK_HEADER(
+	pthread.h,
+	AC_CHECK_LIB(
+		pthread,
+		pthread_create,
+		AC_CHECK_LIB(
+			pthread,
+			pthread_join,
+			SPECIFIC_CFLAGS="$SPECIFIC_CFLAGS -DHAVE_PTHREAD"
+			SPECIFIC_LDFLAGS="$SPECIFIC_LDFLAGS -lpthread",
+			AC_MSG_WARN(Pthread not supported. No SMP support)),
+		AC_MSG_WARN(Pthread not supported. No SMP support)),
+	AC_MSG_WARN(Pthread not supported. No SMP support))
+
+dnl ==========================================================================
+dnl 
 dnl Now we can set CFLAGS if needed
 dnl
 dnl ==========================================================================
