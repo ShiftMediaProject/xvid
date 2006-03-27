@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.h,v 1.17 2004-05-31 21:36:23 edgomez Exp $
+ * $Id: decoder.h,v 1.18 2006-03-27 11:21:48 Skal Exp $
  *
  ****************************************************************************/
 
@@ -80,6 +80,7 @@ typedef struct
 	uint32_t time_inc_bits;
 
 	uint32_t shape;
+	int ver_id;
 	uint32_t quant_bits;
 	uint32_t quant_type;
 	uint16_t *mpeg_quant_matrices;
