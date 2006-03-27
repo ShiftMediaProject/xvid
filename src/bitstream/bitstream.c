@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.c,v 1.55 2005-11-22 10:23:01 suxen_drol Exp $
+ * $Id: bitstream.c,v 1.56 2006-03-27 11:21:48 Skal Exp $
  *
  ****************************************************************************/
 
@@ -423,18 +423,17 @@ BitstreamReadHeaders(Bitstream * bs,
 			DPRINTF(XVID_DEBUG_STARTCODE, "</visual_object_sequence>\n");
 
 		} else if (start_code == VISOBJ_START_CODE) {
-			int visobj_ver_id;
 
 			DPRINTF(XVID_DEBUG_STARTCODE, "<visual_object>\n");
 
 			BitstreamSkip(bs, 32);	/* visual_object_start_code */
 			if (BitstreamGetBit(bs))	/* is_visual_object_identified */
 			{
-				visobj_ver_id = BitstreamGetBits(bs, 4);	/* visual_object_ver_id */
-				DPRINTF(XVID_DEBUG_HEADER,"visobj_ver_id %i\n", visobj_ver_id);
+				dec->ver_id = BitstreamGetBits(bs, 4);	/* visual_object_ver_id */
+				DPRINTF(XVID_DEBUG_HEADER,"visobj_ver_id %i\n", dec->ver_id);
 				BitstreamSkip(bs, 3);	/* visual_object_priority */
 			} else {
-				visobj_ver_id = 1;
+				dec->ver_id = 1;
 			}
 
 			if (BitstreamShowBits(bs, 4) != VISOBJ_TYPE_VIDEO)	/* visual_object_type */
@@ -483,7 +482,7 @@ BitstreamReadHeaders(Bitstream * bs,
 				DPRINTF(XVID_DEBUG_HEADER,"ver_id %i\n", vol_ver_id);
 				BitstreamSkip(bs, 3);	/* video_object_layer_priority */
 			} else {
-				vol_ver_id = 1;
+				vol_ver_id = dec->ver_id;
 			}
 
 			dec->aspect_ratio = BitstreamGetBits(bs, 4);
