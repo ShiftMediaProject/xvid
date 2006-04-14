@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.h,v 1.22 2005-05-23 09:29:43 Skal Exp $
+ * $Id: bitstream.h,v 1.23 2006-04-14 07:24:47 Skal Exp $
  *
  ****************************************************************************/
 
@@ -193,8 +193,12 @@ BitstreamInit(Bitstream * const bs,
 #endif
 	bs->bufb = tmp;
 
-	bs->buf = 0;
 	bs->pos = bs->initpos = bitpos*8;
+	/* preserve the intervening bytes */
+	if (bs->initpos > 0)
+		bs->buf = bs->bufa & (0xffffffff << (32 - bs->initpos));
+	else
+		bs->buf = 0;
 	bs->length = length;
 }
 
@@ -220,7 +224,11 @@ BitstreamReset(Bitstream * const bs)
 #endif
 	bs->bufb = tmp;
 
-	bs->buf = 0;
+	/* preserve the intervening bytes */
+	if (bs->initpos > 0)
+		bs->buf = bs->bufa & (0xffffffff << (32 - bs->initpos));
+	else
+		bs->buf = 0;
 	bs->pos = bs->initpos;
 }
 
