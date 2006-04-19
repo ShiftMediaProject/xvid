@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_pvop.c,v 1.21 2006-02-27 00:24:02 syskin Exp $
+ * $Id: estimation_pvop.c,v 1.22 2006-04-19 15:42:19 syskin Exp $
  *
  ****************************************************************************/
 
@@ -296,7 +296,7 @@ ModeDecision_SAD(SearchData * const Data,
 
 	/* final skip decision, a.k.a. "the vector you found, really that good?" */
 	if (skip_possible && (skip_sad < (int)iQuant * MAX_SAD00_FOR_SKIP))
-		if ( (100*skip_sad)/(pMB->sad16+1) > FINAL_SKIP_THRESH)
+		if ( (100*skip_sad)/(pMB->sad16+1) < FINAL_SKIP_THRESH)
 			if (Data->chroma || xvid_me_SkipDecisionP(pCurrent, pRef, x, y, Data->iEdgedWidth/2, iQuant)) {
 				mode = MODE_NOT_CODED;
 				sad = 0;
