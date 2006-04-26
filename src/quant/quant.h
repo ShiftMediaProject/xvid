@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: quant.h,v 1.5 2005-04-04 23:49:37 edgomez Exp $
+ * $Id: quant.h,v 1.6 2006-04-26 17:44:29 Skal Exp $
  *
  ****************************************************************************/
 
@@ -91,7 +91,7 @@ quant_intraFunc dequant_mpeg_intra_3dne;
 #endif
 
 #ifdef ARCH_IS_IA64
-quanth263_intraFunc dequant_intra_ia64;
+quant_intraFunc dequant_h263_intra_ia64;
 #endif
 
 #ifdef ARCH_IS_PPC
