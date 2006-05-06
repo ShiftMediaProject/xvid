@@ -20,13 +20,14 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: plugin_lumimasking.c,v 1.5 2006-04-15 04:17:02 syskin Exp $
+ * $Id: plugin_lumimasking.c,v 1.6 2006-05-06 04:37:15 syskin Exp $
  *
  ****************************************************************************/
 
 #include <stdlib.h>
 
 #include "../xvid.h"
+#include "../global.h"
 #include "../portab.h"
 #include "../utils/emms.h"
 
