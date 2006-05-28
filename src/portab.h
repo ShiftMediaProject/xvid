@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: portab.h,v 1.55 2006-04-26 17:44:29 Skal Exp $
+ * $Id: portab.h,v 1.56 2006-05-28 07:52:45 suxen_drol Exp $
  *
  ****************************************************************************/
 
@@ -75,6 +75,7 @@ extern unsigned int xvid_debug;
 #    define CACHE_LINE 64
 #    define ptr_t uint32_t
 #    define intptr_t int32_t
+#    define _INTPTR_T_DEFINED
 #    if defined(_MSC_VER) && _MSC_VER >= 1300 && !defined(__INTEL_COMPILER)
 #        include <stdarg.h>
 #    else
@@ -84,6 +85,7 @@ extern unsigned int xvid_debug;
 #    define CACHE_LINE  64
 #    define ptr_t uint64_t
 #    define intptr_t int64_t
+#    define _INTPTR_T_DEFINED
 #    if defined (_MSC_VER) && _MSC_VER >= 1300 && !defined(__INTEL_COMPILER)
 #        include <stdarg.h>
 #    else
