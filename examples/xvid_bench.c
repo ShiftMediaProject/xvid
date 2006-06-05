@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.27 2005-11-03 05:44:07 Skal Exp $
+ * $Id: xvid_bench.c,v 1.28 2006-06-05 21:30:49 Skal Exp $
  *
  ****************************************************************************/
 
@@ -556,6 +556,11 @@ void test_mb()
 		printf( " --- \n" );
 	}
 }
+
+#undef ENTER
+#undef LEAVE
+#undef TEST_MB
+#undef TEST_MB2
 
 /*********************************************************************
  * test transfer
@@ -1700,6 +1705,80 @@ void test_quant_bug()
 	}
 #endif
 }
+
+/*********************************************************************
+ * test some YUV func
+ *********************************************************************/
+  
+#define ENTER \
+for(i=0; i<(int)sizeof(Dst0); ++i) Dst0[0][i] = 0;   \
+t = gettime_usec();                   \
+emms();
+
+#define LEAVE \
+emms();                             \
+t = (gettime_usec() - t) / nb_tests;  \
+	iCrc = calc_crc((uint8_t*)Dst0, sizeof(Dst0), CRC32_INITIAL)
+
+#define TEST_YUYV(FUNC, S)                \
+ENTER                               \
+for(tst=0; tst<nb_tests; ++tst) (FUNC)(Dst0[0], S*WIDTH, Src0[0], Src0[1], Src0[2], WIDTH, WIDTH/2, WIDTH, HEIGHT, 0); \
+LEAVE
+
+#define WIDTH 64
+#define HEIGHT 64
+void test_yuv()
+{
+	const int nb_tests = 200*speed_ref;
+	CPU *cpu;
+	uint8_t Src0[3][WIDTH*HEIGHT];
+	uint8_t Dst0[4][WIDTH*HEIGHT];
+	int i, j;
+	double t;
+	int tst, iCrc;
+
+	colorspace_init();
+	ieee_reseed(1);
+	for(i=0; i<(int)sizeof(Src0); ++i) Src0[0][i] = ieee_rand(0,255);
+
+	printf( "\n ===  test YUV ===\n" );
+
+	init_cpu(&cpu_list[0]);
+	TEST_YUYV(yv12_to_yuyv_c, 4);
+	printf(" yv12_to_yuyv_c %.3f usec       crc32=0x%08x %s\n",
+		   t, iCrc, (iCrc!=0xeb1a0b0a)?"| ERROR": "" );
+	TEST_YUYV(yv12_to_uyvy_c, 4);
+	printf(" yv12_to_uyvy_c %.3f usec       crc32=0x%08x %s\n",
+		   t, iCrc, (iCrc!=0x6e82f55b)?"| ERROR": "" );
+
+#ifdef ARCH_IS_IA32
+	init_cpu(&cpu_list[1]);
+	TEST_YUYV(yv12_to_yuyv_mmx, 4);
+	printf(" yv12_to_yuyv_mmx %.3f usec       crc32=0x%08x %s\n",
+		t, iCrc, (iCrc!=0xeb1a0b0a)?"| ERROR": "" );
+
+	TEST_YUYV(yv12_to_uyvy_mmx, 4);
+	printf(" yv12_to_uyvy_mmx %.3f usec       crc32=0x%08x %s\n",
+		t, iCrc, (iCrc!=0x6e82f55b)?"| ERROR": "" );
+#endif
+
+#ifdef ARCH_IS_PPC
+	init_cpu(&cpu_list[1]);
+	TEST_YUYV(yv12_to_yuyv_altivec_c, 4);
+	printf(" yv12_to_yuyv_altivec_c %.3f usec       crc32=0x%08x %s\n",
+		t, iCrc, (iCrc!=0xeb1a0b0a)?"| ERROR": "" );
+
+	TEST_YUYV(yv12_to_uyvy_altivec_c, 4);
+	printf(" yv12_to_uyvy_altivec_c %.3f usec       crc32=0x%08x %s\n",
+		t, iCrc, (iCrc!=0x6e82f55b)?"| ERROR": "" );
+#endif
+	printf( " --- \n" );
+}
+#undef WIDTH
+#undef HEIGHT
+#undef ENTER
+#undef LEAVE
+
 /*********************************************************************/
 
 static uint32_t __inline log2bin_v1(uint32_t value)
@@ -1935,6 +2014,7 @@ int main(int argc, const char *argv[])
 	if (what==0 || what==11) test_log2bin();
 	if (what==0 || what==12) test_gcd();
 	if (what==0 || what==13) test_compiler();
+	if (what==0 || what==14) test_yuv();
 
 
 	if (what==7) {
