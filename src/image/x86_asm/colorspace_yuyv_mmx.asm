@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: colorspace_yuyv_mmx.asm,v 1.6 2004-08-29 10:02:38 edgomez Exp $
+; * $Id: colorspace_yuyv_mmx.asm,v 1.7 2006-06-05 21:27:36 Skal Exp $
 ; *
 ; ***************************************************************************/
 
@@ -172,9 +172,7 @@ mmx_one:    dw 1, 1, 1, 1
 ;-----------------------------------------------------------------------------
 ; YV12_TO_YUYV( TYPE )
 ;
-; TYPE  0=yuyv, 1=uyvy
-;
-; bytes=2, pixels = 8, vpixels=2
+; bytes=2, pixels = 16, vpixels=2
 ;-----------------------------------------------------------------------------
 
 %macro YV12_TO_YUYV_INIT        2
@@ -182,35 +180,62 @@ mmx_one:    dw 1, 1, 1, 1
 
 
 %macro YV12_TO_YUYV             2
-  movd mm4, [ebx]               ; [    |uuuu]
-  movd mm5, [ecx]               ; [    |vvvv]
-  movq mm0, [esi]               ; [yyyy|yyyy] ; y row 0
+  movq mm6, [ebx]               ; [    |uuuu]
+  movq mm2, [ecx]               ; [    |vvvv]
+  movq mm0, [esi    ]           ; [yyyy|yyyy] ; y row 0
   movq mm1, [esi+eax]           ; [yyyy|yyyy] ; y row 1
-  punpcklbw mm4, mm5            ; [vuvu|vuvu] ; uv row 0
+  movq      mm7, mm6
+  punpcklbw mm6, mm2            ; [vuvu|vuvu] ; uv[0..3]
+  punpckhbw mm7, mm2            ; [vuvu|vuvu] ; uv[4..7]
 
 %if %1 == 0     ; YUYV
   movq mm2, mm0
   movq mm3, mm1
-  punpcklbw mm0, mm4            ; [vyuy|vyuy] ; y row 0 + 0
-  punpckhbw mm2, mm4            ; [vyuy|vyuy] ; y row 0 + 8
-  punpcklbw mm1, mm4            ; [vyuy|vyuy] ; y row 1 + 0
-  punpckhbw mm3, mm4            ; [vyuy|vyuy] ; y row 1 + 8
-  movq [edi], mm0
-  movq [edi+8], mm2
-  movq [edi+edx], mm1
+  movq mm4, [esi    +8]         ; [yyyy|yyyy] ; y[8..15] row 0
+  movq mm5, [esi+eax+8]         ; [yyyy|yyyy] ; y[8..15] row 1
+  punpcklbw mm0, mm6            ; [vyuy|vyuy] ; y row 0 + 0
+  punpckhbw mm2, mm6            ; [vyuy|vyuy] ; y row 0 + 8
+  punpcklbw mm1, mm6            ; [vyuy|vyuy] ; y row 1 + 0
+  punpckhbw mm3, mm6            ; [vyuy|vyuy] ; y row 1 + 8
+  movq [edi      ], mm0
+  movq [edi+8    ], mm2
+  movq [edi+edx  ], mm1
   movq [edi+edx+8], mm3
+  movq mm0, mm4
+  movq mm2, mm5
+  punpcklbw mm0, mm7            ; [vyuy|vyuy] ; y row 0 + 16
+  punpckhbw mm4, mm7            ; [vyuy|vyuy] ; y row 0 + 24
+  punpcklbw mm2, mm7            ; [vyuy|vyuy] ; y row 1 + 16
+  punpckhbw mm5, mm7            ; [vyuy|vyuy] ; y row 1 + 24
+  movq [edi    +16], mm0
+  movq [edi    +24], mm4
+  movq [edi+edx+16], mm2
+  movq [edi+edx+24], mm5
 %else           ; UYVY
-  movq mm5, mm4
-  movq mm6, mm4
-  movq mm7, mm4
-  punpcklbw mm4, mm0            ; [yvyu|yvyu]   ; y row 0 + 0
-  punpckhbw mm5, mm0            ; [yvyu|yvyu]   ; y row 0 + 8
-  punpcklbw mm6, mm1            ; [yvyu|yvyu]   ; y row 1 + 0
-  punpckhbw mm7, mm1            ; [yvyu|yvyu]   ; y row 1 + 8
-  movq [edi], mm4
-  movq [edi+8], mm5
-  movq [edi+edx], mm6
-  movq [edi+edx+8], mm7
+  movq mm2, mm6
+  movq mm3, mm6
+  movq mm4, mm6
+  punpcklbw mm2, mm0            ; [yvyu|yvyu]   ; y row 0 + 0
+  punpckhbw mm3, mm0            ; [yvyu|yvyu]   ; y row 0 + 8
+  movq mm0, [esi    +8]         ; [yyyy|yyyy] ; y[8..15] row 0
+  movq mm5, [esi+eax+8]         ; [yyyy|yyyy] ; y[8..15] row 1
+  punpcklbw mm4, mm1            ; [yvyu|yvyu]   ; y row 1 + 0
+  punpckhbw mm6, mm1            ; [yvyu|yvyu]   ; y row 1 + 8
+  movq [edi      ], mm2
+  movq [edi    +8], mm3
+  movq [edi+edx  ], mm4
+  movq [edi+edx+8], mm6
+  movq mm2, mm7
+  movq mm3, mm7
+  movq mm6, mm7
+  punpcklbw mm2, mm0            ; [yvyu|yvyu]   ; y row 0 + 0
+  punpckhbw mm3, mm0            ; [yvyu|yvyu]   ; y row 0 + 8
+  punpcklbw mm6, mm5            ; [yvyu|yvyu]   ; y row 1 + 0
+  punpckhbw mm7, mm5            ; [yvyu|yvyu]   ; y row 1 + 8
+  movq [edi    +16], mm2
+  movq [edi    +24], mm3
+  movq [edi+edx+16], mm6
+  movq [edi+edx+24], mm7
 %endif
 %endmacro
 
@@ -324,8 +349,8 @@ MAKE_COLORSPACE  uyvy_to_yv12_xmm,0,    2,8,2,  YUYV_TO_YV12, 1, pavgb
 
 ; output
 
-MAKE_COLORSPACE  yv12_to_yuyv_mmx,0,    2,8,2,  YV12_TO_YUYV, 0, -1
-MAKE_COLORSPACE  yv12_to_uyvy_mmx,0,    2,8,2,  YV12_TO_YUYV, 1, -1
+MAKE_COLORSPACE  yv12_to_yuyv_mmx,0,    2,16,2,  YV12_TO_YUYV, 0, -1
+MAKE_COLORSPACE  yv12_to_uyvy_mmx,0,    2,16,2,  YV12_TO_YUYV, 1, -1
 
 MAKE_COLORSPACE  yv12_to_yuyvi_mmx,0,   2,8,4,  YV12_TO_YUYVI, 0, -1
 MAKE_COLORSPACE  yv12_to_uyvyi_mmx,0,   2,8,4,  YV12_TO_YUYVI, 1, -1
