@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: gmc.c,v 1.3 2004-04-02 21:29:21 edgomez Exp $
+ * $Id: gmc.c,v 1.4 2006-06-07 21:00:55 Skal Exp $
  *
  ****************************************************************************/
 
@@ -223,13 +223,13 @@ void Predict_1pt_16x16_C(const NEW_GMC_DATA * const This,
 	int i, j;
 
 	int32_t Offset;
-	if (vo>=(-16*4) && vo<=H) Offset = (vo>>4)*srcstride;
+	if (vo>=(-16<<4) && vo<=H) Offset = (vo>>4)*srcstride;
 	else {
 		if (vo>H) Offset = ( H>>4)*srcstride;
 		else Offset =-16*srcstride;
 		rj = MTab[0];
 	}
-	if (uo>=(-16*4) && uo<=W) Offset += (uo>>4);
+	if (uo>=(-16<<4) && uo<=W) Offset += (uo>>4);
 	else {
 		if (uo>W) Offset += (W>>4);
 		else Offset -= 16;
@@ -274,13 +274,13 @@ void Predict_1pt_8x8_C(const NEW_GMC_DATA * const This,
 	int i, j;
 
 	int32_t Offset;
-	if (vo>=(-8*4) && vo<=H) Offset	= (vo>>4)*srcstride;
+	if (vo>=(-8<<4) && vo<=H) Offset = (vo>>4)*srcstride;
 	else {
 		if (vo>H) Offset = ( H>>4)*srcstride;
 		else Offset =-8*srcstride;
 		rrj = MTab[0];
 	}
-	if (uo>=(-8*4) && uo<=W) Offset	+= (uo>>4);
+	if (uo>=(-8<<4) && uo<=W) Offset += (uo>>4);
 	else {
 		if (uo>W) Offset += ( W>>4);
 		else Offset -= 8;
