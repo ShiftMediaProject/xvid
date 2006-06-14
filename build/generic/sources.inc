@@ -65,6 +65,7 @@ SRC_IA32 = \
 	image/x86_asm/postprocessing_sse2.asm \
 	image/x86_asm/reduced_mmx.asm \
 	image/x86_asm/qpel_mmx.asm \
+	image/x86_asm/gmc_mmx.asm \
 	motion/x86_asm/sad_xmm.asm \
 	motion/x86_asm/sad_sse2.asm \
 	motion/x86_asm/sad_mmx.asm \

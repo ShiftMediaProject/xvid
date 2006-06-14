@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: gmc.c,v 1.4 2006-06-07 21:00:55 Skal Exp $
+ * $Id: gmc.c,v 1.5 2006-06-14 21:44:07 Skal Exp $
  *
  ****************************************************************************/
 
@@ -30,6 +30,58 @@
 
 #include <stdio.h>
 
+  /* initialized by init_GMC(), for 3points */
+static
+void (*Predict_16x16_func)(const NEW_GMC_DATA * const This,
+                           uint8_t *dst, const uint8_t *src,
+                           int dststride, int srcstride, int x, int y, int rounding) = 0;
+static
+void (*Predict_8x8_func)(const NEW_GMC_DATA * const This,
+                         uint8_t *uDst, const uint8_t *uSrc,
+                         uint8_t *vDst, const uint8_t *vSrc,
+                         int dststride, int srcstride, int x, int y, int rounding) = 0;
+
+/****************************************************************************/
+/* this is borrowed from   bitstream.c  until we find a common solution */
+static uint32_t __inline
+log2bin(uint32_t value)
+{
+/* Changed by Chenm001 */
+#if !defined(_MSC_VER)
+  int n = 0;
+
+  while (value) {
+	value >>= 1;
+	n++;
+  }
+  return n;
+#else
+  __asm {
+	bsr eax, value
+	inc eax
+  }
+#endif
+}
+
+/* 16*sizeof(int) -> 1 or 2 cachelines */
+/* table lookup might be faster!  (still to be benchmarked) */
+
+/*
+static int log2bin_table[16] =
+	{ 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4};
+*/
+/*	1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 */
+
+#define RDIV(a,b) (((a)>0 ? (a) + ((b)>>1) : (a) - ((b)>>1))/(b))
+#define RSHIFT(a,b) ( (a)>0 ? ((a) + (1<<((b)-1)))>>(b) : ((a) + (1<<((b)-1))-1)>>(b))
+
+#define MLT(i)  (((16-(i))<<16) + (i))
+static const uint32_t MTab[16] = {
+  MLT( 0), MLT( 1), MLT( 2), MLT( 3), MLT( 4), MLT( 5), MLT( 6), MLT( 7),
+  MLT( 8), MLT( 9), MLT(10), MLT(11), MLT(12), MLT(13), MLT(14), MLT(15)
+};
+#undef MLT
+
 /* ************************************************************
  * Pts = 2 or 3
  *
@@ -38,9 +90,10 @@
  * Conversely, *dst is the macroblock top-left adress.
  */
 
+static
 void Predict_16x16_C(const NEW_GMC_DATA * const This,
-					 uint8_t *dst, const uint8_t *src,
-					 int dststride, int srcstride, int x, int y, int rounding)
+                     uint8_t *dst, const uint8_t *src,
+                     int dststride, int srcstride, int x, int y, int rounding)
 {
 	const int W = This->sW;
 	const int H	= This->sH;
@@ -97,10 +150,11 @@ void Predict_16x16_C(const NEW_GMC_DATA * const This,
 	}
 }
 
+static
 void Predict_8x8_C(const NEW_GMC_DATA * const This,
-					 uint8_t *uDst, const uint8_t *uSrc,
-					 uint8_t *vDst, const uint8_t *vSrc,
-					 int dststride, int srcstride, int x, int y, int rounding)
+                   uint8_t *uDst, const uint8_t *uSrc,
+                   uint8_t *vDst, const uint8_t *vSrc,
+                   int dststride, int srcstride, int x, int y, int rounding)
 {
 	const int W	 = This->sW >> 1;
 	const int H	 = This->sH >> 1;
@@ -176,8 +230,9 @@ void Predict_8x8_C(const NEW_GMC_DATA * const This,
 	}
 }
 
+static
 void get_average_mv_C(const NEW_GMC_DATA * const Dsp, VECTOR * const mv,
-						int x, int y, int qpel)
+                      int x, int y, int qpel)
 {
 	int i, j;
 	int vx = 0, vy = 0;
@@ -206,9 +261,10 @@ void get_average_mv_C(const NEW_GMC_DATA * const Dsp, VECTOR * const mv,
  * simplified version for 1 warp point
  */
 
+static
 void Predict_1pt_16x16_C(const NEW_GMC_DATA * const This,
-						 uint8_t *Dst, const uint8_t *Src,
-						 int dststride, int srcstride, int x, int y, int rounding)
+                         uint8_t *Dst, const uint8_t *Src,
+                         int dststride, int srcstride, int x, int y, int rounding)
 {
 	const int W	 = This->sW;
 	const int H	 = This->sH;
@@ -257,10 +313,11 @@ void Predict_1pt_16x16_C(const NEW_GMC_DATA * const This,
 	}
 }
 
+static
 void Predict_1pt_8x8_C(const NEW_GMC_DATA * const This,
-						 uint8_t *uDst, const uint8_t *uSrc,
-						 uint8_t *vDst, const uint8_t *vSrc,
-						 int dststride, int srcstride, int x, int y, int rounding)
+                       uint8_t *uDst, const uint8_t *uSrc,
+                       uint8_t *vDst, const uint8_t *vSrc,
+                       int dststride, int srcstride, int x, int y, int rounding)
 {
 	const int W	 = This->sW >> 1;
 	const int H	 = This->sH >> 1;
@@ -319,11 +376,226 @@ void Predict_1pt_8x8_C(const NEW_GMC_DATA * const This,
 	}
 }
 
+static
 void get_average_mv_1pt_C(const NEW_GMC_DATA * const Dsp, VECTOR * const mv,
 							int x, int y, int qpel)
 {
 	mv->x = RSHIFT(Dsp->Uo<<qpel, 3);
 	mv->y = RSHIFT(Dsp->Vo<<qpel, 3);
+}
+
+#if defined(ARCH_IS_IA32)
+/* *************************************************************
+ * MMX core function
+ */
+
+static
+void (*GMC_Core_Lin_8)(uint8_t *Dst, const uint16_t * Offsets, 
+                       const uint8_t * const Src0, const int BpS, const int Rounder) = 0;
+
+extern void xvid_GMC_Core_Lin_8_mmx(uint8_t *Dst, const uint16_t * Offsets, 
+                                    const uint8_t * const Src0, const int BpS, const int Rounder);
+
+extern void xvid_GMC_Core_Lin_8_sse2(uint8_t *Dst, const uint16_t * Offsets, 
+                                     const uint8_t * const Src0, const int BpS, const int Rounder);
+
+/* *************************************************************/
+
+static void GMC_Core_Non_Lin_8(uint8_t *Dst, 
+                               const uint16_t * Offsets,
+                               const uint8_t * const Src0, const int srcstride,
+                               const int Rounder)
+{
+  int i;
+  for(i=0; i<8; ++i)
+  {
+    uint32_t u = Offsets[i   ];
+    uint32_t v = Offsets[i+16];
+    const uint32_t ri = MTab[u&0x0f];
+    const uint32_t rj = MTab[v&0x0f];
+    uint32_t f0, f1;
+    const uint8_t * const Src = Src0 + (u>>4) + (v>>4)*srcstride;
+    f0  = Src[0];
+    f0 |= Src[1] << 16;
+    f1  = Src[srcstride +0];
+    f1 |= Src[srcstride +1] << 16;
+    f0 = (ri*f0)>>16;
+    f1 = (ri*f1) & 0x0fff0000;
+    f0 |= f1;
+    f0 = ( rj*f0 + Rounder ) >> 24;
+    Dst[i] = (uint8_t)f0;
+  }
+}
+
+//////////////////////////////////////////////////////////
+
+static
+void Predict_16x16_mmx(const NEW_GMC_DATA * const This,
+                       uint8_t *dst, const uint8_t *src,
+                       int dststride, int srcstride, int x, int y, int rounding)
+{
+  const int W = This->sW;
+  const int H = This->sH;
+  const int rho = 3 - This->accuracy;
+  const int Rounder = ( 128 - (rounding<<(2*rho)) ) << 16;
+  const uint32_t W2 = W<<(16-rho);
+  const uint32_t H2 = H<<(16-rho);
+  
+  const int dUx = This->dU[0];
+  const int dVx = This->dV[0];
+  const int dUy = This->dU[1];
+  const int dVy = This->dV[1];
+
+  int Uo = This->Uo + 16*(dUy*y + dUx*x);
+  int Vo = This->Vo + 16*(dVy*y + dVx*x);
+
+  int i, j;
+
+  DECLARE_ALIGNED_MATRIX(Offsets, 2,16, uint16_t, CACHE_LINE);
+  for(j=16; j>0; --j)
+  {
+    int32_t U = Uo, V = Vo;
+    Uo += dUy; Vo += dVy;
+    if ( W2>(uint32_t)U && W2>(uint32_t)(U+15*dUx) &&
+         H2>(uint32_t)V && H2>(uint32_t)(V+15*dVx) )
+    {
+      for(i=0; i<16; ++i)
+      {
+        uint32_t u = ( U >> 16 ) << rho;
+        uint32_t v = ( V >> 16 ) << rho;
+        U += dUx;  V += dVx;
+        Offsets[   i] = u;
+        Offsets[16+i] = v;
+      }
+          // batch 8 input pixels when linearity says it's ok
+      uint32_t UV1, UV2;
+      UV1 = (Offsets[0] | (Offsets[16]<<16)) & 0xfff0fff0U;
+      UV2 = (Offsets[7] | (Offsets[23]<<16)) & 0xfff0fff0U;
+      if (UV1+7*16==UV2)
+      	GMC_Core_Lin_8(dst,    Offsets,    src + (Offsets[0]>>4) + (Offsets[16]>>4)*srcstride, srcstride, Rounder);
+      else
+      	GMC_Core_Non_Lin_8(dst,   Offsets,   src, srcstride, Rounder);
+      UV1 = (Offsets[ 8] | (Offsets[24]<<16)) & 0xfff0fff0U;
+      UV2 = (Offsets[15] | (Offsets[31]<<16)) & 0xfff0fff0U;
+      if (UV1+7*16==UV2)
+      	GMC_Core_Lin_8(dst+8,  Offsets+8,  src + (Offsets[8]>>4) + (Offsets[24]>>4)*srcstride, srcstride, Rounder);
+      else
+      	GMC_Core_Non_Lin_8(dst+8, Offsets+8, src, srcstride, Rounder);
+    }
+    else
+    {
+      for(i=0; i<16; ++i)
+      {
+        int u = ( U >> 16 ) << rho;
+        int v = ( V >> 16 ) << rho;
+        U += dUx; V += dVx;
+
+        Offsets[   i] = (u<0) ? 0 : (u>=W) ? W : u;
+        Offsets[16+i] = (v<0) ? 0 : (v>=H) ? H : v;
+      }
+        // due to boundary clipping, we cannot infer the 8-pixels batchability
+        // simply by using the linearity. Oh well, not a big deal...
+      GMC_Core_Non_Lin_8(dst,   Offsets,   src, srcstride, Rounder);
+      GMC_Core_Non_Lin_8(dst+8, Offsets+8, src, srcstride, Rounder);
+    }
+    dst += dststride;
+  }
+}
+
+static
+void Predict_8x8_mmx(const NEW_GMC_DATA * const This,
+                     uint8_t *uDst, const uint8_t *uSrc,
+                     uint8_t *vDst, const uint8_t *vSrc,
+                     int dststride, int srcstride, int x, int y, int rounding)
+{
+  const int W   = This->sW >> 1;
+  const int H   = This->sH >> 1;
+  const int rho = 3-This->accuracy;
+  const int32_t Rounder = ( 128 - (rounding<<(2*rho)) ) << 16;
+  const uint32_t W2 = W<<(16-rho);
+  const uint32_t H2 = H<<(16-rho);
+
+  const int dUx = This->dU[0];
+  const int dVx = This->dV[0];
+  const int dUy = This->dU[1];
+  const int dVy = This->dV[1];
+
+  int Uo = This->Uco + 8*(dUy*y + dUx*x);
+  int Vo = This->Vco + 8*(dVy*y + dVx*x);
+
+  DECLARE_ALIGNED_MATRIX(Offsets, 2,16, uint16_t, CACHE_LINE);
+  int i, j;
+  for(j=8; j>0; --j)
+  {
+    int32_t U = Uo, V = Vo;
+    Uo += dUy; Vo += dVy;
+    if ( W2>(uint32_t)U && W2>(uint32_t)(U+15*dUx) &&
+         H2>(uint32_t)V && H2>(uint32_t)(V+15*dVx) )
+    {
+      for(i=0; i<8; ++i)
+      {
+        int32_t u = ( U >> 16 ) << rho;
+        int32_t v = ( V >> 16 ) << rho;
+        U += dUx; V += dVx;
+        Offsets[   i] = u;
+        Offsets[16+i] = v;
+      }
+        // batch 8 input pixels when linearity says it's ok
+      const uint32_t UV1 = (Offsets[ 0] | (Offsets[16]<<16)) & 0xfff0fff0U;
+      const uint32_t UV2 = (Offsets[ 7] | (Offsets[23]<<16)) & 0xfff0fff0U;
+      if (UV1+7*16==UV2)
+      {
+        const uint32_t Off = (Offsets[0]>>4) + (Offsets[16]>>4)*srcstride;
+        GMC_Core_Lin_8(uDst, Offsets, uSrc+Off, srcstride, Rounder);
+        GMC_Core_Lin_8(vDst, Offsets, vSrc+Off, srcstride, Rounder);
+      }
+      else {
+        GMC_Core_Non_Lin_8(uDst, Offsets, uSrc, srcstride, Rounder);
+        GMC_Core_Non_Lin_8(vDst, Offsets, vSrc, srcstride, Rounder);
+      }
+    }
+    else
+    {
+      for(i=0; i<8; ++i)
+      {
+        int u = ( U >> 16 ) << rho;
+        int v = ( V >> 16 ) << rho;
+        U += dUx; V += dVx;
+        Offsets[   i] = (u<0) ? 0 : (u>=W) ? W : u;
+        Offsets[16+i] = (v<0) ? 0 : (v>=H) ? H : v;
+      }
+      GMC_Core_Non_Lin_8(uDst, Offsets, uSrc, srcstride, Rounder);
+      GMC_Core_Non_Lin_8(vDst, Offsets, vSrc, srcstride, Rounder);
+    }
+    uDst += dststride;
+    vDst += dststride;
+  }
+}
+
+#endif /* ARCH_IS_IA32 */
+
+/* *************************************************************
+ * will initialize internal pointers
+ */
+
+void init_GMC(const unsigned int cpu_flags)
+{
+      Predict_16x16_func = Predict_16x16_C;
+      Predict_8x8_func   = Predict_8x8_C;
+
+#if 0 // #if defined(ARCH_IS_IA32)
+      if ((cpu_flags & XVID_CPU_MMX)   || (cpu_flags & XVID_CPU_MMXEXT)   ||
+          (cpu_flags & XVID_CPU_3DNOW) || (cpu_flags & XVID_CPU_3DNOWEXT) ||
+          (cpu_flags & XVID_CPU_SSE)   || (cpu_flags & XVID_CPU_SSE2))
+	{
+	   Predict_16x16_func = Predict_16x16_mmx;
+	   Predict_8x8_func   = Predict_8x8_mmx;
+	   if (cpu_flags & XVID_CPU_SSE2)
+	     GMC_Core_Lin_8 = xvid_GMC_Core_Lin_8_sse2;
+	   else
+             GMC_Core_Lin_8 = xvid_GMC_Core_Lin_8_mmx;
+	}
+#endif
 }
 
 /* *************************************************************
@@ -413,8 +685,8 @@ void generate_GMCparameters( int nb_pts, const int accuracy,
 	gmc->Uco = (gmc->Uco + gmc->dU[0] + gmc->dU[1])>>2;
 	gmc->Vco = (gmc->Vco + gmc->dV[0] + gmc->dV[1])>>2;
 
-	gmc->predict_16x16	= Predict_16x16_C;
-	gmc->predict_8x8	= Predict_8x8_C;
+	gmc->predict_16x16	= Predict_16x16_func;
+	gmc->predict_8x8	= Predict_8x8_func;
 	gmc->get_average_mv = get_average_mv_C;
 	}
 }
