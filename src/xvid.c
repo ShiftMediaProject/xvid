@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.68 2006-02-25 04:41:12 suxen_drol Exp $
+ * $Id: xvid.c,v 1.69 2006-06-14 21:44:07 Skal Exp $
  *
  ****************************************************************************/
 
@@ -40,6 +40,7 @@
 #include "utils/mbfunctions.h"
 #include "quant/quant.h"
 #include "motion/motion.h"
+#include "motion/gmc.h"
 #include "motion/sad.h"
 #include "utils/emms.h"
 #include "utils/timer.h"
@@ -305,6 +306,8 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 	sad16v	   = sad16v_c;
 	sse8_16bit = sse8_16bit_c;
 	sse8_8bit  = sse8_8bit_c;
+
+	init_GMC(cpu_flags);
 
 #if defined(ARCH_IS_IA32)
 
