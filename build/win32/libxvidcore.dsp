@@ -1,24 +1,24 @@
 # Microsoft Developer Studio Project File - Name="libxvidcore" - Package Owner=<4>
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
-# ** DO NOT EDIT **
+# ** NICHT BEARBEITEN **
 
 # TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
 
 CFG=libxvidcore - Win32 Debug
-!MESSAGE This is not a valid makefile. To build this project using NMAKE,
-!MESSAGE use the Export Makefile command and run
+!MESSAGE Dies ist kein gültiges Makefile. Zum Erstellen dieses Projekts mit NMAKE
+!MESSAGE verwenden Sie den Befehl "Makefile exportieren" und führen Sie den Befehl
 !MESSAGE 
 !MESSAGE NMAKE /f "libxvidcore.mak".
 !MESSAGE 
-!MESSAGE You can specify a configuration when running NMAKE
-!MESSAGE by defining the macro CFG on the command line. For example:
+!MESSAGE Sie können beim Ausführen von NMAKE eine Konfiguration angeben
+!MESSAGE durch Definieren des Makros CFG in der Befehlszeile. Zum Beispiel:
 !MESSAGE 
 !MESSAGE NMAKE /f "libxvidcore.mak" CFG="libxvidcore - Win32 Debug"
 !MESSAGE 
-!MESSAGE Possible choices for configuration are:
+!MESSAGE Für die Konfiguration stehen zur Auswahl:
 !MESSAGE 
-!MESSAGE "libxvidcore - Win32 Release" (based on "Win32 (x86) Dynamic-Link Library")
-!MESSAGE "libxvidcore - Win32 Debug" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "libxvidcore - Win32 Release" (basierend auf  "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "libxvidcore - Win32 Debug" (basierend auf  "Win32 (x86) Dynamic-Link Library")
 !MESSAGE 
 
 # Begin Project
@@ -526,7 +526,7 @@ SOURCE=..\..\src\image\x86_asm\colorspace_rgb_mmx.asm
 !IF  "$(CFG)" == "libxvidcore - Win32 Release"
 
 # Begin Custom Build - Assembling $(InputPath)
-InputDir=..\..\src\image\x86_asm
+InputDir=\sklmp4\xvidcore\src\image\x86_asm
 IntDir=.\Release
 InputPath=..\..\src\image\x86_asm\colorspace_rgb_mmx.asm
 InputName=colorspace_rgb_mmx
@@ -539,7 +539,7 @@ InputName=colorspace_rgb_mmx
 !ELSEIF  "$(CFG)" == "libxvidcore - Win32 Debug"
 
 # Begin Custom Build - Assembling $(InputPath)
-InputDir=..\..\src\image\x86_asm
+InputDir=\sklmp4\xvidcore\src\image\x86_asm
 IntDir=.\Debug
 InputPath=..\..\src\image\x86_asm\colorspace_rgb_mmx.asm
 InputName=colorspace_rgb_mmx
@@ -559,7 +559,7 @@ SOURCE=..\..\src\image\x86_asm\colorspace_yuv_mmx.asm
 !IF  "$(CFG)" == "libxvidcore - Win32 Release"
 
 # Begin Custom Build - Assembling $(InputPath)
-InputDir=..\..\src\image\x86_asm
+InputDir=\sklmp4\xvidcore\src\image\x86_asm
 IntDir=.\Release
 InputPath=..\..\src\image\x86_asm\colorspace_yuv_mmx.asm
 InputName=colorspace_yuv_mmx
@@ -572,7 +572,7 @@ InputName=colorspace_yuv_mmx
 !ELSEIF  "$(CFG)" == "libxvidcore - Win32 Debug"
 
 # Begin Custom Build - Assembling $(InputPath)
-InputDir=..\..\src\image\x86_asm
+InputDir=\sklmp4\xvidcore\src\image\x86_asm
 IntDir=.\Debug
 InputPath=..\..\src\image\x86_asm\colorspace_yuv_mmx.asm
 InputName=colorspace_yuv_mmx
@@ -592,7 +592,7 @@ SOURCE=..\..\src\image\x86_asm\colorspace_yuyv_mmx.asm
 !IF  "$(CFG)" == "libxvidcore - Win32 Release"
 
 # Begin Custom Build - Assembling $(InputPath)
-InputDir=..\..\src\image\x86_asm
+InputDir=\sklmp4\xvidcore\src\image\x86_asm
 IntDir=.\Release
 InputPath=..\..\src\image\x86_asm\colorspace_yuyv_mmx.asm
 InputName=colorspace_yuyv_mmx
@@ -605,13 +605,44 @@ InputName=colorspace_yuyv_mmx
 !ELSEIF  "$(CFG)" == "libxvidcore - Win32 Debug"
 
 # Begin Custom Build - Assembling $(InputPath)
-InputDir=..\..\src\image\x86_asm
+InputDir=\sklmp4\xvidcore\src\image\x86_asm
 IntDir=.\Debug
 InputPath=..\..\src\image\x86_asm\colorspace_yuyv_mmx.asm
 InputName=colorspace_yuyv_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	nasm -f win32 -DPREFIX -I"$(InputDir)"\ -o $(IntDir)\$(InputName).obj $(InputPath)
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\image\x86_asm\gmc_mmx.asm
+
+!IF  "$(CFG)" == "libxvidcore - Win32 Release"
+
+# Begin Custom Build - Assembling $(InputPath)
+IntDir=.\Release
+InputPath=..\..\src\image\x86_asm\gmc_mmx.asm
+InputName=gmc_mmx
+
+"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasm -f win32 -DPREFIX -o $(IntDir)\$(InputName).obj $(InputPath)
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "libxvidcore - Win32 Debug"
+
+# Begin Custom Build - Assembling $(InputPath)
+IntDir=.\Debug
+InputPath=..\..\src\image\x86_asm\gmc_mmx.asm
+InputName=gmc_mmx
+
+"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasm -f win32 -DPREFIX -o $(IntDir)\$(InputName).obj $(InputPath)
 
 # End Custom Build
 

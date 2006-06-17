@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: gmc.c,v 1.5 2006-06-14 21:44:07 Skal Exp $
+ * $Id: gmc.c,v 1.6 2006-06-17 13:07:55 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -467,21 +467,24 @@ void Predict_16x16_mmx(const NEW_GMC_DATA * const This,
         Offsets[   i] = u;
         Offsets[16+i] = v;
       }
+	  
+	  {
           // batch 8 input pixels when linearity says it's ok
-      uint32_t UV1, UV2;
-      UV1 = (Offsets[0] | (Offsets[16]<<16)) & 0xfff0fff0U;
-      UV2 = (Offsets[7] | (Offsets[23]<<16)) & 0xfff0fff0U;
-      if (UV1+7*16==UV2)
-      	GMC_Core_Lin_8(dst,    Offsets,    src + (Offsets[0]>>4) + (Offsets[16]>>4)*srcstride, srcstride, Rounder);
-      else
-      	GMC_Core_Non_Lin_8(dst,   Offsets,   src, srcstride, Rounder);
-      UV1 = (Offsets[ 8] | (Offsets[24]<<16)) & 0xfff0fff0U;
-      UV2 = (Offsets[15] | (Offsets[31]<<16)) & 0xfff0fff0U;
-      if (UV1+7*16==UV2)
-      	GMC_Core_Lin_8(dst+8,  Offsets+8,  src + (Offsets[8]>>4) + (Offsets[24]>>4)*srcstride, srcstride, Rounder);
-      else
-      	GMC_Core_Non_Lin_8(dst+8, Offsets+8, src, srcstride, Rounder);
-    }
+        uint32_t UV1, UV2;
+        UV1 = (Offsets[0] | (Offsets[16]<<16)) & 0xfff0fff0U;
+        UV2 = (Offsets[7] | (Offsets[23]<<16)) & 0xfff0fff0U;
+        if (UV1+7*16==UV2)
+      	  GMC_Core_Lin_8(dst,    Offsets,    src + (Offsets[0]>>4) + (Offsets[16]>>4)*srcstride, srcstride, Rounder);
+        else
+      	  GMC_Core_Non_Lin_8(dst,   Offsets,   src, srcstride, Rounder);
+        UV1 = (Offsets[ 8] | (Offsets[24]<<16)) & 0xfff0fff0U;
+        UV2 = (Offsets[15] | (Offsets[31]<<16)) & 0xfff0fff0U;
+        if (UV1+7*16==UV2)
+      	  GMC_Core_Lin_8(dst+8,  Offsets+8,  src + (Offsets[8]>>4) + (Offsets[24]>>4)*srcstride, srcstride, Rounder);
+        else
+      	  GMC_Core_Non_Lin_8(dst+8, Offsets+8, src, srcstride, Rounder);
+	  }
+	}
     else
     {
       for(i=0; i<16; ++i)
@@ -540,19 +543,22 @@ void Predict_8x8_mmx(const NEW_GMC_DATA * const This,
         Offsets[   i] = u;
         Offsets[16+i] = v;
       }
-        // batch 8 input pixels when linearity says it's ok
-      const uint32_t UV1 = (Offsets[ 0] | (Offsets[16]<<16)) & 0xfff0fff0U;
-      const uint32_t UV2 = (Offsets[ 7] | (Offsets[23]<<16)) & 0xfff0fff0U;
-      if (UV1+7*16==UV2)
-      {
-        const uint32_t Off = (Offsets[0]>>4) + (Offsets[16]>>4)*srcstride;
-        GMC_Core_Lin_8(uDst, Offsets, uSrc+Off, srcstride, Rounder);
-        GMC_Core_Lin_8(vDst, Offsets, vSrc+Off, srcstride, Rounder);
-      }
-      else {
-        GMC_Core_Non_Lin_8(uDst, Offsets, uSrc, srcstride, Rounder);
-        GMC_Core_Non_Lin_8(vDst, Offsets, vSrc, srcstride, Rounder);
-      }
+
+	  {
+          // batch 8 input pixels when linearity says it's ok
+        const uint32_t UV1 = (Offsets[ 0] | (Offsets[16]<<16)) & 0xfff0fff0U;
+        const uint32_t UV2 = (Offsets[ 7] | (Offsets[23]<<16)) & 0xfff0fff0U;
+        if (UV1+7*16==UV2)
+		{
+          const uint32_t Off = (Offsets[0]>>4) + (Offsets[16]>>4)*srcstride;
+          GMC_Core_Lin_8(uDst, Offsets, uSrc+Off, srcstride, Rounder);
+          GMC_Core_Lin_8(vDst, Offsets, vSrc+Off, srcstride, Rounder);
+		}
+        else {
+          GMC_Core_Non_Lin_8(uDst, Offsets, uSrc, srcstride, Rounder);
+          GMC_Core_Non_Lin_8(vDst, Offsets, vSrc, srcstride, Rounder);
+		}
+	  }
     }
     else
     {
@@ -583,7 +589,7 @@ void init_GMC(const unsigned int cpu_flags)
       Predict_16x16_func = Predict_16x16_C;
       Predict_8x8_func   = Predict_8x8_C;
 
-#if 0 // #if defined(ARCH_IS_IA32)
+#if defined(ARCH_IS_IA32)
       if ((cpu_flags & XVID_CPU_MMX)   || (cpu_flags & XVID_CPU_MMXEXT)   ||
           (cpu_flags & XVID_CPU_3DNOW) || (cpu_flags & XVID_CPU_3DNOWEXT) ||
           (cpu_flags & XVID_CPU_SSE)   || (cpu_flags & XVID_CPU_SSE2))
