@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.25 2006-06-16 10:08:28 syskin Exp $
+ * $Id: xvid_encraw.c,v 1.26 2006-07-08 14:19:04 Skal Exp $
  *
  ****************************************************************************/
 
@@ -39,7 +39,7 @@
  ************************************************************************/
 
 #include <stdio.h>
-#include <io.h>
+//#include <io.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -196,6 +196,8 @@ static 	PAVISTREAM avi_stream = NULL;
 static 	PAVIFILE avi_file = NULL;
 static 	LPBITMAPINFOHEADER info_header = NULL;
 static 	PGETFRAME get_frame = NULL;
+#else
+#define get_frame NULL
 #endif
 static 	char *ARG_TIMECODEFILE = NULL;
 static 	int XDIM = 0;
@@ -648,7 +650,7 @@ main(int argc,
 			i++;
 			ARG_AVIOUTPUTFILE = argv[i];
 #else
-			fprintf("Not compiled with AVI output support.\n");
+			fprintf( stderr, "Not compiled with AVI output support.\n");
 			return(-1);
 #endif
 		} else if (strcmp("-mkv", argv[i]) == 0 && i < argc - 1) {
@@ -965,11 +967,12 @@ main(int argc,
 	}
 
 	/* Jump to the starting frame */
-	if (ARG_INPUTTYPE < 2)
+	if (ARG_INPUTTYPE == 0)
 		fseek(in_file, ARG_STARTFRAMENR*IMAGE_SIZE(XDIM, YDIM), SEEK_SET);
 
 	/* now we know the sizes, so allocate memory */
-	if (get_frame == NULL) {
+	if (get_frame == NULL) 
+	{
 		in_buffer = (unsigned char *) malloc(4*XDIM*YDIM);
 		if (!in_buffer)
 			goto free_all_memory;
@@ -1124,7 +1127,7 @@ main(int argc,
 				}
 			} else
 #endif
-				if (ARG_INPUTTYPE==1) {
+			if (ARG_INPUTTYPE==1) {
 				/* read PGM data (YUV-format) */
 #ifndef READ_PNM
 				result = read_pgmdata(in_file, in_buffer);
