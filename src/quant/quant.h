@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: quant.h,v 1.6 2006-04-26 17:44:29 Skal Exp $
+ * $Id: quant.h,v 1.7 2006-07-10 08:09:59 syskin Exp $
  *
  ****************************************************************************/
 
@@ -60,7 +60,6 @@ quant_intraFunc quant_h263_intra_3dne;
 quant_intraFunc quant_h263_intra_sse2;
 
 quant_intraFunc quant_mpeg_intra_mmx;
-quant_intraFunc quant_mpeg_intra_xmm;
 #endif
 
 #ifdef ARCH_IS_IA64

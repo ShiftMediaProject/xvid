@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.h,v 1.31 2006-02-24 08:46:22 syskin Exp $
+ * $Id: encoder.h,v 1.32 2006-07-10 08:09:59 syskin Exp $
  *
  ****************************************************************************/
 
@@ -96,6 +96,7 @@ typedef struct
 	int64_t m_stamp;
 
 	uint16_t *mpeg_quant_matrices;
+	uint32_t last_quant_initialized_intra; /* needed for mpeg matrices initialization */
 } MBParam;
 
 

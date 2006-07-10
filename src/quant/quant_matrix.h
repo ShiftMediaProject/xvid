@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: quant_matrix.h,v 1.7 2004-03-22 22:36:24 edgomez Exp $
+ * $Id: quant_matrix.h,v 1.8 2006-07-10 08:09:59 syskin Exp $
  *
  ****************************************************************************/
 
@@ -29,6 +29,8 @@
 
 #include "../portab.h"
 
+#define SCALEBITS 17
+
 void init_mpeg_matrix(uint16_t * mpeg_quant_matrices);
 
 int is_custom_intra_matrix(const uint16_t * mpeg_quant_matrices);
@@ -36,6 +38,8 @@ int is_custom_inter_matrix(const uint16_t * mpeg_quant_matrices);
 
 void set_intra_matrix(uint16_t *mpeg_quant_matrices, const uint8_t * matrix);
 void set_inter_matrix(uint16_t *mpeg_quant_matrices, const uint8_t * matrix);
+
+void init_intra_matrix(uint16_t * mpeg_quant_matrices, uint32_t quant);
 
 const uint16_t *get_intra_matrix(const uint16_t *mpeg_quant_matrices);
 const uint16_t *get_inter_matrix(const uint16_t *mpeg_quant_matrices);
