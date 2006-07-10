@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: quant_mpeg.c,v 1.2 2004-03-22 22:36:24 edgomez Exp $
+ * $Id: quant_mpeg.c,v 1.3 2006-07-10 08:09:59 syskin Exp $
  *
  ****************************************************************************/
 
@@ -43,13 +43,9 @@ quant_interFuncPtr dequant_mpeg_inter;
  * Local data
  ****************************************************************************/
 
-#define VM18P 3
-#define VM18Q 4
-
 /* divide-by-multiply table
  * needs 17 bit shift (16 causes slight errors when q > 19) */
 
-#define SCALEBITS 17
 #define FIX(X)	  ((1UL << SCALEBITS) / (X) + 1)
 
 static const uint32_t multipliers[32] =
@@ -69,10 +65,6 @@ static const uint32_t multipliers[32] =
  ****************************************************************************/
 
 /* quantize intra-block
- *
- * const int32_t quantd = DIV_DIV(VM18P*quant, VM18Q);
- * level = DIV_DIV(16 * data[i], default_intra_matrix[i]);
- * coeff[i] = (level + quantd) / quant2;
  */
 
 uint32_t
@@ -82,29 +74,17 @@ quant_mpeg_intra_c(int16_t * coeff,
 				   const uint32_t dcscalar,
 				   const uint16_t * mpeg_quant_matrices)
 {
-	const uint32_t quantd = ((VM18P * quant) + (VM18Q / 2)) / VM18Q;
-	const uint32_t mult = multipliers[quant];
-	const uint16_t *intra_matrix = get_intra_matrix(mpeg_quant_matrices);
+	const uint16_t * intra_matrix_rec = mpeg_quant_matrices + 1*64;
 	int i;
+	int rounding = 1<<(SCALEBITS-1-3);
 
 	coeff[0] = DIV_DIV(data[0], (int32_t) dcscalar);
 
 	for (i = 1; i < 64; i++) {
-		if (data[i] < 0) {
-			uint32_t level = -data[i];
-
-			level = ((level << 4) + (intra_matrix[i] >> 1)) / intra_matrix[i];
-			level = ((level + quantd) * mult) >> SCALEBITS;
-			coeff[i] = -(int16_t) level;
-		} else if (data[i] > 0) {
-			uint32_t level = data[i];
-
-			level = ((level << 4) + (intra_matrix[i] >> 1)) / intra_matrix[i];
-			level = ((level + quantd) * mult) >> SCALEBITS;
-			coeff[i] = level;
-		} else {
-			coeff[i] = 0;
-		}
+		int level = data[i];
+		level *= intra_matrix_rec[i];
+		level = (level + rounding)>>(SCALEBITS-3);
+		coeff[i] = level;
 	}
 
 	return(0);

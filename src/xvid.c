@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.69 2006-06-14 21:44:07 Skal Exp $
+ * $Id: xvid.c,v 1.70 2006-07-10 08:09:59 syskin Exp $
  *
  ****************************************************************************/
 
@@ -439,7 +439,6 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 		interpolate8x8_halfpel_hv_add = interpolate8x8_halfpel_hv_add_xmm;
 
 		/* Quantization */
-		quant_mpeg_intra = quant_mpeg_intra_xmm;
 		quant_mpeg_inter = quant_mpeg_inter_xmm;
 
 		dequant_h263_intra = dequant_h263_intra_xmm;
@@ -676,7 +675,7 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 		quant_h263_inter   = quant_h263_inter_x86_64;
 		dequant_h263_intra = dequant_h263_intra_x86_64;
 		dequant_h263_inter = dequant_h263_inter_x86_64;
-		quant_mpeg_intra   = quant_mpeg_intra_x86_64;
+		/*quant_mpeg_intra   = quant_mpeg_intra_x86_64; fix me! */
 		quant_mpeg_inter   = quant_mpeg_inter_x86_64;
 		dequant_mpeg_intra   = dequant_mpeg_intra_x86_64;
 		dequant_mpeg_inter   = dequant_mpeg_inter_x86_64;
