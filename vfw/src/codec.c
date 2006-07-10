@@ -580,12 +580,12 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 
 		  create.global |= XVID_GLOBAL_CLOSED_GOP;
 
-      /* dxn: restrict max bframes and enable packed bframes */
-      if ((profiles[codec->config.profile].flags & PROFILE_EXTRA)) {
+      /* restrict max bframes */
+      if ((create.max_bframes > profiles[codec->config.profile].xvid_max_bframes) && (profiles[codec->config.profile].xvid_max_bframes >= 0))
+        create.max_bframes = profiles[codec->config.profile].xvid_max_bframes;
 
-        if (create.max_bframes > profiles[codec->config.profile].xvid_max_bframes)
-          create.max_bframes = profiles[codec->config.profile].xvid_max_bframes;
-
+      /* DXN: enable packed bframes */
+      if ((profiles[codec->config.profile].flags & PROFILE_PACKED)) {
         create.global |= XVID_GLOBAL_PACKED;
       }
     }
