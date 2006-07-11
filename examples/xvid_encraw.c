@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.26 2006-07-08 14:19:04 Skal Exp $
+ * $Id: xvid_encraw.c,v 1.27 2006-07-11 17:17:09 chl Exp $
  *
  ****************************************************************************/
 
@@ -174,7 +174,7 @@ static 	char *ARG_PASS1 = 0;
 static 	char *ARG_PASS2 = 0;
 //static int ARG_QUALITY = ME_ELEMENTS - 1;
 static 	int ARG_QUALITY = 6;
-static 	float ARG_FRAMERATE = 0.00f;
+static 	float ARG_FRAMERATE = 25.00f;
 static 	int ARG_DWRATE = 25;
 static 	int ARG_DWSCALE = 1;
 static 	int ARG_MAXFRAMENR = ABS_MAXFRAMENR;
