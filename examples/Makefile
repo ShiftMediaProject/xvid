@@ -2,7 +2,7 @@
 #
 # XviD examples Makefile
 #
-# $Id: Makefile,v 1.8 2005-05-23 09:29:43 Skal Exp $
+# $Id: Makefile,v 1.9 2006-07-11 10:19:27 chl Exp $
 #
 #############################################################################
 
@@ -10,7 +10,7 @@ include ../build/generic/platform.inc
 
 HDIR    = -I../src
 CFLAGS  = -g $(ARCHITECTURE) $(BUS) $(ENDIANNESS) $(FEATURES) $(SPECIFIC_CFLAGS)
-LDFLAGS = -lc -lm -lxvidcore
+LDFLAGS = -lc -lm libxvidcore.a -lpthread
 
 SOURCES= xvid_encraw.c xvid_decraw.c xvid_bench.c
 OBJECTS=$(SOURCES:.c=.o)
@@ -31,7 +31,7 @@ xvid_decraw.o: xvid_decraw.c
 	$(CC) $(CFLAGS) $(HDIR) -c $<
 
 xvid_bench: xvid_bench.o
-	$(CC) -o $@ $< ../build/generic/=build/libxvidcore.a -lc -lm
+	$(CC) -o $@ $< ../build/generic/=build/libxvidcore.a -lc -lm -lpthread
 
 xvid_bench.o: xvid_bench.c
 	$(CC) $(CFLAGS) $(HDIR) -c $<
