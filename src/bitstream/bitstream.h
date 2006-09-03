@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.h,v 1.23 2006-04-14 07:24:47 Skal Exp $
+ * $Id: bitstream.h,v 1.24 2006-09-03 08:46:56 Skal Exp $
  *
  ****************************************************************************/
 
@@ -162,6 +162,16 @@ void write_video_packet_header(Bitstream * const bs,
                                const FRAMEINFO * const frame,
                                int mbnum);
 
+/*****************************************************************************
+ * Bitstream
+ ****************************************************************************/
+
+/* Input buffer should be readable as full chunks of 8bytes, including
+the end of the buffer. Padding might be appropriate. If only chunks
+of 4bytes are applicable, define XVID_SAFE_BS_TAIL. Note that this will
+slow decoding, so consider this as a last-resort solution */
+/* #define XVID_SAFE_BS_TAIL */
+
 /* initialise bitstream structure */
 
 static void __inline
@@ -263,12 +273,22 @@ BitstreamSkip(Bitstream * const bs,
 		uint32_t tmp;
 
 		bs->bufa = bs->bufb;
-		tmp = *((uint32_t *) bs->tail + 2);
-#ifndef ARCH_IS_BIG_ENDIAN
-		BSWAP(tmp);
+#if defined(XVID_SAFE_BS_TAIL)
+		if (bs->tail<(bs->start+((bs->length+3)>>2)))
 #endif
-		bs->bufb = tmp;
-		bs->tail++;
+		{
+			tmp = *((uint32_t *) bs->tail + 2);
+#ifndef ARCH_IS_BIG_ENDIAN
+			BSWAP(tmp);
+#endif
+			bs->bufb = tmp;
+			bs->tail++;
+		}
+#if defined(XVID_SAFE_BS_TAIL)
+		else {
+			bs->bufb = 0;
+		}
+#endif
 		bs->pos -= 32;
 	}
 }
