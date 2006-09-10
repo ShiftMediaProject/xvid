@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.78 2006-03-27 11:21:48 Skal Exp $
+ * $Id: decoder.c,v 1.79 2006-09-10 22:42:15 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1618,7 +1618,7 @@ repeat:
   if (coding_type == -2 || coding_type == -3) { /* vol and/or resize */
 
     if (coding_type == -3)
-      decoder_resize(dec);
+      if (decoder_resize(dec)) return XVID_ERR_MEMORY;
 
     if(stats) {
       stats->type = XVID_TYPE_VOL;
