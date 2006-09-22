@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_mpeg_mmx.asm,v 1.7 2006-07-11 10:01:27 chl Exp $
+; * $Id: quantize_mpeg_mmx.asm,v 1.8 2006-09-22 03:40:11 syskin Exp $
 ; *
 ; *************************************************************************/
 
@@ -221,22 +221,18 @@ quant_mpeg_intra_mmx:
   ; calculate DC
   movsx eax, word [eax]     ; data[0]
   mov ecx, [esp + 4 + 16]   ; dcscalar
-  mov edx, ecx
-  shr edx, 1                ; edx = dcscalar /2
-  mov edi, edx
-  neg edi
-  
-  cmp eax, 0
-  cmovg edx, edi
-  sub eax, edx
+  mov edx, eax
+  mov edi, ecx
+  shr ecx, 1                ; ecx = dcscalar/2
+  sar edx, 31               ; edx = sign extend of eax (ready for division too)
+  xor ecx, edx              ; adjust ecx according to the sign of data[0]
+  sub ecx, edx
+  add eax, ecx
 
-  mov edi, [esp + 4 + 4]	; coeff again
-
-  cdq                       ; expand eax -> edx:eax
-  idiv ecx                  ; eax = edx:eax / dcscalar
-
-  mov [edi], ax             ; coeff[0] = ax
-
+  mov ecx, [esp + 4 + 4]	; coeff again 
+  idiv edi                  ; eax = edx:eax / dcscalar
+  mov [ecx], ax             ; coeff[0] = ax
+ 
   pop edi
 
   xor eax, eax              ; return(0);
