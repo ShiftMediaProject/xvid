@@ -34,6 +34,7 @@ SRC_GENERIC = \
 	plugins/plugin_lumimasking.c \
 	plugins/plugin_dump.c \
 	plugins/plugin_psnr.c \
+	plugins/plugin_ssim.c \
 	quant/quant_h263.c \
 	quant/quant_matrix.c \
 	quant/quant_mpeg.c \
@@ -78,7 +79,8 @@ SRC_IA32 = \
 	utils/x86_asm/mem_transfer_mmx.asm \
 	utils/x86_asm/mem_transfer_3dne.asm \
 	utils/x86_asm/interlacing_mmx.asm \
-	utils/x86_asm/cpuid.asm
+	utils/x86_asm/cpuid.asm \
+	plugins/x86_asm/plugin_ssim-a.asm
 
 SRC_X86_64 = \
 	dct/x86_64_asm/fdct_mmx_skal.asm \
