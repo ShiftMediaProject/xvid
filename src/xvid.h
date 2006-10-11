@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.55 2006-07-10 17:25:23 Isibaar Exp $
+ * $Id: xvid.h,v 1.56 2006-10-11 13:55:32 Skal Exp $
  *
  ****************************************************************************/
 
@@ -485,6 +485,8 @@ extern xvid_plugin_func xvid_plugin_lumimasking;  /* lumimasking */
 extern xvid_plugin_func xvid_plugin_psnr;	/* write psnr values to stdout */
 extern xvid_plugin_func xvid_plugin_dump;	/* dump before and after yuvpgms */
 
+extern xvid_plugin_func xvid_plugin_ssim;	/*write ssim values to stdout*/
+
 
 /* single pass rate control
  * CBR and Constant quantizer modes */
@@ -537,6 +539,17 @@ typedef struct {
 	int vbv_peakrate;             /* [in:opt] max average bitrate over 3 seconds (bits per second) */
 
 }xvid_plugin_2pass2_t;
+
+
+typedef struct{
+	/*stat output*/
+	int b_printstat;
+	char* stat_path;
+	
+	/*visualize*/
+	int b_visualize;
+
+} xvid_plugin_ssim_t;
 
 /*****************************************************************************
  *                             ENCODER API
