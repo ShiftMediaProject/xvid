@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.28 2006-06-05 21:30:49 Skal Exp $
+ * $Id: xvid_bench.c,v 1.29 2006-10-11 14:55:28 Skal Exp $
  *
  ****************************************************************************/
 
@@ -1944,6 +1944,93 @@ void test_compiler() {
     printf( "ERROR! please post your platform/compiler specs to xvid-devel@xvid.org !\n" );
   }
 }
+/*********************************************************************
+ * test SSIM functions
+ *********************************************************************/
+
+typedef int (*lumfunc)(uint8_t* ptr, int stride);
+typedef void (*csfunc)(uint8_t* ptro, uint8_t* ptrc, int stride, int lumo, int lumc, int* pdevo, int* pdevc, int* pcorr);
+
+extern int lum_8x8_c(uint8_t* ptr, int stride);
+extern int lum_8x8_mmx(uint8_t* ptr, int stride);
+extern int lum_2x8_c(uint8_t* ptr, int stride);
+extern void iconsim_c(uint8_t* ptro, uint8_t* ptrc, int stride, int lumo, int lumc, int* pdevo, int* pdevc, int* pcorr);
+extern void consim_mmx(uint8_t* ptro, uint8_t* ptrc, int stride, int lumo, int lumc, int* pdevo, int* pdevc, int* pcorr);
+extern void consim_sse2(uint8_t* ptro, uint8_t* ptrc, int stride, int lumo, int lumc, int* pdevo, int* pdevc, int* pcorr);
+
+void test_SSIM()
+{
+	const int nb_tests = 3000*speed_ref;
+	int tst;
+	CPU *cpu;
+	int i;
+	int devs[3];
+	long lumo, lumc;
+	DECLARE_ALIGNED_MATRIX(Ref1, 16, 16, uint8_t, 16);
+	DECLARE_ALIGNED_MATRIX(Ref2, 16, 16, uint8_t, 16);
+	lumfunc lum8x8;
+	lumfunc lum2x8;
+	csfunc  csim;
+
+	ieee_reseed(1);
+	printf( "\n ======  test SSIM ======\n" );
+	for(i=0; i<16*16;++i) {
+		long v1, v2;
+		v1 = ieee_rand(-256, 511);
+		v2 = ieee_rand(-256, 511);
+		Ref1[i] = (v1<0) ? 0 : (v1>255) ? 255 : v1;
+		Ref2[i] = (v2<0) ? 0 : (v2>255) ? 255 : v2;
+	}
+	lumc = ieee_rand(0, 255);
+	lumo = ieee_rand(0, 255);
+
+	for(cpu = cpu_list; cpu->name!=0; ++cpu)
+	{
+		double t;
+		int m;
+		if (!init_cpu(cpu))
+			continue;
+		lum8x8 = lum_8x8_c;
+		lum2x8 = lum_2x8_c;
+		csim   = iconsim_c;
+		if (cpu->cpu & XVID_CPU_MMX){
+			lum8x8 = lum_8x8_mmx;
+			csim = consim_mmx;
+		}
+		if (cpu->cpu & XVID_CPU_MMX){
+			csim = consim_sse2;
+		}
+
+		t = gettime_usec();
+		emms();
+		for(tst=0; tst<nb_tests; ++tst) m = lum8x8(Ref1, 16);
+		emms();
+		t = (gettime_usec() - t) / nb_tests;
+		printf("%s - ssim-lum8x8    %.3f usec       m=%d %s\n",
+			   cpu->name, t, m,
+			   (m!=8230)?"| ERROR": "" );
+
+		t = gettime_usec();
+		emms();
+		for(tst=0; tst<nb_tests; ++tst) m = lum2x8(Ref1, 16);
+		emms();
+		t = (gettime_usec() - t) / nb_tests;
+		printf("%s - ssim-lum2x8    %.3f usec       m=%d %s\n",
+			   cpu->name, t, m,
+			   (m!=-841)?"| ERROR": "" );
+
+		t = gettime_usec();
+		emms();
+		for(tst=0; tst<nb_tests; ++tst) csim(Ref1, Ref2, 16, lumo, lumc, devs+0, devs+1, devs+2);
+		emms();
+		t = (gettime_usec() - t) / nb_tests;
+		printf("%s - ssim-lum2x8    %.3f usec       devs=[0x%x 0x%x 0x%x] %s\n",
+			   cpu->name, t, devs[0], devs[1], devs[2],
+			   (devs[0]!=0xeba80 || devs[1]!=0x1053e7 ||  devs[2]!=0x51215)?"| ERROR": "" );
+
+		printf( " --- \n" );
+	}
+}
 
 /*********************************************************************
  * main
@@ -2015,6 +2102,7 @@ int main(int argc, const char *argv[])
 	if (what==0 || what==12) test_gcd();
 	if (what==0 || what==13) test_compiler();
 	if (what==0 || what==14) test_yuv();
+	if (what==0 || what==15) test_SSIM();
 
 
 	if (what==7) {
