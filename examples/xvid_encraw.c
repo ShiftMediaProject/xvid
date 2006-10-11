@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.27 2006-07-11 17:17:09 chl Exp $
+ * $Id: xvid_encraw.c,v 1.28 2006-10-11 13:52:06 Skal Exp $
  *
  ****************************************************************************/
 
@@ -165,6 +165,8 @@ static 	int NUM_ZONES = 0;
 static 	frame_stats_t framestats[7];
 
 static 	int ARG_STATS = 0;
+static 	int ARG_SSIM = 0;
+static 	char* ARG_SSIM_PATH = NULL;
 static 	int ARG_DUMP = 0;
 static 	int ARG_LUMIMASKING = 0;
 static 	int ARG_BITRATE = 0;
@@ -578,6 +580,11 @@ main(int argc,
 			ARG_INPUTFILE = argv[i];
 		} else if (strcmp("-stats", argv[i]) == 0) {
 			ARG_STATS = 1;
+		} else if (strcmp("-ssim", argv[i]) == 0) {
+			ARG_SSIM = 1;
+		} else if (strcmp("-ssim_file", argv[i]) == 0 && i < argc -1) {
+			i++;
+			ARG_SSIM_PATH = argv[i];
 		} else if (strcmp("-timecode", argv[i]) == 0 && i < argc -1) {
 			i++;
 			ARG_TIMECODEFILE = argv[i];
@@ -1561,6 +1568,8 @@ usage()
 	fprintf(stderr, " -noclosed_gop                  : Disable closed GOP mode\n");
 	fprintf(stderr, " -lumimasking                   : use lumimasking algorithm\n");
 	fprintf(stderr, " -stats                         : print stats about encoded frames\n");
+	fprintf(stderr, " -ssim                          : prints the ssim stats for every encoded frame (slow!)\n");
+	fprintf(stderr, " -ssim_file filename            : outputs the ssim stats into a file\n");
 	fprintf(stderr, " -debug                         : activates xvidcore internal debugging output\n");
 	fprintf(stderr, " -vop_debug                     : print some info directly into encoded frames\n");
 	fprintf(stderr, " -nochromame                    : Disable chroma motion estimation\n");
@@ -1763,8 +1772,9 @@ enc_init(int use_assembler)
     xvid_plugin_single_t single;
 	xvid_plugin_2pass1_t rc2pass1;
 	xvid_plugin_2pass2_t rc2pass2;
+	xvid_plugin_ssim_t ssim;
 	//xvid_plugin_fixed_t rcfixed;
-	xvid_enc_plugin_t plugins[7];
+	xvid_enc_plugin_t plugins[8];
 	xvid_gbl_init_t xvid_gbl_init;
 	xvid_enc_create_t xvid_enc_create;
 	int i;
@@ -1892,6 +1902,17 @@ enc_init(int use_assembler)
 		plugins[xvid_enc_create.num_plugins].param = NULL;
 		xvid_enc_create.num_plugins++;
 	}
+
+#ifndef WIN32
+	if (ARG_SSIM) {
+		plugins[xvid_enc_create.num_plugins].func = xvid_plugin_ssim;
+		ssim.b_printstat = 1;
+		ssim.stat_path = ARG_SSIM_PATH;
+		ssim.b_visualize = 0;
+		plugins[xvid_enc_create.num_plugins].param = &ssim;
+		xvid_enc_create.num_plugins++;
+	}
+#endif
 
 #if 0
 	if (ARG_DEBUG) {
