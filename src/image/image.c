@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.c,v 1.35 2005-12-17 13:57:15 syskin Exp $
+ * $Id: image.c,v 1.36 2006-10-13 07:38:09 Skal Exp $
  *
  ****************************************************************************/
 
@@ -34,6 +34,7 @@
 #include "interpolate8x8.h"
 #include "../utils/mem_align.h"
 #include "../motion/sad.h"
+#include "../utils/emms.h"
 
 #include "font.h"		/* XXX: remove later */
 
@@ -1014,3 +1015,68 @@ image_clear(IMAGE * img, int width, int height, int edged_width,
 		p += edged_width/2;
 	}
 }
+
+/****************************************************************************/
+
+static void (*deintl_core)(unsigned char *, int width, int height, const int stride) = 0;
+extern void xvid_deinterlace_sse(unsigned char *, int width, int height, const int stride);
+
+#define CLIP_255(x)   ( ((x)&~255) ? ((-(x)) >> (8*sizeof((x))-1))&0xff : (x) )
+
+static void deinterlace_c(unsigned char *pix, int width, int height, const int bps)
+{
+  pix += bps;
+  while(width-->0)
+  {
+    int p1 = pix[-bps];
+    int p2 = pix[0];
+    int p0 = p2;
+    int j = (height>>1) - 1;
+    int V;
+    unsigned char *P = pix++;
+    while(j-->0)
+    {
+      const int  p3 = P[  bps];
+      const int  p4 = P[2*bps];
+      V =  ((p1+p3+1)>>1) + ((p2 - ((p0+p4+1)>>1)) >> 2);
+      P[0] = CLIP_255( V );
+      p0 = p2;
+      p1 = p3;
+      p2 = p4;
+      P += 2*bps;
+    }
+    V =  ((p1+p1+1)>>1) + ((p2 - ((p0+p2+1)>>1)) >> 2);
+    P[0] = CLIP_255( V );
+  }
+}
+#undef CLIP_255
+
+int xvid_image_deinterlace(xvid_image_t* img, int width, int height, int bottom_first)
+{
+	if (height&1)
+		return 0;
+	if (img->csp!=XVID_CSP_PLANAR && img->csp!=XVID_CSP_I420 && img->csp!=XVID_CSP_YV12)
+		return 0;       /* not yet supported */	
+	if (deintl_core==0) {
+		const int cpu_flags = check_cpu_features();
+		deintl_core = deinterlace_c;
+#ifdef ARCH_IS_IA32
+		if (cpu_flags & XVID_CPU_MMX)
+			deintl_core = xvid_deinterlace_sse;
+#endif			
+	}
+	if (!bottom_first) {
+		deintl_core(img->plane[0], width,    height,    img->stride[0]);
+		deintl_core(img->plane[1], width>>1, height>>1, img->stride[1]);
+		deintl_core(img->plane[2], width>>1, height>>1, img->stride[2]);
+	}
+	else {
+		deintl_core(img->plane[0] + ( height    -1)*img->stride[0], width,    height,    -img->stride[0]);
+		deintl_core(img->plane[1] + ((height>>1)-1)*img->stride[1], width>>1, height>>1, -img->stride[1]);
+		deintl_core(img->plane[2] + ((height>>1)-1)*img->stride[2], width>>1, height>>1, -img->stride[2]);
+	}
+	emms();
+
+	return 1;
+}
+
