@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.30 2006-10-13 15:16:25 Skal Exp $
+ * $Id: xvid_bench.c,v 1.31 2006-10-13 15:19:48 Skal Exp $
  *
  ****************************************************************************/
 
@@ -2012,12 +2012,12 @@ void test_SSIM()
 
 		t = gettime_usec();
 		emms();
-		for(tst=0; tst<nb_tests; ++tst) m = lum2x8(Ref1, 16);
+		for(tst=0; tst<nb_tests; ++tst) m = lum2x8(Ref1+8, 16);
 		emms();
 		t = (gettime_usec() - t) / nb_tests;
 		printf("%s - ssim-lum2x8    %.3f usec       m=%d %s\n",
 			   cpu->name, t, m,
-			   (m!=-841)?"| ERROR": "" );
+			   (m!=681)?"| ERROR": "" );
 
 		t = gettime_usec();
 		emms();
