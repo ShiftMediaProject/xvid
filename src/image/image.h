@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.h,v 1.16 2005-12-17 12:04:52 syskin Exp $
+ * $Id: image.h,v 1.17 2006-10-13 07:38:09 Skal Exp $
  *
  ****************************************************************************/
 
@@ -140,5 +140,11 @@ image_deblock_rrv(IMAGE * img, int edgeg_width,
 				const MACROBLOCK * mbs, int mb_width, int mb_height, int mb_stride,
 				int block, int flags);
 
+
+	/* helper function: deinterlace image.
+	 Only for YUV 4:2:0 planar format. Use bottom_first!=0 if main
+	 field is the bottom one.
+	 returns 1 if everything went ok, 0 otherwise. */
+extern int xvid_image_deinterlace(xvid_image_t* img, int width, int height, int bottom_first);
 
 #endif							/* _IMAGE_H_ */
