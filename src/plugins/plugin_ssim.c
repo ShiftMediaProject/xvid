@@ -112,7 +112,7 @@ void framestat_write(ssim_data_t* ssim, char* path){
 	if(out==NULL) printf("Cannot open %s in plugin_ssim\n",path);
 
 	fprintf(out,"SSIM Error Metric\n");
-	fprintf(out,"quant   avg     min     max");
+	fprintf(out,"quant   avg     min     max\n");
 	while(tmp->next->next != NULL){
 		fprintf(out,"%3d     %1.4f   %1.4f   %1.4f\n",tmp->quant,tmp->ssim_avg,tmp->ssim_min,tmp->ssim_max);
 		tmp = tmp->next;
@@ -263,7 +263,7 @@ static float calc_ssim(int meano, int meanc, int devo, int devc, int corr){
 	fdevo = (float) devo;
 	fdevc = (float) devc;
 	fcorr = (float) corr;
-//	printf("meano: %f meanc: %f devo: %f devc: %f corr: %f\n",fmeano,fmeanc,fdevo,fdevc,fcorr);
+	/* printf("meano: %f meanc: %f devo: %f devc: %f corr: %f\n",fmeano,fmeanc,fdevo,fdevc,fcorr); */
 	return ((2.0*fmeano*fmeanc + c1)*(fcorr/32.0 + c2))/((fmeano*fmeano + fmeanc*fmeanc + c1)*(fdevc/64.0 + fdevo/64.0 + c2));
 }
 
@@ -310,7 +310,7 @@ static void ssim_after(xvid_plg_data_t* data, ssim_data_t* ssim){
 		ptr1+=GRID;
 		ptr2+=GRID;
 		/*rest of each row*/
-		for(j=1;j<width;j+=GRID){
+		for(j=GRID;j<width;j+=GRID){
 			/* for grid = 1 use
 			meano += ssim->func2x8(ptr1,str);
 			meanc += ssim->func2x8(ptr2,str);
@@ -351,7 +351,7 @@ static void ssim_after(xvid_plg_data_t* data, ssim_data_t* ssim){
 	}
 */
 	if(ssim->param->b_printstat){
-		printf("SSIM: avg: %f min: %f max: %f\n",isum,min,max);
+		printf("       SSIM: avg: %f min: %f max: %f\n",isum,min,max);
 	}
 
 }
@@ -424,7 +424,7 @@ int xvid_plugin_ssim(void * handle, int opt, void * param1, void * param2){
 			if(ssim->param->stat_path != NULL)
 				framestat_write(ssim,ssim->param->stat_path);
 			framestat_free(ssim->head);
-			//free(ssim->errmap);
+			/*free(ssim->errmap);*/
 			free(ssim->param);	
 			free(ssim);
 			break;
