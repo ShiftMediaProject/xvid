@@ -26,7 +26,7 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <math.h>
-#include <stdint.h>
+#include "../portab.h"
 #include "../xvid.h"
 #include "plugin_ssim.h"
 #include "../utils/emms.h"
@@ -107,9 +107,9 @@ void framestat_free(framestat_t* stat){
 
 /*writeout the collected stats*/
 void framestat_write(ssim_data_t* ssim, char* path){
+	framestat_t* tmp = ssim->head;
 	FILE* out = fopen(path,"w");
 	if(out==NULL) printf("Cannot open %s in plugin_ssim\n",path);
-	framestat_t* tmp = ssim->head;
 
 	fprintf(out,"SSIM Error Metric\n");
 	fprintf(out,"quant   avg     min     max");
@@ -122,10 +122,9 @@ void framestat_write(ssim_data_t* ssim, char* path){
 
 /*writeout the collected stats in octave readable format*/
 void framestat_write_oct(ssim_data_t* ssim, char* path){
-
+	framestat_t* tmp;
 	FILE* out = fopen(path,"w");
 	if(out==NULL) printf("Cannot open %s in plugin_ssim\n",path);
-	framestat_t* tmp;
 
 	fprintf(out,"quant = [");
 	tmp = ssim->head;

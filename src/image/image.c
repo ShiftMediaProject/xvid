@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.c,v 1.36 2006-10-13 07:38:09 Skal Exp $
+ * $Id: image.c,v 1.37 2006-10-13 08:39:31 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1018,12 +1018,12 @@ image_clear(IMAGE * img, int width, int height, int edged_width,
 
 /****************************************************************************/
 
-static void (*deintl_core)(unsigned char *, int width, int height, const int stride) = 0;
-extern void xvid_deinterlace_sse(unsigned char *, int width, int height, const int stride);
+static void (*deintl_core)(uint8_t *, int width, int height, const int stride) = 0;
+extern void xvid_deinterlace_sse(uint8_t *, int width, int height, const int stride);
 
 #define CLIP_255(x)   ( ((x)&~255) ? ((-(x)) >> (8*sizeof((x))-1))&0xff : (x) )
 
-static void deinterlace_c(unsigned char *pix, int width, int height, const int bps)
+static void deinterlace_c(uint8_t *pix, int width, int height, const int bps)
 {
   pix += bps;
   while(width-->0)
@@ -1071,9 +1071,9 @@ int xvid_image_deinterlace(xvid_image_t* img, int width, int height, int bottom_
 		deintl_core(img->plane[2], width>>1, height>>1, img->stride[2]);
 	}
 	else {
-		deintl_core(img->plane[0] + ( height    -1)*img->stride[0], width,    height,    -img->stride[0]);
-		deintl_core(img->plane[1] + ((height>>1)-1)*img->stride[1], width>>1, height>>1, -img->stride[1]);
-		deintl_core(img->plane[2] + ((height>>1)-1)*img->stride[2], width>>1, height>>1, -img->stride[2]);
+		deintl_core((uint8_t *)img->plane[0] + ( height    -1)*img->stride[0], width,    height,    -img->stride[0]);
+		deintl_core((uint8_t *)img->plane[1] + ((height>>1)-1)*img->stride[1], width>>1, height>>1, -img->stride[1]);
+		deintl_core((uint8_t *)img->plane[2] + ((height>>1)-1)*img->stride[2], width>>1, height>>1, -img->stride[2]);
 	}
 	emms();
 
