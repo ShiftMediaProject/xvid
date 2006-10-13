@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.28 2006-10-11 13:52:06 Skal Exp $
+ * $Id: xvid_encraw.c,v 1.29 2006-10-13 09:28:46 Skal Exp $
  *
  ****************************************************************************/
 
@@ -1903,7 +1903,6 @@ enc_init(int use_assembler)
 		xvid_enc_create.num_plugins++;
 	}
 
-#ifndef WIN32
 	if (ARG_SSIM) {
 		plugins[xvid_enc_create.num_plugins].func = xvid_plugin_ssim;
 		ssim.b_printstat = 1;
@@ -1912,7 +1911,6 @@ enc_init(int use_assembler)
 		plugins[xvid_enc_create.num_plugins].param = &ssim;
 		xvid_enc_create.num_plugins++;
 	}
-#endif
 
 #if 0
 	if (ARG_DEBUG) {
