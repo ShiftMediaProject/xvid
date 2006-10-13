@@ -296,7 +296,8 @@ static void ssim_after(xvid_plg_data_t* data, ssim_data_t* ssim){
 		meano = ssim->func8x8(ptr1,str);
 		meanc = ssim->func8x8(ptr2,str);
 		ssim->consim(ptr1,ptr2,str,meano>>6,meanc>>6,&devo,&devc,&corr);
-		
+		emms();
+
 		val = calc_ssim(meano,meanc,devo,devc,corr);
 		isum += val;
 		c++;
@@ -318,6 +319,8 @@ static void ssim_after(xvid_plg_data_t* data, ssim_data_t* ssim){
 			meano = ssim->func8x8(ptr1,str);
 			meanc = ssim->func8x8(ptr2,str);
 			ssim->consim(ptr1,ptr2,str,meano>>6,meanc>>6,&devo,&devc,&corr);
+			emms();	
+
 			val = calc_ssim(meano,meanc,devo,devc,corr);
 			isum += val;
 			c++;
@@ -370,6 +373,7 @@ static int ssim_create(xvid_plg_create_t* create, void** handle){
 
 	ssim->param = param;
 
+#if defined(ARCH_IS_IA32)
 	if(cpu_flags & XVID_CPU_MMX){
 		ssim->func8x8 = lum_8x8_mmx;
 		ssim->consim = consim_mmx;
@@ -377,6 +381,7 @@ static int ssim_create(xvid_plg_create_t* create, void** handle){
 	if(cpu_flags & XVID_CPU_SSE2){
 		ssim->consim = consim_sse2;
 	}
+#endif
 
 	ssim->ssim_sum = 0.0;
 	ssim->frame_cnt = 0;
