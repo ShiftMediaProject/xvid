@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.30 2006-10-13 15:16:25 Skal Exp $
+ * $Id: xvid_encraw.c,v 1.31 2006-10-16 04:46:01 Skal Exp $
  *
  ****************************************************************************/
 
@@ -1197,6 +1197,7 @@ main(int argc,
 				framestats[5].size += stats_length;
 			}
 
+#define SSE2PSNR(sse, width, height) ((!(sse))?0.0f : 48.131f - 10*(float)log10((float)(sse)/((float)((width)*(height)))))
 
 			if (ARG_PROGRESS == 0) {
 				printf("%5d: key=%i, time= %6.0f, len= %7d", !result ? input_num : -1,
@@ -1204,17 +1205,11 @@ main(int argc,
 				printf(" | type=%s, quant= %2d, len= %7d", type, stats_quant,
 				   stats_length);
 
-#define SSE2PSNR(sse, width, height) ((!(sse))?0.0f : 48.131f - 10*(float)log10((float)(sse)/((float)((width)*(height)))))
 
 				if (ARG_STATS) {
 					printf(", psnr y = %2.2f, psnr u = %2.2f, psnr v = %2.2f",
-						SSE2PSNR(sse[0], XDIM, YDIM), SSE2PSNR(sse[1], XDIM / 2,
-																YDIM / 2),
+						SSE2PSNR(sse[0], XDIM, YDIM), SSE2PSNR(sse[1], XDIM / 2, YDIM / 2),
 						SSE2PSNR(sse[2], XDIM / 2, YDIM / 2));
-	
-					totalPSNR[0] += SSE2PSNR(sse[0], XDIM, YDIM);
-					totalPSNR[1] += SSE2PSNR(sse[1], XDIM/2, YDIM/2);
-					totalPSNR[2] += SSE2PSNR(sse[2], XDIM/2, YDIM/2);
 				}
 				printf("\n");
 			} else {
@@ -1231,8 +1226,13 @@ main(int argc,
 				}
 			}
 
-		}
+			if (ARG_STATS) {
+				totalPSNR[0] += SSE2PSNR(sse[0], XDIM, YDIM);
+				totalPSNR[1] += SSE2PSNR(sse[1], XDIM/2, YDIM/2);
+				totalPSNR[2] += SSE2PSNR(sse[2], XDIM/2, YDIM/2);
+			}
 #undef SSE2PSNR
+		}
 
 		if (m4v_size < 0)
 			break;
