@@ -42,10 +42,13 @@ BITS 32
 	%endif
 %endmacro
 
-%macro ACC_ROW 1
-	movq %1,[ecx]
+%macro ACC_ROW 2
+	movq %1,[    ecx]
+	movq %2,[ecx+edx]
 	psadbw %1,mm0
-	add ecx, edx
+	psadbw %2,mm0
+        lea ecx, [ecx+2*edx]
+        paddw  %1, %2
 %endmacro
 
 	;load a dq from mem to a xmm reg
@@ -154,28 +157,19 @@ lum_8x8_mmx:
 
 	pxor mm0,mm0
 
-	ACC_ROW mm1
-	ACC_ROW mm2
-	paddw mm1 ,mm2
+	ACC_ROW mm1, mm2
 	
-	ACC_ROW mm3
-	ACC_ROW mm4
-	paddw mm3 ,mm4
+	ACC_ROW mm3, mm4
 
-	ACC_ROW mm5
-	ACC_ROW mm6
-	paddw mm5, mm6
+	ACC_ROW mm5, mm6
 
-	ACC_ROW mm7
-	ACC_ROW mm4
-	paddw mm7, mm4
+	ACC_ROW mm7, mm4
 
 	paddw mm1, mm3
 	paddw mm5, mm7
 	paddw mm1, mm5
 
 	movd eax,mm1
-	emms
 	ret
 .endfunc
 
@@ -191,7 +185,7 @@ consim_mmx:
 	pxor mm7,mm7
 	mov eax,[esp+12];stride
 	movd mm7,[esp + 20];lumc
-	pshufw mm6,mm6,00000000b
+	pshufw mm6,mm6,00000000b                ; TODO: remove later! not MMX, but SSE
 	pxor mm5,mm5;corr
 	pshufw mm7,mm7,00000000b
 
