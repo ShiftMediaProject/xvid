@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: colorspace.c,v 1.11 2005-11-22 10:23:01 suxen_drol Exp $
+ * $Id: colorspace.c,v 1.12 2006-10-29 08:04:02 chl Exp $
  *
  ****************************************************************************/
 
@@ -487,17 +487,29 @@ yv12_to_yv12_c(uint8_t * y_dst, uint8_t * u_dst, uint8_t * v_dst,
 		y_dst += y_dst_stride;
 	}
 
-	for (y = height2; y; y--) {
-		memcpy(u_dst, u_src, width2);
-		u_src += uv_src_stride;
-		u_dst += uv_dst_stride;
-	}
+	if (u_src)
+		for (y = height2; y; y--) {
+			memcpy(u_dst, u_src, width2);
+			u_src += uv_src_stride;
+			u_dst += uv_dst_stride;
+		}
+	else
+		for (y = height2; y; y--) {
+			memset(u_dst, 0x80, width2);
+			u_dst += uv_dst_stride;
+		}
 
-	for (y = height2; y; y--) {
-		memcpy(v_dst, v_src, width2);
-		v_src += uv_src_stride;
-		v_dst += uv_dst_stride;
-	}
+	if (v_src)
+		for (y = height2; y; y--) {
+			memcpy(v_dst, v_src, width2);
+			v_src += uv_src_stride;
+			v_dst += uv_dst_stride;
+		}
+	else
+		for (y = height2; y; y--) {
+			memset(v_dst, 0x80, width2);
+			v_dst += uv_dst_stride;
+		}
 }
 
 
