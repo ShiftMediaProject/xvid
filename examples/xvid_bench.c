@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.31 2006-10-13 15:19:48 Skal Exp $
+ * $Id: xvid_bench.c,v 1.32 2006-10-30 10:52:00 Skal Exp $
  *
  ****************************************************************************/
 
@@ -1725,8 +1725,8 @@ ENTER                               \
 for(tst=0; tst<nb_tests; ++tst) (FUNC)(Dst0[0], S*WIDTH, Src0[0], Src0[1], Src0[2], WIDTH, WIDTH/2, WIDTH, HEIGHT, 0); \
 LEAVE
 
-#define WIDTH 64
-#define HEIGHT 64
+#define WIDTH 128
+#define HEIGHT 32
 void test_yuv()
 {
 	const int nb_tests = 200*speed_ref;
@@ -1740,6 +1740,7 @@ void test_yuv()
 	colorspace_init();
 	ieee_reseed(1);
 	for(i=0; i<(int)sizeof(Src0); ++i) Src0[0][i] = ieee_rand(0,255);
+	for(i=0; i<(int)sizeof(Dst0); ++i) Dst0[0][i] = 0x5a;
 
 	printf( "\n ===  test YUV ===\n" );
 
@@ -1774,6 +1775,70 @@ void test_yuv()
 #endif
 	printf( " --- \n" );
 }
+
+#define TEST_YV2(FUNC, WITH_UV, WITH_FLIP)        \
+ENTER                               \
+for(tst=0; tst<nb_tests; ++tst) (FUNC)(Dst0[0], Dst0[1], Dst0[2], WIDTH, WIDTH, \
+	Src0[0], (WITH_UV) ? Src0[1] : 0, (WITH_UV) ? Src0[2] : 0,  WIDTH, WIDTH, \
+	WIDTH-2, HEIGHT-2, WITH_FLIP); \
+LEAVE
+
+#define PRINT_NxN(DATA,W,H,STR)   {   \
+	int i,j; \
+	for(j=0; j<(H); ++j) { \
+		for(i=0; i<(W); ++i) printf( "0x%.2x ", (DATA)[i+j*(STR)] );\
+		printf("\n"); \
+	} \
+	printf("---\n"); \
+}
+
+static const int yv12_CRCs[2][2] = { 
+	{0x5cab7cf0,0xdab46541} 
+,       {0xe8bae865,0x1faf77b7}
+};
+
+void test_yuv2()
+{
+	const int nb_tests = 800*speed_ref;
+	CPU *cpu;
+	uint8_t Src0[3][WIDTH*HEIGHT];
+	uint8_t Dst0[3][WIDTH*HEIGHT];
+	int with_uv, with_flip;
+	int i, j;
+	double t;
+	int tst, iCrc;
+
+	colorspace_init();
+	ieee_reseed(1);
+	for(i=0; i<(int)sizeof(Src0); ++i) Src0[0][i] = ieee_rand(0,255);
+
+	printf( "\n ===  test YV2 ===\n" );
+        for(with_flip=0; with_flip<=1; ++with_flip) {
+        	for(with_uv=0; with_uv<=1; ++with_uv) {
+			init_cpu(&cpu_list[0]);
+			TEST_YV2(yv12_to_yv12_c, with_uv, with_flip);
+			printf(" yv12_to_yv12_c   %.3f usec      \tcrc32=0x%08x %s\n",
+				t, iCrc, (iCrc!=yv12_CRCs[with_flip][with_uv])?"| ERROR": "" );
+			/* if (!with_uv) PRINT_NxN(Dst0[1], WIDTH/2, HEIGHT/2, WIDTH ); */
+
+#ifdef ARCH_IS_IA32
+			init_cpu(&cpu_list[1]);
+			TEST_YV2(yv12_to_yv12_mmx, with_uv, with_flip);
+			printf(" yv12_to_yv12_mmx %.3f usec     \tcrc32=0x%08x %s\n",
+				t, iCrc, (iCrc!=yv12_CRCs[with_flip][with_uv])?"| ERROR": "" );
+			/* if (!with_uv) PRINT_NxN(Dst0[1], WIDTH/2, HEIGHT/2, WIDTH ); */
+
+			TEST_YV2(yv12_to_yv12_xmm, with_uv, with_flip);
+			printf(" yv12_to_yv12_xmm %.3f usec     \tcrc32=0x%08x %s\n",
+				t, iCrc, (iCrc!=yv12_CRCs[with_flip][with_uv])?"| ERROR": "" );
+#endif
+		}
+
+		printf( " --- \n" );
+	}
+	printf( " ===== \n" );
+}
+
 #undef WIDTH
 #undef HEIGHT
 #undef ENTER
@@ -2103,6 +2168,7 @@ int main(int argc, const char *argv[])
 	if (what==0 || what==13) test_compiler();
 	if (what==0 || what==14) test_yuv();
 	if (what==0 || what==15) test_SSIM();
+	if (what==0 || what==16) test_yuv2();
 
 
 	if (what==7) {
