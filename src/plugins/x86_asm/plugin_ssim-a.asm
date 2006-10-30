@@ -216,19 +216,19 @@ consim_sse2:
 	CONSIM_1x8_SSE2
 
 	;accumulate xmm5-7
-	pshufd     xmm0, xmm5, 0EH
+	pshufd     xmm0, xmm5, 0x0E
 	paddd      xmm5, xmm0
-	pshufd     xmm0, xmm5, 01H
+	pshufd     xmm0, xmm5, 0x01
 	paddd      xmm5, xmm0
 
-	pshufd     xmm1, xmm6, 0EH
+	pshufd     xmm1, xmm6, 0x0E
 	paddd      xmm6, xmm1
-	pshufd     xmm1, xmm6, 01H
+	pshufd     xmm1, xmm6, 0x01
 	paddd      xmm6, xmm1
 
-	pshufd     xmm2, xmm7, 0EH
+	pshufd     xmm2, xmm7, 0x0E
 	paddd      xmm7, xmm2
-	pshufd     xmm2, xmm7, 01H
+	pshufd     xmm2, xmm7, 0x01
 	paddd      xmm7, xmm2
 
 	CONSIM_WRITEOUT xmm5,xmm6,xmm7
