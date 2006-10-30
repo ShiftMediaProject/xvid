@@ -62,6 +62,8 @@ typedef struct{
 	uint8_t* errmap;
 	*/
 
+	int grid;
+
 	/*for average SSIM*/
 	float ssim_sum;
 	int frame_cnt;
@@ -232,25 +234,26 @@ int lum_2x8_c(uint8_t* ptr, int stride){
 }
 
 /*calculate contrast and correlation of the two blocks*/
-void iconsim_c(uint8_t* ptro, uint8_t* ptrc, int stride, int lumo, int lumc, int* pdevo, int* pdevc, int* pcorr){
-	int valo, valc, devo =0, devc=0, corr=0;
-	int i,j;
+void consim_c(uint8_t* ptro, uint8_t* ptrc, int stride, int lumo, int lumc, int* pdevo, int* pdevc, int* pcorr){
+	unsigned int valo, valc, devo=0, devc=0, corr=0,i,j,str;
+	str = stride - 8;
 	for(i=0;i< 8;i++){
 		for(j=0;j< 8;j++){
-			valo = *ptro - lumo;
-			valc = *ptrc - lumc;
+			valo = *ptro;
+			valc = *ptrc;
 			devo += valo*valo;
-			ptro++;
 			devc += valc*valc;
-			ptrc++;
 			corr += valo*valc;
+			ptro++;
+			ptrc++;
 		}
-	ptro += stride -8;
-	ptrc += stride -8;
+	ptro += str;
+	ptrc += str;
 	}
-	*pdevo = devo;
-	*pdevc = devc;
-	*pcorr = corr;
+
+	*pdevo = devo - ((lumo*lumo + 32) >> 6);
+	*pdevc = devc - ((lumc*lumc + 32) >> 6);
+	*pcorr = corr - ((lumo*lumc + 32) >> 6);
 };
 
 /*calculate the final ssim value*/
@@ -275,13 +278,11 @@ static void ssim_after(xvid_plg_data_t* data, ssim_data_t* ssim){
 	int meanc, meano;
 	int devc, devo, corr;
 
-	#define GRID 1
-
 	width = data->width - 8;
 	height = data->height - 8;
 	str = data->original.stride[0];
 	if(str != data->current.stride[0]) printf("WARNING: Different strides in plugin_ssim original: %d current: %d\n",str,data->current.stride[0]);
-	ovr = str - width + (width % GRID);
+	ovr = str - width + (width % ssim->grid);
 
 	ptr1 = (unsigned char*) data->original.plane[0];
 	ptr2 = (unsigned char*) data->current.plane[0];
@@ -289,12 +290,12 @@ static void ssim_after(xvid_plg_data_t* data, ssim_data_t* ssim){
 
 
 	/*TODO: Thread*/
-	for(i=0;i<height;i+=GRID){
+	for(i=0;i<height;i+=ssim->grid){
 		/*begin of each row*/
 		meano = meanc = devc = devo = corr = 0;
 		meano = ssim->func8x8(ptr1,str);
 		meanc = ssim->func8x8(ptr2,str);
-		ssim->consim(ptr1,ptr2,str,meano>>6,meanc>>6,&devo,&devc,&corr);
+		ssim->consim(ptr1,ptr2,str,meano,meanc,&devo,&devc,&corr);
 		emms();
 
 		val = calc_ssim(meano,meanc,devo,devc,corr);
@@ -305,19 +306,21 @@ static void ssim_after(xvid_plg_data_t* data, ssim_data_t* ssim){
 			ssim->errmap[i*width] = (uint8_t) 127*val;
 		*/
 
+
 		if(val < min) min = val;
 		if(val > max) max = val;
-		ptr1+=GRID;
-		ptr2+=GRID;
+		ptr1+=ssim->grid;
+		ptr2+=ssim->grid;
 		/*rest of each row*/
-		for(j=GRID;j<width;j+=GRID){
-			/* for grid = 1 use
+		for(j=ssim->grid;j<width;j+=ssim->grid){
+			if(ssim->grid == 1){
 			meano += ssim->func2x8(ptr1,str);
 			meanc += ssim->func2x8(ptr2,str);
-			*/			
+			} else {
 			meano = ssim->func8x8(ptr1,str);
 			meanc = ssim->func8x8(ptr2,str);
-			ssim->consim(ptr1,ptr2,str,meano>>6,meanc>>6,&devo,&devc,&corr);
+			}
+			ssim->consim(ptr1,ptr2,str,meano,meanc,&devo,&devc,&corr);
 			emms();	
 
 			val = calc_ssim(meano,meanc,devo,devc,corr);
@@ -329,8 +332,8 @@ static void ssim_after(xvid_plg_data_t* data, ssim_data_t* ssim){
 			*/
 			if(val < min) min = val;
 			if(val > max) max = val;
-			ptr1+=GRID;
-			ptr2+=GRID;
+			ptr1+=ssim->grid;
+			ptr2+=ssim->grid;
 		}
 		ptr1 +=ovr;
 		ptr2 +=ovr;
@@ -368,16 +371,24 @@ static int ssim_create(xvid_plg_create_t* create, void** handle){
 
 	ssim->func8x8 = lum_8x8_c;
 	ssim->func2x8 = lum_2x8_c;
-	ssim->consim = iconsim_c;
+	ssim->consim = consim_c;
 
 	ssim->param = param;
 
+	ssim->grid = param->acc;
+
+	/*gaussian weigthing not implemented*/
+	if(ssim->grid == 0) ssim->grid = 1;
+	if(ssim->grid > 4) ssim->grid = 4;
+
+	printf("Grid: %d\n",ssim->grid);
+
 #if defined(ARCH_IS_IA32)
-	if(cpu_flags & XVID_CPU_MMX){
+	if((cpu_flags & XVID_CPU_MMX) && (param->acc > 0)){
 		ssim->func8x8 = lum_8x8_mmx;
 		ssim->consim = consim_mmx;
 	}
-	if(cpu_flags & XVID_CPU_SSE2){
+	if((cpu_flags & XVID_CPU_SSE2) && (param->acc > 0)){
 		ssim->consim = consim_sse2;
 	}
 #endif
