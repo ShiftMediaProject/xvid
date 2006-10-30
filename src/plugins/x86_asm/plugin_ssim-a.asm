@@ -112,6 +112,7 @@ BITS 32
 %macro CONSIM_WRITEOUT 3
 	mov eax,[esp + 16];lumo
 	mul eax; lumo^2
+        add eax, 32
 	shr eax,6; 64*lum0^2
 	movd ecx,%1
 	sub ecx,eax
@@ -121,6 +122,7 @@ BITS 32
 
 	mov eax,[esp + 20];lumc
 	mul eax; lumc^2
+        add eax, 32
 	shr eax,6; 64*lumc^2
 	movd ecx,%2
 	sub ecx,eax
@@ -130,6 +132,7 @@ BITS 32
 
 	mov eax,[esp + 16];lumo
 	mul dword [esp + 20]; lumo*lumc, should fit in eax
+        add eax, 32
 	shr eax,6; 64*lumo*lumc
 	movd ecx,%3
 	sub ecx,eax
