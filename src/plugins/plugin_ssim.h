@@ -35,6 +35,11 @@ typedef struct{
 	/*visualize*/
 	int b_visualize;
 
+	/*accuracy
+	0 gaussian weigthed (original, as in paper)
+	int use 1/int of all samples without weigthing*/
+	int acc;
+
 } plg_ssim_param_t;
 
 

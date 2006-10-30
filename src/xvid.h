@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.56 2006-10-11 13:55:32 Skal Exp $
+ * $Id: xvid.h,v 1.57 2006-10-30 11:21:42 Skal Exp $
  *
  ****************************************************************************/
 
@@ -548,6 +548,9 @@ typedef struct{
 	
 	/*visualize*/
 	int b_visualize;
+
+	/*accuracy 0 very accurate 4 very fast*/
+	int acc; 
 
 } xvid_plugin_ssim_t;
 

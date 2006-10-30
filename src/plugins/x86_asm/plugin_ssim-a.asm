@@ -51,95 +51,92 @@ BITS 32
         paddw  %1, %2
 %endmacro
 
-	;load a dq from mem to a xmm reg
-%macro LOAD_XMM 2
-	movdqu %1,[%2]
-	;movhps %1,[%2+8]
-%endmacro
-
-%macro WRITE_XMM 2
-	;movlps [%1],%2
-	;movhps [%1+8],%2
-	movdqu [%1],%2
-%endmacro
-
 %macro CONSIM_1x8_SSE2 0
-	LOAD_XMM xmm0,ecx
-	LOAD_XMM xmm1,edx
-	pxor xmm2,xmm2
+	movdqu xmm0,[ecx]
+	movdqu xmm1,[edx]
 
 	;unpack to words
 	punpcklbw xmm0,xmm2
 	punpcklbw xmm1,xmm2
 
-	;devo
-	psubw xmm0,xmm6
-	movaps xmm2,xmm0
-	pmaddwd xmm2,xmm0
-	paddd xmm3,xmm2
+	movaps xmm3,xmm0
+	movaps xmm4,xmm1
 
-	;devc
-	psubw xmm1,xmm7
-	movaps xmm2,xmm1
-	pmaddwd xmm2,xmm1
-	paddd xmm4,xmm2
+	pmaddwd xmm0,xmm0;orig
+	pmaddwd xmm1,xmm1;comp
+	pmaddwd xmm3,xmm4;corr
 
-	;corr
-	pmaddwd xmm1,xmm0
-	paddd xmm5,xmm1
+	paddd xmm5,xmm0
+	paddd xmm6,xmm1
+	paddd xmm7,xmm3
 %endmacro
-
 
 %macro CONSIM_1x8_MMX 0
-	movq mm0,[ecx];orig
-	movq mm1,[edx];comp
-	pxor mm2,mm2;null vector
+ 	movq mm0,[ecx];orig
+ 	movq mm1,[edx];comp
 
-	;unpack low half of qw to words
-	punpcklbw mm0,mm2
-	punpcklbw mm1,mm2
+ 	;unpack low half of qw to words
+ 	punpcklbw mm0,mm2
+ 	punpcklbw mm1,mm2
 
-	;devo
-	psubw mm0,mm6
-	movq mm2,mm0
-	pmaddwd	mm2,mm0
-	paddd mm3,mm2;
-	
-	;devc
-	psubw mm1,mm7
-	movq mm2,mm1
-	pmaddwd mm2,mm1
-	paddd mm4,mm2
+ 	movq mm3,mm0
+ 	pmaddwd	mm3,mm0
+ 	paddd mm5,mm3;
 
-	;corr
+ 	movq mm4,mm1
+ 	pmaddwd	mm4,mm1
+ 	paddd mm6,mm4;
+
 	pmaddwd mm1,mm0
-	paddd mm5,mm1
+	paddd mm7,mm1
 
-	movq mm0,[ecx]
-	movq mm1,[edx]
-	pxor mm2,mm2;null vector
+ 	movq mm0,[ecx];orig
+ 	movq mm1,[edx];comp
 
-	;unpack high half of qw to words
-	punpckhbw mm0,mm2
-	punpckhbw mm1,mm2
+ 	;unpack high half of qw to words
+ 	punpckhbw mm0,mm2
+ 	punpckhbw mm1,mm2
 
-	;devo
-	psubw mm0,mm6
-	movq mm2,mm0
-	pmaddwd	mm2,mm0
-	paddd mm3,mm2;
-	
-	;devc
-	psubw mm1,mm7
-	movq mm2,mm1
-	pmaddwd mm2,mm1
-	paddd mm4,mm2
+ 	movq mm3,mm0
+ 	pmaddwd	mm3,mm0
+ 	paddd mm5,mm3;
 
-	;corr
+ 	movq mm4,mm1
+ 	pmaddwd	mm4,mm1
+ 	paddd mm6,mm4;
+
 	pmaddwd mm1,mm0
-	paddd mm5,mm1
+	paddd mm7,mm1
 %endmacro
 
+%macro CONSIM_WRITEOUT 3
+	mov eax,[esp + 16];lumo
+	mul eax; lumo^2
+	shr eax,6; 64*lum0^2
+	movd ecx,%1
+	sub ecx,eax
+
+	mov edx,[esp + 24]; pdevo
+	mov [edx],ecx
+
+	mov eax,[esp + 20];lumc
+	mul eax; lumc^2
+	shr eax,6; 64*lumc^2
+	movd ecx,%2
+	sub ecx,eax
+
+	mov edx,[esp + 28]; pdevc
+	mov [edx],ecx
+
+	mov eax,[esp + 16];lumo
+	mul dword [esp + 20]; lumo*lumc, should fit in eax
+	shr eax,6; 64*lumo*lumc
+	movd ecx,%3
+	sub ecx,eax
+
+	mov edx,[esp + 32]; pcorr
+	mov [edx],ecx
+%endmacro
 
 
 SECTION .text
@@ -174,79 +171,21 @@ lum_8x8_mmx:
 .endfunc
 
 ALIGN 16
-consim_mmx:
-	mov ecx,[esp+4] ;ptro
-	pxor mm6,mm6;
-
-	mov edx,[esp+8] ;ptrc
-	pxor mm3,mm3;devo
-	pxor mm4,mm4;devc
-	movd mm6,[esp + 16];lumo
-	pxor mm7,mm7
-	mov eax,[esp+12];stride
-	movd mm7,[esp + 20];lumc
-	pshufw mm6,mm6,00000000b                ; TODO: remove later! not MMX, but SSE
-	pxor mm5,mm5;corr
-	pshufw mm7,mm7,00000000b
-
-	CONSIM_1x8_MMX
-	add ecx,eax
-	add edx,eax
-	CONSIM_1x8_MMX
-	add ecx,eax
-	add edx,eax
-	CONSIM_1x8_MMX
-	add ecx,eax
-	add edx,eax
-	CONSIM_1x8_MMX
-	add ecx,eax
-	add edx,eax
-	CONSIM_1x8_MMX
-	add ecx,eax
-	add edx,eax
-	CONSIM_1x8_MMX
-	add ecx,eax
-	add edx,eax
-	CONSIM_1x8_MMX
-	add ecx,eax
-	add edx,eax
-	CONSIM_1x8_MMX
-
-	pshufw mm0,mm3,01001110b
-	paddd mm3,mm0
-	pshufw mm1,mm4,01001110b
-	paddd mm4,mm1
-	pshufw mm2,mm5,01001110b	
-	paddd mm5,mm2
-
-	;load target pointer
- 	mov ecx,[esp + 24]; pdevo
-	movd [ecx],mm3
- 	mov edx,[esp + 28]; pdevc
-	movd [edx],mm4
- 	mov eax,[esp + 32]; corr
-	movd [eax],mm5
-	emms
-	ret
-.endfunc
-
 consim_sse2:
 	mov ecx,[esp+4] ;ptro
-	pxor xmm6,xmm6;
 	mov edx,[esp+8] ;ptrc
-	pxor xmm3,xmm3;devo
-	pxor xmm4,xmm4;devc
-	movd xmm6,[esp + 16];lumo
-	pxor xmm7,xmm7
 	mov eax,[esp+12];stride
-	movd xmm7,[esp + 20];lumc
-	pxor xmm5,xmm5;corr
+
+	pxor xmm2,xmm2;null vektor
+	pxor xmm5,xmm5;devo
+	pxor xmm6,xmm6;devc
+	pxor xmm7,xmm7;corr
 
 	;broadcast lumo/c
-	;punpcklbw xmm6,xmm6
+	punpcklbw xmm6,xmm6
 	punpcklwd xmm6,xmm6
 	pshufd xmm6,xmm6,00000000b;or shufps
-	;punpcklbw xmm7,xmm7
+	punpcklbw xmm7,xmm7
 	punpcklwd xmm7,xmm7
 	pshufd xmm7,xmm7,00000000b
 
@@ -273,29 +212,73 @@ consim_sse2:
 	add edx,eax
 	CONSIM_1x8_SSE2
 
-;accumulate xmm3-5
-	pshufd     xmm0, xmm3, 0EH ; Get bit 64-127 from xmm1 (or use movhlps)
-	paddd      xmm3, xmm0      ; Sums are in 2 dwords
-	pshufd     xmm0, xmm3, 01H ; Get bit 32-63 from xmm0
-	paddd      xmm3, xmm0      ; Sum is in one dword
+	;accumulate xmm5-7
+	pshufd     xmm0, xmm5, 0EH
+	paddd      xmm5, xmm0
+	pshufd     xmm0, xmm5, 01H
+	paddd      xmm5, xmm0
 
-	pshufd     xmm1, xmm4, 0EH ; Get bit 64-127 from xmm1 (or use movhlps)
-	paddd      xmm4, xmm1      ; Sums are in 2 dwords
-	pshufd     xmm1, xmm4, 01H ; Get bit 32-63 from xmm0
-	paddd      xmm4, xmm1      ; Sum is in one dword
+	pshufd     xmm1, xmm6, 0EH
+	paddd      xmm6, xmm1
+	pshufd     xmm1, xmm6, 01H
+	paddd      xmm6, xmm1
 
-	pshufd     xmm2, xmm5, 0EH ; Get bit 64-127 from xmm1 (or use movhlps)
-	paddd      xmm5, xmm2      ; Sums are in 2 dwords
-	pshufd     xmm2, xmm5, 01H ; Get bit 32-63 from xmm0
-	paddd      xmm5, xmm2      ; Sum is in one dword
+	pshufd     xmm2, xmm7, 0EH
+	paddd      xmm7, xmm2
+	pshufd     xmm2, xmm7, 01H
+	paddd      xmm7, xmm2
+
+	CONSIM_WRITEOUT xmm5,xmm6,xmm7
+	ret
+.endfunc
 
 
-	;load target pointer
- 	mov ecx,[esp + 24]; pdevo
-	movd [ecx],xmm3
- 	mov edx,[esp + 28]; pdevc
-	movd [edx],xmm4
- 	mov eax,[esp + 32]; corr
-	movd [eax],xmm5
+
+
+
+ALIGN 16
+consim_mmx:
+	mov ecx,[esp+4] ;ptro
+	mov edx,[esp+8] ;ptrc
+	mov eax,[esp+12];stride
+	pxor mm2,mm2;null
+	pxor mm5,mm5;devo
+	pxor mm6,mm6;devc
+	pxor mm7,mm7;corr
+
+	CONSIM_1x8_MMX
+	add ecx,eax
+	add edx,eax
+	CONSIM_1x8_MMX
+	add ecx,eax
+	add edx,eax
+	CONSIM_1x8_MMX
+	add ecx,eax
+	add edx,eax
+	CONSIM_1x8_MMX
+	add ecx,eax
+	add edx,eax
+	CONSIM_1x8_MMX
+	add ecx,eax
+	add edx,eax
+	CONSIM_1x8_MMX
+	add ecx,eax
+	add edx,eax
+	CONSIM_1x8_MMX
+	add ecx,eax
+	add edx,eax
+	CONSIM_1x8_MMX
+
+	movq mm0,mm5
+	psrlq mm0,32
+	paddd mm5,mm0
+	movq mm1,mm6
+	psrlq mm1,32
+	paddd mm6,mm1
+	movq mm2,mm7
+	psrlq mm2,32
+	paddd mm7,mm2
+
+	CONSIM_WRITEOUT mm5,mm6,mm7
 	ret
 .endfunc

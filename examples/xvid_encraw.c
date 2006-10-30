@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.31 2006-10-16 04:46:01 Skal Exp $
+ * $Id: xvid_encraw.c,v 1.32 2006-10-30 11:21:42 Skal Exp $
  *
  ****************************************************************************/
 
@@ -165,7 +165,7 @@ static 	int NUM_ZONES = 0;
 static 	frame_stats_t framestats[7];
 
 static 	int ARG_STATS = 0;
-static 	int ARG_SSIM = 0;
+static 	int ARG_SSIM = -1;
 static 	char* ARG_SSIM_PATH = NULL;
 static 	int ARG_DUMP = 0;
 static 	int ARG_LUMIMASKING = 0;
@@ -581,7 +581,11 @@ main(int argc,
 		} else if (strcmp("-stats", argv[i]) == 0) {
 			ARG_STATS = 1;
 		} else if (strcmp("-ssim", argv[i]) == 0) {
-			ARG_SSIM = 1;
+			ARG_SSIM = 2;
+			if ((i < argc - 1) && (*argv[i+1] != '-')) {
+				i++;
+				ARG_SSIM = atoi(argv[i]);
+			}
 		} else if (strcmp("-ssim_file", argv[i]) == 0 && i < argc -1) {
 			i++;
 			ARG_SSIM_PATH = argv[i];
@@ -1568,7 +1572,7 @@ usage()
 	fprintf(stderr, " -noclosed_gop                  : Disable closed GOP mode\n");
 	fprintf(stderr, " -lumimasking                   : use lumimasking algorithm\n");
 	fprintf(stderr, " -stats                         : print stats about encoded frames\n");
-	fprintf(stderr, " -ssim                          : prints the ssim stats for every encoded frame (slow!)\n");
+	fprintf(stderr, " -ssim [integer]                : prints ssim for every frame (accurate: 0 fast: 4) (2)\n");
 	fprintf(stderr, " -ssim_file filename            : outputs the ssim stats into a file\n");
 	fprintf(stderr, " -debug                         : activates xvidcore internal debugging output\n");
 	fprintf(stderr, " -vop_debug                     : print some info directly into encoded frames\n");
@@ -1903,11 +1907,12 @@ enc_init(int use_assembler)
 		xvid_enc_create.num_plugins++;
 	}
 
-	if (ARG_SSIM || ARG_SSIM_PATH != NULL) {
+	if (ARG_SSIM>=0 || ARG_SSIM_PATH != NULL) {
 		plugins[xvid_enc_create.num_plugins].func = xvid_plugin_ssim;
-		ssim.b_printstat = ARG_SSIM;
+		ssim.b_printstat = 1;
 		ssim.stat_path = ARG_SSIM_PATH;
 		ssim.b_visualize = 0;
+		ssim.acc = ARG_SSIM; 
 		plugins[xvid_enc_create.num_plugins].param = &ssim;
 		xvid_enc_create.num_plugins++;
 	}

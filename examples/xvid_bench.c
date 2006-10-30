@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.32 2006-10-30 10:52:00 Skal Exp $
+ * $Id: xvid_bench.c,v 1.33 2006-10-30 11:21:42 Skal Exp $
  *
  ****************************************************************************/
 
@@ -2019,7 +2019,7 @@ typedef void (*csfunc)(uint8_t* ptro, uint8_t* ptrc, int stride, int lumo, int l
 extern int lum_8x8_c(uint8_t* ptr, int stride);
 extern int lum_8x8_mmx(uint8_t* ptr, int stride);
 extern int lum_2x8_c(uint8_t* ptr, int stride);
-extern void iconsim_c(uint8_t* ptro, uint8_t* ptrc, int stride, int lumo, int lumc, int* pdevo, int* pdevc, int* pcorr);
+extern void consim_c(uint8_t* ptro, uint8_t* ptrc, int stride, int lumo, int lumc, int* pdevo, int* pdevc, int* pcorr);
 extern void consim_mmx(uint8_t* ptro, uint8_t* ptrc, int stride, int lumo, int lumc, int* pdevo, int* pdevc, int* pcorr);
 extern void consim_sse2(uint8_t* ptro, uint8_t* ptrc, int stride, int lumo, int lumc, int* pdevo, int* pdevc, int* pcorr);
 
@@ -2057,7 +2057,7 @@ void test_SSIM()
 			continue;
 		lum8x8 = lum_8x8_c;
 		lum2x8 = lum_2x8_c;
-		csim   = iconsim_c;
+		csim   = consim_c;
 		if (cpu->cpu & XVID_CPU_MMX){
 			lum8x8 = lum_8x8_mmx;
 			csim = consim_mmx;
@@ -2091,8 +2091,7 @@ void test_SSIM()
 		t = (gettime_usec() - t) / nb_tests;
 		printf("%s - ssim-consim    %.3f usec       devs=[0x%x 0x%x 0x%x] %s\n",
 			   cpu->name, t, devs[0], devs[1], devs[2],
-			   (devs[0]!=0xeba80 || devs[1]!=0x1053e7 ||  devs[2]!=0x51215)?"| ERROR": "" );
-
+			   (devs[0]!=0x1bdf0f || devs[1]!=0x137258 ||  devs[2]!=0xcdb13)?"| ERROR": "" );
 		printf( " --- \n" );
 	}
 }
