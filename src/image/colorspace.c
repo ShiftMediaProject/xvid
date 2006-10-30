@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: colorspace.c,v 1.12 2006-10-29 08:04:02 chl Exp $
+ * $Id: colorspace.c,v 1.13 2006-10-30 10:52:00 Skal Exp $
  *
  ****************************************************************************/
 
@@ -472,11 +472,14 @@ yv12_to_yv12_c(uint8_t * y_dst, uint8_t * u_dst, uint8_t * v_dst,
 	int width2 = width / 2;
 	int height2 = height / 2;
 	int y;
+	const int with_uv = (u_src!=0 && v_src!=0);
 
 	if (vflip) {
 		y_src += (height - 1) * y_src_stride;
-		u_src += (height2 - 1) * uv_src_stride;
-		v_src += (height2 - 1) * uv_src_stride;
+		if (with_uv) {
+			u_src += (height2 - 1) * uv_src_stride;
+			v_src += (height2 - 1) * uv_src_stride;
+		}
 		y_src_stride = -y_src_stride;
 		uv_src_stride = -uv_src_stride;
 	}
@@ -487,29 +490,24 @@ yv12_to_yv12_c(uint8_t * y_dst, uint8_t * u_dst, uint8_t * v_dst,
 		y_dst += y_dst_stride;
 	}
 
-	if (u_src)
+	if (with_uv) {
 		for (y = height2; y; y--) {
 			memcpy(u_dst, u_src, width2);
+			memcpy(v_dst, v_src, width2);
 			u_src += uv_src_stride;
 			u_dst += uv_dst_stride;
-		}
-	else
-		for (y = height2; y; y--) {
-			memset(u_dst, 0x80, width2);
-			u_dst += uv_dst_stride;
-		}
-
-	if (v_src)
-		for (y = height2; y; y--) {
-			memcpy(v_dst, v_src, width2);
 			v_src += uv_src_stride;
 			v_dst += uv_dst_stride;
 		}
-	else
+	}
+	else {
 		for (y = height2; y; y--) {
+			memset(u_dst, 0x80, width2);
 			memset(v_dst, 0x80, width2);
+			u_dst += uv_dst_stride;
 			v_dst += uv_dst_stride;
 		}
+	}
 }
 
 
