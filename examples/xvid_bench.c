@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.33 2006-10-30 11:21:42 Skal Exp $
+ * $Id: xvid_bench.c,v 1.34 2006-11-01 07:12:26 Skal Exp $
  *
  ****************************************************************************/
 
@@ -58,6 +58,7 @@
 #include "utils/timer.h"
 #include "quant/quant_matrix.c"
 #include "bitstream/cbp.h"
+#include "bitstream/bitstream.h"
 
 #include <math.h>
 
@@ -1932,7 +1933,7 @@ static void __inline new_gcd(int *num, int *den)
 
 void test_gcd()
 {
-	const int nb_tests = 10*speed_ref;
+  const int nb_tests = 10*speed_ref;
   int i;
   uint32_t crc1=0, crc2=0;
   uint32_t n0, n, d0, d;
@@ -2009,6 +2010,7 @@ void test_compiler() {
     printf( "ERROR! please post your platform/compiler specs to xvid-devel@xvid.org !\n" );
   }
 }
+
 /*********************************************************************
  * test SSIM functions
  *********************************************************************/
@@ -2097,6 +2099,62 @@ void test_SSIM()
 }
 
 /*********************************************************************
+ * test bitstream functions
+ *********************************************************************/
+
+#define BIT_BUF_SIZE 2000
+
+static void test_bits()
+{
+  const int nb_tests = 50*speed_ref;
+  int tst;
+  uint32_t Crc;
+  uint8_t Buf[BIT_BUF_SIZE];
+  uint32_t Extracted[BIT_BUF_SIZE*8]; /* worst case: bits read 1 by 1 */
+  int Lens[BIT_BUF_SIZE*8];     
+  double t1;
+
+
+  printf( "\n ===  test bitstream ===\n" );
+  ieee_reseed(1);
+  Crc = 0;
+
+  t1 = gettime_usec();
+  for(tst=0; tst<nb_tests; ++tst) {
+  	Bitstream bs;
+  	int m, m2, l, l2;
+
+	for(l=0; l<BIT_BUF_SIZE; ++l)
+		Buf[l] = (uint8_t)ieee_rand(0,255);
+
+  	l = BIT_BUF_SIZE - ieee_rand(1,BIT_BUF_SIZE/10);
+  	BitstreamInit(&bs, (void*)(Buf+BIT_BUF_SIZE-l), l);
+
+
+	BitstreamReset(&bs);
+	for(l2=l*8, m=0; l2>0; m++) {
+		const int b = ieee_rand(1,32);
+		Lens[m] = b;
+		l2 -= b;
+		if (l2<0) break;
+		Extracted[m] = BitstreamShowBits(&bs, b);
+		BitstreamSkip(&bs, b);
+//		printf( "<= %d: %d 0x%x\n", m, b, Extracted[m]);
+	}
+
+	BitstreamReset(&bs);
+	for(m2=0; m2<m; ++m2) {
+		const int b = Lens[m2];
+		const uint32_t v = BitstreamGetBits(&bs, b);
+		Crc |= (v!=Extracted[m2]);
+//		printf( "=> %d: %d 0x%x %c\n", m2, b, v, " *"[Crc]);
+	}
+  }
+  t1 = (gettime_usec() - t1) / nb_tests;
+  printf(" test_bits   %.3f usec   %s\n", t1, (Crc!=0)?"| ERROR": "" );
+}
+
+/*********************************************************************
  * main
  *********************************************************************/
 
@@ -2111,7 +2169,7 @@ int main(int argc, const char *argv[])
 	int c, what = 0;
 	int width, height;
 	uint32_t chksum = 0;
-  const char * test_bitstream = 0;
+	const char * test_bitstream = 0;
 
 	cpu_mask = 0;  // default => will use autodectect
 	for(c=1; c<argc; ++c)
@@ -2168,7 +2226,7 @@ int main(int argc, const char *argv[])
 	if (what==0 || what==14) test_yuv();
 	if (what==0 || what==15) test_SSIM();
 	if (what==0 || what==16) test_yuv2();
-
+	if (what==0 || what==17) test_bits();
 
 	if (what==7) {
 		test_IEEE1180_compliance(-256, 255, 1);
