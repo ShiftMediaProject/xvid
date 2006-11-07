@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: gmc_mmx.asm,v 1.1 2006-06-14 21:44:07 Skal Exp $
+; * $Id: gmc_mmx.asm,v 1.2 2006-11-07 19:59:03 Skal Exp $
 ; *
 ; *************************************************************************/
 
@@ -193,7 +193,8 @@ xvid_GMC_Core_Lin_8_sse2:
 
   GMC_8_SSE2
 
-  pshuflw   xmm4, [esp +20], 01010101b  ; Rounder (bits [16..31])
+  movd      xmm4, [esp +20]
+  pshuflw   xmm4, xmm4, 01010101b  ; Rounder (bits [16..31])
   punpckldq xmm4, xmm4
   mov  eax, [esp + 4]  ; Dst
 

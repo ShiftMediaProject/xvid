@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: gmc.c,v 1.6 2006-06-17 13:07:55 Isibaar Exp $
+ * $Id: gmc.c,v 1.7 2006-11-07 19:59:03 Skal Exp $
  *
  ****************************************************************************/
 
@@ -27,6 +27,7 @@
 #include "../global.h"
 #include "../encoder.h"
 #include "gmc.h"
+#include "../utils/emms.h"
 
 #include <stdio.h>
 
@@ -459,6 +460,7 @@ void Predict_16x16_mmx(const NEW_GMC_DATA * const This,
     if ( W2>(uint32_t)U && W2>(uint32_t)(U+15*dUx) &&
          H2>(uint32_t)V && H2>(uint32_t)(V+15*dVx) )
     {
+      uint32_t UV1, UV2;
       for(i=0; i<16; ++i)
       {
         uint32_t u = ( U >> 16 ) << rho;
@@ -467,24 +469,21 @@ void Predict_16x16_mmx(const NEW_GMC_DATA * const This,
         Offsets[   i] = u;
         Offsets[16+i] = v;
       }
-	  
-	  {
           // batch 8 input pixels when linearity says it's ok
-        uint32_t UV1, UV2;
-        UV1 = (Offsets[0] | (Offsets[16]<<16)) & 0xfff0fff0U;
-        UV2 = (Offsets[7] | (Offsets[23]<<16)) & 0xfff0fff0U;
-        if (UV1+7*16==UV2)
-      	  GMC_Core_Lin_8(dst,    Offsets,    src + (Offsets[0]>>4) + (Offsets[16]>>4)*srcstride, srcstride, Rounder);
-        else
-      	  GMC_Core_Non_Lin_8(dst,   Offsets,   src, srcstride, Rounder);
-        UV1 = (Offsets[ 8] | (Offsets[24]<<16)) & 0xfff0fff0U;
-        UV2 = (Offsets[15] | (Offsets[31]<<16)) & 0xfff0fff0U;
-        if (UV1+7*16==UV2)
-      	  GMC_Core_Lin_8(dst+8,  Offsets+8,  src + (Offsets[8]>>4) + (Offsets[24]>>4)*srcstride, srcstride, Rounder);
-        else
-      	  GMC_Core_Non_Lin_8(dst+8, Offsets+8, src, srcstride, Rounder);
-	  }
-	}
+
+      UV1 = (Offsets[0] | (Offsets[16]<<16)) & 0xfff0fff0U;
+      UV2 = (Offsets[7] | (Offsets[23]<<16)) & 0xfff0fff0U;
+      if (UV1+7*16==UV2)
+        GMC_Core_Lin_8(dst,    Offsets,    src + (Offsets[0]>>4) + (Offsets[16]>>4)*srcstride, srcstride, Rounder);
+      else
+        GMC_Core_Non_Lin_8(dst,   Offsets,   src, srcstride, Rounder);
+      UV1 = (Offsets[ 8] | (Offsets[24]<<16)) & 0xfff0fff0U;
+      UV2 = (Offsets[15] | (Offsets[31]<<16)) & 0xfff0fff0U;
+      if (UV1+7*16==UV2)
+        GMC_Core_Lin_8(dst+8,  Offsets+8,  src + (Offsets[8]>>4) + (Offsets[24]>>4)*srcstride, srcstride, Rounder);
+      else
+        GMC_Core_Non_Lin_8(dst+8, Offsets+8, src, srcstride, Rounder);
+    }
     else
     {
       for(i=0; i<16; ++i)
@@ -535,6 +534,7 @@ void Predict_8x8_mmx(const NEW_GMC_DATA * const This,
     if ( W2>(uint32_t)U && W2>(uint32_t)(U+15*dUx) &&
          H2>(uint32_t)V && H2>(uint32_t)(V+15*dVx) )
     {
+      uint32_t UV1, UV2;
       for(i=0; i<8; ++i)
       {
         int32_t u = ( U >> 16 ) << rho;
@@ -544,21 +544,19 @@ void Predict_8x8_mmx(const NEW_GMC_DATA * const This,
         Offsets[16+i] = v;
       }
 
-	  {
           // batch 8 input pixels when linearity says it's ok
-        const uint32_t UV1 = (Offsets[ 0] | (Offsets[16]<<16)) & 0xfff0fff0U;
-        const uint32_t UV2 = (Offsets[ 7] | (Offsets[23]<<16)) & 0xfff0fff0U;
-        if (UV1+7*16==UV2)
-		{
-          const uint32_t Off = (Offsets[0]>>4) + (Offsets[16]>>4)*srcstride;
-          GMC_Core_Lin_8(uDst, Offsets, uSrc+Off, srcstride, Rounder);
-          GMC_Core_Lin_8(vDst, Offsets, vSrc+Off, srcstride, Rounder);
-		}
-        else {
-          GMC_Core_Non_Lin_8(uDst, Offsets, uSrc, srcstride, Rounder);
-          GMC_Core_Non_Lin_8(vDst, Offsets, vSrc, srcstride, Rounder);
-		}
-	  }
+			UV1 = (Offsets[ 0] | (Offsets[16]<<16)) & 0xfff0fff0U;
+			UV2 = (Offsets[ 7] | (Offsets[23]<<16)) & 0xfff0fff0U;
+			if (UV1+7*16==UV2)
+      {
+				const uint32_t Off = (Offsets[0]>>4) + (Offsets[16]>>4)*srcstride;
+				GMC_Core_Lin_8(uDst, Offsets, uSrc+Off, srcstride, Rounder);
+				GMC_Core_Lin_8(vDst, Offsets, vSrc+Off, srcstride, Rounder);
+      }
+      else {
+        GMC_Core_Non_Lin_8(uDst, Offsets, uSrc, srcstride, Rounder);
+        GMC_Core_Non_Lin_8(vDst, Offsets, vSrc, srcstride, Rounder);
+      }
     }
     else
     {
@@ -740,4 +738,5 @@ generate_GMCimage(	const NEW_GMC_DATA *const gmc_data, /* [input] precalculated 
 
 			pMBs[mbnum].mcsel = 0; /* until mode decision */
 	}
+  emms();
 }
