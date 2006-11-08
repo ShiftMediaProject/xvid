@@ -27,6 +27,14 @@
 #ifndef SSIM_H
 #define SSIM_H
 
+/*Plugin for calculating and dumping the ssim quality metric according to 
+
+http://www.cns.nyu.edu/~lcv/ssim/
+
+there is a accurate (but very slow) implementation, using a 8x8 gaussian 
+weighting window, that is quite close to the paper, and a faster unweighted 
+implementation*/
+
 typedef struct{
 	/*stat output*/
 	int b_printstat;
@@ -36,8 +44,8 @@ typedef struct{
 	int b_visualize;
 
 	/*accuracy
-	0 gaussian weigthed (original, as in paper)
-	int use 1/int of all samples without weigthing*/
+	0 	gaussian weigthed (original, as in paper, very slow)
+	<=4	unweighted, 1 slow 4 fastest*/
 	int acc;
 
 } plg_ssim_param_t;
