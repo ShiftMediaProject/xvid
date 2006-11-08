@@ -37,6 +37,12 @@
 
 typedef struct framestat_t framestat_t;
 
+/*dev 1.0 gaussian weighting. the weight for the pixel x,y is w(x)*w(y)*/
+static float mask8[8] = {
+	0.0069815, 0.1402264, 1.0361408, 2.8165226, 
+	2.8165226, 1.0361408, 0.1402264, 0.0069815
+};
+
 struct framestat_t{
 	int type;
 	int quant;
@@ -116,7 +122,7 @@ void framestat_write(ssim_data_t* ssim, char* path){
 	fprintf(out,"SSIM Error Metric\n");
 	fprintf(out,"quant   avg     min     max\n");
 	while(tmp->next->next != NULL){
-		fprintf(out,"%3d     %1.4f   %1.4f   %1.4f\n",tmp->quant,tmp->ssim_avg,tmp->ssim_min,tmp->ssim_max);
+		fprintf(out,"%3d     %1.3f   %1.3f   %1.3f\n",tmp->quant,tmp->ssim_avg,tmp->ssim_min,tmp->ssim_max);
 		tmp = tmp->next;
 	}
 	fclose(out);
@@ -221,6 +227,20 @@ int lum_8x8_c(uint8_t* ptr, int stride){
 	return mean;
 }
 
+int lum_8x8_gaussian(uint8_t* ptr, int stride){
+	float mean=0,sum;
+	int i,j;
+	for(i=0;i<8;i++){
+		sum = 0;
+		for(j=0;j<8;j++)
+			sum += ptr[i*stride + j]*mask8[j];
+		
+		sum *=mask8[i];
+		mean += sum;
+	}
+	return (int) mean + 0.5;
+}
+
 /*calculate the difference between two blocks next to each other on a row*/
 int lum_2x8_c(uint8_t* ptr, int stride){
 	int mean=0,i;
@@ -232,6 +252,37 @@ int lum_2x8_c(uint8_t* ptr, int stride){
 	}
 	return mean;
 }
+
+/*calculate contrast and correlation of the two blocks*/
+void consim_gaussian(uint8_t* ptro, uint8_t* ptrc, int stride, int lumo, int lumc, int* pdevo, int* pdevc, int* pcorr){
+	unsigned int valo, valc,i,j,str;
+	float devo=0, devc=0, corr=0,sumo,sumc,sumcorr;
+	str = stride - 8;
+	for(i=0;i< 8;i++){
+		sumo = 0;
+		sumc = 0;
+		sumcorr = 0;
+		for(j=0;j< 8;j++){
+			valo = *ptro;
+			valc = *ptrc;
+			sumo += valo*valo*mask8[j];
+			sumc += valc*valc*mask8[j];
+			sumcorr += valo*valc*mask8[j];
+			ptro++;
+			ptrc++;
+		}
+
+	devo += sumo*mask8[i];
+	devc += sumc*mask8[i];
+	corr += sumcorr*mask8[i];
+	ptro += str;
+	ptrc += str;
+	}
+
+	*pdevo = (int) (devo - ((lumo*lumo + 32) >> 6)) + 0.5;
+	*pdevc = (int) (devc - ((lumc*lumc + 32) >> 6)) + 0.5;
+	*pcorr = (int) (corr - ((lumo*lumc + 32) >> 6)) + 0.5;
+};
 
 /*calculate contrast and correlation of the two blocks*/
 void consim_c(uint8_t* ptro, uint8_t* ptrc, int stride, int lumo, int lumc, int* pdevo, int* pdevc, int* pcorr){
@@ -257,21 +308,15 @@ void consim_c(uint8_t* ptro, uint8_t* ptrc, int stride, int lumo, int lumc, int*
 };
 
 /*calculate the final ssim value*/
-static float calc_ssim(int meano, int meanc, int devo, int devc, int corr){
+static float calc_ssim(float meano, float meanc, float devo, float devc, float corr){
 	static const float c1 = (0.01*255)*(0.01*255);
 	static const float c2 = (0.03*255)*(0.03*255);
-	float fmeano,fmeanc,fdevo,fdevc,fcorr;
-	fmeanc = (float) meanc;
-	fmeano = (float) meano;
-	fdevo = (float) devo;
-	fdevc = (float) devc;
-	fcorr = (float) corr;
-	/* printf("meano: %f meanc: %f devo: %f devc: %f corr: %f\n",fmeano,fmeanc,fdevo,fdevc,fcorr); */
-	return ((2.0*fmeano*fmeanc + c1)*(fcorr/32.0 + c2))/((fmeano*fmeano + fmeanc*fmeanc + c1)*(fdevc/64.0 + fdevo/64.0 + c2));
+	/*printf("meano: %f meanc: %f devo: %f devc: %f corr: %f\n",meano,meanc,devo,devc,corr);*/
+	return ((2.0*meano*meanc + c1)*(corr/32.0 + c2))/((meano*meano + meanc*meanc + c1)*(devc/64.0 + devo/64.0 + c2));
 }
 
 static void ssim_after(xvid_plg_data_t* data, ssim_data_t* ssim){
-	int i,j,c=0;
+	int i,j,c=0,opt;
 	int width,height,str,ovr;
 	unsigned char * ptr1,*ptr2;
 	float isum=0, min=1.00,max=0.00, val;
@@ -287,7 +332,7 @@ static void ssim_after(xvid_plg_data_t* data, ssim_data_t* ssim){
 	ptr1 = (unsigned char*) data->original.plane[0];
 	ptr2 = (unsigned char*) data->current.plane[0];
 
-
+	opt = ssim->grid == 1 && ssim->param->acc != 0;
 
 	/*TODO: Thread*/
 	for(i=0;i<height;i+=ssim->grid){
@@ -298,7 +343,7 @@ static void ssim_after(xvid_plg_data_t* data, ssim_data_t* ssim){
 		ssim->consim(ptr1,ptr2,str,meano,meanc,&devo,&devc,&corr);
 		emms();
 
-		val = calc_ssim(meano,meanc,devo,devc,corr);
+		val = calc_ssim((float) meano,(float) meanc,(float) devo,(float) devc,(float) corr);
 		isum += val;
 		c++;
 		/* for visualisation
@@ -313,17 +358,17 @@ static void ssim_after(xvid_plg_data_t* data, ssim_data_t* ssim){
 		ptr2+=ssim->grid;
 		/*rest of each row*/
 		for(j=ssim->grid;j<width;j+=ssim->grid){
-			if(ssim->grid == 1){
-			meano += ssim->func2x8(ptr1,str);
-			meanc += ssim->func2x8(ptr2,str);
-			} else {
-			meano = ssim->func8x8(ptr1,str);
-			meanc = ssim->func8x8(ptr2,str);
+ 			if(opt){
+ 				meano += ssim->func2x8(ptr1,str);
+ 				meanc += ssim->func2x8(ptr2,str);
+ 			} else {
+				meano = ssim->func8x8(ptr1,str);
+				meanc = ssim->func8x8(ptr2,str);
 			}
 			ssim->consim(ptr1,ptr2,str,meano,meanc,&devo,&devc,&corr);
 			emms();	
 
-			val = calc_ssim(meano,meanc,devo,devc,corr);
+			val = calc_ssim((float) meano,(float) meanc,(float) devo,(float) devc,(float) corr);
 			isum += val;
 			c++;
 			/* for visualisation
@@ -354,7 +399,7 @@ static void ssim_after(xvid_plg_data_t* data, ssim_data_t* ssim){
 	}
 */
 	if(ssim->param->b_printstat){
-		printf("       SSIM: avg: %f min: %f max: %f\n",isum,min,max);
+		printf("       SSIM: avg: %1.3f min: %1.3f max: %1.3f\n",isum,min,max);
 	}
 
 }
@@ -377,12 +422,6 @@ static int ssim_create(xvid_plg_create_t* create, void** handle){
 
 	ssim->grid = param->acc;
 
-	/*gaussian weigthing not implemented*/
-	if(ssim->grid == 0) ssim->grid = 1;
-	if(ssim->grid > 4) ssim->grid = 4;
-
-	printf("Grid: %d\n",ssim->grid);
-
 #if defined(ARCH_IS_IA32)
 	if((cpu_flags & XVID_CPU_MMX) && (param->acc > 0)){
 		ssim->func8x8 = lum_8x8_mmx;
@@ -392,6 +431,15 @@ static int ssim_create(xvid_plg_create_t* create, void** handle){
 		ssim->consim = consim_sse2;
 	}
 #endif
+
+	/*gaussian weigthing not implemented*/
+	if(ssim->grid == 0){
+		ssim->grid = 1;
+		ssim->func8x8 = lum_8x8_gaussian;
+		ssim->func2x8 = NULL;
+		ssim->consim = consim_gaussian;
+	}
+	if(ssim->grid > 4) ssim->grid = 4;
 
 	ssim->ssim_sum = 0.0;
 	ssim->frame_cnt = 0;

@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.32 2006-10-30 11:21:42 Skal Exp $
+ * $Id: xvid_encraw.c,v 1.33 2006-11-08 06:55:27 Skal Exp $
  *
  ****************************************************************************/
 
@@ -1912,7 +1912,7 @@ enc_init(int use_assembler)
 		ssim.b_printstat = 1;
 		ssim.stat_path = ARG_SSIM_PATH;
 		ssim.b_visualize = 0;
-		ssim.acc = ARG_SSIM; 
+		ssim.acc = (ARG_SSIM_PATH != NULL && ARG_SSIM < 0) ? 2 : ARG_SSIM;
 		plugins[xvid_enc_create.num_plugins].param = &ssim;
 		xvid_enc_create.num_plugins++;
 	}
