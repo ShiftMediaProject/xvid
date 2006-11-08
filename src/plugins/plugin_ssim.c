@@ -43,6 +43,16 @@ static float mask8[8] = {
 	2.8165226, 1.0361408, 0.1402264, 0.0069815
 };
 
+/* integer version. Norm: coeffs sums up to 4096.
+  Define USE_INT_GAUSSIAN to use it as replacement to float version */
+
+/* #define USE_INT_GAUSSIAN */
+static const uint16_t imask8[8] = {
+  4, 72, 530, 1442, 1442, 530, 72, 4
+};
+#define GACCUM(X)  ( ((X)+(1<<11)) >> 12 )
+
+
 struct framestat_t{
 	int type;
 	int quant;
@@ -241,6 +251,21 @@ int lum_8x8_gaussian(uint8_t* ptr, int stride){
 	return (int) mean + 0.5;
 }
 
+int lum_8x8_gaussian_int(uint8_t* ptr, int stride){
+	uint32_t mean;
+	int i,j;
+	mean = 0;
+	for(i=0;i<8;i++){
+		uint32_t sum = 0;
+		for(j=0;j<8;j++)
+			sum += ptr[i*stride + j]*imask8[j];
+		
+		sum = GACCUM(sum) * imask8[i];
+		mean += sum;
+	}
+	return (int)GACCUM(mean);
+}
+
 /*calculate the difference between two blocks next to each other on a row*/
 int lum_2x8_c(uint8_t* ptr, int stride){
 	int mean=0,i;
@@ -279,6 +304,40 @@ void consim_gaussian(uint8_t* ptro, uint8_t* ptrc, int stride, int lumo, int lum
 	ptrc += str;
 	}
 
+	*pdevo = (int) (devo - ((lumo*lumo + 32) >> 6)) + 0.5;
+	*pdevc = (int) (devc - ((lumc*lumc + 32) >> 6)) + 0.5;
+	*pcorr = (int) (corr - ((lumo*lumc + 32) >> 6)) + 0.5;
+};
+
+void consim_gaussian_int(uint8_t* ptro, uint8_t* ptrc, int stride, int lumo, int lumc, int* pdevo, int* pdevc, int* pcorr)
+{
+	unsigned int valo, valc,i,j,str;
+	uint32_t  devo=0, devc=0, corr=0;
+	str = stride - 8;
+	for(i=0;i< 8;i++){
+		uint32_t sumo = 0;
+		uint32_t sumc = 0;
+		uint32_t sumcorr = 0;
+		for(j=0;j< 8;j++){
+			valo = *ptro;
+			valc = *ptrc;
+			sumo += valo*valo*imask8[j];
+			sumc += valc*valc*imask8[j];
+			sumcorr += valo*valc*imask8[j];
+			ptro++;
+			ptrc++;
+		}
+
+	devo += GACCUM(sumo)*imask8[i];
+	devc += GACCUM(sumc)*imask8[i];
+	corr += GACCUM(sumcorr)*imask8[i];
+	ptro += str;
+	ptrc += str;
+	}
+
+        devo = GACCUM(devo);
+        devc = GACCUM(devc);
+        corr = GACCUM(corr);
 	*pdevo = (int) (devo - ((lumo*lumo + 32) >> 6)) + 0.5;
 	*pdevc = (int) (devc - ((lumc*lumc + 32) >> 6)) + 0.5;
 	*pcorr = (int) (corr - ((lumo*lumc + 32) >> 6)) + 0.5;
@@ -433,12 +492,21 @@ static int ssim_create(xvid_plg_create_t* create, void** handle){
 #endif
 
 	/*gaussian weigthing not implemented*/
+#if !defined(USE_INT_GAUSSIAN)
 	if(ssim->grid == 0){
 		ssim->grid = 1;
 		ssim->func8x8 = lum_8x8_gaussian;
 		ssim->func2x8 = NULL;
 		ssim->consim = consim_gaussian;
 	}
+#else
+	if(ssim->grid == 0){
+		ssim->grid = 1;
+		ssim->func8x8 = lum_8x8_gaussian_int;
+		ssim->func2x8 = NULL;
+		ssim->consim = consim_gaussian_int;
+	}
+#endif
 	if(ssim->grid > 4) ssim->grid = 4;
 
 	ssim->ssim_sum = 0.0;
