@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: colorspace.c,v 1.13 2006-10-30 10:52:00 Skal Exp $
+ * $Id: colorspace.c,v 1.14 2006-11-10 18:58:39 chl Exp $
  *
  ****************************************************************************/
 
@@ -33,6 +33,7 @@
 /* input */
 packedFuncPtr rgb555_to_yv12;
 packedFuncPtr rgb565_to_yv12;
+packedFuncPtr rgb_to_yv12;
 packedFuncPtr bgr_to_yv12;
 packedFuncPtr bgra_to_yv12;
 packedFuncPtr abgr_to_yv12;
@@ -43,6 +44,7 @@ packedFuncPtr uyvy_to_yv12;
 
 packedFuncPtr rgb555i_to_yv12;
 packedFuncPtr rgb565i_to_yv12;
+packedFuncPtr rgbi_to_yv12;
 packedFuncPtr bgri_to_yv12;
 packedFuncPtr bgrai_to_yv12;
 packedFuncPtr abgri_to_yv12;
@@ -57,6 +59,7 @@ packedFuncPtr yv12_to_rgb565;
 packedFuncPtr yv12_to_bgr;
 packedFuncPtr yv12_to_bgra;
 packedFuncPtr yv12_to_abgr;
+packedFuncPtr yv12_to_rgb;
 packedFuncPtr yv12_to_rgba;
 packedFuncPtr yv12_to_argb;
 packedFuncPtr yv12_to_yuyv;
@@ -67,6 +70,7 @@ packedFuncPtr yv12_to_rgb565i;
 packedFuncPtr yv12_to_bgri;
 packedFuncPtr yv12_to_bgrai;
 packedFuncPtr yv12_to_abgri;
+packedFuncPtr yv12_to_rgbi;
 packedFuncPtr yv12_to_rgbai;
 packedFuncPtr yv12_to_argbi;
 packedFuncPtr yv12_to_yuyvi;
@@ -288,6 +292,7 @@ MAKE_COLORSPACE(rgb555_to_yv12_c,  2,2,2, RGB16_TO_YV12,  MK_RGB555, 0,0,0)
 MAKE_COLORSPACE(rgb565_to_yv12_c,  2,2,2, RGB16_TO_YV12,  MK_RGB565, 0,0,0)
 MAKE_COLORSPACE(bgr_to_yv12_c,     3,2,2, RGB_TO_YV12,    2,1,0, 0)
 MAKE_COLORSPACE(bgra_to_yv12_c,    4,2,2, RGB_TO_YV12,    2,1,0, 0)
+MAKE_COLORSPACE(rgb_to_yv12_c,     3,2,2, RGB_TO_YV12,    0,1,2, 0)
 MAKE_COLORSPACE(abgr_to_yv12_c,    4,2,2, RGB_TO_YV12,    3,2,1, 0)
 MAKE_COLORSPACE(rgba_to_yv12_c,    4,2,2, RGB_TO_YV12,    0,1,2, 0)
 MAKE_COLORSPACE(argb_to_yv12_c,    4,2,2, RGB_TO_YV12,    1,2,3, 0)
@@ -299,6 +304,7 @@ MAKE_COLORSPACE(rgb565i_to_yv12_c, 2,2,4, RGB16I_TO_YV12, MK_RGB565, 0,0,0)
 MAKE_COLORSPACE(bgri_to_yv12_c,    3,2,4, RGBI_TO_YV12,   2,1,0, 0)
 MAKE_COLORSPACE(bgrai_to_yv12_c,   4,2,4, RGBI_TO_YV12,   2,1,0, 0)
 MAKE_COLORSPACE(abgri_to_yv12_c,   4,2,4, RGBI_TO_YV12,   3,2,1, 0)
+MAKE_COLORSPACE(rgbi_to_yv12_c,    3,2,4, RGBI_TO_YV12,   0,1,2, 0)
 MAKE_COLORSPACE(rgbai_to_yv12_c,   4,2,4, RGBI_TO_YV12,   0,1,2, 0)
 MAKE_COLORSPACE(argbi_to_yv12_c,   4,2,4, RGBI_TO_YV12,   1,2,3, 0)
 MAKE_COLORSPACE(yuyvi_to_yv12_c,   2,2,4, YUYVI_TO_YV12,  0,1,2,3)
@@ -440,9 +446,10 @@ MAKE_COLORSPACE(uyvyi_to_yv12_c,   2,2,4, YUYVI_TO_YV12,  1,0,3,2)
 
 MAKE_COLORSPACE(yv12_to_rgb555_c,  2,2,2, YV12_TO_RGB16,  MK_RGB555, 0,0,0)
 MAKE_COLORSPACE(yv12_to_rgb565_c,  2,2,2, YV12_TO_RGB16,  MK_RGB565, 0,0,0)
-MAKE_COLORSPACE(yv12_to_bgr_c,     3,2,2, YV12_TO_RGB,    2,1,0, 0)
+MAKE_COLORSPACE(yv12_to_bgr_c,     3,2,2, YV12_TO_RGB,    2,1,0,0)
 MAKE_COLORSPACE(yv12_to_bgra_c,    4,2,2, YV12_TO_RGB,	  2,1,0,3)
 MAKE_COLORSPACE(yv12_to_abgr_c,    4,2,2, YV12_TO_RGB,    3,2,1,0)
+MAKE_COLORSPACE(yv12_to_rgb_c,     3,2,2, YV12_TO_RGB,    0,1,2,0)
 MAKE_COLORSPACE(yv12_to_rgba_c,    4,2,2, YV12_TO_RGB,    0,1,2,3)
 MAKE_COLORSPACE(yv12_to_argb_c,    4,2,2, YV12_TO_RGB,    1,2,3,0)
 MAKE_COLORSPACE(yv12_to_yuyv_c,    2,2,2, YV12_TO_YUYV,   0,1,2,3)
@@ -453,6 +460,7 @@ MAKE_COLORSPACE(yv12_to_rgb565i_c, 2,2,4, YV12_TO_RGB16I, MK_RGB565, 0,0,0)
 MAKE_COLORSPACE(yv12_to_bgri_c,    3,2,4, YV12_TO_RGBI,   2,1,0, 0)
 MAKE_COLORSPACE(yv12_to_bgrai_c,   4,2,4, YV12_TO_RGBI,	  2,1,0,3)
 MAKE_COLORSPACE(yv12_to_abgri_c,   4,2,4, YV12_TO_RGBI,   3,2,1,0)
+MAKE_COLORSPACE(yv12_to_rgbi_c,    3,2,4, YV12_TO_RGBI,   0,1,2,0)
 MAKE_COLORSPACE(yv12_to_rgbai_c,   4,2,4, YV12_TO_RGBI,   0,1,2,3)
 MAKE_COLORSPACE(yv12_to_argbi_c,   4,2,4, YV12_TO_RGBI,   1,2,3,0)
 MAKE_COLORSPACE(yv12_to_yuyvi_c,   2,2,4, YV12_TO_YUYVI,  0,1,2,3)
