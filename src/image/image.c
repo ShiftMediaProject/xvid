@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.c,v 1.40 2006-11-11 05:07:25 chl Exp $
+ * $Id: image.c,v 1.41 2006-11-11 22:03:30 chl Exp $
  *
  ****************************************************************************/
 
@@ -662,7 +662,7 @@ image_output(IMAGE * image,
 			dst[0], dst_stride[0], image->y, image->u, image->v,
 			edged_width, edged_width2, width, height, (csp & XVID_CSP_VFLIP),
 			interlacing?yv12_to_rgbi  :yv12_to_rgb,
-			interlacing?yv12_to_rgbi_c:yv12_to_rgb_c, 4);
+			interlacing?yv12_to_rgbi_c:yv12_to_rgb_c, 3);
 		return 0;
 
 	case XVID_CSP_RGBA:
