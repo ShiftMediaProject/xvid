@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.70 2006-07-10 08:09:59 syskin Exp $
+ * $Id: xvid.c,v 1.71 2006-11-11 22:06:44 chl Exp $
  *
  ****************************************************************************/
 
@@ -257,6 +257,7 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 	yv12_to_yv12    = yv12_to_yv12_c;
 	rgb555_to_yv12  = rgb555_to_yv12_c;
 	rgb565_to_yv12  = rgb565_to_yv12_c;
+	rgb_to_yv12     = rgb_to_yv12_c;
 	bgr_to_yv12     = bgr_to_yv12_c;
 	bgra_to_yv12    = bgra_to_yv12_c;
 	abgr_to_yv12    = abgr_to_yv12_c;
@@ -278,6 +279,7 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 	/* All colorspace transformation functions YV12->User format */
 	yv12_to_rgb555  = yv12_to_rgb555_c;
 	yv12_to_rgb565  = yv12_to_rgb565_c;
+	yv12_to_rgb     = yv12_to_rgb_c;
 	yv12_to_bgr     = yv12_to_bgr_c;
 	yv12_to_bgra    = yv12_to_bgra_c;
 	yv12_to_abgr    = yv12_to_abgr_c;
