@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.c,v 1.39 2006-11-10 18:58:39 chl Exp $
+ * $Id: image.c,v 1.40 2006-11-11 05:07:25 chl Exp $
  *
  ****************************************************************************/
 
@@ -478,7 +478,7 @@ image_input(IMAGE * image,
 			src[0], src_stride[0], image->y, image->u, image->v,
 			edged_width, edged_width2, width, height, (csp & XVID_CSP_VFLIP),
 			interlacing?rgbi_to_yv12  :rgb_to_yv12,
-			interlacing?rgbi_to_yv12_c:rgb_to_yv12_c, 4);
+			interlacing?rgbi_to_yv12_c:rgb_to_yv12_c, 3);
 		break;
             
 	case XVID_CSP_RGBA :
