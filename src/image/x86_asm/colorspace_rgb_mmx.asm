@@ -84,10 +84,18 @@ ALIGN 16
 ;-----------------------------------------------------------------------------
 ;         FIX(Y_B)	FIX(Y_G)	FIX(Y_R) Ignored
 
-y_mul: dw    25,      129,        66,      0
-u_mul: dw   112,      -74,       -38,      0
-v_mul: dw   -18,      -94,       112,      0
+bgr_y_mul: dw    25,      129,        66,      0
+bgr_u_mul: dw   112,      -74,       -38,      0
+bgr_v_mul: dw   -18,      -94,       112,      0
 
+;-----------------------------------------------------------------------------
+; BGR->YV12 multiplication matrices
+;-----------------------------------------------------------------------------
+;         FIX(Y_R)	FIX(Y_G)	FIX(Y_B) Ignored
+
+rgb_y_mul: dw    66,      129,        25,      0
+rgb_u_mul: dw   -38,      -74,       112,      0
+rgb_v_mul: dw   112,      -94,       -18,      0
 
 ;-----------------------------------------------------------------------------
 ; YV12->RGB data
@@ -120,7 +128,7 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
 ;------------------------------------------------------------------------------
 
 %macro BGR_TO_YV12_INIT		2
-  movq mm7, [y_mul]
+  movq mm7, [bgr_y_mul]
 %endmacro
 
 
@@ -184,8 +192,103 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
 
   ; u_ptr, v_ptr
   movq mm0, mm6                 ; = [  |b4|g4|r4]
-  pmaddwd mm6, [v_mul]          ; *= V_MUL
-  pmaddwd mm0, [u_mul]          ; *= U_MUL
+  pmaddwd mm6, [bgr_v_mul]          ; *= V_MUL
+  pmaddwd mm0, [bgr_u_mul]          ; *= U_MUL
+  movq mm1, mm0
+  movq mm2, mm6
+  psrlq mm1, 32
+  psrlq mm2, 32
+  paddd mm0, mm1
+  paddd mm2, mm6
+
+  movd edx, mm0
+  shr edx, 10
+  add edx, U_ADD
+  mov [ebx], dl
+
+  movd edx, mm2
+  shr edx, 10
+  add edx, V_ADD
+  mov [ecx], dl
+
+  pop edx
+%endmacro
+
+;------------------------------------------------------------------------------
+; RGB_TO_YV12( BYTES )
+;
+; BYTES		3=rgb(24bit), 4=rgba(32-bit)
+;
+; bytes=3/4, pixels = 2, vpixels=2
+;------------------------------------------------------------------------------
+
+%macro RGB_TO_YV12_INIT		2
+  movq mm7, [rgb_y_mul]
+%endmacro
+
+
+%macro RGB_TO_YV12			2
+    ; y_out
+  pxor mm4, mm4
+  pxor mm5, mm5
+  movd mm0, [edi]               ; x_ptr[0...]
+  movd mm2, [edi+edx]           ; x_ptr[x_stride...]
+  punpcklbw mm0, mm4            ; [  |b |g |r ]
+  punpcklbw mm2, mm5            ; [  |b |g |r ]
+  movq mm6, mm0                 ; = [  |b4|g4|r4]
+  paddw mm6, mm2                ; +[  |b4|g4|r4]
+  pmaddwd mm0, mm7              ; *= Y_MUL
+  pmaddwd mm2, mm7              ; *= Y_MUL
+  movq mm4, mm0                 ; [r]
+  movq mm5, mm2                 ; [r]
+  psrlq mm4, 32                 ; +[g]
+  psrlq mm5, 32                 ; +[g]
+  paddd mm0, mm4                ; +[b]
+  paddd mm2, mm5                ; +[b]
+
+  pxor mm4, mm4
+  pxor mm5, mm5
+  movd mm1, [edi+%1]            ; src[%1...]
+  movd mm3, [edi+edx+%1]        ; src[x_stride+%1...]
+  punpcklbw mm1, mm4            ; [  |b |g |r ]
+  punpcklbw mm3, mm5            ; [  |b |g |r ]
+  paddw mm6, mm1                ; +[  |b4|g4|r4]
+  paddw mm6, mm3                ; +[  |b4|g4|r4]
+  pmaddwd mm1, mm7              ; *= Y_MUL
+  pmaddwd mm3, mm7              ; *= Y_MUL
+  movq mm4, mm1                 ; [r]
+  movq mm5, mm3                 ; [r]
+  psrlq mm4, 32                 ; +[g]
+  psrlq mm5, 32                 ; +[g]
+  paddd mm1, mm4                ; +[b]
+  paddd mm3, mm5                ; +[b]
+
+  push edx
+
+  movd edx, mm0
+  shr edx, 8
+  add edx, Y_ADD
+  mov [esi], dl                 ; y_ptr[0]
+
+  movd edx, mm1
+  shr edx, 8
+  add edx, Y_ADD
+  mov [esi + 1], dl             ; y_ptr[1]
+
+  movd edx, mm2
+  shr edx, 8
+  add edx, Y_ADD
+  mov [esi + eax + 0], dl       ; y_ptr[y_stride + 0]
+
+  movd edx, mm3
+  shr edx, 8
+  add edx, Y_ADD
+  mov [esi + eax + 1], dl       ; y_ptr[y_stride + 1]
+
+  ; u_ptr, v_ptr
+  movq mm0, mm6                 ; = [  |b4|g4|r4]
+  pmaddwd mm6, [rgb_v_mul]          ; *= V_MUL
+  pmaddwd mm0, [rgb_u_mul]          ; *= U_MUL
   movq mm1, mm0
   movq mm2, mm6
   psrlq mm1, 32
@@ -424,6 +527,8 @@ SECTION .text
 ; input
 MAKE_COLORSPACE  bgr_to_yv12_mmx,0,    3,2,2,  BGR_TO_YV12,  3, -1
 MAKE_COLORSPACE  bgra_to_yv12_mmx,0,   4,2,2,  BGR_TO_YV12,  4, -1
+MAKE_COLORSPACE  rgb_to_yv12_mmx,0,    3,2,2,  RGB_TO_YV12,  3, -1
+MAKE_COLORSPACE  rgba_to_yv12_mmx,0,   4,2,2,  RGB_TO_YV12,  4, -1
 
 ; output
 MAKE_COLORSPACE  yv12_to_bgr_mmx,48,   3,8,2,  YV12_TO_BGR,  3, -1

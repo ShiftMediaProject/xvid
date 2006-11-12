@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: colorspace.h,v 1.8 2006-11-10 18:58:39 chl Exp $
+ * $Id: colorspace.h,v 1.9 2006-11-12 01:40:36 chl Exp $
  *
  ****************************************************************************/
 
@@ -100,7 +100,9 @@ packedFunc uyvyi_to_yv12_c;
 #ifdef ARCH_IS_IA32
 /* mmx */
 packedFunc bgr_to_yv12_mmx;
+packedFunc rgb_to_yv12_mmx;
 packedFunc bgra_to_yv12_mmx;
+packedFunc rgba_to_yv12_mmx;
 packedFunc yuyv_to_yv12_mmx;
 packedFunc uyvy_to_yv12_mmx;
 
