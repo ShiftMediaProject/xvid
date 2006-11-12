@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.71 2006-11-11 22:06:44 chl Exp $
+ * $Id: xvid.c,v 1.72 2006-11-12 01:40:36 chl Exp $
  *
  ****************************************************************************/
 
@@ -381,7 +381,9 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 		/* image input xxx_to_yv12 related functions */
 		yv12_to_yv12  = yv12_to_yv12_mmx;
 		bgr_to_yv12   = bgr_to_yv12_mmx;
+		rgb_to_yv12   = rgb_to_yv12_mmx;
 		bgra_to_yv12  = bgra_to_yv12_mmx;
+		rgba_to_yv12  = rgba_to_yv12_mmx;
 		yuyv_to_yv12  = yuyv_to_yv12_mmx;
 		uyvy_to_yv12  = uyvy_to_yv12_mmx;
 
