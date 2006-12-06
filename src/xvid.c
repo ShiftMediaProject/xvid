@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.72 2006-11-12 01:40:36 chl Exp $
+ * $Id: xvid.c,v 1.73 2006-12-06 19:55:07 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -137,8 +137,8 @@ detect_cpu_flags(void)
 	if ((cpu_flags & XVID_CPU_SSE) && sigill_check(sse_os_trigger))
 		cpu_flags &= ~XVID_CPU_SSE;
 
-	if ((cpu_flags & XVID_CPU_SSE2) && sigill_check(sse2_os_trigger))
-		cpu_flags &= ~XVID_CPU_SSE2;
+	if ((cpu_flags & (XVID_CPU_SSE2|XVID_CPU_SSE3)) && sigill_check(sse2_os_trigger))
+		cpu_flags &= ~(XVID_CPU_SSE2|XVID_CPU_SSE3);
 #endif
 
 #if defined(ARCH_IS_PPC)
@@ -545,6 +545,15 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 		/* postprocessing */
 		image_brightness = image_brightness_sse2;
 	}
+
+#if 0 // TODO: test...
+	if ((cpu_flags & XVID_CPU_SSE3)) {
+
+		/* SAD operators */
+		sad16    = sad16_sse3;
+		dev16    = dev16_sse3;
+	}
+#endif
 #endif /* ARCH_IS_IA32 */
 
 #if defined(ARCH_IS_IA64)
