@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: sad.h,v 1.22 2005-01-05 23:02:15 edgomez Exp $
+ * $Id: sad.h,v 1.23 2006-12-06 19:55:07 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -47,6 +47,7 @@ sad16Func sad16_mmx;
 sad16Func sad16_xmm;
 sad16Func sad16_3dne;
 sad16Func sad16_sse2;
+sad16Func sad16_sse3;
 #endif
 
 #ifdef ARCH_IS_IA64
@@ -154,6 +155,7 @@ dev16Func dev16_mmx;
 dev16Func dev16_xmm;
 dev16Func dev16_3dne;
 dev16Func dev16_sse2;
+dev16Func dev16_sse3;
 sad16vFunc sad16v_xmm;
 sad16vFunc sad16v_mmx;
 #endif

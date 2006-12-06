@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: cpuid.asm,v 1.9 2004-08-29 10:02:38 edgomez Exp $
+; * $Id: cpuid.asm,v 1.10 2006-12-06 19:55:07 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -51,6 +51,7 @@ BITS 32
 %define CPUID_MMX               0x00800000
 %define CPUID_SSE               0x02000000
 %define CPUID_SSE2              0x04000000
+%define CPUID_SSE3              0x00000001
 
 %define EXT_CPUID_3DNOW         0x80000000
 %define EXT_CPUID_AMD_3DNOWEXT  0x40000000
@@ -61,6 +62,7 @@ BITS 32
 %define XVID_CPU_MMXEXT   (1<< 1)
 %define XVID_CPU_SSE      (1<< 2)
 %define XVID_CPU_SSE2     (1<< 3)
+%define XVID_CPU_SSE3     (1<< 8)
 %define XVID_CPU_3DNOW    (1<< 4)
 %define XVID_CPU_3DNOWEXT (1<< 5)
 %define XVID_CPU_TSC      (1<< 6)
@@ -150,6 +152,9 @@ check_cpu_features:
 
   ; SSE2 support?
   CHECK_FEATURE CPUID_SSE2, XVID_CPU_SSE2, ebp
+
+  ; SSE3 support?
+  CHECK_FEATURE CPUID_SSE3, XVID_CPU_SSE3, ebp
 
   ; extended functions?
   mov eax, 0x80000000
