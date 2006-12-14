@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.128 2006-03-03 11:54:58 syskin Exp $
+ * $Id: encoder.c,v 1.129 2006-12-14 13:09:00 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -770,6 +770,7 @@ static void call_plugins(Encoder * pEnc, FRAMEINFO * frame, IMAGE * original,
 
 		if(pEnc->mbParam.plugin_flags & XVID_REQLAMBDA) {
 			int block = 0;
+			emms();
 			data.lambda = pEnc->temp_lambda;
 			for(i = 0;i < pEnc->mbParam.mb_height; i++)
 				for(j = 0;j < pEnc->mbParam.mb_width; j++)
