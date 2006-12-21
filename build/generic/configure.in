@@ -397,6 +397,12 @@ if test "$ARCHITECTURE" = "IA32" -o "$ARCHITECTURE" = "X86_64" ; then
 	       PREFIX="-DPREFIX"
 	       MARK_FUNCS=""
                ;;
+           *darwin*)
+               AC_MSG_RESULT([macho])
+               NASM_FORMAT="macho"
+               PREFIX="-DPREFIX"
+               MARK_FUNCS=""
+               ;;
        esac
 
        AS="$chosen_asm_prog"
