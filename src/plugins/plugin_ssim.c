@@ -466,12 +466,9 @@ static void ssim_after(xvid_plg_data_t* data, ssim_data_t* ssim){
 static int ssim_create(xvid_plg_create_t* create, void** handle){
 	ssim_data_t* ssim;
 	plg_ssim_param_t* param;
-	int cpu_flags;
 	param = (plg_ssim_param_t*) malloc(sizeof(plg_ssim_param_t));
 	*param = *((plg_ssim_param_t*) create->param);
 	ssim = (ssim_data_t*) malloc(sizeof(ssim_data_t));
-
-	cpu_flags = check_cpu_features();
 
 	ssim->func8x8 = lum_8x8_c;
 	ssim->func2x8 = lum_2x8_c;
@@ -482,12 +479,15 @@ static int ssim_create(xvid_plg_create_t* create, void** handle){
 	ssim->grid = param->acc;
 
 #if defined(ARCH_IS_IA32)
-	if((cpu_flags & XVID_CPU_MMX) && (param->acc > 0)){
-		ssim->func8x8 = lum_8x8_mmx;
-		ssim->consim = consim_mmx;
-	}
-	if((cpu_flags & XVID_CPU_SSE2) && (param->acc > 0)){
-		ssim->consim = consim_sse2;
+	{
+		int cpu_flags = check_cpu_features();
+		if((cpu_flags & XVID_CPU_MMX) && (param->acc > 0)){
+			ssim->func8x8 = lum_8x8_mmx;
+			ssim->consim = consim_mmx;
+		}
+		if((cpu_flags & XVID_CPU_SSE2) && (param->acc > 0)){
+			ssim->consim = consim_sse2;
+		}
 	}
 #endif
 

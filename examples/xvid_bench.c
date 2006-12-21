@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.34 2006-11-01 07:12:26 Skal Exp $
+ * $Id: xvid_bench.c,v 1.35 2006-12-21 23:27:35 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -2060,6 +2060,7 @@ void test_SSIM()
 		lum8x8 = lum_8x8_c;
 		lum2x8 = lum_2x8_c;
 		csim   = consim_c;
+#ifdef ARCH_IS_IA32
 		if (cpu->cpu & XVID_CPU_MMX){
 			lum8x8 = lum_8x8_mmx;
 			csim = consim_mmx;
@@ -2067,7 +2068,7 @@ void test_SSIM()
 		if (cpu->cpu & XVID_CPU_MMX){
 			csim = consim_sse2;
 		}
-
+#endif
 		t = gettime_usec();
 		emms();
 		for(tst=0; tst<nb_tests; ++tst) m = lum8x8(Ref1, 16);
