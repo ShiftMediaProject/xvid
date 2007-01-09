@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.33 2006-11-08 06:55:27 Skal Exp $
+ * $Id: xvid_encraw.c,v 1.34 2007-01-09 20:08:53 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -391,7 +391,17 @@ main(int argc,
 		} else if (strcmp("-h", argv[i]) == 0 && i < argc - 1) {
 			i++;
 			YDIM = atoi(argv[i]);
-        } else if (strcmp("-bitrate", argv[i]) == 0) {
+		} else if (strcmp("-csp",argv[i]) == 0 && i < argc - 1) {
+			i++;
+			if (strcmp(argv[i],"i420") == 0){
+				ARG_COLORSPACE = XVID_CSP_I420;
+			} else if(strcmp(argv[i],"yv12") == 0){
+				ARG_COLORSPACE = XVID_CSP_YV12;
+			} else {
+				printf("Invalid colorspace\n");
+				return 0;
+			}
+		} else if (strcmp("-bitrate", argv[i]) == 0) {
 			if (i < argc - 1)
 				ARG_BITRATE = atoi(argv[i+1]);
 			if (ARG_BITRATE) {
@@ -1509,6 +1519,7 @@ usage()
 #endif
 	fprintf(stderr, " -w      integer: frame width ([1.2048])\n");
 	fprintf(stderr, " -h      integer: frame height ([1.2048])\n");
+	fprintf(stderr, " -csp    string : colorspace of raw input file i420, yv12 (default)\n");
 	fprintf(stderr, " -frames integer: number of frames to encode\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Output options:\n");
@@ -1909,10 +1920,20 @@ enc_init(int use_assembler)
 
 	if (ARG_SSIM>=0 || ARG_SSIM_PATH != NULL) {
 		plugins[xvid_enc_create.num_plugins].func = xvid_plugin_ssim;
-		ssim.b_printstat = 1;
-		ssim.stat_path = ARG_SSIM_PATH;
+
+		if( ARG_SSIM >=0){
+			ssim.b_printstat = 1;
+			ssim.acc = ARG_SSIM;
+		} else {
+			ssim.b_printstat = 0;
+			ssim.acc = 2;
+		}
+
+		if(ARG_SSIM_PATH != NULL){		
+			ssim.stat_path = ARG_SSIM_PATH;
+		}
+
 		ssim.b_visualize = 0;
-		ssim.acc = (ARG_SSIM_PATH != NULL && ARG_SSIM < 0) ? 2 : ARG_SSIM;
 		plugins[xvid_enc_create.num_plugins].param = &ssim;
 		xvid_enc_create.num_plugins++;
 	}
@@ -2055,10 +2076,7 @@ enc_main(unsigned char *image,
 	if (image) {
 		xvid_enc_frame.input.plane[0] = image;
 #ifndef READ_PNM
-		if (ARG_INPUTTYPE==2)
-			xvid_enc_frame.input.csp = ARG_COLORSPACE;
-		else
-			xvid_enc_frame.input.csp = XVID_CSP_I420;
+		xvid_enc_frame.input.csp = ARG_COLORSPACE;
 		xvid_enc_frame.input.stride[0] = XDIM;
 #else
 		xvid_enc_frame.input.csp = XVID_CSP_BGR;
