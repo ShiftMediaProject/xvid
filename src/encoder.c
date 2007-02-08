@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.129 2006-12-14 13:09:00 Isibaar Exp $
+ * $Id: encoder.c,v 1.130 2007-02-08 13:10:24 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1307,8 +1307,9 @@ repeat:
 		if (pEnc->current->stamp > 0) {
 			call_plugins(pEnc, pEnc->reference, &pEnc->sOriginal, XVID_PLG_AFTER, NULL, NULL, stats);
 		}
-		else
-			stats->type = XVID_TYPE_NOTHING;
+        else if (stats) {
+            stats->type = XVID_TYPE_NOTHING;
+        }
 	}
 
 	/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
