@@ -20,7 +20,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: cpuid.asm,v 1.1 2005-01-05 23:02:15 edgomez Exp $
+; * $Id: cpuid.asm,v 1.2 2007-03-08 21:40:19 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -52,6 +52,7 @@ BITS 64
 %define CPUID_MMX               0x00800000
 %define CPUID_SSE               0x02000000
 %define CPUID_SSE2              0x04000000
+%define CPUID_SSE3              0x00000001
 
 %define EXT_CPUID_3DNOW         0x80000000
 %define EXT_CPUID_AMD_3DNOWEXT  0x40000000
@@ -62,6 +63,7 @@ BITS 64
 %define XVID_CPU_MMXEXT   (1<< 1)
 %define XVID_CPU_SSE      (1<< 2)
 %define XVID_CPU_SSE2     (1<< 3)
+%define XVID_CPU_SSE3     (1<< 8)
 %define XVID_CPU_3DNOW    (1<< 4)
 %define XVID_CPU_3DNOWEXT (1<< 5)
 %define XVID_CPU_TSC      (1<< 6)
@@ -84,13 +86,13 @@ vendorAMD:
 ; Macros
 ;=============================================================================
 
-%macro  CHECK_FEATURE 3
-  mov rcx, %1
-  and rcx, rdx
-  neg rcx
-  sbb rcx, rcx
-  and rcx, %2
-  or %3, rcx
+%macro  CHECK_FEATURE 4
+  mov rax, %1
+  and rax, %4
+  neg rax
+  sbb rax, rax
+  and rax, %2
+  or %3, rax
 %endmacro
 
 ;=============================================================================
@@ -132,16 +134,19 @@ check_cpu_features:
   cpuid
 
  ; RDTSC command ?
-  CHECK_FEATURE CPUID_TSC, XVID_CPU_TSC, rbp
+  CHECK_FEATURE CPUID_TSC, XVID_CPU_TSC, rbp, rdx
 
   ; MMX support ?
-  CHECK_FEATURE CPUID_MMX, XVID_CPU_MMX, rbp
+  CHECK_FEATURE CPUID_MMX, XVID_CPU_MMX, rbp, rdx
 
   ; SSE support ?
-  CHECK_FEATURE CPUID_SSE, (XVID_CPU_MMXEXT|XVID_CPU_SSE), rbp
+  CHECK_FEATURE CPUID_SSE, (XVID_CPU_MMXEXT|XVID_CPU_SSE), rbp, rdx
 
   ; SSE2 support?
-  CHECK_FEATURE CPUID_SSE2, XVID_CPU_SSE2, rbp
+  CHECK_FEATURE CPUID_SSE2, XVID_CPU_SSE2, rbp, rdx
+
+  ; SSE3 support?
+  CHECK_FEATURE CPUID_SSE3, XVID_CPU_SSE3, rbp, rcx
 
   ; extended functions?
   mov rax, 0x80000000
@@ -161,13 +166,13 @@ check_cpu_features:
   jnz .cpu_quit
 
   ; 3DNow! support ?
-  CHECK_FEATURE EXT_CPUID_3DNOW, XVID_CPU_3DNOW, rbp
+  CHECK_FEATURE EXT_CPUID_3DNOW, XVID_CPU_3DNOW, rbp, rdx
 
   ; 3DNOW extended ?
-  CHECK_FEATURE EXT_CPUID_AMD_3DNOWEXT, XVID_CPU_3DNOWEXT, rbp
+  CHECK_FEATURE EXT_CPUID_AMD_3DNOWEXT, XVID_CPU_3DNOWEXT, rbp, rdx
 
   ; extended MMX ?
-  CHECK_FEATURE EXT_CPUID_AMD_MMXEXT, XVID_CPU_MMXEXT, rbp
+  CHECK_FEATURE EXT_CPUID_AMD_MMXEXT, XVID_CPU_MMXEXT, rbp, rdx
 
 .cpu_quit:
 
