@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.79 2006-09-10 22:42:15 Isibaar Exp $
+ * $Id: decoder.c,v 1.80 2007-04-16 19:01:28 Skal Exp $
  *
  ****************************************************************************/
 
@@ -1335,6 +1335,13 @@ get_mbtype(Bitstream * bs)
   return -1;
 }
 
+static int __inline get_resync_len_b(const int fcode_backward,
+                                     const int fcode_forward) {
+  int resync_len = ((fcode_forward>fcode_backward) ? fcode_forward : fcode_backward) - 1;
+  if (resync_len < 1) resync_len = 1;
+  return resync_len;
+}
+
 static void
 decoder_bframe(DECODER * dec,
         Bitstream * bs,
@@ -1346,6 +1353,7 @@ decoder_bframe(DECODER * dec,
   VECTOR mv;
   const VECTOR zeromv = {0,0};
   int i;
+  int resync_len;
 
   if (!dec->is_edged[0]) {
     start_timer();
@@ -1363,22 +1371,24 @@ decoder_bframe(DECODER * dec,
     stop_edges_timer();
   }
 
+  resync_len = get_resync_len_b(fcode_backward, fcode_forward);
   for (y = 0; y < dec->mb_height; y++) {
     /* Initialize Pred Motion Vector */
     dec->p_fmv = dec->p_bmv = zeromv;
     for (x = 0; x < dec->mb_width; x++) {
       MACROBLOCK *mb = &dec->mbs[y * dec->mb_width + x];
       MACROBLOCK *last_mb = &dec->last_mbs[y * dec->mb_width + x];
-      const int fcode_max = (fcode_forward>fcode_backward) ? fcode_forward : fcode_backward;
       int intra_dc_threshold; /* fake variable */
 
-      if (check_resync_marker(bs, fcode_max  - 1)) {
-        int bound = read_video_packet_header(bs, dec, fcode_max - 1, &quant,
+      if (check_resync_marker(bs, resync_len)) {
+        int bound = read_video_packet_header(bs, dec, resync_len, &quant,
                            &fcode_forward, &fcode_backward, &intra_dc_threshold);
         x = bound % dec->mb_width;
         y = bound / dec->mb_width;
         /* reset predicted macroblocks */
         dec->p_fmv = dec->p_bmv = zeromv;
+        /* update resync len with new fcodes */
+        resync_len = get_resync_len_b(fcode_backward, fcode_forward);
       }
 
       mv =
