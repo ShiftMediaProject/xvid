@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.c,v 1.56 2006-03-27 11:21:48 Skal Exp $
+ * $Id: bitstream.c,v 1.57 2007-04-16 19:01:28 Skal Exp $
  *
  ****************************************************************************/
 
@@ -1443,7 +1443,7 @@ void write_video_packet_header(Bitstream * const bs,
     else if (frame->coding_type == P_VOP)
       nbitsresyncmarker = NUMBITS_VP_RESYNC_MARKER-1 + frame->fcode;
     else /* B_VOP */
-      nbitsresyncmarker = MAX(NUMBITS_VP_RESYNC_MARKER, NUMBITS_VP_RESYNC_MARKER-1 + MAX(frame->fcode, frame->bcode));
+      nbitsresyncmarker = MAX(NUMBITS_VP_RESYNC_MARKER+1, NUMBITS_VP_RESYNC_MARKER-1 + MAX(frame->fcode, frame->bcode));
 
     BitstreamPadAlways(bs);
     BitstreamPutBits(bs, RESYNC_MARKER, nbitsresyncmarker);
