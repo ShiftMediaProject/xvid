@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: motion_inlines.h,v 1.4 2004-12-08 12:43:48 syskin Exp $
+ * $Id: motion_inlines.h,v 1.5 2007-04-28 16:30:20 syskin Exp $
  *
  ****************************************************************************/
 
@@ -64,8 +64,8 @@ get_range(int32_t * const min_dx,
 }
 
 /* reversed mv.length table */
-static const int r_mvtab[64] = {
-	12, 12, 12, 12, 12, 12, 12, 12,
+static const int r_mvtab[65] = {
+	11, 12, 12, 12, 12, 12, 12, 12, 12,
 	12, 12, 12, 12, 12, 12, 12, 12,
 	12, 12, 12, 12, 12, 12, 12, 12,
 	12, 12, 12, 12, 12, 12, 12, 12,
@@ -87,13 +87,13 @@ d_mv_bits(int x, int y, const VECTOR pred, const uint32_t iFcode, const int qpel
 	bits = (x != 0 ? iFcode:0);
 	x = -abs(x);
 	x >>= (iFcode - 1);
-	bits += r_mvtab[x+63];
+	bits += r_mvtab[x+64];
 
 	y -= pred.y;
 	bits += (y != 0 ? iFcode:0);
 	y = -abs(y);
 	y >>= (iFcode - 1);
-	bits += r_mvtab[y+63];
+	bits += r_mvtab[y+64];
 
 	return bits;
 }

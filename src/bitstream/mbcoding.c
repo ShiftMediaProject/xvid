@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbcoding.c,v 1.53 2006-01-19 22:25:23 Isibaar Exp $
+ * $Id: mbcoding.c,v 1.54 2007-04-28 16:30:20 syskin Exp $
  *
  ****************************************************************************/
 
@@ -35,6 +35,13 @@
 #include "mbcoding.h"
 
 #include "../utils/mbfunctions.h"
+
+#ifdef _DEBUG
+# include "../motion/estimation.h"
+# include "../motion/motion_inlines.h"
+# include <assert.h>
+#endif
+
 
 #define LEVELOFFSET 32
 
@@ -580,6 +587,15 @@ CodeBlockInter(const FRAMEINFO * const frame,
 		for (i = 0; i < (pMB->mode == MODE_INTER4V ? 4 : 1); i++) {
 			CodeVector(bs, pMB->pmvs[i].x, frame->fcode);
 			CodeVector(bs, pMB->pmvs[i].y, frame->fcode);
+
+#ifdef _DEBUG
+			if (i == 0) /* for simplicity */ {
+				int coded_length = BitstreamPos(bs) - bits;
+				int estimated_length = d_mv_bits(pMB->pmvs[i].x, pMB->pmvs[i].y, zeroMV, frame->fcode, 0);
+				assert(estimated_length == coded_length);
+				d_mv_bits(pMB->pmvs[i].x, pMB->pmvs[i].y, zeroMV, frame->fcode, 0);
+			}
+#endif
 		}
 
 	bits = BitstreamPos(bs) - bits;
