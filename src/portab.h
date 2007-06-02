@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: portab.h,v 1.56 2006-05-28 07:52:45 suxen_drol Exp $
+ * $Id: portab.h,v 1.57 2007-06-02 13:53:13 syskin Exp $
  *
  ****************************************************************************/
 
@@ -132,7 +132,7 @@ static __inline void DPRINTF(int level, char *fmt, ...)
 		va_start(args, fmt);
 		vsprintf(buf, fmt, args);
 		va_end(args);
-		OutputDebugString(buf);
+		OutputDebugStringA(buf);
 		fprintf(stderr, "%s", buf);
 	}
 }
