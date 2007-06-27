@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbcoding.c,v 1.54 2007-04-28 16:30:20 syskin Exp $
+ * $Id: mbcoding.c,v 1.55 2007-06-27 14:38:05 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1091,18 +1091,11 @@ get_intra_block(Bitstream * bs,
 
 	do {
 		level = get_coeff(bs, &run, &last, 1, 0);
-		if (run == -1) {
-			DPRINTF(XVID_DEBUG_ERROR,"fatal: invalid run");
+		coeff += run;
+		if ((run|coeff)&~63) {
+			DPRINTF(XVID_DEBUG_ERROR,"fatal: invalid run or index");
 			break;
 		}
-		coeff += run;
-		
-#ifdef _DEBUG
-		if(coeff>=64) {
-		  DPRINTF(XVID_DEBUG_ERROR,"error: overflow in coefficient index\n");
-		  return;
-		}
-#endif
 
 		block[scan[coeff]] = level;
 
@@ -1139,18 +1132,11 @@ get_inter_block_h263(
 	p = 0;
 	do {
 		level = get_coeff(bs, &run, &last, 0, 0);
-		if (run == -1) {
-			DPRINTF(XVID_DEBUG_ERROR,"fatal: invalid run");
+		p += run;
+		if ((p|run)&~63) {
+			DPRINTF(XVID_DEBUG_ERROR,"fatal: invalid run or index");
 			break;
 		}
-		p += run;
-
-#ifdef _DEBUG
-		if(p>=64)	{
-		  DPRINTF(XVID_DEBUG_ERROR,"error: overflow in coefficient index\n");
-		  return;
-		}
-#endif
 
 		if (level < 0) {
 			level = level*quant_m_2 - quant_add;
@@ -1181,18 +1167,11 @@ get_inter_block_mpeg(
 	p = 0;
 	do {
 		level = get_coeff(bs, &run, &last, 0, 0);
-		if (run == -1) {
-			DPRINTF(XVID_DEBUG_ERROR,"fatal: invalid run");
+		p += run;
+		if ((p|run)&~63) {
+			DPRINTF(XVID_DEBUG_ERROR,"fatal: invalid run or index");
 			break;
 		}
-		p += run;
-
-#ifdef _DEBUG
-		if(p>=64)	{
-		  DPRINTF(XVID_DEBUG_ERROR,"error: overflow in coefficient index\n");
-		  return;
-		}
-#endif
 
 		if (level < 0) {
 			level = ((2 * -level + 1) * matrix[scan[p]] * quant) >> 4;
