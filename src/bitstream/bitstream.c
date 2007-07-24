@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.c,v 1.57 2007-04-16 19:01:28 Skal Exp $
+ * $Id: bitstream.c,v 1.58 2007-07-24 09:43:10 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -815,11 +815,12 @@ BitstreamReadHeaders(Bitstream * bs,
 				dec->time_base += time_incr;
 				dec->time = dec->time_base*dec->time_inc_resolution + time_increment;
 				dec->time_pp = (int32_t)(dec->time - dec->last_non_b_time);
-				dec->last_non_b_time = dec->time;
+                dec->last_non_b_time = dec->time;
 			} else {
-				dec->time = (dec->last_time_base + time_incr)*dec->time_inc_resolution + time_increment;
+                dec->time = (dec->last_time_base + time_incr)*dec->time_inc_resolution + time_increment;
 				dec->time_bp = dec->time_pp - (int32_t)(dec->last_non_b_time - dec->time);
 			}
+            if (dec->time_pp <= 0) dec->time_pp = 1;
 			DPRINTF(XVID_DEBUG_HEADER,"time_pp=%i\n", dec->time_pp);
 			DPRINTF(XVID_DEBUG_HEADER,"time_bp=%i\n", dec->time_bp);
 
