@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: fdct_mmx_skal.asm,v 1.6 2004-08-29 10:02:38 edgomez Exp $
+; * $Id: fdct_mmx_skal.asm,v 1.7 2007-09-11 12:41:13 suxen_drol Exp $
 ; *
 ; ***************************************************************************/
 
@@ -378,9 +378,9 @@ MMX_One:
   paddd mm2, mm3               ;  [ out0 | out1 ]
   pmaddwd mm7, mm1             ;  [a0.M10+a1.M11 | b0.M26+b1.M27]
   psrad mm2, 16
-  pmaddwd mm0, qword [%3 + 48] ;  [a0.M12+a1.M13 | b0.M28+b1.M29]
+  pmaddwd mm0, [%3 + 48] ;  [a0.M12+a1.M13 | b0.M28+b1.M29]
   paddd mm4, mm5               ;  [ out2 | out3 ]
-  pmaddwd mm1, qword [%3 + 56] ;  [a0.M14+a1.M15 | b0.M30+b1.M31]
+  pmaddwd mm1, [%3 + 56] ;  [a0.M14+a1.M15 | b0.M30+b1.M31]
   psrad mm4, 16
 
   paddd mm6, mm7               ;  [ out4 | out5 ]
@@ -436,9 +436,9 @@ MMX_One:
   paddd mm2, mm3               ;  [ out0 | out1 ]
   pmaddwd mm7, mm1             ;  [a0.M10+a1.M11 | b0.M26+b1.M27]
   psrad mm2, 16
-  pmaddwd mm0, qword [%3 + 48] ;  [a0.M12+a1.M13 | b0.M28+b1.M29]
+  pmaddwd mm0, [%3 + 48] ;  [a0.M12+a1.M13 | b0.M28+b1.M29]
   paddd mm4, mm5               ;  [ out2 | out3 ]
-  pmaddwd mm1, qword [%3 + 56] ;  [a0.M14+a1.M15 | b0.M30+b1.M31]
+  pmaddwd mm1, [%3 + 56] ;  [a0.M14+a1.M15 | b0.M30+b1.M31]
   psrad mm4, 16
 
   paddd mm6, mm7               ;  [ out4 | out5 ]

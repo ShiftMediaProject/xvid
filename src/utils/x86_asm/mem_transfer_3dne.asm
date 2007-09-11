@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: mem_transfer_3dne.asm,v 1.7 2005-09-13 12:12:15 suxen_drol Exp $
+; * $Id: mem_transfer_3dne.asm,v 1.8 2007-09-11 12:41:13 suxen_drol Exp $
 ; *
 ; ***************************************************************************/
 
@@ -254,7 +254,7 @@ transfer_8to16sub_3dne:
   mov eax, [esp + 8] ; Cur
   mov ecx, [esp +12] ; Ref
   push edi
-  mov edx, [dword esp+4+16] ; Stride
+  mov edx, [esp+4+16] ; Stride
   mov edi, [esp+4+ 4] ; Dst
   pxor mm7, mm7
   nop
@@ -272,7 +272,7 @@ transfer_8to16subro_3dne:
   mov eax, [esp + 8] ; Cur
   mov ecx, [esp +12] ; Ref
   push edi
-  mov edx, [dword esp+4+16] ; Stride
+  mov edx, [esp+4+16] ; Stride
   mov edi, [esp+4+ 4] ; Dst
   pxor mm7, mm7
   nop
