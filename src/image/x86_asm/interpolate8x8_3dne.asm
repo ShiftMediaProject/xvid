@@ -97,7 +97,13 @@ cglobal interpolate8x4_halfpel_hv_3dne
 %if (%1)
   movq mm0, [eax]
 %else
-  movq mm0, [dword eax]
+  movq mm0, [eax+0]
+  ; ---
+  ; nasm >0.99.x rejects the original statement:
+  ;   movq mm0, [dword eax]
+  ; as it is ambiguous. for this statement nasm <0.99.x would
+  ; generate "movq mm0,[eax+0]"
+  ; ---
 %endif
   pavgb mm0, [eax+1]
   movq mm1, [eax+edx]

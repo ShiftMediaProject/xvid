@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: sad_3dne.asm,v 1.6 2004-08-29 10:02:38 edgomez Exp $
+; * $Id: sad_3dne.asm,v 1.7 2007-09-11 12:41:13 suxen_drol Exp $
 ; *
 ; ***************************************************************************/
 
@@ -180,7 +180,7 @@ mmx_one:
   movq mm1, [eax+2*ecx+8]
   psadbw mm3, mm4
 
-  movq mm0, [dword eax+edx]
+  movq mm0, [eax+edx+0]
   psadbw mm2, mm4
   add eax, edx
   psadbw mm1, mm4

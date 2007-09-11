@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_h263_3dne.asm,v 1.5 2004-08-29 10:02:38 edgomez Exp $
+; * $Id: quantize_h263_3dne.asm,v 1.6 2007-09-11 12:41:13 suxen_drol Exp $
 ; *
 ; *************************************************************************/
 ;
@@ -396,7 +396,7 @@ ALIGN 16
 
   quant_intra1 3
   psubw mm5, mm4                    ;C8
-  mov esi, [dword esp + 12]         ; pop back the register value
+  mov esi, [esp + 12]         ; pop back the register value
   mov edi, [esp + 4]                ; pop back the register value
   sar eax, 16
   lea ebx, [byte eax + 1]           ; workaround for eax < 0
@@ -755,7 +755,7 @@ dequant_h263_inter_3dne:
   pmaxsw mm2, mm3                   ;|c|        ;B4 (2nd)
   pmullw mm2, [edi]                 ;*= 2Q      ;B8 (3rd+)
   psraw mm3, 15                     ; sign(c)   ;B7 (2nd)
-  mov edx, [dword esp+ 4+12]        ; data
+  mov edx, [esp+ 4+12]        ; data
 
 ALIGN 8
 
