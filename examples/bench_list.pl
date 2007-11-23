@@ -1,3 +1,5 @@
+#!/usr/bin/perl
+
 #
 # List of benches to run
 #
