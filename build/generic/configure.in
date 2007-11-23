@@ -17,6 +17,8 @@ API_MINOR="1"
 
 dnl NASM version requirement
 minimum_nasm_patch_version=34
+minimum_nasm_minor_version=99
+minimum_nasm_major_version=2
 nasm_prog="nasm"
 yasm_prog="yasm"
 
@@ -364,14 +366,31 @@ if test "$ARCHITECTURE" = "IA32" -o "$ARCHITECTURE" = "X86_64" ; then
            dnl
            AC_MSG_CHECKING([for nasm patch version])
            nasm_patch=`$nasm_prog -r | cut -d '.' -f 3 | cut -d ' ' -f 1`
+           nasm_minor=`$nasm_prog -v | cut -d '.' -f 2 | cut -d ' ' -f 1`
+           nasm_major=`$nasm_prog -v | cut -d '.' -f 1 | cut -d ' ' -f 3`
            if test -z $nasm_patch ; then
               nasm_patch=-1
            fi
+           if test -z $nasm_minor ; then
+              nasm_minor=-1
+           fi
+           if test -z $nasm_major ; then
+              nasm_major=-1
+           fi
            AC_MSG_RESULT([$nasm_patch])
 
-
            if test "$nasm_patch" -lt "$minimum_nasm_patch_version" ; then
-               AC_MSG_WARN([nasm patch version is too old])
+              if test "$nasm_minor" -lt "$minimum_nasm_minor_version" ; then
+                 if test "$nasm_major" -lt "$minimum_nasm_major_version" ; then
+                    AC_MSG_WARN([nasm version is too old])
+                 else
+                   found_nasm_comp_prog="yes"
+		           chosen_asm_prog="$nasm_prog"
+                 fi
+              else
+                 found_nasm_comp_prog="yes"
+                     chosen_asm_prog="$nasm_prog"
+              fi
            else
                found_nasm_comp_prog="yes"
 		       chosen_asm_prog="$nasm_prog"
