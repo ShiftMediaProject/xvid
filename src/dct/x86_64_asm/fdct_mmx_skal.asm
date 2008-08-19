@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: fdct_mmx_skal.asm,v 1.1 2005-01-05 23:02:15 edgomez Exp $
+; * $Id: fdct_mmx_skal.asm,v 1.2 2008-08-19 09:06:48 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -461,3 +461,8 @@ SECTION .text align=16
 ;-----------------------------------------------------------------------------
 
 MAKE_FDCT_FUNC fdct_skal_x86_64, fMTX_MULT_XMM
+
+%ifidn __OUTPUT_FORMAT__,elf
+section ".note.GNU-stack" noalloc noexec nowrite progbits
+%endif
+

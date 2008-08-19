@@ -140,3 +140,8 @@ image_brightness_sse2:
   ret
 .endfunc
 ;//////////////////////////////////////////////////////////////////////
+
+%ifidn __OUTPUT_FORMAT__,elf
+section ".note.GNU-stack" noalloc noexec nowrite progbits
+%endif
+

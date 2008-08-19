@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: idct_mmx.asm,v 1.10 2004-08-29 10:02:38 edgomez Exp $
+; * $Id: idct_mmx.asm,v 1.11 2008-08-19 09:06:48 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -629,4 +629,9 @@ idct_xmm:
 
     ret
 .endfunc
+
+
+%ifidn __OUTPUT_FORMAT__,elf
+section ".note.GNU-stack" noalloc noexec nowrite progbits
+%endif
 

@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: colorspace_yuv_mmx.asm,v 1.6 2006-10-30 10:52:00 Skal Exp $
+; * $Id: colorspace_yuv_mmx.asm,v 1.7 2008-08-19 09:06:48 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -364,3 +364,8 @@ SECTION .text
 MAKE_YV12_TO_YV12	yv12_to_yv12_mmx, 0
 
 MAKE_YV12_TO_YV12	yv12_to_yv12_xmm, 1
+
+%ifidn __OUTPUT_FORMAT__,elf
+section ".note.GNU-stack" noalloc noexec nowrite progbits
+%endif
+

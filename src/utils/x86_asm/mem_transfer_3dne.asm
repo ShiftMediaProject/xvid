@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: mem_transfer_3dne.asm,v 1.8 2007-09-11 12:41:13 suxen_drol Exp $
+; * $Id: mem_transfer_3dne.asm,v 1.9 2008-08-19 09:06:48 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -458,4 +458,9 @@ transfer8x4_copy_3dne:
   COPY_8_TO_8
   ret
 .endfunc
+
+
+%ifidn __OUTPUT_FORMAT__,elf
+section ".note.GNU-stack" noalloc noexec nowrite progbits
+%endif
 

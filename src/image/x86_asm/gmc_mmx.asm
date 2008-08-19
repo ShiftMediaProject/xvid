@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: gmc_mmx.asm,v 1.2 2006-11-07 19:59:03 Skal Exp $
+; * $Id: gmc_mmx.asm,v 1.3 2008-08-19 09:06:48 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -207,3 +207,7 @@ xvid_GMC_Core_Lin_8_sse2:
 .endfunc
 
 ;//////////////////////////////////////////////////////////////////////
+
+%ifidn __OUTPUT_FORMAT__,elf
+section ".note.GNU-stack" noalloc noexec nowrite progbits
+%endif

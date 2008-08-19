@@ -707,3 +707,8 @@ interpolate8x8_6tap_lowpass_v_x86_64:
   pop rbx
   ret
 .endfunc
+
+%ifidn __OUTPUT_FORMAT__,elf
+section ".note.GNU-stack" noalloc noexec nowrite progbits
+%endif
+

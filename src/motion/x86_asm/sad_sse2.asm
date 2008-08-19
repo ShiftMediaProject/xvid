@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: sad_sse2.asm,v 1.13 2006-12-06 19:55:07 Isibaar Exp $
+; * $Id: sad_sse2.asm,v 1.14 2008-08-19 09:06:48 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -191,3 +191,9 @@ ALIGN 16
 dev16_sse3:
   MEAN16_SSE2_SSE3 lddqu
 .endfunc
+
+ 
+%ifidn __OUTPUT_FORMAT__,elf
+section ".note.GNU-stack" noalloc noexec nowrite progbits
+%endif
+
