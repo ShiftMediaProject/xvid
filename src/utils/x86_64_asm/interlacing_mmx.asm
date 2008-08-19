@@ -20,7 +20,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: interlacing_mmx.asm,v 1.3 2008-08-19 09:06:48 Isibaar Exp $
+; * $Id: interlacing_mmx.asm,v 1.4 2008-08-19 09:17:17 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -211,11 +211,6 @@ MBFieldTest_x86_64:
 .end:
   ret
 .endfunc
-
-
-%ifidn __OUTPUT_FORMAT__,elf
-section ".note.GNU-stack" noalloc noexec nowrite progbits
-%endif
 
 
 %ifidn __OUTPUT_FORMAT__,elf
