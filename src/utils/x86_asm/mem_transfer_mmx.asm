@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: mem_transfer_mmx.asm,v 1.17 2005-09-13 12:12:15 suxen_drol Exp $
+; * $Id: mem_transfer_mmx.asm,v 1.18 2008-08-19 09:06:48 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -567,4 +567,9 @@ transfer8x4_copy_mmx:
   COPY_8_TO_8
   ret
 .endfunc
+
+
+%ifidn __OUTPUT_FORMAT__,elf
+section ".note.GNU-stack" noalloc noexec nowrite progbits
+%endif
 

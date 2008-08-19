@@ -21,7 +21,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: qpel_mmx.asm,v 1.2 2005-01-06 23:48:08 edgomez Exp $
+; * $Id: qpel_mmx.asm,v 1.3 2008-08-19 09:06:48 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -1152,3 +1152,8 @@ xvid_V_Pass_Avrg_Up_8_Add_x86_64:
 .endfunc
 
 ;//////////////////////////////////////////////////////////////////////
+
+%ifidn __OUTPUT_FORMAT__,elf
+section ".note.GNU-stack" noalloc noexec nowrite progbits
+%endif
+

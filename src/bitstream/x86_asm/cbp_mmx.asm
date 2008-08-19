@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: cbp_mmx.asm,v 1.14 2005-09-24 03:10:37 suxen_drol Exp $
+; * $Id: cbp_mmx.asm,v 1.15 2008-08-19 09:06:48 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -147,4 +147,9 @@ calc_cbp_mmx:
   and eax, 0x3F
   ret
 .endfunc
+
+
+%ifidn __OUTPUT_FORMAT__,elf
+section ".note.GNU-stack" noalloc noexec nowrite progbits
+%endif
 

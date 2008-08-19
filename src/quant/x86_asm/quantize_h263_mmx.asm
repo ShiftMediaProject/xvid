@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_h263_mmx.asm,v 1.7 2004-08-29 10:02:38 edgomez Exp $
+; * $Id: quantize_h263_mmx.asm,v 1.8 2008-08-19 09:06:48 Isibaar Exp $
 ; *
 ; ****************************************************************************/
 
@@ -1038,4 +1038,9 @@ dequant_h263_inter_sse2:
   xor eax, eax              ; return 0
   ret
 .endfunc
+
+
+%ifidn __OUTPUT_FORMAT__,elf
+section ".note.GNU-stack" noalloc noexec nowrite progbits
+%endif
 

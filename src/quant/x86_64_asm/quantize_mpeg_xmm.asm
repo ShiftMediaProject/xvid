@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_mpeg_xmm.asm,v 1.1 2005-01-05 23:02:15 edgomez Exp $
+; * $Id: quantize_mpeg_xmm.asm,v 1.2 2008-08-19 09:06:48 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -808,3 +808,8 @@ ALIGN 16
   xor rax, rax
   ret
 .endfunc
+
+%ifidn __OUTPUT_FORMAT__,elf
+section ".note.GNU-stack" noalloc noexec nowrite progbits
+%endif
+

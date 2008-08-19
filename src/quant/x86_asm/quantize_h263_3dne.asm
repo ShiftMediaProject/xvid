@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_h263_3dne.asm,v 1.6 2007-09-11 12:41:13 suxen_drol Exp $
+; * $Id: quantize_h263_3dne.asm,v 1.7 2008-08-19 09:06:48 Isibaar Exp $
 ; *
 ; *************************************************************************/
 ;
@@ -783,4 +783,9 @@ ALIGN 8
   xor eax, eax
   ret
 .endfunc
+
+
+%ifidn __OUTPUT_FORMAT__,elf
+section ".note.GNU-stack" noalloc noexec nowrite progbits
+%endif
 
