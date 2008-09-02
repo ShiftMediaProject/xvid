@@ -2,7 +2,7 @@ Source: xvidcore
 Section: libs
 Priority: optional
 Maintainer: Edouard Gomez <ed.gomez@free.fr>
-Build-Depends: debhelper (>> 4.0.0), nasm (>= 0.98.34) | not+i386
+Build-Depends: debhelper (>= 5), nasm (>= 0.98.34) [i386]
 Standards-Version: 3.5.8
 
 Package: libxvidcore4
@@ -17,7 +17,7 @@ Description: High quality ISO MPEG4 codec library
 Package: libxvidcore4-dev
 Section: libdevel
 Architecture: any
-Depends: libxvidcore4 (= ${Source-Version})
+Depends: libxvidcore4 (= ${binary:Version})
 Provides: libxvidcore-dev
 Conflicts: libxvidcore-dev, libxvidcore2-dev, libxvidcore3-dev
 Description: Development files for the XviD ISO MPEG4 codec
