@@ -2,9 +2,6 @@
 # Sample debian/rules that uses debhelper.
 # GNU copyright 1997 to 1999 by Joey Hess.
 
-# This is the debhelper compatibility version to use.
-export DH_COMPAT=4
-
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
@@ -44,7 +41,7 @@ clean:
 	rm -f build-stamp configure-stamp
 
 	# Add here commands to clean up after the build process.
-	-$(MAKE) -C build/generic/ distclean
+	[ ! -f build/generic/Makefile ] || $(MAKE) -C build/generic/ distclean
 
 	dh_clean
 
