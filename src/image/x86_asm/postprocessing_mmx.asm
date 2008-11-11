@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: postprocessing_mmx.asm,v 1.5 2008-08-19 09:06:48 Isibaar Exp $
+; * $Id: postprocessing_mmx.asm,v 1.6 2008-11-11 20:46:24 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -30,15 +30,19 @@ BITS 32
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -93,10 +97,10 @@ image_brightness_mmx:
 	mov esi, [esp+8+12] ; width
 	mov edi, [esp+8+16] ; height
 
-.yloop
+.yloop:
 	xor	eax, eax
 
-.xloop
+.xloop:
 	movq mm0, [edx + eax]
 	movq mm1, [edx + eax + 8]	; mm0 = [dst]
 
@@ -122,7 +126,7 @@ image_brightness_mmx:
 	pop esi
 
 	ret
-.endfunc
+ENDFUNC
 ;//////////////////////////////////////////////////////////////////////
 
 %ifidn __OUTPUT_FORMAT__,elf

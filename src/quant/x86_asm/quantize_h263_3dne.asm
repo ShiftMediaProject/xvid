@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_h263_3dne.asm,v 1.7 2008-08-19 09:06:48 Isibaar Exp $
+; * $Id: quantize_h263_3dne.asm,v 1.8 2008-11-11 20:46:24 Isibaar Exp $
 ; *
 ; *************************************************************************/
 ;
@@ -36,15 +36,19 @@ BITS 32
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -377,7 +381,7 @@ quant_h263_intra_3dne:
 
 ALIGN 16
 
-.q1loop
+.q1loop:
   quant_intra1 0
   mov ebp, [esp + 16 + 16]          ; dcscalar
   movsx eax, word [byte ecx]        ; DC
@@ -410,7 +414,7 @@ ALIGN 16
 
   xor eax, eax
   ret
-.endfunc
+ENDFUNC
 
 
 
@@ -546,7 +550,7 @@ ALIGN 8
   ret
 
 ALIGN 16
-.q1loop
+.q1loop:
   movq mm6, [byte ebx]
 
   quantinter1 0
@@ -567,7 +571,7 @@ ALIGN 16
   pop ebx
 
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -719,7 +723,7 @@ ALIGN 8
 
   xor eax, eax
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -782,7 +786,7 @@ ALIGN 8
 
   xor eax, eax
   ret
-.endfunc
+ENDFUNC
 
 
 %ifidn __OUTPUT_FORMAT__,elf

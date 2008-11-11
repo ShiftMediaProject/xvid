@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: qpel_mmx.asm,v 1.6 2008-08-19 09:06:48 Isibaar Exp $
+; * $Id: qpel_mmx.asm,v 1.7 2008-11-11 20:46:24 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -45,15 +45,19 @@ bits 32
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -139,7 +143,7 @@ Rounder0_MMX:
 times 4 dw 0
 
 align 16
-Rounder_QP_MMX
+Rounder_QP_MMX:
 times 4 dw 16
 times 4 dw 15
 
@@ -349,7 +353,7 @@ SECTION .text
    PROLOG_AVRG
 %endif
 
-.Loop
+.Loop:
 
     ;  mm0..mm3 serves as a 4x4 delay line
 
@@ -458,7 +462,7 @@ SECTION .text
   PROLOG_AVRG
 %endif
 
-.Loop
+.Loop:
     ;  mm0..mm3 serves as a 4x4 delay line
 
 %ifndef USE_TABLES
@@ -560,52 +564,52 @@ SECTION .text
 
 xvid_H_Pass_16_mmx:
   H_PASS_16 0, 0
-.endfunc
+ENDFUNC
 xvid_H_Pass_Avrg_16_mmx:
   H_PASS_16 1, 0
-.endfunc
+ENDFUNC
 xvid_H_Pass_Avrg_Up_16_mmx:
   H_PASS_16 2, 0
-.endfunc
+ENDFUNC
 
 ;//////////////////////////////////////////////////////////////////////
 ;// 8x? copy Functions
 
 xvid_H_Pass_8_mmx:
   H_PASS_8 0, 0
-.endfunc
+ENDFUNC
 xvid_H_Pass_Avrg_8_mmx:
   H_PASS_8 1, 0
-.endfunc
+ENDFUNC
 xvid_H_Pass_Avrg_Up_8_mmx:
   H_PASS_8 2, 0
-.endfunc
+ENDFUNC
 
 ;//////////////////////////////////////////////////////////////////////
 ;// 16x? avrg Functions
 
 xvid_H_Pass_Add_16_mmx:
   H_PASS_16 0, 1
-.endfunc
+ENDFUNC
 xvid_H_Pass_Avrg_Add_16_mmx:
   H_PASS_16 1, 1
-.endfunc
+ENDFUNC
 xvid_H_Pass_Avrg_Up_Add_16_mmx:
   H_PASS_16 2, 1
-.endfunc
+ENDFUNC
 
 ;//////////////////////////////////////////////////////////////////////
 ;// 8x? avrg Functions
 
 xvid_H_Pass_8_Add_mmx:
   H_PASS_8 0, 1
-.endfunc
+ENDFUNC
 xvid_H_Pass_Avrg_8_Add_mmx:
   H_PASS_8 1, 1
-.endfunc
+ENDFUNC
 xvid_H_Pass_Avrg_Up_8_Add_mmx:
   H_PASS_8 2, 1
-.endfunc
+ENDFUNC
 
 
 
@@ -704,7 +708,7 @@ xvid_H_Pass_Avrg_Up_8_Add_mmx:
     ; the size (3rd argument) is meant to be a multiple of 4
     ;  mm0..mm3 serves as a 4x4 delay line
 
-.Loop
+.Loop:
 
   push edi
   push esi      ; esi is preserved for src-mixing
@@ -910,7 +914,7 @@ xvid_H_Pass_Avrg_Up_8_Add_mmx:
     ; we process one stripe of 4x8 pixel each time
     ; the size (3rd argument) is meant to be a multiple of 4
     ;  mm0..mm3 serves as a 4x4 delay line
-.Loop
+.Loop:
 
   push edi
   push esi      ; esi is preserved for src-mixing
@@ -1012,52 +1016,52 @@ xvid_H_Pass_Avrg_Up_8_Add_mmx:
 
 xvid_V_Pass_16_mmx:
   V_PASS_16 0, 0
-.endfunc
+ENDFUNC
 xvid_V_Pass_Avrg_16_mmx:
   V_PASS_16 1, 0
-.endfunc
+ENDFUNC
 xvid_V_Pass_Avrg_Up_16_mmx:
   V_PASS_16 2, 0
-.endfunc
+ENDFUNC
 
 ;//////////////////////////////////////////////////////////////////////
 ;// 8x? copy Functions
 
 xvid_V_Pass_8_mmx:
   V_PASS_8 0, 0
-.endfunc
+ENDFUNC
 xvid_V_Pass_Avrg_8_mmx:
   V_PASS_8 1, 0
-.endfunc
+ENDFUNC
 xvid_V_Pass_Avrg_Up_8_mmx:
   V_PASS_8 2, 0
-.endfunc
+ENDFUNC
 
 ;//////////////////////////////////////////////////////////////////////
 ;// 16x? avrg Functions
 
 xvid_V_Pass_Add_16_mmx:
   V_PASS_16 0, 1
-.endfunc
+ENDFUNC
 xvid_V_Pass_Avrg_Add_16_mmx:
   V_PASS_16 1, 1
-.endfunc
+ENDFUNC
 xvid_V_Pass_Avrg_Up_Add_16_mmx:
   V_PASS_16 2, 1
-.endfunc
+ENDFUNC
 
 ;//////////////////////////////////////////////////////////////////////
 ;// 8x? avrg Functions
 
 xvid_V_Pass_8_Add_mmx:
   V_PASS_8 0, 1
-.endfunc
+ENDFUNC
 xvid_V_Pass_Avrg_8_Add_mmx:
   V_PASS_8 1, 1
-.endfunc
+ENDFUNC
 xvid_V_Pass_Avrg_Up_8_Add_mmx:
   V_PASS_8 2, 1
-.endfunc
+ENDFUNC
 
 ;//////////////////////////////////////////////////////////////////////
 

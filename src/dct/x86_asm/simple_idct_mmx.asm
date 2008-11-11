@@ -31,15 +31,19 @@ BITS 32
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -194,7 +198,7 @@ coeffs:
   packssdw mm4,mm0              ; A2-B2 a2-b2   A3-B3   a3-b3
   movq [ dst + 16],mm4
   jmp short .skip2
-.skip1
+.skip1:
   pslld mm0,16
   paddd mm0,[d40000]
   psrad mm0,13
@@ -203,7 +207,7 @@ coeffs:
   movq [ dst + 8],mm0
   movq [ dst + 16],mm0
   movq [ dst + 24],mm0
-.skip2
+.skip2:
 %undef  src0
 %undef  src4
 %undef  src1
@@ -1098,7 +1102,7 @@ simple_idct_mmx_P:
   jmp .ret
 
 ALIGN 16
-.four
+.four:
   Z_COND_IDCT   edx+64, edx+72, edx+80, edx+88, esp+64, paddd,  [coeffs],   11,     .six
   Z_COND_IDCT   edx+96, edx+104,edx+112,edx+120,esp+96, paddd,  [coeffs],   11,     .five
   IDCT4         esp,    esp+64, esp+32, esp+96, edx,    nop,    0,          20
@@ -1108,7 +1112,7 @@ ALIGN 16
   jmp .ret
 
 ALIGN 16
-.six
+.six:
   Z_COND_IDCT   edx+96, edx+104,edx+112,edx+120,esp+96, paddd,  [coeffs],   11,     .seven
   IDCT6         esp,    esp+64, esp+32, esp+96, edx,    nop,    0,          20
   IDCT6         esp+8,  esp+72, esp+40, esp+104,edx+4,  nop,    0,          20
@@ -1117,7 +1121,7 @@ ALIGN 16
   jmp .ret
 
 ALIGN 16
-.two
+.two:
   Z_COND_IDCT   edx+96, edx+104,edx+112,edx+120,esp+96, paddd,  [coeffs],   11,     .three
   IDCT2         esp,    esp+64, esp+32, esp+96, edx,    nop,    0,          20
   IDCT2         esp+8,  esp+72, esp+40, esp+104,edx+4,  nop,    0,          20
@@ -1126,7 +1130,7 @@ ALIGN 16
   jmp .ret
 
 ALIGN 16
-.three
+.three:
   IDCT3 		esp,	esp+64,	esp+32,	esp+96,	edx,	nop,	0,			20
   IDCT3 		esp+8,	esp+72,	esp+40,	esp+104,edx+4,	nop,	0,			20
   IDCT3 		esp+16,	esp+80,	esp+48,	esp+112,edx+8,	nop,	0,			20
@@ -1134,7 +1138,7 @@ ALIGN 16
   jmp .ret
 
 ALIGN 16
-.five
+.five:
   IDCT5 esp,    esp+64, esp+32, esp+96, edx,    nop,    0,          20
   ; IDCT5       esp+8,  esp+72, esp+40, esp+104,edx+4,  nop,    0,          20
   IDCT5 esp+16, esp+80, esp+48, esp+112,edx+8,  nop,    0,          20
@@ -1142,7 +1146,7 @@ ALIGN 16
   jmp .ret
 
 ALIGN 16
-.one
+.one:
   IDCT1         esp,    esp+64, esp+32, esp+96, edx,    nop,    0,          20
   IDCT1         esp+8,  esp+72, esp+40, esp+104,edx+4,  nop,    0,          20
   IDCT1         esp+16, esp+80, esp+48, esp+112,edx+8,  nop,    0,          20
@@ -1150,17 +1154,17 @@ ALIGN 16
   jmp .ret
 
 ALIGN 16
-.seven
+.seven:
   IDCT7 esp,    esp+64, esp+32, esp+96, edx,    nop,    0,          20
   ; IDCT7       esp+8,  esp+72, esp+40, esp+104,edx+4,  nop,    0,          20
   IDCT7 esp+16, esp+80, esp+48, esp+112,edx+8,  nop,    0,          20
   ; IDCT7       esp+24, esp+88, esp+56, esp+120,edx+12, nop,    0,          20
 
-.ret
+.ret:
   add esp, 128
 
   ret
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -1190,7 +1194,7 @@ simple_idct_mmx:
   jmp .retP
 
 ALIGN 16
-.fourP
+.fourP:
   Z_COND_IDCT   edx+64, edx+72, edx+80, edx+88, esp+64, paddd,  [coeffs],   11,     .sixP
   Z_COND_IDCT   edx+96, edx+104,edx+112,edx+120,esp+96, paddd,  [coeffs],   11,     .fiveP
   IDCT4         esp,    esp+64, esp+32, esp+96, edx,    nop,    0,          20
@@ -1200,7 +1204,7 @@ ALIGN 16
   jmp .retP
 
 ALIGN 16
-.sixP
+.sixP:
   Z_COND_IDCT   edx+96, edx+104,edx+112,edx+120,esp+96, paddd,  [coeffs],   11,     .sevenP
   IDCT6         esp,    esp+64, esp+32, esp+96, edx,    nop,    0,          20
   IDCT6         esp+8,  esp+72, esp+40, esp+104,edx+4,  nop,    0,          20
@@ -1209,7 +1213,7 @@ ALIGN 16
   jmp .retP
 
 ALIGN 16
-.twoP
+.twoP:
   Z_COND_IDCT   edx+96, edx+104,edx+112,edx+120,esp+96, paddd,  [coeffs],   11,     .threeP
   IDCT2         esp,    esp+64, esp+32, esp+96, edx,    nop,    0,          20
   IDCT2         esp+8,  esp+72, esp+40, esp+104,edx+4,  nop,    0,          20
@@ -1218,7 +1222,7 @@ ALIGN 16
   jmp .retP
 
 ALIGN 16
-.threeP
+.threeP:
   IDCT3         esp,    esp+64, esp+32, esp+96, edx,    nop,    0,          20
   IDCT3         esp+8,  esp+72, esp+40, esp+104,edx+4,  nop,    0,          20
   IDCT3         esp+16, esp+80, esp+48, esp+112,edx+8,  nop,    0,          20
@@ -1226,7 +1230,7 @@ ALIGN 16
   jmp .retP
 
 ALIGN 16
-.fiveP
+.fiveP:
   IDCT5         esp,    esp+64, esp+32, esp+96, edx,    nop,    0,          20
   ; IDCT5       esp+8,  esp+72, esp+40, esp+104,edx+4,  nop,    0,          20
   IDCT5         esp+16, esp+80, esp+48, esp+112,edx+8,  nop,    0,          20
@@ -1234,7 +1238,7 @@ ALIGN 16
   jmp .retP
 
 ALIGN 16
-.oneP
+.oneP:
   IDCT1         esp,    esp+64, esp+32, esp+96, edx,    nop,    0,          20
   IDCT1         esp+8,  esp+72, esp+40, esp+104,edx+4,  nop,    0,          20
   IDCT1         esp+16, esp+80, esp+48, esp+112,edx+8,  nop,    0,          20
@@ -1242,17 +1246,17 @@ ALIGN 16
   jmp .retP
 
 ALIGN 16
-.sevenP
+.sevenP:
   IDCT7         esp,    esp+64, esp+32, esp+96, edx,    nop,    0,          20
   ; IDCT7       esp+8,  esp+72, esp+40, esp+104,edx+4,  nop,    0,          20
   IDCT7         esp+16, esp+80, esp+48, esp+112,edx+8,  nop,    0,          20
   ; IDCT7       esp+24, esp+88, esp+56, esp+120,edx+12, nop,    0,          20
 
-.retP
+.retP:
   add esp, 128
 
   ret
-.endfunc
+ENDFUNC
 
 
 %ifidn __OUTPUT_FORMAT__,elf

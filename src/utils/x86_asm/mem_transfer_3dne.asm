@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: mem_transfer_3dne.asm,v 1.9 2008-08-19 09:06:48 Isibaar Exp $
+; * $Id: mem_transfer_3dne.asm,v 1.10 2008-11-11 20:46:24 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -33,15 +33,19 @@ BITS 32
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -149,7 +153,7 @@ transfer_8to16copy_3dne:
   movq [byte ecx+1*64+48], mm6
   movq [ecx+1*64+40], mm7
   ret
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -195,7 +199,7 @@ transfer_16to8copy_3dne:
   movq [eax+4*edx], mm7
   movq [ecx+2*edx], mm6
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -265,7 +269,7 @@ ALIGN 4
   COPY_8_TO_16_SUB 3, 1
   mov edi, ecx
   ret
-.endfunc
+ENDFUNC
 
 ALIGN 16
 transfer_8to16subro_3dne:
@@ -283,7 +287,7 @@ ALIGN 4
   COPY_8_TO_16_SUB 3, 0
   mov edi, ecx
   ret
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -355,7 +359,7 @@ transfer_8to16sub2_3dne:
   COPY_8_TO_16_SUB2_SSE 3
 
   ret
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -403,7 +407,7 @@ transfer_16to8add_3dne:
   lea ecx,[byte ecx+2*edx]
   COPY_16_TO_8_ADD 3
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -436,7 +440,7 @@ transfer8x8_copy_3dne:
   lea ecx,[byte ecx+2*edx]
   COPY_8_TO_8
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -457,7 +461,7 @@ transfer8x4_copy_3dne:
   lea ecx,[byte ecx+2*edx]
   COPY_8_TO_8
   ret
-.endfunc
+ENDFUNC
 
 
 %ifidn __OUTPUT_FORMAT__,elf

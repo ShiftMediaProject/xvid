@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: mem_transfer_mmx.asm,v 1.18 2008-08-19 09:06:48 Isibaar Exp $
+; * $Id: mem_transfer_mmx.asm,v 1.19 2008-11-11 20:46:24 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -32,15 +32,19 @@ BITS 32
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -113,7 +117,7 @@ transfer_8to16copy_mmx:
   COPY_8_TO_16 2
   COPY_8_TO_16 3
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -149,7 +153,7 @@ transfer_16to8copy_mmx:
   lea ecx,[ecx+2*edx]
   COPY_16_TO_8 3
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -213,7 +217,7 @@ transfer_8to16sub_mmx:
 
   pop ebx
   ret
-.endfunc
+ENDFUNC
 
 
 ALIGN 16
@@ -232,7 +236,7 @@ transfer_8to16subro_mmx:
 
   pop ebx
   ret
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -331,7 +335,7 @@ transfer_8to16sub2_mmx:
   pop esi
   pop ebx
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -399,7 +403,7 @@ transfer_8to16sub2_xmm:
   pop esi
   pop ebx
   ret
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -466,7 +470,7 @@ transfer_8to16sub2ro_xmm:
   pop esi
   pop ebx
   ret
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -512,7 +516,7 @@ transfer_16to8add_mmx:
   lea ecx,[ecx+2*edx]
   COPY_16_TO_8_ADD 3
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -545,7 +549,7 @@ transfer8x8_copy_mmx:
   lea ecx,[ecx+2*edx]
   COPY_8_TO_8
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -566,7 +570,7 @@ transfer8x4_copy_mmx:
   lea ecx,[ecx+2*edx]
   COPY_8_TO_8
   ret
-.endfunc
+ENDFUNC
 
 
 %ifidn __OUTPUT_FORMAT__,elf

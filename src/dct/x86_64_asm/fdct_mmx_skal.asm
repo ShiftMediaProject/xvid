@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: fdct_mmx_skal.asm,v 1.2 2008-08-19 09:06:48 Isibaar Exp $
+; * $Id: fdct_mmx_skal.asm,v 1.3 2008-11-11 20:46:24 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -31,15 +31,19 @@ BITS 64
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -434,7 +438,7 @@ cglobal %1
   lea rdx, [fdct_table wrt rip]	; load offset, pic code
   lea rbx, [fdct_rounding_1 wrt rip]	; same
   lea rdi, [fdct_rounding_2 wrt rip]	; same too
-.loop
+.loop:
   %2 rcx, rcx, rdx, rbx, rdi
   add rcx, 2*8
   add rdx, 2*32
@@ -447,7 +451,7 @@ cglobal %1
 %endif
 
   ret
-.endfunc
+ENDFUNC
 %endmacro
 
 ;=============================================================================

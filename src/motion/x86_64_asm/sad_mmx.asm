@@ -21,7 +21,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: sad_mmx.asm,v 1.2 2008-08-19 09:06:48 Isibaar Exp $
+; * $Id: sad_mmx.asm,v 1.3 2008-11-11 20:46:24 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -32,15 +32,19 @@ BITS 64
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -107,7 +111,7 @@ sse8_16bit_x86_64:
 
   ;; All done
   ret
-.endfunc
+ENDFUNC
   
 ;-----------------------------------------------------------------------------
 ;
@@ -162,7 +166,7 @@ sse8_8bit_x86_64:
 
   ;; All done
   ret
-.endfunc
+ENDFUNC
 
 %ifidn __OUTPUT_FORMAT__,elf
 section ".note.GNU-stack" noalloc noexec nowrite progbits

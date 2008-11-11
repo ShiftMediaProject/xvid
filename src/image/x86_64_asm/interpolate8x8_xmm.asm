@@ -30,15 +30,19 @@ BITS 64
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -127,7 +131,7 @@ interpolate8x8_halfpel_h_x86_64:
   COPY_H_SSE_RND0
   ret
 
-.rounding1
+.rounding1:
  ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
   movq mm7, [mmx_one wrt rip]
   COPY_H_SSE_RND1
@@ -138,7 +142,7 @@ interpolate8x8_halfpel_h_x86_64:
   lea rcx,[rcx+2*rdx]
   COPY_H_SSE_RND1
   ret
-.endfunc
+ENDFUNC
 
 ;===========================================================================
 ;
@@ -198,7 +202,7 @@ interpolate8x8_halfpel_v_x86_64:
   COPY_V_SSE_RND0
   ret
 
-.rounding1
+.rounding1:
  ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
   movq mm7, [mmx_one wrt rip]
   movq mm2, [rax]       ; loop invariant
@@ -212,7 +216,7 @@ interpolate8x8_halfpel_v_x86_64:
   lea rcx,[rcx+2*rdx]
   COPY_V_SSE_RND1
   ret
-.endfunc
+ENDFUNC
 
 ;===========================================================================
 ;
@@ -342,7 +346,7 @@ interpolate8x8_halfpel_hv_x86_64:
   COPY_HV_SSE_RND0
   ret
 
-.rounding1
+.rounding1:
   COPY_HV_SSE_RND1
   add rcx, rdx
   COPY_HV_SSE_RND1
@@ -351,7 +355,7 @@ interpolate8x8_halfpel_hv_x86_64:
   add rcx, rdx
   COPY_HV_SSE_RND1
   ret
-.endfunc
+ENDFUNC
 
 ;===========================================================================
 ;
@@ -411,7 +415,7 @@ interpolate8x8_halfpel_add_x86_64:  ; 23c
   lea rcx,[rcx+2*rdx]
   ADD_FF 0, rdx
   EPILOG
-.endfunc
+ENDFUNC
 
 ;===========================================================================
 ;
@@ -473,7 +477,7 @@ interpolate8x8_halfpel_h_add_x86_64:   ; 32c
   ADD_FH_RND0 0, rdx
   EPILOG
 
-.Loop1
+.Loop1:
   ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
   ; movq mm7, [mmx_one wrt rip]
   ADD_FH_RND1 0, rdx
@@ -487,7 +491,7 @@ interpolate8x8_halfpel_h_add_x86_64:   ; 32c
   lea rcx,[rcx+2*rdx]
   ADD_FH_RND1 0, rdx
   EPILOG
-.endfunc
+ENDFUNC
 
 
 ;===========================================================================
@@ -548,7 +552,7 @@ interpolate8x8_halfpel_v_add_x86_64:
   ADD_8_HF_RND0
   EPILOG
 
-.Loop1
+.Loop1:
   movq mm0, [rax] ; loop invariant
   movq mm7, [mmx_one wrt rip]
 
@@ -563,7 +567,7 @@ interpolate8x8_halfpel_v_add_x86_64:
   lea rcx,[rcx+2*rdx]
   ADD_8_HF_RND1 
   EPILOG
-.endfunc
+ENDFUNC
 
 ; The trick is to correct the result of 'pavgb' with some combination of the
 ; lsb's of the 4 input values i,j,k,l, and their intermediate 'pavgb' (s and t).
@@ -693,7 +697,7 @@ interpolate8x8_halfpel_hv_add_x86_64:
   ADD_HH_RND0
   EPILOG
 
-.Loop1
+.Loop1:
   ADD_HH_RND1
   add rcx, rdx
   ADD_HH_RND1
@@ -703,7 +707,7 @@ interpolate8x8_halfpel_hv_add_x86_64:
   ADD_HH_RND1
 
   EPILOG
-.endfunc
+ENDFUNC
 
 %ifidn __OUTPUT_FORMAT__,elf
 section ".note.GNU-stack" noalloc noexec nowrite progbits

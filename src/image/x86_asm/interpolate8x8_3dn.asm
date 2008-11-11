@@ -30,15 +30,19 @@ BITS 32
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -130,7 +134,7 @@ interpolate8x8_halfpel_h_3dn:
   COPY_H_3DN_RND0
   ret
 
-.rounding1
+.rounding1:
   ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
   movq mm7, [mmx_one]
   COPY_H_3DN_RND1
@@ -141,7 +145,7 @@ interpolate8x8_halfpel_h_3dn:
   lea ecx, [ecx+2*edx]
   COPY_H_3DN_RND1
   ret
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -204,7 +208,7 @@ interpolate8x8_halfpel_v_3dn:
   COPY_V_3DN_RND0
   ret
 
-.rounding1
+.rounding1:
  ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
   movq mm7, [mmx_one]
   movq mm2, [eax]       ; loop invariant
@@ -218,7 +222,7 @@ interpolate8x8_halfpel_v_3dn:
   lea ecx, [ecx+2*edx]
   COPY_V_3DN_RND1
   ret
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -322,7 +326,7 @@ interpolate8x8_halfpel_v_3dn:
 %endmacro
 
 ALIGN 16
-interpolate8x8_halfpel_hv_3dn
+interpolate8x8_halfpel_hv_3dn:
   mov eax, [esp+16] ; rounding
   mov ecx, [esp+ 4] ; Dst
   test eax, eax
@@ -349,7 +353,7 @@ interpolate8x8_halfpel_hv_3dn
   COPY_HV_3DN_RND0
   ret
 
-.rounding1
+.rounding1:
   COPY_HV_3DN_RND1
   add ecx, edx
   COPY_HV_3DN_RND1
@@ -358,7 +362,7 @@ interpolate8x8_halfpel_hv_3dn
   add ecx, edx
   COPY_HV_3DN_RND1
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -385,14 +389,14 @@ interpolate8x4_halfpel_h_3dn:
   COPY_H_3DN_RND0
   ret
 
-.rounding1
+.rounding1:
   ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
   movq mm7, [mmx_one]
   COPY_H_3DN_RND1
   lea ecx, [ecx+2*edx]
   COPY_H_3DN_RND1
   ret
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -422,7 +426,7 @@ interpolate8x4_halfpel_v_3dn:
   COPY_V_3DN_RND0
   ret
 
-.rounding1
+.rounding1:
  ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
   movq mm7, [mmx_one]
   movq mm2, [eax]       ; loop invariant
@@ -432,7 +436,7 @@ interpolate8x4_halfpel_v_3dn:
   lea ecx, [ecx+2*edx]
   COPY_V_3DN_RND1
   ret
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -455,7 +459,7 @@ interpolate8x4_halfpel_v_3dn:
 ; with  s=(i+j+1)/2, t=(k+l+1)/2, ij = i^j, kl = k^l, st = s^t.
 
 ALIGN 16
-interpolate8x4_halfpel_hv_3dn
+interpolate8x4_halfpel_hv_3dn:
   mov eax, [esp+16] ; rounding
   mov ecx, [esp+ 4] ; Dst
   test eax, eax
@@ -478,12 +482,12 @@ interpolate8x4_halfpel_hv_3dn
   COPY_HV_3DN_RND0
   ret
 
-.rounding1
+.rounding1:
   COPY_HV_3DN_RND1
   add ecx, edx
   COPY_HV_3DN_RND1
   ret
-.endfunc
+ENDFUNC
 
 
 %ifidn __OUTPUT_FORMAT__,elf

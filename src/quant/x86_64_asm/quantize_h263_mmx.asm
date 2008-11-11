@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_h263_mmx.asm,v 1.2 2008-08-19 09:06:48 Isibaar Exp $
+; * $Id: quantize_h263_mmx.asm,v 1.3 2008-11-11 20:46:24 Isibaar Exp $
 ; *
 ; ****************************************************************************/
 
@@ -35,15 +35,19 @@ BITS 64
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -184,7 +188,7 @@ quant_h263_intra_x86_64:
   movq mm7, [r9 + rax * 8 - 8]
 
 ALIGN 16
-.loop
+.loop:
   movq mm0, [rsi + 8*rcx]           ; mm0 = [1st]
   movq mm3, [rsi + 8*rcx + 8]
   pxor mm1, mm1                     ; mm1 = 0
@@ -208,7 +212,7 @@ ALIGN 16
   cmp rcx, 16
   jnz .loop
 
-.done
+.done:
 
     ; caclulate  data[0] // (int32_t)dcscalar)
   mov rcx, r8				; dscalar
@@ -221,9 +225,9 @@ ALIGN 16
   sub rax, rdx
   jmp short .mul
 
-.gtzero
+.gtzero:
   add rax, rdx
-.mul
+.mul:
   cdq ; expand eax -> edx:eax
   idiv ecx		; eax = edx:eax / dcscalar
   mov [rdi], ax		; coeff[0] = ax
@@ -233,7 +237,7 @@ ALIGN 16
   ret
 
 ALIGN 16
-.q1loop
+.q1loop:
   movq mm0, [rsi + 8*rcx]           ; mm0 = [1st]
   movq mm3, [rsi + 8*rcx + 8]
   pxor mm1, mm1                     ; mm1 = 0
@@ -258,7 +262,7 @@ ALIGN 16
   jnz .q1loop
 
   jmp .done
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -289,7 +293,7 @@ quant_h263_inter_x86_64:
   movq mm7, [r9 + rax * 8 - 8] ; divider
 
 ALIGN 8
-.loop
+.loop:
   movq mm0, [rsi + 8*rcx]           ; mm0 = [1st]
   movq mm3, [rsi + 8*rcx + 8]
   pxor mm1, mm1                     ; mm1 = 0
@@ -317,7 +321,7 @@ ALIGN 8
   cmp rcx, 16
   jnz .loop
 
-.done
+.done:
   pmaddwd mm5, [plus_one wrt rip]
   movq mm0, mm5
   psrlq mm5, 32
@@ -328,7 +332,7 @@ ALIGN 8
   ret
 
 ALIGN 8
-.q1loop
+.q1loop:
   movq mm0, [rsi + 8*rcx]           ; mm0 = [1st]
   movq mm3, [rsi + 8*rcx+ 8]        ;
   pxor mm1, mm1                     ; mm1 = 0
@@ -357,7 +361,7 @@ ALIGN 8
   jnz .q1loop
 
   jmp .done
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -388,7 +392,7 @@ dequant_h263_intra_x86_64:
   mov rax, -16
 
 ALIGN 16
-.loop
+.loop:
   movq mm0, [rcx+8*rax+8*16]        ; c  = coeff[i]
   movq mm3, [rcx+8*rax+8*16 + 8]    ; c' = coeff[i+1]
   pxor mm1, mm1
@@ -438,7 +442,7 @@ ALIGN 16
 
   xor rax, rax
   ret
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -467,7 +471,7 @@ dequant_h263_inter_x86_64:
   mov rax, -16
 
 ALIGN 16
-.loop
+.loop:
   movq mm0, [rcx+8*rax+8*16]      ; c  = coeff[i]
   movq mm3, [rcx+8*rax+8*16 + 8]  ; c' = coeff[i+1]
   pxor mm1, mm1
@@ -504,7 +508,7 @@ ALIGN 16
 
   xor rax, rax
   ret
-.endfunc
+ENDFUNC
 
 %ifidn __OUTPUT_FORMAT__,elf
 section ".note.GNU-stack" noalloc noexec nowrite progbits

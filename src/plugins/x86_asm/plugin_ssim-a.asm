@@ -29,15 +29,19 @@ BITS 32
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -171,7 +175,7 @@ lum_8x8_mmx:
 
 	movd eax,mm1
 	ret
-.endfunc
+ENDFUNC
 
 ALIGN 16
 consim_sse2:
@@ -233,7 +237,7 @@ consim_sse2:
 
 	CONSIM_WRITEOUT xmm5,xmm6,xmm7
 	ret
-.endfunc
+ENDFUNC
 
 
 
@@ -284,7 +288,7 @@ consim_mmx:
 
 	CONSIM_WRITEOUT mm5,mm6,mm7
 	ret
-.endfunc
+ENDFUNC
 
 %ifidn __OUTPUT_FORMAT__,elf
 section ".note.GNU-stack" noalloc noexec nowrite progbits

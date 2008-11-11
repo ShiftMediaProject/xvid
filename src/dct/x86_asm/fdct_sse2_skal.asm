@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: fdct_sse2_skal.asm,v 1.8 2008-08-19 09:06:48 Isibaar Exp $
+; * $Id: fdct_sse2_skal.asm,v 1.9 2008-11-11 20:46:24 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -30,15 +30,19 @@ BITS 32
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -408,51 +412,51 @@ idct_sse2_skal:
   TEST_ROW ecx, .Row0_Round
   iMTX_MULT  0, iTab1, Walken_Idct_Rounders + 16*0, 11
   jmp .Row1
-.Row0_Round
+.Row0_Round:
   movdqa xmm0, [Walken_Idct_Rounders + 16*8 + 8*0]
   movdqa [ecx  ], xmm0
 
-.Row1
+.Row1:
   TEST_ROW ecx+16, .Row1_Round
   iMTX_MULT  1, iTab2, Walken_Idct_Rounders + 16*1, 11
   jmp .Row2
-.Row1_Round
+.Row1_Round:
   movdqa xmm0, [Walken_Idct_Rounders + 16*8 + 16*1]
   movdqa [ecx+16  ], xmm0
 
-.Row2
+.Row2:
   TEST_ROW ecx+32, .Row2_Round
   iMTX_MULT  2, iTab3, Walken_Idct_Rounders + 16*2, 11
   jmp .Row3
-.Row2_Round
+.Row2_Round:
   movdqa xmm0, [Walken_Idct_Rounders + 16*8 + 16*2]
   movdqa [ecx+32  ], xmm0
 
-.Row3
+.Row3:
   TEST_ROW ecx+48, .Row4
   iMTX_MULT  3, iTab4, Walken_Idct_Rounders + 16*3, 11
 
-.Row4
+.Row4:
   TEST_ROW ecx+64, .Row5
   iMTX_MULT  4, iTab1, Walken_Idct_Rounders + 16*4, 11
 
-.Row5
+.Row5:
   TEST_ROW ecx+80, .Row6
   iMTX_MULT  5, iTab4, Walken_Idct_Rounders + 16*5, 11
 
-.Row6
+.Row6:
   TEST_ROW ecx+96, .Row7
   iMTX_MULT  6, iTab3, Walken_Idct_Rounders + 16*6, 11
 
-.Row7
+.Row7:
   TEST_ROW ecx+112, .End
   iMTX_MULT  7, iTab2, Walken_Idct_Rounders + 16*7, 11
-.End
+.End:
 
   iLLM_PASS ecx
 
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ; Helper macro fLLM_PASS
@@ -618,7 +622,7 @@ fdct_sse2_skal:
   fMTX_MULT  6, fTab3, Fdct_Rnd1
   fMTX_MULT  7, fTab2, Fdct_Rnd1
   ret
-.endfunc
+ENDFUNC
 
 
 %ifidn __OUTPUT_FORMAT__,elf

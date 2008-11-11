@@ -30,15 +30,19 @@ BITS 64
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -251,7 +255,7 @@ interpolate8x8_avg2_x86_64:
   AVG2_MMX_RND0
   lea rcx, [rcx+2*rdx]
 
-.start0
+.start0:
 
   AVG2_MMX_RND0
   lea rcx, [rcx+2*rdx]
@@ -264,7 +268,7 @@ interpolate8x8_avg2_x86_64:
   pop rbx
   ret
 
-.rounding1
+.rounding1:
   mov rax, r9				; 6. par (height)
   sub rax, 8
   test rax, rax
@@ -281,7 +285,7 @@ interpolate8x8_avg2_x86_64:
   AVG2_MMX_RND1
   lea rcx, [rcx+2*rdx]
 
-.start1
+.start1:
 
   AVG2_MMX_RND1
   lea rcx, [rcx+2*rdx]
@@ -293,7 +297,7 @@ interpolate8x8_avg2_x86_64:
 
   pop rbx
   ret
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -457,7 +461,7 @@ interpolate8x8_avg4_x86_64:
   pop rbx
   ret
 
-.rounding1
+.rounding1:
   AVG4_MMX_RND1
   lea rcx, [rcx+rdx]
   AVG4_MMX_RND1
@@ -476,7 +480,7 @@ interpolate8x8_avg4_x86_64:
 
   pop rbx
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -587,7 +591,7 @@ interpolate8x8_6tap_lowpass_h_x86_64:
   LOWPASS_6TAP_H_MMX
 
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -706,7 +710,7 @@ interpolate8x8_6tap_lowpass_v_x86_64:
 
   pop rbx
   ret
-.endfunc
+ENDFUNC
 
 %ifidn __OUTPUT_FORMAT__,elf
 section ".note.GNU-stack" noalloc noexec nowrite progbits

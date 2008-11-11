@@ -115,7 +115,7 @@ NAME:
 
   neg edx                   ; x_stride = -x_stride
 
-.dont_flip
+.dont_flip:
 
     ; --- begin loop ---
 
@@ -125,11 +125,11 @@ NAME:
 
   FUNC %+ _INIT ARG1, ARG2  ; call FUNC_INIT
 
-.y_loop
+.y_loop:
   mov [tmp_height], ebp
   mov ebp, [fixed_width]
 
-.x_loop
+.x_loop:
   FUNC ARG1, ARG2           ; call FUNC
 
   add edi, BYTES*PIXELS     ; x_ptr += BYTES*PIXELS
@@ -183,7 +183,7 @@ NAME:
 %undef fixed_width
 %undef tmp_height
         ret
-.endfunc
+ENDFUNC
 %undef NAME
 %undef STACK
 %undef BYTES
