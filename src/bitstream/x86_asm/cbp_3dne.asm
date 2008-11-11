@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: cbp_3dne.asm,v 1.6 2008-08-19 09:06:48 Isibaar Exp $
+; * $Id: cbp_3dne.asm,v 1.7 2008-11-11 20:46:24 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -37,15 +37,19 @@ BITS 32
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -121,7 +125,7 @@ calc_cbp_3dne:
   adc eax, eax
   add esp, byte 24
   ret
-.endfunc
+ENDFUNC
 
 
 %ifidn __OUTPUT_FORMAT__,elf

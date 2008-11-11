@@ -29,15 +29,19 @@ BITS 32
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -130,7 +134,7 @@ interpolate8x8_halfpel_h_xmm:
   COPY_H_SSE_RND0
   ret
 
-.rounding1
+.rounding1:
  ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
   movq mm7, [mmx_one]
   COPY_H_SSE_RND1
@@ -141,7 +145,7 @@ interpolate8x8_halfpel_h_xmm:
   lea ecx,[ecx+2*edx]
   COPY_H_SSE_RND1
   ret
-.endfunc
+ENDFUNC
 
 ;===========================================================================
 ;
@@ -202,7 +206,7 @@ interpolate8x8_halfpel_v_xmm:
   COPY_V_SSE_RND0
   ret
 
-.rounding1
+.rounding1:
  ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
   movq mm7, [mmx_one]
   movq mm2, [eax]       ; loop invariant
@@ -216,7 +220,7 @@ interpolate8x8_halfpel_v_xmm:
   lea ecx,[ecx+2*edx]
   COPY_V_SSE_RND1
   ret
-.endfunc
+ENDFUNC
 
 ;===========================================================================
 ;
@@ -346,7 +350,7 @@ interpolate8x8_halfpel_hv_xmm:
   COPY_HV_SSE_RND0
   ret
 
-.rounding1
+.rounding1:
   COPY_HV_SSE_RND1
   add ecx, edx
   COPY_HV_SSE_RND1
@@ -355,7 +359,7 @@ interpolate8x8_halfpel_hv_xmm:
   add ecx, edx
   COPY_HV_SSE_RND1
   ret
-.endfunc
+ENDFUNC
 
 ;===========================================================================
 ;
@@ -382,14 +386,14 @@ interpolate8x4_halfpel_h_xmm:
   COPY_H_SSE_RND0
   ret
 
-.rounding1
+.rounding1:
  ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
   movq mm7, [mmx_one]
   COPY_H_SSE_RND1
   lea ecx, [ecx+2*edx]
   COPY_H_SSE_RND1
   ret
-.endfunc
+ENDFUNC
 
 ;===========================================================================
 ;
@@ -417,7 +421,7 @@ interpolate8x4_halfpel_v_xmm:
   COPY_V_SSE_RND0
   ret
 
-.rounding1
+.rounding1:
  ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
   movq mm7, [mmx_one]
   movq mm2, [eax]       ; loop invariant
@@ -427,7 +431,7 @@ interpolate8x4_halfpel_v_xmm:
   lea ecx,[ecx+2*edx]
   COPY_V_SSE_RND1
   ret
-.endfunc
+ENDFUNC
 
 ;===========================================================================
 ;
@@ -474,12 +478,12 @@ interpolate8x4_halfpel_hv_xmm:
   COPY_HV_SSE_RND0
   ret
 
-.rounding1
+.rounding1:
   COPY_HV_SSE_RND1
   add ecx, edx
   COPY_HV_SSE_RND1
   ret
-.endfunc
+ENDFUNC
 
 ;===========================================================================
 ;
@@ -547,7 +551,7 @@ interpolate8x8_halfpel_add_xmm:  ; 23c
   lea ecx,[ecx+2*edx]
   ADD_FF 0, edx
   EPILOG
-.endfunc
+ENDFUNC
 
 ;===========================================================================
 ;
@@ -609,7 +613,7 @@ interpolate8x8_halfpel_h_add_xmm:   ; 32c
   ADD_FH_RND0 0, edx
   EPILOG
 
-.Loop1
+.Loop1:
   ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
   ; movq mm7, [mmx_one]
   ADD_FH_RND1 0, edx
@@ -623,7 +627,7 @@ interpolate8x8_halfpel_h_add_xmm:   ; 32c
   lea ecx,[ecx+2*edx]
   ADD_FH_RND1 0, edx
   EPILOG
-.endfunc
+ENDFUNC
 
 
 ;===========================================================================
@@ -684,7 +688,7 @@ interpolate8x8_halfpel_v_add_xmm:
   ADD_8_HF_RND0
   EPILOG
 
-.Loop1
+.Loop1:
   movq mm0, [eax] ; loop invariant
   movq mm7, [mmx_one]
 
@@ -699,7 +703,7 @@ interpolate8x8_halfpel_v_add_xmm:
   lea ecx,[ecx+2*edx]
   ADD_8_HF_RND1 
   EPILOG
-.endfunc
+ENDFUNC
 
 ; The trick is to correct the result of 'pavgb' with some combination of the
 ; lsb's of the 4 input values i,j,k,l, and their intermediate 'pavgb' (s and t).
@@ -829,7 +833,7 @@ interpolate8x8_halfpel_hv_add_xmm:
   ADD_HH_RND0
   EPILOG
 
-.Loop1
+.Loop1:
   ADD_HH_RND1
   add ecx, edx
   ADD_HH_RND1
@@ -839,7 +843,7 @@ interpolate8x8_halfpel_hv_add_xmm:
   ADD_HH_RND1
 
   EPILOG
-.endfunc
+ENDFUNC
 
 
 %ifidn __OUTPUT_FORMAT__,elf

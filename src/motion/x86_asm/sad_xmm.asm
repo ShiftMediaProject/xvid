@@ -21,7 +21,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: sad_xmm.asm,v 1.11 2008-08-19 09:06:48 Isibaar Exp $
+; * $Id: sad_xmm.asm,v 1.12 2008-11-11 20:46:24 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -32,15 +32,19 @@ BITS 32
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -189,7 +193,7 @@ sad16_xmm:
   paddusw mm6,mm5
   movd eax, mm6
   ret
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -230,7 +234,7 @@ sad8_xmm:
   movd eax, mm6
 
   ret
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -275,7 +279,7 @@ sad16bi_xmm:
   movd eax, mm6
   pop ebx
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -296,7 +300,7 @@ sad8bi_xmm:
 
   pxor mm5, mm5 ; accum1
   pxor mm6, mm6 ; accum2
-.Loop
+.Loop:
   SADBI_8x8_XMM
   SADBI_8x8_XMM
   SADBI_8x8_XMM
@@ -306,7 +310,7 @@ sad8bi_xmm:
   movd eax, mm6
   pop ebx
   ret
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -387,7 +391,7 @@ dev16_xmm:
 
   movd eax, mm6
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;int sad16v_xmm(const uint8_t * const cur,
@@ -442,7 +446,7 @@ sad16v_xmm:
   movd eax, mm7
   pop ebx
   ret
-.endfunc
+ENDFUNC
 
 
 %ifidn __OUTPUT_FORMAT__,elf

@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_mpeg_xmm.asm,v 1.2 2008-08-19 09:06:48 Isibaar Exp $
+; * $Id: quantize_mpeg_xmm.asm,v 1.3 2008-11-11 20:46:24 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -37,15 +37,19 @@ BITS 64
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -192,7 +196,7 @@ quant_mpeg_intra_x86_64:
   jg near .lloop
 
 ALIGN 16
-.loop
+.loop:
   movq mm1, [rax + 8*rsi+112]   ; mm0 = [1st]
   psubw mm0, mm1                ;-mm1
   movq mm4, [rax + 8*rsi + 120] ;
@@ -242,7 +246,7 @@ ALIGN 16
   add rsi, byte 2
   jng near .loop
 
-.done
+.done:
 ; calculate  data[0] // (int32_t)dcscalar)
 ;  mov esi, [esp + 12 + 16]  ; dcscalar
   mov rsi, r9			; dcscalar
@@ -278,7 +282,7 @@ ALIGN 16
   ret
 
 ALIGN 16
-.q1loop
+.q1loop:
   movq mm1, [rax + 8*rsi+112]               ; mm0 = [1st]
   psubw mm0, mm1                            ;-mm1
   movq mm4, [rax + 8*rsi+120]               ;
@@ -329,7 +333,7 @@ ALIGN 16
   jmp near .done
 
 ALIGN 8
-.lloop
+.lloop:
   movq mm1, [rax + 8*rsi+112]       ; mm0 = [1st]
   psubw mm0, mm1        ;-mm1
   movq mm4, [rax + 8*rsi+120]
@@ -382,7 +386,7 @@ ALIGN 8
   add rsi,byte 2
   jng near .lloop
   jmp near .done
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -418,7 +422,7 @@ quant_mpeg_inter_x86_64:
   jg near .lloop
 
 ALIGN 16
-.loop
+.loop:
   movq mm1, [rax + 8*rsi+112]       ; mm0 = [1st]
   psubw mm0, mm1 ;-mm1
   movq mm4, [rax + 8*rsi + 120] ;
@@ -482,7 +486,7 @@ ALIGN 16
   ret
 
 ALIGN 16
-.q1loop
+.q1loop:
   movq mm1, [rax + 8*rsi+112]       ; mm0 = [1st]
   psubw mm0, mm1                    ;-mm1
   movq mm4, [rax + 8*rsi+120]
@@ -531,7 +535,7 @@ ALIGN 16
   jmp near .done
 
 ALIGN 8
-.lloop
+.lloop:
   movq mm1, [rax + 8*rsi+112]       ; mm0 = [1st]
   psubw mm0,mm1         ;-mm1
   movq mm4, [rax + 8*rsi+120]
@@ -583,7 +587,7 @@ ALIGN 8
   movq [rdx + 8*rsi +120-16], mm7
   jng near .lloop
   jmp near .done
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -698,7 +702,7 @@ ALIGN 4
 
   xor rax, rax
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -730,7 +734,7 @@ dequant_mpeg_inter_x86_64:
   pxor mm3, mm3
 
 ALIGN 16
-.loop
+.loop:
   movq mm0, [rcx+8*rax + 7*16   ]   ; mm0 = coeff[i]
   pcmpgtw mm1, mm0  ; mm1 = sgn(c)    (preserved)
   movq mm2, [rcx+8*rax + 7*16 +8]   ; mm2 = coeff[i+1]
@@ -807,7 +811,7 @@ ALIGN 16
 
   xor rax, rax
   ret
-.endfunc
+ENDFUNC
 
 %ifidn __OUTPUT_FORMAT__,elf
 section ".note.GNU-stack" noalloc noexec nowrite progbits

@@ -31,15 +31,19 @@ BITS 32
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -152,7 +156,7 @@ interpolate8x8_halfpel_h_3dne:
   COPY_H_SSE_RND0 1
   ret
 
-.rounding1
+.rounding1:
  ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
   mov ecx, [esp+ 4] ; Dst
   movq mm7, [mmx_one]
@@ -164,7 +168,7 @@ interpolate8x8_halfpel_h_3dne:
   lea ecx,[ecx+2*edx]
   COPY_H_SSE_RND1
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -224,7 +228,7 @@ interpolate8x8_halfpel_v_3dne:
   ret
 
 ALIGN 8
-.rounding1
+.rounding1:
   pcmpeqb mm0, mm0
   psubusb mm0, [eax]
   add eax, edx
@@ -288,7 +292,7 @@ ALIGN 8
   movq [ecx], mm4
   movq [ecx+edx], mm5
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -411,7 +415,7 @@ interpolate8x8_halfpel_hv_3dne:
   ret
 
 ALIGN 16
-.rounding1
+.rounding1:
   COPY_HV_SSE_RND1
   lea ecx,[ecx+2*edx]
   COPY_HV_SSE_RND1
@@ -420,7 +424,7 @@ ALIGN 16
   lea ecx,[ecx+2*edx]
   COPY_HV_SSE_RND1
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -446,7 +450,7 @@ interpolate8x4_halfpel_h_3dne:
   COPY_H_SSE_RND0 1
   ret
 
-.rounding1
+.rounding1:
  ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
   mov ecx, [esp+ 4] ; Dst
   movq mm7, [mmx_one]
@@ -454,7 +458,7 @@ interpolate8x4_halfpel_h_3dne:
   lea ecx, [ecx+2*edx]
   COPY_H_SSE_RND1
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -501,7 +505,7 @@ interpolate8x4_halfpel_v_3dne:
   ret
 
 ALIGN 8
-.rounding1
+.rounding1:
   pcmpeqb mm0, mm0
   psubusb mm0, [eax]            ; eax==line0
   add eax, edx                  ; eax==line1
@@ -543,7 +547,7 @@ ALIGN 8
 
   ret
 
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -578,12 +582,12 @@ interpolate8x4_halfpel_hv_3dne:
   ret
 
 ALIGN 16
-.rounding1
+.rounding1:
   COPY_HV_SSE_RND1
   lea ecx,[ecx+2*edx]
   COPY_HV_SSE_RND1
   ret
-.endfunc
+ENDFUNC
 
 
 %ifidn __OUTPUT_FORMAT__,elf

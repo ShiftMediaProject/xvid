@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_mpeg_mmx.asm,v 1.9 2008-08-19 09:06:48 Isibaar Exp $
+; * $Id: quantize_mpeg_mmx.asm,v 1.10 2008-11-11 20:46:24 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -34,15 +34,19 @@ BITS 32
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -237,7 +241,7 @@ quant_mpeg_intra_mmx:
 
   xor eax, eax              ; return(0);
   ret
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -275,7 +279,7 @@ quant_mpeg_inter_mmx:
   movq mm7, [mmx_div + eax * 8 - 8] ; divider
 
 ALIGN 16
-.loop
+.loop:
   movq mm0, [esi + 8*ecx]       ; mm0 = [1st]
   movq mm3, [esi + 8*ecx + 8]   ;
   pxor mm1, mm1                 ; mm1 = 0
@@ -315,7 +319,7 @@ ALIGN 16
   cmp ecx, 16
   jnz near .loop
 
-.done
+.done:
   pmaddwd mm5, [mmx_one]
   movq mm0, mm5
   psrlq mm5, 32
@@ -330,7 +334,7 @@ ALIGN 16
   ret
 
 ALIGN 16
-.q1loop
+.q1loop:
   movq mm0, [esi + 8*ecx]       ; mm0 = [1st]
   movq mm3, [esi + 8*ecx+ 8]
   pxor mm1, mm1                 ; mm1 = 0
@@ -371,7 +375,7 @@ ALIGN 16
   jmp .done
 
 ALIGN 16
-.q2loop
+.q2loop:
   movq mm0, [esi + 8*ecx]       ; mm0 = [1st]
   movq mm3, [esi + 8*ecx+ 8]
   pxor mm1, mm1                 ; mm1 = 0
@@ -410,7 +414,7 @@ ALIGN 16
   jnz near .q2loop
 
   jmp .done
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -478,7 +482,7 @@ dequant_mpeg_intra_mmx:
   pxor mm6, mm6     ; this is a NOP
 
 ALIGN 16
-.loop
+.loop:
   movq mm0, [ecx+8*eax + 8*16]   ; mm0 = c  = coeff[i]
   movq mm3, [ecx+8*eax + 8*16 +8]; mm3 = c' = coeff[i+1]
   pxor mm1, mm1
@@ -550,7 +554,7 @@ ALIGN 16
   pop ebx
 
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -582,7 +586,7 @@ dequant_mpeg_inter_mmx:
   pxor mm6, mm6     ; mismatch sum
 
 ALIGN 16
-.loop
+.loop:
   movq mm0, [ecx+8*eax + 8*16   ]   ; mm0 = coeff[i]
   movq mm2, [ecx+8*eax + 8*16 +8]   ; mm2 = coeff[i+1]
   add eax, 2
@@ -664,7 +668,7 @@ ALIGN 16
   pop ebx
 
   ret
-.endfunc
+ENDFUNC
 
 
 %ifidn __OUTPUT_FORMAT__,elf

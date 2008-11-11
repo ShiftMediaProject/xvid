@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: gmc_mmx.asm,v 1.3 2008-08-19 09:06:48 Isibaar Exp $
+; * $Id: gmc_mmx.asm,v 1.4 2008-11-11 20:46:24 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -39,15 +39,19 @@ bits 32
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -139,7 +143,7 @@ xvid_GMC_Core_Lin_8_mmx:
   movq [eax], mm5
 
   ret
-.endfunc
+ENDFUNC
 
 ;//////////////////////////////////////////////////////////////////////
 ;// SSE2 version
@@ -204,7 +208,7 @@ xvid_GMC_Core_Lin_8_sse2:
   movq [eax], xmm5
 
   ret
-.endfunc
+ENDFUNC
 
 ;//////////////////////////////////////////////////////////////////////
 

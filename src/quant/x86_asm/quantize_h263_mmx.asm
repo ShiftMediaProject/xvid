@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_h263_mmx.asm,v 1.8 2008-08-19 09:06:48 Isibaar Exp $
+; * $Id: quantize_h263_mmx.asm,v 1.9 2008-11-11 20:46:24 Isibaar Exp $
 ; *
 ; ****************************************************************************/
 
@@ -35,15 +35,19 @@ BITS 32
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -161,7 +165,7 @@ quant_h263_intra_mmx:
   movq mm7, [mmx_div+ecx * 8 - 8]
   mov ecx,4
 
-.loop
+.loop:
   movq mm0, [esi]           ; data      
   pxor mm4,mm4
   movq mm1, [esi + 8]
@@ -193,10 +197,10 @@ quant_h263_intra_mmx:
   jne .loop
   jmp .end
    
-.low
+.low:
   movd mm7,ecx
   mov ecx,4
-.loop_low  
+.loop_low:  
   movq mm0, [esi]           
   pxor mm4,mm4
   movq mm1, [esi + 8]
@@ -227,14 +231,14 @@ quant_h263_intra_mmx:
   lea edx, [edx+32]
   jne .loop_low
   
-.end
+.end:
   mov edx, [esp + 4 + 4]     ; coeff
   mov [edx],ax  
   xor eax,eax                ; return 0
 
   pop esi
   ret
-.endfunc
+ENDFUNC
  
 
 ;-----------------------------------------------------------------------------
@@ -273,7 +277,7 @@ quant_h263_intra_sse2:
   mov ecx,2
   movlhps xmm7,xmm7
 
-.loop
+.loop:
   movdqa xmm0, [esi]           
   pxor xmm4,xmm4
   movdqa xmm1, [esi + 16]
@@ -305,10 +309,10 @@ quant_h263_intra_sse2:
   jne .loop
   jmp .end
    
-.low
+.low:
   movd xmm7,ecx
   mov ecx,2
-.loop_low  
+.loop_low:  
   movdqa xmm0, [esi]           
   pxor xmm4,xmm4
   movdqa xmm1, [esi + 16]
@@ -339,14 +343,14 @@ quant_h263_intra_sse2:
   lea edx, [edx+64]
   jne .loop_low
   
-.end
+.end:
   mov edx, [esp + 4 + 4]     ; coeff
   mov [edx],ax  
   xor eax,eax                ; return 0
 
   pop esi
   ret
-.endfunc
+ENDFUNC
  
 ;-----------------------------------------------------------------------------
 ;
@@ -379,7 +383,7 @@ quant_h263_inter_mmx:
   movq mm7, [mmx_div + eax * 8 - 8] ; divider
 
 ALIGN 8
-.loop
+.loop:
   movq mm0, [esi + 8*ecx]           ; mm0 = [1st]
   movq mm3, [esi + 8*ecx + 8]
   pxor mm1, mm1                     ; mm1 = 0
@@ -407,7 +411,7 @@ ALIGN 8
   cmp ecx, 16
   jnz .loop
 
-.done
+.done:
   pmaddwd mm5, [plus_one]
   movq mm0, mm5
   psrlq mm5, 32
@@ -421,7 +425,7 @@ ALIGN 8
   ret
 
 ALIGN 8
-.q1loop
+.q1loop:
   movq mm0, [esi + 8*ecx]           ; mm0 = [1st]
   movq mm3, [esi + 8*ecx+ 8]        ;
   pxor mm1, mm1                     ; mm1 = 0
@@ -450,7 +454,7 @@ ALIGN 8
   jnz .q1loop
 
   jmp .done
-.endfunc
+ENDFUNC
 
 
 
@@ -484,13 +488,13 @@ quant_h263_inter_sse2:
   cmp al, 1
   jz near .qes2_q1loop
 
-.qes2_not1
+.qes2_not1:
   movq mm0, [mmx_div + eax*8 - 8]           ; divider
   movq2dq xmm7, mm0
   movlhps xmm7, xmm7
 
 ALIGN 16
-.qes2_loop
+.qes2_loop:
   movdqa xmm0, [esi + ecx*8]                ; xmm0 = [1st]
   movdqa xmm3, [esi + ecx*8 + 16]           ; xmm3 = [2nd]
   pxor xmm1, xmm1
@@ -518,7 +522,7 @@ ALIGN 16
   cmp ecx, 16
   jnz .qes2_loop
 
-.qes2_done
+.qes2_done:
   movdqu xmm6, [plus_one]
   pmaddwd xmm5, xmm6
   movhlps xmm6, xmm5
@@ -537,7 +541,7 @@ ALIGN 16
   ret
 
 ALIGN 16
-.qes2_q1loop
+.qes2_q1loop:
   movdqa xmm0, [esi + ecx*8]        ; xmm0 = [1st]
   movdqa xmm3, [esi + ecx*8 + 16]   ; xmm3 = [2nd]
   pxor xmm1, xmm1
@@ -565,7 +569,7 @@ ALIGN 16
   cmp ecx, 16
   jnz .qes2_q1loop
   jmp .qes2_done
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -651,7 +655,7 @@ dequant_h263_intra_mmx:
 
   xor eax, eax                    ; return 0
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -736,7 +740,7 @@ dequant_h263_intra_xmm:
 
   xor eax, eax                      ; return 0
   ret
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -825,7 +829,7 @@ dequant_h263_intra_sse2:
 
   xor eax, eax                  ; return 0
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -896,7 +900,7 @@ dequant_h263_inter_mmx:
   
   xor eax, eax              ; return 0
   ret
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -965,7 +969,7 @@ dequant_h263_inter_xmm:
 
   xor eax, eax              ; return 0
   ret
-.endfunc
+ENDFUNC
 
  
 ;-----------------------------------------------------------------------------
@@ -1037,7 +1041,7 @@ dequant_h263_inter_sse2:
 
   xor eax, eax              ; return 0
   ret
-.endfunc
+ENDFUNC
 
 
 %ifidn __OUTPUT_FORMAT__,elf

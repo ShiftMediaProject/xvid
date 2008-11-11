@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: colorspace_yuv_mmx.asm,v 1.7 2008-08-19 09:06:48 Isibaar Exp $
+; * $Id: colorspace_yuv_mmx.asm,v 1.8 2008-11-11 20:46:24 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -30,15 +30,19 @@ BITS 32
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -352,7 +356,7 @@ NAME:
   PLANE_FILL [u_dst], [uv_dst_stride], [width2], [height2], OPT
   PLANE_FILL [v_dst], [uv_dst_stride], [width2], [height2], OPT
   jmp near .Done_UVPlane
-.endfunc
+ENDFUNC
 %endmacro
 
 ;=============================================================================

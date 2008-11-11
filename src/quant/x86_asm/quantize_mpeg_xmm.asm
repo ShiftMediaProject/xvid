@@ -20,7 +20,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_mpeg_xmm.asm,v 1.7 2008-08-19 09:06:48 Isibaar Exp $
+; * $Id: quantize_mpeg_xmm.asm,v 1.8 2008-11-11 20:46:24 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -36,15 +36,19 @@ BITS 32
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -204,7 +208,7 @@ quant_mpeg_inter_xmm:
   nop
 
 ALIGN 16
-.loop
+.loop:
   movq mm1, [eax + 8*esi+112]       ; mm0 = [1st]
   psubw mm0, mm1 ;-mm1
   movq mm4, [eax + 8*esi + 120] ;
@@ -252,7 +256,7 @@ ALIGN 16
   movq [edx + 8*esi +120-16], mm7
   jng near .loop
 
-.done
+.done:
 ; calculate  data[0] // (int32_t)dcscalar)
   paddw mm2, [ebx]
   mov ebx, [esp+24]
@@ -268,7 +272,7 @@ ALIGN 16
   ret
 
 ALIGN 16
-.q1loop
+.q1loop:
   movq mm1, [eax + 8*esi+112]       ; mm0 = [1st]
   psubw mm0, mm1                    ;-mm1
   movq mm4, [eax + 8*esi+120]
@@ -317,7 +321,7 @@ ALIGN 16
   jmp near .done
 
 ALIGN 8
-.lloop
+.lloop:
   movq mm1, [eax + 8*esi+112]       ; mm0 = [1st]
   psubw mm0,mm1         ;-mm1
   movq mm4, [eax + 8*esi+120]
@@ -367,7 +371,7 @@ ALIGN 8
   movq [edx + 8*esi +120-16], mm7
   jng near .lloop
   jmp near .done
-.endfunc
+ENDFUNC
 
 
 ;-----------------------------------------------------------------------------
@@ -487,7 +491,7 @@ ALIGN 4
 
   xor eax, eax
   ret
-.endfunc
+ENDFUNC
 
 ;-----------------------------------------------------------------------------
 ;
@@ -522,7 +526,7 @@ dequant_mpeg_inter_3dne:
   nop4
 
 ALIGN 16
-.loop
+.loop:
   movq mm0, [ecx+8*eax + 7*16   ]   ; mm0 = coeff[i]
   pcmpgtw mm1, mm0  ; mm1 = sgn(c)    (preserved)
   movq mm2, [ecx+8*eax + 7*16 +8]   ; mm2 = coeff[i+1]
@@ -602,7 +606,7 @@ ALIGN 16
 
   xor eax, eax
   ret
-.endfunc
+ENDFUNC
 
 
 %ifidn __OUTPUT_FORMAT__,elf

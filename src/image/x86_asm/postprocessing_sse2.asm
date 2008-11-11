@@ -29,15 +29,19 @@ BITS 32
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -108,10 +112,10 @@ image_brightness_sse2:
   mov esi, [esp+8+32+12] ; width
   mov edi, [esp+8+32+16] ; height
 
-.yloop
+.yloop:
   xor eax, eax
 
-.xloop
+.xloop:
   movdqa xmm0, [edx + eax]
   movdqa xmm1, [edx + eax + 16] ; xmm0 = [dst]
 
@@ -138,7 +142,7 @@ image_brightness_sse2:
   pop esi
 
   ret
-.endfunc
+ENDFUNC
 ;//////////////////////////////////////////////////////////////////////
 
 %ifidn __OUTPUT_FORMAT__,elf

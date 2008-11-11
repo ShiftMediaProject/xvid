@@ -20,7 +20,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: cbp_sse2.asm,v 1.8 2008-08-19 09:06:48 Isibaar Exp $
+; * $Id: cbp_sse2.asm,v 1.9 2008-11-11 20:46:24 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -35,15 +35,19 @@ BITS 32
 		%ifdef MARK_FUNCS
 			global _%1:function %1.endfunc-%1
 			%define %1 _%1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global _%1
 			%define %1 _%1
+			%define ENDFUNC
 		%endif
 	%else
 		%ifdef MARK_FUNCS
 			global %1:function %1.endfunc-%1
+			%define ENDFUNC .endfunc
 		%else
 			global %1
+			%define ENDFUNC
 		%endif
 	%endif
 %endmacro
@@ -106,39 +110,39 @@ calc_cbp_sse2:
   jz .blk2
   or eax, (1<<5)
 
-.blk2
+.blk2:
   LOOP_SSE2 1
   test ecx, ecx
   jz .blk3
   or eax, (1<<4)
 
-.blk3
+.blk3:
   LOOP_SSE2 2
   test ecx, ecx
   jz .blk4
   or eax, (1<<3)
 
-.blk4
+.blk4:
   LOOP_SSE2 3
   test ecx, ecx
   jz .blk5
   or eax, (1<<2)
 
-.blk5
+.blk5:
   LOOP_SSE2 4
   test ecx, ecx
   jz .blk6
   or eax, (1<<1)
 
-.blk6
+.blk6:
   LOOP_SSE2 5
   test ecx, ecx
   jz .finished
   or eax, (1<<0)
 
-.finished
+.finished:
 	ret
-.endfunc
+ENDFUNC
 
 
 %ifidn __OUTPUT_FORMAT__,elf
