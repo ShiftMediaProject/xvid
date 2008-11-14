@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.60 2006-12-06 19:55:07 Isibaar Exp $
+ * $Id: xvid.h,v 1.61 2008-11-14 15:43:27 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -171,6 +171,7 @@ typedef struct {
 #define XVID_CPU_SSE      (1<< 2) /*       sse : pentium3, athlonXP */
 #define XVID_CPU_SSE2     (1<< 3) /*      sse2 : pentium4, athlon64 */
 #define XVID_CPU_SSE3     (1<< 8) /*      sse3 : pentium4, athlon64 */
+#define XVID_CPU_SSE41    (1<< 9) /*      sse41: penryn */
 #define XVID_CPU_3DNOW    (1<< 4) /*     3dnow : k6-2 */
 #define XVID_CPU_3DNOWEXT (1<< 5) /* 3dnow-ext : athlon */
 #define XVID_CPU_TSC      (1<< 6) /*       tsc : Pentium */

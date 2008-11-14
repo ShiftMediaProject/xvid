@@ -358,7 +358,7 @@ if test "$ARCHITECTURE" = "IA32" -o "$ARCHITECTURE" = "X86_64" ; then
    fi
 
    dnl if yasm hasn't been found, then check for nasm (not buggy version)
-   if test "$found_nasm_comp_prog" = "no" -a "$ARCHITECTURE" != "X86_64" ; then
+   if test "$found_nasm_comp_prog" = "no" ; then
        AC_CHECK_PROG([ac_nasm], [$nasm_prog], [yes], [no], , [yes])
        if test "$ac_nasm" = "yes" ; then
            dnl
@@ -379,21 +379,12 @@ if test "$ARCHITECTURE" = "IA32" -o "$ARCHITECTURE" = "X86_64" ; then
            fi
            AC_MSG_RESULT([$nasm_patch])
 
-           if test "$nasm_patch" -lt "$minimum_nasm_patch_version" ; then
-              if test "$nasm_minor" -lt "$minimum_nasm_minor_version" ; then
-                 if test "$nasm_major" -lt "$minimum_nasm_major_version" ; then
-                    AC_MSG_WARN([nasm version is too old])
-                 else
-                   found_nasm_comp_prog="yes"
-		           chosen_asm_prog="$nasm_prog"
-                 fi
-              else
-                 found_nasm_comp_prog="yes"
-                     chosen_asm_prog="$nasm_prog"
-              fi
+           dnl need nasm 2.x for SSE3/4 and X86_64
+           if test "$nasm_major" -lt "$minimum_nasm_major_version" ; then
+             AC_MSG_WARN([nasm version is too old])
            else
-               found_nasm_comp_prog="yes"
-		       chosen_asm_prog="$nasm_prog"
+             found_nasm_comp_prog="yes"
+	       chosen_asm_prog="$nasm_prog"
            fi
        fi
    fi

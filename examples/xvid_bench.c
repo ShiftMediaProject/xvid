@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.35 2006-12-21 23:27:35 Isibaar Exp $
+ * $Id: xvid_bench.c,v 1.36 2008-11-14 15:43:27 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -119,7 +119,9 @@ CPU cpu_list[] = {
 	{ "MMX    ", XVID_CPU_MMX },
 	{ "MMXEXT ", XVID_CPU_MMXEXT | XVID_CPU_MMX },
 	{ "SSE2   ", XVID_CPU_SSE2 | XVID_CPU_MMX },
-	{ "3DNOW  ", XVID_CPU_3DNOW },
+	{ "SSE3   ", XVID_CPU_SSE3 | XVID_CPU_SSE2 | XVID_CPU_MMX },
+	{ "SSE41  ", XVID_CPU_SSE41| XVID_CPU_SSE3 | XVID_CPU_SSE2 | XVID_CPU_MMX },
+    { "3DNOW  ", XVID_CPU_3DNOW },
 	{ "3DNOWE ", XVID_CPU_3DNOW | XVID_CPU_3DNOWEXT },
 #endif
 #ifdef ARCH_IS_PPC
@@ -2180,7 +2182,9 @@ int main(int argc, const char *argv[])
 	  else if (!strcmp(argv[c], "-mmx"))    cpu_mask = XVID_CPU_MMX    | XVID_CPU_FORCE;
 	  else if (!strcmp(argv[c], "-mmxext")) cpu_mask = XVID_CPU_MMXEXT | XVID_CPU_MMX | XVID_CPU_FORCE;
 	  else if (!strcmp(argv[c], "-sse2"))   cpu_mask = XVID_CPU_SSE2   | XVID_CPU_MMXEXT | XVID_CPU_MMX | XVID_CPU_FORCE;
-	  else if (!strcmp(argv[c], "-3dnow"))  cpu_mask = XVID_CPU_3DNOW  | XVID_CPU_FORCE;
+	  else if (!strcmp(argv[c], "-sse3"))   cpu_mask = XVID_CPU_SSE3   | XVID_CPU_SSE2 | XVID_CPU_MMXEXT | XVID_CPU_MMX | XVID_CPU_FORCE;
+	  else if (!strcmp(argv[c], "-sse4"))   cpu_mask = XVID_CPU_SSE41  | XVID_CPU_SSE3 | XVID_CPU_SSE2 | XVID_CPU_MMXEXT | XVID_CPU_MMX | XVID_CPU_FORCE;
+      else if (!strcmp(argv[c], "-3dnow"))  cpu_mask = XVID_CPU_3DNOW  | XVID_CPU_FORCE;
 	  else if (!strcmp(argv[c], "-3dnowe")) cpu_mask = XVID_CPU_3DNOW  | XVID_CPU_3DNOWEXT | XVID_CPU_FORCE;
 	  else if (!strcmp(argv[c], "-altivec")) cpu_mask = XVID_CPU_ALTIVEC | XVID_CPU_FORCE;
 	  else if (!strcmp(argv[c], "-spd")) {

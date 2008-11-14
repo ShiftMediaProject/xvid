@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: gmc.c,v 1.7 2006-11-07 19:59:03 Skal Exp $
+ * $Id: gmc.c,v 1.8 2008-11-14 15:43:27 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -400,6 +400,9 @@ extern void xvid_GMC_Core_Lin_8_mmx(uint8_t *Dst, const uint16_t * Offsets,
 extern void xvid_GMC_Core_Lin_8_sse2(uint8_t *Dst, const uint16_t * Offsets, 
                                      const uint8_t * const Src0, const int BpS, const int Rounder);
 
+extern void xvid_GMC_Core_Lin_8_sse41(uint8_t *Dst, const uint16_t * Offsets, 
+                                      const uint8_t * const Src0, const int BpS, const int Rounder);
+
 /* *************************************************************/
 
 static void GMC_Core_Non_Lin_8(uint8_t *Dst, 
@@ -590,14 +593,20 @@ void init_GMC(const unsigned int cpu_flags)
 #if defined(ARCH_IS_IA32)
       if ((cpu_flags & XVID_CPU_MMX)   || (cpu_flags & XVID_CPU_MMXEXT)   ||
           (cpu_flags & XVID_CPU_3DNOW) || (cpu_flags & XVID_CPU_3DNOWEXT) ||
-          (cpu_flags & XVID_CPU_SSE)   || (cpu_flags & XVID_CPU_SSE2))
+          (cpu_flags & XVID_CPU_SSE)   || (cpu_flags & XVID_CPU_SSE2) ||
+          (cpu_flags & XVID_CPU_SSE3)  || (cpu_flags & XVID_CPU_SSE41))
 	{
 	   Predict_16x16_func = Predict_16x16_mmx;
 	   Predict_8x8_func   = Predict_8x8_mmx;
+#if 0
+       if (cpu_flags & XVID_CPU_SSE41)
+	     GMC_Core_Lin_8 = xvid_GMC_Core_Lin_8_sse41;
+	   else
+#endif
 	   if (cpu_flags & XVID_CPU_SSE2)
 	     GMC_Core_Lin_8 = xvid_GMC_Core_Lin_8_sse2;
 	   else
-             GMC_Core_Lin_8 = xvid_GMC_Core_Lin_8_mmx;
+         GMC_Core_Lin_8 = xvid_GMC_Core_Lin_8_mmx;
 	}
 #endif
 }

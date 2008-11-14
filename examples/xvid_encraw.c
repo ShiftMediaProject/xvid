@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.34 2007-01-09 20:08:53 Isibaar Exp $
+ * $Id: xvid_encraw.c,v 1.35 2008-11-14 15:43:27 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -2021,7 +2021,11 @@ enc_info()
 		fprintf(stderr, "SSE ");
 	if (xvid_gbl_info.cpu_flags & XVID_CPU_SSE2)
 		fprintf(stderr, "SSE2 ");
-	if (xvid_gbl_info.cpu_flags & XVID_CPU_3DNOW)
+	if (xvid_gbl_info.cpu_flags & XVID_CPU_SSE3)
+		fprintf(stderr, "SSE3 ");
+	if (xvid_gbl_info.cpu_flags & XVID_CPU_SSE41)
+		fprintf(stderr, "SSE41 ");
+    if (xvid_gbl_info.cpu_flags & XVID_CPU_3DNOW)
 		fprintf(stderr, "3DNOW ");
 	if (xvid_gbl_info.cpu_flags & XVID_CPU_3DNOWEXT)
 		fprintf(stderr, "3DNOWEXT ");
