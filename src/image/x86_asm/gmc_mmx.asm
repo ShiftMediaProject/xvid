@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: gmc_mmx.asm,v 1.4 2008-11-11 20:46:24 Isibaar Exp $
+; * $Id: gmc_mmx.asm,v 1.5 2008-11-14 15:43:27 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -60,6 +60,7 @@ bits 32
 
 cglobal xvid_GMC_Core_Lin_8_mmx
 cglobal xvid_GMC_Core_Lin_8_sse2
+cglobal xvid_GMC_Core_Lin_8_sse41
 
 ;//////////////////////////////////////////////////////////////////////
 
@@ -148,7 +149,7 @@ ENDFUNC
 ;//////////////////////////////////////////////////////////////////////
 ;// SSE2 version
 
-%macro GMC_8_SSE2 0
+%macro GMC_8_SSE2 1
   
   pcmpeqw   xmm0, xmm0
   movdqa    xmm1, [eax     ]  ; u...
@@ -167,17 +168,27 @@ ENDFUNC
   pmullw    xmm0, xmm4    ; (16-u).(16-v)
   pmullw    xmm1, xmm4    ;     u .(16-v)
 
+%if (%1!=0) ; SSE41
+  pmovzxbw  xmm4, [ecx+edx  ]  ; src2
+  pmovzxbw  xmm5, [ecx+edx+1]  ; src3
+%else
   movq      xmm4, [ecx+edx  ]  ; src2
   movq      xmm5, [ecx+edx+1]  ; src3
   punpcklbw xmm4, xmm7
   punpcklbw xmm5, xmm7
+%endif
   pmullw    xmm2, xmm4
   pmullw    xmm3, xmm5
 
+%if (%1!=0) ; SSE41
+  pmovzxbw  xmm4, [ecx      ]  ; src0
+  pmovzxbw  xmm5, [ecx    +1]  ; src1
+%else
   movq      xmm4, [ecx      ]  ; src0
   movq      xmm5, [ecx    +1]  ; src1
   punpcklbw xmm4, xmm7
   punpcklbw xmm5, xmm7
+%endif
   pmullw    xmm4, xmm0
   pmullw    xmm5, xmm1
 
@@ -195,7 +206,28 @@ xvid_GMC_Core_Lin_8_sse2:
 
   pxor     xmm7, xmm7
 
-  GMC_8_SSE2
+  GMC_8_SSE2 0
+
+  movd      xmm4, [esp +20]
+  pshuflw   xmm4, xmm4, 01010101b  ; Rounder (bits [16..31])
+  punpckldq xmm4, xmm4
+  mov  eax, [esp + 4]  ; Dst
+
+  paddw    xmm5, xmm4
+  psrlw    xmm5, 8
+  packuswb xmm5, xmm5
+  movq [eax], xmm5
+
+  ret
+ENDFUNC
+
+align 16
+xvid_GMC_Core_Lin_8_sse41:
+  mov  eax, [esp + 8]  ; Offsets
+  mov  ecx, [esp +12]  ; Src0
+  mov  edx, [esp +16]  ; BpS
+
+  GMC_8_SSE2 1
 
   movd      xmm4, [esp +20]
   pshuflw   xmm4, xmm4, 01010101b  ; Rounder (bits [16..31])
