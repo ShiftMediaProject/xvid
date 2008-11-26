@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_mpeg_mmx.asm,v 1.12 2008-11-26 02:21:02 Isibaar Exp $
+; * $Id: quantize_mpeg_mmx.asm,v 1.13 2008-11-26 23:35:50 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -445,8 +445,8 @@ dequant_mpeg_intra_mmx:
   mov _EBX, _EAX
 %ifdef ARCH_IS_X86_64
   mov _EAX, prm3
-  lea r9, [mmx_mul_quant]
-  movq mm7, [r9 + _EAX*8 - 8]
+  lea prm1, [mmx_mul_quant]
+  movq mm7, [prm1 + _EAX*8 - 8]
 %else
   mov _EAX, [_ESP + 4 + 12] ; quant
   movq mm7, [mmx_mul_quant  + _EAX*8 - 8]

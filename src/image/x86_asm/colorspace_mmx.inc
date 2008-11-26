@@ -48,7 +48,7 @@ NAME:
 %define shadow          0
 %else
 %define pushsize	4*PTR_SIZE
-%define shadow          32 + 16
+%define shadow          32 + 2*PTR_SIZE
 %endif
 
 %define prm_vflip           dword [_ESP + localsize + pushsize + shadow + 4*PTR_SIZE]
@@ -57,8 +57,8 @@ NAME:
 %define prm_uv_stride       dword [_ESP + localsize + pushsize + shadow + 1*PTR_SIZE]
 
 %ifdef WINDOWS
-%define prm_y_stride        dword [_ESP + localsize + pushsize + shadow - 1*PTR_SIZE]
-%define prm_v_ptr           [_ESP + localsize + pushsize + shadow - 2*PTR_SIZE]
+%define prm_y_stride        dword [_ESP + localsize + pushsize + shadow + 0*PTR_SIZE]
+%define prm_v_ptr           [_ESP + localsize + pushsize + shadow - 1*PTR_SIZE]
 
   push _ESI    ;   esp + localsize + 8
   push _EDI    ;   esp + localsize + 4

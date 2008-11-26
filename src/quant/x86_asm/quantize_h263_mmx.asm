@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_h263_mmx.asm,v 1.10 2008-11-26 01:04:34 Isibaar Exp $
+; * $Id: quantize_h263_mmx.asm,v 1.11 2008-11-26 23:35:50 Isibaar Exp $
 ; *
 ; ****************************************************************************/
 
@@ -128,10 +128,20 @@ quant_h263_intra_mmx:
   add _EAX,TMP0            ; + (dcscalar/2)*sgn(data[0])
 
   mov TMP0, prm3     ; quant
-  cdq 
-  idiv prm4d         ; dcscalar
   lea TMP1, [mmx_div]
   movq mm7, [TMP1+TMP0 * 8 - 8]
+%ifdef ARCH_IS_X86_64
+%ifdef WINDOWS
+  mov TMP1, prm2
+%endif
+%endif
+  cdq 
+  idiv prm4d         ; dcscalar
+%ifdef ARCH_IS_X86_64
+%ifdef WINDOWS
+  mov prm2, TMP1
+%endif
+%endif
   cmp TMP0, 1
   mov TMP1, prm1     ; coeff
   je .low
@@ -249,11 +259,22 @@ quant_h263_intra_sse2:
   sub TMP1,TMP0
   cmovl _EAX,TMP1              ; +/- dcscalar/2
   mov TMP0, prm3    ; quant
-  cdq 
-  idiv prm4d  ; dcscalar
-  cmp TMP0, 1
   lea TMP1, [mmx_div]
   movq xmm7, [TMP1+TMP0 * 8 - 8]
+
+%ifdef ARCH_IS_X86_64
+%ifdef WINDOWS
+  mov TMP1, prm2
+%endif
+%endif
+  cdq 
+  idiv prm4d  ; dcscalar
+%ifdef ARCH_IS_X86_64
+%ifdef WINDOWS
+  mov prm2, TMP1
+%endif
+%endif
+  cmp TMP0, 1
   mov TMP1, prm1     ; coeff
   je near .low
   
