@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: colorspace_yuv_mmx.asm,v 1.9 2008-11-26 01:04:34 Isibaar Exp $
+; * $Id: colorspace_yuv_mmx.asm,v 1.10 2008-11-26 23:35:50 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -45,11 +45,11 @@
 
 %macro	PLANE_COPY	7
 %define DST		        %1
-%define DST_STRIDE      %2
+%define DST_STRIDE      	%2
 %define SRC		        %3
-%define SRC_STRIDE      %4
-%define WIDTH		    %5
-%define HEIGHT		    %6
+%define SRC_STRIDE      	%4
+%define WIDTH		    	%5
+%define HEIGHT                  %6
 %define OPT		        %7
 
   mov _EBX, WIDTH 
@@ -141,6 +141,7 @@
   add SRC, SRC_STRIDE
   add DST, DST_STRIDE
 %endif
+
   dec HEIGHT 
   jg near %%loop64_start_pc
 
@@ -281,7 +282,7 @@ NAME:
 %define shadow          0
 %else
 %define pushsize	4*PTR_SIZE
-%define shadow          32 + 16
+%define shadow          32 + 2*PTR_SIZE 
 %endif
 
 %define prm_vflip	        dword [_ESP + localsize + pushsize + shadow + 7*PTR_SIZE]
@@ -309,8 +310,8 @@ NAME:
   mov _EDI, prm1
   mov TMP1, prm2
 
-  mov _ESI, [_ESP + localsize + pushsize + shadow - 1*PTR_SIZE]
-  mov TMP0d, dword [_ESP + localsize + pushsize + shadow - 2*PTR_SIZE]
+  mov _ESI, [_ESP + localsize + pushsize + shadow + 0*PTR_SIZE]
+  mov TMP0d, dword [_ESP + localsize + pushsize + shadow - 1*PTR_SIZE]
 
 %else
   push _EBP	;	_ESP + localsize + 0*PTR_SIZE
@@ -384,7 +385,7 @@ NAME:
   mov ecx, prm_y_src_stride
   sub eax, 1
   imul eax, ecx 
-  add _ESI, _EAX                 ; y_src += (height-1) * y_src_stride
+  add _ESI, _EAX                ; y_src += (height-1) * y_src_stride
   neg ecx 
   mov prm_y_src_stride, ecx     ; y_src_stride = -y_src_stride
 
@@ -398,8 +399,8 @@ NAME:
   jz .go
   sub eax, 1                     ; _EAX = height2 - 1
   imul eax, ecx 
-  add _EDX, _EAX                  ; u_src += (height2-1) * uv_src_stride
-  add _EBP, _EAX                  ; v_src += (height2-1) * uv_src_stride
+  add _EDX, _EAX                 ; u_src += (height2-1) * uv_src_stride
+  add _EBP, _EAX                 ; v_src += (height2-1) * uv_src_stride
   neg ecx 
   mov prm_u_src, _EDX 
   mov prm_v_src, _EBP 

@@ -505,12 +505,12 @@ ENDFUNC
 ALIGN SECTION_ALIGN
 interpolate8x8_avg2_mmx:
 
-  mov _EAX, prm5   ; rounding
+  mov eax, prm5d   ; rounding
   test _EAX, _EAX
 
   jnz near .rounding1
 
-  mov _EAX, prm6   ; height -> _EAX
+  mov eax, prm6d   ; height -> _EAX
   sub _EAX, 8
   test _EAX, _EAX
 
@@ -546,7 +546,7 @@ interpolate8x8_avg2_mmx:
   ret
 
 .rounding1:
-  mov _EAX, prm6        ; height -> _EAX
+  mov eax, prm6d        ; height -> _EAX
   sub _EAX, 8
   test _EAX, _EAX
 
@@ -708,12 +708,12 @@ ENDFUNC
 ALIGN SECTION_ALIGN
 interpolate8x8_avg4_mmx:
 
-  mov _EAX, prm7      ; rounding
+  mov eax, prm7d      ; rounding
   test _EAX, _EAX
 
   mov TMP0, prm1      ; dst -> edi
   mov _EAX, prm5      ; src4 -> edi
-  mov TMP1, prm6      ; stride -> TMP1
+  mov TMP1d, prm6d    ; stride -> TMP1
 
 
   push _EBX

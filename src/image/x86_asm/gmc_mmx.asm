@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: gmc_mmx.asm,v 1.6 2008-11-26 01:04:34 Isibaar Exp $
+; * $Id: gmc_mmx.asm,v 1.7 2008-11-26 23:35:50 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -104,7 +104,7 @@ xvid_GMC_Core_Lin_8_mmx:
   GMC_4_SSE 0, mm5
   GMC_4_SSE 4, mm6
 
-;  pshufw   mm4, prm5, 01010101b  ; Rounder (bits [16..31])
+;  pshufw   mm4, prm5d, 01010101b  ; Rounder (bits [16..31])
   movd      mm4, prm5d   ; Rounder (bits [16..31])
   mov       _EAX, prm1  ; Dst
   punpcklwd mm4, mm4

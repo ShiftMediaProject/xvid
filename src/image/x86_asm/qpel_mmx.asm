@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: qpel_mmx.asm,v 1.8 2008-11-26 01:04:34 Isibaar Exp $
+; * $Id: qpel_mmx.asm,v 1.9 2008-11-26 23:35:50 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -256,13 +256,8 @@ SECTION .rotext align=SECTION_ALIGN
   lea r9, [%2]
   paddw %1, [r9 + %3]
 %endmacro
-%ifdef WINDOWS
-%define SRC_PTR _EDX
-%define DST_PTR _ECX
-%else
-%define SRC_PTR _ESI
-%define DST_PTR _EDI
-%endif
+%define SRC_PTR prm2 
+%define DST_PTR prm1 
 %else
 %macro XVID_MOVQ 3
   movq %1, [%2 + %3]
@@ -772,7 +767,7 @@ ENDFUNC
 %endif
 
   movd eax, %3
-  mov [DST_PTR], _EAX
+  mov dword [DST_PTR], eax 
 
 %if (%4==0)
   add DST_PTR, _EBP
