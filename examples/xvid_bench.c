@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.37 2008-11-26 09:31:06 Isibaar Exp $
+ * $Id: xvid_bench.c,v 1.38 2008-11-26 23:37:28 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -410,6 +410,15 @@ void test_sad()
 		printf( "%s - sad16bi %.3f usec       sad=%d %s\n",
 				cpu->name, t, s,
 				(s!=26274)?"| ERROR": "" );
+
+                t = gettime_usec();
+                emms();
+                for(tst=0; tst<nb_tests; ++tst) s = sad8bi(Cur, Ref1, Ref2, 8);
+                emms();
+                t = (gettime_usec() - t) / nb_tests;
+                printf( "%s - sad8bi %.3f usec       sad=%d %s\n",
+                                cpu->name, t, s,
+                                (s!=4002)?"| ERROR": "" );
 
 		t = gettime_usec();
 		emms();
