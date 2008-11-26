@@ -19,48 +19,22 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: sad_3dne.asm,v 1.9 2008-11-11 20:46:24 Isibaar Exp $
+; * $Id: sad_3dne.asm,v 1.10 2008-11-26 01:04:34 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
 ; these 3dne functions are compatible with iSSE, but are optimized specifically
 ; for K7 pipelines
 
-BITS 32
-
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
+%include "nasm.inc"
 
 ;=============================================================================
 ; Read only data
 ;=============================================================================
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
+DATA
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 mmx_one:
 	times 4	dw 1
 
@@ -70,32 +44,32 @@ mmx_one:
 
 	;; %1 block number (0..4)
 %macro SAD_16x16_SSE 1
-  movq mm7, [eax]
-  movq mm6, [eax+8]
-  psadbw mm7, [edx]
-  psadbw mm6, [edx+8]
+  movq mm7, [_EAX]
+  movq mm6, [_EAX+8]
+  psadbw mm7, [TMP1]
+  psadbw mm6, [TMP1+8]
 %if (%1)
   paddd mm1, mm5
 %endif
-  movq mm5, [eax+ecx]
-  movq mm4, [eax+ecx+8]
-  psadbw mm5, [edx+ecx]
-  psadbw mm4, [edx+ecx+8]
-  movq mm3, [eax+2*ecx]
-  movq mm2, [eax+2*ecx+8]
-  psadbw mm3, [edx+2*ecx]
-  psadbw mm2, [edx+2*ecx+8]
+  movq mm5, [_EAX+TMP0]
+  movq mm4, [_EAX+TMP0+8]
+  psadbw mm5, [TMP1+TMP0]
+  psadbw mm4, [TMP1+TMP0+8]
+  movq mm3, [_EAX+2*TMP0]
+  movq mm2, [_EAX+2*TMP0+8]
+  psadbw mm3, [TMP1+2*TMP0]
+  psadbw mm2, [TMP1+2*TMP0+8]
 %if (%1)
-  movd [esp+4*(%1-1)], mm1
+  movd [_ESP+4*(%1-1)], mm1
 %else
-  sub esp, byte 12
+  sub _ESP, byte 12
 %endif
-  movq mm1, [eax+ebx]
-  movq mm0, [eax+ebx+8]
-  psadbw mm1, [edx+ebx]
-  psadbw mm0, [edx+ebx+8]
-  lea eax, [eax+4*ecx]
-  lea edx, [edx+4*ecx]
+  movq mm1, [_EAX+_EBX]
+  movq mm0, [_EAX+_EBX+8]
+  psadbw mm1, [TMP1+_EBX]
+  psadbw mm0, [TMP1+_EBX+8]
+  lea _EAX, [_EAX+4*TMP0]
+  lea TMP1, [TMP1+4*TMP0]
   paddd mm7, mm6
   paddd mm5, mm4
   paddd mm3, mm2
@@ -105,119 +79,119 @@ mmx_one:
 %endmacro
 
 %macro SADBI_16x16_SSE0 0
-  movq mm2, [edx]
-  movq mm3, [edx+8]
+  movq mm2, [TMP1]
+  movq mm3, [TMP1+8]
 
-  movq mm5, [byte eax]
-  movq mm6, [eax+8]
-  pavgb mm2, [byte ebx]
-  pavgb mm3, [ebx+8]
+  movq mm5, [byte _EAX]
+  movq mm6, [_EAX+8]
+  pavgb mm2, [byte _EBX]
+  pavgb mm3, [_EBX+8]
 
-  add edx, ecx
+  add TMP1, TMP0
   psadbw mm5, mm2
   psadbw mm6, mm3
 
-  add eax, ecx
-  add ebx, ecx
-  movq mm2, [byte edx]
+  add _EAX, TMP0
+  add _EBX, TMP0
+  movq mm2, [byte TMP1]
 
-  movq mm3, [edx+8]
-  movq mm0, [byte eax]
+  movq mm3, [TMP1+8]
+  movq mm0, [byte _EAX]
 
-  movq mm1, [eax+8]
-  pavgb mm2, [byte ebx]
+  movq mm1, [_EAX+8]
+  pavgb mm2, [byte _EBX]
 
-  pavgb mm3, [ebx+8]
-  add edx, ecx
-  add eax, ecx
+  pavgb mm3, [_EBX+8]
+  add TMP1, TMP0
+  add _EAX, TMP0
 
-  add ebx, ecx
+  add _EBX, TMP0
   psadbw mm0, mm2
   psadbw mm1, mm3
 
 %endmacro
 
 %macro SADBI_16x16_SSE 0
-  movq mm2, [byte edx]
-  movq mm3, [edx+8]
+  movq mm2, [byte TMP1]
+  movq mm3, [TMP1+8]
   paddusw mm5, mm0
   paddusw mm6, mm1
-  movq mm0, [eax]
-  movq mm1, [eax+8]
-  pavgb mm2, [ebx]
-  pavgb mm3, [ebx+8]
-  add edx, ecx
-  add eax, ecx
-  add ebx, ecx
+  movq mm0, [_EAX]
+  movq mm1, [_EAX+8]
+  pavgb mm2, [_EBX]
+  pavgb mm3, [_EBX+8]
+  add TMP1, TMP0
+  add _EAX, TMP0
+  add _EBX, TMP0
   psadbw mm0, mm2
   psadbw mm1, mm3
 %endmacro
 
 %macro SADBI_8x8_3dne 0
-  movq mm2, [edx]
-  movq mm3, [edx+ecx]
-  pavgb mm2, [eax]
-  pavgb mm3, [eax+ecx]
-  lea edx, [edx+2*ecx]
-  lea eax, [eax+2*ecx]
+  movq mm2, [TMP1]
+  movq mm3, [TMP1+TMP0]
+  pavgb mm2, [_EAX]
+  pavgb mm3, [_EAX+TMP0]
+  lea TMP1, [TMP1+2*TMP0]
+  lea _EAX, [_EAX+2*TMP0]
   paddusw mm5, mm0
   paddusw mm6, mm1
-  movq mm0, [ebx]
-  movq mm1, [ebx+ecx]
-  lea ebx, [ebx+2*ecx]
+  movq mm0, [_EBX]
+  movq mm1, [_EBX+TMP0]
+  lea _EBX, [_EBX+2*TMP0]
   psadbw mm0, mm2
   psadbw mm1, mm3
 %endmacro
 
 %macro ABS_16x16_SSE 1
 %if (%1 == 0)
-  movq mm7, [eax]
+  movq mm7, [_EAX]
   psadbw mm7, mm4
   mov esi, esi
-  movq mm6, [eax+8]
-  movq mm5, [eax+ecx]
-  movq mm3, [eax+ecx+8]
+  movq mm6, [_EAX+8]
+  movq mm5, [_EAX+TMP0]
+  movq mm3, [_EAX+TMP0+8]
   psadbw mm6, mm4
 
-  movq mm2, [byte eax+2*ecx]
+  movq mm2, [byte _EAX+2*TMP0]
   psadbw mm5, mm4
-  movq mm1, [eax+2*ecx+8]
+  movq mm1, [_EAX+2*TMP0+8]
   psadbw mm3, mm4
 
-  movq mm0, [eax+edx+0]
+  movq mm0, [_EAX+TMP1+0]
   psadbw mm2, mm4
-  add eax, edx
+  add _EAX, TMP1
   psadbw mm1, mm4
 %endif
 %if (%1 == 1)
   psadbw mm0, mm4
   paddd mm7, mm0
-  movq mm0, [eax+8]
+  movq mm0, [_EAX+8]
   psadbw mm0, mm4
   paddd mm6, mm0
 
-  movq mm0, [byte eax+ecx]
+  movq mm0, [byte _EAX+TMP0]
   psadbw mm0, mm4
 
   paddd mm5, mm0
-  movq mm0, [eax+ecx+8]
+  movq mm0, [_EAX+TMP0+8]
 
   psadbw mm0, mm4
   paddd mm3, mm0
-  movq mm0, [eax+2*ecx]
+  movq mm0, [_EAX+2*TMP0]
   psadbw mm0, mm4
   paddd mm2, mm0
 
-  movq mm0, [eax+2*ecx+8]
-  add eax, edx
+  movq mm0, [_EAX+2*TMP0+8]
+  add _EAX, TMP1
   psadbw mm0, mm4
   paddd mm1, mm0
-  movq mm0, [eax]
+  movq mm0, [_EAX]
 %endif
 %if (%1 == 2)
   psadbw mm0, mm4
   paddd mm7, mm0
-  movq mm0, [eax+8]
+  movq mm0, [_EAX+8]
   psadbw mm0, mm4
   paddd mm6, mm0
 %endif
@@ -227,7 +201,7 @@ mmx_one:
 ; Code
 ;=============================================================================
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 cglobal sad16_3dne
 cglobal sad8_3dne
@@ -246,27 +220,27 @@ cglobal dev16_3dne
 
 ; optimization: 21% faster
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 sad16_3dne:
-  mov eax, [esp+ 4] ; Src1
-  mov edx, [esp+ 8] ; Src2
-  mov ecx, [esp+12] ; Stride
-  push ebx
-  lea ebx, [2*ecx+ecx]
+  mov _EAX, prm1 ; Src1
+  mov TMP1, prm2 ; Src2
+  mov TMP0, prm3 ; Stride
+
+  push _EBX
+  lea _EBX, [2*TMP0+TMP0]
 
   SAD_16x16_SSE 0
   SAD_16x16_SSE 1
   SAD_16x16_SSE 2
   SAD_16x16_SSE 3
 
-  mov ecx, [esp]
-  add ecx, [esp+4]
-  add ecx, [esp+8]
   paddd mm1, mm5
-  mov ebx, [esp+12]
-  add esp, byte 4+12
   movd eax, mm1
-  add eax, ecx
+  add eax, dword [_ESP]
+  add eax, dword [_ESP+4]
+  add eax, dword [_ESP+8]
+  mov _EBX, [_ESP+12]
+  add _ESP, byte PTR_SIZE+12
 
   ret
 ENDFUNC
@@ -280,46 +254,46 @@ ENDFUNC
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 sad8_3dne:
 
-  mov eax, [esp+ 4] ; Src1
-  mov ecx, [esp+12] ; Stride
-  mov edx, [esp+ 8] ; Src2
-  push ebx
-  lea ebx, [ecx+2*ecx]
+  mov _EAX, prm1 ; Src1
+  mov TMP0, prm3 ; Stride
+  mov TMP1, prm2 ; Src2
+  push _EBX
+  lea _EBX, [TMP0+2*TMP0]
 
-  movq mm0, [byte eax]      ;0
-  psadbw mm0, [byte edx]
-  movq mm1, [eax+ecx]       ;1
-  psadbw mm1, [edx+ecx]
+  movq mm0, [byte _EAX]      ;0
+  psadbw mm0, [byte TMP1]
+  movq mm1, [_EAX+TMP0]       ;1
+  psadbw mm1, [TMP1+TMP0]
 
-  movq mm2, [eax+2*ecx]     ;2
-  psadbw mm2, [edx+2*ecx]
-  movq mm3, [eax+ebx]       ;3
-  psadbw mm3, [edx+ebx]
+  movq mm2, [_EAX+2*TMP0]     ;2
+  psadbw mm2, [TMP1+2*TMP0]
+  movq mm3, [_EAX+_EBX]       ;3
+  psadbw mm3, [TMP1+_EBX]
 
   paddd mm0, mm1
 
-  movq mm4, [byte eax+4*ecx];4
-  psadbw mm4, [edx+4*ecx]
-  movq mm5, [eax+2*ebx]     ;6
-  psadbw mm5, [edx+2*ebx]
+  movq mm4, [byte _EAX+4*TMP0];4
+  psadbw mm4, [TMP1+4*TMP0]
+  movq mm5, [_EAX+2*_EBX]     ;6
+  psadbw mm5, [TMP1+2*_EBX]
 
   paddd mm2, mm3
   paddd mm0, mm2
 
-  lea ebx, [ebx+4*ecx]      ;3+4=7
-  lea ecx, [ecx+4*ecx]      ; 5
-  movq mm6, [eax+ecx]       ;5
-  psadbw mm6, [edx+ecx]
-  movq mm7, [eax+ebx]       ;7
-  psadbw mm7, [edx+ebx]
+  lea _EBX, [_EBX+4*TMP0]      ;3+4=7
+  lea TMP0, [TMP0+4*TMP0]      ; 5
+  movq mm6, [_EAX+TMP0]       ;5
+  psadbw mm6, [TMP1+TMP0]
+  movq mm7, [_EAX+_EBX]       ;7
+  psadbw mm7, [TMP1+_EBX]
   paddd mm4, mm5
   paddd mm6, mm7
   paddd mm0, mm4
-  mov ebx, [esp]
-  add esp, byte 4
+  mov _EBX, [_ESP]
+  add _ESP, byte PTR_SIZE 
   paddd mm0, mm6
   movd eax, mm0
 
@@ -337,13 +311,18 @@ ENDFUNC
 ;-----------------------------------------------------------------------------
 ;optimization: 14% faster
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 sad16bi_3dne:
-  mov eax, [esp+ 4] ; Src
-  mov edx, [esp+ 8] ; Ref1
-  mov ecx, [esp+16] ; Stride
-  push ebx
-  mov ebx, [esp+4+12] ; Ref2
+  mov _EAX, prm1 ; Src
+  mov TMP1, prm2 ; Ref1
+  mov TMP0, prm4 ; Stride
+
+  push _EBX
+%ifdef ARCH_IS_X86_64
+  mov _EBX, prm3
+%else
+  mov _EBX, [_ESP+4+12] ; Ref2
+%endif
 
   SADBI_16x16_SSE0
   SADBI_16x16_SSE
@@ -364,7 +343,7 @@ sad16bi_3dne:
   paddusw mm5,mm0
   paddusw mm6,mm1
 
-  pop ebx
+  pop _EBX
   paddusw mm6,mm5
   movd eax, mm6
 
@@ -380,68 +359,73 @@ ENDFUNC
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 sad8bi_3dne:
-  mov eax, [esp+12] ; Ref2
-  mov edx, [esp+ 8] ; Ref1
-  mov ecx, [esp+16] ; Stride
-  push ebx
-  mov ebx, [esp+4+ 4] ; Src
+  mov _EAX, prm3 ; Ref2
+  mov TMP1, prm2 ; Ref1
+  mov TMP0, prm4 ; Stride
 
-  movq mm2, [edx]
-  movq mm3, [edx+ecx]
-  pavgb mm2, [eax]
-  pavgb mm3, [eax+ecx]
-  lea edx, [edx+2*ecx]
-  lea eax, [eax+2*ecx]
-  movq mm5, [ebx]
-  movq mm6, [ebx+ecx]
-  lea ebx, [ebx+2*ecx]
+  push _EBX
+%ifdef ARCH_IS_X86_64
+  mov _EBX, prm1
+%else
+  mov _EBX, [_ESP+4+ 4] ; Src
+%endif
+
+  movq mm2, [TMP1]
+  movq mm3, [TMP1+TMP0]
+  pavgb mm2, [_EAX]
+  pavgb mm3, [_EAX+TMP0]
+  lea TMP1, [TMP1+2*TMP0]
+  lea _EAX, [_EAX+2*TMP0]
+  movq mm5, [_EBX]
+  movq mm6, [_EBX+TMP0]
+  lea _EBX, [_EBX+2*TMP0]
   psadbw mm5, mm2
   psadbw mm6, mm3
 
-  movq mm2, [edx]
-  movq mm3, [edx+ecx]
-  pavgb mm2, [eax]
-  pavgb mm3, [eax+ecx]
-  lea edx, [edx+2*ecx]
-  lea eax, [eax+2*ecx]
-  movq mm0, [ebx]
-  movq mm1, [ebx+ecx]
-  lea ebx, [ebx+2*ecx]
+  movq mm2, [TMP1]
+  movq mm3, [TMP1+TMP0]
+  pavgb mm2, [_EAX]
+  pavgb mm3, [_EAX+TMP0]
+  lea TMP1, [TMP1+2*TMP0]
+  lea _EAX, [_EAX+2*TMP0]
+  movq mm0, [_EBX]
+  movq mm1, [_EBX+TMP0]
+  lea _EBX, [_EBX+2*TMP0]
   psadbw mm0, mm2
   psadbw mm1, mm3
 
-  movq mm2, [edx]
-  movq mm3, [edx+ecx]
-  pavgb mm2, [eax]
-  pavgb mm3, [eax+ecx]
-  lea edx, [edx+2*ecx]
-  lea eax, [eax+2*ecx]
+  movq mm2, [TMP1]
+  movq mm3, [TMP1+TMP0]
+  pavgb mm2, [_EAX]
+  pavgb mm3, [_EAX+TMP0]
+  lea TMP1, [TMP1+2*TMP0]
+  lea _EAX, [_EAX+2*TMP0]
   paddusw mm5,mm0
   paddusw mm6,mm1
-  movq mm0, [ebx]
-  movq mm1, [ebx+ecx]
-  lea ebx, [ebx+2*ecx]
+  movq mm0, [_EBX]
+  movq mm1, [_EBX+TMP0]
+  lea _EBX, [_EBX+2*TMP0]
   psadbw mm0, mm2
   psadbw mm1, mm3
 
-  movq mm2, [edx]
-  movq mm3, [edx+ecx]
-  pavgb mm2, [eax]
-  pavgb mm3, [eax+ecx]
+  movq mm2, [TMP1]
+  movq mm3, [TMP1+TMP0]
+  pavgb mm2, [_EAX]
+  pavgb mm3, [_EAX+TMP0]
   paddusw mm5,mm0
   paddusw mm6,mm1
-  movq mm0, [ebx]
-  movq mm1, [ebx+ecx]
+  movq mm0, [_EBX]
+  movq mm1, [_EBX+TMP0]
   psadbw mm0, mm2
   psadbw mm1, mm3
   paddusw mm5,mm0
   paddusw mm6,mm1
 
   paddusw mm6,mm5
-  mov ebx,[esp]
-  add esp,byte 4
+  mov _EBX,[_ESP]
+  add _ESP,byte PTR_SIZE
   movd eax, mm6
 
  ret
@@ -456,16 +440,16 @@ ENDFUNC
 ;===========================================================================
 ; optimization: 25 % faster
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 dev16_3dne:
 
-  mov eax, [esp+ 4] ; Src
-  mov ecx, [esp+ 8] ; Stride
-  lea edx, [ecx+2*ecx]
+  mov _EAX, prm1 ; Src
+  mov TMP0, prm2 ; Stride
+  lea TMP1, [TMP0+2*TMP0]
 
   pxor mm4, mm4
 
-ALIGN 8
+ALIGN SECTION_ALIGN
   ABS_16x16_SSE 0
   ABS_16x16_SSE 1
   ABS_16x16_SSE 1
@@ -479,7 +463,7 @@ ALIGN 8
 
   paddd mm7, mm6
   paddd mm1, mm3
-  mov eax, [esp+ 4]         ; Src
+  mov _EAX, prm1         ; Src
   paddd mm7, mm1
   punpcklbw mm7, mm7        ;xxyyaazz
   pshufw mm4, mm7, 055h     ; mm4 contains the mean

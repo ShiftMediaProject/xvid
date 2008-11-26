@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbfunctions.h,v 1.20 2005-01-05 23:02:15 edgomez Exp $
+ * $Id: mbfunctions.h,v 1.21 2008-11-26 01:04:34 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -67,12 +67,8 @@ extern MBFIELDTEST_PTR MBFieldTest;
 /* field test implementations */
 MBFIELDTEST MBFieldTest_c;
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64) 
 MBFIELDTEST MBFieldTest_mmx;
-#endif
-
-#ifdef ARCH_IS_X86_64
-MBFIELDTEST MBFieldTest_x86_64;
 #endif
 
 void MBFrameToField(int16_t data[6 * 64]);	/* de-interlace vertical Y blocks */

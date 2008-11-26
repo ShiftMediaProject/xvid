@@ -4,7 +4,7 @@
 ; *  - mmx 8x8 block-based halfpel interpolation -
 ; *
 ; *  Copyright(C) 2001 Peter Ross <pross@xvid.org>
-; *               2002 Michael Militzer <isibaar@xvid.org>
+; *               2002-2008 Michael Militzer <michael@xvid.org>
 ; *
 ; *  This program is free software ; you can redistribute it and/or modify
 ; *  it under the terms of the GNU General Public License as published by
@@ -22,45 +22,19 @@
 ; *
 ; ****************************************************************************/
 
-BITS 32
-
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
+%include "nasm.inc"
 
 ;=============================================================================
 ; Read only data
 ;=============================================================================
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
+DATA
 
 ;-----------------------------------------------------------------------------
 ; (16 - r) rounding table
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 rounding_lowpass_mmx:
 	times 4 dw 16
 	times 4 dw 15
@@ -103,7 +77,7 @@ mmx_mask2:
 ; Code
 ;=============================================================================
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 cglobal interpolate8x8_halfpel_h_mmx
 cglobal interpolate8x8_halfpel_v_mmx
@@ -148,8 +122,8 @@ cglobal interpolate8x8_halfpel_hv_add_mmx
 ;-----------------------------------------------------------------------------
 
 %macro COPY_H_MMX 0
-  movq mm0, [esi]
-  movq mm2, [esi + 1]
+  movq mm0, [TMP0]
+  movq mm2, [TMP0 + 1]
   movq mm1, mm0
   movq mm3, mm2
 
@@ -159,26 +133,24 @@ cglobal interpolate8x8_halfpel_hv_add_mmx
   CALC_AVG mm0, mm1, mm2, mm3, mm7, mm6
 
   packuswb mm0, mm1
-  movq [edi], mm0           ; [dst] = mm01
+  movq [_EAX], mm0           ; [dst] = mm01
 
-  add esi, edx              ; src += stride
-  add edi, edx              ; dst += stride
+  add TMP0, TMP1              ; src += stride
+  add _EAX, TMP1              ; dst += stride
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x8_halfpel_h_mmx:
 
-  push esi
-  push edi
-  mov eax, [esp + 8 + 16]       ; rounding
+  mov _EAX, prm4       ; rounding
+  lea TMP0, [rounding1_mmx]
+  movq mm7, [TMP0 + _EAX * 8]
 
-  movq mm7, [rounding1_mmx + eax * 8]
+  mov _EAX, prm1        ; dst
+  mov TMP0, prm2        ; src
+  mov TMP1, prm3        ; stride
 
-  mov edi, [esp + 8 + 4]        ; dst
-  mov esi, [esp + 8 + 8]        ; src
-  mov edx, [esp + 8 + 12]       ; stride
-
-  pxor mm6, mm6                 ; zero
+  pxor mm6, mm6         ; zero
 
   COPY_H_MMX
   COPY_H_MMX
@@ -188,9 +160,6 @@ interpolate8x8_halfpel_h_mmx:
   COPY_H_MMX
   COPY_H_MMX
   COPY_H_MMX
-
-  pop edi
-  pop esi
 
   ret
 ENDFUNC
@@ -206,8 +175,8 @@ ENDFUNC
 ;-----------------------------------------------------------------------------
 
 %macro COPY_V_MMX 0
-  movq mm0, [esi]
-  movq mm2, [esi + edx]
+  movq mm0, [TMP0]
+  movq mm2, [TMP0 + TMP1]
   movq mm1, mm0
   movq mm3, mm2
 
@@ -217,27 +186,24 @@ ENDFUNC
   CALC_AVG mm0, mm1, mm2, mm3, mm7, mm6
 
   packuswb mm0, mm1
-  movq [edi], mm0       ; [dst] = mm01
+  movq [_EAX], mm0      ; [dst] = mm01
 
-  add esi, edx          ; src += stride
-  add edi, edx          ; dst += stride
+  add TMP0, TMP1        ; src += stride
+  add _EAX, TMP1        ; dst += stride
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x8_halfpel_v_mmx:
 
-  push esi
-  push edi
+  mov _EAX, prm4       ; rounding
+  lea TMP0, [rounding1_mmx]
+  movq mm7, [TMP0 + _EAX * 8]
 
-  mov eax, [esp + 8 + 16]       ; rounding
+  mov _EAX, prm1       ; dst
+  mov TMP0, prm2       ; src
+  mov TMP1, prm3       ; stride
 
-  movq mm7, [rounding1_mmx + eax * 8]
-
-  mov edi, [esp + 8 + 4]        ; dst
-  mov esi, [esp + 8 + 8]        ; src
-  mov edx, [esp + 8 + 12]       ; stride
-
-  pxor mm6, mm6                 ; zero
+  pxor mm6, mm6        ; zero
 
 
   COPY_V_MMX
@@ -248,9 +214,6 @@ interpolate8x8_halfpel_v_mmx:
   COPY_V_MMX
   COPY_V_MMX
   COPY_V_MMX
-
-  pop edi
-  pop esi
 
   ret
 ENDFUNC
@@ -268,8 +231,8 @@ ENDFUNC
 
 %macro COPY_HV_MMX 0
     ; current row
-  movq mm0, [esi]
-  movq mm2, [esi + 1]
+  movq mm0, [TMP0]
+  movq mm2, [TMP0 + 1]
 
   movq mm1, mm0
   movq mm3, mm2
@@ -283,8 +246,8 @@ ENDFUNC
   paddusw mm1, mm3
 
     ; next row
-  movq mm4, [esi + edx]
-  movq mm2, [esi + edx + 1]
+  movq mm4, [TMP0 + TMP1]
+  movq mm2, [TMP0 + TMP1 + 1]
 
   movq mm5, mm4
   movq mm3, mm2
@@ -307,30 +270,25 @@ ENDFUNC
   psrlw mm1, 2
 
   packuswb mm0, mm1
-  movq [edi], mm0           ; [dst] = mm01
+  movq [_EAX], mm0           ; [dst] = mm01
 
-  add esi, edx              ; src += stride
-  add edi, edx              ; dst += stride
+  add TMP0, TMP1             ; src += stride
+  add _EAX, TMP1             ; dst += stride
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x8_halfpel_hv_mmx:
 
-  push esi
-  push edi
+  mov _EAX, prm4    ; rounding
+  lea TMP0, [rounding2_mmx]
+  movq mm7, [TMP0 + _EAX * 8]
 
-  mov eax, [esp + 8 + 16]   ; rounding
+  mov _EAX, prm1    ; dst
+  mov TMP0, prm2    ; src
 
-  movq mm7, [rounding2_mmx + eax * 8]
+  pxor mm6, mm6     ; zero
 
-  mov edi, [esp + 8 + 4]    ; dst
-  mov esi, [esp + 8 + 8]    ; src
-
-  mov eax, 8
-
-  pxor mm6, mm6             ; zero
-
-  mov edx, [esp + 8 + 12]   ; stride
+  mov TMP1, prm3    ; stride
 
   COPY_HV_MMX
   COPY_HV_MMX
@@ -340,9 +298,6 @@ interpolate8x8_halfpel_hv_mmx:
   COPY_HV_MMX
   COPY_HV_MMX
   COPY_HV_MMX
-
-  pop edi
-  pop esi
 
   ret
 ENDFUNC
@@ -356,28 +311,23 @@ ENDFUNC
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x4_halfpel_h_mmx:
 
-  push esi
-  push edi
-  mov eax, [esp + 8 + 16]       ; rounding
+  mov _EAX, prm4        ; rounding
+  lea TMP0, [rounding1_mmx]
+  movq mm7, [TMP0 + _EAX * 8]
 
-  movq mm7, [rounding1_mmx + eax * 8]
+  mov _EAX, prm1        ; dst
+  mov TMP0, prm2        ; src
+  mov TMP1, prm3        ; stride
 
-  mov edi, [esp + 8 + 4]        ; dst
-  mov esi, [esp + 8 + 8]        ; src
-  mov edx, [esp + 8 + 12]       ; stride
-
-  pxor mm6, mm6                 ; zero
+  pxor mm6, mm6         ; zero
 
   COPY_H_MMX
   COPY_H_MMX
   COPY_H_MMX
   COPY_H_MMX
-
-  pop edi
-  pop esi
 
   ret
 ENDFUNC
@@ -392,30 +342,24 @@ ENDFUNC
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x4_halfpel_v_mmx:
 
-  push esi
-  push edi
+  mov _EAX, prm4       ; rounding
+  lea TMP0, [rounding1_mmx]
+  movq mm7, [TMP0 + _EAX * 8]
 
-  mov eax, [esp + 8 + 16]       ; rounding
+  mov _EAX, prm1       ; dst
+  mov TMP0, prm2       ; src
+  mov TMP1, prm3       ; stride
 
-  movq mm7, [rounding1_mmx + eax * 8]
-
-  mov edi, [esp + 8 + 4]        ; dst
-  mov esi, [esp + 8 + 8]        ; src
-  mov edx, [esp + 8 + 12]       ; stride
-
-  pxor mm6, mm6                 ; zero
+  pxor mm6, mm6        ; zero
 
 
   COPY_V_MMX
   COPY_V_MMX
   COPY_V_MMX
   COPY_V_MMX
-
-  pop edi
-  pop esi
 
   ret
 ENDFUNC
@@ -431,32 +375,24 @@ ENDFUNC
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x4_halfpel_hv_mmx:
 
-  push esi
-  push edi
+  mov _EAX, prm4    ; rounding
+  lea TMP0, [rounding2_mmx]
+  movq mm7, [TMP0 + _EAX * 8]
 
-  mov eax, [esp + 8 + 16]   ; rounding
+  mov _EAX, prm1    ; dst
+  mov TMP0, prm2    ; src
 
-  movq mm7, [rounding2_mmx + eax * 8]
+  pxor mm6, mm6     ; zero
 
-  mov edi, [esp + 8 + 4]    ; dst
-  mov esi, [esp + 8 + 8]    ; src
-
-  mov eax, 8
-
-  pxor mm6, mm6             ; zero
-
-  mov edx, [esp + 8 + 12]   ; stride
+  mov TMP1, prm3    ; stride
 
   COPY_HV_MMX
   COPY_HV_MMX
   COPY_HV_MMX
   COPY_HV_MMX
-
-  pop edi
-  pop esi
 
   ret
 ENDFUNC
@@ -473,11 +409,11 @@ ENDFUNC
 ;-----------------------------------------------------------------------------
 
 %macro AVG2_MMX_RND0 0
-  movq mm0, [eax]           ; src1 -> mm0
-  movq mm1, [ebx]           ; src2 -> mm1
+  movq mm0, [_EAX]           ; src1 -> mm0
+  movq mm1, [_EBX]           ; src2 -> mm1
 
-  movq mm4, [eax+edx]
-  movq mm5, [ebx+edx]
+  movq mm4, [_EAX+TMP1]
+  movq mm5, [_EBX+TMP1]
 
   movq mm2, mm0             ; src1 -> mm2
   movq mm3, mm1             ; src2 -> mm3
@@ -512,19 +448,19 @@ ENDFUNC
   paddb mm4, mm5
   paddb mm4, mm3
 
-  lea eax, [eax+2*edx]
-  lea ebx, [ebx+2*edx]
+  lea _EAX, [_EAX+2*TMP1]
+  lea _EBX, [_EBX+2*TMP1]
 
-  movq [ecx], mm0           ; (src1 + src2 + 1) / 2 -> dst
-  movq [ecx+edx], mm4
+  movq [TMP0], mm0           ; (src1 + src2 + 1) / 2 -> dst
+  movq [TMP0+TMP1], mm4
 %endmacro
 
 %macro AVG2_MMX_RND1 0
-  movq mm0, [eax]           ; src1 -> mm0
-  movq mm1, [ebx]           ; src2 -> mm1
+  movq mm0, [_EAX]           ; src1 -> mm0
+  movq mm1, [_EBX]           ; src2 -> mm1
 
-  movq mm4, [eax+edx]
-  movq mm5, [ebx+edx]
+  movq mm4, [_EAX+TMP1]
+  movq mm5, [_EBX+TMP1]
 
   movq mm2, mm0             ; src1 -> mm2
   movq mm3, mm1             ; src2 -> mm3
@@ -559,80 +495,90 @@ ENDFUNC
   paddb mm4, mm5
   paddb mm4, mm3
 
-  lea eax, [eax+2*edx]
-  lea ebx, [ebx+2*edx]
+  lea _EAX, [_EAX+2*TMP1]
+  lea _EBX, [_EBX+2*TMP1]
 
-  movq [ecx], mm0           ; (src1 + src2 + 1) / 2 -> dst
-  movq [ecx+edx], mm4
+  movq [TMP0], mm0           ; (src1 + src2 + 1) / 2 -> dst
+  movq [TMP0+TMP1], mm4
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x8_avg2_mmx:
 
-  push ebx
-
-  mov eax, [esp + 4 + 20]   ; rounding
-  test eax, eax
+  mov _EAX, prm5   ; rounding
+  test _EAX, _EAX
 
   jnz near .rounding1
 
-  mov eax, [esp + 4 + 24]   ; height -> eax
-  sub eax, 8
-  test eax, eax
+  mov _EAX, prm6   ; height -> _EAX
+  sub _EAX, 8
+  test _EAX, _EAX
 
-  mov ecx, [esp + 4 + 4]    ; dst -> edi
-  mov eax, [esp + 4 + 8]    ; src1 -> esi
-  mov ebx, [esp + 4 + 12]   ; src2 -> eax
-  mov edx, [esp + 4 + 16]   ; stride -> edx
+  mov TMP0, prm1   ; dst -> edi
+  mov _EAX, prm2   ; src1 -> esi
+  mov TMP1, prm4   ; stride -> TMP1
+
+  push _EBX
+%ifdef ARCH_IS_X86_64
+  mov _EBX, prm3
+%else
+  mov _EBX, [esp + 4 + 12]   ; src2 -> eax
+%endif
 
   movq mm7, [mmx_one]
 
   jz near .start0
 
   AVG2_MMX_RND0
-  lea ecx, [ecx+2*edx]
+  lea TMP0, [TMP0+2*TMP1]
 
 .start0:
 
   AVG2_MMX_RND0
-  lea ecx, [ecx+2*edx]
+  lea TMP0, [TMP0+2*TMP1]
   AVG2_MMX_RND0
-  lea ecx, [ecx+2*edx]
+  lea TMP0, [TMP0+2*TMP1]
   AVG2_MMX_RND0
-  lea ecx, [ecx+2*edx]
+  lea TMP0, [TMP0+2*TMP1]
   AVG2_MMX_RND0
 
-  pop ebx
+  pop _EBX
   ret
 
 .rounding1:
-  mov eax, [esp + 4 + 24]       ; height -> eax
-  sub eax, 8
-  test eax, eax
+  mov _EAX, prm6        ; height -> _EAX
+  sub _EAX, 8
+  test _EAX, _EAX
 
-  mov ecx, [esp + 4 + 4]        ; dst -> edi
-  mov eax, [esp + 4 + 8]        ; src1 -> esi
-  mov ebx, [esp + 4 + 12]       ; src2 -> eax
-  mov edx, [esp + 4 + 16]       ; stride -> edx
+  mov TMP0, prm1        ; dst -> edi
+  mov _EAX, prm2        ; src1 -> esi
+  mov TMP1, prm4        ; stride -> TMP1
+
+  push _EBX
+%ifdef ARCH_IS_X86_64
+  mov _EBX, prm3
+%else
+  mov _EBX, [esp + 4 + 12]   ; src2 -> eax
+%endif
 
   movq mm7, [mmx_one]
 
   jz near .start1
 
   AVG2_MMX_RND1
-  lea ecx, [ecx+2*edx]
+  lea TMP0, [TMP0+2*TMP1]
 
 .start1:
 
   AVG2_MMX_RND1
-  lea ecx, [ecx+2*edx]
+  lea TMP0, [TMP0+2*TMP1]
   AVG2_MMX_RND1
-  lea ecx, [ecx+2*edx]
+  lea TMP0, [TMP0+2*TMP1]
   AVG2_MMX_RND1
-  lea ecx, [ecx+2*edx]
+  lea TMP0, [TMP0+2*TMP1]
   AVG2_MMX_RND1
 
-  pop ebx
+  pop _EBX
   ret
 ENDFUNC
 
@@ -650,8 +596,8 @@ ENDFUNC
 ;-----------------------------------------------------------------------------
 
 %macro AVG4_MMX_RND0 0
-  movq mm0, [eax]           ; src1 -> mm0
-  movq mm1, [ebx]           ; src2 -> mm1
+  movq mm0, [_EAX]           ; src1 -> mm0
+  movq mm1, [_EBX]           ; src2 -> mm1
 
   movq mm2, mm0
   movq mm3, mm1
@@ -665,14 +611,14 @@ ENDFUNC
   psrlq mm0, 2
   psrlq mm1, 2
 
-  lea eax, [eax+edx]
-  lea ebx, [ebx+edx]
+  lea _EAX, [_EAX+TMP1]
+  lea _EBX, [_EBX+TMP1]
 
   paddb mm0, mm1
   paddb mm2, mm3
 
-  movq mm4, [esi]           ; src3 -> mm0
-  movq mm5, [edi]           ; src4 -> mm1
+  movq mm4, [_ESI]           ; src3 -> mm0
+  movq mm5, [_EDI]           ; src4 -> mm1
 
   movq mm1, mm4
   movq mm3, mm5
@@ -698,15 +644,15 @@ ENDFUNC
   psrlq mm2, 2
   paddb mm0, mm2
 
-  lea esi, [esi+edx]
-  lea edi, [edi+edx]
+  lea _ESI, [_ESI+TMP1]
+  lea _EDI, [_EDI+TMP1]
 
-  movq [ecx], mm0           ; (src1 + src2 + src3 + src4 + 2) / 4 -> dst
+  movq [TMP0], mm0           ; (src1 + src2 + src3 + src4 + 2) / 4 -> dst
 %endmacro
 
 %macro AVG4_MMX_RND1 0
-  movq mm0, [eax]           ; src1 -> mm0
-  movq mm1, [ebx]           ; src2 -> mm1
+  movq mm0, [_EAX]           ; src1 -> mm0
+  movq mm1, [_EBX]           ; src2 -> mm1
 
   movq mm2, mm0
   movq mm3, mm1
@@ -720,14 +666,14 @@ ENDFUNC
   psrlq mm0, 2
   psrlq mm1, 2
 
-  lea eax,[eax+edx]
-  lea ebx,[ebx+edx]
+  lea _EAX,[_EAX+TMP1]
+  lea _EBX,[_EBX+TMP1]
 
   paddb mm0, mm1
   paddb mm2, mm3
 
-  movq mm4, [esi]           ; src3 -> mm0
-  movq mm5, [edi]           ; src4 -> mm1
+  movq mm4, [_ESI]           ; src3 -> mm0
+  movq mm5, [_EDI]           ; src4 -> mm1
 
   movq mm1, mm4
   movq mm3, mm5
@@ -753,75 +699,84 @@ ENDFUNC
   psrlq mm2, 2
   paddb mm0, mm2
 
-  lea esi,[esi+edx]
-  lea edi,[edi+edx]
+  lea _ESI,[_ESI+TMP1]
+  lea _EDI,[_EDI+TMP1]
 
-  movq [ecx], mm0           ; (src1 + src2 + src3 + src4 + 2) / 4 -> dst
+  movq [TMP0], mm0           ; (src1 + src2 + src3 + src4 + 2) / 4 -> dst
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x8_avg4_mmx:
 
-  push ebx
-  push edi
-  push esi
+  mov _EAX, prm7      ; rounding
+  test _EAX, _EAX
 
-  mov eax, [esp + 12 + 28]      ; rounding
+  mov TMP0, prm1      ; dst -> edi
+  mov _EAX, prm5      ; src4 -> edi
+  mov TMP1, prm6      ; stride -> TMP1
 
-  test eax, eax
 
-  mov ecx, [esp + 12 + 4]       ; dst -> edi
-  mov eax, [esp + 12 + 8]       ; src1 -> esi
-  mov ebx, [esp + 12 + 12]      ; src2 -> eax
-  mov esi, [esp + 12 + 16]      ; src3 -> esi
-  mov edi, [esp + 12 + 20]      ; src4 -> edi
-  mov edx, [esp + 12 + 24]      ; stride -> edx
+  push _EBX
+  push _EDI
+  push _ESI
+
+  mov _EDI, _EAX
+
+%ifdef ARCH_IS_X86_64
+  mov _EAX, prm2
+  mov _EBX, prm3
+  mov _ESI, prm4
+%else
+  mov _EAX, [esp + 12 +  8]      ; src1 -> esi
+  mov _EBX, [esp + 12 + 12]      ; src2 -> _EAX
+  mov _ESI, [esp + 12 + 16]      ; src3 -> esi
+%endif
 
   movq mm7, [mmx_one]
 
   jnz near .rounding1
 
   AVG4_MMX_RND0
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   AVG4_MMX_RND0
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   AVG4_MMX_RND0
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   AVG4_MMX_RND0
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   AVG4_MMX_RND0
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   AVG4_MMX_RND0
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   AVG4_MMX_RND0
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   AVG4_MMX_RND0
 
-  pop esi
-  pop edi
-  pop ebx
+  pop _ESI
+  pop _EDI
+  pop _EBX
   ret
 
 .rounding1:
   AVG4_MMX_RND1
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   AVG4_MMX_RND1
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   AVG4_MMX_RND1
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   AVG4_MMX_RND1
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   AVG4_MMX_RND1
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   AVG4_MMX_RND1
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   AVG4_MMX_RND1
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   AVG4_MMX_RND1
 
-  pop esi
-  pop edi
-  pop ebx
+  pop _ESI
+  pop _EDI
+  pop _EBX
   ret
 ENDFUNC
 
@@ -836,8 +791,8 @@ ENDFUNC
 ;-----------------------------------------------------------------------------
 
 %macro LOWPASS_6TAP_H_MMX 0
-  movq mm0, [eax]
-  movq mm2, [eax+1]
+  movq mm0, [_EAX]
+  movq mm2, [_EAX+1]
 
   movq mm1, mm0
   movq mm3, mm2
@@ -854,8 +809,8 @@ ENDFUNC
   psllw mm0, 2
   psllw mm1, 2
 
-  movq mm2, [eax-1]
-  movq mm4, [eax+2]
+  movq mm2, [_EAX-1]
+  movq mm4, [_EAX+2]
 
   movq mm3, mm2
   movq mm5, mm4
@@ -875,8 +830,8 @@ ENDFUNC
   pmullw mm0, [mmx_five]
   pmullw mm1, [mmx_five]
 
-  movq mm2, [eax-2]
-  movq mm4, [eax+3]
+  movq mm2, [_EAX-2]
+  movq mm4, [_EAX+3]
 
   movq mm3, mm2
   movq mm5, mm4
@@ -899,38 +854,39 @@ ENDFUNC
   psraw mm0, 5
   psraw mm1, 5
 
-  lea eax, [eax+edx]
+  lea _EAX, [_EAX+TMP1]
   packuswb mm0, mm1
-  movq [ecx], mm0
+  movq [TMP0], mm0
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x8_6tap_lowpass_h_mmx:
 
-  mov eax, [esp + 16]           ; rounding
+  mov _EAX, prm4           ; rounding
 
-  movq mm6, [rounding_lowpass_mmx + eax * 8]
+  lea TMP0, [rounding_lowpass_mmx]
+  movq mm6, [TMP0 + _EAX * 8]
 
-  mov ecx, [esp + 4]            ; dst -> edi
-  mov eax, [esp + 8]            ; src -> esi
-  mov edx, [esp + 12]           ; stride -> edx
+  mov TMP0, prm1           ; dst -> edi
+  mov _EAX, prm2           ; src -> esi
+  mov TMP1, prm3           ; stride -> edx
 
   pxor mm7, mm7
 
   LOWPASS_6TAP_H_MMX
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   LOWPASS_6TAP_H_MMX
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   LOWPASS_6TAP_H_MMX
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   LOWPASS_6TAP_H_MMX
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   LOWPASS_6TAP_H_MMX
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   LOWPASS_6TAP_H_MMX
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   LOWPASS_6TAP_H_MMX
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   LOWPASS_6TAP_H_MMX
 
   ret
@@ -946,8 +902,8 @@ ENDFUNC
 ;-----------------------------------------------------------------------------
 
 %macro LOWPASS_6TAP_V_MMX 0
-  movq mm0, [eax]
-  movq mm2, [eax+edx]
+  movq mm0, [_EAX]
+  movq mm2, [_EAX+TMP1]
 
   movq mm1, mm0
   movq mm3, mm2
@@ -964,9 +920,9 @@ ENDFUNC
   psllw mm0, 2
   psllw mm1, 2
 
-  movq mm4, [eax+2*edx]
-  sub eax, ebx
-  movq mm2, [eax+2*edx]
+  movq mm4, [_EAX+2*TMP1]
+  sub _EAX, _EBX
+  movq mm2, [_EAX+2*TMP1]
 
   movq mm3, mm2
   movq mm5, mm4
@@ -986,8 +942,8 @@ ENDFUNC
   pmullw mm0, [mmx_five]
   pmullw mm1, [mmx_five]
 
-  movq mm2, [eax+edx]
-  movq mm4, [eax+2*ebx]
+  movq mm2, [_EAX+TMP1]
+  movq mm4, [_EAX+2*_EBX]
 
   movq mm3, mm2
   movq mm5, mm4
@@ -1010,47 +966,48 @@ ENDFUNC
   psraw mm0, 5
   psraw mm1, 5
 
-  lea eax, [eax+4*edx]
+  lea _EAX, [_EAX+4*TMP1]
   packuswb mm0, mm1
-  movq [ecx], mm0
+  movq [TMP0], mm0
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x8_6tap_lowpass_v_mmx:
 
-  push ebx
+  mov _EAX, prm4           ; rounding
 
-  mov eax, [esp + 4 + 16]           ; rounding
+  lea TMP0, [rounding_lowpass_mmx]
+  movq mm6, [TMP0 + _EAX * 8]
 
-  movq mm6, [rounding_lowpass_mmx + eax * 8]
+  mov TMP0, prm1           ; dst -> edi
+  mov _EAX, prm2           ; src -> esi
+  mov TMP1, prm3           ; stride -> edx
 
-  mov ecx, [esp + 4 + 4]            ; dst -> edi
-  mov eax, [esp + 4 + 8]            ; src -> esi
-  mov edx, [esp + 4 + 12]           ; stride -> edx
+  push _EBX
 
-  mov ebx, edx
-  shl ebx, 1
-  add ebx, edx
+  mov _EBX, TMP1
+  shl _EBX, 1
+  add _EBX, TMP1
 
   pxor mm7, mm7
 
   LOWPASS_6TAP_V_MMX
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   LOWPASS_6TAP_V_MMX
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   LOWPASS_6TAP_V_MMX
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   LOWPASS_6TAP_V_MMX
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   LOWPASS_6TAP_V_MMX
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   LOWPASS_6TAP_V_MMX
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   LOWPASS_6TAP_V_MMX
-  lea ecx, [ecx+edx]
+  lea TMP0, [TMP0+TMP1]
   LOWPASS_6TAP_V_MMX
 
-  pop ebx
+  pop _EBX
   ret
 ENDFUNC
 
@@ -1063,9 +1020,9 @@ ENDFUNC
 ;===========================================================================
 
 %macro PROLOG0 0
-  mov ecx, [esp+ 4] ; Dst
-  mov eax, [esp+ 8] ; Src
-  mov edx, [esp+12] ; BpS
+  mov TMP0, prm1 ; Dst
+  mov _EAX, prm2 ; Src
+  mov TMP1, prm3 ; BpS
 %endmacro
 
 %macro PROLOG 2   ; %1: Rounder, %2 load Dst-Rounder
@@ -1133,12 +1090,12 @@ ENDFUNC
 ;===========================================================================
 
 %macro ADD_FF_MMX 1
-  movq mm0, [eax]
-  movq mm2, [ecx]
+  movq mm0, [_EAX]
+  movq mm2, [TMP0]
   movq mm1, mm0
   movq mm3, mm2
 %if (%1!=0)
-  lea eax,[eax+%1*edx]
+  lea _EAX,[_EAX+%1*TMP1]
 %endif
   MIX
   paddusw mm0, mm5  ; rounder
@@ -1147,13 +1104,13 @@ ENDFUNC
   psrlw mm1, 1
 
   packuswb mm0, mm1
-  movq [ecx], mm0
+  movq [TMP0], mm0
 %if (%1!=0)
-  lea ecx,[ecx+%1*edx]
+  lea TMP0,[TMP0+%1*TMP1]
 %endif
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x8_halfpel_add_mmx:
   PROLOG rounding1_mmx, 1
   ADD_FF_MMX 1
@@ -1178,37 +1135,37 @@ ENDFUNC
 ;===========================================================================
 
 %macro ADD_FH_MMX 0
-  movq mm0, [eax]
-  movq mm2, [eax+1]
+  movq mm0, [_EAX]
+  movq mm2, [_EAX+1]
   movq mm1, mm0
   movq mm3, mm2
 
-  lea eax,[eax+edx]
+  lea _EAX,[_EAX+TMP1]
 
   MIX
-  movq mm2, [ecx]   ; prepare mix with Dst[0]
+  movq mm2, [TMP0]   ; prepare mix with Dst[0]
   MIX_DST
-  movq [ecx], mm0
+  movq [TMP0], mm0
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x8_halfpel_h_add_mmx:
   PROLOG rounding1_mmx, 1
 
   ADD_FH_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_FH_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_FH_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_FH_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_FH_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_FH_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_FH_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_FH_MMX
   ret
 ENDFUNC
@@ -1224,38 +1181,38 @@ ENDFUNC
 ;===========================================================================
 
 %macro ADD_HF_MMX 0
-  movq mm0, [eax]
-  movq mm2, [eax+edx]
+  movq mm0, [_EAX]
+  movq mm2, [_EAX+TMP1]
   movq mm1, mm0
   movq mm3, mm2
 
-  lea eax,[eax+edx]
+  lea _EAX,[_EAX+TMP1]
 
   MIX
-  movq mm2, [ecx]   ; prepare mix with Dst[0]
+  movq mm2, [TMP0]   ; prepare mix with Dst[0]
   MIX_DST
-  movq [ecx], mm0
+  movq [TMP0], mm0
 
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x8_halfpel_v_add_mmx:
   PROLOG rounding1_mmx, 1
 
   ADD_HF_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_HF_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_HF_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_HF_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_HF_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_HF_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_HF_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_HF_MMX
   ret
 ENDFUNC
@@ -1282,15 +1239,15 @@ ENDFUNC
 ;===========================================================================
 
 %macro ADD_HH_MMX 0
-  lea eax,[eax+edx]
+  lea _EAX,[_EAX+TMP1]
 
     ; transfert prev line to mm0/mm1
   movq mm0, mm2
   movq mm1, mm3
 
     ; load new line in mm2/mm3
-  movq mm2, [eax]
-  movq mm4, [eax+1]
+  movq mm2, [_EAX]
+  movq mm4, [_EAX+1]
   movq mm3, mm2
   movq mm5, mm4
 
@@ -1307,7 +1264,7 @@ ENDFUNC
   paddusw mm0, mm2  
   paddusw mm1, mm3  
 
-  movq mm4, [ecx]   ; prepare mix with Dst[0]
+  movq mm4, [TMP0]   ; prepare mix with Dst[0]
   movq mm5, mm4
 
   paddusw mm0, mm7  ; finish mixing current line
@@ -1330,16 +1287,16 @@ ENDFUNC
 
   packuswb mm0, mm1
 
-  movq [ecx], mm0
+  movq [TMP0], mm0
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x8_halfpel_hv_add_mmx:
   PROLOG rounding2_mmx, 0    ; mm5 is busy. Don't load dst-rounder
 
     ; preprocess first line
-  movq mm0, [eax]
-  movq mm2, [eax+1]
+  movq mm0, [_EAX]
+  movq mm2, [_EAX+1]
   movq mm1, mm0
   movq mm3, mm2
 
@@ -1353,19 +1310,19 @@ interpolate8x8_halfpel_hv_add_mmx:
    ; Input: mm2/mm3 contains the value (Src[0]+Src[1]) of previous line
 
   ADD_HH_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_HH_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_HH_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_HH_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_HH_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_HH_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_HH_MMX
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   ADD_HH_MMX
 
   ret

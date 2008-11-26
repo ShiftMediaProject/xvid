@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: reduced.h,v 1.3 2004-03-22 22:36:24 edgomez Exp $
+ * $Id: reduced.h,v 1.4 2008-11-26 01:04:34 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -43,40 +43,40 @@ typedef void FILTER_DIFF_18X18_TO_8X8(int16_t *Dst, const uint8_t *Src, const in
 
 extern COPY_UPSAMPLED_8X8_16TO8 * copy_upsampled_8x8_16to8;
 extern COPY_UPSAMPLED_8X8_16TO8 xvid_Copy_Upsampled_8x8_16To8_C;
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 extern COPY_UPSAMPLED_8X8_16TO8 xvid_Copy_Upsampled_8x8_16To8_mmx;
 extern COPY_UPSAMPLED_8X8_16TO8 xvid_Copy_Upsampled_8x8_16To8_xmm;
 #endif
 
 extern ADD_UPSAMPLED_8X8_16TO8 * add_upsampled_8x8_16to8;
 extern ADD_UPSAMPLED_8X8_16TO8 xvid_Add_Upsampled_8x8_16To8_C;
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 extern ADD_UPSAMPLED_8X8_16TO8 xvid_Add_Upsampled_8x8_16To8_mmx;
 extern ADD_UPSAMPLED_8X8_16TO8 xvid_Add_Upsampled_8x8_16To8_xmm;
 #endif
 
 extern VFILTER_31 * vfilter_31;
 extern VFILTER_31 xvid_VFilter_31_C;
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 extern VFILTER_31 xvid_VFilter_31_x86;
 #endif
 
 extern HFILTER_31 * hfilter_31;
 extern HFILTER_31 xvid_HFilter_31_C;
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 extern HFILTER_31 xvid_HFilter_31_x86;
 extern HFILTER_31 xvid_HFilter_31_mmx;
 #endif
 
 extern FILTER_18X18_TO_8X8 * filter_18x18_to_8x8;
 extern FILTER_18X18_TO_8X8 xvid_Filter_18x18_To_8x8_C;
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 extern FILTER_18X18_TO_8X8 xvid_Filter_18x18_To_8x8_mmx;
 #endif
 
 extern FILTER_DIFF_18X18_TO_8X8 * filter_diff_18x18_to_8x8;
 extern FILTER_DIFF_18X18_TO_8X8 xvid_Filter_Diff_18x18_To_8x8_C;
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(XVID_IS_X86_64)
 extern FILTER_DIFF_18X18_TO_8X8 xvid_Filter_Diff_18x18_To_8x8_mmx;
 #endif
 

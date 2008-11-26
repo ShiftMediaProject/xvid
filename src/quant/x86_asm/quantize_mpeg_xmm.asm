@@ -20,7 +20,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_mpeg_xmm.asm,v 1.8 2008-11-11 20:46:24 Isibaar Exp $
+; * $Id: quantize_mpeg_xmm.asm,v 1.9 2008-11-26 01:04:34 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -29,50 +29,15 @@
 
 %define SATURATE
 
-BITS 32
-
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
-
-%macro cextern 1
-	%ifdef PREFIX
-		extern _%1
-		%define %1 _%1
-	%else
-		extern %1
-	%endif
-%endmacro
+%include "nasm.inc"
 
 ;=============================================================================
 ; Local data
 ;=============================================================================
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
+DATA
 
-ALIGN 8
+ALIGN SECTION_ALIGN
 mmzero:
 	dd 0,0
 mmx_one:
@@ -82,7 +47,7 @@ mmx_one:
 ; divide by 2Q table
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 mmx_divs:		;i>2
 %assign i 1
 %rep 31
@@ -90,7 +55,7 @@ mmx_divs:		;i>2
 	%assign i i+1
 %endrep
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 mmx_div:		;quant>2
 	times 4 dw 65535 ; the div by 2 formula will overflow for the case
 	                 ; quant=1 but we don't care much because quant=1
@@ -106,11 +71,16 @@ mmx_div:		;quant>2
 dw (1 << 16) / (%1) + 1
 %endmacro
 
+%ifndef ARCH_IS_X86_64
 %define nop4	db	08Dh, 074h, 026h,0
-%define nop3	add	esp, byte 0
-%define nop2	mov	esp, esp
-%define nop7	db	08dh, 02ch, 02dh,0,0,0,0
-%define nop6	add	ebp, dword 0
+%define nop7    db      08dh, 02ch, 02dh,0,0,0,0
+%else
+%define nop4 
+%define nop7
+%endif
+%define nop3	add	_ESP, byte 0
+%define nop2	mov	_ESP, _ESP 
+%define nop6	add	_EBP, dword 0
 
 ;-----------------------------------------------------------------------------
 ; quantd table
@@ -119,7 +89,7 @@ dw (1 << 16) / (%1) + 1
 %define VM18P	3
 %define VM18Q	4
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 quantd:
 %assign i 1
 %rep 31
@@ -131,7 +101,7 @@ quantd:
 ; multiple by 2Q table
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 mmx_mul_quant:
 %assign i 1
 %rep 31
@@ -143,7 +113,7 @@ mmx_mul_quant:
 ; saturation limits
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 mmx_32767_minus_2047:
 	times 4 dw (32767-2047)
 mmx_32768_minus_2048:
@@ -167,7 +137,7 @@ dd 0
 ; Code
 ;=============================================================================
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 cglobal quant_mpeg_inter_xmm
 cglobal dequant_mpeg_intra_3dne
@@ -182,36 +152,43 @@ cglobal dequant_mpeg_inter_3dne
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 quant_mpeg_inter_xmm:
-  mov eax, [esp  + 8]       ; data
-  mov ecx, [esp  + 12]      ; quant
-  mov edx, [esp  + 4]       ; coeff
-  push esi
-  push edi
-  push ebx
+  mov _EAX, prm2       ; data
+  mov TMP0, prm3       ; quant
+  mov TMP1, prm1       ; coeff
+  push _ESI
+  push _EDI
+  push _EBX
   nop
-  mov edi, [esp + 12 + 16]
-  mov esi, -14
-  mov ebx, esp
-  sub esp, byte 24
-  lea ebx, [esp+8]
-  and ebx, byte -8 ;ALIGN 8
+%ifdef ARCH_IS_X86_64
+  mov _EDI, prm4
+%else
+  mov _EDI, [_ESP + 12 + 16]
+%endif
+
+  mov _ESI, -14
+  mov _EBX, _ESP
+  sub _ESP, byte 24
+  lea _EBX, [_ESP+8]
+  and _EBX, byte -8 ;ALIGN 8
   pxor mm0, mm0
   pxor mm3, mm3
-  movq [byte ebx],mm0
-  db 0Fh, 7Fh, 44h, 23h, 8 ;movq [ebx+8],mm0
-  cmp ecx, byte 1
+  movq [byte _EBX],mm0
+  movq [_EBX+8],mm0
+%if 0
+  cmp TMP0, byte 1
   je near .q1loop
-  cmp ecx, byte 19
+  cmp TMP0, byte 19
   jg near .lloop
   nop
+%endif
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 .loop:
-  movq mm1, [eax + 8*esi+112]       ; mm0 = [1st]
+  movq mm1, [_EAX + 8*_ESI+112]       ; mm0 = [1st]
   psubw mm0, mm1 ;-mm1
-  movq mm4, [eax + 8*esi + 120] ;
+  movq mm4, [_EAX + 8*_ESI + 120] ;
   psubw mm3, mm4 ;-mm4
   pmaxsw mm0, mm1 ;|src|
   pmaxsw mm3, mm4
@@ -220,49 +197,54 @@ ALIGN 16
   psraw mm4, 15
   psllw mm0, 4          ; level << 4
   psllw mm3, 4          ;
-  paddw mm0, [edi + 640 + 8*esi+112]
-  paddw mm3, [edi + 640 + 8*esi+120]
-  movq mm5, [edi + 896 + 8*esi+112]
-  movq mm7, [edi + 896 + 8*esi+120]
+  paddw mm0, [_EDI + 640 + 8*_ESI+112]
+  paddw mm3, [_EDI + 640 + 8*_ESI+120]
+  movq mm5, [_EDI + 896 + 8*_ESI+112]
+  movq mm7, [_EDI + 896 + 8*_ESI+120]
   pmulhuw mm5, mm0
   pmulhuw mm7, mm3
-  mov esp, esp
-  movq mm2, [edi + 512 + 8*esi+112]
-  movq mm6, [edi + 512 + 8*esi+120]
+  mov _ESP, _ESP
+  movq mm2, [_EDI + 512 + 8*_ESI+112]
+  movq mm6, [_EDI + 512 + 8*_ESI+120]
   pmullw mm2, mm5
   pmullw mm6, mm7
   psubw mm0, mm2
   psubw mm3, mm6
-  movq mm2, [byte ebx]
-  movq mm6, [mmx_divs + ecx * 8 - 8]
-  pmulhuw mm0, [edi + 768 + 8*esi+112]
-  pmulhuw mm3, [edi + 768 + 8*esi+120]
-  paddw mm2, [ebx+8]    ;sum
+  movq mm2, [byte _EBX]
+%ifdef ARCH_IS_X86_64
+  lea r9, [mmx_divs]
+  movq mm6, [r9 + TMP0 * 8 - 8]
+%else
+  movq mm6, [mmx_divs + TMP0 * 8 - 8]
+%endif
+  pmulhuw mm0, [_EDI + 768 + 8*_ESI+112]
+  pmulhuw mm3, [_EDI + 768 + 8*_ESI+120]
+  paddw mm2, [_EBX+8]    ;sum
   paddw mm5, mm0
   paddw mm7, mm3
   pxor mm0, mm0
   pxor mm3, mm3
   pmulhuw mm5, mm6      ; mm0 = (mm0 / 2Q) >> 16
   pmulhuw mm7, mm6      ;  (level ) / quant (0<quant<32)
-  add esi, byte 2
+  add _ESI, byte 2
   paddw mm2, mm5        ;sum += x1
-  movq [ebx], mm7       ;store x2
+  movq [_EBX], mm7       ;store x2
   pxor mm5, mm1         ; mm0 *= sign(mm0)
   pxor mm7, mm4         ;
   psubw mm5, mm1        ; undisplace
   psubw mm7, mm4        ;
-  db 0Fh, 7Fh, 54h, 23h, 08 ;movq   [ebx+8],mm2 ;store sum
-  movq [edx + 8*esi+112-16], mm5
-  movq [edx + 8*esi +120-16], mm7
+  movq [_EBX+8],mm2 ;store sum
+  movq [TMP1 + 8*_ESI+112-16], mm5
+  movq [TMP1 + 8*_ESI +120-16], mm7
   jng near .loop
 
 .done:
 ; calculate  data[0] // (int32_t)dcscalar)
-  paddw mm2, [ebx]
-  mov ebx, [esp+24]
-  mov edi, [esp+4+24]
-  mov esi, [esp+8+24]
-  add esp, byte 12+24
+  paddw mm2, [_EBX]
+  mov _EBX, [_ESP+24]
+  mov _EDI, [_ESP+PTR_SIZE+24]
+  mov _ESI, [_ESP+2*PTR_SIZE+24]
+  add _ESP, byte 3*PTR_SIZE+24
   pmaddwd mm2, [mmx_one]
   punpckldq mm0, mm2 ;get low dw to mm0:high
   paddd mm0,mm2
@@ -271,11 +253,11 @@ ALIGN 16
 
   ret
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 .q1loop:
-  movq mm1, [eax + 8*esi+112]       ; mm0 = [1st]
+  movq mm1, [_EAX + 8*_ESI+112]       ; mm0 = [1st]
   psubw mm0, mm1                    ;-mm1
-  movq mm4, [eax + 8*esi+120]
+  movq mm4, [_EAX + 8*_ESI+120]
   psubw mm3, mm4                    ;-mm4
   pmaxsw mm0, mm1                   ;|src|
   pmaxsw mm3, mm4
@@ -284,47 +266,47 @@ ALIGN 16
   psraw mm4, 15
   psllw mm0, 4                              ; level << 4
   psllw mm3, 4
-  paddw mm0, [edi + 640 + 8*esi+112]    ;mm0 is to be divided
-  paddw mm3, [edi + 640 + 8*esi+120]    ; inter1 contains fix for division by 1
-  movq mm5, [edi + 896 + 8*esi+112] ;with rounding down
-  movq mm7, [edi + 896 + 8*esi+120]
+  paddw mm0, [_EDI + 640 + 8*_ESI+112]    ;mm0 is to be divided
+  paddw mm3, [_EDI + 640 + 8*_ESI+120]    ; inter1 contains fix for division by 1
+  movq mm5, [_EDI + 896 + 8*_ESI+112] ;with rounding down
+  movq mm7, [_EDI + 896 + 8*_ESI+120]
   pmulhuw mm5, mm0
   pmulhuw mm7, mm3                          ;mm7: first approx of division
-  mov esp, esp
-  movq mm2, [edi + 512 + 8*esi+112]
-  movq mm6, [edi + 512 + 8*esi+120]      ; divs for q<=16
+  mov _ESP, _ESP
+  movq mm2, [_EDI + 512 + 8*_ESI+112]
+  movq mm6, [_EDI + 512 + 8*_ESI+120]      ; divs for q<=16
   pmullw mm2, mm5                           ;test value <= original
   pmullw mm6, mm7
   psubw mm0, mm2                            ;mismatch
   psubw mm3, mm6
-  movq mm2, [byte ebx]
-  pmulhuw mm0, [edi + 768 + 8*esi+112]  ;correction
-  pmulhuw mm3, [edi + 768 + 8*esi+120]
-  paddw mm2, [ebx+8]    ;sum
+  movq mm2, [byte _EBX]
+  pmulhuw mm0, [_EDI + 768 + 8*_ESI+112]  ;correction
+  pmulhuw mm3, [_EDI + 768 + 8*_ESI+120]
+  paddw mm2, [_EBX+8]    ;sum
   paddw mm5, mm0        ;final result
   paddw mm7, mm3
   pxor mm0, mm0
   pxor mm3, mm3
   psrlw mm5, 1          ;  (level ) /2  (quant = 1)
   psrlw mm7, 1
-  add esi, byte 2
+  add _ESI, byte 2
   paddw mm2, mm5        ;sum += x1
-  movq [ebx], mm7       ;store x2
+  movq [_EBX], mm7      ;store x2
   pxor mm5, mm1         ; mm0 *= sign(mm0)
   pxor mm7, mm4         ;
   psubw mm5, mm1        ; undisplace
   psubw mm7, mm4        ;
-  movq [ebx+8], mm2     ;store sum
-  movq [edx + 8*esi+112-16], mm5
-  movq [edx + 8*esi +120-16], mm7
+  movq [_EBX+8], mm2    ;store sum
+  movq [TMP1 + 8*_ESI+112-16], mm5
+  movq [TMP1 + 8*_ESI +120-16], mm7
   jng near .q1loop
   jmp near .done
 
-ALIGN 8
+ALIGN SECTION_ALIGN
 .lloop:
-  movq mm1, [eax + 8*esi+112]       ; mm0 = [1st]
+  movq mm1, [_EAX + 8*_ESI+112]       ; mm0 = [1st]
   psubw mm0,mm1         ;-mm1
-  movq mm4, [eax + 8*esi+120]
+  movq mm4, [_EAX + 8*_ESI+120]
   psubw mm3,mm4         ;-mm4
   pmaxsw mm0,mm1        ;|src|
   pmaxsw mm3,mm4
@@ -333,42 +315,47 @@ ALIGN 8
   psraw mm4,15
   psllw mm0, 4          ; level << 4
   psllw mm3, 4          ;
-  paddw mm0, [edi + 640 + 8*esi+112] ;mm0 is to be divided inter1 contains fix for division by 1
-  paddw mm3, [edi + 640 + 8*esi+120]
-  movq mm5,[edi + 896 + 8*esi+112]
-  movq mm7,[edi + 896 + 8*esi+120]
+  paddw mm0, [_EDI + 640 + 8*_ESI+112] ;mm0 is to be divided inter1 contains fix for division by 1
+  paddw mm3, [_EDI + 640 + 8*_ESI+120]
+  movq mm5,[_EDI + 896 + 8*_ESI+112]
+  movq mm7,[_EDI + 896 + 8*_ESI+120]
   pmulhuw mm5,mm0
   pmulhuw mm7,mm3       ;mm7: first approx of division
-  mov esp,esp
-  movq mm2,[edi + 512 + 8*esi+112]
-  movq mm6,[edi + 512 + 8*esi+120]
+  mov _ESP,_ESP
+  movq mm2,[_EDI + 512 + 8*_ESI+112]
+  movq mm6,[_EDI + 512 + 8*_ESI+120]
   pmullw mm2,mm5        ;test value <= original
   pmullw mm6,mm7
   psubw mm0,mm2         ;mismatch
   psubw mm3,mm6
-  movq mm2,[byte ebx]
-  movq mm6,[mmx_div + ecx * 8 - 8]  ; divs for q<=16
-  pmulhuw mm0,[edi + 768 + 8*esi+112] ;correction
-  pmulhuw mm3,[edi + 768 + 8*esi+120]
-  paddw mm2,[ebx+8]     ;sum
+  movq mm2,[byte _EBX]
+%ifdef ARCH_IS_X86_64
+  lea r9, [mmx_div]
+  movq mm6, [r9 + TMP0 * 8 - 8]
+%else
+  movq mm6,[mmx_div + TMP0 * 8 - 8]  ; divs for q<=16
+%endif
+  pmulhuw mm0,[_EDI + 768 + 8*_ESI+112] ;correction
+  pmulhuw mm3,[_EDI + 768 + 8*_ESI+120]
+  paddw mm2,[_EBX+8]    ;sum
   paddw mm5,mm0         ;final result
   paddw mm7,mm3
   pxor mm0,mm0
   pxor mm3,mm3
   pmulhuw mm5, mm6      ; mm0 = (mm0 / 2Q) >> 16
   pmulhuw mm7, mm6      ;  (level ) / quant (0<quant<32)
-  add esi,byte 2
+  add _ESI,byte 2
   psrlw mm5, 1          ; (level ) / (2*quant)
   paddw mm2,mm5         ;sum += x1
   psrlw mm7, 1
-  movq [ebx],mm7        ;store x2
+  movq [_EBX],mm7       ;store x2
   pxor mm5, mm1         ; mm0 *= sign(mm0)
   pxor mm7, mm4         ;
   psubw mm5, mm1        ; undisplace
   psubw mm7, mm4        ;
-  db 0Fh, 7Fh, 54h, 23h, 08 ;movq   [ebx+8],mm2 ;store sum
-  movq [edx + 8*esi+112-16], mm5
-  movq [edx + 8*esi +120-16], mm7
+  movq [_EBX+8], mm2    ;store sum
+  movq [TMP1 + 8*_ESI+112-16], mm5
+  movq [TMP1 + 8*_ESI +120-16], mm7
   jng near .lloop
   jmp near .done
 ENDFUNC
@@ -395,8 +382,8 @@ ENDFUNC
   ;
 
 %macro DEQUANT4INTRAMMX 1
-  movq mm1, [byte ecx+ 16 * %1] ; mm0 = c  = coeff[i]
-  movq mm4, [ecx+ 16 * %1 +8]   ; mm3 = c' = coeff[i+1]
+  movq mm1, [byte TMP0+ 16 * %1] ; mm0 = c  = coeff[i]
+  movq mm4, [TMP0+ 16 * %1 +8]   ; mm3 = c' = coeff[i+1]
   psubw mm0, mm1
   psubw mm3, mm4
   pmaxsw mm0, mm1
@@ -404,19 +391,19 @@ ENDFUNC
   psraw mm1, 15
   psraw mm4, 15
 %if %1
-  movq mm2, [eax+8] ;preshifted quant
-  movq mm7, [eax+8]
+  movq mm2, [_EAX+8] ;preshifted quant
+  movq mm7, [_EAX+8]
 %endif
-  pmullw mm2, [edi + 16 * %1 ]     ; matrix[i]*quant
-  pmullw mm7, [edi + 16 * %1 +8]   ; matrix[i+1]*quant
+  pmullw mm2, [TMP1 + 16 * %1 ]     ; matrix[i]*quant
+  pmullw mm7, [TMP1 + 16 * %1 +8]   ; matrix[i+1]*quant
   movq mm5, mm0
   movq mm6, mm3
   pmulhw mm0, mm2   ; high of coeff*(matrix*quant)
   pmulhw mm3, mm7   ; high of coeff*(matrix*quant)
   pmullw mm2, mm5   ; low  of coeff*(matrix*quant)
   pmullw mm7, mm6   ; low  of coeff*(matrix*quant)
-  pcmpgtw mm0, [eax]
-  pcmpgtw mm3, [eax]
+  pcmpgtw mm0, [_EAX]
+  pcmpgtw mm3, [_EAX]
   paddusw mm2, mm0
   paddusw mm7, mm3
   psrlw mm2, 5
@@ -425,71 +412,86 @@ ENDFUNC
   pxor mm7, mm4     ; start negating back
   psubusw mm1, mm0
   psubusw mm4, mm3
-  movq mm0, [eax]   ;zero
-  movq mm3, [eax]   ;zero
+  movq mm0, [_EAX]   ;zero
+  movq mm3, [_EAX]   ;zero
   psubw mm2, mm1    ; finish negating back
   psubw mm7, mm4    ; finish negating back
-  movq [byte edx + 16 * %1], mm2   ; data[i]
-  movq [edx + 16 * %1  +8], mm7   ; data[i+1]
+  movq [byte _EDI + 16 * %1], mm2   ; data[i]
+  movq [_EDI + 16 * %1  +8], mm7   ; data[i+1]
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 dequant_mpeg_intra_3dne:
-  mov eax, [esp+12] ; quant
-  mov ecx, [esp+8]  ; coeff
-  movq mm7, [mmx_mul_quant  + eax*8 - 8]
-  psllw mm7, 2      ; << 2. See comment.
-  mov edx, [esp+4]  ; data
-  push ebx
-  movsx ebx, word [ecx]
+  mov _EAX, prm3  ; quant
+%ifdef ARCH_IS_X86_64
+  lea TMP0, [mmx_mul_quant]
+  movq mm7, [TMP0 + _EAX*8 - 8]
+%else
+  movq mm7, [mmx_mul_quant  + _EAX*8 - 8]
+%endif
+  mov TMP0, prm2  ; coeff
+  psllw mm7, 2    ; << 2. See comment.
+  mov TMP1, prm5 ; mpeg_quant_matrices	
+  push _EBX
+  movsx _EBX, word [TMP0]
   pxor mm0, mm0
   pxor mm3, mm3
-  push esi
-  lea eax, [esp-28]
-  sub esp, byte 32
-  and eax, byte -8  ;points to qword ALIGNed space on stack
-  movq [eax], mm0
-  movq [eax+8], mm7
-  imul ebx, [esp+16+8+32]    ; dcscalar
+  push _ESI
+  lea _EAX, [_ESP-28]
+  sub _ESP, byte 32
+  and _EAX, byte -8  ;points to qword ALIGNed space on stack
+  movq [_EAX], mm0
+  movq [_EAX+8], mm7
+%ifdef ARCH_IS_X86_64
+  imul _EBX, prm4    ; dcscalar
+%else
+  imul _EBX, [_ESP+16+8+32]    ; dcscalar
+%endif
   movq mm2, mm7
-  push edi
-  mov edi, [esp + 32 + 12 + 20] ; mpeg_quant_matrices	
-ALIGN 4
+  push _EDI
+
+%ifdef ARCH_IS_X86_64
+  mov _EDI, prm1  ; data
+%else
+  mov _EDI, [_ESP+4+12+32]
+%endif
+
+ALIGN SECTION_ALIGN
 
   DEQUANT4INTRAMMX 0
 
-  mov esi, -2048
+  mov _ESI, -2048
   nop
-  cmp ebx, esi
+  cmp _EBX, _ESI
 
   DEQUANT4INTRAMMX 1
 
-  cmovl ebx, esi
-  neg esi
-  sub esi, byte 1 ;2047
+  cmovl _EBX, _ESI
+  neg _ESI
+  sub _ESI, byte 1 ;2047
 
   DEQUANT4INTRAMMX 2
 
-  cmp ebx, esi
-  cmovg ebx, esi
-  lea ebp, [byte ebp]
+  cmp _EBX, _ESI
+  cmovg _EBX, _ESI
+  lea _EBP, [byte _EBP]
 
   DEQUANT4INTRAMMX 3
 
-  mov esi, [esp+36]
-  mov [byte edx], bx
-  mov ebx, [esp+36+4]
+  mov _ESI, [_ESP+32+PTR_SIZE]
+  mov [byte _EDI], bx
+  mov _EBX, [_ESP+32+2*PTR_SIZE]
 
   DEQUANT4INTRAMMX 4
   DEQUANT4INTRAMMX 5
   DEQUANT4INTRAMMX 6
   DEQUANT4INTRAMMX 7
 
-  pop edi
+  pop _EDI
 
-  add esp, byte 32+8
+  add _ESP, byte 32+2*PTR_SIZE
 
-  xor eax, eax
+  xor _EAX, _EAX
   ret
 ENDFUNC
 
@@ -507,37 +509,46 @@ ENDFUNC
     ; sgn(x) is the result of 'pcmpgtw 0,x':  0 if x>=0, -1 if x<0.
     ; It's mixed with the extraction of the absolute value.
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 dequant_mpeg_inter_3dne:
-  mov edx, [esp+ 4]        ; data
-  mov ecx, [esp+ 8]        ; coeff
-  mov eax, [esp+12]        ; quant
-  movq mm7, [mmx_mul_quant  + eax*8 - 8]
-  mov eax, -14
+  mov _EAX, prm3        ; quant
+%ifdef ARCH_IS_X86_64
+  lea TMP0, [mmx_mul_quant]
+  movq mm7, [TMP0  + _EAX*8 - 8]
+%else
+  movq mm7, [mmx_mul_quant  + _EAX*8 - 8]
+%endif
+  mov TMP1, prm1        ; data
+  mov TMP0, prm2        ; coeff
+  mov _EAX, -14
   paddw mm7, mm7    ; << 1
   pxor mm6, mm6     ; mismatch sum
-  push esi
-  push edi
-  mov esi, mmzero
+  push _ESI
+  push _EDI
+  mov _ESI, mmzero
   pxor mm1, mm1
   pxor mm3, mm3
-  mov edi, [esp + 8 + 16] ; mpeg_quant_matrices
+%ifdef ARCH_IS_X86_64
+  mov _EDI, prm4
+%else
+  mov _EDI, [_ESP + 8 + 16] ; mpeg_quant_matrices
+%endif
   nop
   nop4
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 .loop:
-  movq mm0, [ecx+8*eax + 7*16   ]   ; mm0 = coeff[i]
+  movq mm0, [TMP0+8*_EAX + 7*16   ]   ; mm0 = coeff[i]
   pcmpgtw mm1, mm0  ; mm1 = sgn(c)    (preserved)
-  movq mm2, [ecx+8*eax + 7*16 +8]   ; mm2 = coeff[i+1]
+  movq mm2, [TMP0+8*_EAX + 7*16 +8]   ; mm2 = coeff[i+1]
   pcmpgtw mm3, mm2  ; mm3 = sgn(c')   (preserved)
   paddsw mm0, mm1   ; c += sgn(c)
   paddsw mm2, mm3   ; c += sgn(c')
   paddw mm0, mm0    ; c *= 2
   paddw mm2, mm2    ; c'*= 2
 
-  movq mm4, [esi]
-  movq mm5, [esi]
+  movq mm4, [_ESI]
+  movq mm5, [_ESI]
   psubw mm4, mm0    ; -c
   psubw mm5, mm2    ; -c'
 
@@ -552,16 +563,16 @@ ALIGN 16
 
   movq mm4, mm7     ; (matrix*quant)
   nop
-  pmullw mm4, [edi + 512 + 8*eax + 7*16]
+  pmullw mm4, [_EDI + 512 + 8*_EAX + 7*16]
   movq mm5, mm4
   pmulhw mm5, mm0   ; high of c*(matrix*quant)
   pmullw mm0, mm4   ; low  of c*(matrix*quant)
 
   movq mm4, mm7     ; (matrix*quant)
-  pmullw mm4, [edi + 512 + 8*eax + 7*16 + 8]
-  add eax, byte 2
+  pmullw mm4, [_EDI + 512 + 8*_EAX + 7*16 + 8]
+  add _EAX, byte 2
 
-  pcmpgtw mm5, [esi]
+  pcmpgtw mm5, [_ESI]
   paddusw mm0, mm5
   psrlw mm0, 5
   pxor mm0, mm1     ; start restoring sign
@@ -572,18 +583,18 @@ ALIGN 16
   pmullw mm2, mm4   ; low  of c*(matrix*quant)
   psubw mm0, mm1    ; finish restoring sign
 
-  pcmpgtw mm5, [esi]
+  pcmpgtw mm5, [_ESI]
   paddusw mm2, mm5
   psrlw mm2, 5
   pxor mm2, mm3     ; start restoring sign
   psubusw mm3, mm5
   psubw mm2, mm3    ; finish restoring sign
-  movq mm1, [esi]
-  movq mm3, [byte esi]
+  movq mm1, [_ESI]
+  movq mm3, [byte _ESI]
   pxor mm6, mm0                             ; mismatch control
-  movq [edx + 8*eax + 7*16 -2*8   ], mm0    ; data[i]
+  movq [TMP1 + 8*_EAX + 7*16 -2*8   ], mm0    ; data[i]
   pxor mm6, mm2                             ; mismatch control
-  movq [edx + 8*eax + 7*16 -2*8 +8], mm2    ; data[i+1]
+  movq [TMP1 + 8*_EAX + 7*16 -2*8 +8], mm2    ; data[i+1]
 
   jng .loop
   nop
@@ -597,14 +608,14 @@ ALIGN 16
   pxor mm1, mm2
   pxor mm6, mm1
   movd eax, mm6
-  pop edi
-  and eax, byte 1
-  xor eax, byte 1
-  mov esi, [esp]
-  add esp, byte 4
-  xor word [edx + 2*63], ax
+  pop _EDI
+  and _EAX, byte 1
+  xor _EAX, byte 1
+  mov _ESI, [_ESP]
+  add _ESP, byte PTR_SIZE
+  xor word [TMP1 + 2*63], ax
 
-  xor eax, eax
+  xor _EAX, _EAX
   ret
 ENDFUNC
 

@@ -20,52 +20,26 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: sad_sse2.asm,v 1.15 2008-11-11 20:46:24 Isibaar Exp $
+; * $Id: sad_sse2.asm,v 1.16 2008-11-26 01:04:34 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
-BITS 32
-
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
+%include "nasm.inc"
 
 ;=============================================================================
 ; Read only data
 ;=============================================================================
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
+DATA
 
-ALIGN 64
+ALIGN SECTION_ALIGN
 zero    times 4   dd 0
 
 ;=============================================================================
 ; Code
 ;=============================================================================
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 cglobal  sad16_sse2
 cglobal  dev16_sse2
@@ -82,12 +56,12 @@ cglobal  dev16_sse3
 
 
 %macro SAD_16x16_SSE2 1
-  %1  xmm0, [edx]
-  %1  xmm1, [edx+ecx]
-  lea edx,[edx+2*ecx]
-  movdqa  xmm2, [eax]
-  movdqa  xmm3, [eax+ecx]
-  lea eax,[eax+2*ecx]
+  %1  xmm0, [TMP1]
+  %1  xmm1, [TMP1+TMP0]
+  lea TMP1,[TMP1+2*TMP0]
+  movdqa  xmm2, [_EAX]
+  movdqa  xmm3, [_EAX+TMP0]
+  lea _EAX,[_EAX+2*TMP0]
   psadbw  xmm0, xmm2
   paddusw xmm6,xmm0
   psadbw  xmm1, xmm3
@@ -95,9 +69,9 @@ cglobal  dev16_sse3
 %endmacro
 
 %macro SAD16_SSE2_SSE3 1
-  mov eax, [esp+ 4] ; cur (assumed aligned)
-  mov edx, [esp+ 8] ; ref
-  mov ecx, [esp+12] ; stride
+  mov _EAX, prm1 ; cur (assumed aligned)
+  mov TMP1, prm2 ; ref
+  mov TMP0, prm3 ; stride
 
   pxor xmm6, xmm6 ; accum
 
@@ -116,13 +90,13 @@ cglobal  dev16_sse3
   ret
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 sad16_sse2:
   SAD16_SSE2_SSE3 movdqu
 ENDFUNC
 
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 sad16_sse3:
   SAD16_SSE2_SSE3 lddqu
 ENDFUNC
@@ -132,10 +106,10 @@ ENDFUNC
 ; uint32_t dev16_sse2(const uint8_t * const cur, const uint32_t stride);
 ;-----------------------------------------------------------------------------
 
-%macro MEAN_16x16_SSE2 1  ; eax: src, ecx:stride, mm7: zero or mean => mm6: result
-  %1 xmm0, [eax]
-  %1 xmm1, [eax+ecx]
-  lea eax, [eax+2*ecx]    ; + 2*stride
+%macro MEAN_16x16_SSE2 1  ; _EAX: src, TMP0:stride, mm7: zero or mean => mm6: result
+  %1 xmm0, [_EAX]
+  %1 xmm1, [_EAX+TMP0]
+  lea _EAX, [_EAX+2*TMP0]    ; + 2*stride
   psadbw xmm0, xmm7
   paddusw xmm6, xmm0
   psadbw xmm1, xmm7
@@ -144,8 +118,8 @@ ENDFUNC
 
 
 %macro MEAN16_SSE2_SSE3 1
-  mov eax, [esp+ 4]   ; src
-  mov ecx, [esp+ 8]   ; stride
+  mov _EAX, prm1   ; src
+  mov TMP0, prm2   ; stride
 
   pxor xmm6, xmm6     ; accum
   pxor xmm7, xmm7     ; zero
@@ -160,7 +134,7 @@ ENDFUNC
   MEAN_16x16_SSE2 %1
   MEAN_16x16_SSE2 %1
 
-  mov eax, [esp+ 4]       ; src again
+  mov _EAX, prm1       ; src again
 
   pshufd   xmm7, xmm6, 10b
   paddusw  xmm7, xmm6
@@ -186,12 +160,12 @@ ENDFUNC
   ret
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 dev16_sse2:
   MEAN16_SSE2_SSE3 movdqu
 ENDFUNC
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 dev16_sse3:
   MEAN16_SSE2_SSE3 lddqu
 ENDFUNC

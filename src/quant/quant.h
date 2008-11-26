@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: quant.h,v 1.7 2006-07-10 08:09:59 syskin Exp $
+ * $Id: quant.h,v 1.8 2008-11-26 01:04:34 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -54,7 +54,7 @@ extern quant_intraFuncPtr dequant_mpeg_intra;
 quant_intraFunc quant_h263_intra_c;
 quant_intraFunc quant_mpeg_intra_c;
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 quant_intraFunc quant_h263_intra_mmx;
 quant_intraFunc quant_h263_intra_3dne;
 quant_intraFunc quant_h263_intra_sse2;
@@ -70,16 +70,11 @@ quant_intraFunc quant_h263_intra_ia64;
 quant_intraFunc quant_h263_intra_altivec_c;
 #endif
 
-#ifdef ARCH_IS_X86_64
-quant_intraFunc quant_h263_intra_x86_64;
-quant_intraFunc quant_mpeg_intra_x86_64;
-#endif
-
 /* DeQuant functions */
 quant_intraFunc dequant_h263_intra_c;
 quant_intraFunc dequant_mpeg_intra_c;
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 quant_intraFunc dequant_h263_intra_mmx;
 quant_intraFunc dequant_h263_intra_xmm;
 quant_intraFunc dequant_h263_intra_3dne;
@@ -96,11 +91,6 @@ quant_intraFunc dequant_h263_intra_ia64;
 #ifdef ARCH_IS_PPC
 quant_intraFunc dequant_h263_intra_altivec_c;
 quant_intraFunc dequant_mpeg_intra_altivec_c;
-#endif
-
-#ifdef ARCH_IS_X86_64
-quant_intraFunc dequant_h263_intra_x86_64;
-quant_intraFunc dequant_mpeg_intra_x86_64;
 #endif
 
 /*****************************************************************************
@@ -127,7 +117,7 @@ extern quant_interFuncPtr dequant_mpeg_inter;
 quant_interFunc quant_h263_inter_c;
 quant_interFunc quant_mpeg_inter_c;
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 quant_interFunc quant_h263_inter_mmx;
 quant_interFunc quant_h263_inter_3dne;
 quant_interFunc quant_h263_inter_sse2;
@@ -144,15 +134,10 @@ quant_interFunc quant_h263_inter_ia64;
 quant_interFunc quant_h263_inter_altivec_c;
 #endif
 
-#ifdef ARCH_IS_X86_64
-quant_interFunc quant_h263_inter_x86_64;
-quant_interFunc quant_mpeg_inter_x86_64;
-#endif
-
 quant_interFunc dequant_h263_inter_c;
 quant_interFunc dequant_mpeg_inter_c;
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 quant_interFunc dequant_h263_inter_mmx;
 quant_interFunc dequant_h263_inter_xmm;
 quant_interFunc dequant_h263_inter_3dne;
@@ -169,11 +154,6 @@ quant_interFunc dequant_h263_inter_ia64;
 #ifdef ARCH_IS_PPC
 quant_interFunc dequant_h263_inter_altivec_c;
 quant_interFunc dequant_mpeg_inter_altivec_c;
-#endif
-
-#ifdef ARCH_IS_X86_64
-quant_interFunc dequant_h263_inter_x86_64;
-quant_interFunc dequant_mpeg_inter_x86_64;
 #endif
 
 #endif /* _QUANT_H_ */

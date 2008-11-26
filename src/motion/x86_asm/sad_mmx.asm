@@ -20,45 +20,19 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: sad_mmx.asm,v 1.19 2008-11-11 20:46:24 Isibaar Exp $
+; * $Id: sad_mmx.asm,v 1.20 2008-11-26 01:04:34 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
-BITS 32
-
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
+%include "nasm.inc"
 
 ;=============================================================================
 ; Read only data
 ;=============================================================================
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
+DATA
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 mmx_one:
 	times 4	dw 1
 
@@ -67,15 +41,15 @@ mmx_one:
 ;=============================================================================
 
 %macro SAD_16x16_MMX 0
-  movq mm0, [eax]
-  movq mm1, [edx]
+  movq mm0, [_EAX]
+  movq mm1, [TMP1]
 
-  movq mm2, [eax+8]
-  movq mm3, [edx+8]
+  movq mm2, [_EAX+8]
+  movq mm3, [TMP1+8]
 
   movq mm4, mm0
   psubusb mm0, mm1
-  lea eax, [eax+ecx]
+  lea _EAX, [_EAX+TMP0]
   movq mm5, mm2
   psubusb mm2, mm3
 
@@ -88,7 +62,7 @@ mmx_one:
   punpcklbw mm0,mm7
   movq mm3, mm2
   punpckhbw mm1,mm7
-  lea edx, [edx+ecx]
+  lea TMP1, [TMP1+TMP0]
   punpcklbw mm2,mm7
   paddusw mm0, mm1
   punpckhbw mm3,mm7
@@ -99,14 +73,14 @@ mmx_one:
 %endmacro
 
 %macro SAD_8x8_MMX	0
-  movq mm0, [eax]
-  movq mm1, [edx]
+  movq mm0, [_EAX]
+  movq mm1, [TMP1]
 
-  movq mm2, [eax+ecx]
-  movq mm3, [edx+ecx]
+  movq mm2, [_EAX+TMP0]
+  movq mm3, [TMP1+TMP0]
 
-  lea eax,[eax+2*ecx]
-  lea edx,[edx+2*ecx]
+  lea _EAX,[_EAX+2*TMP0]
+  lea TMP1,[TMP1+2*TMP0]
 
   movq mm4, mm0
   psubusb mm0, mm1
@@ -132,16 +106,16 @@ mmx_one:
 
 
 %macro SADV_16x16_MMX 0
-  movq mm0, [eax]
-  movq mm1, [edx]
+  movq mm0, [_EAX]
+  movq mm1, [TMP1]
 
-  movq mm2, [eax+8]
+  movq mm2, [_EAX+8]
   movq mm4, mm0
-  movq mm3, [edx+8]
+  movq mm3, [TMP1+8]
   psubusb mm0, mm1
 
   psubusb mm1, mm4
-  lea eax,[eax+ecx]
+  lea _EAX,[_EAX+TMP0]
   por mm0, mm1
 
   movq mm4, mm2
@@ -159,19 +133,19 @@ mmx_one:
   punpckhbw mm3,mm7
   paddusw mm5, mm0
   paddusw mm2,mm3
-  lea edx,[edx+ecx]
+  lea TMP1,[TMP1+TMP0]
   paddusw mm6, mm2
 %endmacro
 
 %macro SADBI_16x16_MMX 2    ; SADBI_16x16_MMX( int_ptr_offset, bool_increment_ptr );
 
-  movq mm0, [edx+%1]
-  movq mm2, [ebx+%1]
+  movq mm0, [TMP1+%1]
+  movq mm2, [_EBX+%1]
   movq mm1, mm0
   movq mm3, mm2
 
 %if %2 != 0
-  add edx, ecx
+  add TMP1, TMP0
 %endif
 
   punpcklbw mm0, mm7
@@ -180,7 +154,7 @@ mmx_one:
   punpckhbw mm3, mm7
 
 %if %2 != 0
-  add ebx, ecx
+  add _EBX, TMP0
 %endif
 
   paddusw mm0, mm2              ; mm01 = ref1 + ref2
@@ -190,13 +164,13 @@ mmx_one:
   psrlw mm0, 1                  ; mm01 >>= 1
   psrlw mm1, 1
 
-  movq mm2, [eax+%1]
+  movq mm2, [_EAX+%1]
   movq mm3, mm2
   punpcklbw mm2, mm7            ; mm23 = src
   punpckhbw mm3, mm7
 
 %if %2 != 0
-  add eax, ecx
+  add _EAX, TMP0
 %endif
 
   movq mm4, mm0
@@ -214,9 +188,9 @@ mmx_one:
 %endmacro
 
 %macro MEAN_16x16_MMX 0
-  movq mm0, [eax]
-  movq mm2, [eax+8]
-  lea eax, [eax+ecx]
+  movq mm0, [_EAX]
+  movq mm2, [_EAX+8]
+  lea _EAX, [_EAX+TMP0]
   movq mm1, mm0
   punpcklbw mm0, mm7
   movq mm3, mm2
@@ -230,9 +204,9 @@ mmx_one:
 %endmacro
 
 %macro ABS_16x16_MMX 0
-  movq mm0, [eax]
-  movq mm2, [eax+8]
-  lea eax, [eax+ecx]
+  movq mm0, [_EAX]
+  movq mm2, [_EAX+8]
+  lea _EAX, [_EAX+TMP0]
   movq mm1, mm0
   movq mm3, mm2
   punpcklbw mm0, mm7
@@ -268,7 +242,7 @@ mmx_one:
 ; Code
 ;=============================================================================
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 cglobal sad16_mmx
 cglobal sad16v_mmx
@@ -290,12 +264,12 @@ cglobal sse8_8bit_mmx
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 sad16_mmx:
 
-  mov eax, [esp+ 4] ; Src1
-  mov edx, [esp+ 8] ; Src2
-  mov ecx, [esp+12] ; Stride
+  mov _EAX, prm1 ; Src1
+  mov TMP1, prm2 ; Src2
+  mov TMP0, prm3 ; Stride
 
   pxor mm6, mm6 ; accum
   pxor mm7, mm7 ; zero
@@ -336,12 +310,12 @@ ENDFUNC
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 sad8_mmx:
 
-  mov eax, [esp+ 4] ; Src1
-  mov edx, [esp+ 8] ; Src2
-  mov ecx, [esp+12] ; Stride
+  mov _EAX, prm1 ; Src1
+  mov TMP1, prm2 ; Src2
+  mov TMP0, prm3 ; Stride
 
   pxor mm6, mm6 ; accum
   pxor mm7, mm7 ; zero
@@ -370,16 +344,20 @@ ENDFUNC
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 sad16v_mmx:
 
-  push ebx
-  push edi
+  mov _EAX, prm1 ; Src1
+  mov TMP1, prm2 ; Src2
+  mov TMP0, prm3 ; Stride
 
-  mov eax, [esp + 8 + 4] ; Src1
-  mov edx, [esp + 8 + 8] ; Src2
-  mov ecx, [esp + 8 + 12] ; Stride
-  mov ebx, [esp + 8 + 16] ; sad ptr
+  push _EBX
+  push _EDI
+%ifdef ARCH_IS_X86_64
+  mov _EBX, prm4
+%else
+  mov _EBX, [_ESP + 8 + 16] ; sad ptr
+%endif
 
   pxor mm5, mm5 ; accum
   pxor mm6, mm6 ; accum
@@ -406,8 +384,8 @@ sad16v_mmx:
   paddd mm5, mm2
   paddd mm6, mm3
 
-  movd [ebx], mm5
-  movd [ebx + 4], mm6
+  movd [_EBX], mm5
+  movd [_EBX + 4], mm6
 
   paddd mm5, mm6
 
@@ -437,17 +415,17 @@ sad16v_mmx:
   paddd mm5, mm2
   paddd mm6, mm3
 
-  movd [ebx + 8], mm5
-  movd [ebx + 12], mm6
+  movd [_EBX + 8], mm5
+  movd [_EBX + 12], mm6
 
   paddd mm5, mm6
 
   movd eax, mm5
 
-  add eax, edi
+  add _EAX, _EDI 
 
-  pop edi
-  pop ebx
+  pop _EDI
+  pop _EBX
 
   ret
 ENDFUNC
@@ -461,13 +439,18 @@ ENDFUNC
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 sad16bi_mmx:
-  push ebx
-  mov eax, [esp+4+ 4] ; Src
-  mov edx, [esp+4+ 8] ; Ref1
-  mov ebx, [esp+4+12] ; Ref2
-  mov ecx, [esp+4+16] ; Stride
+  mov _EAX, prm1 ; Src
+  mov TMP1, prm2 ; Ref1
+  mov TMP0, prm4 ; Stride
+
+  push _EBX
+%ifdef ARCH_IS_X86_64
+  mov _EBX, prm3 ; Ref2
+%else
+  mov _EBX, [_ESP+4+12] ; Ref2
+%endif
 
   pxor mm6, mm6 ; accum2
   pxor mm7, mm7
@@ -512,7 +495,7 @@ sad16bi_mmx:
   paddd mm6, mm7
 
   movd eax, mm6
-  pop ebx
+  pop _EBX
 
   ret
 ENDFUNC
@@ -526,13 +509,18 @@ ENDFUNC
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 sad8bi_mmx:
-  push ebx
-  mov eax, [esp+4+ 4] ; Src
-  mov edx, [esp+4+ 8] ; Ref1
-  mov ebx, [esp+4+12] ; Ref2
-  mov ecx, [esp+4+16] ; Stride
+  mov _EAX, prm1 ; Src
+  mov TMP1, prm2 ; Ref1
+  mov TMP0, prm4 ; Stride
+
+  push _EBX
+%ifdef ARCH_IS_X86_64
+  mov _EBX, prm3
+%else
+  mov _EBX, [_ESP+4+12] ; Ref2
+%endif
 
   pxor mm6, mm6 ; accum2
   pxor mm7, mm7
@@ -552,7 +540,7 @@ sad8bi_mmx:
   paddd mm6, mm7
 
   movd eax, mm6
-  pop ebx
+  pop _EBX
   ret
 ENDFUNC
 
@@ -563,10 +551,10 @@ ENDFUNC
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 dev16_mmx:
-  mov eax, [esp+ 4] ; Src
-  mov ecx, [esp+ 8] ; Stride
+  mov _EAX, prm1 ; Src
+  mov TMP0, prm2 ; Stride
 
   pxor mm7, mm7 ; zero
   pxor mm5, mm5 ; accum1
@@ -606,7 +594,7 @@ dev16_mmx:
     ; mm5 is the new accum
 
   pxor mm5, mm5
-  mov eax, [esp+ 4]         ; Src
+  mov _EAX, prm1         ; Src
 
   ABS_16x16_MMX
   ABS_16x16_MMX
@@ -656,22 +644,20 @@ ENDFUNC
 %endmacro
 	
 sse8_16bit_mmx:
-  push esi
-  push edi
 
   ;; Load the function params
-  mov esi, [esp+8+4]
-  mov edi, [esp+8+8]
-  mov edx, [esp+8+12]
+  mov _EAX, prm1
+  mov TMP0, prm2
+  mov TMP1, prm3
 
   ;; Reset the sse accumulator
   pxor mm2, mm2
 
   ;; Let's go
 %rep 8
-  ROW_SSE_16bit_MMX esi, edi
-  lea esi, [esi+edx]
-  lea edi, [edi+edx]
+  ROW_SSE_16bit_MMX _EAX, TMP0
+  lea _EAX, [_EAX+TMP1]
+  lea TMP0, [TMP0+TMP1]
 %endrep
 
   ;; Finish adding each dword of the accumulator
@@ -681,8 +667,6 @@ sse8_16bit_mmx:
   movd eax, mm2
 
   ;; All done
-  pop edi
-  pop esi
   ret
 ENDFUNC
 
@@ -718,13 +702,11 @@ ENDFUNC
 %endmacro
 
 sse8_8bit_mmx:
-  push esi
-  push edi
 
   ;; Load the function params
-  mov esi, [esp+8+4]
-  mov edi, [esp+8+8]
-  mov edx, [esp+8+12]
+  mov _EAX, prm1
+  mov TMP0, prm2
+  mov TMP1, prm3
 
   ;; Reset the sse accumulator
   pxor mm6, mm6
@@ -734,9 +716,9 @@ sse8_8bit_mmx:
 
   ;; Let's go
 %rep 8
-  ROW_SSE_8bit_MMX esi, edi
-  lea esi, [esi+edx]
-  lea edi, [edi+edx]
+  ROW_SSE_8bit_MMX _EAX, TMP0
+  lea _EAX, [_EAX+TMP1]
+  lea TMP0, [TMP0+TMP1]
 %endrep
 
   ;; Finish adding each dword of the accumulator
@@ -746,8 +728,6 @@ sse8_8bit_mmx:
   movd eax, mm6
 
   ;; All done
-  pop edi
-  pop esi
   ret
 ENDFUNC
 

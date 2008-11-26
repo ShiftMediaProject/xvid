@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: deintl_sse.asm,v 1.3 2008-11-11 20:46:24 Isibaar Exp $
+; * $Id: deintl_sse.asm,v 1.4 2008-11-26 01:04:34 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -32,29 +32,7 @@
 ; *
 ; *************************************************************************/
 
-bits 32
-
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
+%include "nasm.inc"
 
 ;//////////////////////////////////////////////////////////////////////
 
@@ -62,50 +40,50 @@ cglobal xvid_deinterlace_sse
 
 ;//////////////////////////////////////////////////////////////////////
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
+DATA
 
-align 16
+align SECTION_ALIGN
 Mask_6b  times 16 db 0x3f
 Rnd_3b:  times 16 db 3
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 ;//////////////////////////////////////////////////////////////////////
 ;// sse version
 
-align 16
+align SECTION_ALIGN
 xvid_deinterlace_sse:
 
-  mov eax, [esp+ 4]  ; Pix
-  mov ecx, [esp+12]  ; Height
-  mov edx, [esp+16]  ; BpS
+  mov _EAX, prm1  ; Pix
+  mov TMP0, prm3  ; Height
+  mov TMP1, prm4  ; BpS
 
-  push ebx
-  mov ebx, [esp+4+ 8] ; Width
+  push _EBX
+%ifdef ARCH_IS_X86_64
+  mov _EBX,  prm2  ; Width
+%else
+  mov _EBX, [esp+4+ 8] ; Width
+%endif
 
-  add ebx, 7
-  shr ecx, 1
-  shr ebx, 3        ; Width /= 8
-  dec ecx
+  add _EBX, 7
+  shr TMP0, 1
+  shr _EBX, 3        ; Width /= 8
+  dec TMP0
 
   movq mm6, [Mask_6b]
 
 .Loop_x:
-  push eax
-  movq mm1, [eax      ]
-  movq mm2, [eax+  edx]
-  lea  eax, [eax+  edx]
+  push _EAX
+  movq mm1,  [_EAX      ]
+  movq mm2,  [_EAX+ TMP1]
+  lea  _EAX, [_EAX+ TMP1]
   movq mm0, mm2
 
-  push ecx
+  push TMP0
 
 .Loop:
-  movq    mm3, [eax+  edx]
-  movq    mm4, [eax+2*edx]
+  movq    mm3, [_EAX+  TMP1]
+  movq    mm4, [_EAX+2*TMP1]
   movq    mm5, mm2
   pavgb   mm0, mm4
   pavgb   mm1, mm3
@@ -119,12 +97,12 @@ xvid_deinterlace_sse:
   pand    mm0, mm6
   paddusb mm1, mm2
   psubusb mm1, mm0
-  movq   [eax], mm1
-  lea  eax, [eax+2*edx]
+  movq   [_EAX], mm1
+  lea  _EAX, [_EAX+2*TMP1]
   movq mm0, mm5
   movq mm1, mm3
   movq mm2, mm4
-  dec ecx
+  dec TMP0
   jg .Loop
 
   pavgb mm0, mm2     ; p0 += p2
@@ -139,16 +117,16 @@ xvid_deinterlace_sse:
   pand    mm0, mm6
   paddusb mm1, mm2
   psubusb mm1, mm0
-  movq   [eax], mm1
+  movq   [_EAX], mm1
 
-  pop ecx
-  pop eax
-  add eax, 8
+  pop TMP0
+  pop _EAX
+  add _EAX, 8
 
-  dec ebx
+  dec _EBX
   jg .Loop_x
 
-  pop ebx
+  pop _EBX
   ret
 ENDFUNC
 

@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: idct_mmx.asm,v 1.12 2008-11-11 20:46:24 Isibaar Exp $
+; * $Id: idct_mmx.asm,v 1.13 2008-11-26 01:04:34 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -44,33 +44,11 @@
 ; (for rows) and first stage DCT 8x8 (for columns)
 ;
 
-BITS 32
-
 ;=============================================================================
 ; Macros and other preprocessor constants
 ;=============================================================================
 
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
+%include "nasm.inc"
 
 %define BITS_INV_ACC    5                         ; 4 or 5 for IEEE
 %define SHIFT_INV_ROW   16 - BITS_INV_ACC
@@ -88,17 +66,13 @@ BITS 32
 ; Local Data (Read Only)
 ;=============================================================================
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
+DATA
 
 ;-----------------------------------------------------------------------------
 ; Various memory constants (trigonometric values or rounding values)
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 one_corr:
   dw 1, 1, 1, 1
 round_inv_row:
@@ -579,7 +553,7 @@ tab_i_35_xmm:
 ; Code
 ;=============================================================================
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 cglobal idct_mmx
 cglobal idct_xmm
@@ -588,23 +562,23 @@ cglobal idct_xmm
 ; void idct_mmx(uint16_t block[64]);
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 idct_mmx:
-    mov eax, dword [esp + 4]
+    mov TMP0, prm1
 
 	;; Process each row
-    DCT_8_INV_ROW_MMX eax+0*16, eax+0*16, tab_i_04_mmx, rounder_0
-    DCT_8_INV_ROW_MMX eax+1*16, eax+1*16, tab_i_17_mmx, rounder_1
-    DCT_8_INV_ROW_MMX eax+2*16, eax+2*16, tab_i_26_mmx, rounder_2
-    DCT_8_INV_ROW_MMX eax+3*16, eax+3*16, tab_i_35_mmx, rounder_3
-    DCT_8_INV_ROW_MMX eax+4*16, eax+4*16, tab_i_04_mmx, rounder_4
-    DCT_8_INV_ROW_MMX eax+5*16, eax+5*16, tab_i_35_mmx, rounder_5
-    DCT_8_INV_ROW_MMX eax+6*16, eax+6*16, tab_i_26_mmx, rounder_6
-    DCT_8_INV_ROW_MMX eax+7*16, eax+7*16, tab_i_17_mmx, rounder_7
+    DCT_8_INV_ROW_MMX TMP0+0*16, TMP0+0*16, tab_i_04_mmx, rounder_0
+    DCT_8_INV_ROW_MMX TMP0+1*16, TMP0+1*16, tab_i_17_mmx, rounder_1
+    DCT_8_INV_ROW_MMX TMP0+2*16, TMP0+2*16, tab_i_26_mmx, rounder_2
+    DCT_8_INV_ROW_MMX TMP0+3*16, TMP0+3*16, tab_i_35_mmx, rounder_3
+    DCT_8_INV_ROW_MMX TMP0+4*16, TMP0+4*16, tab_i_04_mmx, rounder_4
+    DCT_8_INV_ROW_MMX TMP0+5*16, TMP0+5*16, tab_i_35_mmx, rounder_5
+    DCT_8_INV_ROW_MMX TMP0+6*16, TMP0+6*16, tab_i_26_mmx, rounder_6
+    DCT_8_INV_ROW_MMX TMP0+7*16, TMP0+7*16, tab_i_17_mmx, rounder_7
 
 	;; Process the columns (4 at a time)
-    DCT_8_INV_COL eax+0, eax+0
-    DCT_8_INV_COL eax+8, eax+8
+    DCT_8_INV_COL TMP0+0, TMP0+0
+    DCT_8_INV_COL TMP0+8, TMP0+8
 
     ret
 ENDFUNC
@@ -613,23 +587,23 @@ ENDFUNC
 ; void idct_xmm(uint16_t block[64]);
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 idct_xmm:
-    mov eax, dword [esp + 4]
+    mov TMP0, prm1
 
 	;; Process each row
-    DCT_8_INV_ROW_XMM eax+0*16, eax+0*16, tab_i_04_xmm, rounder_0
-    DCT_8_INV_ROW_XMM eax+1*16, eax+1*16, tab_i_17_xmm, rounder_1
-    DCT_8_INV_ROW_XMM eax+2*16, eax+2*16, tab_i_26_xmm, rounder_2
-    DCT_8_INV_ROW_XMM eax+3*16, eax+3*16, tab_i_35_xmm, rounder_3
-    DCT_8_INV_ROW_XMM eax+4*16, eax+4*16, tab_i_04_xmm, rounder_4
-    DCT_8_INV_ROW_XMM eax+5*16, eax+5*16, tab_i_35_xmm, rounder_5
-    DCT_8_INV_ROW_XMM eax+6*16, eax+6*16, tab_i_26_xmm, rounder_6
-    DCT_8_INV_ROW_XMM eax+7*16, eax+7*16, tab_i_17_xmm, rounder_7
+    DCT_8_INV_ROW_XMM TMP0+0*16, TMP0+0*16, tab_i_04_xmm, rounder_0
+    DCT_8_INV_ROW_XMM TMP0+1*16, TMP0+1*16, tab_i_17_xmm, rounder_1
+    DCT_8_INV_ROW_XMM TMP0+2*16, TMP0+2*16, tab_i_26_xmm, rounder_2
+    DCT_8_INV_ROW_XMM TMP0+3*16, TMP0+3*16, tab_i_35_xmm, rounder_3
+    DCT_8_INV_ROW_XMM TMP0+4*16, TMP0+4*16, tab_i_04_xmm, rounder_4
+    DCT_8_INV_ROW_XMM TMP0+5*16, TMP0+5*16, tab_i_35_xmm, rounder_5
+    DCT_8_INV_ROW_XMM TMP0+6*16, TMP0+6*16, tab_i_26_xmm, rounder_6
+    DCT_8_INV_ROW_XMM TMP0+7*16, TMP0+7*16, tab_i_17_xmm, rounder_7
 
 	;; Process the columns (4 at a time)
-    DCT_8_INV_COL eax+0, eax+0
-    DCT_8_INV_COL eax+8, eax+8
+    DCT_8_INV_COL TMP0+0, TMP0+0
+    DCT_8_INV_COL TMP0+8, TMP0+8
 
     ret
 ENDFUNC

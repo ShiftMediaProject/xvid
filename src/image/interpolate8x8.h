@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: interpolate8x8.h,v 1.16 2005-09-13 12:12:15 suxen_drol Exp $
+ * $Id: interpolate8x8.h,v 1.17 2008-11-26 01:04:34 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -127,7 +127,7 @@ INTERPOLATE8X8 interpolate8x8_halfpel_h_add_c;
 INTERPOLATE8X8 interpolate8x8_halfpel_v_add_c;
 INTERPOLATE8X8 interpolate8x8_halfpel_hv_add_c;
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 INTERPOLATE8X8 interpolate8x8_halfpel_h_mmx;
 INTERPOLATE8X8 interpolate8x8_halfpel_v_mmx;
 INTERPOLATE8X8 interpolate8x8_halfpel_hv_mmx;
@@ -188,21 +188,10 @@ INTERPOLATE8X8 interpolate8x8_halfpel_v_add_altivec_c;
 INTERPOLATE8X8 interpolate8x8_halfpel_hv_add_altivec_c;
 #endif
 
-#ifdef ARCH_IS_X86_64
-INTERPOLATE8X8 interpolate8x8_halfpel_h_x86_64;
-INTERPOLATE8X8 interpolate8x8_halfpel_v_x86_64;
-INTERPOLATE8X8 interpolate8x8_halfpel_hv_x86_64;
-
-INTERPOLATE8X8 interpolate8x8_halfpel_add_x86_64;
-INTERPOLATE8X8 interpolate8x8_halfpel_h_add_x86_64;
-INTERPOLATE8X8 interpolate8x8_halfpel_v_add_x86_64;
-INTERPOLATE8X8 interpolate8x8_halfpel_hv_add_x86_64;
-#endif
-
 INTERPOLATE8X8_AVG2 interpolate8x8_avg2_c;
 INTERPOLATE8X8_AVG4 interpolate8x8_avg4_c;
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 INTERPOLATE8X8_AVG2 interpolate8x8_avg2_mmx;
 INTERPOLATE8X8_AVG4 interpolate8x8_avg4_mmx;
 #endif
@@ -210,11 +199,6 @@ INTERPOLATE8X8_AVG4 interpolate8x8_avg4_mmx;
 #ifdef ARCH_IS_PPC
 INTERPOLATE8X8_AVG2 interpolate8x8_avg2_altivec_c;
 INTERPOLATE8X8_AVG4 interpolate8x8_avg4_altivec_c;
-#endif
-
-#ifdef ARCH_IS_X86_64
-INTERPOLATE8X8_AVG2 interpolate8x8_avg2_x86_64;
-INTERPOLATE8X8_AVG4 interpolate8x8_avg4_x86_64;
 #endif
 
 INTERPOLATE_LOWPASS interpolate8x8_lowpass_h_c;
@@ -229,18 +213,13 @@ INTERPOLATE_LOWPASS_HV interpolate16x16_lowpass_hv_c;
 INTERPOLATE8X8_6TAP_LOWPASS interpolate8x8_6tap_lowpass_h_c;
 INTERPOLATE8X8_6TAP_LOWPASS interpolate8x8_6tap_lowpass_v_c;
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 INTERPOLATE8X8_6TAP_LOWPASS interpolate8x8_6tap_lowpass_h_mmx;
 INTERPOLATE8X8_6TAP_LOWPASS interpolate8x8_6tap_lowpass_v_mmx;
 #endif
 
 #ifdef ARCH_IS_PPC
 INTERPOLATE8X8_6TAP_LOWPASS interpolate8x8_6tap_lowpass_h_altivec_c;
-#endif
-
-#ifdef ARCH_IS_X86_64
-INTERPOLATE8X8_6TAP_LOWPASS interpolate8x8_6tap_lowpass_h_x86_64;
-INTERPOLATE8X8_6TAP_LOWPASS interpolate8x8_6tap_lowpass_v_x86_64;
 #endif
 
 static __inline void

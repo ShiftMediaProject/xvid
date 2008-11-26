@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: idct_3dne.asm,v 1.8 2008-11-11 20:46:24 Isibaar Exp $
+; * $Id: idct_3dne.asm,v 1.9 2008-11-26 01:04:34 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -54,33 +54,11 @@
 ; Athlon optimizations contributed by Jaan Kalda
 ;-----------------------------------------------------------------------------
 
-BITS 32
-
 ;=============================================================================
 ; Macros and other preprocessor constants
 ;=============================================================================
 
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
+%include "nasm.inc"
 
 %define BITS_INV_ACC    5                         ; 4 or 5 for IEEE
 %define SHIFT_INV_ROW   16 - BITS_INV_ACC
@@ -98,17 +76,13 @@ BITS 32
 ; Local Data (Read Only)
 ;=============================================================================
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
+DATA
 
 ;-----------------------------------------------------------------------------
 ; Various memory constants (trigonometric values or rounding values)
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 one_corr:
   dw 1, 1, 1, 1
 round_inv_row:
@@ -225,7 +199,7 @@ tab_i_35_xmm:
 ; Code
 ;=============================================================================
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 cglobal idct_3dne
 
@@ -233,17 +207,17 @@ cglobal idct_3dne
 ; void idct_3dne(uint16_t block[64]);
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 idct_3dne:
-  mov eax, [esp+4]
+  mov _ECX, prm1
 
-;   DCT_8_INV_ROW_1_s [eax+64], [eax+64], tab_i_04_sse, rounder_4 ;rounder_4=0
-  pshufw mm0, [eax+64],10001000b        ; x2 x0 x2 x0
+;   DCT_8_INV_ROW_1_s [_ECX+64], [_ECX+64], tab_i_04_sse, rounder_4 ;rounder_4=0
+  pshufw mm0, [_ECX+64],10001000b        ; x2 x0 x2 x0
   movq mm3, [tab_i_04_xmm]          ; 3     ; w05 w04 w01 w00
-  pshufw mm1, [eax+64+8],10001000b  ; x6 x4 x6 x4
+  pshufw mm1, [_ECX+64+8],10001000b  ; x6 x4 x6 x4
   movq mm4, [tab_i_04_xmm+8]        ; 4     ; w07 w06 w03 w02
-  pshufw mm2, [eax+64],11011101b        ; x3 x1 x3 x1
-  pshufw mm5, [eax+64+8],11011101b  ; x7 x5 x7 x5
+  pshufw mm2, [_ECX+64],11011101b        ; x3 x1 x3 x1
+  pshufw mm5, [_ECX+64+8],11011101b  ; x7 x5 x7 x5
   movq mm6, [tab_i_04_xmm+32]   ; 6     ; w21 w20 w17 w16
   pmaddwd mm3, mm0              ; x2*w05+x0*w04 x2*w01+x0*w00
   movq mm7, [tab_i_04_xmm+40]   ; 7     ; w23 w22 w19 w18 ;
@@ -256,18 +230,18 @@ idct_3dne:
   pmaddwd mm5, [tab_i_04_xmm+56]; x7*w31+x5*w30 x7*w27+x5*w26
   paddd mm3, mm4                ; 4 free    ; a1=sum(even1) a0=sum(even0)
   paddd mm0, mm1                ; 1 free    ; a3=sum(even3) a2=sum(even2)
-  pshufw mm1, [eax+80+8],10001000b  ; x6 x4 x6 x4
+  pshufw mm1, [_ECX+80+8],10001000b  ; x6 x4 x6 x4
   movq mm4, mm3                 ; 4     ; a1 a0
   paddd mm6, mm7                ; 7 free    ; b1=sum(odd1) b0=sum(odd0)
   paddd mm2, mm5                ; 5 free    ; b3=sum(odd3) b2=sum(odd2)
-  pshufw mm5, [eax+80],10001000b; x2 x0 x2 x0   mm5 & mm0 exchanged for next cycle
+  pshufw mm5, [_ECX+80],10001000b; x2 x0 x2 x0   mm5 & mm0 exchanged for next cycle
   movq mm7, mm0                 ; 7     ; a3 a2
   psubd mm4, mm6                ; 6 free    ; a1-b1 a0-b0
   paddd mm6, mm3                ; mm6 = mm3+mm6+mm5+mm4; a1+b1 a0+b0
   movq mm3, [tab_i_35_xmm]      ; 3     ; w05 w04 w01 w00
   psubd mm7, mm2                ; ; a3-b3 a2-b2
   paddd mm0, mm2                ; 0 free a3+b3 a2+b2
-  pshufw mm2, [eax+80],11011101b; x3 x1 x3 x1
+  pshufw mm2, [_ECX+80],11011101b; x3 x1 x3 x1
   pmaddwd mm3, mm5              ; x2*w05+x0*w04 x2*w01+x0*w00
   pmaddwd mm5, [tab_i_35_xmm+16]; x2*w13+x0*w12 x2*w09+x0*w08
   psrad mm4, SHIFT_INV_ROW      ; y6=a1-b1 y7=a0-b0
@@ -276,16 +250,16 @@ idct_3dne:
   psrad mm0, SHIFT_INV_ROW      ; y3=a3+b3 y2=a2+b2
   packssdw mm7, mm4             ; 4     ; y6 y7 y4 y5
   packssdw mm6, mm0             ; 0 free    ; y3 y2 y1 y0
-  pshufw mm0, [eax+80+8],11011101b  ; x7 x5 x7 x5
-  movq [eax+64], mm6            ; 3     ; save y3 y2 y1 y0 stall2
+  pshufw mm0, [_ECX+80+8],11011101b  ; x7 x5 x7 x5
+  movq [_ECX+64], mm6            ; 3     ; save y3 y2 y1 y0 stall2
 
-;   DCT_8_INV_ROW_1_s [eax+80], [eax+80], tab_i_35_xmm, rounder_5
+;   DCT_8_INV_ROW_1_s [_ECX+80], [_ECX+80], tab_i_35_xmm, rounder_5
   movq mm4, [tab_i_35_xmm+8]    ; 4     ; w07 w06 w03 w02
   movq mm6, [tab_i_35_xmm+32]   ; 6     ; w21 w20 w17 w16
   pshufw mm7, mm7, 10110001b    ; y7 y6 y5 y4
   paddd mm3, [rounder_5]        ; +rounder stall 6
   paddd mm5, [rounder_5]        ; +rounder
-  movq [eax+64+8], mm7          ; 7     ; save y7 y6 y5 y4
+  movq [_ECX+64+8], mm7          ; 7     ; save y7 y6 y5 y4
   movq mm7, [tab_i_35_xmm+40]   ; 7     ; w23 w22 w19 w18
   pmaddwd mm4, mm1              ; x6*w07+x4*w06 x6*w03+x4*w02
   pmaddwd mm1, [tab_i_35_xmm+24]; x6*w15+x4*w14 x6*w11+x4*w10
@@ -295,18 +269,18 @@ idct_3dne:
   pmaddwd mm0, [tab_i_35_xmm+56]; x7*w31+x5*w30 x7*w27+x5*w26
   paddd mm3, mm4                ; 4 free    ; a1=sum(even1) a0=sum(even0)
   paddd mm5, mm1                ; 1 free    ; a3=sum(even3) a2=sum(even2)
-  pshufw mm1, [eax+96+8],10001000b  ; x6 x4 x6 x4
+  pshufw mm1, [_ECX+96+8],10001000b  ; x6 x4 x6 x4
   movq mm4, mm3                 ; 4     ; a1 a0
   paddd mm6, mm7                ; 7 free    ; b1=sum(odd1) b0=sum(odd0)
   paddd mm2, mm0                ; 5 free    ; b3=sum(odd3) b2=sum(odd2)
-  pshufw mm0, [eax+96],10001000b    ; x2 x0 x2 x0
+  pshufw mm0, [_ECX+96],10001000b    ; x2 x0 x2 x0
   movq mm7, mm5                 ; 7     ; a3 a2
   psubd mm4, mm6                ; 6 free    ; a1-b1 a0-b0 stall 5
   paddd mm6, mm3                ; mm3 = mm3+mm6+mm5+mm4; a1+b1 a0+b0
   movq mm3, [tab_i_26_xmm]      ; 3     ; w05 w04 w01 w00
   psubd mm7, mm2                ; ; a3-b3 a2-b2
   paddd mm5, mm2                ; 0 free a3+b3 a2+b2
-  pshufw mm2, [eax+96],11011101b; x3 x1 x3 x1
+  pshufw mm2, [_ECX+96],11011101b; x3 x1 x3 x1
   pmaddwd mm3, mm0              ; x2*w05+x0*w04 x2*w01+x0*w00
   pmaddwd mm0, [tab_i_26_xmm+16]; x2*w13+x0*w12 x2*w09+x0*w08
   psrad mm4, SHIFT_INV_ROW      ; y6=a1-b1 y7=a0-b0
@@ -315,16 +289,16 @@ idct_3dne:
   psrad mm5, SHIFT_INV_ROW      ; y3=a3+b3 y2=a2+b2
   packssdw mm7, mm4             ; 4     ; y6 y7 y4 y5
   packssdw mm6, mm5             ; 0 free    ; y3 y2 y1 y0
-  pshufw mm5, [eax+96+8],11011101b  ; x7 x5 x7 x5
-  movq [eax+80], mm6            ; 3     ; save y3 y2 y1 y0
+  pshufw mm5, [_ECX+96+8],11011101b  ; x7 x5 x7 x5
+  movq [_ECX+80], mm6            ; 3     ; save y3 y2 y1 y0
 
-;   DCT_8_INV_ROW_1_s [eax+96], [eax+96], tab_i_26_xmm, rounder_6
+;   DCT_8_INV_ROW_1_s [_ECX+96], [_ECX+96], tab_i_26_xmm, rounder_6
   movq mm4, [tab_i_26_xmm+8]    ; 4     ; w07 w06 w03 w02
   movq mm6, [tab_i_26_xmm+32]   ; 6     ; w21 w20 w17 w16
   pshufw mm7, mm7, 10110001b    ; y7 y6 y5 y4 STALL 6
   paddd mm3, [rounder_6]        ; +rounder
   paddd mm0, [rounder_6]        ; +rounder
-  movq [eax+80+8], mm7          ; 7     ; save y7 y6
+  movq [_ECX+80+8], mm7          ; 7     ; save y7 y6
   movq mm7, [tab_i_26_xmm+40]   ; 7     ; w23 w22 w19 w18
   pmaddwd mm4, mm1              ; x6*w07+x4*w06 x6*w03+x4*w02
   pmaddwd mm1, [tab_i_26_xmm+24]; x6*w15+x4*w14 x6*w11+x4*w10
@@ -334,18 +308,18 @@ idct_3dne:
   pmaddwd mm5, [tab_i_26_xmm+56]; x7*w31+x5*w30 x7*w27+x5*w26
   paddd mm3, mm4                ; 4 free    ; a1=sum(even1) a0=sum(even0)
   paddd mm0, mm1                ; 1 free    ; a3=sum(even3) a2=sum(even2)
-  pshufw mm1, [eax+112+8],10001000b ; x6 x4 x6 x4
+  pshufw mm1, [_ECX+112+8],10001000b ; x6 x4 x6 x4
   movq mm4, mm3                 ; 4     ; a1 a0
   paddd mm6, mm7                ; 7 free    ; b1=sum(odd1) b0=sum(odd0)
   paddd mm2, mm5                ; 5 free    ; b3=sum(odd3) b2=sum(odd2)
-  pshufw mm5, [eax+112],10001000b; x2 x0 x2 x0  mm5 & mm0 exchanged for next cycle
+  pshufw mm5, [_ECX+112],10001000b; x2 x0 x2 x0  mm5 & mm0 exchanged for next cycle
   movq mm7, mm0                 ; 7     ; a3 a2
   psubd mm4, mm6                ; 6 free    ; a1-b1 a0-b0
   paddd mm6, mm3                ; mm6 = mm3+mm6+mm5+mm4; a1+b1 a0+b0
   movq mm3, [tab_i_17_xmm]      ; 3     ; w05 w04 w01 w00
   psubd mm7, mm2                ; ; a3-b3 a2-b2
   paddd mm0, mm2                ; 0 free a3+b3 a2+b2
-  pshufw mm2, [eax+112],11011101b; x3 x1 x3 x1
+  pshufw mm2, [_ECX+112],11011101b; x3 x1 x3 x1
   pmaddwd mm3, mm5              ; x2*w05+x0*w04 x2*w01+x0*w00
   pmaddwd mm5, [tab_i_17_xmm+16]; x2*w13+x0*w12 x2*w09+x0*w08
   psrad mm4, SHIFT_INV_ROW      ; y6=a1-b1 y7=a0-b0
@@ -354,16 +328,16 @@ idct_3dne:
   psrad mm0, SHIFT_INV_ROW      ; y3=a3+b3 y2=a2+b2
   packssdw mm7, mm4             ; 4     ; y6 y7 y4 y5
   packssdw mm6, mm0             ; 0 free    ; y3 y2 y1 y0
-  pshufw mm0, [eax+112+8],11011101b ; x7 x5 x7 x5
-  movq [eax+96], mm6            ; 3     ; save y3 y2 y1 y0 stall2
+  pshufw mm0, [_ECX+112+8],11011101b ; x7 x5 x7 x5
+  movq [_ECX+96], mm6            ; 3     ; save y3 y2 y1 y0 stall2
 
-;   DCT_8_INV_ROW_1_s [eax+112], [eax+112], tab_i_17_xmm, rounder_7
+;   DCT_8_INV_ROW_1_s [_ECX+112], [_ECX+112], tab_i_17_xmm, rounder_7
   movq mm4, [tab_i_17_xmm+8]    ; 4     ; w07 w06 w03 w02
   movq mm6, [tab_i_17_xmm+32]   ; 6     ; w21 w20 w17 w16
   pshufw mm7, mm7, 10110001b    ; y7 y6 y5 y4
   paddd mm3, [rounder_7]        ; +rounder stall 6
   paddd mm5, [rounder_7]        ; +rounder
-  movq [eax+96+8], mm7          ; 7     ; save y7 y6 y5 y4
+  movq [_ECX+96+8], mm7          ; 7     ; save y7 y6 y5 y4
   movq mm7, [tab_i_17_xmm+40]   ; 7     ; w23 w22 w19 w18
   pmaddwd mm4, mm1              ; x6*w07+x4*w06 x6*w03+x4*w02
   pmaddwd mm1, [tab_i_17_xmm+24]; x6*w15+x4*w14 x6*w11+x4*w10
@@ -373,18 +347,18 @@ idct_3dne:
   pmaddwd mm0, [tab_i_17_xmm+56]; x7*w31+x5*w30 x7*w27+x5*w26
   paddd mm3, mm4                ; 4 free    ; a1=sum(even1) a0=sum(even0)
   paddd mm5, mm1                ; 1 free    ; a3=sum(even3) a2=sum(even2)
-  pshufw mm1, [eax+0+8],10001000b; x6 x4 x6 x4
+  pshufw mm1, [_ECX+0+8],10001000b; x6 x4 x6 x4
   movq mm4, mm3                 ; 4     ; a1 a0
   paddd mm6, mm7                ; 7 free    ; b1=sum(odd1) b0=sum(odd0)
   paddd mm2, mm0                ; 5 free    ; b3=sum(odd3) b2=sum(odd2)
-  pshufw mm0, [eax+0],10001000b ; x2 x0 x2 x0
+  pshufw mm0, [_ECX+0],10001000b ; x2 x0 x2 x0
   movq mm7, mm5                 ; 7     ; a3 a2
   psubd mm4, mm6                ; 6 free    ; a1-b1 a0-b0 stall 5
   paddd mm6, mm3                ; mm3 = mm3+mm6+mm5+mm4; a1+b1 a0+b0
   movq mm3, [tab_i_04_xmm]      ; 3     ; w05 w04 w01 w00
   psubd mm7, mm2                ; ; a3-b3 a2-b2
   paddd mm5, mm2                ; 0 free a3+b3 a2+b2
-  pshufw mm2, [eax+0],11011101b ; x3 x1 x3 x1
+  pshufw mm2, [_ECX+0],11011101b ; x3 x1 x3 x1
   pmaddwd mm3, mm0              ; x2*w05+x0*w04 x2*w01+x0*w00
   pmaddwd mm0, [tab_i_04_xmm+16]; x2*w13+x0*w12 x2*w09+x0*w08
   psrad mm4, SHIFT_INV_ROW      ; y6=a1-b1 y7=a0-b0
@@ -393,16 +367,16 @@ idct_3dne:
   psrad mm5, SHIFT_INV_ROW      ; y3=a3+b3 y2=a2+b2
   packssdw mm7, mm4             ; 4     ; y6 y7 y4 y5
   packssdw mm6, mm5             ; 0 free    ; y3 y2 y1 y0
-  pshufw mm5, [eax+0+8],11011101b; x7 x5 x7 x5
-  movq [eax+112], mm6           ; 3     ; save y3 y2 y1 y0
+  pshufw mm5, [_ECX+0+8],11011101b; x7 x5 x7 x5
+  movq [_ECX+112], mm6           ; 3     ; save y3 y2 y1 y0
 
-;   DCT_8_INV_ROW_1_s [eax+0],  0, tab_i_04_xmm, rounder_0
+;   DCT_8_INV_ROW_1_s [_ECX+0],  0, tab_i_04_xmm, rounder_0
   movq mm4, [tab_i_04_xmm+8]    ; 4     ; w07 w06 w03 w02
   movq mm6, [tab_i_04_xmm+32]   ; 6     ; w21 w20 w17 w16
   pshufw mm7, mm7, 10110001b    ; y7 y6 y5 y4 STALL 6
   paddd mm3, [rounder_0]        ; +rounder
   paddd mm0, [rounder_0]        ; +rounder
-  movq [eax+112+8], mm7         ; 7     ; save y7 y6
+  movq [_ECX+112+8], mm7         ; 7     ; save y7 y6
   movq mm7, [tab_i_04_xmm+40]   ; 7     ; w23 w22 w19 w18
   pmaddwd mm4, mm1              ; x6*w07+x4*w06 x6*w03+x4*w02
   pmaddwd mm1, [tab_i_04_xmm+24]; x6*w15+x4*w14 x6*w11+x4*w10
@@ -412,18 +386,18 @@ idct_3dne:
   pmaddwd mm5, [tab_i_04_xmm+56]; x7*w31+x5*w30 x7*w27+x5*w26
   paddd mm3, mm4                ; 4 free    ; a1=sum(even1) a0=sum(even0)
   paddd mm0, mm1                ; 1
-  pshufw mm1, [eax+16+8],10001000b  ; x6 x4 x6 x4
+  pshufw mm1, [_ECX+16+8],10001000b  ; x6 x4 x6 x4
   movq mm4, mm3                 ; 4     ; a1 a0
   paddd mm6, mm7                ; 7 free    ; b1=sum(odd1) b0=sum(odd0)
   paddd mm2, mm5                ; 5 free    ; b3=sum(odd3) b2=sum(odd2)
-  pshufw mm5, [eax+16],10001000b; x2 x0 x2 x0   mm5 & mm0 exchanged for next cycle
+  pshufw mm5, [_ECX+16],10001000b; x2 x0 x2 x0   mm5 & mm0 exchanged for next cycle
   movq mm7, mm0                 ; 7     ; a3 a2
   psubd mm4, mm6                ; 6 free    ; a1-b1 a0-b0
   paddd mm6, mm3                ; mm6 = mm3+mm6+mm5+mm4; a1+b1 a0+b0
   movq mm3, [tab_i_17_xmm]      ; 3     ; w05 w04 w01 w00
   psubd mm7, mm2                ; ; a3-b3 a2-b2
   paddd mm0, mm2                ; 0 free a3+b3 a2+b2
-  pshufw mm2, [eax+16],11011101b; x3 x1 x3 x1
+  pshufw mm2, [_ECX+16],11011101b; x3 x1 x3 x1
   pmaddwd mm3, mm5              ; x2*w05+x0*w04 x2*w01+x0*w00
   pmaddwd mm5, [tab_i_17_xmm+16]; x2*w13+x0*w12 x2*w09+x0*w08
   psrad mm4, SHIFT_INV_ROW      ; y6=a1-b1 y7=a0-b0
@@ -432,16 +406,16 @@ idct_3dne:
   psrad mm0, SHIFT_INV_ROW      ; y3=a3+b3 y2=a2+b2
   packssdw mm7, mm4             ; 4     ; y6 y7 y4 y5
   packssdw mm6, mm0             ; 0 free    ; y3 y2 y1 y0
-  pshufw mm0, [eax+16+8],11011101b  ; x7 x5 x7 x5
-  movq [eax+0], mm6             ; 3     ; save y3 y2 y1 y0 stall2
+  pshufw mm0, [_ECX+16+8],11011101b  ; x7 x5 x7 x5
+  movq [_ECX+0], mm6             ; 3     ; save y3 y2 y1 y0 stall2
 
-; DCT_8_INV_ROW_1_s [eax+16], 16, tab_i_17_xmm, rounder_1
+; DCT_8_INV_ROW_1_s [_ECX+16], 16, tab_i_17_xmm, rounder_1
   movq mm4, [tab_i_17_xmm+8]    ; 4     ; w07 w06 w03 w02
   movq mm6, [tab_i_17_xmm+32]   ; 6     ; w21 w20 w17 w16
   pshufw mm7, mm7, 10110001b    ; y7 y6 y5 y4
   paddd mm3, [rounder_1]        ; +rounder stall 6
   paddd mm5, [rounder_1]        ; +rounder
-  movq [eax+0+8], mm7           ; 7     ; save y7 y6 y5 y4
+  movq [_ECX+0+8], mm7           ; 7     ; save y7 y6 y5 y4
   movq mm7, [tab_i_17_xmm+40]   ; 7     ; w23 w22 w19 w18
   pmaddwd mm4, mm1              ; x6*w07+x4*w06 x6*w03+x4*w02
   pmaddwd mm1, [tab_i_17_xmm+24]; x6*w15+x4*w14 x6*w11+x4*w10
@@ -451,18 +425,18 @@ idct_3dne:
   pmaddwd mm0, [tab_i_17_xmm+56]; x7*w31+x5*w30 x7*w27+x5*w26
   paddd mm3, mm4                ; 4 free    ; a1=sum(even1) a0=sum(even0)
   paddd mm5, mm1                ; 1 free    ; a3=sum(even3) a2=sum(even2)
-  pshufw mm1, [eax+32+8],10001000b  ; x6 x4 x6 x4
+  pshufw mm1, [_ECX+32+8],10001000b  ; x6 x4 x6 x4
   movq mm4, mm3                 ; 4     ; a1 a0
   paddd mm6, mm7                ; 7 free    ; b1=sum(odd1) b0=sum(odd0)
   paddd mm2, mm0                ; 5 free    ; b3=sum(odd3) b2=sum(odd2)
-  pshufw mm0, [eax+32],10001000b; x2 x0 x2 x0
+  pshufw mm0, [_ECX+32],10001000b; x2 x0 x2 x0
   movq mm7, mm5                 ; 7     ; a3 a2
   psubd mm4, mm6                ; 6 free    ; a1-b1 a0-b0 stall 5
   paddd mm6, mm3                ; mm3 = mm3+mm6+mm5+mm4; a1+b1 a0+b0
   movq mm3, [tab_i_26_xmm]      ; 3     ; w05 w04 w01 w00
   psubd mm7, mm2                ; ; a3-b3 a2-b2
   paddd mm5, mm2                ; 0 free a3+b3 a2+b2
-  pshufw mm2, [eax+32],11011101b; x3 x1 x3 x1
+  pshufw mm2, [_ECX+32],11011101b; x3 x1 x3 x1
   pmaddwd mm3, mm0              ; x2*w05+x0*w04 x2*w01+x0*w00
   pmaddwd mm0, [tab_i_26_xmm+16]; x2*w13+x0*w12 x2*w09+x0*w08
   psrad mm4, SHIFT_INV_ROW      ; y6=a1-b1 y7=a0-b0
@@ -471,16 +445,16 @@ idct_3dne:
   psrad mm5, SHIFT_INV_ROW      ; y3=a3+b3 y2=a2+b2
   packssdw mm7, mm4             ; 4     ; y6 y7 y4 y5
   packssdw mm6, mm5             ; 0 free    ; y3 y2 y1 y0
-  pshufw mm5, [eax+32+8],11011101b  ; x7 x5 x7 x5
-  movq [eax+16], mm6            ; 3     ; save y3 y2 y1 y0
+  pshufw mm5, [_ECX+32+8],11011101b  ; x7 x5 x7 x5
+  movq [_ECX+16], mm6            ; 3     ; save y3 y2 y1 y0
 
-;   DCT_8_INV_ROW_1_s [eax+32], 32, tab_i_26_xmm, rounder_2
+;   DCT_8_INV_ROW_1_s [_ECX+32], 32, tab_i_26_xmm, rounder_2
   movq mm4, [tab_i_26_xmm+8]    ; 4     ; w07 w06 w03 w02
   movq mm6, [tab_i_26_xmm+32]   ; 6     ; w21 w20 w17 w16
   pshufw mm7, mm7, 10110001b    ; y7 y6 y5 y4 STALL 6
   paddd mm3, [rounder_2]        ; +rounder
   paddd mm0, [rounder_2]        ; +rounder
-  movq [eax+16+8], mm7          ; 7     ; save y7 y6
+  movq [_ECX+16+8], mm7          ; 7     ; save y7 y6
   movq mm7, [tab_i_26_xmm+40]   ; 7     ; w23 w22 w19 w18
   pmaddwd mm4, mm1              ; x6*w07+x4*w06 x6*w03+x4*w02
   pmaddwd mm1, [tab_i_26_xmm+24]; x6*w15+x4*w14 x6*w11+x4*w10
@@ -490,18 +464,18 @@ idct_3dne:
   pmaddwd mm5, [tab_i_26_xmm+56]; x7*w31+x5*w30 x7*w27+x5*w26
   paddd mm3, mm4                ; 4 free    ; a1=sum(even1) a0=sum(even0)
   paddd mm0, mm1                ; 1 free    ; a3=sum(even3) a2=sum(even2)
-  pshufw mm1, [eax+48+8],10001000b      ; x6 x4 x6 x4
+  pshufw mm1, [_ECX+48+8],10001000b      ; x6 x4 x6 x4
   movq mm4, mm3                 ; 4     ; a1 a0
   paddd mm6, mm7                ; 7 free    ; b1=sum(odd1) b0=sum(odd0)
   paddd mm2, mm5                ; 5 free    ; b3=sum(odd3) b2=sum(odd2)
-  pshufw mm5, [eax+48],10001000b; x2 x0 x2 x0   mm5 & mm0 exchanged for next cycle
+  pshufw mm5, [_ECX+48],10001000b; x2 x0 x2 x0   mm5 & mm0 exchanged for next cycle
   movq mm7, mm0                 ; 7     ; a3 a2
   psubd mm4, mm6                ; 6 free    ; a1-b1 a0-b0
   paddd mm6, mm3                ; mm6 = mm3+mm6+mm5+mm4; a1+b1 a0+b0
   movq mm3, [tab_i_35_xmm]      ; 3     ; w05 w04 w01 w00
   psubd mm7, mm2                ; ; a3-b3 a2-b2
   paddd mm0, mm2                ; 0 free a3+b3 a2+b2
-  pshufw mm2, [eax+48],11011101b; x3 x1 x3 x1
+  pshufw mm2, [_ECX+48],11011101b; x3 x1 x3 x1
   pmaddwd mm3, mm5              ; x2*w05+x0*w04 x2*w01+x0*w00
   pmaddwd mm5, [tab_i_35_xmm+16]; x2*w13+x0*w12 x2*w09+x0*w08
   psrad mm4, SHIFT_INV_ROW      ; y6=a1-b1 y7=a0-b0
@@ -510,16 +484,16 @@ idct_3dne:
   psrad mm0, SHIFT_INV_ROW      ; y3=a3+b3 y2=a2+b2
   packssdw mm7, mm4             ; 4     ; y6 y7 y4 y5
   packssdw mm6, mm0             ; 0 free    ; y3 y2 y1 y0
-  pshufw mm0, [eax+48+8],11011101b  ; x7 x5 x7 x5
-  movq [eax+32], mm6            ; 3     ; save y3 y2 y1 y0 stall2
+  pshufw mm0, [_ECX+48+8],11011101b  ; x7 x5 x7 x5
+  movq [_ECX+32], mm6            ; 3     ; save y3 y2 y1 y0 stall2
 
-;   DCT_8_INV_ROW_1_s [eax+48], [eax+48], tab_i_35_xmm, rounder_3
+;   DCT_8_INV_ROW_1_s [_ECX+48], [_ECX+48], tab_i_35_xmm, rounder_3
   movq mm4, [tab_i_35_xmm+8]    ; 4     ; w07 w06 w03 w02
   movq mm6, [tab_i_35_xmm+32]   ; 6     ; w21 w20 w17 w16
   pshufw mm7, mm7, 10110001b    ; y7 y6 y5 y4
   paddd mm3, [rounder_3]        ; +rounder stall 6
   paddd mm5, [rounder_3]        ; +rounder
-  movq [eax+32+8], mm7          ; 7     ; save y7 y6 y5 y4
+  movq [_ECX+32+8], mm7          ; 7     ; save y7 y6 y5 y4
   movq mm7, [tab_i_35_xmm+40]   ; 7     ; w23 w22 w19 w18
   pmaddwd mm4, mm1              ; x6*w07+x4*w06 x6*w03+x4*w02
   pmaddwd mm1, [tab_i_35_xmm+24]; x6*w15+x4*w14 x6*w11+x4*w10
@@ -539,30 +513,30 @@ idct_3dne:
   paddd mm3, mm6                ; mm3 = mm3+mm6+mm5+mm4; a1+b1 a0+b0
   psubd mm7, mm2                ; ; a3-b3 a2-b2
   paddd mm2, mm5                ; 0 free a3+b3 a2+b2
-  movq mm5, [eax+16*5]
+  movq mm5, [_ECX+16*5]
   psrad mm4, SHIFT_INV_ROW      ; y6=a1-b1 y7=a0-b0
   psrad mm7, SHIFT_INV_ROW      ; y4=a3-b3 y5=a2-b2
   psrad mm3, SHIFT_INV_ROW      ; y1=a1+b1 y0=a0+b0
   psrad mm2, SHIFT_INV_ROW      ; y3=a3+b3 y2=a2+b2
-  movq mm6, [eax+16*1]
+  movq mm6, [_ECX+16*1]
   packssdw mm7, mm4             ; 4     ; y6 y7 y4 y5
   movq mm4, [tg_1_16]
   packssdw mm3, mm2             ; 0 free    ; y3 y2 y1 y0
   pshufw mm2, mm7, 10110001b    ; y7 y6 y5 y4
 
-;   DCT_8_INV_COL_4 [eax+0],[eax+0]
-;   movq    mm3,mmword ptr [eax+16*3]
-  movq mm7, [eax+16*7]
+;   DCT_8_INV_COL_4 [_ECX+0],[_ECX+0]
+;   movq    mm3,mmword ptr [_ECX+16*3]
+  movq mm7, [_ECX+16*7]
   pmulhw mm0, mm3           ; x3*(tg_3_16-1)
   pmulhw mm1, mm5           ; x5*(tg_3_16-1)
-  movq [eax+48+8], mm2      ; 7     ; save y7 y6 y5 y4
+  movq [_ECX+48+8], mm2      ; 7     ; save y7 y6 y5 y4
   movq mm2, mm4             ; tg_1_16
   pmulhw mm4, mm7           ; x7*tg_1_16
   paddsw mm0, mm3           ; x3*tg_3_16
   pmulhw mm2, mm6           ; x1*tg_1_16
   paddsw mm1, mm3           ; x3+x5*(tg_3_16-1)
   psubsw mm0, mm5           ; x3*tg_3_16-x5 = tm35
-  movq [eax+48], mm3        ; 3     ; save y3 y2 y1 y0
+  movq [_ECX+48], mm3        ; 3     ; save y3 y2 y1 y0
   movq mm3, [ocos_4_16]
   paddsw mm1, mm5           ; x3+x5*tg_3_16 = tp35
   paddsw mm4, mm6           ; x1+tg_1_16*x7 = tp17
@@ -575,23 +549,23 @@ idct_3dne:
   paddsw mm2, mm0           ; tm17+tm35 = t2
   movq mm7, [tg_2_16]
   movq mm1, mm4             ; t1
-  movq [eax+3*16], mm5      ; save b0
+  movq [_ECX+3*16], mm5      ; save b0
   paddsw mm1, mm2           ; t1+t2
-  movq [eax+5*16], mm6      ; save b3
+  movq [_ECX+5*16], mm6      ; save b3
   psubsw mm4, mm2           ; t1-t2
-  movq mm5, [eax+2*16]
+  movq mm5, [_ECX+2*16]
   movq mm0, mm7             ; tg_2_16
-  movq mm6, [eax+6*16]
+  movq mm6, [_ECX+6*16]
   pmulhw mm0, mm5           ; x2*tg_2_16
   pmulhw mm7, mm6           ; x6*tg_2_16
 ; slot
   pmulhw mm1, mm3           ; ocos_4_16*(t1+t2) = b1/2
 ; slot
-  movq mm2, [eax+0*16]
+  movq mm2, [_ECX+0*16]
   pmulhw mm4, mm3           ; ocos_4_16*(t1-t2) = b2/2
   psubsw mm0, mm6           ; t2*tg_2_16-x6 = tm26
-  movq mm3, [eax+0*16]      ; x0
-  movq mm6, [eax+4*16]
+  movq mm3, [_ECX+0*16]      ; x0
+  movq mm6, [_ECX+4*16]
   paddsw mm7, mm5           ; x2+x6*tg_2_16 = tp26
   paddsw mm2, mm6           ; x0+x4 = tp04
   psubsw mm3, mm6           ; x0-x4 = tm04
@@ -611,40 +585,40 @@ idct_3dne:
   psubsw mm7, mm1           ; a1-b1
   psraw mm6, SHIFT_INV_COL  ; dst2
   psubsw mm0, mm4           ; a2-b2
-  movq mm1, [eax+3*16]      ; load b0
+  movq mm1, [_ECX+3*16]      ; load b0
   psraw mm7, SHIFT_INV_COL  ; dst6
   movq mm4, mm5             ; a0
   psraw mm0, SHIFT_INV_COL  ; dst5
-  movq [eax+1*16], mm3
+  movq [_ECX+1*16], mm3
   paddsw mm5, mm1           ; a0+b0
-  movq [eax+2*16], mm6
+  movq [_ECX+2*16], mm6
   psubsw mm4, mm1           ; a0-b0
-  movq mm3, [eax+5*16]      ; load b3
+  movq mm3, [_ECX+5*16]      ; load b3
   psraw mm5, SHIFT_INV_COL  ; dst0
   movq mm6, mm2             ; a3
   psraw mm4, SHIFT_INV_COL  ; dst7
-  movq [eax+5*16], mm0
+  movq [_ECX+5*16], mm0
   movq mm0, [tg_3_16]
   paddsw mm2, mm3           ; a3+b3
-  movq [eax+6*16], mm7
+  movq [_ECX+6*16], mm7
   psubsw mm6, mm3           ; a3-b3
-  movq mm3, [eax+8+16*3]
-  movq [eax+0*16], mm5
+  movq mm3, [_ECX+8+16*3]
+  movq [_ECX+0*16], mm5
   psraw mm2, SHIFT_INV_COL  ; dst3
-  movq [eax+7*16], mm4
+  movq [_ECX+7*16], mm4
 
- ;  DCT_8_INV_COL_4 [eax+8],[eax+8]
+ ;  DCT_8_INV_COL_4 [_ECX+8],[_ECX+8]
   movq mm1, mm0             ; tg_3_16
-  movq mm5, [eax+8+16*5]
+  movq mm5, [_ECX+8+16*5]
   psraw mm6, SHIFT_INV_COL  ; dst4
   pmulhw mm0, mm3           ; x3*(tg_3_16-1)
   movq mm4, [tg_1_16]
   pmulhw mm1, mm5           ; x5*(tg_3_16-1)
-  movq mm7, [eax+8+16*7]
-  movq [eax+3*16], mm2
+  movq mm7, [_ECX+8+16*7]
+  movq [_ECX+3*16], mm2
   movq mm2, mm4             ; tg_1_16
-  movq [eax+4*16], mm6
-  movq mm6, [eax+8+16*1]
+  movq [_ECX+4*16], mm6
+  movq mm6, [_ECX+8+16*1]
   pmulhw mm4, mm7           ; x7*tg_1_16
   paddsw mm0, mm3           ; x3*tg_3_16
   pmulhw mm2, mm6           ; x1*tg_1_16
@@ -662,23 +636,23 @@ idct_3dne:
   movq mm7, [tg_2_16]
   movq mm1, mm4             ; t1
   psubsw mm6, mm0           ; tm17-tm35 = b3
-  movq [eax+8+3*16], mm5    ; save b0
-  movq [eax+8+5*16], mm6    ; save b3
+  movq [_ECX+8+3*16], mm5    ; save b0
+  movq [_ECX+8+5*16], mm6    ; save b3
   psubsw mm4, mm2           ; t1-t2
-  movq mm5, [eax+8+2*16]
+  movq mm5, [_ECX+8+2*16]
   movq mm0, mm7             ; tg_2_16
-  movq mm6, [eax+8+6*16]
+  movq mm6, [_ECX+8+6*16]
   paddsw mm1, mm2           ; t1+t2
   pmulhw mm0, mm5           ; x2*tg_2_16
   pmulhw mm7, mm6           ; x6*tg_2_16
-  movq mm2, [eax+8+0*16]
+  movq mm2, [_ECX+8+0*16]
   pmulhw mm4, mm3           ; ocos_4_16*(t1-t2) = b2/2
   psubsw mm0, mm6           ; t2*tg_2_16-x6 = tm26
  ; slot
   pmulhw mm1, mm3           ; ocos_4_16*(t1+t2) = b1/2
  ; slot
-  movq mm3, [eax+8+0*16]    ; x0
-  movq mm6, [eax+8+4*16]
+  movq mm3, [_ECX+8+0*16]    ; x0
+  movq mm6, [_ECX+8+4*16]
   paddsw mm7, mm5           ; x2+x6*tg_2_16 = tp26
   paddsw mm2, mm6           ; x0+x4 = tp04
   psubsw mm3, mm6           ; x0-x4 = tm04
@@ -698,28 +672,28 @@ idct_3dne:
   psubsw mm7, mm1           ; a1-b1
   psraw mm6, SHIFT_INV_COL  ; dst2
   psubsw mm0, mm4           ; a2-b2
-  movq mm1, [eax+8+3*16]    ; load b0
+  movq mm1, [_ECX+8+3*16]    ; load b0
   psraw mm7, SHIFT_INV_COL  ; dst6
   movq mm4, mm5             ; a0
   psraw mm0, SHIFT_INV_COL  ; dst5
-  movq [eax+8+1*16], mm3
+  movq [_ECX+8+1*16], mm3
   paddsw mm5, mm1           ; a0+b0
-  movq [eax+8+2*16], mm6
+  movq [_ECX+8+2*16], mm6
   psubsw mm4, mm1           ; a0-b0
-  movq mm3, [eax+8+5*16]    ; load b3
+  movq mm3, [_ECX+8+5*16]    ; load b3
   psraw mm5, SHIFT_INV_COL  ; dst0
   movq mm6, mm2         ; a3
   psraw mm4, SHIFT_INV_COL  ; dst7
-  movq [eax+8+5*16], mm0
+  movq [_ECX+8+5*16], mm0
   paddsw mm2, mm3           ; a3+b3
-  movq [eax+8+6*16], mm7
+  movq [_ECX+8+6*16], mm7
   psubsw mm6, mm3           ; a3-b3
-  movq [eax+8+0*16], mm5
+  movq [_ECX+8+0*16], mm5
   psraw mm2, SHIFT_INV_COL  ; dst3
-  movq [eax+8+7*16], mm4
+  movq [_ECX+8+7*16], mm4
   psraw mm6, SHIFT_INV_COL  ; dst4
-  movq [eax+8+3*16], mm2
-  movq [eax+8+4*16], mm6
+  movq [_ECX+8+3*16], mm2
+  movq [_ECX+8+4*16], mm6
 
   ret
 ENDFUNC

@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: colorspace.h,v 1.9 2006-11-12 01:40:36 chl Exp $
+ * $Id: colorspace.h,v 1.10 2008-11-26 01:04:34 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -97,7 +97,7 @@ packedFunc argbi_to_yv12_c;
 packedFunc yuyvi_to_yv12_c;
 packedFunc uyvyi_to_yv12_c;
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 /* mmx */
 packedFunc bgr_to_yv12_mmx;
 packedFunc rgb_to_yv12_mmx;
@@ -172,7 +172,7 @@ packedFunc yv12_to_argbi_c;
 packedFunc yv12_to_yuyvi_c;
 packedFunc yv12_to_uyvyi_c;
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 /* mmx */
 packedFunc yv12_to_bgr_mmx;
 packedFunc yv12_to_bgra_mmx;
@@ -200,7 +200,7 @@ extern planarFuncPtr yv12_to_yv12;
 
 planarFunc yv12_to_yv12_c;
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 planarFunc yv12_to_yv12_mmx;
 planarFunc yv12_to_yv12_xmm;
 #endif

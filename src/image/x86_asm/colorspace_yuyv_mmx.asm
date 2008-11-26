@@ -19,50 +19,24 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: colorspace_yuyv_mmx.asm,v 1.9 2008-11-11 20:46:24 Isibaar Exp $
+; * $Id: colorspace_yuyv_mmx.asm,v 1.10 2008-11-26 01:04:34 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
-BITS 32
-
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
+%include "nasm.inc"
 
 ;=============================================================================
 ; Read only data
 ;=============================================================================
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
+DATA
 
 ;-----------------------------------------------------------------------------
 ; yuyv/uyvy mask for extracting yuv components
 ;-----------------------------------------------------------------------------
 ;				y     u     y     v     y     u     y     v
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 yuyv_mask:	db 0xff,  0,  0xff,   0,   0xff,  0,   0xff,  0
 mmx_one:    dw 1, 1, 1, 1
 
@@ -85,10 +59,10 @@ mmx_one:    dw 1, 1, 1, 1
 
 
 %macro YUYV_TO_YV12             2
-  movq mm0, [edi]               ; x_ptr[0]
-  movq mm1, [edi + 8]           ; x_ptr[8]
-  movq mm2, [edi + edx]         ; x_ptr[x_stride + 0]
-  movq mm3, [edi + edx + 8]     ; x_ptr[x_stride + 8]
+  movq mm0, [x_ptr]               ; x_ptr[0]
+  movq mm1, [x_ptr + 8]           ; x_ptr[8]
+  movq mm2, [x_ptr + x_stride]         ; x_ptr[x_stride + 0]
+  movq mm3, [x_ptr + x_stride + 8]     ; x_ptr[x_stride + 8]
 
     ; average uv-components
 ;---[ plain mmx ]----------------------------------------------------
@@ -154,11 +128,11 @@ mmx_one:    dw 1, 1, 1, 1
   packuswb mm2, mm3
 
 %ifidn %2,pavgb         ; xmm
-  movntq [esi], mm0
-  movntq [esi+eax], mm2
+  movntq [y_ptr], mm0
+  movntq [y_ptr+y_stride], mm2
 %else                   ; plain mmx,3dnow
-  movq [esi], mm0
-  movq [esi+eax], mm2
+  movq [y_ptr], mm0
+  movq [y_ptr+y_stride], mm2
 %endif
 
     ; write uv-components
@@ -169,8 +143,8 @@ mmx_one:    dw 1, 1, 1, 1
   pand mm4, mm7
   packuswb mm5,mm5
   packuswb mm4,mm4
-  movd [ebx],mm5
-  movd [ecx],mm4
+  movd [u_ptr],mm5
+  movd [v_ptr],mm4
 %endmacro
 
 ;-----------------------------------------------------------------------------
@@ -184,10 +158,10 @@ mmx_one:    dw 1, 1, 1, 1
 
 
 %macro YV12_TO_YUYV             2
-  movq mm6, [ebx]               ; [    |uuuu]
-  movq mm2, [ecx]               ; [    |vvvv]
-  movq mm0, [esi    ]           ; [yyyy|yyyy] ; y row 0
-  movq mm1, [esi+eax]           ; [yyyy|yyyy] ; y row 1
+  movq mm6, [u_ptr]               ; [    |uuuu]
+  movq mm2, [v_ptr]               ; [    |vvvv]
+  movq mm0, [y_ptr    ]           ; [yyyy|yyyy] ; y row 0
+  movq mm1, [y_ptr+y_stride]           ; [yyyy|yyyy] ; y row 1
   movq      mm7, mm6
   punpcklbw mm6, mm2            ; [vuvu|vuvu] ; uv[0..3]
   punpckhbw mm7, mm2            ; [vuvu|vuvu] ; uv[4..7]
@@ -195,40 +169,40 @@ mmx_one:    dw 1, 1, 1, 1
 %if %1 == 0     ; YUYV
   movq mm2, mm0
   movq mm3, mm1
-  movq mm4, [esi    +8]         ; [yyyy|yyyy] ; y[8..15] row 0
-  movq mm5, [esi+eax+8]         ; [yyyy|yyyy] ; y[8..15] row 1
+  movq mm4, [y_ptr    +8]         ; [yyyy|yyyy] ; y[8..15] row 0
+  movq mm5, [y_ptr+y_stride+8]         ; [yyyy|yyyy] ; y[8..15] row 1
   punpcklbw mm0, mm6            ; [vyuy|vyuy] ; y row 0 + 0
   punpckhbw mm2, mm6            ; [vyuy|vyuy] ; y row 0 + 8
   punpcklbw mm1, mm6            ; [vyuy|vyuy] ; y row 1 + 0
   punpckhbw mm3, mm6            ; [vyuy|vyuy] ; y row 1 + 8
-  movq [edi      ], mm0
-  movq [edi+8    ], mm2
-  movq [edi+edx  ], mm1
-  movq [edi+edx+8], mm3
+  movq [x_ptr      ], mm0
+  movq [x_ptr+8    ], mm2
+  movq [x_ptr+x_stride  ], mm1
+  movq [x_ptr+x_stride+8], mm3
   movq mm0, mm4
   movq mm2, mm5
   punpcklbw mm0, mm7            ; [vyuy|vyuy] ; y row 0 + 16
   punpckhbw mm4, mm7            ; [vyuy|vyuy] ; y row 0 + 24
   punpcklbw mm2, mm7            ; [vyuy|vyuy] ; y row 1 + 16
   punpckhbw mm5, mm7            ; [vyuy|vyuy] ; y row 1 + 24
-  movq [edi    +16], mm0
-  movq [edi    +24], mm4
-  movq [edi+edx+16], mm2
-  movq [edi+edx+24], mm5
+  movq [x_ptr    +16], mm0
+  movq [x_ptr    +24], mm4
+  movq [x_ptr+x_stride+16], mm2
+  movq [x_ptr+x_stride+24], mm5
 %else           ; UYVY
   movq mm2, mm6
   movq mm3, mm6
   movq mm4, mm6
   punpcklbw mm2, mm0            ; [yvyu|yvyu]   ; y row 0 + 0
   punpckhbw mm3, mm0            ; [yvyu|yvyu]   ; y row 0 + 8
-  movq mm0, [esi    +8]         ; [yyyy|yyyy] ; y[8..15] row 0
-  movq mm5, [esi+eax+8]         ; [yyyy|yyyy] ; y[8..15] row 1
+  movq mm0, [y_ptr    +8]         ; [yyyy|yyyy] ; y[8..15] row 0
+  movq mm5, [y_ptr+y_stride+8]         ; [yyyy|yyyy] ; y[8..15] row 1
   punpcklbw mm4, mm1            ; [yvyu|yvyu]   ; y row 1 + 0
   punpckhbw mm6, mm1            ; [yvyu|yvyu]   ; y row 1 + 8
-  movq [edi      ], mm2
-  movq [edi    +8], mm3
-  movq [edi+edx  ], mm4
-  movq [edi+edx+8], mm6
+  movq [x_ptr      ], mm2
+  movq [x_ptr    +8], mm3
+  movq [x_ptr+x_stride  ], mm4
+  movq [x_ptr+x_stride+8], mm6
   movq mm2, mm7
   movq mm3, mm7
   movq mm6, mm7
@@ -236,10 +210,10 @@ mmx_one:    dw 1, 1, 1, 1
   punpckhbw mm3, mm0            ; [yvyu|yvyu]   ; y row 0 + 8
   punpcklbw mm6, mm5            ; [yvyu|yvyu]   ; y row 1 + 0
   punpckhbw mm7, mm5            ; [yvyu|yvyu]   ; y row 1 + 8
-  movq [edi    +16], mm2
-  movq [edi    +24], mm3
-  movq [edi+edx+16], mm6
-  movq [edi+edx+24], mm7
+  movq [x_ptr    +16], mm2
+  movq [x_ptr    +24], mm3
+  movq [x_ptr+x_stride+16], mm6
+  movq [x_ptr+x_stride+24], mm7
 %endif
 %endmacro
 
@@ -255,48 +229,56 @@ mmx_one:    dw 1, 1, 1, 1
 %endmacro
 
 %macro YV12_TO_YUYVI                2
-  xchg ebp, [uv_stride]
-  movd mm0, [ebx]               ; [    |uuuu]
-  movd mm1, [ebx+ebp]           ; [    |uuuu]
-  punpcklbw mm0, [ecx]          ; [vuvu|vuvu] ; uv row 0
-  punpcklbw mm1, [ecx+ebp]      ; [vuvu|vuvu] ; uv row 1
-  xchg ebp, [uv_stride]
+%ifdef ARCH_IS_X86_64
+  mov TMP1d, prm_uv_stride
+  movd mm0, [u_ptr]               ; [    |uuuu]
+  movd mm1, [u_ptr+TMP1]          ; [    |uuuu]
+  punpcklbw mm0, [v_ptr]          ; [vuvu|vuvu] ; uv row 0
+  punpcklbw mm1, [v_ptr+TMP1]     ; [vuvu|vuvu] ; uv row 1
+%else
+  xchg width, prm_uv_stride
+  movd mm0, [u_ptr]               ; [    |uuuu]
+  movd mm1, [u_ptr+width]         ; [    |uuuu]
+  punpcklbw mm0, [v_ptr]          ; [vuvu|vuvu] ; uv row 0
+  punpcklbw mm1, [v_ptr+width]    ; [vuvu|vuvu] ; uv row 1
+  xchg width, prm_uv_stride
+%endif
 
 %if %1 == 0     ; YUYV
-  movq mm4, [esi]               ; [yyyy|yyyy] ; y row 0
-  movq mm6, [esi+eax]           ; [yyyy|yyyy] ; y row 1
+  movq mm4, [y_ptr]               ; [yyyy|yyyy] ; y row 0
+  movq mm6, [y_ptr+y_stride]           ; [yyyy|yyyy] ; y row 1
   movq mm5, mm4
   movq mm7, mm6
   punpcklbw mm4, mm0            ; [yuyv|yuyv] ; y row 0 + 0
   punpckhbw mm5, mm0            ; [yuyv|yuyv] ; y row 0 + 8
   punpcklbw mm6, mm1            ; [yuyv|yuyv] ; y row 1 + 0
   punpckhbw mm7, mm1            ; [yuyv|yuyv] ; y row 1 + 8
-  movq [edi], mm4
-  movq [edi+8], mm5
-  movq [edi+edx], mm6
-  movq [edi+edx+8], mm7
+  movq [x_ptr], mm4
+  movq [x_ptr+8], mm5
+  movq [x_ptr+x_stride], mm6
+  movq [x_ptr+x_stride+8], mm7
 
-  push esi
-  push edi
-  add esi, eax
-  add edi, edx
-  movq mm4, [esi+eax]           ; [yyyy|yyyy] ; y row 2
-  movq mm6, [esi+2*eax]         ; [yyyy|yyyy] ; y row 3
+  push y_ptr
+  push x_ptr
+  add y_ptr, y_stride
+  add x_ptr, x_stride
+  movq mm4, [y_ptr+y_stride]           ; [yyyy|yyyy] ; y row 2
+  movq mm6, [y_ptr+2*y_stride]         ; [yyyy|yyyy] ; y row 3
   movq mm5, mm4
   movq mm7, mm6
   punpcklbw mm4, mm0            ; [yuyv|yuyv] ; y row 2 + 0
   punpckhbw mm5, mm0            ; [yuyv|yuyv] ; y row 2 + 8
   punpcklbw mm6, mm1            ; [yuyv|yuyv] ; y row 3 + 0
   punpckhbw mm7, mm1            ; [yuyv|yuyv] ; y row 3 + 8
-  movq [edi+edx], mm4
-  movq [edi+edx+8], mm5
-  movq [edi+2*edx], mm6
-  movq [edi+2*edx+8], mm7
-  pop edi
-  pop esi
+  movq [x_ptr+x_stride], mm4
+  movq [x_ptr+x_stride+8], mm5
+  movq [x_ptr+2*x_stride], mm6
+  movq [x_ptr+2*x_stride+8], mm7
+  pop x_ptr
+  pop y_ptr
 %else           ; UYVY
-  movq mm2, [esi]               ; [yyyy|yyyy] ; y row 0
-  movq mm3, [esi+eax]           ; [yyyy|yyyy] ; y row 1
+  movq mm2, [y_ptr]               ; [yyyy|yyyy] ; y row 0
+  movq mm3, [y_ptr+y_stride]           ; [yyyy|yyyy] ; y row 1
   movq mm4, mm0
   movq mm5, mm0
   movq mm6, mm1
@@ -305,17 +287,17 @@ mmx_one:    dw 1, 1, 1, 1
   punpckhbw mm5, mm2            ; [uyvy|uyvy] ; y row 0 + 8
   punpcklbw mm6, mm3            ; [uyvy|uyvy] ; y row 1 + 0
   punpckhbw mm7, mm3            ; [uyvy|uyvy] ; y row 1 + 8
-  movq [edi], mm4
-  movq [edi+8], mm5
-  movq [edi+edx], mm6
-  movq [edi+edx+8], mm7
+  movq [x_ptr], mm4
+  movq [x_ptr+8], mm5
+  movq [x_ptr+x_stride], mm6
+  movq [x_ptr+x_stride+8], mm7
 
-  push esi
-  push edi
-  add esi, eax
-  add edi, edx
-  movq mm2, [esi+eax]           ; [yyyy|yyyy] ; y row 2
-  movq mm3, [esi+2*eax]         ; [yyyy|yyyy] ; y row 3
+  push y_ptr
+  push x_ptr
+  add y_ptr, y_stride
+  add x_ptr, x_stride
+  movq mm2, [y_ptr+y_stride]           ; [yyyy|yyyy] ; y row 2
+  movq mm3, [y_ptr+2*y_stride]         ; [yyyy|yyyy] ; y row 3
   movq mm4, mm0
   movq mm5, mm0
   movq mm6, mm1
@@ -324,12 +306,12 @@ mmx_one:    dw 1, 1, 1, 1
   punpckhbw mm5, mm2            ; [uyvy|uyvy] ; y row 2 + 8
   punpcklbw mm6, mm3            ; [uyvy|uyvy] ; y row 3 + 0
   punpckhbw mm7, mm3            ; [uyvy|uyvy] ; y row 3 + 8
-  movq [edi+edx], mm4
-  movq [edi+edx+8], mm5
-  movq [edi+2*edx], mm6
-  movq [edi+2*edx+8], mm7
-  pop edi
-  pop esi
+  movq [x_ptr+x_stride], mm4
+  movq [x_ptr+x_stride+8], mm5
+  movq [x_ptr+2*x_stride], mm6
+  movq [x_ptr+2*x_stride+8], mm7
+  pop x_ptr
+  pop y_ptr
 %endif
 %endmacro
 
@@ -337,7 +319,7 @@ mmx_one:    dw 1, 1, 1, 1
 ; Code
 ;=============================================================================
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 %include "colorspace_mmx.inc"
 

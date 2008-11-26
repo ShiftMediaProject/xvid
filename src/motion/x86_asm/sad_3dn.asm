@@ -19,45 +19,19 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: sad_3dn.asm,v 1.11 2008-11-11 20:46:24 Isibaar Exp $
+; * $Id: sad_3dn.asm,v 1.12 2008-11-26 01:04:34 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
-BITS 32
-
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
+%include "nasm.inc"
 
 ;=============================================================================
 ; Read only data
 ;=============================================================================
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
+DATA
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 mmx_one:
 	times 4	dw 1
 
@@ -65,18 +39,18 @@ mmx_one:
 ; Helper macros
 ;=============================================================================
 %macro SADBI_16x16_3DN 0
-  movq mm0, [eax] ; src
-  movq mm2, [eax+8]
+  movq mm0, [_EAX] ; src
+  movq mm2, [_EAX+8]
 
-  movq mm1, [edx] ; ref1
-  movq mm3, [edx+8]
-  pavgusb mm1, [ebx] ; ref2
-  lea edx, [edx+ecx]
-  pavgusb mm3, [ebx+8]
-  lea ebx, [ebx+ecx]
+  movq mm1, [TMP1] ; ref1
+  movq mm3, [TMP1+8]
+  pavgusb mm1, [_EBX] ; ref2
+  lea TMP1, [TMP1+TMP0]
+  pavgusb mm3, [_EBX+8]
+  lea _EBX, [_EBX+TMP0]
 
   movq mm4, mm0
-  lea eax, [eax+ecx]
+  lea _EAX, [_EAX+TMP0]
   psubusb mm0, mm1
   movq mm5, mm2
   psubusb mm2, mm3
@@ -101,18 +75,18 @@ mmx_one:
 %endmacro
 
 %macro SADBI_8x8_3DN 0
-  movq mm0, [eax] ; src
-  movq mm2, [eax+ecx]
+  movq mm0, [_EAX] ; src
+  movq mm2, [_EAX+TMP0]
 
-  movq mm1, [edx] ; ref1
-  movq mm3, [edx+ecx]
-  pavgusb mm1, [ebx] ; ref2
-  lea edx, [edx+2*ecx]
-  pavgusb mm3, [ebx+ecx]
-  lea ebx, [ebx+2*ecx]
+  movq mm1, [TMP1] ; ref1
+  movq mm3, [TMP1+TMP0]
+  pavgusb mm1, [_EBX] ; ref2
+  lea TMP1, [TMP1+2*TMP0]
+  pavgusb mm3, [_EBX+TMP0]
+  lea _EBX, [_EBX+2*TMP0]
 
   movq mm4, mm0
-  lea eax, [eax+2*ecx]
+  lea _EAX, [_EAX+2*TMP0]
   psubusb mm0, mm1
   movq mm5, mm2
   psubusb mm2, mm3
@@ -140,7 +114,7 @@ mmx_one:
 ; Code
 ;=============================================================================
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 cglobal  sad16bi_3dn
 cglobal  sad8bi_3dn
@@ -154,13 +128,18 @@ cglobal  sad8bi_3dn
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 sad16bi_3dn:
-  push ebx
-  mov eax, [esp+4+ 4] ; Src
-  mov edx, [esp+4+ 8] ; Ref1
-  mov ebx, [esp+4+12] ; Ref2
-  mov ecx, [esp+4+16] ; Stride
+  mov _EAX, prm1 ; Src
+  mov TMP1, prm2 ; Ref1
+  mov TMP0, prm4 ; Stride
+
+  push _EBX
+%ifdef ARCH_IS_X86_64
+  mov _EBX, prm3
+%else
+  mov _EBX, [_ESP+4+12] ; Ref2
+%endif
 
   pxor mm6, mm6 ; accum2
   pxor mm7, mm7
@@ -190,7 +169,7 @@ sad16bi_3dn:
 
   movd eax, mm6
 
-  pop ebx
+  pop _EBX
 
   ret
 ENDFUNC
@@ -204,13 +183,18 @@ ENDFUNC
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 sad8bi_3dn:
-  push ebx
-  mov eax, [esp+4+ 4] ; Src
-  mov edx, [esp+4+ 8] ; Ref1
-  mov ebx, [esp+4+12] ; Ref2
-  mov ecx, [esp+4+16] ; Stride
+  mov _EAX, prm1 ; Src
+  mov TMP1, prm2 ; Ref1
+  mov TMP0, prm4 ; Stride
+
+  push _EBX
+%ifdef ARCH_IS_X86_64
+  mov _EBX, prm3
+%else
+  mov _EBX, [_ESP+4+12] ; Ref2
+%endif
 
   pxor mm6, mm6 ; accum2
   pxor mm7, mm7
@@ -227,7 +211,7 @@ sad8bi_3dn:
 
   movd eax, mm6
 
-  pop ebx
+  pop _EBX
 
   ret
 ENDFUNC

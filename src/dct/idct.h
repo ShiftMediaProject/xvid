@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: idct.h,v 1.12 2005-05-23 12:06:02 Skal Exp $
+ * $Id: idct.h,v 1.13 2008-11-26 01:04:34 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -37,14 +37,12 @@ extern idctFuncPtr idct;
 idctFunc idct_int32;
 idctFunc simple_idct_c;		/* Michael Niedermayer */
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 idctFunc idct_mmx;			/* AP-992, Peter Gubanov, Michel Lespinasse */
 idctFunc idct_xmm;			/* AP-992, Peter Gubanov, Michel Lespinasse */
 idctFunc idct_3dne;			/* AP-992, Peter Gubanov, Michel Lespinasse, Jaan Kalda */
 idctFunc idct_sse2_skal;	/* Skal's one, IEEE 1180 compliant */
 idctFunc idct_sse2_dmitry;	/* Dmitry Rozhdestvensky */
-idctFunc simple_idct_mmx;	/* Michael Niedermayer; expects permutated data */
-idctFunc simple_idct_mmx2;	/* Michael Niedermayer */
 #endif
 
 #ifdef ARCH_IS_IA64
@@ -53,10 +51,6 @@ idctFunc idct_ia64;
 
 #ifdef ARCH_IS_PPC
 idctFunc idct_altivec_c;
-#endif
-
-#ifdef ARCH_IS_X86_64
-idctFunc idct_x86_64;
 #endif
 
 #endif							/* _IDCT_H_ */

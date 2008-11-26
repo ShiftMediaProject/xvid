@@ -12,15 +12,17 @@
 ; ARG1		argument passed to FUNC
 ; 
 ; throughout the FUNC the registers mean:
-; eax		y_stride
-; ebx		u_ptr
-; ecx		v_ptr
-; edx		x_stride
-; esi		y_ptr
-; edi		x_ptr
-; ebp		width
-;
 ;------------------------------------------------------------------------------
+
+%define y_stride       _EAX
+%define u_ptr          _EBX
+%define v_ptr          _ECX
+%define x_stride       _EDX
+%define x_stride_d      edx
+%define y_ptr          _ESI
+%define x_ptr          _EDI
+%define width          _EBP
+
 %macro		MAKE_COLORSPACE			8
 %define NAME		%1
 %define STACK		%2
@@ -31,151 +33,238 @@
 %define ARG1		%7
 %define ARG2		%8
 	; --- define function global/symbol
-ALIGN 16
+ALIGN SECTION_ALIGN
 cglobal NAME
 NAME:
 	; --- init stack ---
 
-%define pushsize	16
-%define localsize	20 + STACK
+  push _EBX    ;   esp + localsize + 16
 
-%define vflip           esp + localsize + pushsize + 40
-%define height          esp + localsize + pushsize + 36
-%define width           esp + localsize + pushsize + 32
-%define uv_stride       esp + localsize + pushsize + 28
-%define y_stride        esp + localsize + pushsize + 24
-%define v_ptr           esp + localsize + pushsize + 20
-%define u_ptr           esp + localsize + pushsize + 16
-%define y_ptr           esp + localsize + pushsize + 12
-%define x_stride        esp + localsize + pushsize + 8
-%define x_ptr           esp + localsize + pushsize + 4
-%define _ip             esp + localsize + pushsize + 0
+%ifdef ARCH_IS_X86_64
 
-  push ebx    ;   esp + localsize + 16
-  push esi    ;   esp + localsize + 8
-  push edi    ;   esp + localsize + 4
-  push ebp    ;   esp + localsize + 0
+%define localsize	2*PTR_SIZE + STACK
+%ifndef WINDOWS
+%define pushsize	2*PTR_SIZE
+%define shadow          0
+%else
+%define pushsize	4*PTR_SIZE
+%define shadow          32 + 16
+%endif
 
-%define x_dif           esp + localsize - 4
-%define y_dif           esp + localsize - 8
-%define uv_dif          esp + localsize - 12
-%define fixed_width     esp + localsize - 16
-%define tmp_height      esp + localsize - 20
+%define prm_vflip           dword [_ESP + localsize + pushsize + shadow + 4*PTR_SIZE]
+%define prm_height          dword [_ESP + localsize + pushsize + shadow + 3*PTR_SIZE]
+%define prm_width           dword [_ESP + localsize + pushsize + shadow + 2*PTR_SIZE]
+%define prm_uv_stride       dword [_ESP + localsize + pushsize + shadow + 1*PTR_SIZE]
 
-    sub esp, localsize
+%ifdef WINDOWS
+%define prm_y_stride        dword [_ESP + localsize + pushsize + shadow - 1*PTR_SIZE]
+%define prm_v_ptr           [_ESP + localsize + pushsize + shadow - 2*PTR_SIZE]
+
+  push _ESI    ;   esp + localsize + 8
+  push _EDI    ;   esp + localsize + 4
+
+%else
+%define prm_y_stride        prm6d
+%define prm_v_ptr           prm5
+%endif
+
+%define prm_u_ptr           prm4
+%define prm_y_ptr           prm3
+%define prm_x_stride        prm2d
+%define prm_x_ptr           prm1
+%define _ip                 _ESP + localsize + pushsize + 0
+
+%define x_dif               TMP0
+
+%else
+
+%define localsize	5*PTR_SIZE + STACK
+%define pushsize	4*PTR_SIZE
+
+%define prm_vflip           [_ESP + localsize + pushsize + 10*PTR_SIZE]
+%define prm_height          [_ESP + localsize + pushsize +  9*PTR_SIZE]
+%define prm_width           [_ESP + localsize + pushsize +  8*PTR_SIZE]
+%define prm_uv_stride       [_ESP + localsize + pushsize +  7*PTR_SIZE]
+%define prm_y_stride        [_ESP + localsize + pushsize +  6*PTR_SIZE]
+%define prm_v_ptr           [_ESP + localsize + pushsize +  5*PTR_SIZE]
+%define prm_u_ptr           [_ESP + localsize + pushsize +  4*PTR_SIZE]
+%define prm_y_ptr           [_ESP + localsize + pushsize +  3*PTR_SIZE]
+%define prm_x_stride        [_ESP + localsize + pushsize +  2*PTR_SIZE]
+%define prm_x_ptr           [_ESP + localsize + pushsize +  1*PTR_SIZE]
+%define _ip                 _ESP + localsize + pushsize + 0
+
+%define x_dif               dword [_ESP + localsize -  5*4]
+
+  push _ESI    ;   esp + localsize + 8
+  push _EDI    ;   esp + localsize + 4
+
+%endif
+
+  push _EBP    ;   esp + localsize + 0
+
+%define y_dif           dword [_ESP + localsize -  1*4]
+%define uv_dif          dword [_ESP + localsize -  2*4]
+%define fixed_width     dword [_ESP + localsize -  3*4]
+%define tmp_height      dword [_ESP + localsize -  4*4]
+
+  sub _ESP, localsize
 
     ; --- init varibles ---
     
-  mov eax, [width]          ; fixed width
-  add eax, 15               ;
-  and eax, ~15              ;
-  mov [fixed_width],eax     ;
+  mov eax, prm_width         ; fixed width
+  add eax, 15                ;
+  and eax, ~15               ;
+  mov fixed_width, eax       ;
 
-  mov ebx, [x_stride]       ;
+  mov ebx, prm_x_stride      ;
 %rep BYTES
-  sub ebx, eax              ;
+  sub _EBX, _EAX             ;
 %endrep
-  mov [x_dif], ebx          ; x_dif = x_stride - BYTES*fixed_width
+  mov x_dif, _EBX            ; x_dif = x_stride - BYTES*fixed_width
 
-  mov ebx, [y_stride]       ;
-  sub ebx, eax              ;
-  mov [y_dif], ebx          ; y_dif = y_stride - fixed_width
+  mov ebx, prm_y_stride      ;
+  sub ebx, eax               ;
+  mov y_dif, ebx             ; y_dif = y_stride - fixed_width
 
-  mov ebx, [uv_stride]      ;
-  mov ecx, eax              ;
-  shr ecx, 1                ;
-  sub ebx, ecx              ;
-  mov [uv_dif], ebx         ; uv_dif = uv_stride - fixed_width/2
+  mov ebx, prm_uv_stride     ;
+  mov TMP1, _EAX             ;
+  shr TMP1, 1                ;
+  sub _EBX, TMP1             ;
+  mov uv_dif, ebx            ; uv_dif = uv_stride - fixed_width/2
 
-  mov esi, [y_ptr]          ; $esi$ = y_ptr
-  mov edi, [x_ptr]          ; $edi$ = x_ptr
-  mov edx, [x_stride]       ; $edx$ = x_stride
-  mov ebp, [height]         ; $ebp$ = height
+%ifdef ARCH_IS_X86_64
+%ifndef WINDOWS
+  mov TMP1d, prm_x_stride
+  mov _ESI, prm_y_ptr
+  mov _EDX, TMP1
+%else
+  mov _ESI, prm_y_ptr
+  mov _EDI, prm_x_ptr
+%endif
+%else
+  mov _ESI, prm_y_ptr        ; $esi$ = y_ptr
+  mov _EDI, prm_x_ptr        ; $edi$ = x_ptr
+  mov  edx, prm_x_stride     ; $edx$ = x_stride
+%endif
 
+  mov ebp, prm_height       ; $ebp$ = height
 
-  mov ebx, [vflip]
-  or ebx, ebx
+  mov ebx, prm_vflip
+  or _EBX, _EBX
   jz .dont_flip
 
     ; --- do flipping ---
 
-  xor ebx,ebx
+  xor _EBX,_EBX
 %rep BYTES
-  sub ebx, eax
+  sub _EBX, _EAX
 %endrep
-  sub ebx, edx
-  mov [x_dif], ebx          ; x_dif = -BYTES*fixed_width - x_stride
+  sub _EBX, _EDX
+  mov x_dif, _EBX            ; x_dif = -BYTES*fixed_width - x_stride
 
-  mov eax, ebp
-  sub eax, 1
-  push edx                
-  mul edx
-  pop edx
-  add edi, eax              ; $edi$ += (height-1) * x_stride
+  mov _EAX, _EBP
+  sub _EAX, 1
+%ifdef ARCH_IS_X86_64
+  mov TMP1, _EDX
+  mul edx 
+  mov _EDX, TMP1
+%else
+  push _EDX                
+  mul edx 
+  pop _EDX
+%endif
+  add _EDI, _EAX             ; $edi$ += (height-1) * x_stride
 
-  neg edx                   ; x_stride = -x_stride
+  neg _EDX                   ; x_stride = -x_stride
 
 .dont_flip:
 
     ; --- begin loop ---
 
-  mov eax, [y_stride]       ; $eax$ = y_stride
-  mov ebx, [u_ptr]          ; $ebx$ = u_ptr
-  mov ecx, [v_ptr]          ; $ecx$ = v_ptr
+  mov  eax, prm_y_stride     ; $eax$ = y_stride
+  mov _EBX, prm_u_ptr        ; $ebx$ = u_ptr
+  mov _ECX, prm_v_ptr        ; $ecx$ = v_ptr
 
-  FUNC %+ _INIT ARG1, ARG2  ; call FUNC_INIT
+  FUNC %+ _INIT ARG1, ARG2   ; call FUNC_INIT
 
 .y_loop:
-  mov [tmp_height], ebp
-  mov ebp, [fixed_width]
+  mov tmp_height, ebp
+  mov ebp, fixed_width
 
 .x_loop:
-  FUNC ARG1, ARG2           ; call FUNC
+  FUNC ARG1, ARG2            ; call FUNC
 
-  add edi, BYTES*PIXELS     ; x_ptr += BYTES*PIXELS
-  add esi, PIXELS           ; y_ptr += PIXELS
-  add ebx, PIXELS/2         ; u_ptr += PIXELS/2
-  add ecx, PIXELS/2         ; v_ptr += PIXELS/2
+  add _EDI, BYTES*PIXELS     ; x_ptr += BYTES*PIXELS
+  add _ESI, PIXELS           ; y_ptr += PIXELS
+  add _EBX, PIXELS/2         ; u_ptr += PIXELS/2
+  add _ECX, PIXELS/2         ; v_ptr += PIXELS/2
         
-  sub ebp, PIXELS           ; $ebp$ -= PIXELS
-  jg .x_loop                ; if ($ebp$ > 0) goto .x_loop
+  sub _EBP, PIXELS           ; $ebp$ -= PIXELS
+  jg .x_loop                 ; if ($ebp$ > 0) goto .x_loop
 
-  mov ebp, [tmp_height]
-  add edi, [x_dif]          ; x_ptr += x_dif + (VPIXELS-1)*x_stride
-  add esi, [y_dif]          ; y_ptr += y_dif + (VPIXELS-1)*y_stride
+  mov ebp, tmp_height
+  add _EDI, x_dif            ; x_ptr += x_dif + (VPIXELS-1)*x_stride
+%ifdef ARCH_IS_X86_64
+  mov TMP1d, y_dif
+  add _ESI, TMP1             ; y_ptr += y_dif + (VPIXELS-1)*y_stride
+%else
+  add _ESI, y_dif            ; y_ptr += y_dif + (VPIXELS-1)*y_stride
+%endif
+
 %rep VPIXELS-1
-  add edi, edx            
-  add esi, eax            
+  add _EDI, _EDX            
+  add _ESI, _EAX          
 %endrep
 
-  add ebx, [uv_dif]         ; u_ptr += uv_dif + ((VPIXELS/2)-1)*uv_stride
-  add ecx, [uv_dif]         ; v_ptr += uv_dif + ((VPIXELS/2)-1)*uv_stride
+%ifdef ARCH_IS_X86_64
+  mov TMP1d, uv_dif
+  add _EBX, TMP1             ; u_ptr += uv_dif + ((VPIXELS/2)-1)*uv_stride
+  add _ECX, TMP1             ; v_ptr += uv_dif + ((VPIXELS/2)-1)*uv_stride
+%else
+  add _EBX, uv_dif           ; u_ptr += uv_dif + ((VPIXELS/2)-1)*uv_stride
+  add _ECX, uv_dif           ; v_ptr += uv_dif + ((VPIXELS/2)-1)*uv_stride
+%endif
+
 %rep (VPIXELS/2)-1
-  add ebx, [uv_stride]
-  add ecx, [uv_stride]
+%ifdef ARCH_IS_X86_64
+  mov TMP1d, prm_uv_stride
+  add _EBX, TMP1
+  add _ECX, TMP1
+%else
+  add _EBX, prm_uv_stride
+  add _ECX, prm_uv_stride
+%endif
 %endrep
 
-  sub ebp, VPIXELS          ; $ebp$ -= VPIXELS
-  jg .y_loop                ; if ($ebp$ > 0) goto .y_loop
+  sub _EBP, VPIXELS          ; $ebp$ -= VPIXELS
+  jg .y_loop                 ; if ($ebp$ > 0) goto .y_loop
 
   ; cleanup stack & undef everything
 
-  add esp, localsize
-  pop ebp
-  pop edi
-  pop esi
-  pop ebx
+  add _ESP, localsize
 
-%undef vflip
-%undef height
-%undef width
-%undef uv_stride
-%undef y_stride
-%undef v_ptr
-%undef u_ptr
-%undef y_ptr
-%undef x_stride
-%undef x_ptr
+  pop _EBP
+%ifndef ARCH_IS_X86_64
+  pop _EDI
+  pop _ESI
+%else
+%ifdef WINDOWS
+  pop _EDI
+  pop _ESI
+%endif
+%endif
+  pop _EBX
+
+%undef prm_vflip
+%undef prm_height
+%undef prm_width
+%undef prm_uv_stride
+%undef prm_y_stride
+%undef prm_v_ptr
+%undef prm_u_ptr
+%undef prm_y_ptr
+%undef prm_x_stride
+%undef prm_x_ptr
 %undef _ip
 %undef x_dif
 %undef y_dif

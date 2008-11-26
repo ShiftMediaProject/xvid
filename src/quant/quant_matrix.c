@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: quant_matrix.c,v 1.15 2006-07-10 08:09:59 syskin Exp $
+ * $Id: quant_matrix.c,v 1.16 2008-11-26 01:04:34 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -127,7 +127,7 @@ init_intra_matrix(uint16_t * mpeg_quant_matrices, uint32_t quant)
 
 	for (i = 0; i < 64; i++) {
 		uint32_t div = intra_matrix[i]*quant;
-		intra_matrix_rec[i] = ((1<<SCALEBITS) + (div>>1))/div;
+		intra_matrix_rec[i] = ((uint32_t)((1<<SCALEBITS) + (div>>1)))/div;
 	}
 }
 

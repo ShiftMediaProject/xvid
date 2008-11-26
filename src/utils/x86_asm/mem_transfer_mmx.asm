@@ -4,7 +4,7 @@
 ; *  - 8<->16 bit transfer functions -
 ; *
 ; *  Copyright (C) 2001 Peter Ross <pross@xvid.org>
-; *                2001 Michael Militzer <isibaar@xvid.org>
+; *                2001-2008 Michael Militzer <michael@xvid.org>
 ; *                2002 Pascal Massimino <skal@planet-d.net>
 ; *
 ; *  This program is free software ; you can redistribute it and/or modify
@@ -21,45 +21,19 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: mem_transfer_mmx.asm,v 1.19 2008-11-11 20:46:24 Isibaar Exp $
+; * $Id: mem_transfer_mmx.asm,v 1.20 2008-11-26 01:04:34 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
-BITS 32
-
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
+%include "nasm.inc"
 
 ;=============================================================================
 ; Read only data
 ;=============================================================================
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
+DATA
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 mmx_one:
 	dw 1, 1, 1, 1
 
@@ -67,7 +41,7 @@ mmx_one:
 ; Code
 ;=============================================================================
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 cglobal transfer_8to16copy_mmx
 cglobal transfer_16to8copy_mmx
@@ -89,27 +63,27 @@ cglobal transfer8x4_copy_mmx
 ;-----------------------------------------------------------------------------
 
 %macro COPY_8_TO_16 1
-  movq mm0, [eax]
-  movq mm1, [eax+edx]
+  movq mm0, [_EAX]
+  movq mm1, [_EAX+TMP1]
   movq mm2, mm0
   movq mm3, mm1
   punpcklbw mm0, mm7
-  movq [ecx+%1*32], mm0
+  movq [TMP0+%1*32], mm0
   punpcklbw mm1, mm7
-  movq [ecx+%1*32+16], mm1
+  movq [TMP0+%1*32+16], mm1
   punpckhbw mm2, mm7
   punpckhbw mm3, mm7
-  lea eax, [eax+2*edx]
-  movq [ecx+%1*32+8], mm2
-  movq [ecx+%1*32+24], mm3
+  lea _EAX, [_EAX+2*TMP1]
+  movq [TMP0+%1*32+8], mm2
+  movq [TMP0+%1*32+24], mm3
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 transfer_8to16copy_mmx:
 
-  mov ecx, [esp+ 4] ; Dst
-  mov eax, [esp+ 8] ; Src
-  mov edx, [esp+12] ; Stride
+  mov TMP0, prm1 ; Dst
+  mov _EAX, prm2 ; Src
+  mov TMP1, prm3 ; Stride
   pxor mm7, mm7
 
   COPY_8_TO_16 0
@@ -128,29 +102,29 @@ ENDFUNC
 ;-----------------------------------------------------------------------------
 
 %macro COPY_16_TO_8 1
-  movq mm0, [eax+%1*32]
-  movq mm1, [eax+%1*32+8]
+  movq mm0, [_EAX+%1*32]
+  movq mm1, [_EAX+%1*32+8]
   packuswb mm0, mm1
-  movq [ecx], mm0
-  movq mm2, [eax+%1*32+16]
-  movq mm3, [eax+%1*32+24]
+  movq [TMP0], mm0
+  movq mm2, [_EAX+%1*32+16]
+  movq mm3, [_EAX+%1*32+24]
   packuswb mm2, mm3
-  movq [ecx+edx], mm2
+  movq [TMP0+TMP1], mm2
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 transfer_16to8copy_mmx:
 
-  mov ecx, [esp+ 4] ; Dst
-  mov eax, [esp+ 8] ; Src
-  mov edx, [esp+12] ; Stride
+  mov TMP0, prm1 ; Dst
+  mov _EAX, prm2 ; Src
+  mov TMP1, prm3 ; Stride
 
   COPY_16_TO_8 0
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   COPY_16_TO_8 1
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   COPY_16_TO_8 2
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   COPY_16_TO_8 3
   ret
 ENDFUNC
@@ -164,24 +138,24 @@ ENDFUNC
 ;
 ;-----------------------------------------------------------------------------
 
-; when second argument == 1, reference (ebx) block is to current (eax)
+; when second argument == 1, reference (ebx) block is to current (_EAX)
 %macro COPY_8_TO_16_SUB 2
-  movq mm0, [eax]      ; cur
-  movq mm2, [eax+edx]
+  movq mm0, [_EAX]      ; cur
+  movq mm2, [_EAX+TMP1]
   movq mm1, mm0
   movq mm3, mm2
 
   punpcklbw mm0, mm7
   punpcklbw mm2, mm7
-  movq mm4, [ebx]      ; ref
+  movq mm4, [_EBX]      ; ref
   punpckhbw mm1, mm7
   punpckhbw mm3, mm7
-  movq mm5, [ebx+edx]  ; ref
+  movq mm5, [_EBX+TMP1]  ; ref
 
   movq mm6, mm4
 %if %2 == 1
-  movq [eax], mm4
-  movq [eax+edx], mm5
+  movq [_EAX], mm4
+  movq [_EAX+TMP1], mm5
 %endif
   punpcklbw mm4, mm7
   punpckhbw mm6, mm7
@@ -191,23 +165,28 @@ ENDFUNC
   punpcklbw mm5, mm7
   punpckhbw mm6, mm7
   psubsw mm2, mm5
-  lea eax, [eax+2*edx]
+  lea _EAX, [_EAX+2*TMP1]
   psubsw mm3, mm6
-  lea ebx,[ebx+2*edx]
+  lea _EBX,[_EBX+2*TMP1]
 
-  movq [ecx+%1*32+ 0], mm0 ; dst
-  movq [ecx+%1*32+ 8], mm1
-  movq [ecx+%1*32+16], mm2
-  movq [ecx+%1*32+24], mm3
+  movq [TMP0+%1*32+ 0], mm0 ; dst
+  movq [TMP0+%1*32+ 8], mm1
+  movq [TMP0+%1*32+16], mm2
+  movq [TMP0+%1*32+24], mm3
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 transfer_8to16sub_mmx:
-  mov ecx, [esp  + 4] ; Dst
-  mov eax, [esp  + 8] ; Cur
-  push ebx
-  mov ebx, [esp+4+12] ; Ref
-  mov edx, [esp+4+16] ; Stride
+  mov TMP0, prm1 ; Dst
+  mov _EAX, prm2 ; Cur
+  mov TMP1, prm4 ; Stride
+
+  push _EBX
+%ifdef ARCH_IS_X86_64
+  mov _EBX, prm3
+%else
+  mov _EBX, [_ESP+4+12] ; Ref
+%endif
   pxor mm7, mm7
 
   COPY_8_TO_16_SUB 0, 1
@@ -215,18 +194,23 @@ transfer_8to16sub_mmx:
   COPY_8_TO_16_SUB 2, 1
   COPY_8_TO_16_SUB 3, 1
 
-  pop ebx
+  pop _EBX
   ret
 ENDFUNC
 
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 transfer_8to16subro_mmx:
-  mov ecx, [esp  + 4] ; Dst
-  mov eax, [esp  + 8] ; Cur
-  push ebx
-  mov ebx, [esp+4+12] ; Ref
-  mov edx, [esp+4+16] ; Stride
+  mov TMP0, prm1 ; Dst
+  mov _EAX, prm2 ; Cur
+  mov TMP1, prm4 ; Stride
+
+  push _EBX
+%ifdef ARCH_IS_X86_64
+  mov _EBX, prm3
+%else
+  mov _EBX, [_ESP+4+12] ; Ref
+%endif
   pxor mm7, mm7
 
   COPY_8_TO_16_SUB 0, 0
@@ -234,7 +218,7 @@ transfer_8to16subro_mmx:
   COPY_8_TO_16_SUB 2, 0
   COPY_8_TO_16_SUB 3, 0
 
-  pop ebx
+  pop _EBX
   ret
 ENDFUNC
 
@@ -250,12 +234,12 @@ ENDFUNC
 ;-----------------------------------------------------------------------------
 
 %macro COPY_8_TO_16_SUB2_MMX 1
-  movq mm0, [eax]      ; cur
-  movq mm2, [eax+edx]
+  movq mm0, [_EAX]      ; cur
+  movq mm2, [_EAX+TMP1]
 
   ; mm4 <- (ref1+ref2+1) / 2
-  movq mm4, [ebx]      ; ref1
-  movq mm1, [esi]      ; ref2
+  movq mm4, [_EBX]      ; ref1
+  movq mm1, [_ESI]      ; ref2
   movq mm6, mm4
   movq mm3, mm1
   punpcklbw mm4, mm7
@@ -269,11 +253,11 @@ ENDFUNC
   psrlw mm4, 1
   psrlw mm6, 1
   packuswb mm4, mm6
-  movq [eax], mm4
+  movq [_EAX], mm4
 
     ; mm5 <- (ref1+ref2+1) / 2
-  movq mm5, [ebx+edx]  ; ref1
-  movq mm1, [esi+edx]  ; ref2
+  movq mm5, [_EBX+TMP1]  ; ref1
+  movq mm1, [_ESI+TMP1]  ; ref2
   movq mm6, mm5
   movq mm3, mm1
   punpcklbw mm5, mm7
@@ -284,11 +268,11 @@ ENDFUNC
   paddusw mm6, mm3
   paddusw mm5, [mmx_one]
   paddusw mm6, [mmx_one]
-  lea esi, [esi+2*edx]
+  lea _ESI, [_ESI+2*TMP1]
   psrlw mm5, 1
   psrlw mm6, 1
   packuswb mm5, mm6
-  movq [eax+edx], mm5
+  movq [_EAX+TMP1], mm5
 
   movq mm1, mm0
   movq mm3, mm2
@@ -306,25 +290,36 @@ ENDFUNC
   punpcklbw mm5, mm7
   punpckhbw mm6, mm7
   psubsw mm2, mm5
-  lea eax, [eax+2*edx]
+  lea _EAX, [_EAX+2*TMP1]
   psubsw mm3, mm6
-  lea ebx, [ebx+2*edx]
+  lea _EBX, [_EBX+2*TMP1]
 
-  movq [ecx+%1*32+ 0], mm0 ; dst
-  movq [ecx+%1*32+ 8], mm1
-  movq [ecx+%1*32+16], mm2
-  movq [ecx+%1*32+24], mm3
+  movq [TMP0+%1*32+ 0], mm0 ; dst
+  movq [TMP0+%1*32+ 8], mm1
+  movq [TMP0+%1*32+16], mm2
+  movq [TMP0+%1*32+24], mm3
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 transfer_8to16sub2_mmx:
-  mov ecx, [esp  + 4] ; Dst
-  mov eax, [esp  + 8] ; Cur
-  push ebx
-  mov ebx, [esp+4+12] ; Ref1
-  push esi
-  mov esi, [esp+8+16] ; Ref2
-  mov edx, [esp+8+20] ; Stride
+  mov TMP0, prm1   ; Dst
+  mov TMP1d, prm5d ; Stride
+  mov _EAX, prm2   ; Cur
+
+  push _EBX
+%ifdef ARCH_IS_X86_64
+  mov _EBX, prm3
+%else
+  mov _EBX, [_ESP+4+12] ; Ref1
+%endif
+
+  push _ESI
+%ifdef ARCH_IS_X86_64
+  mov _ESI, prm4
+%else
+  mov _ESI, [_ESP+8+16] ; Ref2
+%endif
+
   pxor mm7, mm7
 
   COPY_8_TO_16_SUB2_MMX 0
@@ -332,8 +327,8 @@ transfer_8to16sub2_mmx:
   COPY_8_TO_16_SUB2_MMX 2
   COPY_8_TO_16_SUB2_MMX 3
 
-  pop esi
-  pop ebx
+  pop _ESI
+  pop _EBX
   ret
 ENDFUNC
 
@@ -348,51 +343,62 @@ ENDFUNC
 ;-----------------------------------------------------------------------------
 
 %macro COPY_8_TO_16_SUB2_SSE 1
-  movq mm0, [eax]      ; cur
-  movq mm2, [eax+edx]
+  movq mm0, [_EAX]      ; cur
+  movq mm2, [_EAX+TMP1]
   movq mm1, mm0
   movq mm3, mm2
 
   punpcklbw mm0, mm7
   punpcklbw mm2, mm7
-  movq mm4, [ebx]     ; ref1
-  pavgb mm4, [esi]     ; ref2
-  movq [eax], mm4
+  movq mm4, [_EBX]     ; ref1
+  pavgb mm4, [_ESI]     ; ref2
+  movq [_EAX], mm4
   punpckhbw mm1, mm7
   punpckhbw mm3, mm7
-  movq mm5, [ebx+edx] ; ref
-  pavgb mm5, [esi+edx] ; ref2
-  movq [eax+edx], mm5
+  movq mm5, [_EBX+TMP1] ; ref
+  pavgb mm5, [_ESI+TMP1] ; ref2
+  movq [_EAX+TMP1], mm5
 
   movq mm6, mm4
   punpcklbw mm4, mm7
   punpckhbw mm6, mm7
   psubsw mm0, mm4
   psubsw mm1, mm6
-  lea esi, [esi+2*edx]
+  lea _ESI, [_ESI+2*TMP1]
   movq mm6, mm5
   punpcklbw mm5, mm7
   punpckhbw mm6, mm7
   psubsw mm2, mm5
-  lea eax, [eax+2*edx]
+  lea _EAX, [_EAX+2*TMP1]
   psubsw mm3, mm6
-  lea ebx, [ebx+2*edx]
+  lea _EBX, [_EBX+2*TMP1]
 
-  movq [ecx+%1*32+ 0], mm0 ; dst
-  movq [ecx+%1*32+ 8], mm1
-  movq [ecx+%1*32+16], mm2
-  movq [ecx+%1*32+24], mm3
+  movq [TMP0+%1*32+ 0], mm0 ; dst
+  movq [TMP0+%1*32+ 8], mm1
+  movq [TMP0+%1*32+16], mm2
+  movq [TMP0+%1*32+24], mm3
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 transfer_8to16sub2_xmm:
-  mov ecx, [esp  + 4] ; Dst
-  mov eax, [esp  + 8] ; Cur
-  push ebx
-  mov ebx, [esp+4+12] ; Ref1
-  push esi
-  mov esi, [esp+8+16] ; Ref2
-  mov edx, [esp+8+20] ; Stride
+  mov TMP0, prm1   ; Dst
+  mov _EAX, prm2   ; Cur
+  mov TMP1d, prm5d ; Stride
+
+  push _EBX
+%ifdef ARCH_IS_X86_64
+  mov _EBX, prm3 ; Ref1
+%else
+  mov _EBX, [_ESP+4+12] ; Ref1
+%endif
+
+  push _ESI
+%ifdef ARCH_IS_X86_64
+  mov _ESI, prm4 ; Ref1
+%else
+  mov _ESI, [_ESP+8+16] ; Ref2
+%endif
+
   pxor mm7, mm7
 
   COPY_8_TO_16_SUB2_SSE 0
@@ -400,8 +406,8 @@ transfer_8to16sub2_xmm:
   COPY_8_TO_16_SUB2_SSE 2
   COPY_8_TO_16_SUB2_SSE 3
 
-  pop esi
-  pop ebx
+  pop _ESI
+  pop _EBX
   ret
 ENDFUNC
 
@@ -417,58 +423,68 @@ ENDFUNC
 ;-----------------------------------------------------------------------------
 
 %macro COPY_8_TO_16_SUB2RO_SSE 1
-  movq mm0, [eax]      ; cur
-  movq mm2, [eax+edx]
+  movq mm0, [_EAX]      ; cur
+  movq mm2, [_EAX+TMP1]
   movq mm1, mm0
   movq mm3, mm2
 
   punpcklbw mm0, mm7
   punpcklbw mm2, mm7
-  movq mm4, [ebx]     ; ref1
-  pavgb mm4, [esi]     ; ref2
+  movq mm4, [_EBX]     ; ref1
+  pavgb mm4, [_ESI]     ; ref2
   punpckhbw mm1, mm7
   punpckhbw mm3, mm7
-  movq mm5, [ebx+edx] ; ref
-  pavgb mm5, [esi+edx] ; ref2
+  movq mm5, [_EBX+TMP1] ; ref
+  pavgb mm5, [_ESI+TMP1] ; ref2
 
   movq mm6, mm4
   punpcklbw mm4, mm7
   punpckhbw mm6, mm7
   psubsw mm0, mm4
   psubsw mm1, mm6
-  lea esi, [esi+2*edx]
+  lea _ESI, [_ESI+2*TMP1]
   movq mm6, mm5
   punpcklbw mm5, mm7
   punpckhbw mm6, mm7
   psubsw mm2, mm5
-  lea eax, [eax+2*edx]
+  lea _EAX, [_EAX+2*TMP1]
   psubsw mm3, mm6
-  lea ebx, [ebx+2*edx]
+  lea _EBX, [_EBX+2*TMP1]
 
-  movq [ecx+%1*32+ 0], mm0 ; dst
-  movq [ecx+%1*32+ 8], mm1
-  movq [ecx+%1*32+16], mm2
-  movq [ecx+%1*32+24], mm3
+  movq [TMP0+%1*32+ 0], mm0 ; dst
+  movq [TMP0+%1*32+ 8], mm1
+  movq [TMP0+%1*32+16], mm2
+  movq [TMP0+%1*32+24], mm3
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 transfer_8to16sub2ro_xmm:
   pxor mm7, mm7
-  mov ecx, [esp  + 4] ; Dst
-  mov eax, [esp  + 8] ; Cur
-  push ebx
-  mov ebx, [esp+4+12] ; Ref1
-  push esi
-  mov esi, [esp+8+16] ; Ref2
-  mov edx, [esp+8+20] ; Stride
+  mov TMP0, prm1   ; Dst
+  mov _EAX, prm2   ; Cur
+  mov TMP1d, prm5d ; Stride
+
+  push _EBX
+%ifdef ARCH_IS_X86_64
+  mov _EBX, prm3
+%else
+  mov _EBX, [_ESP+4+12] ; Ref1
+%endif
+
+  push _ESI
+%ifdef ARCH_IS_X86_64
+  mov _ESI, prm4
+%else
+  mov _ESI, [_ESP+8+16] ; Ref2
+%endif
 
   COPY_8_TO_16_SUB2RO_SSE 0
   COPY_8_TO_16_SUB2RO_SSE 1
   COPY_8_TO_16_SUB2RO_SSE 2
   COPY_8_TO_16_SUB2RO_SSE 3
 
-  pop esi
-  pop ebx
+  pop _ESI
+  pop _EBX
   ret
 ENDFUNC
 
@@ -482,38 +498,38 @@ ENDFUNC
 ;-----------------------------------------------------------------------------
 
 %macro COPY_16_TO_8_ADD 1
-  movq mm0, [ecx]
-  movq mm2, [ecx+edx]
+  movq mm0, [TMP0]
+  movq mm2, [TMP0+TMP1]
   movq mm1, mm0
   movq mm3, mm2
   punpcklbw mm0, mm7
   punpcklbw mm2, mm7
   punpckhbw mm1, mm7
   punpckhbw mm3, mm7
-  paddsw mm0, [eax+%1*32+ 0]
-  paddsw mm1, [eax+%1*32+ 8]
-  paddsw mm2, [eax+%1*32+16]
-  paddsw mm3, [eax+%1*32+24]
+  paddsw mm0, [_EAX+%1*32+ 0]
+  paddsw mm1, [_EAX+%1*32+ 8]
+  paddsw mm2, [_EAX+%1*32+16]
+  paddsw mm3, [_EAX+%1*32+24]
   packuswb mm0, mm1
-  movq [ecx], mm0
+  movq [TMP0], mm0
   packuswb mm2, mm3
-  movq [ecx+edx], mm2
+  movq [TMP0+TMP1], mm2
 %endmacro
 
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 transfer_16to8add_mmx:
-  mov ecx, [esp+ 4] ; Dst
-  mov eax, [esp+ 8] ; Src
-  mov edx, [esp+12] ; Stride
+  mov TMP0, prm1 ; Dst
+  mov _EAX, prm2 ; Src
+  mov TMP1, prm3 ; Stride
   pxor mm7, mm7
 
   COPY_16_TO_8_ADD 0
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   COPY_16_TO_8_ADD 1
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   COPY_16_TO_8_ADD 2
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   COPY_16_TO_8_ADD 3
   ret
 ENDFUNC
@@ -528,25 +544,25 @@ ENDFUNC
 ;-----------------------------------------------------------------------------
 
 %macro COPY_8_TO_8 0
-  movq mm0, [eax]
-  movq mm1, [eax+edx]
-  movq [ecx], mm0
-  lea eax, [eax+2*edx]
-  movq [ecx+edx], mm1
+  movq mm0, [_EAX]
+  movq mm1, [_EAX+TMP1]
+  movq [TMP0], mm0
+  lea _EAX, [_EAX+2*TMP1]
+  movq [TMP0+TMP1], mm1
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 transfer8x8_copy_mmx:
-  mov ecx, [esp+ 4] ; Dst
-  mov eax, [esp+ 8] ; Src
-  mov edx, [esp+12] ; Stride
+  mov TMP0, prm1 ; Dst
+  mov _EAX, prm2 ; Src
+  mov TMP1, prm3 ; Stride
 
   COPY_8_TO_8
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   COPY_8_TO_8
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   COPY_8_TO_8
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   COPY_8_TO_8
   ret
 ENDFUNC
@@ -560,14 +576,14 @@ ENDFUNC
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 transfer8x4_copy_mmx:
-  mov ecx, [esp+ 4] ; Dst
-  mov eax, [esp+ 8] ; Src
-  mov edx, [esp+12] ; Stride
+  mov TMP0, prm1 ; Dst
+  mov _EAX, prm2 ; Src
+  mov TMP1, prm3 ; Stride
 
   COPY_8_TO_8
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   COPY_8_TO_8
   ret
 ENDFUNC
