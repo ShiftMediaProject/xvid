@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.61 2008-11-14 15:43:27 Isibaar Exp $
+ * $Id: xvid.h,v 1.62 2008-11-26 02:36:37 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -73,7 +73,7 @@ extern "C" {
  * doesnt hurt but not increasing it could cause difficulty for decoders in the
  * future
  */
-#define XVID_BS_VERSION 47
+#define XVID_BS_VERSION 48
 
 /*****************************************************************************
  * error codes
