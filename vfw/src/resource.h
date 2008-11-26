@@ -97,7 +97,9 @@
 #define IDC_CPU_3DNOW                   1057
 #define IDC_CPU_3DNOWEXT                1058
 #define IDC_LOAD                        1059
+#define IDC_CPU_SSE3                    1059
 #define IDC_SAVE                        1060
+#define IDC_CPU_SSE4                    1060
 #define IDC_WEBSITE                     1061
 #define IDC_BUILD                       1062
 #define IDC_CORE                        1063

@@ -77,8 +77,8 @@ END
 
 IDD_MAIN DIALOGEX 0, 0, 225, 255
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "XviD Configuration"
-FONT 8, "MS Shell Dlg"
+CAPTION "Xvid Configuration"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     COMBOBOX        IDC_PROFILE,88,16,91,200,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
@@ -465,16 +465,16 @@ END
 
 IDD_ABOUT DIALOG DISCARDABLE  0, 0, 192, 165
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "XviD MPEG4 Video Codec"
+CAPTION "Xvid MPEG4 Video Codec"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CTEXT           "GPL'ed MPEG4 video codec demonstration.\nFor educational purposes only.",
+    CTEXT           "Xvid is copyrighted software.\nIt is licensed to you under GNU GPL license.",
                     IDC_STATIC,12,112,168,20
     CTEXT           "WEBSITE",IDC_WEBSITE,60,92,72,8,SS_NOTIFY | 
                     SS_CENTERIMAGE
     CTEXT           "BUILD",IDC_BUILD,8,28,176,8,SS_CENTERIMAGE
     CONTROL         "IDB_LOGO",IDC_STATIC,"Static",SS_BITMAP,24,56,15,13
-    CTEXT           "XviD MPEG4 video codec",IDC_STATIC,8,16,176,12
+    CTEXT           "Xvid MPEG4 video codec",IDC_STATIC,8,16,176,12
     GROUPBOX        "About",IDC_STATIC,4,4,184,132
     DEFPUSHBUTTON   "OK",IDOK,102,144,80,14
     CTEXT           "CORE",IDC_CORE,8,40,176,8,SS_CENTERIMAGE
@@ -585,7 +585,7 @@ BEGIN
     EDITTEXT        IDC_LEVEL_BITRATE,156,131,40,12,ES_RIGHT | 
                     ES_AUTOHSCROLL | ES_READONLY
     LTEXT           "Profile @ Level:",IDC_STATIC,8,10,52,8
-    GROUPBOX        "Level - XviD will not force you to respect these",
+    GROUPBOX        "Level - Xvid will not force you to respect these",
                     IDC_LEVEL_LEVEL_G,8,28,196,66
     LTEXT           "Suggested:",IDC_LEVEL_DIM_S,16,45,48,8
     LTEXT           "x",IDC_STATIC,120,45,8,8
@@ -627,7 +627,7 @@ END
 
 IDD_STATUS DIALOGEX 0, 0, 325, 220
 STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "XviD Status"
+CAPTION "Xvid Status"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL         "",IDC_STATUS_GRAPH,"Static",SS_OWNERDRAW | SS_NOTIFY,4,
@@ -864,18 +864,22 @@ BEGIN
     CONTROL         "MMX",IDC_CPU_MMX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     28,44,33,10
     CONTROL         "Integer SSE",IDC_CPU_MMXEXT,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,28,57,54,10
+                    WS_TABSTOP,28,56,54,10
     CONTROL         "SSE",IDC_CPU_SSE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     28,68,30,10
     CONTROL         "SSE2",IDC_CPU_SSE2,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,28,81,34,10
     CONTROL         "3DNow!",IDC_CPU_3DNOW,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,28,92,42,10
+                    WS_TABSTOP,28,118,42,10
     CONTROL         "3DNow! 2",IDC_CPU_3DNOWEXT,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,28,105,48,10
-    EDITTEXT        IDC_DEBUG,127,133,76,12,ES_AUTOHSCROLL
-    GROUPBOX        "Performance optimizations",-1,8,4,196,120
-    LTEXT           "OutputDebugString debug level:",-1,7,135,104,12
+                    WS_TABSTOP,28,131,48,10
+    EDITTEXT        IDC_DEBUG,127,150,76,12,ES_AUTOHSCROLL
+    GROUPBOX        "Performance optimizations",-1,8,4,196,141
+    LTEXT           "OutputDebugString debug level:",-1,7,152,104,12
+    CONTROL         "SSE3",IDC_CPU_SSE3,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,28,93,34,10
+    CONTROL         "SSE4",IDC_CPU_SSE4,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,28,106,34,10
 END
 
 
@@ -991,8 +995,8 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDC_CPU_AUTO            "Enable XviD's internal CPU detection"
-    IDC_CPU_FORCE           "Override XviD's internal CPU detection (not recommended)"
+    IDC_CPU_AUTO            "Enable Xvid's internal CPU detection"
+    IDC_CPU_FORCE           "Override Xvid's internal CPU detection (not recommended)"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -1022,7 +1026,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDC_CARTOON             "Enables special motion estimation features for cartoons/anime."
     IDC_OVERFLOW_CONTROL_STRENGTH 
-                            "0=Default from core (let xvid decide). Else overflow payback percent per frame. Higher value will meet target file size better, but will also spoil quantizer distribution more."
+                            "0=Default from core (let Xvid decide). Else overflow payback percent per frame. Higher value will meet target file size better, but will also spoil quantizer distribution more."
     IDC_ASPECT_RATIO        "Display aspect ratio is used to scale the video on playback/anamorphic encoding).\n\nDefault 1:1 for no scaling necessary."
 END
 

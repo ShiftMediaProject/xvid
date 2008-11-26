@@ -1105,7 +1105,9 @@ static void adv_mode(HWND hDlg, int idd, CONFIG * config)
 		EnableDlgWindow(hDlg, IDC_CPU_MMXEXT,	cpu_force);
 		EnableDlgWindow(hDlg, IDC_CPU_SSE,		cpu_force);
 		EnableDlgWindow(hDlg, IDC_CPU_SSE2,		cpu_force);
-		EnableDlgWindow(hDlg, IDC_CPU_3DNOW,	cpu_force);
+		EnableDlgWindow(hDlg, IDC_CPU_SSE3,		cpu_force);
+		EnableDlgWindow(hDlg, IDC_CPU_SSE4, 	cpu_force);
+        EnableDlgWindow(hDlg, IDC_CPU_3DNOW,	cpu_force);
 		EnableDlgWindow(hDlg, IDC_CPU_3DNOWEXT,	cpu_force);
 		break;
 	}
@@ -1256,7 +1258,9 @@ static void adv_upload(HWND hDlg, int idd, CONFIG * config)
 		CheckDlg(hDlg, IDC_CPU_MMXEXT, (config->cpu & XVID_CPU_MMXEXT));
 		CheckDlg(hDlg, IDC_CPU_SSE, (config->cpu & XVID_CPU_SSE));
 		CheckDlg(hDlg, IDC_CPU_SSE2, (config->cpu & XVID_CPU_SSE2));
-		CheckDlg(hDlg, IDC_CPU_3DNOW, (config->cpu & XVID_CPU_3DNOW));
+		CheckDlg(hDlg, IDC_CPU_SSE3, (config->cpu & XVID_CPU_SSE3));
+		CheckDlg(hDlg, IDC_CPU_SSE4, (config->cpu & XVID_CPU_SSE41));
+        CheckDlg(hDlg, IDC_CPU_3DNOW, (config->cpu & XVID_CPU_3DNOW));
 		CheckDlg(hDlg, IDC_CPU_3DNOWEXT, (config->cpu & XVID_CPU_3DNOWEXT));
 
 		CheckRadioButton(hDlg, IDC_CPU_AUTO, IDC_CPU_FORCE,
@@ -1453,7 +1457,9 @@ static void adv_download(HWND hDlg, int idd, CONFIG * config)
 		config->cpu |= IsDlgChecked(hDlg, IDC_CPU_MMXEXT)   ? XVID_CPU_MMXEXT : 0;
 		config->cpu |= IsDlgChecked(hDlg, IDC_CPU_SSE)	  ? XVID_CPU_SSE : 0;
 		config->cpu |= IsDlgChecked(hDlg, IDC_CPU_SSE2)	 ? XVID_CPU_SSE2 : 0;
-		config->cpu |= IsDlgChecked(hDlg, IDC_CPU_3DNOW)	? XVID_CPU_3DNOW : 0;
+		config->cpu |= IsDlgChecked(hDlg, IDC_CPU_SSE3)	  ? XVID_CPU_SSE3 : 0;
+		config->cpu |= IsDlgChecked(hDlg, IDC_CPU_SSE4)     ? XVID_CPU_SSE41 : 0;
+        config->cpu |= IsDlgChecked(hDlg, IDC_CPU_3DNOW)	? XVID_CPU_3DNOW : 0;
 		config->cpu |= IsDlgChecked(hDlg, IDC_CPU_3DNOWEXT) ? XVID_CPU_3DNOWEXT : 0;
 		config->cpu |= IsDlgChecked(hDlg, IDC_CPU_FORCE)	? XVID_CPU_FORCE : 0;
     config->debug = get_dlgitem_hex(hDlg, IDC_DEBUG, config->debug);
@@ -1745,7 +1751,7 @@ static BOOL adv_dialog(HWND hParent, CONFIG * config, const int * dlgs, int size
 	psh.dwFlags = PSH_PROPSHEETPAGE | PSH_NOAPPLYNOW | PSH_NOCONTEXTHELP;
 	psh.hwndParent = hParent;
 	psh.hInstance = g_hInst;
-	psh.pszCaption = (LPSTR) "XviD Configuration";
+	psh.pszCaption = (LPSTR) "Xvid Configuration";
 	psh.nPages = size;
 	psh.nStartPage = 0;
 	psh.ppsp = (LPCPROPSHEETPAGE)&psp;
