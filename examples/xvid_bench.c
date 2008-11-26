@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.36 2008-11-14 15:43:27 Isibaar Exp $
+ * $Id: xvid_bench.c,v 1.37 2008-11-26 09:31:06 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -115,20 +115,17 @@ typedef struct {
 
 CPU cpu_list[] = {
 	{ "PLAINC ", 0 },
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 	{ "MMX    ", XVID_CPU_MMX },
 	{ "MMXEXT ", XVID_CPU_MMXEXT | XVID_CPU_MMX },
 	{ "SSE2   ", XVID_CPU_SSE2 | XVID_CPU_MMX },
 	{ "SSE3   ", XVID_CPU_SSE3 | XVID_CPU_SSE2 | XVID_CPU_MMX },
 	{ "SSE41  ", XVID_CPU_SSE41| XVID_CPU_SSE3 | XVID_CPU_SSE2 | XVID_CPU_MMX },
-    { "3DNOW  ", XVID_CPU_3DNOW },
+	{ "3DNOW  ", XVID_CPU_3DNOW },
 	{ "3DNOWE ", XVID_CPU_3DNOW | XVID_CPU_3DNOWEXT },
 #endif
 #ifdef ARCH_IS_PPC
 	{ "ALTIVEC", XVID_CPU_ALTIVEC },
-#endif
-#ifdef ARCH_IS_X86_64
-	{ "X86_64 ", XVID_CPU_ASM},
 #endif
 #ifdef ARCH_IS_IA64
 //	{ "IA64   ", XVID_CPU_IA64 },
@@ -733,6 +730,7 @@ for(s=CRC32_INITIAL,qm=1; qm<=255; ++qm) {              \
   set_intra_matrix( mpeg_quant_matrices, Quant );                \
   emms();                                   \
   for(q=1; q<=max_Q; ++q) {                 \
+	init_intra_matrix( mpeg_quant_matrices, q ); \
 	for(tst=0; tst<nb_tests; ++tst)         \
 	  (FUNC)((DST), (SRC), q, q, mpeg_quant_matrices);           \
 	byte_swap((uint8_t*)(DST), 64*sizeof((DST)[0]), sizeof((DST)[0]));  \
@@ -743,7 +741,7 @@ for(s=CRC32_INITIAL,qm=1; qm<=255; ++qm) {              \
 t = (gettime_usec()-t-overhead)/nb_tests/qm
 
 #define TEST_INTRA(REFFUNC, NEWFUNC, RANGE)              \
-{ int i,q,s;\
+{ int32_t i,q,s;\
 	DECLARE_ALIGNED_MATRIX(Src, 8, 8, int16_t, 16); \
   DECLARE_ALIGNED_MATRIX(Dst, 8, 8, int16_t, 16); \
   DECLARE_ALIGNED_MATRIX(Dst2,8, 8, int16_t, 16); \
@@ -775,11 +773,11 @@ t = (gettime_usec()-t-overhead)/nb_tests/qm
 
 void test_quant()
 {
-	const int nb_tests = 1*speed_ref;
-	const int max_Q = 31;
+	const int32_t nb_tests = 1*speed_ref;
+	const int32_t max_Q = 31;
 	DECLARE_ALIGNED_MATRIX(mpeg_quant_matrices, 8, 64, uint16_t, 16);
 
-	int i, qm;
+	int32_t i, qm;
 	CPU *cpu;
 	DECLARE_ALIGNED_MATRIX(Src, 8, 8, int16_t, 16);
 	DECLARE_ALIGNED_MATRIX(Dst, 8, 8, int16_t, 16);
@@ -798,7 +796,7 @@ void test_quant()
 	for(cpu = cpu_list; cpu->name!=0; ++cpu)
 	{
 		double t, overhead;
-		int tst, q;
+		int32_t tst, q;
 		uint32_t s;
 
 		if (!init_cpu(cpu))
@@ -822,7 +820,7 @@ void test_quant()
 		TEST_QUANT2(quant_mpeg_intra, Dst, Src);
 		printf("%s -   quant_mpeg_intra %.3f usec       crc32=0x%08x %s\n",
 			   cpu->name, t, s,
-			   (s!=0xfd6a21a4)? "| ERROR": "");
+			   (s!=0x3b999af6)? "| ERROR": "");
 
 		TEST_QUANT(quant_mpeg_inter, Dst, Src);
 		printf("%s -   quant_mpeg_inter %.3f usec       crc32=0x%08x %s\n",
@@ -1723,10 +1721,19 @@ emms();                             \
 t = (gettime_usec() - t) / nb_tests;  \
 	iCrc = calc_crc((uint8_t*)Dst0, sizeof(Dst0), CRC32_INITIAL)
 
-#define TEST_YUYV(FUNC, S)                \
+#define TEST_YUYV(FUNC, S, FLIP)                \
 ENTER                               \
-for(tst=0; tst<nb_tests; ++tst) (FUNC)(Dst0[0], S*WIDTH, Src0[0], Src0[1], Src0[2], WIDTH, WIDTH/2, WIDTH, HEIGHT, 0); \
+for(tst=0; tst<nb_tests; ++tst) (FUNC)(Dst0[0], S*WIDTH, Src0[0], Src0[1], Src0[2], WIDTH, WIDTH/2, WIDTH, HEIGHT, (FLIP)); \
 LEAVE
+
+static const int yuv_CRCs[6][2] = {
+	{0x0f4fb96b,0x780b6a68}
+,	{0xa986b289,0x65e49b76}
+,	{0x7f19c152,0xd539b86e}
+,	{0x0f4fb96b,0x780b6a68}
+,	{0xa986b289,0x65e49b76}
+,	{0x36ab8b57,0x1cd92fee}
+};
 
 #define WIDTH 128
 #define HEIGHT 32
@@ -1736,7 +1743,7 @@ void test_yuv()
 	CPU *cpu;
 	uint8_t Src0[3][WIDTH*HEIGHT];
 	uint8_t Dst0[4][WIDTH*HEIGHT];
-	int i, j;
+	int i, j, with_flip;
 	double t;
 	int tst, iCrc;
 
@@ -1744,38 +1751,54 @@ void test_yuv()
 	ieee_reseed(1);
 	for(i=0; i<(int)sizeof(Src0); ++i) Src0[0][i] = ieee_rand(0,255);
 	for(i=0; i<(int)sizeof(Dst0); ++i) Dst0[0][i] = 0x5a;
+	
+        printf( "\n ===  test YUV ===\n" );
 
-	printf( "\n ===  test YUV ===\n" );
+        for(with_flip=0; with_flip<=1; ++with_flip) {
 
-	init_cpu(&cpu_list[0]);
-	TEST_YUYV(yv12_to_yuyv_c, 4);
-	printf(" yv12_to_yuyv_c %.3f usec       crc32=0x%08x %s\n",
-		   t, iCrc, (iCrc!=0xeb1a0b0a)?"| ERROR": "" );
-	TEST_YUYV(yv12_to_uyvy_c, 4);
-	printf(" yv12_to_uyvy_c %.3f usec       crc32=0x%08x %s\n",
-		   t, iCrc, (iCrc!=0x6e82f55b)?"| ERROR": "" );
+		init_cpu(&cpu_list[0]);
+		TEST_YUYV(yv12_to_yuyv_c, 4, with_flip);
+		printf(" yv12_to_yuyv_c %.3f usec       crc32=0x%08x %s\n",
+			   t, iCrc, (iCrc!=yuv_CRCs[0][with_flip])?"| ERROR": "" );
+		TEST_YUYV(yv12_to_uyvy_c, 4, with_flip);
+		printf(" yv12_to_uyvy_c %.3f usec       crc32=0x%08x %s\n",
+		   	t, iCrc, (iCrc!=yuv_CRCs[1][with_flip])?"| ERROR": "" );
+ 
+        	TEST_YUYV(yv12_to_bgra_c, 4, with_flip);
+        	printf(" yv12_to_bgra_c %.3f usec       crc32=0x%08x %s\n",
+               		t, iCrc, (iCrc!=yuv_CRCs[2][with_flip])?"| ERROR": "" );
 
-#ifdef ARCH_IS_IA32
-	init_cpu(&cpu_list[1]);
-	TEST_YUYV(yv12_to_yuyv_mmx, 4);
-	printf(" yv12_to_yuyv_mmx %.3f usec       crc32=0x%08x %s\n",
-		t, iCrc, (iCrc!=0xeb1a0b0a)?"| ERROR": "" );
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
+		init_cpu(&cpu_list[1]);
+		TEST_YUYV(yv12_to_yuyv_mmx, 4, with_flip);
+		printf(" yv12_to_yuyv_mmx %.3f usec       crc32=0x%08x %s\n",
+			t, iCrc, (iCrc!=yuv_CRCs[3][with_flip])?"| ERROR": "" );
 
-	TEST_YUYV(yv12_to_uyvy_mmx, 4);
-	printf(" yv12_to_uyvy_mmx %.3f usec       crc32=0x%08x %s\n",
-		t, iCrc, (iCrc!=0x6e82f55b)?"| ERROR": "" );
+		TEST_YUYV(yv12_to_uyvy_mmx, 4, with_flip);
+		printf(" yv12_to_uyvy_mmx %.3f usec       crc32=0x%08x %s\n",
+			t, iCrc, (iCrc!=yuv_CRCs[4][with_flip])?"| ERROR": "" );
+
+        	TEST_YUYV(yv12_to_bgra_mmx, 4, with_flip);
+        	printf(" yv12_to_bgra_mmx %.3f usec       crc32=0x%08x %s\n",
+                	t, iCrc, (iCrc!=yuv_CRCs[5][with_flip])?"| ERROR": "" );
+
 #endif
 
 #ifdef ARCH_IS_PPC
-	init_cpu(&cpu_list[1]);
-	TEST_YUYV(yv12_to_yuyv_altivec_c, 4);
-	printf(" yv12_to_yuyv_altivec_c %.3f usec       crc32=0x%08x %s\n",
-		t, iCrc, (iCrc!=0xeb1a0b0a)?"| ERROR": "" );
+		init_cpu(&cpu_list[1]);
+		TEST_YUYV(yv12_to_yuyv_altivec_c, 4, with_flip);
+		printf(" yv12_to_yuyv_altivec_c %.3f usec       crc32=0x%08x %s\n",
+			t, iCrc, (iCrc!=yuv_CRCs[3][with_flip])?"| ERROR": "" );
 
-	TEST_YUYV(yv12_to_uyvy_altivec_c, 4);
-	printf(" yv12_to_uyvy_altivec_c %.3f usec       crc32=0x%08x %s\n",
-		t, iCrc, (iCrc!=0x6e82f55b)?"| ERROR": "" );
+		TEST_YUYV(yv12_to_uyvy_altivec_c, 4, with_flip);
+		printf(" yv12_to_uyvy_altivec_c %.3f usec       crc32=0x%08x %s\n",
+			t, iCrc, (iCrc!=yuv_CRCs[4][with_flip])?"| ERROR": "" );
+
+         	TEST_YUYV(yv12_to_bgra_altivec_c, 4, with_flip);
+		printf(" yv12_to_bgra_altivec_c %.3f usec       crc32=0x%08x %s\n",
+                        t, iCrc, (iCrc!=yuv_CRCs[5][with_flip])?"| ERROR": "" );
 #endif
+	}
 	printf( " --- \n" );
 }
 
@@ -1824,7 +1847,7 @@ void test_yuv2()
 				t, iCrc, (iCrc!=yv12_CRCs[with_flip][with_uv])?"| ERROR": "" );
 			/* if (!with_uv) PRINT_NxN(Dst0[1], WIDTH/2, HEIGHT/2, WIDTH ); */
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 			init_cpu(&cpu_list[1]);
 			TEST_YV2(yv12_to_yv12_mmx, with_uv, with_flip);
 			printf(" yv12_to_yv12_mmx %.3f usec     \tcrc32=0x%08x %s\n",
@@ -2062,7 +2085,7 @@ void test_SSIM()
 		lum8x8 = lum_8x8_c;
 		lum2x8 = lum_2x8_c;
 		csim   = consim_c;
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 		if (cpu->cpu & XVID_CPU_MMX){
 			lum8x8 = lum_8x8_mmx;
 			csim = consim_mmx;
@@ -2259,7 +2282,7 @@ int main(int argc, const char *argv[])
 			   "    may appear to be slow.\n");
 	}
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 	if (what == 0 || what == 5) {
 		printf("\n"
 			   "NB: MMX mpeg4 quantization is known to have very small errors (+/-1 magnitude)\n"
