@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: fdct_mmx_ffmpeg.asm,v 1.7 2008-11-11 20:46:24 Isibaar Exp $
+; * $Id: fdct_mmx_ffmpeg.asm,v 1.8 2008-11-26 01:04:34 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -42,33 +42,11 @@
 ; *  respective work in order to have a nice/fast mmx fDCT.
 ; ***************************************************************************/
 
-BITS 32
-
 ;=============================================================================
 ; Macros and other preprocessor constants
 ;=============================================================================
 
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
+%include "nasm.inc"
 
 ;;; Define this if you want an unrolled version of the code
 %define UNROLLED_LOOP
@@ -83,13 +61,9 @@ BITS 32
 ; Local Data (Read Only)
 ;=============================================================================
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
+DATA
 
-ALIGN 8
+ALIGN SECTION_ALIGN
 tab_frw_01234567:
   dw  16384,   16384,   -8867,  -21407
   dw  16384,   16384,   21407,    8867
@@ -163,25 +137,25 @@ tab_frw_01234567:
   dw  17855,  -31521,   26722,  -31521
   dw   6270,   26722,    6270,  -17855
 
-ALIGN 8
+ALIGN SECTION_ALIGN
 fdct_one_corr:
   dw 1, 1, 1, 1
 
-ALIGN 8
+ALIGN SECTION_ALIGN
 fdct_tg_all_16:
   dw  13036,	13036,	13036,	13036
   dw  27146,	27146,	27146,	27146
   dw -21746, -21746, -21746, -21746
 
-ALIGN 8
+ALIGN SECTION_ALIGN
 cos_4_16:
   dw -19195, -19195, -19195, -19195
 
-ALIGN 8
+ALIGN SECTION_ALIGN
 ocos_4_16:
   dw 23170, 23170, 23170, 23170
 
-ALIGN 8
+ALIGN SECTION_ALIGN
 fdct_r_row:
   dd RND_FRW_ROW, RND_FRW_ROW
 
@@ -375,33 +349,33 @@ fdct_r_row:
 %endmacro
 
 %macro MAKE_FDCT_FUNC 2
-ALIGN 16
+ALIGN SECTION_ALIGN
 cglobal %1
 %1:
 	;; Move the destination/source address to the eax register
-  mov eax, [esp + 4]
+  mov _EAX, prm1
 
 	;; Process the columns (4 at a time)
-  FDCT_COLUMN_COMMON eax, eax, 0 ; columns 0..3
-  FDCT_COLUMN_COMMON eax, eax, 4 ; columns 4..7
+  FDCT_COLUMN_COMMON _EAX, _EAX, 0 ; columns 0..3
+  FDCT_COLUMN_COMMON _EAX, _EAX, 4 ; columns 4..7
 
 %ifdef UNROLLED_LOOP
 	; Unrolled loop version
 %assign i 0
 %rep 8
 	;; Process the 'i'th row
-  %2 eax+2*i*8, eax+2*i*8, tab_frw_01234567+2*32*i
+  %2 _EAX+2*i*8, _EAX+2*i*8, tab_frw_01234567+2*32*i
 	%assign i i+1
 %endrep
 %else
-  mov ecx, 8
-  mov edx, tab_frw_01234567
-ALIGN 8
+  mov _ECX, 8
+  mov _EDX, tab_frw_01234567
+ALIGN SECTION_ALIGN
 .loop
-  %2 eax, eax, edx
-  add eax, 2*8
-  add edx, 2*32
-  dec ecx
+  %2 _EAX, _EAX,_EDX
+  add _EAX, 2*8
+  add _EDX, 2*32
+  dec _ECX
   jne .loop
 %endif
 
@@ -413,7 +387,7 @@ ENDFUNC
 ; Code
 ;=============================================================================
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 ;-----------------------------------------------------------------------------
 ; void fdct_mmx_ffmpeg(int16_t block[64]);

@@ -3,7 +3,7 @@
 ; *  XVID MPEG-4 VIDEO CODEC
 ; *  - mmx 8x8 block-based halfpel interpolation -
 ; *
-; *  Copyright(C) 2002 Michael Militzer <isibaar@xvid.org>
+; *  Copyright(C) 2002-2008 Michael Militzer <michael@xvid.org>
 ; *               2002 Pascal Massimino <skal@planet-d.net>
 ; *
 ; *  This program is free software ; you can redistribute it and/or modify
@@ -22,45 +22,19 @@
 ; *
 ; ****************************************************************************/
 
-BITS 32
-
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
+%include "nasm.inc"
 
 ;=============================================================================
 ; Read only data
 ;=============================================================================
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
+DATA
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 mmx_one:
 	times 8 db 1
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 cglobal interpolate8x8_halfpel_h_xmm
 cglobal interpolate8x8_halfpel_v_xmm
@@ -85,52 +59,52 @@ cglobal interpolate8x8_halfpel_hv_add_xmm
 ;===========================================================================
 
 %macro COPY_H_SSE_RND0 0
-  movq mm0,  [eax]
-  pavgb mm0, [eax+1]
-  movq mm1,  [eax+edx]
-  pavgb mm1, [eax+edx+1]
-  lea eax,[eax+2*edx]
-  movq [ecx],mm0
-  movq [ecx+edx],mm1
+  movq mm0,  [_EAX]
+  pavgb mm0, [_EAX+1]
+  movq mm1,  [_EAX+TMP1]
+  pavgb mm1, [_EAX+TMP1+1]
+  lea _EAX,[_EAX+2*TMP1]
+  movq [TMP0],mm0
+  movq [TMP0+TMP1],mm1
 %endmacro
 
 %macro COPY_H_SSE_RND1 0
-  movq mm0, [eax]
-  movq mm1, [eax+edx]
+  movq mm0, [_EAX]
+  movq mm1, [_EAX+TMP1]
   movq mm4, mm0
   movq mm5, mm1
-  movq mm2, [eax+1]
-  movq mm3, [eax+edx+1]
+  movq mm2, [_EAX+1]
+  movq mm3, [_EAX+TMP1+1]
   pavgb mm0, mm2
   pxor mm2, mm4
   pavgb mm1, mm3
-  lea eax, [eax+2*edx]
+  lea _EAX, [_EAX+2*TMP1]
   pxor mm3, mm5
   pand mm2, mm7
   pand mm3, mm7
   psubb mm0, mm2
-  movq [ecx], mm0
+  movq [TMP0], mm0
   psubb mm1, mm3
-  movq [ecx+edx], mm1
+  movq [TMP0+TMP1], mm1
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x8_halfpel_h_xmm:
 
-  mov eax, [esp+16]     ; rounding
-  mov ecx, [esp+ 4]     ; Dst
-  test eax,eax
-  mov eax, [esp+ 8]     ; Src
-  mov edx, [esp+12]     ; stride
+  mov _EAX, prm4     ; rounding
+  mov TMP0, prm1     ; Dst
+  test _EAX,_EAX
+  mov _EAX, prm2     ; Src
+  mov TMP1, prm3     ; stride
 
   jnz near .rounding1
 
   COPY_H_SSE_RND0
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   COPY_H_SSE_RND0
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   COPY_H_SSE_RND0
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   COPY_H_SSE_RND0
   ret
 
@@ -138,11 +112,11 @@ interpolate8x8_halfpel_h_xmm:
  ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
   movq mm7, [mmx_one]
   COPY_H_SSE_RND1
-  lea ecx, [ecx+2*edx]
+  lea TMP0, [TMP0+2*TMP1]
   COPY_H_SSE_RND1
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   COPY_H_SSE_RND1
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   COPY_H_SSE_RND1
   ret
 ENDFUNC
@@ -157,20 +131,20 @@ ENDFUNC
 ;===========================================================================
 
 %macro COPY_V_SSE_RND0 0
-  movq mm0, [eax]
-  movq mm1, [eax+edx]
+  movq mm0, [_EAX]
+  movq mm1, [_EAX+TMP1]
   pavgb mm0, mm1
-  pavgb mm1, [eax+2*edx]
-  lea eax, [eax+2*edx]
-  movq [ecx], mm0
-  movq [ecx+edx],mm1
+  pavgb mm1, [_EAX+2*TMP1]
+  lea _EAX, [_EAX+2*TMP1]
+  movq [TMP0], mm0
+  movq [TMP0+TMP1],mm1
 %endmacro
 
 %macro COPY_V_SSE_RND1 0
   movq mm0, mm2
-  movq mm1, [eax]
-  movq mm2, [eax+edx]
-  lea eax,[eax+2*edx]
+  movq mm1, [_EAX]
+  movq mm2, [_EAX+TMP1]
+  lea _EAX,[_EAX+2*TMP1]
   movq mm4, mm0
   movq mm5, mm1
   pavgb mm0, mm1
@@ -180,44 +154,44 @@ ENDFUNC
   pand mm4, mm7         ; lsb's of (i^j)...
   pand mm5, mm7         ; lsb's of (i^j)...
   psubb mm0, mm4        ; ...are substracted from result of pavgb
-  movq [ecx], mm0
+  movq [TMP0], mm0
   psubb mm1, mm5        ; ...are substracted from result of pavgb
-  movq [ecx+edx], mm1
+  movq [TMP0+TMP1], mm1
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x8_halfpel_v_xmm:
 
-  mov eax, [esp+16]; rounding
-  mov ecx, [esp+ 4]     ; Dst
-  test eax,eax
-  mov eax, [esp+ 8]     ; Src
-  mov edx, [esp+12]     ; stride
+  mov _EAX, prm4     ; rounding
+  mov TMP0, prm1     ; Dst
+  test _EAX,_EAX
+  mov _EAX, prm2     ; Src
+  mov TMP1, prm3     ; stride
 
   ; we process 2 line at a time
   jnz near .rounding1
 
   COPY_V_SSE_RND0
-  lea ecx, [ecx+2*edx]
+  lea TMP0, [TMP0+2*TMP1]
   COPY_V_SSE_RND0
-  lea ecx, [ecx+2*edx]
+  lea TMP0, [TMP0+2*TMP1]
   COPY_V_SSE_RND0
-  lea ecx, [ecx+2*edx]
+  lea TMP0, [TMP0+2*TMP1]
   COPY_V_SSE_RND0
   ret
 
 .rounding1:
  ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
   movq mm7, [mmx_one]
-  movq mm2, [eax]       ; loop invariant
-  add eax, edx
+  movq mm2, [_EAX]       ; loop invariant
+  add _EAX, TMP1
 
   COPY_V_SSE_RND1
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   COPY_V_SSE_RND1
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   COPY_V_SSE_RND1
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   COPY_V_SSE_RND1
   ret
 ENDFUNC
@@ -244,14 +218,14 @@ ENDFUNC
 ; Moreover, we process 2 lines at a times, for better overlapping (~15% faster).
 
 %macro COPY_HV_SSE_RND0 0
-  lea eax, [eax+edx]
+  lea _EAX, [_EAX+TMP1]
 
-  movq mm0, [eax]
-  movq mm1, [eax+1]
+  movq mm0, [_EAX]
+  movq mm1, [_EAX+1]
 
   movq mm6, mm0
   pavgb mm0, mm1    ; mm0=(j+k+1)/2. preserved for next step
-  lea eax, [eax+edx]
+  lea _EAX, [_EAX+TMP1]
   pxor mm1, mm6     ; mm1=(j^k).     preserved for next step
 
   por mm3, mm1      ; ij |= jk
@@ -262,13 +236,13 @@ ENDFUNC
   pand mm3, mm7     ; mask lsb
   psubb mm2, mm3    ; apply.
 
-  movq [ecx], mm2
+  movq [TMP0], mm2
 
-  movq mm2, [eax]
-  movq mm3, [eax+1]
+  movq mm2, [_EAX]
+  movq mm3, [_EAX+1]
   movq mm6, mm2
   pavgb mm2, mm3    ; preserved for next iteration
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   pxor mm3, mm6     ; preserved for next iteration
 
   por mm1, mm3
@@ -280,18 +254,18 @@ ENDFUNC
   pand mm1, mm7
   psubb mm0, mm1
 
-  movq [ecx], mm0
+  movq [TMP0], mm0
 %endmacro
 
 %macro COPY_HV_SSE_RND1 0
-  lea eax, [eax+edx]
+  lea _EAX, [_EAX+TMP1]
 
-  movq mm0, [eax]
-  movq mm1, [eax+1]
+  movq mm0, [_EAX]
+  movq mm1, [_EAX+1]
 
   movq mm6, mm0
   pavgb mm0, mm1    ; mm0=(j+k+1)/2. preserved for next step
-  lea eax, [eax+edx]
+  lea _EAX, [_EAX+TMP1]
   pxor mm1, mm6     ; mm1=(j^k).     preserved for next step
 
   pand mm3, mm1
@@ -302,13 +276,13 @@ ENDFUNC
   pand mm3, mm7
   psubb mm2, mm3
 
-  movq [ecx], mm2
+  movq [TMP0], mm2
 
-  movq mm2, [eax]
-  movq mm3, [eax+1]
+  movq mm2, [_EAX]
+  movq mm3, [_EAX+1]
   movq mm6, mm2
   pavgb mm2, mm3     ; preserved for next iteration
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   pxor mm3, mm6      ; preserved for next iteration
 
   pand mm1, mm3
@@ -319,22 +293,22 @@ ENDFUNC
   pand mm1, mm7
   psubb mm0, mm1
 
-  movq [ecx], mm0
+  movq [TMP0], mm0
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x8_halfpel_hv_xmm:
-  mov eax, [esp+16]  ; rounding
-  mov ecx, [esp+ 4]  ; Dst
-  test eax, eax
-  mov eax, [esp+ 8]  ; Src
-  mov edx, [esp+12]  ; stride
+  mov _EAX, prm4  ; rounding
+  mov TMP0, prm1  ; Dst
+  test _EAX, _EAX
+  mov _EAX, prm2  ; Src
+  mov TMP1, prm3  ; stride
 
   movq mm7, [mmx_one]
 
     ; loop invariants: mm2=(i+j+1)/2  and  mm3= i^j
-  movq mm2, [eax]
-  movq mm3, [eax+1]
+  movq mm2, [_EAX]
+  movq mm3, [_EAX+1]
   movq mm6, mm2
   pavgb mm2, mm3
   pxor mm3, mm6       ; mm2/mm3 ready
@@ -342,21 +316,21 @@ interpolate8x8_halfpel_hv_xmm:
   jnz near .rounding1
 
   COPY_HV_SSE_RND0
-  add ecx, edx
+  add TMP0, TMP1
   COPY_HV_SSE_RND0
-  add ecx, edx
+  add TMP0, TMP1
   COPY_HV_SSE_RND0
-  add ecx, edx
+  add TMP0, TMP1
   COPY_HV_SSE_RND0
   ret
 
 .rounding1:
   COPY_HV_SSE_RND1
-  add ecx, edx
+  add TMP0, TMP1
   COPY_HV_SSE_RND1
-  add ecx, edx
+  add TMP0, TMP1
   COPY_HV_SSE_RND1
-  add ecx, edx
+  add TMP0, TMP1
   COPY_HV_SSE_RND1
   ret
 ENDFUNC
@@ -370,19 +344,19 @@ ENDFUNC
 ;
 ;===========================================================================
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x4_halfpel_h_xmm:
 
-  mov eax, [esp+16]     ; rounding
-  mov ecx, [esp+ 4]     ; Dst
-  test eax,eax
-  mov eax, [esp+ 8]     ; Src
-  mov edx, [esp+12]     ; stride
+  mov _EAX, prm4     ; rounding
+  mov TMP0, prm1     ; Dst
+  test _EAX,_EAX
+  mov _EAX, prm2     ; Src
+  mov TMP1, prm3     ; stride
 
   jnz near .rounding1
 
   COPY_H_SSE_RND0
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   COPY_H_SSE_RND0
   ret
 
@@ -390,7 +364,7 @@ interpolate8x4_halfpel_h_xmm:
  ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
   movq mm7, [mmx_one]
   COPY_H_SSE_RND1
-  lea ecx, [ecx+2*edx]
+  lea TMP0, [TMP0+2*TMP1]
   COPY_H_SSE_RND1
   ret
 ENDFUNC
@@ -404,31 +378,31 @@ ENDFUNC
 ;
 ;===========================================================================
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x4_halfpel_v_xmm:
 
-  mov eax, [esp+16]; rounding
-  mov ecx, [esp+ 4]     ; Dst
-  test eax,eax
-  mov eax, [esp+ 8]     ; Src
-  mov edx, [esp+12]     ; stride
+  mov _EAX, prm4     ; rounding
+  mov TMP0, prm1     ; Dst
+  test _EAX,_EAX
+  mov _EAX, prm2     ; Src
+  mov TMP1, prm3     ; stride
 
   ; we process 2 line at a time
   jnz near .rounding1
 
   COPY_V_SSE_RND0
-  lea ecx, [ecx+2*edx]
+  lea TMP0, [TMP0+2*TMP1]
   COPY_V_SSE_RND0
   ret
 
 .rounding1:
  ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
   movq mm7, [mmx_one]
-  movq mm2, [eax]       ; loop invariant
-  add eax, edx
+  movq mm2, [_EAX]       ; loop invariant
+  add _EAX, TMP1
 
   COPY_V_SSE_RND1
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   COPY_V_SSE_RND1
   ret
 ENDFUNC
@@ -454,19 +428,19 @@ ENDFUNC
 
 ; Moreover, we process 2 lines at a times, for better overlapping (~15% faster).
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x4_halfpel_hv_xmm:
-  mov eax, [esp+16]  ; rounding
-  mov ecx, [esp+ 4]  ; Dst
-  test eax, eax
-  mov eax, [esp+ 8]  ; Src
-  mov edx, [esp+12]  ; stride
+  mov _EAX, prm4  ; rounding
+  mov TMP0, prm1  ; Dst
+  test _EAX, _EAX
+  mov _EAX, prm2  ; Src
+  mov TMP1, prm3  ; stride
 
   movq mm7, [mmx_one]
 
     ; loop invariants: mm2=(i+j+1)/2  and  mm3= i^j
-  movq mm2, [eax]
-  movq mm3, [eax+1]
+  movq mm2, [_EAX]
+  movq mm3, [_EAX+1]
   movq mm6, mm2
   pavgb mm2, mm3
   pxor mm3, mm6       ; mm2/mm3 ready
@@ -474,13 +448,13 @@ interpolate8x4_halfpel_hv_xmm:
   jnz near .rounding1
 
   COPY_HV_SSE_RND0
-  add ecx, edx
+  add TMP0, TMP1
   COPY_HV_SSE_RND0
   ret
 
 .rounding1:
   COPY_HV_SSE_RND1
-  add ecx, edx
+  add TMP0, TMP1
   COPY_HV_SSE_RND1
   ret
 ENDFUNC
@@ -494,13 +468,13 @@ ENDFUNC
 ;===========================================================================
 
 %macro PROLOG0 0
-  mov ecx, [esp+ 4] ; Dst
-  mov eax, [esp+ 8] ; Src
-  mov edx, [esp+12] ; BpS
+  mov TMP0, prm1 ; Dst
+  mov _EAX, prm2 ; Src
+  mov TMP1, prm3 ; BpS
 %endmacro
 %macro PROLOG1 0
   PROLOG0
-  test dword [esp+16], 1; Rounding?
+  test prm4d, 1; Rounding?
 %endmacro
 %macro EPILOG 0
   ret
@@ -517,39 +491,39 @@ ENDFUNC
 ;===========================================================================
 
 %macro ADD_FF 2
-    movq mm0,  [eax+%1]
-    movq mm1,  [eax+%2]
+    movq mm0,  [_EAX+%1]
+    movq mm1,  [_EAX+%2]
 ;;---
 ;;    movq mm2, mm0
 ;;	movq mm3, mm1
 ;;---
-    pavgb mm0, [ecx+%1]
-    pavgb mm1, [ecx+%2]
+    pavgb mm0, [TMP0+%1]
+    pavgb mm1, [TMP0+%2]
 ;;--
-;;    por mm2, [ecx+%1]
-;;	por mm3, [ecx+%2]
+;;    por mm2, [TMP0+%1]
+;;	por mm3, [TMP0+%2]
 ;;	pand mm2, [mmx_one]
 ;;	pand mm3, [mmx_one]
 ;;	psubsb mm0, mm2
 ;;	psubsb mm1, mm3
 ;;--
-    movq [ecx+%1], mm0
-    movq [ecx+%2], mm1
+    movq [TMP0+%1], mm0
+    movq [TMP0+%2], mm1
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x8_halfpel_add_xmm:  ; 23c
   PROLOG1
-  ADD_FF 0, edx
-  lea eax,[eax+2*edx]
-  lea ecx,[ecx+2*edx]
-  ADD_FF 0, edx
-  lea eax,[eax+2*edx]
-  lea ecx,[ecx+2*edx]
-  ADD_FF 0, edx
-  lea eax,[eax+2*edx]
-  lea ecx,[ecx+2*edx]
-  ADD_FF 0, edx
+  ADD_FF 0, TMP1
+  lea _EAX,[_EAX+2*TMP1]
+  lea TMP0,[TMP0+2*TMP1]
+  ADD_FF 0, TMP1
+  lea _EAX,[_EAX+2*TMP1]
+  lea TMP0,[TMP0+2*TMP1]
+  ADD_FF 0, TMP1
+  lea _EAX,[_EAX+2*TMP1]
+  lea TMP0,[TMP0+2*TMP1]
+  ADD_FF 0, TMP1
   EPILOG
 ENDFUNC
 
@@ -565,23 +539,23 @@ ENDFUNC
 
 
 %macro ADD_FH_RND0 2
-    movq mm0,  [eax+%1]
-    movq mm1,  [eax+%2]
-    pavgb mm0, [eax+%1+1]
-    pavgb mm1, [eax+%2+1]
-    pavgb mm0, [ecx+%1]
-    pavgb mm1, [ecx+%2]
-    movq [ecx+%1],mm0
-    movq [ecx+%2],mm1
+    movq mm0,  [_EAX+%1]
+    movq mm1,  [_EAX+%2]
+    pavgb mm0, [_EAX+%1+1]
+    pavgb mm1, [_EAX+%2+1]
+    pavgb mm0, [TMP0+%1]
+    pavgb mm1, [TMP0+%2]
+    movq [TMP0+%1],mm0
+    movq [TMP0+%2],mm1
 %endmacro
 
 %macro ADD_FH_RND1 2
-    movq mm0,  [eax+%1]
-    movq mm1,  [eax+%2]
+    movq mm0,  [_EAX+%1]
+    movq mm1,  [_EAX+%2]
     movq mm4, mm0
     movq mm5, mm1
-    movq mm2, [eax+%1+1]
-    movq mm3, [eax+%2+1]
+    movq mm2, [_EAX+%1+1]
+    movq mm3, [_EAX+%2+1]
     pavgb mm0, mm2
     ; lea ??
     pxor mm2, mm4
@@ -591,41 +565,41 @@ ENDFUNC
     pand mm3, [mmx_one]
     psubb mm0, mm2
     psubb mm1, mm3
-    pavgb mm0, [ecx+%1]
-    pavgb mm1, [ecx+%2]
-    movq [ecx+%1],mm0
-    movq [ecx+%2],mm1
+    pavgb mm0, [TMP0+%1]
+    pavgb mm1, [TMP0+%2]
+    movq [TMP0+%1],mm0
+    movq [TMP0+%2],mm1
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x8_halfpel_h_add_xmm:   ; 32c
   PROLOG1
   jnz near .Loop1
-  ADD_FH_RND0 0, edx
-  lea eax,[eax+2*edx]
-  lea ecx,[ecx+2*edx]
-  ADD_FH_RND0 0, edx
-  lea eax,[eax+2*edx]
-  lea ecx,[ecx+2*edx]
-  ADD_FH_RND0 0, edx
-  lea eax,[eax+2*edx]
-  lea ecx,[ecx+2*edx]
-  ADD_FH_RND0 0, edx
+  ADD_FH_RND0 0, TMP1
+  lea _EAX,[_EAX+2*TMP1]
+  lea TMP0,[TMP0+2*TMP1]
+  ADD_FH_RND0 0, TMP1
+  lea _EAX,[_EAX+2*TMP1]
+  lea TMP0,[TMP0+2*TMP1]
+  ADD_FH_RND0 0, TMP1
+  lea _EAX,[_EAX+2*TMP1]
+  lea TMP0,[TMP0+2*TMP1]
+  ADD_FH_RND0 0, TMP1
   EPILOG
 
 .Loop1:
   ; we use: (i+j)/2 = ( i+j+1 )/2 - (i^j)&1
   ; movq mm7, [mmx_one]
-  ADD_FH_RND1 0, edx
-  lea eax,[eax+2*edx]
-  lea ecx,[ecx+2*edx]
-  ADD_FH_RND1 0, edx
-  lea eax,[eax+2*edx]
-  lea ecx,[ecx+2*edx]
-  ADD_FH_RND1 0, edx
-  lea eax,[eax+2*edx]
-  lea ecx,[ecx+2*edx]
-  ADD_FH_RND1 0, edx
+  ADD_FH_RND1 0, TMP1
+  lea _EAX,[_EAX+2*TMP1]
+  lea TMP0,[TMP0+2*TMP1]
+  ADD_FH_RND1 0, TMP1
+  lea _EAX,[_EAX+2*TMP1]
+  lea TMP0,[TMP0+2*TMP1]
+  ADD_FH_RND1 0, TMP1
+  lea _EAX,[_EAX+2*TMP1]
+  lea TMP0,[TMP0+2*TMP1]
+  ADD_FH_RND1 0, TMP1
   EPILOG
 ENDFUNC
 
@@ -641,21 +615,21 @@ ENDFUNC
 ;===========================================================================
 
 %macro ADD_8_HF_RND0 0
-  movq mm0,  [eax]
-  movq mm1,  [eax+edx]
+  movq mm0,  [_EAX]
+  movq mm1,  [_EAX+TMP1]
   pavgb mm0, mm1
-  pavgb mm1, [eax+2*edx]
-  lea eax,[eax+2*edx]
-  pavgb mm0, [ecx]
-  pavgb mm1, [ecx+edx]
-  movq [ecx],mm0 
-  movq [ecx+edx],mm1
+  pavgb mm1, [_EAX+2*TMP1]
+  lea _EAX,[_EAX+2*TMP1]
+  pavgb mm0, [TMP0]
+  pavgb mm1, [TMP0+TMP1]
+  movq [TMP0],mm0 
+  movq [TMP0+TMP1],mm1
 %endmacro
 
 %macro ADD_8_HF_RND1 0
-  movq mm1, [eax+edx]
-  movq mm2, [eax+2*edx]
-  lea eax,[eax+2*edx]
+  movq mm1, [_EAX+TMP1]
+  movq mm2, [_EAX+2*TMP1]
+  lea _EAX,[_EAX+2*TMP1]
   movq mm4, mm0
   movq mm5, mm1
   pavgb mm0, mm1
@@ -665,14 +639,14 @@ ENDFUNC
   pand mm4, mm7    ; lsb's of (i^j)...
   pand mm5, mm7    ; lsb's of (i^j)...
   psubb mm0, mm4 ; ...are substracted from result of pavgb
-  pavgb mm0, [ecx]
-  movq [ecx], mm0
+  pavgb mm0, [TMP0]
+  movq [TMP0], mm0
   psubb mm1, mm5 ; ...are substracted from result of pavgb
-  pavgb mm1, [ecx+edx]
-  movq [ecx+edx], mm1
+  pavgb mm1, [TMP0+TMP1]
+  movq [TMP0+TMP1], mm1
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x8_halfpel_v_add_xmm:
   PROLOG1
 
@@ -680,27 +654,27 @@ interpolate8x8_halfpel_v_add_xmm:
   pxor mm7, mm7   ; this is a NOP
 
   ADD_8_HF_RND0
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   ADD_8_HF_RND0
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   ADD_8_HF_RND0
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   ADD_8_HF_RND0
   EPILOG
 
 .Loop1:
-  movq mm0, [eax] ; loop invariant
+  movq mm0, [_EAX] ; loop invariant
   movq mm7, [mmx_one]
 
   ADD_8_HF_RND1 
   movq mm0, mm2
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   ADD_8_HF_RND1 
   movq mm0, mm2
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   ADD_8_HF_RND1 
   movq mm0, mm2
-  lea ecx,[ecx+2*edx]
+  lea TMP0,[TMP0+2*TMP1]
   ADD_8_HF_RND1 
   EPILOG
 ENDFUNC
@@ -727,14 +701,14 @@ ENDFUNC
 ;===========================================================================
 
 %macro ADD_HH_RND0 0
-  lea eax,[eax+edx]
+  lea _EAX,[_EAX+TMP1]
 
-  movq mm0, [eax]
-  movq mm1, [eax+1]
+  movq mm0, [_EAX]
+  movq mm1, [_EAX+1]
 
   movq mm6, mm0
   pavgb mm0, mm1  ; mm0=(j+k+1)/2. preserved for next step
-  lea eax,[eax+edx]
+  lea _EAX,[_EAX+TMP1]
   pxor mm1, mm6   ; mm1=(j^k).     preserved for next step
 
   por mm3, mm1    ; ij |= jk
@@ -745,14 +719,14 @@ ENDFUNC
   pand mm3, mm7   ; mask lsb
   psubb mm2, mm3  ; apply.
 
-  pavgb mm2, [ecx]
-  movq [ecx], mm2
+  pavgb mm2, [TMP0]
+  movq [TMP0], mm2
 
-  movq mm2, [eax]
-  movq mm3, [eax+1]
+  movq mm2, [_EAX]
+  movq mm3, [_EAX+1]
   movq mm6, mm2
   pavgb mm2, mm3  ; preserved for next iteration
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   pxor mm3, mm6   ; preserved for next iteration
 
   por mm1, mm3
@@ -764,19 +738,19 @@ ENDFUNC
   pand mm1, mm7 
   psubb mm0, mm1
 
-  pavgb mm0, [ecx]
-  movq [ecx], mm0
+  pavgb mm0, [TMP0]
+  movq [TMP0], mm0
 %endmacro
 
 %macro ADD_HH_RND1 0
-  lea eax,[eax+edx]
+  lea _EAX,[_EAX+TMP1]
 
-  movq mm0, [eax]
-  movq mm1, [eax+1]
+  movq mm0, [_EAX]
+  movq mm1, [_EAX+1]
 
   movq mm6, mm0
   pavgb mm0, mm1  ; mm0=(j+k+1)/2. preserved for next step
-  lea eax,[eax+edx]
+  lea _EAX,[_EAX+TMP1]
   pxor mm1, mm6   ; mm1=(j^k).     preserved for next step
 
   pand mm3, mm1
@@ -787,14 +761,14 @@ ENDFUNC
   pand mm3, mm7
   psubb mm2, mm3
 
-  pavgb mm2, [ecx]
-  movq [ecx], mm2
+  pavgb mm2, [TMP0]
+  movq [TMP0], mm2
 
-  movq mm2, [eax]
-  movq mm3, [eax+1]
+  movq mm2, [_EAX]
+  movq mm3, [_EAX+1]
   movq mm6, mm2
   pavgb mm2, mm3  ; preserved for next iteration
-  lea ecx,[ecx+edx]
+  lea TMP0,[TMP0+TMP1]
   pxor mm3, mm6   ; preserved for next iteration
 
   pand mm1, mm3
@@ -805,19 +779,19 @@ ENDFUNC
   pand mm1, mm7
   psubb mm0, mm1
 
-  pavgb mm0, [ecx]
-  movq [ecx], mm0
+  pavgb mm0, [TMP0]
+  movq [TMP0], mm0
 %endmacro
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 interpolate8x8_halfpel_hv_add_xmm:
   PROLOG1
 
   movq mm7, [mmx_one]
 
     ; loop invariants: mm2=(i+j+1)/2  and  mm3= i^j
-  movq mm2, [eax] 
-  movq mm3, [eax+1]
+  movq mm2, [_EAX] 
+  movq mm3, [_EAX+1]
   movq mm6, mm2   
   pavgb mm2, mm3
   pxor mm3, mm6   ; mm2/mm3 ready
@@ -825,21 +799,21 @@ interpolate8x8_halfpel_hv_add_xmm:
   jnz near .Loop1
 
   ADD_HH_RND0
-  add ecx, edx
+  add TMP0, TMP1
   ADD_HH_RND0
-  add ecx, edx
+  add TMP0, TMP1
   ADD_HH_RND0
-  add ecx, edx
+  add TMP0, TMP1
   ADD_HH_RND0
   EPILOG
 
 .Loop1:
   ADD_HH_RND1
-  add ecx, edx
+  add TMP0, TMP1
   ADD_HH_RND1
-  add ecx, edx
+  add TMP0, TMP1
   ADD_HH_RND1
-  add ecx, edx
+  add TMP0, TMP1
   ADD_HH_RND1
 
   EPILOG

@@ -6,7 +6,7 @@
 ; *
 ; *  This file is part of XviD, a free MPEG-4 video encoder/decoder
 ; *
-; *  XviD is free software; you can redistribute it and/or modify it
+; *  XviD is free software; you can rDST_PTRstribute it and/or modify it
 ; *  under the terms of the GNU General Public License as published by
 ; *  the Free Software Foundation; either version 2 of the License, or
 ; *  (at your option) any later version.
@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: qpel_mmx.asm,v 1.7 2008-11-11 20:46:24 Isibaar Exp $
+; * $Id: qpel_mmx.asm,v 1.8 2008-11-26 01:04:34 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -38,38 +38,7 @@
                         ; instead of xvid_Expand_mmx...
 
 
-bits 32
-
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
-%macro cextern 1
-	%ifdef PREFIX
-		extern _%1
-		%define %1 _%1
-	%else
-		extern %1
-	%endif
-%endmacro
-
+%include "nasm.inc"
 
 ;//////////////////////////////////////////////////////////////////////
 ;// Declarations
@@ -104,57 +73,124 @@ cglobal xvid_V_Pass_8_Add_mmx
 cglobal xvid_V_Pass_Avrg_8_Add_mmx
 cglobal xvid_V_Pass_Avrg_Up_8_Add_mmx
 
-cextern xvid_Expand_mmx
+cglobal xvid_Expand_mmx
 
-%ifdef USE_TABLES
+cglobal xvid_FIR_1_0_0_0
+cglobal xvid_FIR_3_1_0_0
+cglobal xvid_FIR_6_3_1_0
+cglobal xvid_FIR_14_3_2_1
+cglobal xvid_FIR_20_6_3_1
+cglobal xvid_FIR_20_20_6_3
+cglobal xvid_FIR_23_19_6_3
+cglobal xvid_FIR_7_20_20_6
+cglobal xvid_FIR_6_20_20_6
+cglobal xvid_FIR_6_20_20_7
+cglobal xvid_FIR_3_6_20_20
+cglobal xvid_FIR_3_6_19_23
+cglobal xvid_FIR_1_3_6_20
+cglobal xvid_FIR_1_2_3_14
+cglobal xvid_FIR_0_1_3_6
+cglobal xvid_FIR_0_0_1_3
+cglobal xvid_FIR_0_0_0_1
 
-cextern xvid_FIR_1_0_0_0
-cextern xvid_FIR_3_1_0_0
-cextern xvid_FIR_6_3_1_0
-cextern xvid_FIR_14_3_2_1
-cextern xvid_FIR_20_6_3_1
-cextern xvid_FIR_20_20_6_3
-cextern xvid_FIR_23_19_6_3
-cextern xvid_FIR_7_20_20_6
-cextern xvid_FIR_6_20_20_6
-cextern xvid_FIR_6_20_20_7
-cextern xvid_FIR_3_6_20_20
-cextern xvid_FIR_3_6_19_23
-cextern xvid_FIR_1_3_6_20
-cextern xvid_FIR_1_2_3_14
-cextern xvid_FIR_0_1_3_6
-cextern xvid_FIR_0_0_1_3
-cextern xvid_FIR_0_0_0_1
+SECTION .data align=SECTION_ALIGN
 
-%endif
+align SECTION_ALIGN
+xvid_Expand_mmx:
+times 256*4 dw 0        ; uint16_t xvid_Expand_mmx[256][4]
+ENDFUNC
+
+xvid_FIR_1_0_0_0:
+times 256*4 dw 0
+ENDFUNC
+
+xvid_FIR_3_1_0_0:
+times 256*4 dw 0
+ENDFUNC
+
+xvid_FIR_6_3_1_0:
+times 256*4 dw 0
+ENDFUNC
+
+xvid_FIR_14_3_2_1:
+times 256*4 dw 0
+ENDFUNC
+
+xvid_FIR_20_6_3_1:
+times 256*4 dw 0
+ENDFUNC
+
+xvid_FIR_20_20_6_3:
+times 256*4 dw 0
+ENDFUNC
+
+xvid_FIR_23_19_6_3:
+times 256*4 dw 0
+ENDFUNC
+
+xvid_FIR_7_20_20_6:
+times 256*4 dw 0
+ENDFUNC
+
+xvid_FIR_6_20_20_6:
+times 256*4 dw 0
+ENDFUNC
+
+xvid_FIR_6_20_20_7:
+times 256*4 dw 0
+ENDFUNC
+
+xvid_FIR_3_6_20_20:
+times 256*4 dw 0
+ENDFUNC
+
+xvid_FIR_3_6_19_23:
+times 256*4 dw 0
+ENDFUNC
+
+xvid_FIR_1_3_6_20:
+times 256*4 dw 0
+ENDFUNC
+
+xvid_FIR_1_2_3_14:
+times 256*4 dw 0
+ENDFUNC
+
+xvid_FIR_0_1_3_6:
+times 256*4 dw 0
+ENDFUNC
+
+xvid_FIR_0_0_1_3:
+times 256*4 dw 0
+ENDFUNC
+
+xvid_FIR_0_0_0_1:
+times 256*4 dw 0
+ENDFUNC
 
 ;//////////////////////////////////////////////////////////////////////
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
+DATA
 
-align 16
+align SECTION_ALIGN
 Rounder1_MMX:
 times 4 dw 1
 Rounder0_MMX:
 times 4 dw 0
 
-align 16
+align SECTION_ALIGN
 Rounder_QP_MMX:
 times 4 dw 16
 times 4 dw 15
 
 %ifndef USE_TABLES
 
-align 16
+align SECTION_ALIGN
 
   ; H-Pass table shared by 16x? and 8x? filters
 
 FIR_R0:  dw 14, -3,  2, -1
-align 16
+align SECTION_ALIGN
 FIR_R1:  dw 23, 19, -6,  3,   -1,  0,  0,  0
 
 FIR_R2:  dw -7, 20, 20, -6,    3, -1,  0,  0
@@ -164,19 +200,19 @@ FIR_R3:  dw  3, -6, 20, 20,   -6,  3, -1,  0
 FIR_R4:  dw -1,  3, -6, 20,   20, -6,  3, -1
 
 FIR_R5:  dw  0, -1,  3, -6,   20, 20, -6,  3,   -1,  0,  0,  0
-align 16
+align SECTION_ALIGN
 FIR_R6:  dw  0,  0, -1,  3,   -6, 20, 20, -6,    3, -1,  0,  0
-align 16
+align SECTION_ALIGN
 FIR_R7:  dw  0,  0,  0, -1,    3, -6, 20, 20,   -6,  3, -1,  0
-align 16
+align SECTION_ALIGN
 FIR_R8:  dw                   -1,  3, -6, 20,   20, -6,  3, -1
 
 FIR_R9:  dw                    0, -1,  3, -6,   20, 20, -6,  3,   -1,  0,  0,  0
-align 16
+align SECTION_ALIGN
 FIR_R10: dw                    0,  0, -1,  3,   -6, 20, 20, -6,    3, -1,  0,  0
-align 16
+align SECTION_ALIGN
 FIR_R11: dw                    0,  0,  0, -1,    3, -6, 20, 20,   -6,  3, -1,  0
-align 16
+align SECTION_ALIGN
 FIR_R12: dw                                     -1,  3, -6, 20,   20, -6,  3, -1
 
 FIR_R13: dw                                      0, -1,  3, -6,   20, 20, -6,  3
@@ -191,7 +227,7 @@ FIR_R16: dw                                                       -1,  2, -3, 14
 
   ; V-Pass taps
 
-align 16
+align SECTION_ALIGN
 FIR_Cm7: times 4 dw -7
 FIR_Cm6: times 4 dw -6
 FIR_Cm3: times 4 dw -3
@@ -203,7 +239,7 @@ FIR_C19: times 4 dw 19
 FIR_C20: times 4 dw 20
 FIR_C23: times 4 dw 23
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 ;//////////////////////////////////////////////////////////////////////
 ;// Here we go with the Q-Pel mess.
@@ -211,46 +247,96 @@ SECTION .text
 ;//  For vertical ones, we process 4 *input* pixel in parallel.
 ;//////////////////////////////////////////////////////////////////////
 
+%ifdef ARCH_IS_X86_64
+%macro XVID_MOVQ 3
+  lea r9, [%2]
+  movq %1, [r9 + %3]
+%endmacro
+%macro XVID_PADDW 3
+  lea r9, [%2]
+  paddw %1, [r9 + %3]
+%endmacro
+%ifdef WINDOWS
+%define SRC_PTR _EDX
+%define DST_PTR _ECX
+%else
+%define SRC_PTR _ESI
+%define DST_PTR _EDI
+%endif
+%else
+%macro XVID_MOVQ 3
+  movq %1, [%2 + %3]
+%endmacro
+%macro XVID_PADDW 3
+  paddw %1, [%2 + %3]
+%endmacro
+%define SRC_PTR _ESI
+%define DST_PTR _EDI
+%endif
+
 %macro PROLOG_NO_AVRG 0
-  push esi
-  push edi
-  push ebp
-  mov edi, [esp+16 + 0*4] ; Dst
-  mov esi, [esp+16 + 1*4] ; Src
-  mov ecx, [esp+16 + 2*4] ; Size
-  mov ebp, [esp+16 + 3*4] ; BpS
-  mov eax, [esp+16 + 4*4] ; Rnd
-  and eax, 1
-  movq mm7, [Rounder_QP_MMX+eax*8]  ; rounder
+  mov TMP0, prm3 ; Size
+  mov TMP1, prm4 ; BpS
+  mov eax, prm5d ; Rnd
+
+%ifndef ARCH_IS_X86_64
+  push SRC_PTR
+  push DST_PTR
+%endif
+  push _EBP
+  mov _EBP, TMP1
+
+%ifndef ARCH_IS_X86_64
+  mov DST_PTR, [_ESP+16 + 0*4] ; Dst
+  mov SRC_PTR, [_ESP+16 + 1*4] ; Src
+%endif
+  
+  and _EAX, 1
+  lea TMP1, [Rounder_QP_MMX]
+  movq mm7, [TMP1+_EAX*8]  ; rounder
 %endmacro
 
 %macro EPILOG_NO_AVRG 0
-  pop ebp
-  pop edi
-  pop esi
+  pop _EBP
+%ifndef ARCH_IS_X86_64
+  pop DST_PTR
+  pop SRC_PTR
+%endif
   ret
 %endmacro
 
 %macro PROLOG_AVRG 0
-  push ebx
-  push esi
-  push edi
-  push ebp
-  mov edi, [esp+20 + 0*4] ; Dst
-  mov esi, [esp+20 + 1*4] ; Src
-  mov ecx, [esp+20 + 2*4] ; Size
-  mov ebp, [esp+20 + 3*4] ; BpS
-  mov eax, [esp+20 + 4*4] ; Rnd
-  and eax, 1
-  movq mm7, [Rounder_QP_MMX+eax*8]  ; rounder
-  lea ebx, [Rounder1_MMX+eax*8]     ; *Rounder2
+  mov TMP0, prm3 ; Size
+  mov TMP1, prm4 ; BpS
+  mov eax, prm5d ; Rnd
+
+  push _EBX
+  push _EBP
+%ifndef ARCH_IS_X86_64
+  push SRC_PTR
+  push DST_PTR
+%endif
+  mov _EBP, TMP1
+
+%ifndef ARCH_IS_X86_64
+  mov DST_PTR, [_ESP+20 + 0*4] ; Dst
+  mov SRC_PTR, [_ESP+20 + 1*4] ; Src
+%endif
+
+  and _EAX, 1
+  lea TMP1, [Rounder_QP_MMX]
+  movq mm7, [TMP1+_EAX*8]  ; rounder
+  lea TMP1, [Rounder1_MMX]
+  lea _EBX, [TMP1+_EAX*8]     ; *Rounder2
 %endmacro
 
 %macro EPILOG_AVRG 0
-  pop ebp
-  pop edi
-  pop esi
-  pop ebx
+%ifndef ARCH_IS_X86_64
+  pop DST_PTR
+  pop SRC_PTR
+%endif
+  pop _EBP
+  pop _EBX
   ret
 %endmacro
 
@@ -263,25 +349,25 @@ SECTION .text
   ; macros for USE_TABLES
 
 %macro TLOAD 2     ; %1,%2: src pixels
-  movzx eax, byte [esi+%1]
-  movzx edx, byte [esi+%2]
-  movq mm0, [xvid_FIR_14_3_2_1 + eax*8 ]
-  movq mm3, [xvid_FIR_1_2_3_14 + edx*8 ]
+  movzx _EAX, byte [SRC_PTR+%1]
+  movzx TMP1, byte [SRC_PTR+%2]
+  XVID_MOVQ mm0, xvid_FIR_14_3_2_1, _EAX*8
+  XVID_MOVQ mm3, xvid_FIR_1_2_3_14, TMP1*8
   paddw mm0, mm7
   paddw mm3, mm7
 %endmacro
 
 %macro TACCUM2 5   ;%1:src pixel/%2-%3:Taps tables/ %4-%5:dst regs
-  movzx eax, byte [esi+%1]
-  paddw %4, [%2 + eax*8]
-  paddw %5, [%3 + eax*8]
+  movzx _EAX, byte [SRC_PTR+%1]
+  XVID_PADDW %4, %2, _EAX*8
+  XVID_PADDW %5, %3, _EAX*8
 %endmacro
 
 %macro TACCUM3 7   ;%1:src pixel/%2-%4:Taps tables/%5-%7:dst regs
-  movzx eax, byte [esi+%1]
-  paddw %5, [%2 + eax*8]
-  paddw %6, [%3 + eax*8]
-  paddw %7, [%4 + eax*8]
+  movzx _EAX, byte [SRC_PTR+%1]
+  XVID_PADDW %5, %2, _EAX*8
+  XVID_PADDW %6, %3, _EAX*8
+  XVID_PADDW %7, %4, _EAX*8
 %endmacro
 
 ;//////////////////////////////////////////////////////////////////////
@@ -289,10 +375,10 @@ SECTION .text
   ; macros without USE_TABLES
 
 %macro LOAD 2     ; %1,%2: src pixels
-  movzx eax, byte [esi+%1]
-  movzx edx, byte [esi+%2]
-  movq mm0, [xvid_Expand_mmx + eax*8]
-  movq mm3, [xvid_Expand_mmx + edx*8]
+  movzx _EAX, byte [SRC_PTR+%1]
+  movzx TMP1, byte [SRC_PTR+%2]
+  XVID_MOVQ mm0, xvid_Expand_mmx, _EAX*8
+  XVID_MOVQ mm3, xvid_Expand_mmx, TMP1*8
   pmullw mm0, [FIR_R0 ]
   pmullw mm3, [FIR_R16]
   paddw mm0, mm7
@@ -300,8 +386,8 @@ SECTION .text
 %endmacro
 
 %macro ACCUM2 4   ;src pixel/Taps/dst regs #1-#2
-  movzx eax, byte [esi+%1]
-  movq mm4, [xvid_Expand_mmx + eax*8]
+  movzx _EAX, byte [SRC_PTR+%1]
+  XVID_MOVQ mm4, xvid_Expand_mmx, _EAX*8
   movq mm5, mm4
   pmullw mm4, [%2]
   pmullw mm5, [%2+8]
@@ -310,8 +396,8 @@ SECTION .text
 %endmacro
 
 %macro ACCUM3 5   ;src pixel/Taps/dst regs #1-#2-#3
-  movzx eax, byte [esi+%1]
-  movq mm4, [xvid_Expand_mmx + eax*8]
+  movzx _EAX, byte [SRC_PTR+%1]
+  XVID_MOVQ mm4, xvid_Expand_mmx, _EAX*8
   movq mm5, mm4
   movq mm6, mm5
   pmullw mm4, [%2   ]
@@ -417,30 +503,30 @@ SECTION .text
   packuswb mm2, mm3
 
 %if (%1==1)
-  MIX mm0, esi, ebx
+  MIX mm0, SRC_PTR, _EBX
 %elif (%1==2)
-  MIX mm0, esi+1, ebx
+  MIX mm0, SRC_PTR+1, _EBX
 %endif
 %if (%2==1)
-  MIX mm0, edi, Rounder1_MMX
+  MIX mm0, DST_PTR, Rounder1_MMX
 %endif
 
 %if (%1==1)
-  MIX mm2, esi+8, ebx
+  MIX mm2, SRC_PTR+8, _EBX
 %elif (%1==2)
-  MIX mm2, esi+9, ebx
+  MIX mm2, SRC_PTR+9, _EBX
 %endif
 %if (%2==1)
-  MIX mm2, edi+8, Rounder1_MMX
+  MIX mm2, DST_PTR+8, Rounder1_MMX
 %endif
 
-  lea esi, [esi+ebp]
+  lea SRC_PTR, [SRC_PTR+_EBP]
 
-  movq [edi+0], mm0
-  movq [edi+8], mm2
+  movq [DST_PTR+0], mm0
+  movq [DST_PTR+8], mm2
 
-  add edi, ebp
-  dec ecx
+  add DST_PTR, _EBP
+  dec TMP0
   jg .Loop
 
 %if (%2==0) && (%1==0)
@@ -492,40 +578,40 @@ SECTION .text
 
 %else  ; test with unrolling (little faster, but not much)
 
-  movzx eax, byte [esi]
-  movzx edx, byte [esi+8]
-  movq mm0, [xvid_FIR_14_3_2_1 + eax*8 ]
-  movzx eax, byte [esi+1]
-  movq mm3, [xvid_FIR_1_2_3_14 + edx*8 ]
+  movzx _EAX, byte [SRC_PTR]
+  movzx TMP1, byte [SRC_PTR+8]
+  XVID_MOVQ mm0, xvid_FIR_14_3_2_1, _EAX*8
+  movzx _EAX, byte [SRC_PTR+1]
+  XVID_MOVQ mm3, xvid_FIR_1_2_3_14, TMP1*8
   paddw mm0, mm7
   paddw mm3, mm7
 
-  movzx edx, byte [esi+2]
-  paddw mm0, [xvid_FIR_23_19_6_3 + eax*8]
-  paddw mm3, [xvid_FIR_1_0_0_0 + eax*8]
+  movzx TMP1, byte [SRC_PTR+2]
+  XVID_PADDW mm0, xvid_FIR_23_19_6_3, _EAX*8
+  XVID_PADDW mm3, xvid_FIR_1_0_0_0, _EAX*8
 
-  movzx eax, byte [esi+3]
-  paddw mm0, [xvid_FIR_7_20_20_6 + edx*8]
-  paddw mm3, [xvid_FIR_3_1_0_0 + edx*8]
+  movzx _EAX, byte [SRC_PTR+3]
+  XVID_PADDW mm0, xvid_FIR_7_20_20_6, TMP1*8
+  XVID_PADDW mm3, xvid_FIR_3_1_0_0, TMP1*8
 
-  movzx edx, byte [esi+4]
-  paddw mm0, [xvid_FIR_3_6_20_20 + eax*8]
-  paddw mm3, [xvid_FIR_6_3_1_0 + eax*8]
+  movzx TMP1, byte [SRC_PTR+4]
+  XVID_PADDW mm0, xvid_FIR_3_6_20_20, _EAX*8
+  XVID_PADDW mm3, xvid_FIR_6_3_1_0, _EAX*8
 
-  movzx eax, byte [esi+5]
-  paddw mm0, [xvid_FIR_1_3_6_20 + edx*8]
-  paddw mm3, [xvid_FIR_20_6_3_1 + edx*8]
+  movzx _EAX, byte [SRC_PTR+5]
+  XVID_PADDW mm0, xvid_FIR_1_3_6_20, TMP1*8
+  XVID_PADDW mm3, xvid_FIR_20_6_3_1, TMP1*8
 
-  movzx edx, byte [esi+6]
-  paddw mm0, [xvid_FIR_0_1_3_6 + eax*8]
-  paddw mm3, [xvid_FIR_20_20_6_3 + eax*8]
+  movzx TMP1, byte [SRC_PTR+6]
+  XVID_PADDW mm0, xvid_FIR_0_1_3_6, _EAX*8
+  XVID_PADDW mm3, xvid_FIR_20_20_6_3, _EAX*8
 
-  movzx eax, byte [esi+7]
-  paddw mm0, [xvid_FIR_0_0_1_3 + edx*8]
-  paddw mm3, [xvid_FIR_6_20_20_7 + edx*8]
+  movzx _EAX, byte [SRC_PTR+7]
+  XVID_PADDW mm0, xvid_FIR_0_0_1_3, TMP1*8
+  XVID_PADDW mm3, xvid_FIR_6_20_20_7, TMP1*8
 
-  paddw mm0, [xvid_FIR_0_0_0_1 + eax*8]
-  paddw mm3, [xvid_FIR_3_6_19_23 + eax*8]
+  XVID_PADDW mm0, xvid_FIR_0_0_0_1, _EAX*8
+  XVID_PADDW mm3, xvid_FIR_3_6_19_23, _EAX*8
 
 %endif
 
@@ -536,19 +622,19 @@ SECTION .text
   packuswb mm0, mm3
 
 %if (%1==1)
-  MIX mm0, esi, ebx
+  MIX mm0, SRC_PTR, _EBX
 %elif (%1==2)
-  MIX mm0, esi+1, ebx
+  MIX mm0, SRC_PTR+1, _EBX
 %endif
 %if (%2==1)
-  MIX mm0, edi, Rounder1_MMX
+  MIX mm0, DST_PTR, Rounder1_MMX
 %endif
 
-  movq [edi], mm0
+  movq [DST_PTR], mm0
 
-  add edi, ebp
-  add esi, ebp
-  dec ecx
+  add DST_PTR, _EBP
+  add SRC_PTR, _EBP
+  dec TMP0
   jg .Loop
 
 %if (%2==0) && (%1==0)
@@ -621,10 +707,10 @@ ENDFUNC
 
 %macro V_LOAD 1  ; %1=Last?
 
-  movd mm4, [edx]
+  movd mm4, dword [TMP1]
   pxor mm6, mm6
 %if (%1==0)
-  add edx, ebp
+  add TMP1, _EBP
 %endif
   punpcklbw mm4, mm6
 
@@ -675,21 +761,21 @@ ENDFUNC
   packuswb %3, %3
 
 %if (%1==1)
-  V_MIX %3, esi, ebx
-  add esi, ebp
+  V_MIX %3, SRC_PTR, _EBX
+  add SRC_PTR, _EBP
 %elif (%1==2)
-  add esi, ebp
-  V_MIX %3, esi, ebx
+  add SRC_PTR, _EBP
+  V_MIX %3, SRC_PTR, _EBX
 %endif
 %if (%2==1)
-  V_MIX %3, edi, Rounder1_MMX
+  V_MIX %3, DST_PTR, Rounder1_MMX
 %endif
 
   movd eax, %3
-  mov [edi], eax
+  mov [DST_PTR], _EAX
 
 %if (%4==0)
-  add edi, ebp
+  add DST_PTR, _EBP
 %endif
 
 %endmacro
@@ -710,9 +796,9 @@ ENDFUNC
 
 .Loop:
 
-  push edi
-  push esi      ; esi is preserved for src-mixing
-  mov edx, esi
+  push DST_PTR
+  push SRC_PTR      ; SRC_PTR is preserved for src-mixing
+  mov TMP1, SRC_PTR
 
     ; ouput rows [0..3], from input rows [0..8]
 
@@ -748,11 +834,11 @@ ENDFUNC
 
     ; ouput rows [4..7], from input rows [1..11] (!!)
 
-  mov esi, [esp]
-  lea edx, [esi+ebp]
+  mov SRC_PTR, [_ESP]
+  lea TMP1, [SRC_PTR+_EBP]
 
-  lea esi, [esi+4*ebp]  ; for src-mixing
-  push esi              ; this will be the new value for next round
+  lea SRC_PTR, [SRC_PTR+4*_EBP]  ; for src-mixing
+  push SRC_PTR              ; this will be the new value for next round
 
   movq mm0, mm7
   movq mm1, mm7
@@ -796,11 +882,11 @@ ENDFUNC
 
     ; ouput rows [8..11], from input rows [5..15]
 
-  pop esi
-  lea edx, [esi+ebp]
+  pop SRC_PTR
+  lea TMP1, [SRC_PTR+_EBP]
 
-  lea esi, [esi+4*ebp]  ; for src-mixing
-  push esi              ; this will be the new value for next round
+  lea SRC_PTR, [SRC_PTR+4*_EBP]  ; for src-mixing
+  push SRC_PTR              ; this will be the new value for next round
 
   movq mm0, mm7
   movq mm1, mm7
@@ -846,11 +932,11 @@ ENDFUNC
 
     ; ouput rows [12..15], from input rows [9.16]
 
-  pop esi
-  lea edx, [esi+ebp]
+  pop SRC_PTR
+  lea TMP1, [SRC_PTR+_EBP]
 
 %if (%1!=0)
-  lea esi, [esi+4*ebp]  ; for src-mixing
+  lea SRC_PTR, [SRC_PTR+4*_EBP]  ; for src-mixing
 %endif
 
   movq mm0, mm7
@@ -886,11 +972,11 @@ ENDFUNC
 
     ; ... next 4 columns
 
-  pop esi
-  pop edi
-  add esi, 4
-  add edi, 4
-  sub ecx, 4
+  pop SRC_PTR
+  pop DST_PTR
+  add SRC_PTR, 4
+  add DST_PTR, 4
+  sub TMP0, 4
   jg .Loop
 
 %if (%2==0) && (%1==0)
@@ -916,9 +1002,9 @@ ENDFUNC
     ;  mm0..mm3 serves as a 4x4 delay line
 .Loop:
 
-  push edi
-  push esi      ; esi is preserved for src-mixing
-  mov edx, esi
+  push DST_PTR
+  push SRC_PTR      ; SRC_PTR is preserved for src-mixing
+  mov TMP1, SRC_PTR
 
     ; ouput rows [0..3], from input rows [0..8]
 
@@ -955,11 +1041,11 @@ ENDFUNC
 
     ; ouput rows [4..7], from input rows [1..9]
 
-  mov esi, [esp]
-  lea edx, [esi+ebp]
+  mov SRC_PTR, [_ESP]
+  lea TMP1, [SRC_PTR+_EBP]
 
 %if (%1!=0)
-  lea esi, [esi+4*ebp]  ; for src-mixing
+  lea SRC_PTR, [SRC_PTR+4*_EBP]  ; for src-mixing
 %endif
 
   movq mm0, mm7
@@ -995,11 +1081,11 @@ ENDFUNC
 
     ; ... next 4 columns
 
-  pop esi
-  pop edi
-  add esi, 4
-  add edi, 4
-  sub ecx, 4
+  pop SRC_PTR
+  pop DST_PTR
+  add SRC_PTR, 4
+  add DST_PTR, 4
+  sub TMP0, 4
   jg .Loop
 
 %if (%2==0) && (%1==0)
@@ -1064,6 +1150,9 @@ xvid_V_Pass_Avrg_Up_8_Add_mmx:
 ENDFUNC
 
 ;//////////////////////////////////////////////////////////////////////
+
+%undef SRC_PTR
+%undef DST_PTR
 
 %ifidn __OUTPUT_FORMAT__,elf
 section ".note.GNU-stack" noalloc noexec nowrite progbits

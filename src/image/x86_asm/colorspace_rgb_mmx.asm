@@ -3,7 +3,7 @@
 ; *  XVID MPEG-4 VIDEO CODEC
 ; *  - RGB colorspace conversions -
 ; *
-; *  Copyright(C) 2002-2003 Michael Militzer <isibaar@xvid.org>
+; *  Copyright(C) 2002-2008 Michael Militzer <michael@xvid.org>
 ; *               2002-2003 Peter Ross <pross@xvid.org>
 ; *
 ; *  This program is free software ; you can redistribute it and/or modify
@@ -22,29 +22,7 @@
 ; *
 ; ****************************************************************************/
 
-BITS 32
-
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
+%include "nasm.inc"
 
 ;=============================================================================
 ; Some constants
@@ -76,12 +54,9 @@ BITS 32
 ; Read only data
 ;=============================================================================
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
-ALIGN 16
+DATA
+
+ALIGN SECTION_ALIGN
 
 ;-----------------------------------------------------------------------------
 ; RGB->YV12 multiplication matrices
@@ -138,10 +113,11 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
 
 %macro BGR_TO_YV12			2
     ; y_out
+
   pxor mm4, mm4
   pxor mm5, mm5
-  movd mm0, [edi]               ; x_ptr[0...]
-  movd mm2, [edi+edx]           ; x_ptr[x_stride...]
+  movd mm0, [x_ptr]               ; x_ptr[0...]
+  movd mm2, [x_ptr+x_stride]           ; x_ptr[x_stride...]
   punpcklbw mm0, mm4            ; [  |b |g |r ]
   punpcklbw mm2, mm5            ; [  |b |g |r ]
   movq mm6, mm0                 ; = [  |b4|g4|r4]
@@ -157,8 +133,8 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
 
   pxor mm4, mm4
   pxor mm5, mm5
-  movd mm1, [edi+%1]            ; src[%1...]
-  movd mm3, [edi+edx+%1]        ; src[x_stride+%1...]
+  movd mm1, [x_ptr+%1]            ; src[%1...]
+  movd mm3, [x_ptr+x_stride+%1]        ; src[x_stride+%1...]
   punpcklbw mm1, mm4            ; [  |b |g |r ]
   punpcklbw mm3, mm5            ; [  |b |g |r ]
   paddw mm6, mm1                ; +[  |b4|g4|r4]
@@ -172,27 +148,27 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
   paddd mm1, mm4                ; +[b]
   paddd mm3, mm5                ; +[b]
 
-  push edx
+  push x_stride
 
-  movd edx, mm0
-  shr edx, 8
-  add edx, Y_ADD
-  mov [esi], dl                 ; y_ptr[0]
+  movd x_stride_d, mm0
+  shr x_stride, 8
+  add x_stride, Y_ADD
+  mov [y_ptr], dl                 ; y_ptr[0]
 
-  movd edx, mm1
-  shr edx, 8
-  add edx, Y_ADD
-  mov [esi + 1], dl             ; y_ptr[1]
+  movd x_stride_d, mm1
+  shr x_stride, 8
+  add x_stride, Y_ADD
+  mov [y_ptr + 1], dl             ; y_ptr[1]
 
-  movd edx, mm2
-  shr edx, 8
-  add edx, Y_ADD
-  mov [esi + eax + 0], dl       ; y_ptr[y_stride + 0]
+  movd x_stride_d, mm2
+  shr x_stride, 8
+  add x_stride, Y_ADD
+  mov [y_ptr + y_stride + 0], dl       ; y_ptr[y_stride + 0]
 
-  movd edx, mm3
-  shr edx, 8
-  add edx, Y_ADD
-  mov [esi + eax + 1], dl       ; y_ptr[y_stride + 1]
+  movd x_stride_d, mm3
+  shr x_stride, 8
+  add x_stride, Y_ADD
+  mov [y_ptr + y_stride + 1], dl       ; y_ptr[y_stride + 1]
 
   ; u_ptr, v_ptr
   movq mm0, mm6                 ; = [  |b4|g4|r4]
@@ -205,17 +181,17 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
   paddd mm0, mm1
   paddd mm2, mm6
 
-  movd edx, mm0
-  shr edx, 10
-  add edx, U_ADD
-  mov [ebx], dl
+  movd x_stride_d, mm0
+  shr x_stride, 10
+  add x_stride, U_ADD
+  mov [u_ptr], dl
 
-  movd edx, mm2
-  shr edx, 10
-  add edx, V_ADD
-  mov [ecx], dl
+  movd x_stride_d, mm2
+  shr x_stride, 10
+  add x_stride, V_ADD
+  mov [v_ptr], dl
 
-  pop edx
+  pop x_stride
 %endmacro
 
 ;------------------------------------------------------------------------------
@@ -235,8 +211,8 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
     ; y_out
   pxor mm4, mm4
   pxor mm5, mm5
-  movd mm0, [edi]               ; x_ptr[0...]
-  movd mm2, [edi+edx]           ; x_ptr[x_stride...]
+  movd mm0, [x_ptr]             ; x_ptr[0...]
+  movd mm2, [x_ptr+x_stride]    ; x_ptr[x_stride...]
   punpcklbw mm0, mm4            ; [  |b |g |r ]
   punpcklbw mm2, mm5            ; [  |b |g |r ]
   movq mm6, mm0                 ; = [  |b4|g4|r4]
@@ -252,8 +228,8 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
 
   pxor mm4, mm4
   pxor mm5, mm5
-  movd mm1, [edi+%1]            ; src[%1...]
-  movd mm3, [edi+edx+%1]        ; src[x_stride+%1...]
+  movd mm1, [x_ptr+%1]          ; src[%1...]
+  movd mm3, [x_ptr+x_stride+%1] ; src[x_stride+%1...]
   punpcklbw mm1, mm4            ; [  |b |g |r ]
   punpcklbw mm3, mm5            ; [  |b |g |r ]
   paddw mm6, mm1                ; +[  |b4|g4|r4]
@@ -267,27 +243,27 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
   paddd mm1, mm4                ; +[b]
   paddd mm3, mm5                ; +[b]
 
-  push edx
+  push x_stride
 
-  movd edx, mm0
-  shr edx, 8
-  add edx, Y_ADD
-  mov [esi], dl                 ; y_ptr[0]
+  movd x_stride_d, mm0
+  shr x_stride, 8
+  add x_stride, Y_ADD
+  mov [y_ptr], dl                 ; y_ptr[0]
 
-  movd edx, mm1
-  shr edx, 8
-  add edx, Y_ADD
-  mov [esi + 1], dl             ; y_ptr[1]
+  movd x_stride_d, mm1
+  shr x_stride, 8
+  add x_stride, Y_ADD
+  mov [y_ptr + 1], dl             ; y_ptr[1]
 
-  movd edx, mm2
-  shr edx, 8
-  add edx, Y_ADD
-  mov [esi + eax + 0], dl       ; y_ptr[y_stride + 0]
+  movd x_stride_d, mm2
+  shr x_stride, 8
+  add x_stride, Y_ADD
+  mov [y_ptr + y_stride + 0], dl       ; y_ptr[y_stride + 0]
 
-  movd edx, mm3
-  shr edx, 8
-  add edx, Y_ADD
-  mov [esi + eax + 1], dl       ; y_ptr[y_stride + 1]
+  movd x_stride_d, mm3
+  shr x_stride, 8
+  add x_stride, Y_ADD
+  mov [y_ptr + y_stride + 1], dl       ; y_ptr[y_stride + 1]
 
   ; u_ptr, v_ptr
   movq mm0, mm6                 ; = [  |b4|g4|r4]
@@ -300,17 +276,17 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
   paddd mm0, mm1
   paddd mm2, mm6
 
-  movd edx, mm0
-  shr edx, 10
-  add edx, U_ADD
-  mov [ebx], dl
+  movd x_stride_d, mm0
+  shr x_stride, 10
+  add x_stride, U_ADD
+  mov [u_ptr], dl
 
-  movd edx, mm2
-  shr edx, 10
-  add edx, V_ADD
-  mov [ecx], dl
+  movd x_stride_d, mm2
+  shr x_stride, 10
+  add x_stride, V_ADD
+  mov [v_ptr], dl
 
-  pop edx
+  pop x_stride
 %endmacro
 
 ;------------------------------------------------------------------------------
@@ -326,15 +302,15 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
 %endmacro
 
 %macro YV12_TO_BGR			2
-%define TEMP_Y1  esp
-%define TEMP_Y2  esp + 8
-%define TEMP_G1  esp + 16
-%define TEMP_G2  esp + 24
-%define TEMP_B1  esp + 32
-%define TEMP_B2  esp + 40
+%define TEMP_Y1  _ESP
+%define TEMP_Y2  _ESP + 8
+%define TEMP_G1  _ESP + 16
+%define TEMP_G2  _ESP + 24
+%define TEMP_B1  _ESP + 32
+%define TEMP_B2  _ESP + 40
 
-  movd mm2, [ebx]           ; u_ptr[0]
-  movd mm3, [ecx]           ; v_ptr[0]
+  movd mm2, [u_ptr]           ; u_ptr[0]
+  movd mm3, [v_ptr]           ; v_ptr[0]
   punpcklbw mm2, mm7        ; u3u2u1u0 -> mm2
   punpcklbw mm3, mm7        ; v3v2v1v0 -> mm3
   psubsw mm2, [U_SUB]       ; U - 128
@@ -353,7 +329,7 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
   paddsw mm2, mm3
   paddsw mm6, mm0
   pmullw mm5, [VR_MUL]      ; R_ADD -> mm5
-  movq mm0, [esi]           ; y7y6y5y4y3y2y1y0 -> mm0
+  movq mm0, [y_ptr]           ; y7y6y5y4y3y2y1y0 -> mm0
   movq mm1, mm0
   punpckhbw mm1, mm7        ; y7y6y5y4 -> mm1
   punpcklbw mm0, mm7        ; y3y2y1y0 -> mm0
@@ -369,7 +345,7 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
   psraw mm0, SCALEBITS
   packuswb mm0, mm1         ;g7g6g5g4g3g2g1g0 -> mm0
   movq [TEMP_G1], mm0
-  movq mm0, [esi+eax]       ; y7y6y5y4y3y2y1y0 -> mm0
+  movq mm0, [y_ptr+y_stride]       ; y7y6y5y4y3y2y1y0 -> mm0
   movq mm1, mm0
   punpckhbw mm1, mm7        ; y7y6y5y4 -> mm1
   punpcklbw mm0, mm7        ; y3y2y1y0 -> mm0
@@ -436,15 +412,15 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
   punpcklbw mm0, mm3        ; 0r5g5b50r4g4b4 -> mm0
   punpckhbw mm5, mm3        ; 0r7g7b70r6g6b6 -> mm5
 %if %1 == 3     ; BGR (24-bit)
-  movd [edi], mm2
+  movd [x_ptr], mm2
   psrlq mm2, 32
-  movd [edi + 3], mm2
-  movd [edi + 6], mm4
+  movd [x_ptr + 3], mm2
+  movd [x_ptr + 6], mm4
   psrlq mm4, 32
-  movd [edi + 9], mm4
-  movd [edi + 12], mm0
+  movd [x_ptr + 9], mm4
+  movd [x_ptr + 12], mm0
   psrlq mm0, 32
-  movd [edi + 15], mm0
+  movd [x_ptr + 15], mm0
   movq mm2, mm5
   psrlq mm0, 8              ; 000000r5g5 -> mm0
   psllq mm2, 32             ; 0r6g6b60000 -> mm2
@@ -453,7 +429,7 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
   por mm0, mm2              ; 000r6g6b6r5g5 -> mm0
   psllq mm5, 40             ; r7g7b700000 -> mm5
   por mm5, mm0              ; r7g7b7r6g6b6r5g5 -> mm5
-  movq [edi + 16], mm5
+  movq [x_ptr + 16], mm5
   movq mm0, [TEMP_B2]
   movq mm1, [TEMP_G2]
   movq mm2, mm0
@@ -468,15 +444,15 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
   movq mm5, mm0
   punpcklbw mm0, mm3        ; 0r5g5b50r4g4b4 -> mm0
   punpckhbw mm5, mm3        ; 0r7g7b70r6g6b6 -> mm5
-  movd [edi+edx], mm2
+  movd [x_ptr+x_stride], mm2
   psrlq mm2, 32
-  movd [edi+edx + 3], mm2
-  movd [edi+edx + 6], mm4
+  movd [x_ptr+x_stride + 3], mm2
+  movd [x_ptr+x_stride + 6], mm4
   psrlq mm4, 32
-  movd [edi+edx + 9], mm4
-  movd [edi+edx + 12], mm0
+  movd [x_ptr+x_stride + 9], mm4
+  movd [x_ptr+x_stride + 12], mm0
   psrlq mm0, 32
-  movd [edi+edx + 15], mm0
+  movd [x_ptr+x_stride + 15], mm0
   movq mm2, mm5
   psrlq mm0, 8              ; 000000r5g5 -> mm0
   psllq mm2, 32             ; 0r6g6b60000 -> mm2
@@ -485,13 +461,13 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
   por mm0, mm2              ; 000r6g6b6r5g5 -> mm0
   psllq mm5, 40             ; r7g7b700000 -> mm5
   por mm5, mm0              ; r7g7b7r6g6b6r5g5 -> mm5
-  movq [edi + edx + 16], mm5
+  movq [x_ptr + x_stride + 16], mm5
 
 %else       ; BGRA (32-bit)
-  movq [edi], mm2
-  movq [edi + 8], mm4
-  movq [edi + 16], mm0
-  movq [edi + 24], mm5
+  movq [x_ptr], mm2
+  movq [x_ptr + 8], mm4
+  movq [x_ptr + 16], mm0
+  movq [x_ptr + 24], mm5
   movq mm0, [TEMP_B2]
   movq mm1, [TEMP_G2]
   movq mm2, mm0
@@ -506,10 +482,10 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
   movq mm5, mm0
   punpcklbw mm0, mm3        ; 0r5g5b50r4g4b4 -> mm0
   punpckhbw mm5, mm3        ; 0r7g7b70r6g6b6 -> mm5
-  movq [edi + edx], mm2
-  movq [edi + edx + 8], mm4
-  movq [edi + edx + 16], mm0
-  movq [edi + edx + 24], mm5
+  movq [x_ptr + x_stride], mm2
+  movq [x_ptr + x_stride + 8], mm4
+  movq [x_ptr + x_stride + 16], mm0
+  movq [x_ptr + x_stride + 24], mm5
 %endif
 
 %undef TEMP_Y1
@@ -524,7 +500,7 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
 ; Code
 ;=============================================================================
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 %include "colorspace_mmx.inc"
 

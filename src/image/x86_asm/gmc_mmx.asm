@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: gmc_mmx.asm,v 1.5 2008-11-14 15:43:27 Isibaar Exp $
+; * $Id: gmc_mmx.asm,v 1.6 2008-11-26 01:04:34 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -32,29 +32,7 @@
 ; *
 ; *************************************************************************/
 
-bits 32
-
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
+%include "nasm.inc"
 
 ;//////////////////////////////////////////////////////////////////////
 
@@ -64,17 +42,13 @@ cglobal xvid_GMC_Core_Lin_8_sse41
 
 ;//////////////////////////////////////////////////////////////////////
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
+DATA
 
-align 16
+align SECTION_ALIGN
 Cst16:
 times 8 dw 16
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 ;//////////////////////////////////////////////////////////////////////
 ;// mmx version
@@ -82,9 +56,9 @@ SECTION .text
 %macro GMC_4_SSE 2  ; %1: i   %2: out reg (mm5 or mm6)
 
   pcmpeqw   mm0, mm0
-  movq      mm1, [eax+2*(%1)     ]  ; u0 | u1 | u2 | u3
+  movq      mm1, [_EAX+2*(%1)     ]  ; u0 | u1 | u2 | u3
   psrlw     mm0, 12                 ; mask 0x000f
-  movq      mm2, [eax+2*(%1)+2*16]  ; v0 | v1 | v2 | v3
+  movq      mm2, [_EAX+2*(%1)+2*16]  ; v0 | v1 | v2 | v3
 
   pand      mm1, mm0  ; u0
   pand      mm2, mm0  ; v0
@@ -99,15 +73,15 @@ SECTION .text
   pmullw    mm0, mm4    ; (16-u).(16-v)
   pmullw    mm1, mm4    ;     u .(16-v)
 
-  movd      mm4, [ecx+edx  +%1]  ; src2
-  movd       %2, [ecx+edx+1+%1]  ; src3
+  movd      mm4, [TMP0+TMP1  +%1]  ; src2
+  movd       %2, [TMP0+TMP1+1+%1]  ; src3
   punpcklbw mm4, mm7
   punpcklbw  %2, mm7
   pmullw    mm2, mm4
   pmullw    mm3,  %2
 
-  movd      mm4, [ecx      +%1]  ; src0
-  movd       %2, [ecx    +1+%1]  ; src1
+  movd      mm4, [TMP0       +%1]  ; src0
+  movd       %2, [TMP0     +1+%1]  ; src1
   punpcklbw mm4, mm7
   punpcklbw  %2, mm7
   pmullw    mm4, mm0
@@ -119,20 +93,20 @@ SECTION .text
   paddw      %2, mm2
 %endmacro
 
-align 16
+align SECTION_ALIGN
 xvid_GMC_Core_Lin_8_mmx:
-  mov  eax, [esp + 8]  ; Offsets
-  mov  ecx, [esp +12]  ; Src0
-  mov  edx, [esp +16]  ; BpS
+  mov  _EAX, prm2  ; Offsets
+  mov  TMP0, prm3  ; Src0
+  mov  TMP1, prm4  ; BpS
 
   pxor      mm7, mm7
 
   GMC_4_SSE 0, mm5
   GMC_4_SSE 4, mm6
 
-;  pshufw   mm4, [esp +20], 01010101b  ; Rounder (bits [16..31])
-  movd      mm4, [esp+20]  ; Rounder (bits [16..31])
-  mov       eax, [esp + 4]  ; Dst
+;  pshufw   mm4, prm5, 01010101b  ; Rounder (bits [16..31])
+  movd      mm4, prm5d   ; Rounder (bits [16..31])
+  mov       _EAX, prm1  ; Dst
   punpcklwd mm4, mm4
   punpckhdq mm4, mm4
 
@@ -141,7 +115,7 @@ xvid_GMC_Core_Lin_8_mmx:
   psrlw    mm5, 8
   psrlw    mm6, 8
   packuswb mm5, mm6
-  movq [eax], mm5
+  movq [_EAX], mm5
 
   ret
 ENDFUNC
@@ -152,9 +126,9 @@ ENDFUNC
 %macro GMC_8_SSE2 1
   
   pcmpeqw   xmm0, xmm0
-  movdqa    xmm1, [eax     ]  ; u...
+  movdqa    xmm1, [_EAX     ]  ; u...
   psrlw     xmm0, 12          ; mask = 0x000f
-  movdqa    xmm2, [eax+2*16]  ; v...
+  movdqa    xmm2, [_EAX+2*16]  ; v...
   pand      xmm1, xmm0
   pand      xmm2, xmm0
 
@@ -169,11 +143,11 @@ ENDFUNC
   pmullw    xmm1, xmm4    ;     u .(16-v)
 
 %if (%1!=0) ; SSE41
-  pmovzxbw  xmm4, [ecx+edx  ]  ; src2
-  pmovzxbw  xmm5, [ecx+edx+1]  ; src3
+  pmovzxbw  xmm4, [TMP0+TMP1  ]  ; src2
+  pmovzxbw  xmm5, [TMP0+TMP1+1]  ; src3
 %else
-  movq      xmm4, [ecx+edx  ]  ; src2
-  movq      xmm5, [ecx+edx+1]  ; src3
+  movq      xmm4, [TMP0+TMP1  ]  ; src2
+  movq      xmm5, [TMP0+TMP1+1]  ; src3
   punpcklbw xmm4, xmm7
   punpcklbw xmm5, xmm7
 %endif
@@ -181,11 +155,11 @@ ENDFUNC
   pmullw    xmm3, xmm5
 
 %if (%1!=0) ; SSE41
-  pmovzxbw  xmm4, [ecx      ]  ; src0
-  pmovzxbw  xmm5, [ecx    +1]  ; src1
+  pmovzxbw  xmm4, [TMP0     ]  ; src0
+  pmovzxbw  xmm5, [TMP0   +1]  ; src1
 %else
-  movq      xmm4, [ecx      ]  ; src0
-  movq      xmm5, [ecx    +1]  ; src1
+  movq      xmm4, [TMP0     ]  ; src0
+  movq      xmm5, [TMP0   +1]  ; src1
   punpcklbw xmm4, xmm7
   punpcklbw xmm5, xmm7
 %endif
@@ -198,46 +172,46 @@ ENDFUNC
   paddw     xmm5, xmm2
 %endmacro
 
-align 16
+align SECTION_ALIGN
 xvid_GMC_Core_Lin_8_sse2:
-  mov  eax, [esp + 8]  ; Offsets
-  mov  ecx, [esp +12]  ; Src0
-  mov  edx, [esp +16]  ; BpS
+  mov  _EAX, prm2  ; Offsets
+  mov  TMP0, prm3  ; Src0
+  mov  TMP1, prm4  ; BpS
 
   pxor     xmm7, xmm7
 
   GMC_8_SSE2 0
 
-  movd      xmm4, [esp +20]
+  movd      xmm4, prm5d
   pshuflw   xmm4, xmm4, 01010101b  ; Rounder (bits [16..31])
   punpckldq xmm4, xmm4
-  mov  eax, [esp + 4]  ; Dst
+  mov  _EAX, prm1  ; Dst
 
   paddw    xmm5, xmm4
   psrlw    xmm5, 8
   packuswb xmm5, xmm5
-  movq [eax], xmm5
+  movq [_EAX], xmm5
 
   ret
 ENDFUNC
 
-align 16
+align SECTION_ALIGN
 xvid_GMC_Core_Lin_8_sse41:
-  mov  eax, [esp + 8]  ; Offsets
-  mov  ecx, [esp +12]  ; Src0
-  mov  edx, [esp +16]  ; BpS
+  mov  _EAX, prm2  ; Offsets
+  mov  TMP0, prm3  ; Src0
+  mov  TMP1, prm4  ; BpS
 
   GMC_8_SSE2 1
 
-  movd      xmm4, [esp +20]
+  movd      xmm4, prm5d
   pshuflw   xmm4, xmm4, 01010101b  ; Rounder (bits [16..31])
   punpckldq xmm4, xmm4
-  mov  eax, [esp + 4]  ; Dst
+  mov  _EAX, prm1  ; Dst
 
   paddw    xmm5, xmm4
   psrlw    xmm5, 8
   packuswb xmm5, xmm5
-  movq [eax], xmm5
+  movq [_EAX], xmm5
 
   ret
 ENDFUNC

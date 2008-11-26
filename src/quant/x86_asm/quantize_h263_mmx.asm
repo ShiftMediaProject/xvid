@@ -21,48 +21,22 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_h263_mmx.asm,v 1.9 2008-11-11 20:46:24 Isibaar Exp $
+; * $Id: quantize_h263_mmx.asm,v 1.10 2008-11-26 01:04:34 Isibaar Exp $
 ; *
 ; ****************************************************************************/
 
 ; enable dequant saturate [-2048,2047], test purposes only.
 %define SATURATE
 
-BITS 32
-
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
+%include "nasm.inc"
 
 ;=============================================================================
 ; Read only Local data
 ;=============================================================================
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
+DATA
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 plus_one:
 	times 8 dw 1
 
@@ -72,7 +46,7 @@ plus_one:
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 mmx_quant:
 %assign quant 0
 %rep 32
@@ -86,7 +60,7 @@ mmx_quant:
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 mmx_sub:
 %assign quant 1
 %rep 31
@@ -104,7 +78,7 @@ mmx_sub:
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 mmx_div:
 %assign quant 1
 %rep 31
@@ -116,7 +90,7 @@ mmx_div:
 ; Code
 ;=============================================================================
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 cglobal quant_h263_intra_mmx
 cglobal quant_h263_intra_sse2
@@ -139,45 +113,48 @@ cglobal dequant_h263_inter_sse2
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 quant_h263_intra_mmx:
 
-  push esi
+  mov _EAX, prm2     ; data
+  mov TMP0, prm4     ; dcscalar
+  movsx _EAX, word [_EAX]  ; data[0]
+  
+  sar TMP0, 1              ; dcscalar /2
+  mov TMP1, _EAX
+  sar TMP1, 31             ; sgn(data[0])
+  xor TMP0,TMP1            ; *sgn(data[0])
+  sub _EAX,TMP1
+  add _EAX,TMP0            ; + (dcscalar/2)*sgn(data[0])
 
-  mov esi, [esp + 4 + 8]     ; data
-  mov ecx,[esp + 4 + 16]     ; dcscalar
-  movsx eax, word [esi]      ; data[0]
-   
-  sar ecx,1                  ; dcscalar /2
-  mov edx,eax
-  sar edx,31                 ; sgn(data[0])
-  xor ecx,edx                ; *sgn(data[0])
-  sub eax,edx
-  add eax,ecx                ; + (dcscalar/2)*sgn(data[0])
-
-  mov ecx, [esp + 4 + 12]    ; quant
+  mov TMP0, prm3     ; quant
   cdq 
-  idiv dword [esp + 4 + 16]  ; dcscalar
-  cmp ecx, 1
-  mov edx, [esp + 4 + 4]     ; coeff
+  idiv prm4d         ; dcscalar
+  lea TMP1, [mmx_div]
+  movq mm7, [TMP1+TMP0 * 8 - 8]
+  cmp TMP0, 1
+  mov TMP1, prm1     ; coeff
   je .low
  
-  movq mm7, [mmx_div+ecx * 8 - 8]
-  mov ecx,4
+  mov TMP0, prm2     ; data
+  push _EAX          ; DC
+  mov _EAX, TMP0
+
+  mov TMP0,4
 
 .loop:
-  movq mm0, [esi]           ; data      
+  movq mm0, [_EAX]           ; data      
   pxor mm4,mm4
-  movq mm1, [esi + 8]
+  movq mm1, [_EAX + 8]
   pcmpgtw mm4,mm0           ; (data<0)
   pxor mm5,mm5
   pmulhw mm0,mm7            ; /(2*quant)
   pcmpgtw mm5,mm1
-  movq mm2, [esi+16] 
+  movq mm2, [_EAX+16] 
   psubw mm0,mm4             ;  +(data<0)
   pmulhw mm1,mm7
   pxor mm4,mm4
-  movq mm3,[esi+24]
+  movq mm3,[_EAX+24]
   pcmpgtw mm4,mm2
   psubw mm1,mm5 
   pmulhw mm2,mm7 
@@ -186,57 +163,64 @@ quant_h263_intra_mmx:
   pmulhw mm3,mm7
   psubw mm2,mm4
   psubw mm3,mm5  
-  movq [edx], mm0
-  lea esi, [esi+32]
-  movq [edx + 8], mm1
-  movq [edx + 16], mm2
-  movq [edx + 24], mm3
+  movq [TMP1], mm0
+  lea _EAX, [_EAX+32]
+  movq [TMP1 + 8], mm1
+  movq [TMP1 + 16], mm2
+  movq [TMP1 + 24], mm3
    
-  dec ecx
-  lea edx, [edx+32]
+  dec TMP0
+  lea TMP1, [TMP1+32]
   jne .loop
   jmp .end
    
 .low:
-  movd mm7,ecx
-  mov ecx,4
+  movd mm7,TMP0d
+
+  mov TMP0, prm2
+  push _EAX
+  mov _EAX, TMP0
+
+  mov TMP0,4
 .loop_low:  
-  movq mm0, [esi]           
+  movq mm0, [_EAX]           
   pxor mm4,mm4
-  movq mm1, [esi + 8]
+  movq mm1, [_EAX + 8]
   pcmpgtw mm4,mm0
   pxor mm5,mm5
   psubw mm0,mm4
   pcmpgtw mm5,mm1
   psraw mm0,mm7
   psubw mm1,mm5 
-  movq mm2,[esi+16]
+  movq mm2,[_EAX+16]
   pxor mm4,mm4
   psraw mm1,mm7
   pcmpgtw mm4,mm2
   pxor mm5,mm5
   psubw mm2,mm4
-  movq mm3,[esi+24]
+  movq mm3,[_EAX+24]
   pcmpgtw mm5,mm3
   psraw mm2,mm7
   psubw mm3,mm5
-  movq [edx], mm0
+  movq [TMP1], mm0
   psraw mm3,mm7
-  movq [edx + 8], mm1
-  movq [edx+16],mm2
-  lea esi, [esi+32]
-  movq [edx+24],mm3
+  movq [TMP1 + 8], mm1
+  movq [TMP1+16],mm2
+  lea _EAX, [_EAX+32]
+  movq [TMP1+24],mm3
   
-  dec ecx
-  lea edx, [edx+32]
+  dec TMP0
+  lea TMP1, [TMP1+32]
   jne .loop_low
   
 .end:
-  mov edx, [esp + 4 + 4]     ; coeff
-  mov [edx],ax  
-  xor eax,eax                ; return 0
 
-  pop esi
+  pop _EAX
+
+  mov TMP1, prm1     ; coeff
+  mov [TMP1],ax  
+  xor _EAX,_EAX       ; return 0
+
   ret
 ENDFUNC
  
@@ -251,45 +235,48 @@ ENDFUNC
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 quant_h263_intra_sse2:
 
-  push esi
-
-  mov esi, [esp + 4 + 8]     ; data
+  mov _EAX, prm2     ; data
  
-  movsx eax, word [esi]      ; data[0]
+  movsx _EAX, word [_EAX]      ; data[0]
  
-  mov ecx,[esp + 4 + 16]     ; dcscalar
-  mov edx,eax
-  sar ecx,1
-  add eax,ecx
-  sub edx,ecx
-  cmovl eax,edx              ; +/- dcscalar/2
-  mov ecx, [esp + 4 + 12]    ; quant
+  mov TMP0,prm4     ; dcscalar
+  mov TMP1,_EAX
+  sar TMP0,1
+  add _EAX,TMP0
+  sub TMP1,TMP0
+  cmovl _EAX,TMP1              ; +/- dcscalar/2
+  mov TMP0, prm3    ; quant
   cdq 
-  idiv dword [esp + 4 + 16]  ; dcscalar
-  cmp ecx, 1
-  mov edx, [esp + 4 + 4]     ; coeff
-  movq xmm7, [mmx_div+ecx * 8 - 8]
-  je .low
+  idiv prm4d  ; dcscalar
+  cmp TMP0, 1
+  lea TMP1, [mmx_div]
+  movq xmm7, [TMP1+TMP0 * 8 - 8]
+  mov TMP1, prm1     ; coeff
+  je near .low
   
-  mov ecx,2
+  mov TMP0, prm2
+  push _EAX ; DC
+  mov _EAX, TMP0
+
+  mov TMP0,2
   movlhps xmm7,xmm7
 
 .loop:
-  movdqa xmm0, [esi]           
+  movdqa xmm0, [_EAX]           
   pxor xmm4,xmm4
-  movdqa xmm1, [esi + 16]
+  movdqa xmm1, [_EAX + 16]
   pcmpgtw xmm4,xmm0 
   pxor xmm5,xmm5
   pmulhw xmm0,xmm7
   pcmpgtw xmm5,xmm1
-  movdqa xmm2, [esi+32] 
+  movdqa xmm2, [_EAX+32] 
   psubw xmm0,xmm4
   pmulhw xmm1,xmm7
   pxor xmm4,xmm4
-  movdqa xmm3,[esi+48]
+  movdqa xmm3,[_EAX+48]
   pcmpgtw xmm4,xmm2
   psubw xmm1,xmm5 
   pmulhw xmm2,xmm7 
@@ -298,57 +285,64 @@ quant_h263_intra_sse2:
   pmulhw xmm3,xmm7
   psubw xmm2,xmm4
   psubw xmm3,xmm5  
-  movdqa [edx], xmm0
-  lea esi, [esi+64]
-  movdqa [edx + 16], xmm1
-  movdqa [edx + 32], xmm2
-  movdqa [edx + 48], xmm3
+  movdqa [TMP1], xmm0
+  lea _EAX, [_EAX+64]
+  movdqa [TMP1 + 16], xmm1
+  movdqa [TMP1 + 32], xmm2
+  movdqa [TMP1 + 48], xmm3
    
-  dec ecx
-  lea edx, [edx+64]
+  dec TMP0
+  lea TMP1, [TMP1+64]
   jne .loop
   jmp .end
    
 .low:
-  movd xmm7,ecx
-  mov ecx,2
+  movd xmm7,TMP0d
+
+  mov TMP0, prm2
+  push _EAX ; DC
+  mov _EAX, TMP0
+
+  mov TMP0,2
 .loop_low:  
-  movdqa xmm0, [esi]           
+  movdqa xmm0, [_EAX]           
   pxor xmm4,xmm4
-  movdqa xmm1, [esi + 16]
+  movdqa xmm1, [_EAX + 16]
   pcmpgtw xmm4,xmm0
   pxor xmm5,xmm5
   psubw xmm0,xmm4
   pcmpgtw xmm5,xmm1
   psraw xmm0,xmm7
   psubw xmm1,xmm5 
-  movdqa xmm2,[esi+32]
+  movdqa xmm2,[_EAX+32]
   pxor xmm4,xmm4
   psraw xmm1,xmm7
   pcmpgtw xmm4,xmm2
   pxor xmm5,xmm5
   psubw xmm2,xmm4
-  movdqa xmm3,[esi+48]
+  movdqa xmm3,[_EAX+48]
   pcmpgtw xmm5,xmm3
   psraw xmm2,xmm7
   psubw xmm3,xmm5
-  movdqa [edx], xmm0
+  movdqa [TMP1], xmm0
   psraw xmm3,xmm7
-  movdqa [edx+16], xmm1
-  movdqa [edx+32],xmm2
-  lea esi, [esi+64]
-  movdqa [edx+48],xmm3
+  movdqa [TMP1+16], xmm1
+  movdqa [TMP1+32],xmm2
+  lea _EAX, [_EAX+64]
+  movdqa [TMP1+48],xmm3
   
-  dec ecx
-  lea edx, [edx+64]
+  dec TMP0
+  lea TMP1, [TMP1+64]
   jne .loop_low
   
 .end:
-  mov edx, [esp + 4 + 4]     ; coeff
-  mov [edx],ax  
-  xor eax,eax                ; return 0
 
-  pop esi
+  pop _EAX
+
+  mov TMP1, prm1     ; coeff
+  mov [TMP1],ax  
+  xor _EAX,_EAX            ; return 0
+
   ret
 ENDFUNC
  
@@ -361,31 +355,29 @@ ENDFUNC
 ;
 ;-----------------------------------------------------------------------------
   
-ALIGN 16
+ALIGN SECTION_ALIGN
 quant_h263_inter_mmx:
 
-  push ecx
-  push esi
-  push edi
-
-  mov edi, [esp + 12 + 4]           ; coeff
-  mov esi, [esp + 12 + 8]           ; data
-  mov eax, [esp + 12 + 12]          ; quant
-
-  xor ecx, ecx
+  mov TMP1, prm1           ; coeff
+  mov _EAX, prm3           ; quant
 
   pxor mm5, mm5                     ; sum
-  movq mm6, [mmx_sub + eax * 8 - 8] ; sub
+  lea TMP0, [mmx_sub]
+  movq mm6, [TMP0 + _EAX * 8 - 8] ; sub
 
   cmp al, 1
-  jz .q1loop
+  jz near .q1routine
 
-  movq mm7, [mmx_div + eax * 8 - 8] ; divider
+  lea TMP0, [mmx_div]
+  movq mm7, [TMP0 + _EAX * 8 - 8] ; divider
 
-ALIGN 8
+  xor TMP0, TMP0
+  mov _EAX, prm2           ; data
+
+ALIGN SECTION_ALIGN
 .loop:
-  movq mm0, [esi + 8*ecx]           ; mm0 = [1st]
-  movq mm3, [esi + 8*ecx + 8]
+  movq mm0, [_EAX + 8*TMP0]           ; mm0 = [1st]
+  movq mm3, [_EAX + 8*TMP0 + 8]
   pxor mm1, mm1                     ; mm1 = 0
   pxor mm4, mm4                     ;
   pcmpgtw mm1, mm0                  ; mm1 = (0 > mm0)
@@ -404,11 +396,11 @@ ALIGN 8
   pxor mm3, mm4                     ;
   psubw mm0, mm1                    ; undisplace
   psubw mm3, mm4
-  movq [edi + 8*ecx], mm0
-  movq [edi + 8*ecx + 8], mm3
+  movq [TMP1 + 8*TMP0], mm0
+  movq [TMP1 + 8*TMP0 + 8], mm3
 
-  add ecx, 2
-  cmp ecx, 16
+  add TMP0, 2
+  cmp TMP0, 16
   jnz .loop
 
 .done:
@@ -418,16 +410,17 @@ ALIGN 8
   paddd mm0, mm5
 
   movd eax, mm0     ; return sum
-  pop edi
-  pop esi
-  pop ecx
 
   ret
 
-ALIGN 8
+.q1routine:
+  xor TMP0, TMP0
+  mov _EAX, prm2           ; data
+
+ALIGN SECTION_ALIGN
 .q1loop:
-  movq mm0, [esi + 8*ecx]           ; mm0 = [1st]
-  movq mm3, [esi + 8*ecx+ 8]        ;
+  movq mm0, [_EAX + 8*TMP0]           ; mm0 = [1st]
+  movq mm3, [_EAX + 8*TMP0+ 8]        ;
   pxor mm1, mm1                     ; mm1 = 0
   pxor mm4, mm4                     ;
   pcmpgtw mm1, mm0                  ; mm1 = (0 > mm0)
@@ -446,11 +439,11 @@ ALIGN 8
   pxor mm3, mm4                     ;
   psubw mm0, mm1                    ; undisplace
   psubw mm3, mm4
-  movq [edi + 8*ecx], mm0
-  movq [edi + 8*ecx + 8], mm3
+  movq [TMP1 + 8*TMP0], mm0
+  movq [TMP1 + 8*TMP0 + 8], mm3
 
-  add ecx, 2
-  cmp ecx, 16
+  add TMP0, 2
+  cmp TMP0, 16
   jnz .q1loop
 
   jmp .done
@@ -467,36 +460,36 @@ ENDFUNC
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 quant_h263_inter_sse2:
 
-  push esi
-  push edi
-
-  mov edi, [esp + 8 + 4]      ; coeff
-  mov esi, [esp + 8 + 8]      ; data
-  mov eax, [esp + 8 + 12]     ; quant
-
-  xor ecx, ecx
+  mov TMP1, prm1      ; coeff
+  mov _EAX, prm3      ; quant
 
   pxor xmm5, xmm5                           ; sum
 
-  movq mm0, [mmx_sub + eax*8 - 8]           ; sub
+  lea TMP0, [mmx_sub]
+  movq mm0, [TMP0 + _EAX*8 - 8]             ; sub
   movq2dq xmm6, mm0                         ; load into low 8 bytes
   movlhps xmm6, xmm6                        ; duplicate into high 8 bytes
 
   cmp al, 1
-  jz near .qes2_q1loop
+  jz near .qes2_q1_routine
 
 .qes2_not1:
-  movq mm0, [mmx_div + eax*8 - 8]           ; divider
+  lea TMP0, [mmx_div]
+  movq mm0, [TMP0 + _EAX*8 - 8]          ; divider
+
+  xor TMP0, TMP0
+  mov _EAX, prm2      ; data
+
   movq2dq xmm7, mm0
   movlhps xmm7, xmm7
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 .qes2_loop:
-  movdqa xmm0, [esi + ecx*8]                ; xmm0 = [1st]
-  movdqa xmm3, [esi + ecx*8 + 16]           ; xmm3 = [2nd]
+  movdqa xmm0, [_EAX + TMP0*8]               ; xmm0 = [1st]
+  movdqa xmm3, [_EAX + TMP0*8 + 16]          ; xmm3 = [2nd]
   pxor xmm1, xmm1
   pxor xmm4, xmm4
   pcmpgtw xmm1, xmm0
@@ -515,11 +508,11 @@ ALIGN 16
   pxor xmm3, xmm4
   psubw xmm0, xmm1
   psubw xmm3, xmm4
-  movdqa [edi + ecx*8], xmm0
-  movdqa [edi + ecx*8 + 16], xmm3
+  movdqa [TMP1 + TMP0*8], xmm0
+  movdqa [TMP1 + TMP0*8 + 16], xmm3
 
-  add ecx, 4
-  cmp ecx, 16
+  add TMP0, 4
+  cmp TMP0, 16
   jnz .qes2_loop
 
 .qes2_done:
@@ -535,15 +528,16 @@ ALIGN 16
 
   movd eax, mm0         ; return sum
 
-  pop edi
-  pop esi
-
   ret
 
-ALIGN 16
+.qes2_q1_routine:
+  xor TMP0, TMP0
+  mov _EAX, prm2      ; data
+
+ALIGN SECTION_ALIGN
 .qes2_q1loop:
-  movdqa xmm0, [esi + ecx*8]        ; xmm0 = [1st]
-  movdqa xmm3, [esi + ecx*8 + 16]   ; xmm3 = [2nd]
+  movdqa xmm0, [_EAX + TMP0*8]        ; xmm0 = [1st]
+  movdqa xmm3, [_EAX + TMP0*8 + 16]   ; xmm3 = [2nd]
   pxor xmm1, xmm1
   pxor xmm4, xmm4
   pcmpgtw xmm1, xmm0
@@ -562,11 +556,11 @@ ALIGN 16
   pxor xmm3, xmm4
   psubw xmm0, xmm1
   psubw xmm3, xmm4
-  movdqa [edi + ecx*8], xmm0
-  movdqa [edi + ecx*8 + 16], xmm3
+  movdqa [TMP1 + TMP0*8], xmm0
+  movdqa [TMP1 + TMP0*8 + 16], xmm3
 
-  add ecx, 4
-  cmp ecx, 16
+  add TMP0, 4
+  cmp TMP0, 16
   jnz .qes2_q1loop
   jmp .qes2_done
 ENDFUNC
@@ -582,33 +576,34 @@ ENDFUNC
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 dequant_h263_intra_mmx:
 
-  mov ecx, [esp+12]                 ; quant
-  mov eax, [esp+ 8]                 ; coeff
+  mov TMP0, prm3                 ; quant
+  mov _EAX, prm2                 ; coeff
   pcmpeqw mm0,mm0
-  movq mm6, [mmx_quant + ecx*8]     ; quant
-  shl ecx,31                        ; quant & 1 ? 0 : - 1
+  lea TMP1, [mmx_quant]
+  movq mm6, [TMP1 + TMP0*8] ; quant
+  shl TMP0,31                    ; quant & 1 ? 0 : - 1
   movq mm7,mm6
   movq mm5,mm0
-  movd mm1,ecx
-  mov edx, [esp+ 4]                 ; data
+  movd mm1,TMP0d
+  mov TMP1, prm1                 ; data
   psllw mm0,mm1
-  paddw mm7,mm7                     ; 2*quant
-  paddw mm6,mm0                     ; quant-1
+  paddw mm7,mm7                  ; 2*quant
+  paddw mm6,mm0                  ; quant-1
   psllw mm5,12
-  mov ecx,8
+  mov TMP0,8
   psrlw mm5,1
 
 .loop: 
-  movq mm0,[eax] 
+  movq mm0,[_EAX] 
   pxor mm2,mm2
   pxor mm4,mm4
   pcmpgtw mm2,mm0
   pcmpeqw mm4,mm0
   pmullw mm0,mm7      ; * 2 * quant  
-  movq mm1,[eax+8]
+  movq mm1,[_EAX+8]
   psubw mm0,mm2 
   pxor mm2,mm6
   pxor mm3,mm3
@@ -632,28 +627,28 @@ dequant_h263_intra_mmx:
   paddsw mm0, mm5
   paddsw mm1, mm5
   
-  movq [edx],mm0
-  lea eax,[eax+16]
-  movq [edx+8],mm1
+  movq [TMP1],mm0
+  lea _EAX,[_EAX+16]
+  movq [TMP1+8],mm1
  
-  dec ecx
-  lea edx,[edx+16]
+  dec TMP0
+  lea TMP1,[TMP1+16]
   jne .loop
   
    ; deal with DC
-  mov eax, [esp+ 8]                ; coeff
-  movd mm1,[esp+16]                ; dcscalar
-  movd mm0,[eax]                   ; coeff[0]
+  mov _EAX, prm2               ; coeff
+  movd mm1,prm4d                ; dcscalar
+  movd mm0,[_EAX]                   ; coeff[0]
   pmullw mm0,mm1                   ; * dcscalar
-  mov edx, [esp+ 4]                ; data
+  mov TMP1, prm1               ; data
   paddsw mm0, mm5                  ; saturate +
   psubsw mm0, mm5
   psubsw mm0, mm5                  ; saturate -
   paddsw mm0, mm5
   movd eax,mm0
-  mov [edx], ax
+  mov [TMP1], ax
 
-  xor eax, eax                    ; return 0
+  xor _EAX, _EAX                    ; return 0
   ret
 ENDFUNC
 
@@ -668,37 +663,37 @@ ENDFUNC
 ;-----------------------------------------------------------------------------
 
   
-ALIGN 16 
+ALIGN SECTION_ALIGN 
 dequant_h263_intra_xmm:
 
-  mov ecx, [esp+12]                 ; quant
-  mov eax, [esp+ 8]                 ; coeff
+  mov TMP0, prm3                 ; quant
+  mov _EAX, prm2                 ; coeff
 
-  movd mm6,ecx                      ; quant
+  movd mm6,TMP0d                  ; quant
   pcmpeqw mm0,mm0
-  pshufw mm6,mm6,0                  ; all quant
-  shl ecx,31
+  pshufw mm6,mm6,0               ; all quant
+  shl TMP0,31
   movq mm5,mm0
   movq mm7,mm6
-  movd mm1,ecx
-  mov edx, [esp+ 4]                 ; data
-  psllw mm0,mm1                     ; quant & 1 ? 0 : - 1
+  movd mm1,TMP0d
+  mov TMP1, prm1                 ; data
+  psllw mm0,mm1                  ; quant & 1 ? 0 : - 1
   movq mm4,mm5
-  paddw mm7,mm7                     ; quant*2
-  paddw mm6,mm0                     ; quant-1
-  psrlw mm4,5                       ; mm4=2047
-  mov ecx,8
-  pxor mm5,mm4                      ; mm5=-2048
+  paddw mm7,mm7                  ; quant*2
+  paddw mm6,mm0                  ; quant-1
+  psrlw mm4,5                    ; mm4=2047
+  mov TMP0,8
+  pxor mm5,mm4                   ; mm5=-2048
   
 .loop:
-  movq mm0,[eax] 
+  movq mm0,[_EAX] 
   pxor mm2,mm2
   pxor mm3,mm3
 
   pcmpgtw mm2,mm0
   pcmpeqw mm3,mm0     ; if coeff==0...
   pmullw mm0,mm7      ; * 2 * quant
-  movq mm1,[eax+8]
+  movq mm1,[_EAX+8]
   
   psubw mm0,mm2
   pxor mm2,mm6
@@ -718,27 +713,27 @@ dequant_h263_intra_xmm:
   
   pmaxsw mm0,mm5
   pminsw mm1,mm4
-  movq [edx],mm0
+  movq [TMP1],mm0
   pmaxsw mm1,mm5
-  lea eax,[eax+16]
-  movq [edx+8],mm1
+  lea _EAX,[_EAX+16]
+  movq [TMP1+8],mm1
   
-  dec ecx
-  lea edx,[edx+16]
+  dec TMP0
+  lea TMP1,[TMP1+16]
   jne .loop
   
    ; deal with DC
-  mov eax, [esp+ 8]                 ; coeff
-  movd mm1,[esp+16]                 ; dcscalar
-  movd mm0, [eax]
+  mov _EAX, prm2                ; coeff
+  movd mm1,prm4d                 ; dcscalar
+  movd mm0, [_EAX]
   pmullw mm0, mm1            
-  mov edx, [esp+ 4]                 ; data
+  mov TMP1, prm1                ; data
   pminsw mm0,mm4
   pmaxsw mm0,mm5
   movd eax, mm0
-  mov [edx], ax
+  mov [TMP1], ax
 
-  xor eax, eax                      ; return 0
+  xor _EAX, _EAX                ; return 0
   ret
 ENDFUNC
 
@@ -753,39 +748,39 @@ ENDFUNC
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16 
+ALIGN SECTION_ALIGN 
 dequant_h263_intra_sse2:
 
-  mov ecx, [esp+12]                 ; quant
-  mov eax, [esp+ 8]                 ; coeff
+  mov TMP0, prm3                 ; quant
+  mov _EAX, prm2                 ; coeff
  
-  movd xmm6,ecx                     ; quant
+  movd xmm6,TMP0d                     ; quant
 
-  shl ecx,31
+  shl TMP0,31
   pshuflw xmm6,xmm6,0
   pcmpeqw xmm0,xmm0
   movlhps xmm6,xmm6                 ; all quant
-  movd xmm1,ecx
+  movd xmm1,TMP0d
   movdqa xmm5,xmm0
   movdqa xmm7,xmm6
-  mov edx, [esp+ 4]                 ; data
+  mov TMP1, prm1                 ; data
   paddw xmm7,xmm7                   ; quant *2
   psllw xmm0,xmm1                   ; quant & 1 ? 0 : - 1 
   movdqa xmm4,xmm5
   paddw xmm6,xmm0                   ; quant-1
   psrlw xmm4,5                      ; 2047
-  mov ecx,4
+  mov TMP0,4
   pxor xmm5,xmm4                    ; mm5=-2048
   
 .loop:
-  movdqa xmm0,[eax] 
+  movdqa xmm0,[_EAX] 
   pxor xmm2,xmm2
   pxor xmm3,xmm3
 
   pcmpgtw xmm2,xmm0
   pcmpeqw xmm3,xmm0
   pmullw xmm0,xmm7      ; * 2 * quant
-  movdqa xmm1,[eax+16]
+  movdqa xmm1,[_EAX+16]
   
   psubw xmm0,xmm2
   pxor xmm2,xmm6
@@ -805,29 +800,29 @@ dequant_h263_intra_sse2:
   
   pmaxsw xmm0,xmm5
   pminsw xmm1,xmm4
-  movdqa [edx],xmm0
+  movdqa [TMP1],xmm0
   pmaxsw xmm1,xmm5
-  lea eax,[eax+32]
-  movdqa [edx+16],xmm1
+  lea _EAX,[_EAX+32]
+  movdqa [TMP1+16],xmm1
  
-  dec ecx
-  lea edx,[edx+32]
+  dec TMP0
+  lea TMP1,[TMP1+32]
   jne .loop
     
    ; deal with DC
 
-  mov eax, [esp+ 8]             ; coeff
-  movsx eax,word [eax]
-  imul dword [esp+16]           ; dcscalar
-  mov edx, [esp+ 4]             ; data
+  mov _EAX, prm2             ; coeff
+  movsx _EAX,word [_EAX]
+  imul prm4d                 ; dcscalar
+  mov TMP1, prm1             ; data
   movd xmm0,eax
   pminsw xmm0,xmm4
   pmaxsw xmm0,xmm5
   movd eax,xmm0
   
-  mov [edx], ax
+  mov [TMP1], ax
 
-  xor eax, eax                  ; return 0
+  xor _EAX, _EAX                  ; return 0
   ret
 ENDFUNC
 
@@ -840,27 +835,28 @@ ENDFUNC
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 dequant_h263_inter_mmx:
 
-  mov ecx, [esp+12]                 ; quant
-  mov eax, [esp+ 8]                 ; coeff
+  mov TMP0, prm3                 ; quant
+  mov _EAX, prm2                 ; coeff
   pcmpeqw mm0,mm0
-  movq mm6, [mmx_quant + ecx*8]     ; quant
-  shl ecx,31                        ; odd/even
+  lea TMP1, [mmx_quant]
+  movq mm6, [TMP1 + TMP0*8]      ; quant
+  shl TMP0,31                    ; odd/even
   movq mm7,mm6
-  movd mm1,ecx
-  mov edx, [esp+ 4]                 ; data
+  movd mm1,TMP0d
+  mov TMP1, prm1                 ; data
   movq mm5,mm0
-  psllw mm0,mm1                     ; quant & 1 ? 0 : - 1
-  paddw mm7,mm7                     ; quant*2
-  paddw mm6,mm0                     ; quant & 1 ? quant : quant - 1
+  psllw mm0,mm1                  ; quant & 1 ? 0 : - 1
+  paddw mm7,mm7                  ; quant*2
+  paddw mm6,mm0                  ; quant & 1 ? quant : quant - 1
   psllw mm5,12
-  mov ecx,8
-  psrlw mm5,1                       ; 32767-2047 (32768-2048)
+  mov TMP0,8
+  psrlw mm5,1                    ; 32767-2047 (32768-2048)
 
 .loop:
-  movq mm0,[eax] 
+  movq mm0,[_EAX] 
   pxor mm4,mm4
   pxor mm2,mm2
   pcmpeqw mm4,mm0     ; if coeff==0...
@@ -868,7 +864,7 @@ dequant_h263_inter_mmx:
   pmullw mm0,mm7      ; * 2 * quant
   pxor mm3,mm3
   psubw mm0,mm2 
-  movq mm1,[eax+8]
+  movq mm1,[_EAX+8]
   pxor mm2,mm6
   pcmpgtw mm3,mm1
   pandn mm4,mm2      ; ... then data==0
@@ -890,15 +886,15 @@ dequant_h263_inter_mmx:
   paddsw mm0, mm5
   paddsw mm1, mm5
   
-  movq [edx],mm0
-  lea eax,[eax+16]
-  movq [edx+8],mm1
+  movq [TMP1],mm0
+  lea _EAX,[_EAX+16]
+  movq [TMP1+8],mm1
  
-  dec ecx
-  lea edx,[edx+16]
+  dec TMP0
+  lea TMP1,[TMP1+16]
   jne .loop
   
-  xor eax, eax              ; return 0
+  xor _EAX, _EAX              ; return 0
   ret
 ENDFUNC
 
@@ -911,36 +907,37 @@ ENDFUNC
 ;                                 const uint16_t *mpeg_matrices);
 ;
 ;-----------------------------------------------------------------------------
-ALIGN 16 
+ALIGN SECTION_ALIGN 
 dequant_h263_inter_xmm:
 
-  mov ecx, [esp+12]                 ; quant
-  mov eax, [esp+ 8]                 ; coeff
+  mov TMP0, prm3                 ; quant
+  mov _EAX, prm2                 ; coeff
   pcmpeqw mm0,mm0
-  movq mm6, [mmx_quant + ecx*8]     ; quant
-  shl ecx,31
+  lea TMP1, [mmx_quant]
+  movq mm6, [TMP1 + TMP0*8]      ; quant
+  shl TMP0,31
   movq mm5,mm0
-  movd mm1,ecx
+  movd mm1,TMP0d
   movq mm7,mm6
   psllw mm0,mm1
-  mov edx, [esp+ 4]                 ; data
+  mov TMP1, prm1                 ; data
   movq mm4,mm5
   paddw mm7,mm7
   paddw mm6,mm0                     ; quant-1
 
   psrlw mm4,5
-  mov ecx,8
+  mov TMP0,8
   pxor mm5,mm4                      ; mm5=-2048
    
 .loop:
-  movq mm0,[eax] 
+  movq mm0,[_EAX] 
   pxor mm3,mm3
   pxor mm2,mm2
   pcmpeqw mm3,mm0
   pcmpgtw mm2,mm0
   pmullw mm0,mm7                    ; * 2 * quant
   pandn mm3,mm6
-  movq mm1,[eax+8]
+  movq mm1,[_EAX+8]
   psubw mm0,mm2 
   pxor mm2,mm3
   pxor mm3,mm3
@@ -959,15 +956,15 @@ dequant_h263_inter_xmm:
   pmaxsw mm0,mm5
   pmaxsw mm1,mm5
     
-  movq [edx],mm0
-  lea eax,[eax+16]
-  movq [edx+8],mm1
+  movq [TMP1],mm0
+  lea _EAX,[_EAX+16]
+  movq [TMP1+8],mm1
  
-  dec ecx
-  lea edx,[edx+16]
+  dec TMP0
+  lea TMP1,[TMP1+16]
   jne .loop
 
-  xor eax, eax              ; return 0
+  xor _EAX, _EAX              ; return 0
   ret
 ENDFUNC
 
@@ -981,38 +978,39 @@ ENDFUNC
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 dequant_h263_inter_sse2:
 
-  mov ecx, [esp+12]                 ; quant
-  mov eax, [esp+ 8]                 ; coeff
+  mov TMP0, prm3                 ; quant
+  mov _EAX, prm2                 ; coeff
 
-  movq xmm6, [mmx_quant + ecx*8]    ; quant
-  inc ecx
+  lea TMP1, [mmx_quant]
+  movq xmm6, [TMP1 + TMP0*8]    ; quant
+  inc TMP0
   pcmpeqw xmm5,xmm5
-  and ecx,1
+  and TMP0,1
   movlhps xmm6,xmm6
-  movd xmm0,ecx
+  movd xmm0,TMP0d
   movdqa xmm7,xmm6
   pshuflw xmm0,xmm0,0
   movdqa xmm4,xmm5
-  mov edx, [esp+ 4]                 ; data
+  mov TMP1, prm1                 ; data
   movlhps xmm0,xmm0
   paddw xmm7,xmm7
   psubw xmm6,xmm0
   psrlw xmm4,5   ; 2047
-  mov ecx,4
+  mov TMP0,4
   pxor xmm5,xmm4 ; mm5=-2048
   
 .loop:
-  movdqa xmm0,[eax] 
+  movdqa xmm0,[_EAX] 
   pxor xmm3,xmm3
   pxor xmm2,xmm2
   pcmpeqw xmm3,xmm0
   pcmpgtw xmm2,xmm0
   pmullw xmm0,xmm7      ; * 2 * quant
   pandn xmm3,xmm6
-  movdqa xmm1,[eax+16]
+  movdqa xmm1,[_EAX+16]
   psubw xmm0,xmm2 
   pxor xmm2,xmm3
   pxor xmm3,xmm3
@@ -1031,15 +1029,15 @@ dequant_h263_inter_sse2:
   pmaxsw xmm0,xmm5
   pmaxsw xmm1,xmm5
     
-  movdqa [edx],xmm0
-  lea eax,[eax+32]
-  movdqa [edx+16],xmm1
+  movdqa [TMP1],xmm0
+  lea _EAX,[_EAX+32]
+  movdqa [TMP1+16],xmm1
  
-  dec ecx
-  lea edx,[edx+32]
+  dec TMP0
+  lea TMP1,[TMP1+32]
   jne .loop
 
-  xor eax, eax              ; return 0
+  xor _EAX, _EAX              ; return 0
   ret
 ENDFUNC
 

@@ -19,43 +19,17 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: reduced_mmx.asm,v 1.8 2008-11-11 20:46:24 Isibaar Exp $
+; * $Id: reduced_mmx.asm,v 1.9 2008-11-26 01:04:34 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
-BITS 32
-
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
+%include "nasm.inc"
 
 ;===========================================================================
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
+DATA
 
-align 16
+align SECTION_ALIGN
 Up31 dw  3, 1, 3, 1
 Up13 dw  1, 3, 1, 3
 Up93 dw  9, 3, 9, 3
@@ -71,7 +45,7 @@ Mask_ff dw 0xff,0xff,0xff,0xff
 
 ;===========================================================================
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 cglobal xvid_Copy_Upsampled_8x8_16To8_mmx
 cglobal xvid_Add_Upsampled_8x8_16To8_mmx
@@ -104,8 +78,8 @@ cglobal xvid_Filter_Diff_18x18_To_8x8_mmx
     ; MMX-way of reordering columns...
 
 %macro COL03 3    ;%1/%2: regs, %3: row   -output: mm4/mm5
-  movq %1, [edx+%3*16+0*2]   ; %1  = 0|1|2|3
-  movq %2,[edx+%3*16+1*2]    ; %2  = 1|2|3|4
+  movq %1, [TMP1+%3*16+0*2]   ; %1  = 0|1|2|3
+  movq %2,[TMP1+%3*16+1*2]    ; %2  = 1|2|3|4
   movq mm5, %1               ; mm5 = 0|1|2|3
   movq mm4, %1               ; mm4 = 0|1|2|3
   punpckhwd mm5,%2           ; mm5 = 2|3|3|4
@@ -116,8 +90,8 @@ cglobal xvid_Filter_Diff_18x18_To_8x8_mmx
 %endmacro
 
 %macro COL47 3    ;%1-%2: regs, %3: row   -output: mm4/mm5
-  movq mm5, [edx+%3*16+4*2]   ; mm5 = 4|5|6|7
-  movq %1, [edx+%3*16+3*2]    ; %1  = 3|4|5|6
+  movq mm5, [TMP1+%3*16+4*2]   ; mm5 = 4|5|6|7
+  movq %1, [TMP1+%3*16+3*2]    ; %1  = 3|4|5|6
   movq %2,  mm5               ; %2  = 4|5|6|7
   movq mm4, mm5               ; mm4 = 4|5|6|7
   punpckhwd %2, %2            ; %2  = 6|6|7|7
@@ -156,7 +130,7 @@ cglobal xvid_Filter_Diff_18x18_To_8x8_mmx
   psraw %1, 2
   psraw %2, 2
   packuswb %1,%2
-  movq [ecx], %1
+  movq [TMP0], %1
 %endmacro
 
 %macro STORE_2 2    ; pack and store (%1,%2) + (mm4,mm5)
@@ -166,19 +140,19 @@ cglobal xvid_Filter_Diff_18x18_To_8x8_mmx
   psraw mm5, 4
   packuswb %1,%2
   packuswb mm4, mm5
-  movq [ecx], %1
-  movq [ecx+eax], mm4
-  lea ecx, [ecx+2*eax]
+  movq [TMP0], %1
+  movq [TMP0+_EAX], mm4
+  lea TMP0, [TMP0+2*_EAX]
 %endmacro
 
 ;//////////////////////////////////////////////////////////////////////
 
-align 16
+align SECTION_ALIGN
 xvid_Copy_Upsampled_8x8_16To8_mmx:  ; 344c
 
-  mov ecx, [esp+4]  ; Dst
-  mov edx, [esp+8]  ; Src
-  mov eax, [esp+12] ; BpS
+  mov TMP0, prm1  ; Dst
+  mov TMP1, prm2  ; Src
+  mov _EAX, prm3  ; BpS
 
   movq mm6, [Up13]
   movq mm7, [Up31]
@@ -188,7 +162,7 @@ xvid_Copy_Upsampled_8x8_16To8_mmx:  ; 344c
   movq mm4, mm0
   movq mm5, mm1
   STORE_1 mm4, mm5
-  add ecx, eax
+  add TMP0, _EAX
 
   COL03 mm2, mm3, 1
   MUL_PACK mm2,mm3, mm6, mm7
@@ -227,15 +201,15 @@ xvid_Copy_Upsampled_8x8_16To8_mmx:  ; 344c
 
   STORE_1 mm2, mm3
 
-  mov ecx, [esp+4]
-  add ecx, 8
+  mov TMP0, prm1
+  add TMP0, 8
 
   COL47 mm0, mm1, 0
   MUL_PACK mm0,mm1, mm6, mm7
   movq mm4, mm0
   movq mm5, mm1
   STORE_1 mm4, mm5
-  add ecx, eax
+  add TMP0, _EAX
 
   COL47 mm2, mm3, 1
   MUL_PACK mm2,mm3, mm6, mm7
@@ -309,15 +283,15 @@ ENDFUNC
   psubsw %1, mm6
   psubsw %2, mm7
 
-    ; mix with destination [ecx]
-  movq mm6, [ecx]
-  movq mm7, [ecx]
+    ; mix with destination [TMP0]
+  movq mm6, [TMP0]
+  movq mm7, [TMP0]
   punpcklbw mm6, [Cst0]
   punpckhbw mm7, [Cst0]
   paddsw %1, mm6
   paddsw %2, mm7
   packuswb %1,%2
-  movq [ecx], %1
+  movq [TMP0], %1
 %endmacro
 
 %macro STORE_ADD_2 2
@@ -344,15 +318,15 @@ ENDFUNC
   psubsw mm5, mm7
 
     ; mix with destination
-  movq mm6, [ecx]
-  movq mm7, [ecx]
+  movq mm6, [TMP0]
+  movq mm7, [TMP0]
   punpcklbw mm6, [Cst0]
   punpckhbw mm7, [Cst0]
   paddsw %1, mm6
   paddsw %2, mm7
 
-  movq mm6, [ecx+eax]
-  movq mm7, [ecx+eax]
+  movq mm6, [TMP0+_EAX]
+  movq mm7, [TMP0+_EAX]
 
   punpcklbw mm6, [Cst0]
   punpckhbw mm7, [Cst0]
@@ -362,27 +336,27 @@ ENDFUNC
   packuswb %1,%2
   packuswb mm4, mm5
 
-  movq [ecx], %1
-  movq [ecx+eax], mm4
+  movq [TMP0], %1
+  movq [TMP0+_EAX], mm4
 
-  lea ecx, [ecx+2*eax]
+  lea TMP0, [TMP0+2*_EAX]
 %endmacro
 
 ;//////////////////////////////////////////////////////////////////////
 
-align 16
+align SECTION_ALIGN
 xvid_Add_Upsampled_8x8_16To8_mmx:  ; 579c
 
-  mov ecx, [esp+4]  ; Dst
-  mov edx, [esp+8]  ; Src
-  mov eax, [esp+12] ; BpS
+  mov TMP0, prm1  ; Dst
+  mov TMP1, prm2  ; Src
+  mov _EAX, prm3  ; BpS
 
   COL03 mm0, mm1, 0
   MUL_PACK mm0,mm1, [Up13], [Up31]
   movq mm4, mm0
   movq mm5, mm1
   STORE_ADD_1 mm4, mm5
-  add ecx, eax
+  add TMP0, _EAX
 
   COL03 mm2, mm3, 1
   MUL_PACK mm2,mm3, [Up13], [Up31]
@@ -422,15 +396,15 @@ xvid_Add_Upsampled_8x8_16To8_mmx:  ; 579c
   STORE_ADD_1 mm2, mm3
 
 
-  mov ecx, [esp+4]
-  add ecx, 8
+  mov TMP0, prm1
+  add TMP0, 8
 
   COL47 mm0, mm1, 0
   MUL_PACK mm0,mm1, [Up13], [Up31]
   movq mm4, mm0
   movq mm5, mm1
   STORE_ADD_1 mm4, mm5
-  add ecx, eax
+  add TMP0, _EAX
 
   COL47 mm2, mm3, 1
   MUL_PACK mm2,mm3, [Up13], [Up31]
@@ -482,16 +456,16 @@ ENDFUNC
   ; xmm version can take (little) advantage of 'pshufw'
 
 %macro COL03_SSE 3    ;%1/%2: regs, %3: row   -trashes mm4/mm5
-  movq %2, [edx+%3*16+0*2]               ; <- 0|1|2|3
+  movq %2, [TMP1+%3*16+0*2]               ; <- 0|1|2|3
   pshufw %1,  %2,  (0+0*4+0*16+1*64)     ; %1 = 0|0|0|1
   pshufw mm4, %2,  (0+1*4+1*16+2*64)     ; mm4= 0|1|1|2
   pshufw %2,  %2,  (1+2*4+2*16+3*64)     ; %2 = 1|2|2|3
-  pshufw mm5, [edx+%3*16+2*2],  (0+1*4+1*16+2*64) ; mm5 = 2|3|3|4
+  pshufw mm5, [TMP1+%3*16+2*2],  (0+1*4+1*16+2*64) ; mm5 = 2|3|3|4
 %endmacro
 
 %macro COL47_SSE 3    ;%1-%2: regs, %3: row   -trashes mm4/mm5
-  pshufw %1, [edx+%3*16+2*2],  (1+2*4+2*16+3*64) ; 3|4|4|5
-  movq mm5, [edx+%3*16+2*4]                      ; <- 4|5|6|7
+  pshufw %1, [TMP1+%3*16+2*2],  (1+2*4+2*16+3*64) ; 3|4|4|5
+  movq mm5, [TMP1+%3*16+2*4]                      ; <- 4|5|6|7
   pshufw mm4, mm5,  (0+1*4+1*16+2*64)            ; 4|5|5|6
   pshufw %2,  mm5,  (1+2*4+2*16+3*64)            ; 5|6|6|7
   pshufw mm5, mm5,  (2+3*4+3*16+3*64)            ; 6|7|7|7
@@ -500,12 +474,12 @@ ENDFUNC
 
 ;//////////////////////////////////////////////////////////////////////
 
-align 16
+align SECTION_ALIGN
 xvid_Copy_Upsampled_8x8_16To8_xmm:  ; 315c
 
-  mov ecx, [esp+4]  ; Dst
-  mov edx, [esp+8]  ; Src
-  mov eax, [esp+12] ; BpS
+  mov TMP0, prm1  ; Dst
+  mov TMP1, prm2  ; Src
+  mov _EAX, prm3  ; BpS
 
   movq mm6, [Up13]
   movq mm7, [Up31]
@@ -515,7 +489,7 @@ xvid_Copy_Upsampled_8x8_16To8_xmm:  ; 315c
   movq mm4, mm0
   movq mm5, mm1
   STORE_1 mm4, mm5
-  add ecx, eax
+  add TMP0, _EAX
 
   COL03_SSE mm2, mm3, 1
   MUL_PACK mm2,mm3, mm6, mm7
@@ -554,15 +528,15 @@ xvid_Copy_Upsampled_8x8_16To8_xmm:  ; 315c
 
   STORE_1 mm2, mm3
 
-  mov ecx, [esp+4]
-  add ecx, 8
+  mov TMP0, prm1
+  add TMP0, 8
 
   COL47_SSE mm0, mm1, 0
   MUL_PACK mm0,mm1, mm6, mm7
   movq mm4, mm0
   movq mm5, mm1
   STORE_1 mm4, mm5
-  add ecx, eax
+  add TMP0, _EAX
 
   COL47_SSE mm2, mm3, 1
   MUL_PACK mm2,mm3, mm6, mm7
@@ -611,19 +585,19 @@ ENDFUNC
 ;
 ;===========================================================================
 
-align 16
+align SECTION_ALIGN
 xvid_Add_Upsampled_8x8_16To8_xmm:  ; 549c
 
-  mov ecx, [esp+4]  ; Dst
-  mov edx, [esp+8]  ; Src
-  mov eax, [esp+12] ; BpS
+  mov TMP0, prm1  ; Dst
+  mov TMP1, prm2  ; Src
+  mov _EAX, prm3  ; BpS
 
   COL03_SSE mm0, mm1, 0
   MUL_PACK mm0,mm1, [Up13], [Up31]
   movq mm4, mm0
   movq mm5, mm1
   STORE_ADD_1 mm4, mm5
-  add ecx, eax
+  add TMP0, _EAX
 
   COL03_SSE mm2, mm3, 1
   MUL_PACK mm2,mm3, [Up13], [Up31]
@@ -663,15 +637,15 @@ xvid_Add_Upsampled_8x8_16To8_xmm:  ; 549c
   STORE_ADD_1 mm2, mm3
 
 
-  mov ecx, [esp+4]
-  add ecx, 8
+  mov TMP0, prm1
+  add TMP0, 8
 
   COL47_SSE mm0, mm1, 0
   MUL_PACK mm0,mm1, [Up13], [Up31]
   movq mm4, mm0
   movq mm5, mm1
   STORE_ADD_1 mm4, mm5
-  add ecx, eax
+  add TMP0, _EAX
 
   COL47_SSE mm2, mm3, 1
   MUL_PACK mm2,mm3, [Up13], [Up31]
@@ -728,25 +702,24 @@ ENDFUNC
 ;// We use the trick: tmp = (x+y+2) -> [x = (tmp+2x)>>2, y = (tmp+2y)>>2]
 ;//////////////////////////////////////////////////////////////////////
 
-align 16
+align SECTION_ALIGN
 xvid_HFilter_31_mmx:
-  push esi
-  push edi
-  mov esi, [esp+4  +8]  ; Src1
-  mov edi, [esp+8  +8]  ; Src2
-  mov eax, [esp+12 +8] ; Nb_Blks
-  lea eax,[eax*2]
+
+  mov TMP0, prm1  ; Src1
+  mov TMP1, prm2  ; Src2
+  mov _EAX, prm3  ; Nb_Blks
+  lea _EAX, [_EAX*2]
   movq mm5, [Cst2]
   pxor mm7, mm7
 
-  lea esi, [esi+eax*4]
-  lea edi, [edi+eax*4]
+  lea TMP0, [TMP0+_EAX*4]
+  lea TMP1, [TMP1+_EAX*4]
 
-  neg eax
+  neg _EAX
 
 .Loop:  ;12c
-  movd mm0, [esi+eax*4]
-  movd mm1, [edi+eax*4]
+  movd mm0, [TMP0+_EAX*4]
+  movd mm1, [TMP1+_EAX*4]
   movq mm2, mm5
   punpcklbw mm0, mm7
   punpcklbw mm1, mm7
@@ -760,13 +733,11 @@ xvid_HFilter_31_mmx:
   psraw mm1, 2
   packuswb mm0, mm7
   packuswb mm1, mm7
-  movd [esi+eax*4], mm0
-  movd [edi+eax*4], mm1
-  add eax,1
+  movd [TMP0+_EAX*4], mm0
+  movd [TMP1+_EAX*4], mm1
+  add _EAX,1
   jl .Loop
 
-  pop edi
-  pop esi
   ret
 ENDFUNC
 
@@ -774,76 +745,84 @@ ENDFUNC
   ; this is for the fun of ASM coding, coz' every modern compiler can
   ; end up with a code that looks very much like this one...
 
-align 16
+align SECTION_ALIGN
 xvid_VFilter_31_x86:
-  push esi
-  push edi
-  push ebx
-  push ebp
-  mov esi, [esp+4  +16]  ; Src1
-  mov edi, [esp+8  +16]  ; Src2
-  mov ebp, [esp+12 +16]  ; BpS
-  mov eax, [esp+16 +16]  ; Nb_Blks
-  lea eax,[eax*8]
+  mov TMP0, prm1  ; Src1
+  mov TMP1, prm2  ; Src2
+  mov _EAX, prm4  ; Nb_Blks
+  lea _EAX, [_EAX*8]
+
+  push _ESI
+  push _EDI
+  push _EBX
+  push _EBP
+
+%ifdef ARCH_IS_X86_64
+  mov _EBP, prm3
+%else
+  mov _EBP, [_ESP+12 +16]  ; BpS
+%endif
 
 .Loop:  ;7c
-  movzx ecx, byte [esi]
-  movzx edx, byte [edi]
+  movzx _ESI, byte [TMP0]
+  movzx _EDI, byte [TMP1]
 
-  lea ebx, [ecx+edx+2]
-  lea ecx,[ebx+2*ecx]
-  lea edx,[ebx+2*edx]
+  lea _EBX,[_ESI+_EDI+2]
+  lea _ESI,[_EBX+2*_ESI]
+  lea _EDI,[_EBX+2*_EDI]
 
-  shr ecx,2
-  shr edx,2
-  mov [esi], cl
-  mov [edi], dl
-  lea esi, [esi+ebp]
-  lea edi, [edi+ebp]
-  dec eax
+  shr _ESI,2
+  shr _EDI,2
+  mov [TMP0], cl
+  mov [TMP1], dl
+  lea TMP0, [TMP0+_EBP]
+  lea TMP1, [TMP1+_EBP]
+  dec _EAX
   jg .Loop
 
-  pop ebp
-  pop ebx
-  pop edi
-  pop esi
+  pop _EBP
+  pop _EBX
+  pop _EDI
+  pop _ESI
   ret
 ENDFUNC
 
   ; this one's just a little faster than gcc's code. Very little.
 
-align 16
+align SECTION_ALIGN
 xvid_HFilter_31_x86:
-  push esi
-  push edi
-  push ebx
-  mov esi, [esp+4  +12]  ; Src1
-  mov edi, [esp+8  +12]  ; Src2
-  mov eax, [esp+12 +12]  ; Nb_Blks
 
-  lea eax,[eax*8]
-  lea esi, [esi+eax]
-  lea edi, [esi+eax]
-  neg eax
+  mov TMP0, prm1   ; Src1
+  mov TMP1, prm2   ; Src2
+  mov _EAX, prm3   ; Nb_Blks
+
+  lea _EAX,[_EAX*8]
+  lea TMP0, [TMP0+_EAX]
+  lea TMP1, [TMP0+_EAX]
+  neg _EAX
+
+  push _ESI
+  push _EDI
+  push _EBX
 
 .Loop:  ; 6c
-  movzx ecx, byte [esi+eax]
-  movzx edx, byte [edi+eax]
+  movzx _ESI, byte [TMP0+_EAX]
+  movzx _EDI, byte [TMP1+_EAX]
 
-  lea ebx, [ecx+edx+2]
-  lea ecx,[ebx+2*ecx]
-  lea edx,[ebx+2*edx]
-  shr ecx,2
-  shr edx,2
-  mov [esi+eax], cl
-  mov [edi+eax], dl
-  inc eax
+  lea _EBX, [_ESI+_EDI+2]
+  lea _ESI,[_EBX+2*_ESI]
+  lea _EDI,[_EBX+2*_EDI]
+  shr _ESI,2
+  shr _EDI,2
+  mov [TMP0+_EAX], cl
+  mov [TMP1+_EAX], dl
+  inc _EAX
 
   jl .Loop
 
-  pop ebx
-  pop edi
-  pop esi
+  pop _EBX
+  pop _EDI
+  pop _ESI
   ret
 ENDFUNC
 
@@ -883,56 +862,56 @@ ENDFUNC
 ;===========================================================================
 
 %macro COPY_TWO_LINES_1331 1     ; %1: dst
-  HFILTER_1331 edx    , mm5
-  HFILTER_1331 edx+eax, mm6
-  lea edx, [edx+2*eax]
+  HFILTER_1331 TMP1    , mm5
+  HFILTER_1331 TMP1+_EAX, mm6
+  lea TMP1, [TMP1+2*_EAX]
   VFILTER_1331 mm3,mm4,mm5, mm6
   movq [%1], mm3
 
-  HFILTER_1331 edx    , mm3
-  HFILTER_1331 edx+eax, mm4
-  lea edx, [edx+2*eax]
+  HFILTER_1331 TMP1    , mm3
+  HFILTER_1331 TMP1+_EAX, mm4
+  lea TMP1, [TMP1+2*_EAX]
   VFILTER_1331 mm5,mm6,mm3,mm4
   movq [%1+16], mm5
 %endmacro
 
-align 16
+align SECTION_ALIGN
 xvid_Filter_18x18_To_8x8_mmx:  ; 283c   (~4.4c per output pixel)
 
-  mov ecx, [esp+4]  ; Dst
-  mov edx, [esp+8]  ; Src
-  mov eax, [esp+12] ; BpS
+  mov TMP0, prm1  ; Dst
+  mov TMP1, prm2  ; Src
+  mov _EAX, prm3  ; BpS
 
   movq mm7, [Cst3]
-  sub edx, eax
+  sub TMP1, _EAX
 
     ; mm3/mm4/mm5/mm6 is used as a 4-samples delay line.
 
       ; process columns 0-3
 
-  HFILTER_1331 edx    , mm3   ; pre-load mm3/mm4
-  HFILTER_1331 edx+eax, mm4
-  lea edx, [edx+2*eax]
+  HFILTER_1331 TMP1    , mm3   ; pre-load mm3/mm4
+  HFILTER_1331 TMP1+_EAX, mm4
+  lea TMP1, [TMP1+2*_EAX]
 
-  COPY_TWO_LINES_1331 ecx + 0*16
-  COPY_TWO_LINES_1331 ecx + 2*16
-  COPY_TWO_LINES_1331 ecx + 4*16
-  COPY_TWO_LINES_1331 ecx + 6*16
+  COPY_TWO_LINES_1331 TMP0 + 0*16
+  COPY_TWO_LINES_1331 TMP0 + 2*16
+  COPY_TWO_LINES_1331 TMP0 + 4*16
+  COPY_TWO_LINES_1331 TMP0 + 6*16
 
       ; process columns 4-7
 
-  mov edx, [esp+8]
-  sub edx, eax
-  add edx, 8
+  mov TMP1, prm2
+  sub TMP1, _EAX
+  add TMP1, 8
 
-  HFILTER_1331 edx    , mm3   ; pre-load mm3/mm4
-  HFILTER_1331 edx+eax, mm4
-  lea edx, [edx+2*eax]
+  HFILTER_1331 TMP1    , mm3   ; pre-load mm3/mm4
+  HFILTER_1331 TMP1+_EAX, mm4
+  lea TMP1, [TMP1+2*_EAX]
 
-  COPY_TWO_LINES_1331 ecx + 0*16 +8
-  COPY_TWO_LINES_1331 ecx + 2*16 +8
-  COPY_TWO_LINES_1331 ecx + 4*16 +8
-  COPY_TWO_LINES_1331 ecx + 6*16 +8
+  COPY_TWO_LINES_1331 TMP0 + 0*16 +8
+  COPY_TWO_LINES_1331 TMP0 + 2*16 +8
+  COPY_TWO_LINES_1331 TMP0 + 4*16 +8
+  COPY_TWO_LINES_1331 TMP0 + 6*16 +8
 
   ret
 ENDFUNC
@@ -945,59 +924,59 @@ ENDFUNC
 ;===========================================================================
 
 %macro DIFF_TWO_LINES_1331 1     ; %1: dst
-  HFILTER_1331 edx    , mm5
-  HFILTER_1331 edx+eax, mm6
-  lea edx, [edx+2*eax]
+  HFILTER_1331 TMP1    , mm5
+  HFILTER_1331 TMP1+_EAX, mm6
+  lea TMP1, [TMP1+2*_EAX]
   movq mm2, [%1]
   VFILTER_1331 mm3,mm4,mm5, mm6
   psubsw mm2, mm3
   movq [%1], mm2
 
-  HFILTER_1331 edx    , mm3
-  HFILTER_1331 edx+eax, mm4
-  lea edx, [edx+2*eax]
+  HFILTER_1331 TMP1    , mm3
+  HFILTER_1331 TMP1+_EAX, mm4
+  lea TMP1, [TMP1+2*_EAX]
   movq mm2, [%1+16]
   VFILTER_1331 mm5,mm6,mm3,mm4
   psubsw mm2, mm5
   movq [%1+16], mm2
 %endmacro
 
-align 16
+align SECTION_ALIGN
 xvid_Filter_Diff_18x18_To_8x8_mmx:  ; 302c
 
-  mov ecx, [esp+4]  ; Dst
-  mov edx, [esp+8]  ; Src
-  mov eax, [esp+12] ; BpS
+  mov TMP0, prm1  ; Dst
+  mov TMP1, prm2  ; Src
+  mov _EAX, prm3  ; BpS
 
   movq mm7, [Cst3]
-  sub edx, eax
+  sub TMP1, _EAX
 
     ; mm3/mm4/mm5/mm6 is used as a 4-samples delay line.
 
       ; process columns 0-3
 
-  HFILTER_1331 edx    , mm3   ; pre-load mm3/mm4
-  HFILTER_1331 edx+eax, mm4
-  lea edx, [edx+2*eax]
+  HFILTER_1331 TMP1    , mm3   ; pre-load mm3/mm4
+  HFILTER_1331 TMP1+_EAX, mm4
+  lea TMP1, [TMP1+2*_EAX]
 
-  DIFF_TWO_LINES_1331 ecx + 0*16
-  DIFF_TWO_LINES_1331 ecx + 2*16
-  DIFF_TWO_LINES_1331 ecx + 4*16
-  DIFF_TWO_LINES_1331 ecx + 6*16
+  DIFF_TWO_LINES_1331 TMP0 + 0*16
+  DIFF_TWO_LINES_1331 TMP0 + 2*16
+  DIFF_TWO_LINES_1331 TMP0 + 4*16
+  DIFF_TWO_LINES_1331 TMP0 + 6*16
 
       ; process columns 4-7
-  mov edx, [esp+8]
-  sub edx, eax
-  add edx, 8
+  mov TMP1, prm2
+  sub TMP1, _EAX
+  add TMP1, 8
 
-  HFILTER_1331 edx    , mm3   ; pre-load mm3/mm4
-  HFILTER_1331 edx+eax, mm4
-  lea edx, [edx+2*eax]
+  HFILTER_1331 TMP1    , mm3   ; pre-load mm3/mm4
+  HFILTER_1331 TMP1+_EAX, mm4
+  lea TMP1, [TMP1+2*_EAX]
 
-  DIFF_TWO_LINES_1331 ecx + 0*16 +8
-  DIFF_TWO_LINES_1331 ecx + 2*16 +8
-  DIFF_TWO_LINES_1331 ecx + 4*16 +8
-  DIFF_TWO_LINES_1331 ecx + 6*16 +8
+  DIFF_TWO_LINES_1331 TMP0 + 0*16 +8
+  DIFF_TWO_LINES_1331 TMP0 + 2*16 +8
+  DIFF_TWO_LINES_1331 TMP0 + 4*16 +8
+  DIFF_TWO_LINES_1331 TMP0 + 6*16 +8
 
   ret
 ENDFUNC

@@ -5,7 +5,7 @@
 ; *
 ; *  Copyright(C) 2002 Daniel Smith <danielsmith@astroboymail.com>
 ; *
-; *  This program is free software ; you can redistribute it and/or modify
+; *  This program is free software ; you can r_EDIstribute it and/or modify
 ; *  it under the terms of the GNU General Public License as published by
 ; *  the Free Software Foundation ; either version 2 of the License, or
 ; *  (at your option) any later version.
@@ -19,51 +19,25 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: interlacing_mmx.asm,v 1.8 2008-11-11 20:46:24 Isibaar Exp $
+; * $Id: interlacing_mmx.asm,v 1.9 2008-11-26 01:04:34 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
-BITS 32
-
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
+%include "nasm.inc"
 
 ;=============================================================================
 ; Read only data
 ;=============================================================================
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
+DATA
 
 ; advances to next block on right
-ALIGN 16
+ALIGN SECTION_ALIGN
 nexts:
 	dd 0, 0, 8, 120, 8
 
 ; multiply word sums into dwords
-ALIGN 16
+ALIGN SECTION_ALIGN
 ones:
 	times 4 dw 1
 
@@ -71,27 +45,27 @@ ones:
 ; Code
 ;=============================================================================
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 cglobal MBFieldTest_mmx
 
 ; neater
-%define	line0	esi
-%define	line1	esi+16
-%define	line2	esi+32
-%define	line3	esi+48
-%define	line4	esi+64
-%define	line5	esi+80
-%define	line6	esi+96
-%define	line7	esi+112
-%define	line8	edi
-%define	line9	edi+16
-%define	line10	edi+32
-%define	line11	edi+48
-%define	line12	edi+64
-%define	line13	edi+80
-%define	line14	edi+96
-%define	line15	edi+112
+%define	line0	_ESI
+%define	line1	_ESI+16
+%define	line2	_ESI+32
+%define	line3	_ESI+48
+%define	line4	_ESI+64
+%define	line5	_ESI+80
+%define	line6	_ESI+96
+%define	line7	_ESI+112
+%define	line8	_EDI
+%define	line9	_EDI+16
+%define	line10	_EDI+32
+%define	line11	_EDI+48
+%define	line12	_EDI+64
+%define	line13	_EDI+80
+%define	line14	_EDI+96
+%define	line15	_EDI+112
 
 ; keep from losing track which reg holds which line - these never overlap
 %define	m00		mm0
@@ -139,20 +113,22 @@ cglobal MBFieldTest_mmx
 ;
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 MBFieldTest_mmx:
 
-  push esi
-  push edi
+  mov  _EAX, prm1
 
-  mov esi, [esp+8+4]            ; esi = top left block
-  mov edi, esi
-  add edi, 256                  ; edi = bottom left block
+  push _ESI
+  push _EDI
+
+  mov _ESI, _EAX                ; _ESI = top left block
+  mov _EDI, _ESI
+  add _EDI, 256                 ; _EDI = bottom left block
 
   pxor mm6, mm6                 ; frame total
   pxor mm7, mm7                 ; field total
 
-  mov eax, 4                    ; we do left 8 bytes of data[0*64], then right 8 bytes
+  mov _EAX, 4                   ; we do left 8 bytes of data[0*64], then right 8 bytes
                                 ; then left 8 bytes of data[1*64], then last 8 bytes
 .loop:
   movq m00, [line0]             ; line0
@@ -188,11 +164,12 @@ MBFieldTest_mmx:
   psubw m14, mm4
   paddw mm6, m14                ; add to frame total
 
-  mov ecx, [nexts+eax*4]        ; move esi/edi 8 pixels to the right
-  add esi, ecx
-  add edi, ecx
+  lea TMP0, [nexts]
+  mov TMP0, [TMP0+_EAX*4]        ; move _ESI/_EDI 8 pixels to the right
+  add _ESI, TMP0
+  add _EDI, TMP0
 
-  dec eax
+  dec _EAX
   jnz near .loop
 
 .decide:
@@ -200,23 +177,23 @@ MBFieldTest_mmx:
   pmaddwd mm6, mm0
   pmaddwd mm7, mm0
 
-  movq mm0, mm6                 ; ecx will be frame total, edx field
+  movq mm0, mm6                 ; TMP0 will be frame total, TMP1 field
   movq mm1, mm7
   psrlq mm0, 32
   psrlq mm1, 32
   paddd mm0, mm6
   paddd mm1, mm7
-  movd ecx, mm0
-  movd edx, mm1
+  movd TMP0d, mm0
+  movd TMP1d, mm1
 
-  add edx, 350                  ; add bias against field decision
-  cmp ecx, edx
+  add TMP1, 350                  ; add bias against field decision
+  cmp TMP0, TMP1
   jb .end                       ; if frame<field, don't use field dct
-  inc eax                       ; if frame>=field, use field dct (return 1)
+  inc _EAX                       ; if frame>=field, use field dct (return 1)
 
 .end:
-  pop edi
-  pop esi
+  pop _EDI
+  pop _ESI
 
   ret
 ENDFUNC

@@ -22,7 +22,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: motion_smp.h,v 1.4 2006-02-27 12:16:04 suxen_drol Exp $
+ * $Id: motion_smp.h,v 1.5 2008-11-26 01:04:34 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -40,7 +40,7 @@
 static __inline int pthread_num_processors_np() 
 {
 	DWORD p_aff, s_aff, r = 0;
-	GetProcessAffinityMask(GetCurrentProcess(), &p_aff, &s_aff);
+	GetProcessAffinityMask(GetCurrentProcess(), (PDWORD_PTR) &p_aff, (PDWORD_PTR) &s_aff);
 	for(; p_aff != 0; p_aff>>=1) r += p_aff&1;
 	return r;
 }

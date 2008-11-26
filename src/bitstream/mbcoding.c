@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbcoding.c,v 1.56 2007-06-28 14:55:11 Skal Exp $
+ * $Id: mbcoding.c,v 1.57 2008-11-26 01:04:34 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1087,7 +1087,7 @@ get_intra_block(Bitstream * bs,
 {
 
 	const uint16_t *scan = scan_tables[direction];
-	int level, run, last;
+	int level, run, last = 0;
 
 	do {
 		level = get_coeff(bs, &run, &last, 1, 0);
@@ -1127,7 +1127,7 @@ get_inter_block_h263(
 	int p;
 	int level;
 	int run;
-	int last;
+	int last = 0;
 
 	p = 0;
 	do {
@@ -1162,7 +1162,7 @@ get_inter_block_mpeg(
 	int p;
 	int level;
 	int run;
-	int last;
+	int last = 0;
 
 	p = 0;
 	do {

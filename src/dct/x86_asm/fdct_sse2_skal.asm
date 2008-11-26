@@ -19,33 +19,11 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: fdct_sse2_skal.asm,v 1.9 2008-11-11 20:46:24 Isibaar Exp $
+; * $Id: fdct_sse2_skal.asm,v 1.10 2008-11-26 01:04:34 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
-BITS 32
-
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
+%include "nasm.inc"
 
 ;-----------------------------------------------------------------------------
 ;
@@ -92,13 +70,9 @@ BITS 32
 ; Read only data
 ;=============================================================================
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
+DATA
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 tan1:    times 8 dw 0x32ec    ; tan( pi/16)
 tan2:    times 8 dw 0x6a0a    ; tan(2pi/16)  (=sqrt(2)-1)
 tan3:    times 8 dw 0xab0e    ; tan(3pi/16)-1
@@ -108,7 +82,7 @@ sqrt2:   times 8 dw 0x5a82    ; 0.5/sqrt(2)
 ; Inverse DCT tables
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 iTab1:
   dw 0x4000, 0x539f, 0x4000, 0x22a3
   dw 0x4000, 0xdd5d, 0x4000, 0xac61
@@ -149,7 +123,7 @@ iTab4:
   dw 0x3b21, 0x14c3, 0x979e, 0xc4df
   dw 0x14c3, 0x587e, 0x587e, 0x979e
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 Walken_Idct_Rounders:
   dd  65536, 65536, 65536, 65536
   dd   3597,  3597,  3597,  3597
@@ -169,7 +143,7 @@ Walken_Idct_Rounders:
 ; Forward DCT tables
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 fTab1:
   dw 0x4000, 0x4000, 0x58c5, 0x4b42,
   dw 0xdd5d, 0xac61, 0xa73b, 0xcdb7,
@@ -211,7 +185,7 @@ fTab4:
   dw 0x28ba, 0x9dac, 0x14c3, 0xc4df
 
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 Fdct_Rnd0: dw  6,8,8,8, 6,8,8,8
 Fdct_Rnd1: dw  8,8,8,8, 8,8,8,8
 Fdct_Rnd2: dw 10,8,8,8, 8,8,8,8
@@ -221,7 +195,7 @@ Rounder1:  dw  1,1,1,1, 1,1,1,1
 ; Code
 ;=============================================================================
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 cglobal idct_sse2_skal
 cglobal fdct_sse2_skal
@@ -232,7 +206,7 @@ cglobal fdct_sse2_skal
 
 %macro iMTX_MULT 4   ; %1=src, %2 = Table to use, %3=rounder, %4=Shift
 
-  movdqa  xmm0, [ecx+%1*16]     ; xmm0 = [01234567]
+  movdqa  xmm0, [_ECX+%1*16]     ; xmm0 = [01234567]
 
   pshuflw xmm0, xmm0, 11011000b ; [02134567]  ; these two shufflings could be
   pshufhw xmm0, xmm0, 11011000b ; [02134657]  ; integrated in zig-zag orders
@@ -261,7 +235,7 @@ cglobal fdct_sse2_skal
 
   pshufhw xmm6, xmm6, 00011011b ; [01234567]
 
-  movdqa  [ecx+%1*16], xmm6
+  movdqa  [_ECX+%1*16], xmm6
 
 %endmacro
 
@@ -391,11 +365,11 @@ cglobal fdct_sse2_skal
 ;-----------------------------------------------------------------------------
 
 %macro TEST_ROW 2     ; %1:src,  %2:label x8
-  mov eax, [%1   ]
-  mov edx, [%1+ 8]
-  or  eax, [%1+ 4]
-  or  edx, [%1+12]
-  or  eax, edx
+  mov _EAX, [%1   ]
+  mov _EDX, [%1+ 8]
+  or  _EAX, [%1+ 4]
+  or  _EDX, [%1+12]
+  or  _EAX, _EDX
   jz near %2
 %endmacro
 
@@ -404,56 +378,56 @@ cglobal fdct_sse2_skal
 ;-----------------------------------------------------------------------------
 ; IEEE1180 and Walken compatible version
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 idct_sse2_skal:
 
-  mov ecx, [esp+ 4]  ; Src
+  mov _ECX, prm1  ; Src
 
-  TEST_ROW ecx, .Row0_Round
+  TEST_ROW _ECX, .Row0_Round
   iMTX_MULT  0, iTab1, Walken_Idct_Rounders + 16*0, 11
   jmp .Row1
 .Row0_Round:
   movdqa xmm0, [Walken_Idct_Rounders + 16*8 + 8*0]
-  movdqa [ecx  ], xmm0
+  movdqa [_ECX  ], xmm0
 
 .Row1:
-  TEST_ROW ecx+16, .Row1_Round
+  TEST_ROW _ECX+16, .Row1_Round
   iMTX_MULT  1, iTab2, Walken_Idct_Rounders + 16*1, 11
   jmp .Row2
 .Row1_Round:
   movdqa xmm0, [Walken_Idct_Rounders + 16*8 + 16*1]
-  movdqa [ecx+16  ], xmm0
+  movdqa [_ECX+16  ], xmm0
 
 .Row2:
-  TEST_ROW ecx+32, .Row2_Round
+  TEST_ROW _ECX+32, .Row2_Round
   iMTX_MULT  2, iTab3, Walken_Idct_Rounders + 16*2, 11
   jmp .Row3
 .Row2_Round:
   movdqa xmm0, [Walken_Idct_Rounders + 16*8 + 16*2]
-  movdqa [ecx+32  ], xmm0
+  movdqa [_ECX+32  ], xmm0
 
 .Row3:
-  TEST_ROW ecx+48, .Row4
+  TEST_ROW _ECX+48, .Row4
   iMTX_MULT  3, iTab4, Walken_Idct_Rounders + 16*3, 11
 
 .Row4:
-  TEST_ROW ecx+64, .Row5
+  TEST_ROW _ECX+64, .Row5
   iMTX_MULT  4, iTab1, Walken_Idct_Rounders + 16*4, 11
 
 .Row5:
-  TEST_ROW ecx+80, .Row6
+  TEST_ROW _ECX+80, .Row6
   iMTX_MULT  5, iTab4, Walken_Idct_Rounders + 16*5, 11
 
 .Row6:
-  TEST_ROW ecx+96, .Row7
+  TEST_ROW _ECX+96, .Row7
   iMTX_MULT  6, iTab3, Walken_Idct_Rounders + 16*6, 11
 
 .Row7:
-  TEST_ROW ecx+112, .End
+  TEST_ROW _ECX+112, .End
   iMTX_MULT  7, iTab2, Walken_Idct_Rounders + 16*7, 11
 .End:
 
-  iLLM_PASS ecx
+  iLLM_PASS _ECX
 
   ret
 ENDFUNC
@@ -568,7 +542,7 @@ ENDFUNC
 
 %macro fMTX_MULT 3   ; %1=src, %2 = Coeffs, %3=rounders
 
-  movdqa   xmm0, [ecx+%1*16+0]   ; xmm0 = [0123][4567]
+  movdqa   xmm0, [_ECX+%1*16+0]   ; xmm0 = [0123][4567]
   pshufhw  xmm1, xmm0, 00011011b ; xmm1 = [----][7654]
   pshufd   xmm0, xmm0, 01000100b
   pshufd   xmm1, xmm1, 11101110b
@@ -602,17 +576,17 @@ ENDFUNC
 
   psraw    xmm0, 4               ; => [-2048, 2047]
 
-  movdqa  [ecx+%1*16+0], xmm0
+  movdqa  [_ECX+%1*16+0], xmm0
 %endmacro
 
 ;-----------------------------------------------------------------------------
 ; Function Forward DCT
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 fdct_sse2_skal:
-  mov ecx, [esp+4]
-  fLLM_PASS ecx+0, 3
+  mov _ECX, prm1
+  fLLM_PASS _ECX+0, 3
   fMTX_MULT  0, fTab1, Fdct_Rnd0
   fMTX_MULT  1, fTab2, Fdct_Rnd2
   fMTX_MULT  2, fTab3, Fdct_Rnd1

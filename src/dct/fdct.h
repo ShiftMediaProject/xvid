@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: fdct.h,v 1.10 2005-01-05 23:02:15 edgomez Exp $
+ * $Id: fdct.h,v 1.11 2008-11-26 01:04:34 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -33,7 +33,7 @@ extern fdctFuncPtr fdct;
 
 fdctFunc fdct_int32;
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 fdctFunc fdct_mmx_ffmpeg;
 fdctFunc fdct_xmm_ffmpeg;
 fdctFunc fdct_mmx_skal;
@@ -43,10 +43,6 @@ fdctFunc fdct_sse2_skal;
 
 #ifdef ARCH_IS_IA64
 fdctFunc fdct_ia64;
-#endif
-
-#ifdef ARCH_IS_X86_64
-fdctFunc fdct_skal_x86_64;
 #endif
 
 #endif							/* _FDCT_H_ */

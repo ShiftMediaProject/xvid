@@ -19,37 +19,15 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: idct_sse2_dmitry.asm,v 1.7 2008-11-11 20:46:24 Isibaar Exp $
+; * $Id: idct_sse2_dmitry.asm,v 1.8 2008-11-26 01:04:34 Isibaar Exp $
 ; *
 ; ***************************************************************************/
-
-BITS 32
 
 ;=============================================================================
 ; Macros and other preprocessor constants
 ;=============================================================================
 
-%macro cglobal 1
-	%ifdef PREFIX
-		%ifdef MARK_FUNCS
-			global _%1:function %1.endfunc-%1
-			%define %1 _%1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global _%1
-			%define %1 _%1
-			%define ENDFUNC
-		%endif
-	%else
-		%ifdef MARK_FUNCS
-			global %1:function %1.endfunc-%1
-			%define ENDFUNC .endfunc
-		%else
-			global %1
-			%define ENDFUNC
-		%endif
-	%endif
-%endmacro
+%include "nasm.inc"
 
 %define BITS_INV_ACC    5                           ; 4 or 5 for IEEE
 %define SHIFT_INV_ROW   16 - BITS_INV_ACC
@@ -67,13 +45,9 @@ BITS 32
 ; Local Data (Read Only)
 ;=============================================================================
 
-%ifdef FORMAT_COFF
-SECTION .rodata
-%else
-SECTION .rodata align=16
-%endif
+DATA
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 tab_i_04:
   dw  16384,  21407,  16384,   8867 ; movq-> w05 w04 w01 w00
   dw  16384,  -8867,  16384, -21407 ; w13 w12 w09 w08
@@ -171,7 +145,7 @@ ocos_4_16: dw  23170,  23170,  23170,  23170    ; cos * (2<<15) + 0.5
 ; Code
 ;=============================================================================
 
-SECTION .text
+SECTION .rotext align=SECTION_ALIGN
 
 cglobal idct_sse2_dmitry
 
@@ -330,21 +304,21 @@ cglobal idct_sse2_dmitry
 ; void idct_sse2_dmitry(int16_t coeff[64]);
 ;-----------------------------------------------------------------------------
 
-ALIGN 16
+ALIGN SECTION_ALIGN
 idct_sse2_dmitry:
 
-  mov eax, [esp + 4]
+  mov _ECX, prm1
 
-  DCT_8_INV_ROW_1_SSE2 eax+  0, eax+  0, tab_i_04, rounder_2_0
-  DCT_8_INV_ROW_1_SSE2 eax+ 16, eax+ 16, tab_i_17, rounder_2_1
-  DCT_8_INV_ROW_1_SSE2 eax+ 32, eax+ 32, tab_i_26, rounder_2_2
-  DCT_8_INV_ROW_1_SSE2 eax+ 48, eax+ 48, tab_i_35, rounder_2_3
-  DCT_8_INV_ROW_1_SSE2 eax+ 64, eax+ 64, tab_i_04, rounder_2_4
-  DCT_8_INV_ROW_1_SSE2 eax+ 80, eax+ 80, tab_i_35, rounder_2_5
-  DCT_8_INV_ROW_1_SSE2 eax+ 96, eax+ 96, tab_i_26, rounder_2_6
-  DCT_8_INV_ROW_1_SSE2 eax+112, eax+112, tab_i_17, rounder_2_7
+  DCT_8_INV_ROW_1_SSE2 _ECX+  0, _ECX+  0, tab_i_04, rounder_2_0
+  DCT_8_INV_ROW_1_SSE2 _ECX+ 16, _ECX+ 16, tab_i_17, rounder_2_1
+  DCT_8_INV_ROW_1_SSE2 _ECX+ 32, _ECX+ 32, tab_i_26, rounder_2_2
+  DCT_8_INV_ROW_1_SSE2 _ECX+ 48, _ECX+ 48, tab_i_35, rounder_2_3
+  DCT_8_INV_ROW_1_SSE2 _ECX+ 64, _ECX+ 64, tab_i_04, rounder_2_4
+  DCT_8_INV_ROW_1_SSE2 _ECX+ 80, _ECX+ 80, tab_i_35, rounder_2_5
+  DCT_8_INV_ROW_1_SSE2 _ECX+ 96, _ECX+ 96, tab_i_26, rounder_2_6
+  DCT_8_INV_ROW_1_SSE2 _ECX+112, _ECX+112, tab_i_17, rounder_2_7
 
-  DCT_8_INV_COL_4_SSE2 eax, eax
+  DCT_8_INV_COL_4_SSE2 _ECX, _ECX
 
   ret
 ENDFUNC

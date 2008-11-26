@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.c,v 1.41 2006-11-11 22:03:30 chl Exp $
+ * $Id: image.c,v 1.42 2008-11-26 01:04:34 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1075,7 +1075,7 @@ int xvid_image_deinterlace(xvid_image_t* img, int width, int height, int bottom_
 		return 0;       /* not yet supported */	
 	if (deintl_core==0) {
 		deintl_core = deinterlace_c;
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 		{
 			int cpu_flags = check_cpu_features();
 			if (cpu_flags & XVID_CPU_MMX)

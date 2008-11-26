@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.74 2008-11-14 15:43:27 Isibaar Exp $
+ * $Id: xvid.c,v 1.75 2008-11-26 01:04:34 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -311,7 +311,7 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 
 	init_GMC(cpu_flags);
 
-#if defined(ARCH_IS_IA32)
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 
 	if ((cpu_flags & XVID_CPU_MMX) || (cpu_flags & XVID_CPU_MMXEXT) ||
 		(cpu_flags & XVID_CPU_3DNOW) || (cpu_flags & XVID_CPU_3DNOWEXT) ||
@@ -334,14 +334,14 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 
 		/* Quantization related functions */
 		quant_h263_intra   = quant_h263_intra_mmx;
-		quant_h263_inter   = quant_h263_inter_mmx;
+                quant_h263_inter   = quant_h263_inter_mmx;
 		dequant_h263_intra = dequant_h263_intra_mmx;
 		dequant_h263_inter = dequant_h263_inter_mmx;
-
 		quant_mpeg_intra   = quant_mpeg_intra_mmx;
 		quant_mpeg_inter   = quant_mpeg_inter_mmx;
 		dequant_mpeg_intra = dequant_mpeg_intra_mmx;
 		dequant_mpeg_inter = dequant_mpeg_inter_mmx;
+
 
 		/* Block related functions */
 		transfer_8to16copy = transfer_8to16copy_mmx;
@@ -380,7 +380,9 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 		image_brightness = image_brightness_mmx;
 
 		/* image input xxx_to_yv12 related functions */
+
 		yv12_to_yv12  = yv12_to_yv12_mmx;
+
 		bgr_to_yv12   = bgr_to_yv12_mmx;
 		rgb_to_yv12   = rgb_to_yv12_mmx;
 		bgra_to_yv12  = bgra_to_yv12_mmx;
@@ -420,6 +422,7 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 
 		yuyv_to_yv12  = yuyv_to_yv12_3dn;
 		uyvy_to_yv12  = uyvy_to_yv12_3dn;
+
 	}
 
 
@@ -443,18 +446,18 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 		interpolate8x8_halfpel_v_add = interpolate8x8_halfpel_v_add_xmm;
 		interpolate8x8_halfpel_hv_add = interpolate8x8_halfpel_hv_add_xmm;
 
-		/* Quantization */
+        /* Quantization */
 		quant_mpeg_inter = quant_mpeg_inter_xmm;
 
 		dequant_h263_intra = dequant_h263_intra_xmm;
 		dequant_h263_inter = dequant_h263_inter_xmm;
 
-		/* Buffer transfer */
+        /* Buffer transfer */
 		transfer_8to16sub2 = transfer_8to16sub2_xmm;
 		transfer_8to16sub2ro = transfer_8to16sub2ro_xmm;
 
 		/* Colorspace transformation */
-		yv12_to_yv12  = yv12_to_yv12_xmm;
+		/* yv12_to_yv12  = yv12_to_yv12_xmm; */ /* appears to be slow on many machines */
 		yuyv_to_yv12  = yuyv_to_yv12_xmm;
 		uyvy_to_yv12  = uyvy_to_yv12_xmm;
 
@@ -506,7 +509,7 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 			interpolate8x4_halfpel_v = interpolate8x4_halfpel_v_3dne;
 			interpolate8x4_halfpel_hv = interpolate8x4_halfpel_hv_3dne;
 
-			/* Quantization */
+            /* Quantization */
 			quant_h263_intra = quant_h263_intra_3dne;		/* cmov only */
 			quant_h263_inter = quant_h263_inter_3dne;
 			dequant_mpeg_intra = dequant_mpeg_intra_3dne;	/* cmov only */
@@ -514,9 +517,7 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 			dequant_h263_intra = dequant_h263_intra_3dne;
 			dequant_h263_inter = dequant_h263_inter_3dne;
 
-			/* ME functions */
-			calc_cbp = calc_cbp_3dne;
-
+            /* ME functions */
 			sad16 = sad16_3dne;
 			sad8 = sad8_3dne;
 			sad16bi = sad16bi_3dne;
@@ -524,7 +525,7 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 			dev16 = dev16_3dne;
 		}
 	}
-
+ 
 	if ((cpu_flags & XVID_CPU_SSE2)) {
 
 		calc_cbp = calc_cbp_sse2;
@@ -541,10 +542,11 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 
 		/* DCT operators */
 		fdct = fdct_sse2_skal;
-        idct = idct_sse2_skal;   /* Is now IEEE1180 and Walken compliant. */
+                idct = idct_sse2_skal;   /* Is now IEEE1180 and Walken compliant. */
 
 		/* postprocessing */
 		image_brightness = image_brightness_sse2;
+
 	}
 
 	if ((cpu_flags & XVID_CPU_SSE3)) {
@@ -644,74 +646,6 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
         }
 #endif
 
-#if defined(ARCH_IS_X86_64)
-	/* For now, only XVID_CPU_ASM is looked for, so user can still
-	 * disable asm usage the usual way. When Intel EMT64 cpus will
-	 * be out, maybe we'll have to check more precisely what cpu
-	 * features there really are. */
-	if (cpu_flags & XVID_CPU_ASM) {
-		/* SIMD state flusher */
-		emms = emms_mmx;
-
-		/* DCT operators */
-		fdct = fdct_skal_x86_64;
-		idct = idct_x86_64;
-
-		/* SAD operators */
-		sad16      = sad16_x86_64;
-		sad8       = sad8_x86_64;
-		sad16bi    = sad16bi_x86_64;
-		sad8bi     = sad8bi_x86_64;
-		dev16      = dev16_x86_64;
-		sad16v	   = sad16v_x86_64;
-		sse8_16bit = sse8_16bit_x86_64;
-		sse8_8bit  = sse8_8bit_x86_64;
-
-		/* Interpolation operators */
-		interpolate8x8_halfpel_h  = interpolate8x8_halfpel_h_x86_64;
-		interpolate8x8_halfpel_v  = interpolate8x8_halfpel_v_x86_64;
-		interpolate8x8_halfpel_hv = interpolate8x8_halfpel_hv_x86_64;
-
-		interpolate8x8_halfpel_add = interpolate8x8_halfpel_add_x86_64;
-		interpolate8x8_halfpel_h_add = interpolate8x8_halfpel_h_add_x86_64;
-		interpolate8x8_halfpel_v_add = interpolate8x8_halfpel_v_add_x86_64;
-		interpolate8x8_halfpel_hv_add = interpolate8x8_halfpel_hv_add_x86_64;
-
-		interpolate8x8_6tap_lowpass_h = interpolate8x8_6tap_lowpass_h_x86_64;
-		interpolate8x8_6tap_lowpass_v = interpolate8x8_6tap_lowpass_v_x86_64;
-
-		interpolate8x8_avg2 = interpolate8x8_avg2_x86_64;
-		interpolate8x8_avg4 = interpolate8x8_avg4_x86_64;
-
-		/* Quantization related functions */
-		quant_h263_intra   = quant_h263_intra_x86_64;
-		quant_h263_inter   = quant_h263_inter_x86_64;
-		dequant_h263_intra = dequant_h263_intra_x86_64;
-		dequant_h263_inter = dequant_h263_inter_x86_64;
-		/*quant_mpeg_intra   = quant_mpeg_intra_x86_64; fix me! */
-		quant_mpeg_inter   = quant_mpeg_inter_x86_64;
-		dequant_mpeg_intra   = dequant_mpeg_intra_x86_64;
-		dequant_mpeg_inter   = dequant_mpeg_inter_x86_64;
-
-		/* Block related functions */
-		transfer_8to16copy  = transfer_8to16copy_x86_64;
-		transfer_16to8copy  = transfer_16to8copy_x86_64;
-		transfer_8to16sub   = transfer_8to16sub_x86_64;
-		transfer_8to16subro = transfer_8to16subro_x86_64;
-		transfer_8to16sub2  = transfer_8to16sub2_x86_64;
-		transfer_8to16sub2ro= transfer_8to16sub2ro_x86_64;
-		transfer_16to8add   = transfer_16to8add_x86_64;
-		transfer8x8_copy    = transfer8x8_copy_x86_64;
-
-		/* Qpel stuff */
-		xvid_QP_Funcs = &xvid_QP_Funcs_x86_64;
-		xvid_QP_Add_Funcs = &xvid_QP_Add_Funcs_x86_64;
-
-		/* Interlacing Functions */
-		MBFieldTest = MBFieldTest_x86_64;
-	}
-#endif
-
 #if defined(_DEBUG)
     xvid_debug = init->debug;
 #endif
@@ -731,10 +665,10 @@ xvid_gbl_info(xvid_gbl_info_t * info)
 	info->cpu_flags = detect_cpu_flags();
   info->num_threads = 0;
 
-#if defined(WIN32)
+#if defined(_WIN32)
   {
     DWORD dwProcessAffinityMask, dwSystemAffinityMask;
-    if (GetProcessAffinityMask(GetCurrentProcess(), &dwProcessAffinityMask, &dwSystemAffinityMask)) {
+    if (GetProcessAffinityMask(GetCurrentProcess(), (PDWORD_PTR) &dwProcessAffinityMask, (PDWORD_PTR) &dwSystemAffinityMask)) {
       int i;      
       for(i=0; i<32; i++) {
         if ((dwProcessAffinityMask & (1<<i)))
@@ -742,6 +676,11 @@ xvid_gbl_info(xvid_gbl_info_t * info)
       }
     }
   }
+#else
+
+  #include <unistd.h>
+  info->num_threads = sysconf(_SC_NPROCESSORS_CONF);	
+
 #endif
 
 	return 0;

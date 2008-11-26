@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: sad.h,v 1.23 2006-12-06 19:55:07 Isibaar Exp $
+ * $Id: sad.h,v 1.24 2008-11-26 01:04:34 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -42,7 +42,7 @@ typedef sad16Func *sad16FuncPtr;
 extern sad16FuncPtr sad16;
 sad16Func sad16_c;
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 sad16Func sad16_mmx;
 sad16Func sad16_xmm;
 sad16Func sad16_3dne;
@@ -58,10 +58,6 @@ sad16Func sad16_ia64;
 sad16Func sad16_altivec_c;
 #endif
 
-#ifdef ARCH_IS_X86_64
-sad16Func sad16_x86_64;
-#endif
-
 sad16Func mrsad16_c;
 
 typedef uint32_t(sad8Func) (const uint8_t * const cur,
@@ -71,7 +67,7 @@ typedef sad8Func *sad8FuncPtr;
 extern sad8FuncPtr sad8;
 sad8Func sad8_c;
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 sad8Func sad8_mmx;
 sad8Func sad8_xmm;
 sad8Func sad8_3dne;
@@ -85,10 +81,6 @@ sad8Func sad8_ia64;
 sad8Func sad8_altivec_c;
 #endif
 
-#ifdef ARCH_IS_X86_64
-sad8Func sad8_x86_64;
-#endif
-
 typedef uint32_t(sad16biFunc) (const uint8_t * const cur,
 							   const uint8_t * const ref1,
 							   const uint8_t * const ref2,
@@ -97,7 +89,7 @@ typedef sad16biFunc *sad16biFuncPtr;
 extern sad16biFuncPtr sad16bi;
 sad16biFunc sad16bi_c;
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 sad16biFunc sad16bi_mmx;
 sad16biFunc sad16bi_xmm;
 sad16biFunc sad16bi_3dne;
@@ -112,10 +104,6 @@ sad16biFunc sad16bi_ia64;
 sad16biFunc sad16bi_altivec_c;
 #endif
 
-#ifdef ARCH_IS_X86_64
-sad16biFunc sad16bi_x86_64;
-#endif
-
 typedef uint32_t(sad8biFunc) (const uint8_t * const cur,
 							   const uint8_t * const ref1,
 							   const uint8_t * const ref2,
@@ -124,15 +112,11 @@ typedef sad8biFunc *sad8biFuncPtr;
 extern sad8biFuncPtr sad8bi;
 sad8biFunc sad8bi_c;
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 sad8biFunc sad8bi_mmx;
 sad8biFunc sad8bi_xmm;
 sad8biFunc sad8bi_3dne;
 sad8biFunc sad8bi_3dn;
-#endif
-
-#ifdef ARCH_IS_X86_64
-sad8biFunc sad8bi_x86_64;
 #endif
 
 typedef uint32_t(dev16Func) (const uint8_t * const cur,
@@ -150,7 +134,7 @@ extern sad16vFuncPtr sad16v;
 sad16vFunc sad16v_c;
 sad16vFunc sad32v_c;
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 dev16Func dev16_mmx;
 dev16Func dev16_xmm;
 dev16Func dev16_3dne;
@@ -168,11 +152,6 @@ dev16Func dev16_ia64;
 dev16Func dev16_altivec_c;
 #endif
 
-#ifdef ARCH_IS_X86_64
-dev16Func dev16_x86_64;
-sad16vFunc sad16v_x86_64;
-#endif
-
 /* This function assumes blocks use 16bit signed elements */
 typedef uint32_t (sse8Func_16bit)(const int16_t * cur,
 								  const int16_t * ref,
@@ -181,16 +160,12 @@ typedef sse8Func_16bit *sse8Func_16bitPtr;
 extern sse8Func_16bitPtr sse8_16bit;
 
 sse8Func_16bit sse8_16bit_c;
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 sse8Func_16bit sse8_16bit_mmx;
 #endif
 
 #ifdef ARCH_IS_PPC
 sse8Func_16bit sse8_16bit_altivec_c;
-#endif
-
-#ifdef ARCH_IS_X86_64
-sse8Func_16bit sse8_16bit_x86_64;
 #endif
 
 /* This function assumes blocks use 8bit *un*signed elements */
@@ -202,12 +177,8 @@ extern sse8Func_8bitPtr sse8_8bit;
 
 sse8Func_8bit sse8_8bit_c;
 
-#ifdef ARCH_IS_IA32
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 sse8Func_8bit sse8_8bit_mmx;
-#endif
-
-#ifdef ARCH_IS_X86_64
-sse8Func_8bit sse8_8bit_x86_64;
 #endif
 
 #endif							/* _ENCODER_SAD_H_ */
