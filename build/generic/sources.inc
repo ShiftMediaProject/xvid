@@ -45,7 +45,6 @@ SRC_GENERIC = \
 	utils/timer.c
 
 SRC_IA32 = \
-	bitstream/x86_asm/cbp_3dne.asm \
 	bitstream/x86_asm/cbp_mmx.asm \
 	bitstream/x86_asm/cbp_sse2.asm \
 	dct/x86_asm/fdct_mmx_ffmpeg.asm \
@@ -54,7 +53,6 @@ SRC_IA32 = \
 	dct/x86_asm/idct_3dne.asm \
 	dct/x86_asm/idct_mmx.asm \
 	dct/x86_asm/idct_sse2_dmitry.asm \
-	dct/x86_asm/simple_idct_mmx.asm \
 	image/x86_asm/colorspace_rgb_mmx.asm \
 	image/x86_asm/colorspace_yuv_mmx.asm \
 	image/x86_asm/colorspace_yuyv_mmx.asm \
@@ -83,19 +81,7 @@ SRC_IA32 = \
 	utils/x86_asm/cpuid.asm \
 	plugins/x86_asm/plugin_ssim-a.asm
 
-SRC_X86_64 = \
-	dct/x86_64_asm/fdct_mmx_skal.asm \
-	dct/x86_64_asm/idct_mmx.asm \
-	image/x86_64_asm/interpolate8x8_mmx.asm \
-	image/x86_64_asm/interpolate8x8_xmm.asm \
-	image/x86_64_asm/qpel_mmx.asm \
-	motion/x86_64_asm/sad_mmx.asm \
-	motion/x86_64_asm/sad_xmm.asm \
-	quant/x86_64_asm/quantize_h263_mmx.asm \
-	quant/x86_64_asm/quantize_mpeg_xmm.asm \
-	utils/x86_64_asm/cpuid.asm \
-	utils/x86_64_asm/interlacing_mmx.asm \
-	utils/x86_64_asm/mem_transfer_mmx.asm
+SRC_X86_64 = $(SRC_IA32)
 
 SRC_IA64 = \
 	dct/ia64_asm/fdct_ia64.s \

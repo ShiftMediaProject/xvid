@@ -1,6 +1,6 @@
 dnl ==========================================================================
 dnl
-dnl Autoconf script for XviD
+dnl Autoconf script for Xvid
 dnl
 dnl Copyright(C) 2003-2004 Edouard Gomez <ed.gomez@free.fr>
 dnl
@@ -8,7 +8,7 @@ dnl ==========================================================================
 
 AC_PREREQ([2.50])
 
-AC_INIT([XviD], [1.1.0-beta2], [xvid-devel@xvid.org])
+AC_INIT([Xvid], [1.2.0], [xvid-devel@xvid.org])
 AC_CONFIG_SRCDIR(configure.in)
 
 dnl Do not forget to increase that when needed.
@@ -16,18 +16,15 @@ API_MAJOR="4"
 API_MINOR="1"
 
 dnl NASM version requirement
-minimum_nasm_patch_version=34
-minimum_nasm_minor_version=99
+minimum_nasm_minor_version=0
 minimum_nasm_major_version=2
 nasm_prog="nasm"
-yasm_prog="yasm"
 
 dnl Default CFLAGS -- Big impact on overall speed
 our_cflags_defaults="-Wall"
 our_cflags_defaults="$our_cflags_defaults -O2"
 our_cflags_defaults="$our_cflags_defaults -fstrength-reduce"
 our_cflags_defaults="$our_cflags_defaults -finline-functions"
-our_cflags_defaults="$our_cflags_defaults -freduce-all-givs"
 our_cflags_defaults="$our_cflags_defaults -ffast-math"
 our_cflags_defaults="$our_cflags_defaults -fomit-frame-pointer"
 
@@ -201,7 +198,7 @@ case "$ac_cv_sizeof_int_p" in
 	BUS="64BIT"
 	;;
      *)
-	AC_MSG_ERROR([XviD supports only 32/64 bit architectures])
+	AC_MSG_ERROR([Xvid supports only 32/64 bit architectures])
 	;;
 esac
 
@@ -343,41 +340,28 @@ if test "$ARCHITECTURE" = "IA32" -o "$ARCHITECTURE" = "X86_64" ; then
 
    dnl
    dnl Checking for nasm compatible programs
-   dnl yasm is preferred over nasm, because... i can use it
-   dnl to profile assembly code ;-)
    dnl
 
    found_nasm_comp_prog="no"
    chosen_asm_prog=""
 
-   dnl Check for yasm first
-   AC_CHECK_PROG([ac_yasm], [$yasm_prog], [yes], [no], , [yes])
-   if test "$ac_yasm" = "yes" ; then
-     found_nasm_comp_prog="yes"
-     chosen_asm_prog="$yasm_prog"
-   fi
-
-   dnl if yasm hasn't been found, then check for nasm (not buggy version)
+   dnl Check for nasm (not buggy version)
    if test "$found_nasm_comp_prog" = "no" ; then
        AC_CHECK_PROG([ac_nasm], [$nasm_prog], [yes], [no], , [yes])
        if test "$ac_nasm" = "yes" ; then
            dnl
-           dnl Checking nasm patch version
+           dnl Checking nasm version
            dnl
-           AC_MSG_CHECKING([for nasm patch version])
-           nasm_patch=`$nasm_prog -r | cut -d '.' -f 3 | cut -d ' ' -f 1`
+           AC_MSG_CHECKING([for nasm version])
            nasm_minor=`$nasm_prog -v | cut -d '.' -f 2 | cut -d ' ' -f 1`
            nasm_major=`$nasm_prog -v | cut -d '.' -f 1 | cut -d ' ' -f 3`
-           if test -z $nasm_patch ; then
-              nasm_patch=-1
-           fi
            if test -z $nasm_minor ; then
               nasm_minor=-1
            fi
            if test -z $nasm_major ; then
               nasm_major=-1
            fi
-           AC_MSG_RESULT([$nasm_patch])
+           AC_MSG_RESULT([$nasm_major])
 
            dnl need nasm 2.x for SSE3/4 and X86_64
            if test "$nasm_major" -lt "$minimum_nasm_major_version" ; then
@@ -396,15 +380,25 @@ if test "$ARCHITECTURE" = "IA32" -o "$ARCHITECTURE" = "X86_64" ; then
        AC_MSG_CHECKING([for asm object format])
        case "$target_os" in
            *bsd*|linux*|beos|irix*|solaris*)
-               AC_MSG_RESULT([elf])
-               NASM_FORMAT="elf"
+               if test "$ARCHITECTURE" = "X86_64" ; then
+                   AC_MSG_RESULT([elf64])
+                   NASM_FORMAT="elf64"
+               else
+                   AC_MSG_RESULT([elf])
+                   NASM_FORMAT="elf"
+               fi
 	       MARK_FUNCS="-DMARK_FUNCS"
 	           PREFIX=""
                ;;
            [[cC]][[yY]][[gG]][[wW]][[iI]][[nN]]*|mingw32*|mks*)
-               AC_MSG_RESULT([win32])
-               NASM_FORMAT="win32"
-	       PREFIX="-DPREFIX"
+               if test "$ARCHITECTURE" = "X86_64" ; then
+                   AC_MSG_RESULT([win64])
+                   NASM_FORMAT="win64"
+               else
+                   AC_MSG_RESULT([win32])
+                   NASM_FORMAT="win32"
+               fi
+	       PREFIX="-DWINDOWS"
 	       MARK_FUNCS=""
                ;;
            *darwin*)
@@ -417,10 +411,10 @@ if test "$ARCHITECTURE" = "IA32" -o "$ARCHITECTURE" = "X86_64" ; then
 
        AS="$chosen_asm_prog"
        ASSEMBLY_EXTENSION="asm"
-       AFLAGS="-I\$(<D)/ -f $NASM_FORMAT $PREFIX $MARK_FUNCS"
+       AFLAGS="-I\$(<D)/ -I../../src/ -f $NASM_FORMAT $PREFIX $MARK_FUNCS"
        ASSEMBLY_SOURCES="SRC_${ARCHITECTURE}"
        if test "$ARCHITECTURE" = "X86_64" ; then
-               AFLAGS=${AFLAGS}" -m amd64"
+               AFLAGS=${AFLAGS}" -DARCH_IS_X86_64"
        fi
    else 
        AC_MSG_WARN([no correct assembler was found - Compiling generic sources only])
