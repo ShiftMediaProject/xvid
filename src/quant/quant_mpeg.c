@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: quant_mpeg.c,v 1.4 2008-11-26 01:04:34 Isibaar Exp $
+ * $Id: quant_mpeg.c,v 1.5 2008-11-26 02:21:02 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -80,7 +80,7 @@ quant_mpeg_intra_c(int16_t * coeff,
 
 	coeff[0] = DIV_DIV(data[0], (int32_t) dcscalar);
 	
-        for (i = 1; i < 64; i++) {
+	for (i = 1; i < 64; i++) {
 		int32_t level = data[i];
 		level *= intra_matrix_rec[i];
 		level = (level + rounding)>>(SCALEBITS-3);

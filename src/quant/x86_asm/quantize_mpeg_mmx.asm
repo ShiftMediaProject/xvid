@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_mpeg_mmx.asm,v 1.11 2008-11-26 01:04:34 Isibaar Exp $
+; * $Id: quantize_mpeg_mmx.asm,v 1.12 2008-11-26 02:21:02 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -177,30 +177,30 @@ quant_mpeg_intra_mmx:
 
   movq mm7, [mmx_rounding]
 
-;  QUANT_MMX(0)
-;  QUANT_MMX(1)
-;  QUANT_MMX(2)
-;  QUANT_MMX(3)
-;  QUANT_MMX(4)
-;  QUANT_MMX(5)
-;  QUANT_MMX(6)
-;  QUANT_MMX(7)
+  QUANT_MMX(0)
+  QUANT_MMX(1)
+  QUANT_MMX(2)
+  QUANT_MMX(3)
+  QUANT_MMX(4)
+  QUANT_MMX(5)
+  QUANT_MMX(6)
+  QUANT_MMX(7)
 
   ; calculate DC
-;  movsx _EAX, word [_EAX]   ; data[0]
-;  mov TMP0, prm4            ; dcscalar
-;  mov _EDX, _EAX 
-;  shr TMP0, 1               ; TMP0 = dcscalar/2
-;  sar _EDX, 31              ; TMP1 = sign extend of _EAX (ready for division too)
-;  xor TMP0, _EDX            ; adjust TMP0 according to the sign of data[0]
-;  sub TMP0, _EDX 
-;  add _EAX, TMP0
+  movsx _EAX, word [_EAX]   ; data[0]
+  mov TMP0, prm4            ; dcscalar
+  mov _EDX, _EAX 
+  shr TMP0, 1               ; TMP0 = dcscalar/2
+  sar _EDX, 31              ; TMP1 = sign extend of _EAX (ready for division too)
+  xor TMP0, _EDX            ; adjust TMP0 according to the sign of data[0]
+  sub TMP0, _EDX 
+  add _EAX, TMP0
 
-;  mov TMP0, prm4  	    ; dcscalar
-;  idiv TMP0                 ; _EAX = _EDX:_EAX / dcscalar
+  mov TMP0, prm4  	    ; dcscalar
+  idiv TMP0                 ; _EAX = _EDX:_EAX / dcscalar
 
-;  mov _EDX, prm1            ; coeff again
-;  mov word [_EDX], ax       ; coeff[0] = ax
+  mov _EDX, prm1            ; coeff again
+  mov word [_EDX], ax       ; coeff[0] = ax
  
   xor _EAX, _EAX            ; return(0);
   ret

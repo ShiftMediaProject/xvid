@@ -67,7 +67,11 @@ cglobal image_brightness_sse2
 ALIGN SECTION_ALIGN
 image_brightness_sse2:
 
-  mov eax, prm5d  ; brightness offset value	
+%ifdef ARCH_IS_X86_64
+  movsx _EAX, prm5d
+%else
+  mov eax, prm5   ; brightness offset value	
+%endif
   mov TMP1, prm1  ; Dst
   mov TMP0, prm2  ; stride
 

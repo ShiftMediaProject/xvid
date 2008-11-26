@@ -20,7 +20,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_mpeg_xmm.asm,v 1.9 2008-11-26 01:04:34 Isibaar Exp $
+; * $Id: quantize_mpeg_xmm.asm,v 1.10 2008-11-26 02:21:02 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -176,13 +176,12 @@ quant_mpeg_inter_xmm:
   pxor mm3, mm3
   movq [byte _EBX],mm0
   movq [_EBX+8],mm0
-%if 0
+
   cmp TMP0, byte 1
   je near .q1loop
   cmp TMP0, byte 19
   jg near .lloop
   nop
-%endif
 
 ALIGN SECTION_ALIGN
 .loop:

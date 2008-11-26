@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: postprocessing_mmx.asm,v 1.7 2008-11-26 01:04:34 Isibaar Exp $
+; * $Id: postprocessing_mmx.asm,v 1.8 2008-11-26 02:21:02 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -60,11 +60,12 @@ image_brightness_mmx:
 
 	movq mm6, [mmx_0x80]
 
-	mov eax, prm5d ; offset
 %ifdef ARCH_IS_X86_64
+        movsx _EAX, prm5d
         lea r9, [mmx_offset]
 	movq mm7, [r9 + (_EAX + 128)*8]   ; being lazy
 %else
+        mov eax, prm5d ; offset
         movq mm7, [mmx_offset + (_EAX + 128)*8]   ; being lazy
 %endif
 
