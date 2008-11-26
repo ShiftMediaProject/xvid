@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: codec.h,v 1.5 2004-04-18 07:55:11 syskin Exp $
+ * $Id: codec.h,v 1.6 2008-11-26 10:11:16 Isibaar Exp $
  *
  ****************************************************************************/
 #ifndef _CODEC_H_
@@ -30,7 +30,7 @@
 #include "status.h"
 
 #define XVID_NAME_L		L"XVID"
-#define XVID_DESC_L		L"XviD MPEG-4 Codec"
+#define XVID_DESC_L		L"Xvid MPEG-4 Codec"
 
 #define FOURCC_XVID	mmioFOURCC('X','V','I','D')
 #define FOURCC_DIVX	mmioFOURCC('D','I','V','X')

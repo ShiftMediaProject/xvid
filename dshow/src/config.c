@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: config.c,v 1.8 2005-09-18 01:34:13 suxen_drol Exp $
+ * $Id: config.c,v 1.9 2008-11-26 10:11:31 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -109,14 +109,14 @@ BOOL CALLBACK adv_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			nForceColorspace = SendMessage(GetDlgItem(hwnd, IDC_COLORSPACE), CB_GETCURSEL, 0, 0); 
 			if ( g_config.nForceColorspace != nForceColorspace )
 			{
-				MessageBox(0, "You have changed the output colorspace.\r\nClose the movie and open it for the new colorspace to take effect.", "XviD DShow", MB_TOPMOST);
+				MessageBox(0, "You have changed the output colorspace.\r\nClose the movie and open it for the new colorspace to take effect.", "Xvid DShow", MB_TOPMOST);
 			}
 			g_config.nForceColorspace = nForceColorspace;
 
 			aspect_ratio = SendMessage(GetDlgItem(hwnd, IDC_USE_AR), CB_GETCURSEL, 0, 0);
 			if ( g_config.aspect_ratio != aspect_ratio )
 			{
-				MessageBox(0, "You have changed the default aspect ratio.\r\nClose the movie and open it for the new aspect ratio to take effect.", "XviD DShow", MB_TOPMOST);
+				MessageBox(0, "You have changed the default aspect ratio.\r\nClose the movie and open it for the new aspect ratio to take effect.", "Xvid DShow", MB_TOPMOST);
 			}
 			g_config.aspect_ratio = aspect_ratio;
 			SaveRegistryInfo();
