@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: portab.h,v 1.57 2007-06-02 13:53:13 syskin Exp $
+ * $Id: portab.h,v 1.58 2008-11-27 16:31:48 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -360,7 +360,7 @@ type * name = (type *) (((int32_t) name##_storage+(alignment - 1)) & ~((int32_t)
 /*----------------------------------------------------------------------------
   | watcom ia32 specific macros/functions
  *---------------------------------------------------------------------------*/
-#    if defined(ARCH_IS_IA32)
+#    if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 
 #        define BSWAP(a)  __asm mov eax,a __asm bswap eax __asm mov a, eax
 
