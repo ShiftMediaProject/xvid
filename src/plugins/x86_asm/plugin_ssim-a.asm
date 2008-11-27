@@ -94,35 +94,35 @@ BITS 32
 %endmacro
 
 %macro CONSIM_WRITEOUT 3
-	mov _EAX,prm4;lumo
-	mul _EAX; lumo^2
-        add _EAX, 32
-	shr _EAX,6; 64*lum0^2
+	mov eax,prm4d;lumo
+	mul eax; lumo^2
+        add eax, 32
+	shr eax, 6; 64*lum0^2
 	movd TMP0d,%1
-	sub TMP0,_EAX
+	sub TMP0d, eax
 
 	mov TMP1,prm6; pdevo
-	mov [TMP1],TMP0
+	mov dword [TMP1],TMP0d
 
 	mov eax,prm5d ;lumc
-	mul _EAX; lumc^2
-        add _EAX, 32
-	shr _EAX,6; 64*lumc^2
+	mul eax; lumc^2
+        add eax, 32
+	shr eax, 6; 64*lumc^2
 	movd TMP0d,%2
-	sub TMP0,_EAX
+	sub TMP0d, eax
 
 	mov TMP1,prm7; pdevc
-	mov [TMP1],TMP0
+	mov dword [TMP1],TMP0d
 
-	mov _EAX,prm4;lumo
+	mov eax,prm4d;lumo
 	mul prm5d; lumo*lumc, should fit in _EAX
-        add _EAX, 32
-	shr _EAX,6; 64*lumo*lumc
+        add eax, 32
+	shr eax, 6; 64*lumo*lumc
 	movd TMP0d,%3
-	sub TMP0,_EAX
+	sub TMP0d, eax
 
 	mov TMP1,prm8; pcorr
-	mov [TMP1],TMP0
+	mov dword [TMP1],TMP0d
 %endmacro
 
 
