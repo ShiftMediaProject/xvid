@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.75 2008-11-26 01:04:34 Isibaar Exp $
+ * $Id: xvid.c,v 1.76 2008-11-27 00:47:03 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -542,7 +542,7 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 
 		/* DCT operators */
 		fdct = fdct_sse2_skal;
-                idct = idct_sse2_skal;   /* Is now IEEE1180 and Walken compliant. */
+		idct = idct_sse2_skal;   /* Is now IEEE1180 and Walken compliant. */
 
 		/* postprocessing */
 		image_brightness = image_brightness_sse2;

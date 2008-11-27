@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: postprocessing.c,v 1.4 2004-04-18 07:55:11 syskin Exp $
+ * $Id: postprocessing.c,v 1.5 2008-11-27 00:47:03 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -433,7 +433,8 @@ void image_brightness_c(uint8_t *dst, int stride, int width, int height, int off
 	{
 		for(x = 0; x < width; x++)
 		{
-			dst[y*stride + x] = CLIP( dst[y*stride + x] + offset, 0, 255);
+			int p = dst[y*stride + x];
+			dst[y*stride + x] = CLIP( p + offset, 0, 255);
 		}
 	}
 }
