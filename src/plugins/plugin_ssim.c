@@ -39,8 +39,8 @@ typedef struct framestat_t framestat_t;
 
 /*dev 1.0 gaussian weighting. the weight for the pixel x,y is w(x)*w(y)*/
 static float mask8[8] = {
-	0.0069815, 0.1402264, 1.0361408, 2.8165226, 
-	2.8165226, 1.0361408, 0.1402264, 0.0069815
+	0.0069815f, 0.1402264f, 1.0361408f, 2.8165226f, 
+	2.8165226f, 1.0361408f, 0.1402264f, 0.0069815f
 };
 
 /* integer version. Norm: coeffs sums up to 4096.
@@ -248,7 +248,7 @@ int lum_8x8_gaussian(uint8_t* ptr, int stride){
 		sum *=mask8[i];
 		mean += sum;
 	}
-	return (int) mean + 0.5;
+	return (int) (mean + 0.5);
 }
 
 int lum_8x8_gaussian_int(uint8_t* ptr, int stride){
@@ -304,9 +304,9 @@ void consim_gaussian(uint8_t* ptro, uint8_t* ptrc, int stride, int lumo, int lum
 	ptrc += str;
 	}
 
-	*pdevo = (int) (devo - ((lumo*lumo + 32) >> 6)) + 0.5;
-	*pdevc = (int) (devc - ((lumc*lumc + 32) >> 6)) + 0.5;
-	*pcorr = (int) (corr - ((lumo*lumc + 32) >> 6)) + 0.5;
+	*pdevo = (int) ((devo - ((lumo*lumo + 32) >> 6)) + 0.5);
+	*pdevc = (int) ((devc - ((lumc*lumc + 32) >> 6)) + 0.5);
+	*pcorr = (int) ((corr - ((lumo*lumc + 32) >> 6)) + 0.5);
 };
 
 void consim_gaussian_int(uint8_t* ptro, uint8_t* ptrc, int stride, int lumo, int lumc, int* pdevo, int* pdevc, int* pcorr)
@@ -338,9 +338,9 @@ void consim_gaussian_int(uint8_t* ptro, uint8_t* ptrc, int stride, int lumo, int
         devo = GACCUM(devo);
         devc = GACCUM(devc);
         corr = GACCUM(corr);
-	*pdevo = (int) (devo - ((lumo*lumo + 32) >> 6)) + 0.5;
-	*pdevc = (int) (devc - ((lumc*lumc + 32) >> 6)) + 0.5;
-	*pcorr = (int) (corr - ((lumo*lumc + 32) >> 6)) + 0.5;
+	*pdevo = (int) ((devo - ((lumo*lumo + 32) >> 6)) + 0.5);
+	*pdevc = (int) ((devc - ((lumc*lumc + 32) >> 6)) + 0.5);
+	*pcorr = (int) ((corr - ((lumo*lumc + 32) >> 6)) + 0.5);
 };
 
 /*calculate contrast and correlation of the two blocks*/
@@ -368,10 +368,10 @@ void consim_c(uint8_t* ptro, uint8_t* ptrc, int stride, int lumo, int lumc, int*
 
 /*calculate the final ssim value*/
 static float calc_ssim(float meano, float meanc, float devo, float devc, float corr){
-	static const float c1 = (0.01*255)*(0.01*255);
-	static const float c2 = (0.03*255)*(0.03*255);
+	static const float c1 = (0.01f*255)*(0.01f*255);
+	static const float c2 = (0.03f*255)*(0.03f*255);
 	/*printf("meano: %f meanc: %f devo: %f devc: %f corr: %f\n",meano,meanc,devo,devc,corr);*/
-	return ((2.0*meano*meanc + c1)*(corr/32.0 + c2))/((meano*meano + meanc*meanc + c1)*(devc/64.0 + devo/64.0 + c2));
+	return ((2.0f*meano*meanc + c1)*(corr/32.0f + c2))/((meano*meano + meanc*meanc + c1)*(devc/64.0f + devo/64.0f + c2));
 }
 
 static void ssim_after(xvid_plg_data_t* data, ssim_data_t* ssim){
@@ -480,7 +480,8 @@ static int ssim_create(xvid_plg_create_t* create, void** handle){
 
 #if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 	{
-		int cpu_flags = check_cpu_features();
+        int cpu_flags = param->cpu_flags;
+
 		if((cpu_flags & XVID_CPU_MMX) && (param->acc > 0)){
 			ssim->func8x8 = lum_8x8_mmx;
 			ssim->consim = consim_mmx;

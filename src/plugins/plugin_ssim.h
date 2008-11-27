@@ -48,6 +48,8 @@ typedef struct{
 	<=4	unweighted, 1 slow 4 fastest*/
 	int acc;
 
+    int cpu_flags; /* XVID_CPU_XXX flags */
+
 } plg_ssim_param_t;
 
 
