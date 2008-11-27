@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.35 2008-11-14 15:43:27 Isibaar Exp $
+ * $Id: xvid_encraw.c,v 1.36 2008-11-27 19:45:28 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1919,7 +1919,9 @@ enc_init(int use_assembler)
 	}
 
 	if (ARG_SSIM>=0 || ARG_SSIM_PATH != NULL) {
-		plugins[xvid_enc_create.num_plugins].func = xvid_plugin_ssim;
+        memset(&ssim, 0, sizeof(xvid_plugin_ssim_t));
+
+        plugins[xvid_enc_create.num_plugins].func = xvid_plugin_ssim;
 
 		if( ARG_SSIM >=0){
 			ssim.b_printstat = 1;
