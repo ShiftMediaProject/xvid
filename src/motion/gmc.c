@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: gmc.c,v 1.8 2008-11-14 15:43:27 Isibaar Exp $
+ * $Id: gmc.c,v 1.9 2008-11-27 16:31:48 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -385,7 +385,7 @@ void get_average_mv_1pt_C(const NEW_GMC_DATA * const Dsp, VECTOR * const mv,
 	mv->y = RSHIFT(Dsp->Vo<<qpel, 3);
 }
 
-#if defined(ARCH_IS_IA32)
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 /* *************************************************************
  * MMX core function
  */
@@ -590,7 +590,7 @@ void init_GMC(const unsigned int cpu_flags)
       Predict_16x16_func = Predict_16x16_C;
       Predict_8x8_func   = Predict_8x8_C;
 
-#if defined(ARCH_IS_IA32)
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
       if ((cpu_flags & XVID_CPU_MMX)   || (cpu_flags & XVID_CPU_MMXEXT)   ||
           (cpu_flags & XVID_CPU_3DNOW) || (cpu_flags & XVID_CPU_3DNOWEXT) ||
           (cpu_flags & XVID_CPU_SSE)   || (cpu_flags & XVID_CPU_SSE2) ||
@@ -598,15 +598,13 @@ void init_GMC(const unsigned int cpu_flags)
 	{
 	   Predict_16x16_func = Predict_16x16_mmx;
 	   Predict_8x8_func   = Predict_8x8_mmx;
-#if 0
-       if (cpu_flags & XVID_CPU_SSE41)
+
+           if (cpu_flags & XVID_CPU_SSE41)
 	     GMC_Core_Lin_8 = xvid_GMC_Core_Lin_8_sse41;
-	   else
-#endif
-	   if (cpu_flags & XVID_CPU_SSE2)
+	   else if (cpu_flags & XVID_CPU_SSE2)
 	     GMC_Core_Lin_8 = xvid_GMC_Core_Lin_8_sse2;
 	   else
-         GMC_Core_Lin_8 = xvid_GMC_Core_Lin_8_mmx;
+             GMC_Core_Lin_8 = xvid_GMC_Core_Lin_8_mmx;
 	}
 #endif
 }
