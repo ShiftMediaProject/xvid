@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.36 2008-11-27 19:45:28 Isibaar Exp $
+ * $Id: xvid_encraw.c,v 1.37 2008-11-27 20:17:39 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1935,6 +1935,7 @@ enc_init(int use_assembler)
 			ssim.stat_path = ARG_SSIM_PATH;
 		}
 
+        ssim.cpu_flags = xvid_gbl_init.cpu_flags;
 		ssim.b_visualize = 0;
 		plugins[xvid_enc_create.num_plugins].param = &ssim;
 		xvid_enc_create.num_plugins++;

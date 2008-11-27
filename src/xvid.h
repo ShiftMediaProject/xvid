@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.62 2008-11-26 02:36:37 Isibaar Exp $
+ * $Id: xvid.h,v 1.63 2008-11-27 20:17:33 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -554,6 +554,8 @@ typedef struct{
 
 	/*accuracy 0 very accurate 4 very fast*/
 	int acc; 
+
+    int cpu_flags; /* XVID_CPU_XXX flags */
 
 } xvid_plugin_ssim_t;
 
