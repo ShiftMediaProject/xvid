@@ -82,11 +82,11 @@ image_brightness_sse2:
   movdqa xmm6, [xmm_0x80]
 
   ; Create a offset...offset vector
-  mov TMP1, _ESP          ; TMP1 will be esp aligned mod 16
-  add TMP1, 15            ; TMP1 = esp + 15
-  and TMP1, ~15           ; TMP1 = (esp + 15)&(~15)
-  CREATE_OFFSET_VECTOR TMP1, al
-  movdqa xmm7, [TMP1]
+  mov _ESI, _ESP          ; TMP1 will be esp aligned mod 16
+  add _ESI, 15            ; TMP1 = esp + 15
+  and _ESI, ~15           ; TMP1 = (esp + 15)&(~15)
+  CREATE_OFFSET_VECTOR _ESI, al
+  movdqa xmm7, [_ESI]
 
 %ifdef ARCH_IS_X86_64
   mov _ESI, prm3
