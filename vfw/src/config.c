@@ -705,12 +705,12 @@ static void quant_loadsave(HWND hDlg, CONFIG * config, int save)
 
 static BOOL CALLBACK quantmatrix_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	CONFIG* config = (CONFIG*)GetWindowLong(hDlg, GWL_USERDATA);
+	CONFIG* config = (CONFIG*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
 
 	switch (uMsg)
 	{
 	case WM_INITDIALOG :
-		SetWindowLong(hDlg, GWL_USERDATA, lParam);
+		SetWindowLongPtr(hDlg, GWLP_USERDATA, lParam);
 		config = (CONFIG*)lParam;
 		quant_upload(hDlg, config);
 
@@ -1491,13 +1491,13 @@ static BOOL CALLBACK adv_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 {
 	PROPSHEETINFO *psi;
 
-	psi = (PROPSHEETINFO*)GetWindowLong(hDlg, GWL_USERDATA);
+	psi = (PROPSHEETINFO*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
 
 	switch (uMsg)
 	{
 	case WM_INITDIALOG :
 		psi = (PROPSHEETINFO*) ((LPPROPSHEETPAGE)lParam)->lParam;
-		SetWindowLong(hDlg, GWL_USERDATA, (LPARAM)psi);
+		SetWindowLongPtr(hDlg, GWLP_USERDATA, (LPARAM)psi);
 
 		if (g_hTooltip)
 			EnumChildWindows(hDlg, enum_tooltips, 0);
@@ -1685,19 +1685,19 @@ static BOOL CALLBACK adv_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 			DPRINTF("PSN_SET");
 			adv_upload(hDlg, psi->idd, psi->config);
 			adv_mode(hDlg, psi->idd, psi->config);
-			SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
+			SetWindowLongPtr(hDlg, DWLP_MSGRESULT, FALSE);
 			break;
 
 		case PSN_KILLACTIVE :
 			DPRINTF("PSN_KILL");
 			adv_download(hDlg, psi->idd, psi->config);
-			SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
+			SetWindowLongPtr(hDlg, DWLP_MSGRESULT, FALSE);
 			break;
 
 		case PSN_APPLY :
 			DPRINTF("PSN_APPLY");
 			psi->config->save = TRUE;
-			SetWindowLong(hDlg, DWL_MSGRESULT, FALSE);
+			SetWindowLongPtr(hDlg, DWLP_MSGRESULT, FALSE);
 			break;
 		}
 		break;
@@ -1920,13 +1920,13 @@ static const int other_dlgs[] = { IDD_ENC, IDD_DEC, IDD_COMMON };
 
 BOOL CALLBACK main_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	CONFIG* config = (CONFIG*)GetWindowLong(hDlg, GWL_USERDATA);
+	CONFIG* config = (CONFIG*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
 	unsigned int i;
 
 	switch (uMsg)
 	{
 	case WM_INITDIALOG :
-		SetWindowLong(hDlg, GWL_USERDATA, lParam);
+		SetWindowLongPtr(hDlg, GWLP_USERDATA, lParam);
 		config = (CONFIG*)lParam;
 
 		for (i=0; i<sizeof(profiles)/sizeof(profile_t); i++)
@@ -1958,7 +1958,7 @@ BOOL CALLBACK main_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			EnumChildWindows(hDlg, enum_tooltips, 0);
 		}
 
-		SetClassLong(GetDlgItem(hDlg, IDC_BITRATE_S), GCL_HCURSOR, (LONG)LoadCursor(NULL, IDC_HAND));
+		SetClassLongPtr(GetDlgItem(hDlg, IDC_BITRATE_S), GCLP_HCURSOR, (LONG)LoadCursor(NULL, IDC_HAND));
 
 		{
 			DWORD ext_style = ListView_GetExtendedListViewStyle(GetDlgItem(hDlg,IDC_ZONES));
@@ -2249,13 +2249,13 @@ static BOOL CALLBACK license_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 					}
 				}
 			}
-			SetWindowLong(hDlg, GWL_USERDATA, (LONG)hGlobal);
+			SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG)hGlobal);
 		}
 		break;
 
 	case WM_DESTROY :
 		{
-			HGLOBAL hGlobal = (HGLOBAL)GetWindowLong(hDlg, GWL_USERDATA);
+			HGLOBAL hGlobal = (HGLOBAL)GetWindowLongPtr(hDlg, GWLP_USERDATA);
 			if (hGlobal) {
 				FreeResource(hGlobal);
 			}
@@ -2335,7 +2335,7 @@ BOOL CALLBACK about_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 			}
 
-			SetClassLong(GetDlgItem(hDlg, IDC_WEBSITE), GCL_HCURSOR, (LONG)LoadCursor(NULL, IDC_HAND));
+			SetClassLongPtr(GetDlgItem(hDlg, IDC_WEBSITE), GCLP_HCURSOR, (LONG)LoadCursor(NULL, IDC_HAND));
 			SetDlgItemText(hDlg, IDC_WEBSITE, XVID_WEBSITE);
 		}
 		break;

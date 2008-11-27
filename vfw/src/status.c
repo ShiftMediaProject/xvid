@@ -19,7 +19,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: status.c,v 1.2 2004-03-22 22:36:25 edgomez Exp $
+ * $Id: status.c,v 1.3 2008-11-27 11:57:28 Isibaar Exp $
  *
  *****************************************************************************/
 
@@ -121,12 +121,12 @@ avg_quant(int quants[31], int min, int max, char* buf)
 
 static BOOL CALLBACK status_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	status_t * s = (status_t*)GetWindowLong(hDlg, GWL_USERDATA);
+	status_t * s = (status_t*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
 
 	switch (uMsg)
 	{
 	case WM_INITDIALOG :
-		SetWindowLong(hDlg, GWL_USERDATA, lParam);
+		SetWindowLongPtr(hDlg, GWLP_USERDATA, lParam);
 		s = (status_t*)lParam;
 		
 		s->hGraph = GetDlgItem(hDlg, IDC_STATUS_GRAPH);
