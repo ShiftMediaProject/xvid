@@ -2300,7 +2300,12 @@ BOOL CALLBACK about_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			HINSTANCE m_hdll;
 
 			SetDlgItemText(hDlg, IDC_BUILD, XVID_BUILD);
-			SetDlgItemText(hDlg, IDC_SPECIAL_BUILD, XVID_SPECIAL_BUILD);
+#ifdef _WIN64
+			wsprintf(core, "(%s, 64-bit Edition)", XVID_SPECIAL_BUILD);
+#else
+			wsprintf(core, "(%s)", XVID_SPECIAL_BUILD);
+#endif
+			SetDlgItemText(hDlg, IDC_SPECIAL_BUILD, core);
 
 			memset(&info, 0, sizeof(info));
 			info.version = XVID_VERSION;

@@ -468,7 +468,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Xvid MPEG4 Video Codec"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CTEXT           "Xvid is copyrighted software.\nIt is licensed to you under GNU GPL license.",
+    CTEXT           "Xvid is copyrighted software. It may be distributed\naccording to the terms of the GNU GPL license.",
                     IDC_STATIC,12,112,168,20
     CTEXT           "WEBSITE",IDC_WEBSITE,60,92,72,8,SS_NOTIFY | 
                     SS_CENTERIMAGE
