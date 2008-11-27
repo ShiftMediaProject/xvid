@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: interlacing_mmx.asm,v 1.9 2008-11-26 01:04:34 Isibaar Exp $
+; * $Id: interlacing_mmx.asm,v 1.10 2008-11-27 18:35:36 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -165,7 +165,7 @@ MBFieldTest_mmx:
   paddw mm6, m14                ; add to frame total
 
   lea TMP0, [nexts]
-  mov TMP0, [TMP0+_EAX*4]        ; move _ESI/_EDI 8 pixels to the right
+  mov TMP0d, dword [TMP0+_EAX*4] ; move _ESI/_EDI 8 pixels to the right
   add _ESI, TMP0
   add _EDI, TMP0
 
