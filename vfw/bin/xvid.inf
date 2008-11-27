@@ -1,11 +1,11 @@
-; XviD MPEG-4 Video Codec install
+; Xvid MPEG-4 Video Codec install
 
 [Version]
 Signature = "$CHICAGO$"
 Class = MEDIA
 
 [SourceDisksNames]
-1="XviD MPEG-4 Video Codec Install Disk",, 0001
+1="Xvid MPEG-4 Video Codec Install Disk",, 0001
 
 [SourceDisksFiles]
 xvidvfw.dll=1
@@ -13,7 +13,7 @@ xvid.inf=1
 xvidcore.dll=1
 
 [Installable.Drivers]
-XVID = 1:xvidvfw.dll, "vidc.XVID", "XviD MPEG-4 Video Codec" , , ,
+XVID = 1:xvidvfw.dll, "vidc.XVID", "Xvid MPEG-4 Video Codec" , , ,
 
 [DefaultInstall]
 CopyFiles=MPEG4.Copy.Inf,MPEG4.Copy
@@ -70,7 +70,7 @@ HKLM,%UnInstallPath%,NoRepair,%REG_DWORD%,1
 HKLM,%UnInstallPath%,UninstallString,,"%11%\rundll32.exe setupapi,InstallHinfSection Remove_XviD 132 %17%\%InfFile%"
 
 [MPEG4.DoReg]
-;HKLM,Software\Microsoft\Windows\CurrentVersion\RunOnce\Setup,"Registering XviD Direct Show ;Decoder...",,"%11%\regsvr32.exe /s %11%\xvid.ax"
+;HKLM,Software\Microsoft\Windows\CurrentVersion\RunOnce\Setup,"Registering Xvid Direct Show ;Decoder...",,"%11%\regsvr32.exe /s %11%\xvid.ax"
 
 [MPEG4.DelReg]
 HKLM,SYSTEM\CurrentControlSet\Control\MediaResources\icm\vidc.XVID
@@ -79,7 +79,7 @@ HKLM,SOFTWARE\Microsoft\Windows NT\CurrentVersion\drivers.desc,xvidvfw.dll,,""
 HKLM,%UnInstallPath%
 
 [MPEG4.Unregister]
-;HKLM,Software\Microsoft\Windows\CurrentVersion\RunOnce\Setup,"Unregistering XviD Direct Show ;Decoder...",,"%11%\regsvr32.exe /s /u %11%\xvid.ax"
+;HKLM,Software\Microsoft\Windows\CurrentVersion\RunOnce\Setup,"Unregistering Xvid Direct Show ;Decoder...",,"%11%\regsvr32.exe /s /u %11%\xvid.ax"
 
 [MPEG4.DelConfig]
 HKCU,Software\GNU\XviD
@@ -90,10 +90,10 @@ MPEG4.Copy = 11
 MPEG4.Copy.Inf = 17
 
 [Strings]
-XviD="XviD MPEG-4 Video Codec"
+XviD="Xvid MPEG-4 Video Codec"
 InfFile="xvid.inf"
 UnInstallPath="Software\Microsoft\Windows\CurrentVersion\Uninstall\xvid"
 MediaClassName="Media Devices"
-mfgname="XviD Development Team"
+mfgname="Xvid Development Team"
 Website="http://www.xvid.org/"
 REG_DWORD=0x00010001
