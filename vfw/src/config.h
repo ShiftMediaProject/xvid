@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: config.h,v 1.11 2006-07-10 17:39:23 Isibaar Exp $
+ * $Id: config.h,v 1.12 2008-11-27 16:33:32 Isibaar Exp $
  *
  ****************************************************************************/
 #ifndef _CONFIG_H_
@@ -53,7 +53,7 @@ extern HINSTANCE g_hInst;
 
 #define XVID_BUILD		__TIME__ ", " __DATE__
 #define XVID_WEBSITE	"http://www.xvid.org/"
-#define XVID_SPECIAL_BUILD	"(Vanilla CVS Build)"
+#define XVID_SPECIAL_BUILD	"Vanilla CVS Build"
 
 /* constants */
 #define CONFIG_2PASS_FILE ".\\video.pass"
