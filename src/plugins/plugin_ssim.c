@@ -480,7 +480,7 @@ static int ssim_create(xvid_plg_create_t* create, void** handle){
 
 #if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 	{
-        int cpu_flags = param->cpu_flags;
+        int cpu_flags = (param->cpu_flags & XVID_CPU_FORCE) ? param->cpu_flags : check_cpu_features();
 
 		if((cpu_flags & XVID_CPU_MMX) && (param->acc > 0)){
 			ssim->func8x8 = lum_8x8_mmx;
