@@ -8,7 +8,7 @@
 # Requires GNU Make because of shell expansion performed at a bad time with
 # other make programs (even using := variable assignments)
 #
-# $Id: Makefile,v 1.6 2005-12-18 02:55:54 syskin Exp $
+# $Id: Makefile,v 1.7 2008-11-27 11:57:51 Isibaar Exp $
 ##############################################################################
 
 include sources.inc
@@ -35,7 +35,6 @@ WINDRES=windres
 # The `mingw-runtime` package is required when building with -mno-cygwin
 CFLAGS += -mthreads
 CFLAGS += -I$(SRC_DIR)/w32api -I$(LOCAL_XVID_SRCTREE)
-CFLAGS += -D_WIN32_IE=0x0500
 CFLAGS += -mno-cygwin
 
 CXXFLAGS +=-mthreads
