@@ -421,6 +421,7 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 	xvid_plugin_single_t single;
 	xvid_plugin_2pass1_t pass1;
 	xvid_plugin_2pass2_t pass2;
+    xvid_gbl_info_t info;
 	int i;
 	HANDLE hFile;
   const quality_t* quality_preset = (codec->config.quality==quality_table_num) ?
@@ -441,6 +442,10 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 	init.cpu_flags = codec->config.cpu;
 	init.debug = codec->config.debug;
 	codec->xvid_global_func(0, XVID_GBL_INIT, &init, NULL);
+
+	memset(&info, 0, sizeof(info));
+	info.version = XVID_VERSION;
+	codec->xvid_global_func(0, XVID_GBL_INFO, &info, NULL);
 
 	memset(&create, 0, sizeof(create));
 	create.version = XVID_VERSION;
@@ -591,13 +596,20 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
     }
 	}
 
-  /* dxn: always write divx5 userdata */
-  if ((profiles[codec->config.profile].flags & PROFILE_EXTRA))
-    create.global |= XVID_GLOBAL_DIVX5_USERDATA;
+    /* dxn: always write divx5 userdata */
+    if ((profiles[codec->config.profile].flags & PROFILE_EXTRA))
+      create.global |= XVID_GLOBAL_DIVX5_USERDATA;
 
 	create.frame_drop_ratio = quality_preset->frame_drop_ratio;
 
-	create.num_threads = codec->config.num_threads;
+    /* Encoder threads */
+    if (codec->config.num_threads == 0)
+        create.num_threads = info.num_threads; /* Autodetect */
+    else if (codec->config.num_threads == 1)
+        create.num_threads = -1; /* Single-threaded, disable SMP */
+    else 
+        create.num_threads = codec->config.num_threads;
+
 
 	switch(codec->xvid_encore_func(0, XVID_ENC_CREATE, &create, NULL))
 	{

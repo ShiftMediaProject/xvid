@@ -191,7 +191,8 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,51,113,10
     CONTROL         "Display encoding status",IDC_DISPLAY_STATUS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,64,91,10
-    LTEXT           "Number of threads:",IDC_NUMTHREADS_STATIC,7,34,61,8
+    LTEXT           "Number of threads (0=autodetect):",
+                    IDC_NUMTHREADS_STATIC,7,34,109,8
     LTEXT           "FourCC used:",IDC_STATIC,7,15,80,8,SS_CENTERIMAGE
 END
 
