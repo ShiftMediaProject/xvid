@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.76 2008-11-27 00:47:03 Isibaar Exp $
+ * $Id: xvid.c,v 1.77 2008-11-28 16:42:50 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -673,6 +673,11 @@ xvid_gbl_info(xvid_gbl_info_t * info)
       for(i=0; i<32; i++) {
         if ((dwProcessAffinityMask & (1<<i)))
           info->num_threads++;
+      }
+      if (info->num_threads == 0) {
+        SYSTEM_INFO siSysInfo;
+        GetSystemInfo(&siSysInfo);
+        info->num_threads = siSysInfo.dwNumberOfProcessors; /* number of _logical_ cores */
       }
     }
   }
