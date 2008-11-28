@@ -1,7 +1,2028 @@
-# Ed.Gomez: This ChangeLog is generated from a personal tree maintained
-# under the arch revision control tool. That's why dates may be skewed. I
-# also removed all my email adresses from the output because they are not
-# relevant.
+# Note that this ChangeLog covers only changes to the HEAD branch
+
+---------------------
+Date: 2008/11/28 19:28:41
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+updated nasm dependency
+
+Members: 
+	debian/control:1.2->1.3 
+
+---------------------
+Date: 2008/11/28 19:16:42
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+pump up HEAD version numbers
+
+Members: 
+	build/generic/configure.in:1.25->1.26 
+	debian/changelog:1.2->1.3 
+	src/xvid.c:1.77->1.78 
+	src/xvid.h:1.63->1.64 
+
+---------------------
+Date: 2008/11/28 17:54:43
+Author: Isibaar
+Branch: HEAD
+Tag: tag-branching-1_2_0 
+Log:
+WIN64 compatibility
+
+Members: 
+	dshow/src/config.h:1.5->1.6 
+
+---------------------
+Date: 2008/11/28 17:42:50
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+alternative multicore detection
+
+Members: 
+	src/xvid.c:1.76->1.77 
+
+---------------------
+Date: 2008/11/28 12:56:01
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+Auto SMP
+
+Members: 
+	vfw/src/codec.c:1.21->1.22 
+	vfw/src/config.c:1.35->1.36 
+	vfw/src/resource.rc:1.24->1.25 
+
+---------------------
+Date: 2008/11/28 11:58:07
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+bugfix: prevent access violation if width/height is not multiple of 2
+
+Members: 
+	src/image/image.c:1.42->1.43 
+
+---------------------
+Date: 2008/11/27 21:46:13
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+AMD64 fix
+
+Members: 
+	src/plugins/x86_asm/plugin_ssim-a.asm:1.8->1.9 
+
+---------------------
+Date: 2008/11/27 21:34:53
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+readded cpu check
+
+Members: 
+	src/plugins/plugin_ssim.c:1.11->1.12 
+
+---------------------
+Date: 2008/11/27 21:17:33
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+more ssim fixes
+
+Members: 
+	examples/xvid_encraw.c:1.36->1.37 
+	src/xvid.h:1.62->1.63 
+	src/plugins/plugin_ssim.c:1.10->1.11 
+	src/plugins/plugin_ssim.h:1.3->1.4 
+
+---------------------
+Date: 2008/11/27 20:45:28
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+fix for -ssim option
+
+Members: 
+	examples/xvid_encraw.c:1.35->1.36 
+
+---------------------
+Date: 2008/11/27 19:35:36
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+64-bit fix
+
+Members: 
+	src/utils/x86_asm/interlacing_mmx.asm:1.9->1.10 
+
+---------------------
+Date: 2008/11/27 17:42:00
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+updated strings
+
+Members: 
+	vfw/bin/xvid.inf:1.3->1.4 
+
+---------------------
+Date: 2008/11/27 17:33:32
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+64-bit GUI note
+
+Members: 
+	vfw/src/config.c:1.34->1.35 
+	vfw/src/config.h:1.11->1.12 
+	vfw/src/resource.rc:1.23->1.24 
+
+---------------------
+Date: 2008/11/27 17:31:48
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+enable SSE4 GMC code
+
+Members: 
+	src/portab.h:1.57->1.58 
+	src/motion/gmc.c:1.8->1.9 
+
+---------------------
+Date: 2008/11/27 12:57:28
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+WIN64 compatibility
+
+Members: 
+	dshow/Makefile:1.6->1.7 
+	vfw/bin/Makefile:1.5->1.6 
+	vfw/src/config.c:1.33->1.34 
+	vfw/src/status.c:1.2->1.3 
+
+---------------------
+Date: 2008/11/27 01:47:03
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+brightness control fix
+
+Members: 
+	src/xvid.c:1.75->1.76 
+	src/image/postprocessing.c:1.4->1.5 
+	src/image/x86_asm/postprocessing_sse2.asm:1.9->1.10 
+
+---------------------
+Date: 2008/11/27 00:37:28
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+sad8bi bench
+
+Members: 
+	examples/xvid_bench.c:1.37->1.38 
+
+---------------------
+Date: 2008/11/27 00:35:50
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+some WIN64 fixes
+
+Members: 
+	src/image/x86_asm/colorspace_mmx.inc:1.6->1.7 
+	src/image/x86_asm/colorspace_yuv_mmx.asm:1.9->1.10 
+	src/image/x86_asm/gmc_mmx.asm:1.6->1.7 
+	src/image/x86_asm/interpolate8x8_mmx.asm:1.21->1.22 
+	src/image/x86_asm/postprocessing_mmx.asm:1.8->1.9 
+	src/image/x86_asm/qpel_mmx.asm:1.8->1.9 
+	src/quant/x86_asm/quantize_h263_mmx.asm:1.10->1.11 
+	src/quant/x86_asm/quantize_mpeg_mmx.asm:1.12->1.13 
+
+---------------------
+Date: 2008/11/26 11:11:16
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+GUI controls for SSE3/SSE4
+Updated about box and messages
+
+Members: 
+	dshow/src/CXvidDecoder.h:1.6->1.7 
+	dshow/src/Configure.cpp:1.4->1.5 
+	dshow/src/config.c:1.8->1.9 
+	vfw/src/codec.h:1.5->1.6 
+	vfw/src/config.c:1.32->1.33 
+	vfw/src/resource.h:1.10->1.11 
+	vfw/src/resource.rc:1.22->1.23 
+
+---------------------
+Date: 2008/11/26 10:31:06
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+some more benches
+
+Members: 
+	examples/xvid_bench.c:1.36->1.37 
+
+---------------------
+Date: 2008/11/26 03:36:37
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+increment bs version
+
+Members: 
+	src/xvid.h:1.61->1.62 
+
+---------------------
+Date: 2008/11/26 03:32:54
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+removed obsolete AMD64 asm source files
+
+Members: 
+	src/dct/x86_64_asm/fdct_mmx_skal.asm:1.3->1.4(DEAD) 
+	src/dct/x86_64_asm/idct_mmx.asm:1.3->1.4(DEAD) 
+	src/image/x86_64_asm/interpolate8x8_mmx.asm:1.3->1.4(DEAD) 
+	src/image/x86_64_asm/interpolate8x8_xmm.asm:1.3->1.4(DEAD) 
+	src/image/x86_64_asm/qpel_mmx.asm:1.4->1.5(DEAD) 
+	src/motion/x86_64_asm/sad_mmx.asm:1.3->1.4(DEAD) 
+	src/motion/x86_64_asm/sad_xmm.asm:1.3->1.4(DEAD) 
+	src/quant/x86_64_asm/quantize_h263_mmx.asm:1.3->1.4(DEAD) 
+	src/quant/x86_64_asm/quantize_mpeg_xmm.asm:1.3->1.4(DEAD) 
+	src/utils/x86_64_asm/cpuid.asm:1.6->1.7(DEAD) 
+	src/utils/x86_64_asm/interlacing_mmx.asm:1.5->1.6(DEAD) 
+	src/utils/x86_64_asm/mem_transfer_mmx.asm:1.3->1.4(DEAD) 
+
+---------------------
+Date: 2008/11/26 03:21:02
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+X86_64 fixes
+
+Members: 
+	src/image/x86_asm/postprocessing_mmx.asm:1.7->1.8 
+	src/image/x86_asm/postprocessing_sse2.asm:1.8->1.9 
+	src/quant/quant_mpeg.c:1.4->1.5 
+	src/quant/x86_asm/quantize_mpeg_mmx.asm:1.11->1.12 
+	src/quant/x86_asm/quantize_mpeg_xmm.asm:1.9->1.10 
+
+---------------------
+Date: 2008/11/26 03:17:50
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+win64 target
+
+Members: 
+	build/generic/Makefile:1.16->1.17 
+	build/generic/configure.in:1.24->1.25 
+	build/generic/sources.inc:1.14->1.15 
+
+---------------------
+Date: 2008/11/26 03:12:41
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+updated MSVC project files
+
+Members: 
+	build/win32/libxvidcore.dsp:1.14->1.15 
+	build/win32/libxvidcore_static.dsp:1.4->1.5 
+
+---------------------
+Date: 2008/11/26 02:04:34
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+Unified elf64/win64 X86_64 support
+
+Members: 
+	src/nasm.inc:INITIAL->1.1 
+	src/xvid.c:1.74->1.75 
+	src/bitstream/cbp.h:1.11->1.12 
+	src/bitstream/mbcoding.c:1.56->1.57 
+	src/bitstream/x86_asm/cbp_3dne.asm:1.7->1.8(DEAD) 
+	src/bitstream/x86_asm/cbp_mmx.asm:1.16->1.17 
+	src/bitstream/x86_asm/cbp_sse2.asm:1.9->1.10 
+	src/dct/fdct.h:1.10->1.11 
+	src/dct/idct.h:1.12->1.13 
+	src/dct/x86_asm/fdct_mmx_ffmpeg.asm:1.7->1.8 
+	src/dct/x86_asm/fdct_mmx_skal.asm:1.9->1.10 
+	src/dct/x86_asm/fdct_sse2_skal.asm:1.9->1.10 
+	src/dct/x86_asm/idct_3dne.asm:1.8->1.9 
+	src/dct/x86_asm/idct_mmx.asm:1.12->1.13 
+	src/dct/x86_asm/idct_sse2_dmitry.asm:1.7->1.8 
+	src/dct/x86_asm/simple_idct_mmx.asm:1.9->1.10(DEAD) 
+	src/image/colorspace.h:1.9->1.10 
+	src/image/image.c:1.41->1.42 
+	src/image/interpolate8x8.h:1.16->1.17 
+	src/image/qpel.c:1.8->1.9 
+	src/image/qpel.h:1.7->1.8 
+	src/image/reduced.h:1.3->1.4 
+	src/image/x86_asm/colorspace_mmx.inc:1.5->1.6 
+	src/image/x86_asm/colorspace_rgb_mmx.asm:1.9->1.10 
+	src/image/x86_asm/colorspace_yuv_mmx.asm:1.8->1.9 
+	src/image/x86_asm/colorspace_yuyv_mmx.asm:1.9->1.10 
+	src/image/x86_asm/deintl_sse.asm:1.3->1.4 
+	src/image/x86_asm/gmc_mmx.asm:1.5->1.6 
+	src/image/x86_asm/interpolate8x8_3dn.asm:1.11->1.12 
+	src/image/x86_asm/interpolate8x8_3dne.asm:1.10->1.11 
+	src/image/x86_asm/interpolate8x8_mmx.asm:1.20->1.21 
+	src/image/x86_asm/interpolate8x8_xmm.asm:1.12->1.13 
+	src/image/x86_asm/postprocessing_mmx.asm:1.6->1.7 
+	src/image/x86_asm/postprocessing_sse2.asm:1.7->1.8 
+	src/image/x86_asm/qpel_mmx.asm:1.7->1.8 
+	src/image/x86_asm/reduced_mmx.asm:1.8->1.9 
+	src/motion/motion_smp.h:1.4->1.5 
+	src/motion/sad.h:1.23->1.24 
+	src/motion/x86_asm/sad_3dn.asm:1.11->1.12 
+	src/motion/x86_asm/sad_3dne.asm:1.9->1.10 
+	src/motion/x86_asm/sad_mmx.asm:1.19->1.20 
+	src/motion/x86_asm/sad_sse2.asm:1.15->1.16 
+	src/motion/x86_asm/sad_xmm.asm:1.12->1.13 
+	src/plugins/plugin_ssim.c:1.9->1.10 
+	src/plugins/x86_asm/plugin_ssim-a.asm:1.7->1.8 
+	src/quant/quant.h:1.7->1.8 
+	src/quant/quant_matrix.c:1.15->1.16 
+	src/quant/quant_mpeg.c:1.3->1.4 
+	src/quant/x86_asm/quantize_h263_3dne.asm:1.8->1.9 
+	src/quant/x86_asm/quantize_h263_mmx.asm:1.9->1.10 
+	src/quant/x86_asm/quantize_mpeg_mmx.asm:1.10->1.11 
+	src/quant/x86_asm/quantize_mpeg_xmm.asm:1.8->1.9 
+	src/utils/mbfunctions.h:1.20->1.21 
+	src/utils/mem_transfer.h:1.17->1.18 
+	src/utils/x86_asm/cpuid.asm:1.14->1.15 
+	src/utils/x86_asm/interlacing_mmx.asm:1.8->1.9 
+	src/utils/x86_asm/mem_transfer_3dne.asm:1.10->1.11 
+	src/utils/x86_asm/mem_transfer_mmx.asm:1.19->1.20 
+
+---------------------
+Date: 2008/11/14 16:43:27
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+initial SSE4 support
+
+Members: 
+	build/generic/configure.in:1.23->1.24 
+	examples/xvid_bench.c:1.35->1.36 
+	examples/xvid_encraw.c:1.34->1.35 
+	src/xvid.c:1.73->1.74 
+	src/xvid.h:1.60->1.61 
+	src/image/x86_asm/gmc_mmx.asm:1.4->1.5 
+	src/motion/gmc.c:1.7->1.8 
+	src/utils/x86_64_asm/cpuid.asm:1.5->1.6 
+	src/utils/x86_asm/cpuid.asm:1.13->1.14 
+
+---------------------
+Date: 2008/11/11 21:46:24
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+NASM 2.x compatibility
+
+Members: 
+	src/bitstream/x86_asm/cbp_3dne.asm:1.6->1.7 
+	src/bitstream/x86_asm/cbp_mmx.asm:1.15->1.16 
+	src/bitstream/x86_asm/cbp_sse2.asm:1.8->1.9 
+	src/dct/x86_64_asm/fdct_mmx_skal.asm:1.2->1.3 
+	src/dct/x86_64_asm/idct_mmx.asm:1.2->1.3 
+	src/dct/x86_asm/fdct_mmx_ffmpeg.asm:1.6->1.7 
+	src/dct/x86_asm/fdct_mmx_skal.asm:1.8->1.9 
+	src/dct/x86_asm/fdct_sse2_skal.asm:1.8->1.9 
+	src/dct/x86_asm/idct_3dne.asm:1.7->1.8 
+	src/dct/x86_asm/idct_mmx.asm:1.11->1.12 
+	src/dct/x86_asm/idct_sse2_dmitry.asm:1.6->1.7 
+	src/dct/x86_asm/simple_idct_mmx.asm:1.8->1.9 
+	src/image/x86_64_asm/interpolate8x8_mmx.asm:1.2->1.3 
+	src/image/x86_64_asm/interpolate8x8_xmm.asm:1.2->1.3 
+	src/image/x86_64_asm/qpel_mmx.asm:1.3->1.4 
+	src/image/x86_asm/colorspace_mmx.inc:1.4->1.5 
+	src/image/x86_asm/colorspace_rgb_mmx.asm:1.8->1.9 
+	src/image/x86_asm/colorspace_yuv_mmx.asm:1.7->1.8 
+	src/image/x86_asm/colorspace_yuyv_mmx.asm:1.8->1.9 
+	src/image/x86_asm/deintl_sse.asm:1.2->1.3 
+	src/image/x86_asm/gmc_mmx.asm:1.3->1.4 
+	src/image/x86_asm/interpolate8x8_3dn.asm:1.10->1.11 
+	src/image/x86_asm/interpolate8x8_3dne.asm:1.9->1.10 
+	src/image/x86_asm/interpolate8x8_mmx.asm:1.19->1.20 
+	src/image/x86_asm/interpolate8x8_xmm.asm:1.11->1.12 
+	src/image/x86_asm/postprocessing_mmx.asm:1.5->1.6 
+	src/image/x86_asm/postprocessing_sse2.asm:1.6->1.7 
+	src/image/x86_asm/qpel_mmx.asm:1.6->1.7 
+	src/image/x86_asm/reduced_mmx.asm:1.7->1.8 
+	src/motion/x86_64_asm/sad_mmx.asm:1.2->1.3 
+	src/motion/x86_64_asm/sad_xmm.asm:1.2->1.3 
+	src/motion/x86_asm/sad_3dn.asm:1.10->1.11 
+	src/motion/x86_asm/sad_3dne.asm:1.8->1.9 
+	src/motion/x86_asm/sad_mmx.asm:1.18->1.19 
+	src/motion/x86_asm/sad_sse2.asm:1.14->1.15 
+	src/motion/x86_asm/sad_xmm.asm:1.11->1.12 
+	src/plugins/x86_asm/plugin_ssim-a.asm:1.6->1.7 
+	src/quant/x86_64_asm/quantize_h263_mmx.asm:1.2->1.3 
+	src/quant/x86_64_asm/quantize_mpeg_xmm.asm:1.2->1.3 
+	src/quant/x86_asm/quantize_h263_3dne.asm:1.7->1.8 
+	src/quant/x86_asm/quantize_h263_mmx.asm:1.8->1.9 
+	src/quant/x86_asm/quantize_mpeg_mmx.asm:1.9->1.10 
+	src/quant/x86_asm/quantize_mpeg_xmm.asm:1.7->1.8 
+	src/utils/x86_64_asm/cpuid.asm:1.4->1.5 
+	src/utils/x86_64_asm/interlacing_mmx.asm:1.4->1.5 
+	src/utils/x86_64_asm/mem_transfer_mmx.asm:1.2->1.3 
+	src/utils/x86_asm/cpuid.asm:1.12->1.13 
+	src/utils/x86_asm/interlacing_mmx.asm:1.7->1.8 
+	src/utils/x86_asm/mem_transfer_3dne.asm:1.9->1.10 
+	src/utils/x86_asm/mem_transfer_mmx.asm:1.18->1.19 
+
+---------------------
+Date: 2008/09/02 14:23:30
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- added the debian files from 1.1.3 release to CVS head
+- applied a patch by Fabian Greffrath <greffrath at leat ! rub ! de>
+
+Members: 
+	debian/changelog:1.1->1.2 
+	debian/compat:INITIAL->1.1 
+	debian/control:1.1->1.2 
+	debian/copyright:INITIAL->1.1 
+	debian/libxvidcore4-dev.dirs:INITIAL->1.1 
+	debian/libxvidcore4-dev.docs:INITIAL->1.1 
+	debian/libxvidcore4-dev.install:INITIAL->1.1 
+	debian/libxvidcore4.dirs:INITIAL->1.1 
+	debian/libxvidcore4.docs:INITIAL->1.1 
+	debian/libxvidcore4.install:INITIAL->1.1 
+	debian/rules:1.1->1.2 
+
+---------------------
+Date: 2008/08/19 11:17:17
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- removed accidental duplicates
+
+Members: 
+	src/utils/x86_64_asm/cpuid.asm:1.3->1.4 
+	src/utils/x86_64_asm/interlacing_mmx.asm:1.3->1.4 
+
+---------------------
+Date: 2008/08/19 11:06:48
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- noexecstack patch by Hans de Goede
+
+Members: 
+	src/bitstream/x86_asm/cbp_3dne.asm:1.5->1.6 
+	src/bitstream/x86_asm/cbp_mmx.asm:1.14->1.15 
+	src/bitstream/x86_asm/cbp_sse2.asm:1.7->1.8 
+	src/dct/x86_64_asm/fdct_mmx_skal.asm:1.1->1.2 
+	src/dct/x86_64_asm/idct_mmx.asm:1.1->1.2 
+	src/dct/x86_asm/fdct_mmx_ffmpeg.asm:1.5->1.6 
+	src/dct/x86_asm/fdct_mmx_skal.asm:1.7->1.8 
+	src/dct/x86_asm/fdct_sse2_skal.asm:1.7->1.8 
+	src/dct/x86_asm/idct_3dne.asm:1.6->1.7 
+	src/dct/x86_asm/idct_mmx.asm:1.10->1.11 
+	src/dct/x86_asm/idct_sse2_dmitry.asm:1.5->1.6 
+	src/dct/x86_asm/simple_idct_mmx.asm:1.7->1.8 
+	src/image/x86_64_asm/interpolate8x8_mmx.asm:1.1->1.2 
+	src/image/x86_64_asm/interpolate8x8_xmm.asm:1.1->1.2 
+	src/image/x86_64_asm/qpel_mmx.asm:1.2->1.3 
+	src/image/x86_asm/colorspace_rgb_mmx.asm:1.7->1.8 
+	src/image/x86_asm/colorspace_yuv_mmx.asm:1.6->1.7 
+	src/image/x86_asm/colorspace_yuyv_mmx.asm:1.7->1.8 
+	src/image/x86_asm/deintl_sse.asm:1.1->1.2 
+	src/image/x86_asm/gmc_mmx.asm:1.2->1.3 
+	src/image/x86_asm/interpolate8x8_3dn.asm:1.9->1.10 
+	src/image/x86_asm/interpolate8x8_3dne.asm:1.8->1.9 
+	src/image/x86_asm/interpolate8x8_mmx.asm:1.18->1.19 
+	src/image/x86_asm/interpolate8x8_xmm.asm:1.10->1.11 
+	src/image/x86_asm/postprocessing_mmx.asm:1.4->1.5 
+	src/image/x86_asm/postprocessing_sse2.asm:1.5->1.6 
+	src/image/x86_asm/qpel_mmx.asm:1.5->1.6 
+	src/image/x86_asm/reduced_mmx.asm:1.6->1.7 
+	src/motion/x86_64_asm/sad_mmx.asm:1.1->1.2 
+	src/motion/x86_64_asm/sad_xmm.asm:1.1->1.2 
+	src/motion/x86_asm/sad_3dn.asm:1.9->1.10 
+	src/motion/x86_asm/sad_3dne.asm:1.7->1.8 
+	src/motion/x86_asm/sad_mmx.asm:1.17->1.18 
+	src/motion/x86_asm/sad_sse2.asm:1.13->1.14 
+	src/motion/x86_asm/sad_xmm.asm:1.10->1.11 
+	src/plugins/x86_asm/plugin_ssim-a.asm:1.5->1.6 
+	src/quant/x86_64_asm/quantize_h263_mmx.asm:1.1->1.2 
+	src/quant/x86_64_asm/quantize_mpeg_xmm.asm:1.1->1.2 
+	src/quant/x86_asm/quantize_h263_3dne.asm:1.6->1.7 
+	src/quant/x86_asm/quantize_h263_mmx.asm:1.7->1.8 
+	src/quant/x86_asm/quantize_mpeg_mmx.asm:1.8->1.9 
+	src/quant/x86_asm/quantize_mpeg_xmm.asm:1.6->1.7 
+	src/utils/x86_64_asm/cpuid.asm:1.2->1.3 
+	src/utils/x86_64_asm/interlacing_mmx.asm:1.2->1.3 
+	src/utils/x86_64_asm/mem_transfer_mmx.asm:1.1->1.2 
+	src/utils/x86_asm/cpuid.asm:1.11->1.12 
+	src/utils/x86_asm/interlacing_mmx.asm:1.6->1.7 
+	src/utils/x86_asm/mem_transfer_3dne.asm:1.8->1.9 
+	src/utils/x86_asm/mem_transfer_mmx.asm:1.17->1.18 
+
+---------------------
+Date: 2007/11/23 11:45:09
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- add missing #!/usr/bin/perl
+
+Members: 
+	examples/bench_list.pl:1.2->1.3 
+
+---------------------
+Date: 2007/11/23 11:44:11
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- update for nasm >= 0.99
+
+Members: 
+	build/generic/configure.in:1.22->1.23 
+
+---------------------
+Date: 2007/09/11 14:41:13
+Author: suxen_drol
+Branch: HEAD
+Tag: (none) 
+Log:
+nasm 0.99.x compatibility
+
+Members: 
+	src/dct/x86_asm/fdct_mmx_skal.asm:1.6->1.7 
+	src/image/x86_asm/interpolate8x8_3dne.asm:1.7->1.8 
+	src/motion/x86_asm/sad_3dne.asm:1.6->1.7 
+	src/quant/x86_asm/quantize_h263_3dne.asm:1.5->1.6 
+	src/utils/x86_asm/mem_transfer_3dne.asm:1.7->1.8 
+
+---------------------
+Date: 2007/07/26 16:30:31
+Author: suxen_drol
+Branch: HEAD
+Tag: (none) 
+Log:
+posix compliance; s/malloc\.h/stdlib\.h/
+
+Members: 
+	src/plugins/plugin_ssim.c:1.8->1.9 
+
+---------------------
+Date: 2007/07/24 11:43:10
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- improve b-frame decoding robustness (with broken stream or missing
+  ref frame)
+
+Members: 
+	src/bitstream/bitstream.c:1.57->1.58 
+
+---------------------
+Date: 2007/07/19 15:46:16
+Author: suxen_drol
+Branch: HEAD
+Tag: (none) 
+Log:
+remove plugin_fixed.c as per instruction "[XviD-devel] pete cvs commits digest" (13 May 2003)
+
+Members: 
+	src/plugins/plugin_fixed.c:1.2->1.3(DEAD) 
+
+---------------------
+Date: 2007/06/28 16:55:11
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        Simplify index testing after get_coeff(), esp. after decoding error.
+
+Members: 
+	src/bitstream/mbcoding.c:1.55->1.56 
+
+---------------------
+Date: 2007/06/27 16:38:05
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- patch for a potential vulnerability reported by Secunia
+
+Members: 
+	src/bitstream/mbcoding.c:1.54->1.55 
+
+---------------------
+Date: 2007/06/02 15:53:13
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+compile with unicode support correctly (windows/debug). Patch by Kurt Pruenner
+
+Members: 
+	src/portab.h:1.56->1.57 
+
+---------------------
+Date: 2007/04/28 18:30:20
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+Correction to out-of-bounds memory access in d_mv_bits; an assertion showing that d_mv_bits is still wrong; VC8 project files
+
+Members: 
+	build/win32/libxvidcore.sln:INITIAL->1.1 
+	build/win32/libxvidcore.vcproj:INITIAL->1.1 
+	src/bitstream/mbcoding.c:1.53->1.54 
+	src/motion/motion_inlines.h:1.4->1.5 
+
+---------------------
+Date: 2007/04/16 21:01:28
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        fix for bad resync_marker length in b-vops (both enc and dec)
+
+        Thanks to Mathieu Monnier for the report
+        (mathieu.monnier at polytechnique dot org)
+
+Members: 
+	src/decoder.c:1.79->1.80 
+	src/bitstream/bitstream.c:1.56->1.57 
+
+---------------------
+Date: 2007/03/08 22:40:12
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- fix SSE3 detection and port to x86_64
+
+Members: 
+	src/utils/x86_64_asm/cpuid.asm:1.1->1.2 
+	src/utils/x86_asm/cpuid.asm:1.10->1.11 
+
+---------------------
+Date: 2007/02/08 14:10:24
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- avoid access violation when stats==NULL - patch by Felipe Contreras
+
+Members: 
+	src/encoder.c:1.129->1.130 
+
+---------------------
+Date: 2007/01/09 21:08:53
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- ssim and colorspace set-up patches by Johannes Reinhardt
+
+Members: 
+	examples/xvid_encraw.c:1.33->1.34 
+
+---------------------
+Date: 2006/12/22 00:29:27
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- build patch for Mac by Eric Petit
+
+Members: 
+	build/generic/configure.in:1.21->1.22 
+
+---------------------
+Date: 2006/12/22 00:27:25
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- PPC build cleanup patch for SSIM by Paul Kurucz
+
+Members: 
+	examples/xvid_bench.c:1.34->1.35 
+	src/plugins/plugin_ssim.c:1.7->1.8 
+
+---------------------
+Date: 2006/12/14 14:09:00
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- missing emms() fix by squid_80
+
+Members: 
+	src/encoder.c:1.128->1.129 
+
+---------------------
+Date: 2006/12/06 20:55:42
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- Add xvid_plugin_ssim
+
+Members: 
+	build/generic/libxvidcore.def:1.4->1.5 
+
+---------------------
+Date: 2006/12/06 20:55:07
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- SSE3 patch
+
+Members: 
+	src/xvid.c:1.72->1.73 
+	src/xvid.h:1.59->1.60 
+	src/motion/sad.h:1.22->1.23 
+	src/motion/x86_asm/sad_sse2.asm:1.12->1.13 
+	src/utils/x86_asm/cpuid.asm:1.9->1.10 
+
+---------------------
+Date: 2006/11/12 02:40:36
+Author: chl
+Branch: HEAD
+Tag: (none) 
+Log:
+MMX version of RGB_to_yv12, shamelessly copy&pasted from the BGR version.
+
+Members: 
+	src/xvid.c:1.71->1.72 
+	src/image/colorspace.h:1.8->1.9 
+	src/image/x86_asm/colorspace_rgb_mmx.asm:1.6->1.7 
+
+---------------------
+Date: 2006/11/11 23:06:44
+Author: chl
+Branch: HEAD
+Tag: (none) 
+Log:
+Fixed RGB but, simply forgot to initialize the function ptr
+
+Members: 
+	src/xvid.c:1.70->1.71 
+
+---------------------
+Date: 2006/11/11 23:03:30
+Author: chl
+Branch: HEAD
+Tag: (none) 
+Log:
+Same RGB bug, different location
+
+Members: 
+	src/image/image.c:1.40->1.41 
+
+---------------------
+Date: 2006/11/11 06:07:25
+Author: chl
+Branch: HEAD
+Tag: (none) 
+Log:
+Typo in RGB, but still seems broken.
+
+Members: 
+	src/image/image.c:1.39->1.40 
+
+---------------------
+Date: 2006/11/10 19:58:39
+Author: chl
+Branch: HEAD
+Tag: (none) 
+Log:
+Added support for RGB colorspace. Incredible that after 5 years, this still
+wasn't there (only BGR and RGB+alpha).
+There are no accelerated MMX version, yet.
+
+Members: 
+	src/xvid.h:1.58->1.59 
+	src/image/colorspace.c:1.13->1.14 
+	src/image/colorspace.h:1.7->1.8 
+	src/image/image.c:1.38->1.39 
+
+---------------------
+Date: 2006/11/08 08:17:22
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        + added an integer-based alternative to float gaussian.
+        #define USE_INT_GAUSSIAN to activate it
+
+Members: 
+	src/plugins/plugin_ssim.c:1.6->1.7 
+
+---------------------
+Date: 2006/11/08 07:55:27
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        + applied ssim_part3.diff patch, by Johannes Reinhardt
+
+Members: 
+	examples/xvid_encraw.c:1.32->1.33 
+	src/plugins/plugin_ssim.c:1.5->1.6 
+	src/plugins/plugin_ssim.h:1.2->1.3 
+
+---------------------
+Date: 2006/11/07 20:59:03
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        + added a seamingly missing emms() to generate_GMCimage()
+        + little ASM clean-up, pointer out by Celtic_Druid
+
+Members: 
+	src/image/x86_asm/gmc_mmx.asm:1.1->1.2 
+	src/motion/gmc.c:1.6->1.7 
+
+---------------------
+Date: 2006/11/01 11:04:29
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- upped BS_VERSION to 47
+
+Members: 
+	src/xvid.h:1.57->1.58 
+
+---------------------
+Date: 2006/11/01 08:12:26
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        + added a very simple bench to test bitstream-read functions
+        mostly to be used in conjunction to valgrind to spot uninitialized
+        reads.
+
+Members: 
+	examples/xvid_bench.c:1.33->1.34 
+
+---------------------
+Date: 2006/10/30 23:23:05
+Author: chl
+Branch: HEAD
+Tag: (none) 
+Log:
+nasm/yasm (at least my versions) didn't like the 0EH syntax in pshufd.
+Change to 0x0E fixes it (thanks for the hint, skal!).
+
+Members: 
+	src/plugins/x86_asm/plugin_ssim-a.asm:1.4->1.5 
+
+---------------------
+Date: 2006/10/30 12:33:57
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        + fix for rounding error while descaling
+
+Members: 
+	src/plugins/x86_asm/plugin_ssim-a.asm:1.3->1.4 
+
+---------------------
+Date: 2006/10/30 12:21:42
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        + further patch for SSIM plugin by Johannes Reinhardt
+        + updated `xvid_bench 15` => there's still a little
+        rounding inaccuracy in the reported CRCs. Work in progress...
+
+Members: 
+	examples/xvid_bench.c:1.32->1.33 
+	examples/xvid_encraw.c:1.31->1.32 
+	src/xvid.h:1.56->1.57 
+	src/plugins/plugin_ssim.c:1.4->1.5 
+	src/plugins/plugin_ssim.h:1.1->1.2 
+	src/plugins/x86_asm/plugin_ssim-a.asm:1.2->1.3 
+
+---------------------
+Date: 2006/10/30 11:52:00
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        + added support for NULL u/v pointer in yv12_to_yv12* functions
+        (+little bug fix for the vflip case).
+        Added a bench in xvid_bench.c (`xvid_bench 16`)
+
+Members: 
+	examples/xvid_bench.c:1.31->1.32 
+	src/image/colorspace.c:1.12->1.13 
+	src/image/x86_asm/colorspace_yuv_mmx.asm:1.5->1.6 
+
+---------------------
+Date: 2006/10/29 09:04:02
+Author: chl
+Branch: HEAD
+Tag: (none) 
+Log:
+Simple handle to flooding chroma components with 0x80: set src->u and
+src->v to NULL. To work with VFlip, set also src_uv_stride=0.
+
+Members: 
+	src/image/colorspace.c:1.11->1.12 
+
+---------------------
+Date: 2006/10/26 18:34:32
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        slightly faster lum_8x8_mmx
+
+Members: 
+	src/plugins/x86_asm/plugin_ssim-a.asm:1.1->1.2 
+
+---------------------
+Date: 2006/10/16 06:46:01
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+        update totalPSNR[], whatever the ARG_PROGRESS
+
+Members: 
+	examples/xvid_encraw.c:1.30->1.31 
+
+---------------------
+Date: 2006/10/13 17:19:48
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        bench on lum2x8 was wrong (uninitialized reads)
+
+Members: 
+	examples/xvid_bench.c:1.30->1.31 
+
+---------------------
+Date: 2006/10/13 17:16:25
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        some more SSIM patches by Johannes
+
+Members: 
+	examples/xvid_bench.c:1.29->1.30 
+	examples/xvid_encraw.c:1.29->1.30 
+	src/plugins/plugin_ssim.c:1.3->1.4 
+
+---------------------
+Date: 2006/10/13 13:26:18
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        wrong call to check_cpu_features() in case of non-ARCH_IS_IA32
+
+Members: 
+	src/image/image.c:1.37->1.38 
+
+---------------------
+Date: 2006/10/13 11:28:46
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        removed the #ifndef WIN32 protection around xvid_plugin_ssim
+
+Members: 
+	examples/xvid_encraw.c:1.28->1.29 
+
+---------------------
+Date: 2006/10/13 10:39:07
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- Updated the MSVC project files plus some minor compilation fixes
+
+Members: 
+	build/win32/libxvidcore.dsp:1.13->1.14 
+	src/image/image.c:1.36->1.37 
+	src/plugins/plugin_ssim.c:1.2->1.3 
+
+---------------------
+Date: 2006/10/13 09:38:09
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        + added a simple de-interlacing func (c + sse version),
+        declared as xvid_image_deinterlace() in image.h
+
+        Of course, one should prefer deinterlacing through some avisynth
+        plugin, but...
+
+        please update the dsp/dsw
+
+Members: 
+	build/generic/sources.inc:1.13->1.14 
+	src/image/image.c:1.35->1.36 
+	src/image/image.h:1.16->1.17 
+	src/image/x86_asm/deintl_sse.asm:INITIAL->1.1 
+
+---------------------
+Date: 2006/10/13 08:32:02
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        + added a forgotten ARCH_IS_IA32
+        + added some missing emms() after asm calls (since floats are used)
+
+Members: 
+	src/plugins/plugin_ssim.c:1.1->1.2 
+
+---------------------
+Date: 2006/10/11 16:55:28
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        + added a bench for SSIM's internal function (`xvid_bench 15`)
+
+Members: 
+	examples/xvid_bench.c:1.28->1.29 
+
+---------------------
+Date: 2006/10/11 15:55:32
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        + added SSIM plugin code
+
+        Patch by Johannes Reinhardt at uni-konstanz dot de
+
+Members: 
+	build/generic/sources.inc:1.12->1.13 
+	src/xvid.h:1.55->1.56 
+	src/plugins/plugin_ssim.c:INITIAL->1.1 
+	src/plugins/plugin_ssim.h:INITIAL->1.1 
+	src/plugins/x86_asm/plugin_ssim-a.asm:INITIAL->1.1 
+
+---------------------
+Date: 2006/10/11 15:52:06
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        + added SSIM pluging to xvid_encraw.c (only for non-WIN32
+        for now)
+        + modified Makefile to use generic/=build/libxvidcore.a
+        direct path
+
+        Patch by Johannes Reinhardt at uni-konstanz dot de
+
+Members: 
+	examples/Makefile:1.9->1.10 
+	examples/xvid_encraw.c:1.27->1.28 
+
+---------------------
+Date: 2006/09/22 05:40:11
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+stop using cmov with mmx
+
+Members: 
+	src/quant/x86_asm/quantize_mpeg_mmx.asm:1.7->1.8 
+
+---------------------
+Date: 2006/09/11 00:42:15
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- small bug reported by Greg Handi
+
+Members: 
+	src/decoder.c:1.78->1.79 
+
+---------------------
+Date: 2006/09/03 10:46:56
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        + added a protection flag XVID_SAFE_BS_TAIL for not reading
+        more than 4byte past the end of the input buffer. This is
+        disabled by default (because slow), and 8byte-padding of input
+        buffer should be a prefered solution in case of problem.
+        Please cross-check i didn't break something.
+
+
+        Thanks to Liang Jian ( jianliang79 at gmail dot com ) for
+        pointing out the problem.
+
+Members: 
+	src/bitstream/bitstream.h:1.23->1.24 
+
+---------------------
+Date: 2006/08/23 22:27:22
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        Typo: use stride from data->current instead of data->reference
+        Thanks to  Johannes.Reinhardt at uni-konstanz dot de
+
+Members: 
+	src/plugins/plugin_dump.c:1.2->1.3 
+
+---------------------
+Date: 2006/07/11 20:36:18
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- updated graphics
+
+Members: 
+	dshow/src/XviD_logo.bmp:1.2->1.3 
+	vfw/src/XviD_logo.bmp:1.2->1.3 
+	vfw/src/xvid.ico:1.1->1.2 
+
+---------------------
+Date: 2006/07/11 19:17:09
+Author: chl
+Branch: HEAD
+Tag: (none) 
+Log:
+ARG_FRAMERATE=0. broke encoding with default
+
+Members: 
+	examples/xvid_encraw.c:1.26->1.27 
+
+---------------------
+Date: 2006/07/11 12:19:27
+Author: chl
+Branch: HEAD
+Tag: (none) 
+Log:
+linking to pthread library was missing
+
+Members: 
+	examples/Makefile:1.8->1.9 
+
+---------------------
+Date: 2006/07/11 12:01:27
+Author: chl
+Branch: HEAD
+Tag: (none) 
+Log:
+fissing .endfunc
+
+Members: 
+	src/quant/x86_asm/quantize_mpeg_mmx.asm:1.6->1.7 
+
+---------------------
+Date: 2006/07/10 19:39:23
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- updated profile definitions
+
+Members: 
+	vfw/src/codec.c:1.20->1.21 
+	vfw/src/config.c:1.31->1.32 
+	vfw/src/config.h:1.10->1.11 
+
+---------------------
+Date: 2006/07/10 19:25:23
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- increment bs version to 45
+
+Members: 
+	src/xvid.h:1.54->1.55 
+
+---------------------
+Date: 2006/07/10 10:09:59
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+faster and waaay more precise mpeg intra quantization
+
+Members: 
+	src/encoder.h:1.31->1.32 
+	src/xvid.c:1.69->1.70 
+	src/quant/quant.h:1.6->1.7 
+	src/quant/quant_matrix.c:1.14->1.15 
+	src/quant/quant_matrix.h:1.7->1.8 
+	src/quant/quant_mpeg.c:1.2->1.3 
+	src/quant/x86_asm/quantize_mpeg_mmx.asm:1.5->1.6 
+	src/quant/x86_asm/quantize_mpeg_xmm.asm:1.5->1.6 
+	src/utils/mbtransquant.c:1.31->1.32 
+
+---------------------
+Date: 2006/07/08 16:19:04
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        some compile fix... note: -start <int> only works for
+        raw YUV input (type 0).
+
+Members: 
+	examples/xvid_encraw.c:1.25->1.26 
+
+---------------------
+Date: 2006/06/17 15:07:55
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- Enabled Skal's new SIMD optimizations for GMC
+
+Members: 
+	build/win32/libxvidcore.dsp:1.12->1.13 
+	src/motion/gmc.c:1.5->1.6 
+
+---------------------
+Date: 2006/06/16 12:08:28
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+xvid_encraw with AVI input support, possible MKV output support, and all options/settings. Possibly the ugliest piece of code in our tree. Needs a rewrite.
+
+Members: 
+	examples/xvid_encraw.c:1.24->1.25 
+
+---------------------
+Date: 2006/06/14 23:44:07
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        added mmx/sse2 code for GMC (3-pts only).
+        new file: image/x86_asm/gmc_mmx.asm
+
+        At this point, new GMC code isn't enabled (gmc.c:586).
+        So: this commit should give binary-exact same input/output
+        than before.
+
+        dsp/dsw not updated.
+
+Members: 
+	build/generic/sources.inc:1.11->1.12 
+	src/xvid.c:1.68->1.69 
+	src/image/x86_asm/gmc_mmx.asm:INITIAL->1.1 
+	src/motion/gmc.c:1.4->1.5 
+	src/motion/gmc.h:1.2->1.3 
+
+---------------------
+Date: 2006/06/07 23:00:55
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        + fix for a long-standing typo in the clipping value
+        for 1-pts GMC prediction.
+
+Members: 
+	src/motion/gmc.c:1.3->1.4 
+
+---------------------
+Date: 2006/06/05 23:30:49
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        + added a test_yuv() stub to test YUV functions,
+        at least : yv12_to_yuyv and yv12_to_uyvy
+
+Members: 
+	examples/xvid_bench.c:1.27->1.28 
+
+---------------------
+Date: 2006/06/05 23:27:36
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        + faster yv12->yuyv / uyvy MMX functions
+        patch suggested by Carlo Bramini ( carlo bramix at libero dot it )
+
+Members: 
+	src/image/x86_asm/colorspace_yuyv_mmx.asm:1.6->1.7 
+
+---------------------
+Date: 2006/05/28 09:52:45
+Author: suxen_drol
+Branch: HEAD
+Tag: (none) 
+Log:
+define _INTPTR_T_DEFINED
+
+Members: 
+	src/portab.h:1.55->1.56 
+
+---------------------
+Date: 2006/05/06 06:37:15
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+missing #include b0rks compilation
+
+Members: 
+	src/plugins/plugin_lumimasking.c:1.5->1.6 
+
+---------------------
+Date: 2006/04/26 19:44:29
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        + bswap and quant_h264_intra naming fix.
+
+        Patch by Thomas Koeckerbauer ( k0055217 at students dot uni-linz dot ac dot at )
+
+Members: 
+	src/portab.h:1.54->1.55 
+	src/quant/quant.h:1.5->1.6 
+
+---------------------
+Date: 2006/04/25 17:19:27
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+write stats file in the same directory as target file, not in root directory
+
+Members: 
+	vfw/src/config.h:1.9->1.10 
+
+---------------------
+Date: 2006/04/19 17:42:19
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+final skip threshold had its sign reversed, oops
+
+Members: 
+	src/motion/estimation_pvop.c:1.21->1.22 
+
+---------------------
+Date: 2006/04/15 06:17:02
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+s/max/MAX - *nix compilation bustage fix
+
+Members: 
+	src/plugins/plugin_lumimasking.c:1.4->1.5 
+
+---------------------
+Date: 2006/04/14 09:24:47
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        preserve the intervening bytes in BitstreamInit()
+
+        original reports by Alex Volkov and Liang Jian.
+
+Members: 
+	src/bitstream/bitstream.h:1.22->1.23 
+
+---------------------
+Date: 2006/04/13 22:48:06
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- debian patch by GomGom
+
+Members: 
+	debian/README.Debian:INITIAL->1.1 
+	debian/changelog:INITIAL->1.1 
+	debian/control:INITIAL->1.1 
+	debian/rules:INITIAL->1.1 
+
+---------------------
+Date: 2006/03/27 13:21:48
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+        fix for the visual_object_verid vs. video_object_layer_verid
+        problem of 6.3.3, reported by Li Xiang (lixiang01 at gmail dot com)
+        Thanks for report and test bitstreams!
+
+Members: 
+	src/decoder.c:1.77->1.78 
+	src/decoder.h:1.17->1.18 
+	src/bitstream/bitstream.c:1.55->1.56 
+
+---------------------
+Date: 2006/03/11 13:10:42
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+let lumimasking work with quant 1 too
+
+Members: 
+	src/plugins/plugin_lumimasking.c:1.3->1.4 
+
+---------------------
+Date: 2006/03/05 05:01:07
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+detect pthreads and add proper linking flags if they are found. patch by caro from irc
+
+Members: 
+	build/generic/configure.in:1.20->1.21 
+
+---------------------
+Date: 2006/03/03 12:54:58
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+fixed destructor bug - temp lamdas not freed
+
+Members: 
+	src/encoder.c:1.127->1.128 
+
+---------------------
+Date: 2006/02/27 13:16:04
+Author: suxen_drol
+Branch: HEAD
+Tag: (none) 
+Log:
+mingw compatibility, remove gcc warnings
+
+Members: 
+	src/motion/motion_smp.h:1.3->1.4 
+
+---------------------
+Date: 2006/02/27 01:24:02
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+synchronize only once *slaps forhead*
+
+Members: 
+	src/motion/estimation_pvop.c:1.20->1.21 
+
+---------------------
+Date: 2006/02/27 01:22:31
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+cosmetics; make it compile on linux and others without #defines
+
+Members: 
+	src/motion/motion_smp.h:1.2->1.3 
+
+---------------------
+Date: 2006/02/26 02:52:34
+Author: suxen_drol
+Branch: HEAD
+Tag: (none) 
+Log:
+add debug.c
+
+Members: 
+	dshow/dshow.dsp:1.6->1.7 
+	dshow/src/debug.c:INITIAL->1.1 
+	dshow/src/debug.h:1.5->1.6 
+
+---------------------
+Date: 2006/02/25 05:41:12
+Author: suxen_drol
+Branch: HEAD
+Tag: (none) 
+Log:
+win32: populate info.num_thread fields using GetProcessAffinityMask()
+
+Members: 
+	src/xvid.c:1.67->1.68 
+
+---------------------
+Date: 2006/02/25 02:20:41
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+oops I forgot to commit these yesterday ;_;
+
+Members: 
+	src/motion/estimation_bvop.c:1.24->1.25 
+	src/motion/estimation_pvop.c:1.19->1.20 
+
+---------------------
+Date: 2006/02/25 00:35:04
+Author: suxen_drol
+Branch: HEAD
+Tag: (none) 
+Log:
+add minfcode and minbcode members to SMPmotionData struct
+
+Members: 
+	src/motion/motion_smp.h:1.1->1.2 
+
+---------------------
+Date: 2006/02/24 23:59:07
+Author: suxen_drol
+Branch: HEAD
+Tag: (none) 
+Log:
+prevent segfault when encoding application calls compress_end with NULL codec context (PerfectDark at yandex dot ru)
+
+Members: 
+	vfw/src/codec.c:1.19->1.20 
+
+---------------------
+Date: 2006/02/24 15:18:59
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+SMP update - don't run encoding in parallel after all
+
+Members: 
+	src/encoder.c:1.126->1.127 
+
+---------------------
+Date: 2006/02/24 11:39:23
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+support -threads parameter (defaults to zero)
+
+Members: 
+	examples/xvid_encraw.c:1.23->1.24 
+
+---------------------
+Date: 2006/02/24 09:46:22
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+multithreaded encoding
+
+Members: 
+	src/encoder.c:1.125->1.126 
+	src/encoder.h:1.30->1.31 
+	src/motion/estimation_bvop.c:1.23->1.24 
+	src/motion/estimation_pvop.c:1.18->1.19 
+	src/motion/motion_smp.h:INITIAL->1.1 
+
+---------------------
+Date: 2006/02/24 09:33:52
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+enable number of threads; treat is as any other config (no auto-detection)
+
+Members: 
+	vfw/src/config.c:1.30->1.31 
+
+---------------------
+Date: 2006/02/23 08:22:43
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+reset dquant table, all of it
+
+Members: 
+	src/encoder.c:1.124->1.125 
+
+---------------------
+Date: 2006/02/15 21:58:43
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- N-VOP patch by Andrew Dunstan
+
+Members: 
+	src/encoder.c:1.123->1.124 
+
+---------------------
+Date: 2006/02/15 20:16:39
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+Bugfix: Decoding was prematurely terminated upon EOF
+
+Members: 
+	examples/xvid_decraw.c:1.23->1.24 
+
+---------------------
+Date: 2006/01/19 23:25:18
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- Added MV bits to statistics
+
+Members: 
+	src/encoder.c:1.122->1.123 
+	src/encoder.h:1.29->1.30 
+	src/bitstream/mbcoding.c:1.52->1.53 
+
+---------------------
+Date: 2006/01/17 20:06:25
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- Removed the 9999 frames encode limit from xvid_encraw
+
+Members: 
+	examples/xvid_encraw.c:1.22->1.23 
+
+---------------------
+Date: 2006/01/09 01:39:43
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- fix for EMT64 platform
+
+Members: 
+	src/xvid.c:1.66->1.67 
+
+---------------------
+Date: 2006/01/08 23:25:57
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- Increased the bs_version to 43
+
+Members: 
+	src/xvid.h:1.53->1.54 
+
+---------------------
+Date: 2005/12/30 15:04:49
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- Initialize dec->bs_version to high value. Before it seemed unititalized for
+  non XviD streams...
+
+Members: 
+	src/decoder.c:1.76->1.77 
+
+---------------------
+Date: 2005/12/30 14:52:32
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- Made the debug build config link again
+
+Members: 
+	dshow/dshow.dsp:1.5->1.6 
+	dshow/src/debug.h:1.4->1.5 
+
+---------------------
+Date: 2005/12/24 02:06:20
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- (hopefully) fixed the decoder bugs reported by Michael Niedermayer
+
+Members: 
+	src/decoder.c:1.75->1.76 
+
+---------------------
+Date: 2005/12/18 07:52:12
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+cleanup; skip decision moved to separate function
+
+Members: 
+	src/motion/estimation_pvop.c:1.17->1.18 
+	src/motion/motion.h:1.23->1.24 
+
+---------------------
+Date: 2005/12/18 03:55:54
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+-freduce-all-givs not supporeted by gcc4 - easiest to just remove
+
+Members: 
+	dshow/Makefile:1.5->1.6 
+	vfw/bin/Makefile:1.4->1.5 
+
+---------------------
+Date: 2005/12/17 14:57:15
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+stupid typo in latest patch
+
+Members: 
+	src/image/image.c:1.34->1.35 
+
+---------------------
+Date: 2005/12/17 13:04:52
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+easier image_interpolate() call, absolete comments removed
+
+Members: 
+	src/encoder.c:1.121->1.122 
+	src/image/image.c:1.33->1.34 
+	src/image/image.h:1.15->1.16 
+
+---------------------
+Date: 2005/12/17 12:24:32
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+ancient useless code removed
+
+Members: 
+	src/image/image.c:1.32->1.33 
+
+---------------------
+Date: 2005/12/10 06:20:35
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+slightly better trellis - check at least 3 coefficients. 0.05dB better with no measurable speed penalty
+
+Members: 
+	src/utils/mbtransquant.c:1.30->1.31 
+
+---------------------
+Date: 2005/12/09 05:45:35
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+expose VHQ and Trellis lambdas to HVS plugins
+
+Members: 
+	src/encoder.c:1.120->1.121 
+	src/encoder.h:1.28->1.29 
+	src/global.h:1.24->1.25 
+	src/xvid.h:1.52->1.53 
+	src/motion/estimation_rd_based.c:1.13->1.14 
+	src/motion/estimation_rd_based_bvop.c:1.9->1.10 
+	src/utils/mbtransquant.c:1.29->1.30 
+
+---------------------
+Date: 2005/12/09 05:39:49
+Author: syskin
+Branch: HEAD
+Tag: (none) 
+Log:
+tuning lambdas for better PSNR and vhq0 mode decision
+
+Members: 
+	src/motion/estimation.h:1.12->1.13 
+	src/motion/estimation_common.c:1.12->1.13 
+
+---------------------
+Date: 2005/11/25 13:07:01
+Author: chl
+Branch: HEAD
+Tag: (none) 
+Log:
+remove "xvid" in PGM-header, so xvid_encraw understands it
+
+Members: 
+	examples/xvid_decraw.c:1.22->1.23 
+
+---------------------
+Date: 2005/11/22 11:53:10
+Author: suxen_drol
+Branch: HEAD
+Tag: (none) 
+Log:
+update cvs-head to reflect xvid-1.2 development status:
+	set build string to "xvid-1.2.0-dev"
+	set XVID_VERSION to 1.2.-127
+	set XVID_BS_VERSION to 40
+	set XVID_UNSTABLE
+
+Members: 
+	src/xvid.c:1.65->1.66 
+	src/xvid.h:1.51->1.52 
+
+---------------------
+Date: 2005/11/22 11:23:01
+Author: suxen_drol
+Branch: HEAD
+Tag: (none) 
+Log:
+cleanings in code spotted by sparse (ed dot gomez at free dot fr>
+
+Members: 
+	src/decoder.c:1.74->1.75 
+	src/encoder.c:1.119->1.120 
+	src/xvid.c:1.64->1.65 
+	src/bitstream/bitstream.c:1.54->1.55 
+	src/dct/idct.c:1.8->1.9 
+	src/image/colorspace.c:1.10->1.11 
+	src/image/font.c:1.6->1.7 
+	src/image/qpel.c:1.7->1.8 
+	src/motion/estimation_rd_based.c:1.12->1.13 
+	src/motion/estimation_rd_based_bvop.c:1.8->1.9 
+	src/prediction/mbprediction.c:1.17->1.18 
+	src/utils/emms.c:1.10->1.11 
+	src/utils/mbtransquant.c:1.28->1.29 
+	src/utils/timer.h:1.10->1.11 
+
+---------------------
+Date: 2005/11/03 06:44:07
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+	typo fixed (thanks squid_80)
+
+Members: 
+	examples/xvid_bench.c:1.26->1.27 
+
+---------------------
+Date: 2005/10/26 14:38:33
+Author: Skal
+Branch: HEAD
+Tag: (none) 
+Log:
+
+         + removed the x_Ref%4 in qpel.h, in favor of x_Ref>>2.
+        As suggested by Gruel, there might be a compiler
+        problem for some very very exotic platform.
+        Hence, i've added a test_compiler() in xvid_bench.c, to
+        be sure everything are ok. Hope the test is correct.
+
+        + added benches for interlaced decoding, as supplied
+        by Christoph Kühnel (info at intek-darmstadt dot de).
+        Thanks a lot.
+
+Members: 
+	examples/xvid_bench.c:1.25->1.26 
+	src/image/qpel.h:1.6->1.7 
+
+---------------------
+Date: 2005/10/23 00:32:44
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- Renamed and extended the profiles
+
+Members: 
+	vfw/src/codec.c:1.18->1.19 
+	vfw/src/config.c:1.29->1.30 
+	vfw/src/config.h:1.8->1.9 
+
+---------------------
+Date: 2005/10/16 02:00:04
+Author: suxen_drol
+Branch: HEAD
+Tag: (none) 
+Log:
+vfw quality presets
+
+Members: 
+	vfw/src/codec.c:1.17->1.18 
+	vfw/src/config.c:1.28->1.29 
+	vfw/src/config.h:1.7->1.8 
+	vfw/src/resource.h:1.9->1.10 
+	vfw/src/resource.rc:1.21->1.22 
+
+---------------------
+Date: 2005/10/09 09:38:33
+Author: suxen_drol
+Branch: HEAD
+Tag: (none) 
+Log:
+TODO/Changelog update
+
+Members: 
+	ChangeLog:1.13->1.14 
+	TODO:1.7->1.8 
 
 2005/10/8 0:58:2, 'suxen_drol'
 	compatibility with haali media splitter:
