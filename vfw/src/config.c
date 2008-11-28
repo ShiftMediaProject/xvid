@@ -1466,7 +1466,7 @@ static void adv_download(HWND hDlg, int idd, CONFIG * config)
     break;
 
   case IDD_ENC :
-		config->num_threads = config_get_uint(hDlg, IDC_NUMTHREADS, config->num_threads);
+		config->num_threads = min(4, config_get_uint(hDlg, IDC_NUMTHREADS, config->num_threads));
 		config->fourcc_used = SendDlgItemMessage(hDlg, IDC_FOURCC, CB_GETCURSEL, 0, 0);
 		config->vop_debug = IsDlgChecked(hDlg, IDC_VOPDEBUG);
 		config->display_status = IsDlgChecked(hDlg, IDC_DISPLAY_STATUS);
