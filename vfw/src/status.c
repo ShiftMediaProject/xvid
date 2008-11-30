@@ -19,7 +19,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: status.c,v 1.3 2008-11-27 11:57:28 Isibaar Exp $
+ * $Id: status.c,v 1.4 2008-11-30 17:56:07 Isibaar Exp $
  *
  *****************************************************************************/
 
@@ -119,7 +119,7 @@ avg_quant(int quants[31], int min, int max, char* buf)
 
 /* status window proc handlder */
 
-static BOOL CALLBACK status_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK status_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	status_t * s = (status_t*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
 

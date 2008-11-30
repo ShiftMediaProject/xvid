@@ -1958,7 +1958,7 @@ INT_PTR CALLBACK main_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			EnumChildWindows(hDlg, enum_tooltips, 0);
 		}
 
-		SetClassLongPtr(GetDlgItem(hDlg, IDC_BITRATE_S), GCLP_HCURSOR, (LONG)LoadCursor(NULL, IDC_HAND));
+		SetClassLongPtr(GetDlgItem(hDlg, IDC_BITRATE_S), GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_HAND));
 
 		{
 			DWORD ext_style = ListView_GetExtendedListViewStyle(GetDlgItem(hDlg,IDC_ZONES));
@@ -2249,7 +2249,7 @@ static INT_PTR CALLBACK license_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
 					}
 				}
 			}
-			SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG)hGlobal);
+			SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)hGlobal);
 		}
 		break;
 
@@ -2340,7 +2340,7 @@ INT_PTR CALLBACK about_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 			}
 
-			SetClassLongPtr(GetDlgItem(hDlg, IDC_WEBSITE), GCLP_HCURSOR, (LONG)LoadCursor(NULL, IDC_HAND));
+			SetClassLongPtr(GetDlgItem(hDlg, IDC_WEBSITE), GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, IDC_HAND));
 			SetDlgItemText(hDlg, IDC_WEBSITE, XVID_WEBSITE);
 		}
 		break;
@@ -2349,7 +2349,7 @@ INT_PTR CALLBACK about_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			SetBkMode((HDC)wParam, TRANSPARENT) ;
 			SetTextColor((HDC)wParam, RGB(0x00,0x00,0xc0));
-			return (BOOL)GetStockObject(NULL_BRUSH);
+			return (INT_PTR)GetStockObject(NULL_BRUSH);
 		}
 		return 0;
 
