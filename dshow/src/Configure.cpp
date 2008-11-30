@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: Configure.cpp,v 1.5 2008-11-26 10:11:31 Isibaar Exp $
+ * $Id: Configure.cpp,v 1.6 2008-11-30 16:36:44 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -33,7 +33,7 @@
 static HINSTANCE g_xvid_hInst;
 
 
-int adv_dialog(HWND hwndOwner)
+INT_PTR adv_dialog(HWND hwndOwner)
 {
 	PROPSHEETPAGE psp [1];
 	PROPSHEETHEADER psh;

@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: portab.h,v 1.58 2008-11-27 16:31:48 Isibaar Exp $
+ * $Id: portab.h,v 1.59 2008-11-30 16:36:44 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -153,7 +153,7 @@ type * name = (type *) (((int32_t) name##_storage+(alignment - 1)) & ~((int32_t)
 /*----------------------------------------------------------------------------
   | msvc x86 specific macros/functions
  *---------------------------------------------------------------------------*/
-#    if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
+#    if defined(ARCH_IS_IA32)
 #        define BSWAP(a) __asm mov eax,a __asm bswap eax __asm mov a, eax
 
 static __inline int64_t read_counter(void)
@@ -168,6 +168,14 @@ static __inline int64_t read_counter(void)
 	ts = ((uint64_t) ts2 << 32) | ((uint64_t) ts1);
 	return ts;
 }
+
+#    elif defined(ARCH_IS_X86_64)
+
+#    include <intrin.h>
+
+#    define BSWAP(a) ((a) = _byteswap_ulong(a))
+
+static __inline int64_t read_counter(void) { return __rdtsc(); }
 
 /*----------------------------------------------------------------------------
   | msvc GENERIC (plain C only) - Probably alpha or some embedded device

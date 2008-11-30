@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.78 2008-11-28 18:16:42 Isibaar Exp $
+ * $Id: xvid.c,v 1.79 2008-11-30 16:36:44 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -663,24 +663,16 @@ xvid_gbl_info(xvid_gbl_info_t * info)
 	info->actual_version = XVID_VERSION;
 	info->build = "xvid-1.3.0-dev";
 	info->cpu_flags = detect_cpu_flags();
-  info->num_threads = 0;
+	info->num_threads = 0;
 
 #if defined(_WIN32)
+
   {
-    DWORD dwProcessAffinityMask, dwSystemAffinityMask;
-    if (GetProcessAffinityMask(GetCurrentProcess(), (PDWORD_PTR) &dwProcessAffinityMask, (PDWORD_PTR) &dwSystemAffinityMask)) {
-      int i;      
-      for(i=0; i<32; i++) {
-        if ((dwProcessAffinityMask & (1<<i)))
-          info->num_threads++;
-      }
-      if (info->num_threads == 0) {
-        SYSTEM_INFO siSysInfo;
-        GetSystemInfo(&siSysInfo);
-        info->num_threads = siSysInfo.dwNumberOfProcessors; /* number of _logical_ cores */
-      }
-    }
+	SYSTEM_INFO siSysInfo;
+	GetSystemInfo(&siSysInfo);
+	info->num_threads = siSysInfo.dwNumberOfProcessors; /* number of _logical_ cores */
   }
+
 #else
 
   #include <unistd.h>

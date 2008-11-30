@@ -546,7 +546,7 @@ static int config_get_uint(HWND hDlg, UINT item, int config)
 #define UINT_BUF_SZ	20
 static int config_get_cbuint(HWND hDlg, UINT item, int def)
 {
-	int sel = SendMessage(GetDlgItem(hDlg, item), CB_GETCURSEL, 0, 0);
+	LRESULT sel = SendMessage(GetDlgItem(hDlg, item), CB_GETCURSEL, 0, 0);
 	char buf[UINT_BUF_SZ];
 
 	if (sel<0) {
@@ -703,7 +703,7 @@ static void quant_loadsave(HWND hDlg, CONFIG * config, int save)
 
 /* quantization matrix dialog proc */
 
-static BOOL CALLBACK quantmatrix_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK quantmatrix_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	CONFIG* config = (CONFIG*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
 
@@ -1487,7 +1487,7 @@ static void adv_download(HWND hDlg, int idd, CONFIG * config)
 
 /* advanced dialog proc */
 
-static BOOL CALLBACK adv_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK adv_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	PROPSHEETINFO *psi;
 
@@ -1918,7 +1918,7 @@ static const int quality_dlgs[] = { IDD_MOTION, IDD_QUANT };
 static const int other_dlgs[] = { IDD_ENC, IDD_DEC, IDD_COMMON };
 
 
-BOOL CALLBACK main_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK main_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	CONFIG* config = (CONFIG*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
 	unsigned int i;
@@ -2231,7 +2231,7 @@ BOOL CALLBACK main_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 /* LICENSE DIALOG ====================================================================== */
 /* ===================================================================================== */
 
-static BOOL CALLBACK license_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK license_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
@@ -2287,7 +2287,7 @@ static BOOL CALLBACK license_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 /* ABOUT DIALOG ======================================================================== */
 /* ===================================================================================== */
 
-BOOL CALLBACK about_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK about_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{

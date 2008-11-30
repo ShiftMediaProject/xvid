@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: gmc.c,v 1.9 2008-11-27 16:31:48 Isibaar Exp $
+ * $Id: gmc.c,v 1.10 2008-11-30 16:36:44 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -48,7 +48,7 @@ static uint32_t __inline
 log2bin(uint32_t value)
 {
 /* Changed by Chenm001 */
-#if !defined(_MSC_VER)
+#if !defined(_MSC_VER) || defined(ARCH_IS_X86_64)
   int n = 0;
 
   while (value) {

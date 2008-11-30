@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: driverproc.c,v 1.8 2005-09-09 11:34:51 suxen_drol Exp $
+ * $Id: driverproc.c,v 1.9 2008-11-30 16:36:44 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -35,10 +35,10 @@
 
 static int clean_dll_bindings(CODEC* codec);
 
-BOOL WINAPI DllMain(
-	HANDLE hModule, 
-	DWORD  ul_reason_for_call, 
-	LPVOID lpReserved)
+INT_PTR WINAPI DllMain(
+		HANDLE hModule, 
+		DWORD  ul_reason_for_call, 
+		LPVOID lpReserved)
 {
 	g_hInst = (HINSTANCE) hModule;
     return TRUE;
@@ -310,7 +310,7 @@ void WINAPI Configure(HWND hwnd, HINSTANCE hinst, LPTSTR lpCmdLine, int nCmdShow
 {
 	DWORD dwDriverId;
 
-	dwDriverId = DriverProc(0, 0, DRV_OPEN, 0, 0);
+	dwDriverId = (DWORD) DriverProc(0, 0, DRV_OPEN, 0, 0);
 	if (dwDriverId != (DWORD)NULL)
 	{
 		if (lstrcmpi(lpCmdLine, "about")==0) {
