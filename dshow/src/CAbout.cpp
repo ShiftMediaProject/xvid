@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CAbout.cpp,v 1.2 2004-03-22 22:36:23 edgomez Exp $
+ * $Id: CAbout.cpp,v 1.3 2008-11-30 16:36:44 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -63,7 +63,7 @@ CAbout::~CAbout()
 }
 
 
-BOOL CAbout::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CAbout::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if (adv_proc(hwnd, uMsg, wParam, lParam) == FALSE) {
 		return CBasePropertyPage::OnReceiveMessage(hwnd, uMsg, wParam, lParam);

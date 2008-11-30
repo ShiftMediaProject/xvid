@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: config.h,v 1.12 2008-11-27 16:33:32 Isibaar Exp $
+ * $Id: config.h,v 1.13 2008-11-30 16:36:44 Isibaar Exp $
  *
  ****************************************************************************/
 #ifndef _CONFIG_H_
@@ -292,7 +292,7 @@ void config_reg_set(CONFIG * config);
 void sort_zones(zone_t * zones, int zone_num, int * sel);
 
 
-BOOL CALLBACK main_proc(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK about_proc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK main_proc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK about_proc(HWND, UINT, WPARAM, LPARAM);
 
 #endif /* _CONFIG_H_ */

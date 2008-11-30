@@ -1,24 +1,24 @@
 # Microsoft Developer Studio Project File - Name="vfw" - Package Owner=<4>
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
-# ** DO NOT EDIT **
+# ** NICHT BEARBEITEN **
 
 # TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
 
 CFG=vfw - Win32 Debug
-!MESSAGE This is not a valid makefile. To build this project using NMAKE,
-!MESSAGE use the Export Makefile command and run
+!MESSAGE Dies ist kein gültiges Makefile. Zum Erstellen dieses Projekts mit NMAKE
+!MESSAGE verwenden Sie den Befehl "Makefile exportieren" und führen Sie den Befehl
 !MESSAGE 
 !MESSAGE NMAKE /f "vfw.mak".
 !MESSAGE 
-!MESSAGE You can specify a configuration when running NMAKE
-!MESSAGE by defining the macro CFG on the command line. For example:
+!MESSAGE Sie können beim Ausführen von NMAKE eine Konfiguration angeben
+!MESSAGE durch Definieren des Makros CFG in der Befehlszeile. Zum Beispiel:
 !MESSAGE 
 !MESSAGE NMAKE /f "vfw.mak" CFG="vfw - Win32 Debug"
 !MESSAGE 
-!MESSAGE Possible choices for configuration are:
+!MESSAGE Für die Konfiguration stehen zur Auswahl:
 !MESSAGE 
-!MESSAGE "vfw - Win32 Release" (based on "Win32 (x86) Dynamic-Link Library")
-!MESSAGE "vfw - Win32 Debug" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "vfw - Win32 Release" (basierend auf  "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "vfw - Win32 Debug" (basierend auf  "Win32 (x86) Dynamic-Link Library")
 !MESSAGE 
 
 # Begin Project
@@ -87,7 +87,7 @@ LINK32=link.exe
 # SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
-PostBuild_Cmds=copy ../build/win32/bin/xvidcore.dll bin
+PostBuild_Cmds=copy "..\build\win32\bin\xvidcore.dll" ".\bin"
 # End Special Build Tool
 
 !ENDIF 
@@ -153,11 +153,11 @@ SOURCE=.\src\vfwext.h
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # Begin Source File
 
-SOURCE=.\src\xvid.ico
+SOURCE=.\src\resource.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\resource.rc
+SOURCE=.\src\xvid.ico
 # End Source File
 # Begin Source File
 
