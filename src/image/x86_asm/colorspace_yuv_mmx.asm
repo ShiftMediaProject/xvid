@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: colorspace_yuv_mmx.asm,v 1.10 2008-11-26 23:35:50 Isibaar Exp $
+; * $Id: colorspace_yuv_mmx.asm,v 1.11 2008-12-01 15:00:44 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -28,6 +28,14 @@
 ;=============================================================================
 ; Helper macros
 ;=============================================================================
+
+%macro _MOVQ        3
+%if %1 == 1
+	movntq  %2, %3      ; xmm
+%else
+	movq    %2, %3      ; plain mmx
+%endif
+%endmacro
 
 ;------------------------------------------------------------------------------
 ; PLANE_COPY ( DST, DST_STRIDE, SRC, SRC_STRIDE, WIDTH, HEIGHT, OPT )
@@ -81,25 +89,14 @@
   movq mm7, [SRC + 48]
   movq mm0, [SRC + 56]
 
-%if OPT == 0                ; plain mmx
-  movq [DST     ], mm1      ; write to y_out
-  movq [DST +  8], mm2
-  movq [DST + 16], mm3
-  movq [DST + 24], mm4
-  movq [DST + 32], mm5
-  movq [DST + 40], mm6
-  movq [DST + 48], mm7
-  movq [DST + 56], mm0
-%else
-  movntq [DST     ], mm1    ; write to y_out
-  movntq [DST +  8], mm2
-  movntq [DST + 16], mm3
-  movntq [DST + 24], mm4
-  movntq [DST + 32], mm5
-  movntq [DST + 40], mm6
-  movntq [DST + 48], mm7
-  movntq [DST + 56], mm0
-%endif
+  _MOVQ [DST     ], mm1      ; write to y_out
+  _MOVQ [DST +  8], mm2
+  _MOVQ [DST + 16], mm3
+  _MOVQ [DST + 24], mm4
+  _MOVQ [DST + 32], mm5
+  _MOVQ [DST + 40], mm6
+  _MOVQ [DST + 48], mm7
+  _MOVQ [DST + 56], mm0
 
   add SRC, 64
   add DST, 64
@@ -113,13 +110,9 @@
 %%loop16_pc:
   movq mm1, [SRC]
   movq mm2, [SRC + 8]
-%if OPT == 0                ; plain mmx
-  movq [DST], mm1
-  movq [DST + 8], mm2
-%else
-  movntq [DST], mm1
-  movntq [DST + 8], mm2
-%endif
+
+  _MOVQ [DST], mm1
+  _MOVQ [DST + 8], mm2
 
   add SRC, 16
   add DST, 16
@@ -190,25 +183,14 @@
 
 %%loop64_pf:
 
-%if OPT == 0                 ; plain mmx
-  movq [DST     ], mm0       ; write to y_out
-  movq [DST +  8], mm0
-  movq [DST + 16], mm0
-  movq [DST + 24], mm0
-  movq [DST + 32], mm0
-  movq [DST + 40], mm0
-  movq [DST + 48], mm0
-  movq [DST + 56], mm0
-%else
-  movntq [DST     ], mm0     ; write to y_out
-  movntq [DST +  8], mm0
-  movntq [DST + 16], mm0
-  movntq [DST + 24], mm0
-  movntq [DST + 32], mm0
-  movntq [DST + 40], mm0
-  movntq [DST + 48], mm0
-  movntq [DST + 56], mm0
-%endif
+  _MOVQ [DST     ], mm0      ; write to y_out
+  _MOVQ [DST +  8], mm0
+  _MOVQ [DST + 16], mm0
+  _MOVQ [DST + 24], mm0
+  _MOVQ [DST + 32], mm0
+  _MOVQ [DST + 40], mm0
+  _MOVQ [DST + 48], mm0
+  _MOVQ [DST + 56], mm0
 
   add DST, 64
   loop %%loop64_pf
@@ -219,13 +201,8 @@
   jz %%loop1_start_pf
 
 %%loop16_pf:
-%if OPT == 0                 ; plain mmx
-  movq [DST    ], mm0
-  movq [DST + 8], mm0
-%else
-  movntq [DST    ], mm0
-  movntq [DST + 8], mm0
-%endif
+  _MOVQ [DST    ], mm0
+  _MOVQ [DST + 8], mm0
 
   add DST, 16
   loop %%loop16_pf

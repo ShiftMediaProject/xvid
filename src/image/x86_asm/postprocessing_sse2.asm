@@ -118,7 +118,7 @@ image_brightness_sse2:
   jl .xloop
 
   add TMP1, TMP0                  ; dst += stride
-  sub _EDI, 1
+  dec _EDI
   jg .yloop
 
   add _ESP, 32

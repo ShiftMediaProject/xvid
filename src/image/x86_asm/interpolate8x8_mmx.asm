@@ -512,7 +512,6 @@ interpolate8x8_avg2_mmx:
 
   mov eax, prm6d   ; height -> _EAX
   sub _EAX, 8
-  test _EAX, _EAX
 
   mov TMP0, prm1   ; dst -> edi
   mov _EAX, prm2   ; src1 -> esi
@@ -548,7 +547,6 @@ interpolate8x8_avg2_mmx:
 .rounding1:
   mov eax, prm6d        ; height -> _EAX
   sub _EAX, 8
-  test _EAX, _EAX
 
   mov TMP0, prm1        ; dst -> edi
   mov _EAX, prm2        ; src1 -> esi
@@ -984,10 +982,7 @@ interpolate8x8_6tap_lowpass_v_mmx:
   mov TMP1, prm3           ; stride -> edx
 
   push _EBX
-
-  mov _EBX, TMP1
-  shl _EBX, 1
-  add _EBX, TMP1
+  lea _EBX, [TMP1+TMP1*2]
 
   pxor mm7, mm7
 
