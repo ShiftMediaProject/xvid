@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: colorspace_yuv_mmx.asm,v 1.11 2008-12-01 15:00:44 Isibaar Exp $
+; * $Id: colorspace_yuv_mmx.asm,v 1.12 2008-12-01 15:22:37 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -89,14 +89,14 @@
   movq mm7, [SRC + 48]
   movq mm0, [SRC + 56]
 
-  _MOVQ [DST     ], mm1      ; write to y_out
-  _MOVQ [DST +  8], mm2
-  _MOVQ [DST + 16], mm3
-  _MOVQ [DST + 24], mm4
-  _MOVQ [DST + 32], mm5
-  _MOVQ [DST + 40], mm6
-  _MOVQ [DST + 48], mm7
-  _MOVQ [DST + 56], mm0
+  _MOVQ OPT, [DST     ], mm1      ; write to y_out
+  _MOVQ OPT, [DST +  8], mm2
+  _MOVQ OPT, [DST + 16], mm3
+  _MOVQ OPT, [DST + 24], mm4
+  _MOVQ OPT, [DST + 32], mm5
+  _MOVQ OPT, [DST + 40], mm6
+  _MOVQ OPT, [DST + 48], mm7
+  _MOVQ OPT, [DST + 56], mm0
 
   add SRC, 64
   add DST, 64
@@ -111,8 +111,8 @@
   movq mm1, [SRC]
   movq mm2, [SRC + 8]
 
-  _MOVQ [DST], mm1
-  _MOVQ [DST + 8], mm2
+  _MOVQ OPT, [DST], mm1
+  _MOVQ OPT, [DST + 8], mm2
 
   add SRC, 16
   add DST, 16
@@ -183,14 +183,14 @@
 
 %%loop64_pf:
 
-  _MOVQ [DST     ], mm0      ; write to y_out
-  _MOVQ [DST +  8], mm0
-  _MOVQ [DST + 16], mm0
-  _MOVQ [DST + 24], mm0
-  _MOVQ [DST + 32], mm0
-  _MOVQ [DST + 40], mm0
-  _MOVQ [DST + 48], mm0
-  _MOVQ [DST + 56], mm0
+  _MOVQ OPT, [DST     ], mm0      ; write to y_out
+  _MOVQ OPT, [DST +  8], mm0
+  _MOVQ OPT, [DST + 16], mm0
+  _MOVQ OPT, [DST + 24], mm0
+  _MOVQ OPT, [DST + 32], mm0
+  _MOVQ OPT, [DST + 40], mm0
+  _MOVQ OPT, [DST + 48], mm0
+  _MOVQ OPT, [DST + 56], mm0
 
   add DST, 64
   loop %%loop64_pf
@@ -201,8 +201,8 @@
   jz %%loop1_start_pf
 
 %%loop16_pf:
-  _MOVQ [DST    ], mm0
-  _MOVQ [DST + 8], mm0
+  _MOVQ OPT, [DST    ], mm0
+  _MOVQ OPT, [DST + 8], mm0
 
   add DST, 16
   loop %%loop16_pf
