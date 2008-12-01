@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: nasm.inc,v 1.2 2008-11-30 16:36:44 Isibaar Exp $
+; * $Id: nasm.inc,v 1.3 2008-12-01 14:45:45 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -50,6 +50,16 @@ DEFAULT REL
 %define prm7d dword prm7
 %define prm8d dword prm8
 
+%macro PUSH_XMM6_XMM7 0
+      movdqa [_ESP+PTR_SIZE], xmm6
+      movdqa [_ESP+PTR_SIZE+16], xmm7
+%endmacro
+
+%macro POP_XMM6_XMM7 0
+      movdqa xmm6, [_ESP+PTR_SIZE]
+      movdqa xmm7, [_ESP+PTR_SIZE+16]
+%endmacro
+
 %else ; Linux
 
 %define prm1 rdi
@@ -70,6 +80,9 @@ DEFAULT REL
 %define prm7d dword prm7
 %define prm8d dword prm8
 
+%define PUSH_XMM6_XMM7
+%define POP_XMM6_XMM7
+
 %endif
 
 %define _EAX rax
@@ -89,6 +102,7 @@ DEFAULT REL
 
 %define PTR_SIZE 8
 %define PTR_TYPE qword
+
 
 %else
 
@@ -131,6 +145,9 @@ BITS 32
 
 %define PTR_SIZE 4
 %define PTR_TYPE dword
+
+%define PUSH_XMM6_XMM7
+%define POP_XMM6_XMM7
 
 %endif
 

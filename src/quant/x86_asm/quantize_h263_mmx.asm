@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_h263_mmx.asm,v 1.11 2008-11-26 23:35:50 Isibaar Exp $
+; * $Id: quantize_h263_mmx.asm,v 1.12 2008-12-01 14:45:46 Isibaar Exp $
 ; *
 ; ****************************************************************************/
 
@@ -483,7 +483,8 @@ ENDFUNC
 
 ALIGN SECTION_ALIGN
 quant_h263_inter_sse2:
-
+  PUSH_XMM6_XMM7
+  
   mov TMP1, prm1      ; coeff
   mov _EAX, prm3      ; quant
 
@@ -549,6 +550,7 @@ ALIGN SECTION_ALIGN
 
   movd eax, mm0         ; return sum
 
+  POP_XMM6_XMM7
   ret
 
 .qes2_q1_routine:
@@ -771,7 +773,8 @@ ENDFUNC
 
 ALIGN SECTION_ALIGN 
 dequant_h263_intra_sse2:
-
+  PUSH_XMM6_XMM7
+  
   mov TMP0, prm3                 ; quant
   mov _EAX, prm2                 ; coeff
  
@@ -844,6 +847,8 @@ dequant_h263_intra_sse2:
   mov [TMP1], ax
 
   xor _EAX, _EAX                  ; return 0
+
+  POP_XMM6_XMM7
   ret
 ENDFUNC
 
@@ -1001,7 +1006,8 @@ ENDFUNC
 
 ALIGN SECTION_ALIGN
 dequant_h263_inter_sse2:
-
+  PUSH_XMM6_XMM7
+  
   mov TMP0, prm3                 ; quant
   mov _EAX, prm2                 ; coeff
 
@@ -1059,6 +1065,8 @@ dequant_h263_inter_sse2:
   jne .loop
 
   xor _EAX, _EAX              ; return 0
+
+  POP_XMM6_XMM7
   ret
 ENDFUNC
 

@@ -159,6 +159,7 @@ ENDFUNC
 
 ALIGN SECTION_ALIGN
 consim_sse2:
+	PUSH_XMM6_XMM7
 	mov TMP0,prm1 ;ptro
 	mov TMP1,prm2 ;ptrc
 	mov _EAX, prm3 ;stride
@@ -216,6 +217,8 @@ consim_sse2:
 	paddd      xmm7, xmm2
 
 	CONSIM_WRITEOUT xmm5,xmm6,xmm7
+
+	POP_XMM6_XMM7
 	ret
 ENDFUNC
 

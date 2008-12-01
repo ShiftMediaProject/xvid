@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: sad_sse2.asm,v 1.16 2008-11-26 01:04:34 Isibaar Exp $
+; * $Id: sad_sse2.asm,v 1.17 2008-12-01 14:45:45 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -69,6 +69,7 @@ cglobal  dev16_sse3
 %endmacro
 
 %macro SAD16_SSE2_SSE3 1
+  PUSH_XMM6_XMM7
   mov _EAX, prm1 ; cur (assumed aligned)
   mov TMP1, prm2 ; ref
   mov TMP0, prm3 ; stride
@@ -87,6 +88,8 @@ cglobal  dev16_sse3
   pshufd  xmm5, xmm6, 00000010b
   paddusw xmm6, xmm5
   pextrw  eax, xmm6, 0
+
+  POP_XMM6_XMM7
   ret
 %endmacro
 
@@ -118,6 +121,7 @@ ENDFUNC
 
 
 %macro MEAN16_SSE2_SSE3 1
+  PUSH_XMM6_XMM7
   mov _EAX, prm1   ; src
   mov TMP0, prm2   ; stride
 
@@ -157,6 +161,8 @@ ENDFUNC
   pshufd   xmm7, xmm6, 10b
   paddusw  xmm7, xmm6
   pextrw eax, xmm7, 0
+
+  POP_XMM6_XMM7
   ret
 %endmacro
 

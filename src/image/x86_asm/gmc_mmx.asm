@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: gmc_mmx.asm,v 1.7 2008-11-26 23:35:50 Isibaar Exp $
+; * $Id: gmc_mmx.asm,v 1.8 2008-12-01 14:45:45 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -174,6 +174,8 @@ ENDFUNC
 
 align SECTION_ALIGN
 xvid_GMC_Core_Lin_8_sse2:
+  PUSH_XMM6_XMM7
+  
   mov  _EAX, prm2  ; Offsets
   mov  TMP0, prm3  ; Src0
   mov  TMP1, prm4  ; BpS
@@ -192,11 +194,14 @@ xvid_GMC_Core_Lin_8_sse2:
   packuswb xmm5, xmm5
   movq [_EAX], xmm5
 
+  POP_XMM6_XMM7
   ret
 ENDFUNC
 
 align SECTION_ALIGN
 xvid_GMC_Core_Lin_8_sse41:
+  PUSH_XMM6_XMM7
+  
   mov  _EAX, prm2  ; Offsets
   mov  TMP0, prm3  ; Src0
   mov  TMP1, prm4  ; BpS
@@ -213,6 +218,7 @@ xvid_GMC_Core_Lin_8_sse41:
   packuswb xmm5, xmm5
   movq [_EAX], xmm5
 
+  POP_XMM6_XMM7
   ret
 ENDFUNC
 

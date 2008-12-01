@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: idct_sse2_dmitry.asm,v 1.8 2008-11-26 01:04:34 Isibaar Exp $
+; * $Id: idct_sse2_dmitry.asm,v 1.9 2008-12-01 14:45:45 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -306,6 +306,7 @@ cglobal idct_sse2_dmitry
 
 ALIGN SECTION_ALIGN
 idct_sse2_dmitry:
+  PUSH_XMM6_XMM7
 
   mov _ECX, prm1
 
@@ -320,6 +321,7 @@ idct_sse2_dmitry:
 
   DCT_8_INV_COL_4_SSE2 _ECX, _ECX
 
+  POP_XMM6_XMM7
   ret
 ENDFUNC
 
