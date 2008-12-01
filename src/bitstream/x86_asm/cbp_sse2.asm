@@ -20,7 +20,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: cbp_sse2.asm,v 1.10 2008-11-26 01:04:34 Isibaar Exp $
+; * $Id: cbp_sse2.asm,v 1.11 2008-12-01 14:45:45 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -76,6 +76,8 @@ calc_cbp_sse2:
   mov _EDX, prm1           ; coeff[]
   xor _EAX, _EAX           ; cbp = 0
 
+  PUSH_XMM6_XMM7
+  
   movdqu xmm7, [ignore_dc] ; mask to ignore dc value
   pxor xmm6, xmm6          ; zero
 
@@ -109,7 +111,9 @@ calc_cbp_sse2:
   or _EAX, (1<<0)
 
 .finished:
-	ret
+ 
+  POP_XMM6_XMM7
+  ret
 ENDFUNC
 
 

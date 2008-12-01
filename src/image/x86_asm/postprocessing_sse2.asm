@@ -66,7 +66,7 @@ cglobal image_brightness_sse2
 
 ALIGN SECTION_ALIGN
 image_brightness_sse2:
-
+  PUSH_XMM6_XMM7
 %ifdef ARCH_IS_X86_64
   movsx _EAX, prm5d
 %else
@@ -125,6 +125,7 @@ image_brightness_sse2:
   pop _EDI
   pop _ESI
 
+  POP_XMM6_XMM7
   ret
 ENDFUNC
 ;//////////////////////////////////////////////////////////////////////

@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: fdct_sse2_skal.asm,v 1.10 2008-11-26 01:04:34 Isibaar Exp $
+; * $Id: fdct_sse2_skal.asm,v 1.11 2008-12-01 14:45:45 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -381,6 +381,8 @@ cglobal fdct_sse2_skal
 ALIGN SECTION_ALIGN
 idct_sse2_skal:
 
+  PUSH_XMM6_XMM7
+
   mov _ECX, prm1  ; Src
 
   TEST_ROW _ECX, .Row0_Round
@@ -429,6 +431,7 @@ idct_sse2_skal:
 
   iLLM_PASS _ECX
 
+  POP_XMM6_XMM7
   ret
 ENDFUNC
 
@@ -585,6 +588,7 @@ ENDFUNC
 
 ALIGN SECTION_ALIGN
 fdct_sse2_skal:
+  PUSH_XMM6_XMM7
   mov _ECX, prm1
   fLLM_PASS _ECX+0, 3
   fMTX_MULT  0, fTab1, Fdct_Rnd0
@@ -595,6 +599,8 @@ fdct_sse2_skal:
   fMTX_MULT  5, fTab4, Fdct_Rnd1
   fMTX_MULT  6, fTab3, Fdct_Rnd1
   fMTX_MULT  7, fTab2, Fdct_Rnd1
+  
+  POP_XMM6_XMM7
   ret
 ENDFUNC
 
