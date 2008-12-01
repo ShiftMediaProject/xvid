@@ -162,8 +162,8 @@ NAME:
   sub _EBX, _EDX
   mov x_dif, _EBX            ; x_dif = -BYTES*fixed_width - x_stride
 
-  mov _EAX, _EBP
-  sub _EAX, 1
+  lea _EAX, [_EBP-1]
+
 %ifdef ARCH_IS_X86_64
   mov TMP1, _EDX
   mul edx 

@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: postprocessing_mmx.asm,v 1.9 2008-11-26 23:35:50 Isibaar Exp $
+; * $Id: postprocessing_mmx.asm,v 1.10 2008-12-01 15:00:44 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -104,7 +104,7 @@ image_brightness_mmx:
 	jl .xloop
 
 	add TMP1, TMP0				; dst += stride
-	sub _EDI, 1
+	dec _EDI
 	jg .yloop
 
 	pop _EDI
