@@ -66,7 +66,6 @@ cglobal image_brightness_sse2
 
 ALIGN SECTION_ALIGN
 image_brightness_sse2:
-  PUSH_XMM6_XMM7
 %ifdef ARCH_IS_X86_64
   movsx _EAX, prm5d
 %else
@@ -79,14 +78,14 @@ image_brightness_sse2:
   push _EDI    ; 8 bytes offset for push
   sub _ESP, 32 ; 32 bytes for local data (16bytes will be used, 16bytes more to align correctly mod 16)
 
-  movdqa xmm6, [xmm_0x80]
+  movdqa xmm2, [xmm_0x80]
 
   ; Create a offset...offset vector
   mov _ESI, _ESP          ; TMP1 will be esp aligned mod 16
   add _ESI, 15            ; TMP1 = esp + 15
   and _ESI, ~15           ; TMP1 = (esp + 15)&(~15)
   CREATE_OFFSET_VECTOR _ESI, al
-  movdqa xmm7, [_ESI]
+  movdqa xmm3, [_ESI]
 
 %ifdef ARCH_IS_X86_64
   mov _ESI, prm3
@@ -103,12 +102,12 @@ image_brightness_sse2:
   movdqa xmm0, [TMP1 + _EAX]
   movdqa xmm1, [TMP1 + _EAX + 16] ; xmm0 = [dst]
 
-  paddb xmm0, xmm6              ; unsigned -> signed domain
-  paddb xmm1, xmm6
-  paddsb xmm0, xmm7
-  paddsb xmm1, xmm7             ; xmm0 += offset
-  psubb xmm0, xmm6
-  psubb xmm1, xmm6              ; signed -> unsigned domain
+  paddb xmm0, xmm2              ; unsigned -> signed domain
+  paddb xmm1, xmm2
+  paddsb xmm0, xmm3
+  paddsb xmm1, xmm3             ; xmm0 += offset
+  psubb xmm0, xmm2
+  psubb xmm1, xmm2              ; signed -> unsigned domain
 
   movdqa [TMP1 + _EAX], xmm0
   movdqa [TMP1 + _EAX + 16], xmm1 ; [dst] = xmm0
@@ -125,7 +124,6 @@ image_brightness_sse2:
   pop _EDI
   pop _ESI
 
-  POP_XMM6_XMM7
   ret
 ENDFUNC
 ;//////////////////////////////////////////////////////////////////////

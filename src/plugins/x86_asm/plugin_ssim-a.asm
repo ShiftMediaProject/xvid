@@ -169,14 +169,6 @@ consim_sse2:
 	pxor xmm6,xmm6;devc
 	pxor xmm7,xmm7;corr
 
-	;broadcast lumo/c
-	punpcklbw xmm6,xmm6
-	punpcklwd xmm6,xmm6
-	pshufd xmm6,xmm6,00000000b;or shufps
-	punpcklbw xmm7,xmm7
-	punpcklwd xmm7,xmm7
-	pshufd xmm7,xmm7,00000000b
-
 	CONSIM_1x8_SSE2
 	add TMP0,_EAX
 	add TMP1,_EAX
