@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: cpuid.asm,v 1.15 2008-11-26 01:04:34 Isibaar Exp $
+; * $Id: cpuid.asm,v 1.16 2008-12-02 13:44:55 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -221,7 +221,22 @@ emms_3dn:
   ret
 ENDFUNC
 
+%ifdef ARCH_IS_X86_64
+%ifdef WINDOWS
+cglobal prime_xmm
+prime_xmm:
+  movdqa xmm6, [prm1]
+  movdqa xmm7, [prm1+16]
+  ret
+ENDFUNC
 
+cglobal get_xmm
+get_xmm:
+  movdqa [prm1], xmm6
+  movdqa [prm1+16], xmm7
+  ret
+%endif
+%endif
 
 %ifidn __OUTPUT_FORMAT__,elf
 section ".note.GNU-stack" noalloc noexec nowrite progbits

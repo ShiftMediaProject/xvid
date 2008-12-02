@@ -20,7 +20,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: cbp_sse2.asm,v 1.11 2008-12-01 14:45:45 Isibaar Exp $
+; * $Id: cbp_sse2.asm,v 1.12 2008-12-02 13:44:55 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -32,7 +32,7 @@
 
 %macro LOOP_SSE2 2
   movdqa xmm0, [%2+(%1)*128]
-  pand xmm0, xmm7
+  pand xmm0, xmm3
   movdqa xmm1, [%2+(%1)*128+16]
 
   por xmm0, [%2+(%1)*128+32]
@@ -43,7 +43,7 @@
   por xmm1, [%2+(%1)*128+112]
 
   por xmm0, xmm1        ; xmm0 = xmm1 = 128 bits worth of info
-  psadbw xmm0, xmm6     ; contains 2 dwords with sums
+  psadbw xmm0, xmm2     ; contains 2 dwords with sums
   movhlps xmm1, xmm0    ; move high dword from xmm0 to low xmm1
   por xmm0, xmm1        ; combine
   movd ecx, xmm0        ; if ecx set, values were found
@@ -76,10 +76,8 @@ calc_cbp_sse2:
   mov _EDX, prm1           ; coeff[]
   xor _EAX, _EAX           ; cbp = 0
 
-  PUSH_XMM6_XMM7
-  
-  movdqu xmm7, [ignore_dc] ; mask to ignore dc value
-  pxor xmm6, xmm6          ; zero
+  movdqu xmm3, [ignore_dc] ; mask to ignore dc value
+  pxor xmm2, xmm2          ; zero
 
   LOOP_SSE2 0, _EDX
   jz .blk2
@@ -112,7 +110,6 @@ calc_cbp_sse2:
 
 .finished:
  
-  POP_XMM6_XMM7
   ret
 ENDFUNC
 

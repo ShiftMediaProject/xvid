@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_bench.c,v 1.38 2008-11-26 23:37:28 Isibaar Exp $
+ * $Id: xvid_bench.c,v 1.39 2008-12-02 13:44:55 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -47,6 +47,7 @@
 #include "xvid.h"
 
 // inner guts
+#include "portab.h"
 #include "dct/idct.h"
 #include "dct/fdct.h"
 #include "image/colorspace.h"
@@ -2205,6 +2206,13 @@ int main(int argc, const char *argv[])
 	int width, height;
 	uint32_t chksum = 0;
 	const char * test_bitstream = 0;
+#if defined(WIN32) && defined(ARCH_IS_X86_64)
+	DECLARE_ALIGNED_MATRIX(xmm_save, 2, 4, uint64_t, 16);
+	// assumes xmm6 and xmm7 won't be falsely preserved by C code
+	for(c=0;c<4;c++)
+		xmm_save[c] = read_counter();
+	prime_xmm(xmm_save);
+#endif
 
 	cpu_mask = 0;  // default => will use autodectect
 	for(c=1; c<argc; ++c)
@@ -2283,6 +2291,20 @@ int main(int argc, const char *argv[])
 	}
 	if (what==-2)
 		test_quant_bug();
+
+#if defined(WIN32) && defined(ARCH_IS_X86_64)
+	get_xmm(xmm_save+4);
+	if (memcmp(xmm_save, xmm_save+4, 4*sizeof(int64_t))) {
+		printf("\nWIN64 ERROR: XMM6 and XMM7 contents not preserved!\n"
+		       "        XMM6                             XMM7\n"
+		       "Before: %.16I64X%.16I64X %.16I64X%.16I64X\n"
+		       "After:  %.16I64X%.16I64X %.16I64X%.16I64X",
+		        xmm_save[0],xmm_save[1],xmm_save[2],xmm_save[3],
+		        xmm_save[4],xmm_save[5],xmm_save[6],xmm_save[7]);
+	} else {
+		printf("\nWIN64: XMM6 and XMM7 contents preserved correctly.\n");
+	}
+#endif
 
 	if ((what >= 0 && what <= 6) || what == 10) {
 		printf("\n\n"
