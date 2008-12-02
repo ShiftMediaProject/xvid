@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: cpuid.asm,v 1.16 2008-12-02 13:44:55 Isibaar Exp $
+; * $Id: cpuid.asm,v 1.17 2008-12-02 13:58:30 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -235,6 +235,7 @@ get_xmm:
   movdqa [prm1], xmm6
   movdqa [prm1+16], xmm7
   ret
+ENDFUNC
 %endif
 %endif
 
