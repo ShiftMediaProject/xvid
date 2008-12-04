@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_mpeg_mmx.asm,v 1.14 2008-12-04 14:41:50 Isibaar Exp $
+; * $Id: quantize_mpeg_mmx.asm,v 1.15 2008-12-04 18:30:36 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -187,12 +187,13 @@ quant_mpeg_intra_mmx:
   QUANT_MMX(7)
 
   ; calculate DC
-  XVID_MOVSX _EAX, word [_EAX]   ; data[0]
-  mov TMP0, prm4            ; dcscalar
+  movsx _EAX, word [_EAX]  ; data[0]
+  mov TMP0, prm4           ; dcscalar
   mov _EDX, _EAX 
-  shr TMP0, 1               ; TMP0 = dcscalar/2
-  sar _EDX, 31              ; TMP1 = sign extend of _EAX (ready for division too)
-  xor TMP0, _EDX            ; adjust TMP0 according to the sign of data[0]
+  shr TMP0, 1              ; TMP0 = dcscalar/2
+  sar _EDX, 31             ; TMP1 = sign extend of _EAX (ready for division too)
+
+  xor TMP0, _EDX           ; adjust TMP0 according to the sign of data[0]
   sub TMP0, _EDX 
   add _EAX, TMP0
 

@@ -67,7 +67,7 @@ cglobal image_brightness_sse2
 ALIGN SECTION_ALIGN
 image_brightness_sse2:
 %ifdef ARCH_IS_X86_64
-  XVID_MOVSX _EAX, prm5d
+  XVID_MOVSXD _EAX, prm5d
 %else
   mov eax, prm5   ; brightness offset value	
 %endif

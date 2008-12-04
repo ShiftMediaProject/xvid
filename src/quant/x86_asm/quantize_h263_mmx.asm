@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_h263_mmx.asm,v 1.14 2008-12-04 14:41:50 Isibaar Exp $
+; * $Id: quantize_h263_mmx.asm,v 1.15 2008-12-04 18:30:36 Isibaar Exp $
 ; *
 ; ****************************************************************************/
 
@@ -118,10 +118,10 @@ quant_h263_intra_mmx:
 
   mov _EAX, prm2     ; data
   mov TMP0, prm4     ; dcscalar
-  XVID_MOVSX _EAX, word [_EAX]  ; data[0]
+  movsx _EAX, word [_EAX]  ; data[0]
   
   sar TMP0, 1              ; dcscalar /2
-  mov TMP1, _EAX
+  mov TMP1, _EAX 
   sar TMP1, 31             ; sgn(data[0])
   xor TMP0,TMP1            ; *sgn(data[0])
   sub _EAX,TMP1
@@ -250,10 +250,10 @@ quant_h263_intra_sse2:
   PUSH_XMM6_XMM7
   mov _EAX, prm2     ; data
  
-  XVID_MOVSX _EAX, word [_EAX]      ; data[0]
+  movsx _EAX, word [_EAX]      ; data[0]
  
   mov TMP0,prm4     ; dcscalar
-  mov TMP1,_EAX
+  mov TMP1, _EAX 
   sar TMP0,1
   add _EAX,TMP0
   sub TMP1,TMP0
@@ -834,7 +834,7 @@ dequant_h263_intra_sse2:
    ; deal with DC
 
   mov _EAX, prm2             ; coeff
-  XVID_MOVSX _EAX,word [_EAX]
+  movsx _EAX,word [_EAX]
   imul prm4d                 ; dcscalar
   mov TMP1, prm1             ; data
   movd xmm0,eax
