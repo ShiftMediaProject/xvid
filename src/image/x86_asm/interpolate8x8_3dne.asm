@@ -52,7 +52,7 @@ DB 08Dh,074h,026h,0
 ; Macros
 ;=============================================================================
 
-SECTION .rotext align=SECTION_ALIGN
+TEXT
 
 cglobal interpolate8x8_halfpel_h_3dne
 cglobal interpolate8x8_halfpel_v_3dne

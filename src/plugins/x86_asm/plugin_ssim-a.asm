@@ -126,7 +126,7 @@ BITS 32
 %endmacro
 
 
-SECTION .rotext align=SECTION_ALIGN
+TEXT
 
 cglobal lum_8x8_mmx
 cglobal consim_sse2

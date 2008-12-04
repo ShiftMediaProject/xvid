@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: postprocessing_mmx.asm,v 1.10 2008-12-01 15:00:44 Isibaar Exp $
+; * $Id: postprocessing_mmx.asm,v 1.11 2008-12-04 14:41:50 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -46,7 +46,7 @@ mmx_offset:
 ; Code
 ;=============================================================================
 
-SECTION .rotext align=SECTION_ALIGN
+TEXT
 
 cglobal image_brightness_mmx
 
@@ -61,7 +61,7 @@ image_brightness_mmx:
 	movq mm6, [mmx_0x80]
 
 %ifdef ARCH_IS_X86_64
-        movsx _EAX, prm5d
+        XVID_MOVSX _EAX, prm5d
         lea TMP0, [mmx_offset]
 	movq mm7, [TMP0 + (_EAX + 128)*8]   ; being lazy
 %else

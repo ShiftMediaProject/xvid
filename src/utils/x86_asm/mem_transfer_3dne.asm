@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: mem_transfer_3dne.asm,v 1.11 2008-11-26 01:04:34 Isibaar Exp $
+; * $Id: mem_transfer_3dne.asm,v 1.12 2008-12-04 14:41:50 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -53,7 +53,7 @@ mm_zero:
 ; Code
 ;=============================================================================
 
-SECTION .rotext align=SECTION_ALIGN
+TEXT
 
 cglobal transfer_8to16copy_3dne
 cglobal transfer_16to8copy_3dne

@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: qpel_mmx.asm,v 1.9 2008-11-26 23:35:50 Isibaar Exp $
+; * $Id: qpel_mmx.asm,v 1.10 2008-12-04 14:41:50 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -239,7 +239,7 @@ FIR_C19: times 4 dw 19
 FIR_C20: times 4 dw 20
 FIR_C23: times 4 dw 23
 
-SECTION .rotext align=SECTION_ALIGN
+TEXT
 
 ;//////////////////////////////////////////////////////////////////////
 ;// Here we go with the Q-Pel mess.

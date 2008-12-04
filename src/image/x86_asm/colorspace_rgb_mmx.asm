@@ -500,7 +500,7 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
 ; Code
 ;=============================================================================
 
-SECTION .rotext align=SECTION_ALIGN
+TEXT
 
 %include "colorspace_mmx.inc"
 

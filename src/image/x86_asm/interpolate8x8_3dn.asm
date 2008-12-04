@@ -39,7 +39,7 @@ mmx_one:
 ; Code
 ;=============================================================================
 
-SECTION .rotext align=SECTION_ALIGN
+TEXT
 
 cglobal interpolate8x8_halfpel_h_3dn
 cglobal interpolate8x8_halfpel_v_3dn

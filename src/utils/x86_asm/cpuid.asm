@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: cpuid.asm,v 1.17 2008-12-02 13:58:30 Isibaar Exp $
+; * $Id: cpuid.asm,v 1.18 2008-12-04 14:41:50 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -87,7 +87,7 @@ vendorAMD:
 %define XVID_POPFD  popfd
 %endif
 
-SECTION .rotext align=SECTION_ALIGN
+TEXT
 
 ; int check_cpu_feature(void)
 
