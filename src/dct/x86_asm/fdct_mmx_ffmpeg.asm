@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: fdct_mmx_ffmpeg.asm,v 1.8 2008-11-26 01:04:34 Isibaar Exp $
+; * $Id: fdct_mmx_ffmpeg.asm,v 1.9 2008-12-04 14:41:50 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -387,7 +387,7 @@ ENDFUNC
 ; Code
 ;=============================================================================
 
-SECTION .rotext align=SECTION_ALIGN
+TEXT
 
 ;-----------------------------------------------------------------------------
 ; void fdct_mmx_ffmpeg(int16_t block[64]);

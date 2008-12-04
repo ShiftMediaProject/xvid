@@ -20,7 +20,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: cbp_sse2.asm,v 1.12 2008-12-02 13:44:55 Isibaar Exp $
+; * $Id: cbp_sse2.asm,v 1.13 2008-12-04 14:41:50 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -64,7 +64,7 @@ ignore_dc:
 ; Code
 ;=============================================================================
 
-SECTION .rotext align=SECTION_ALIGN
+TEXT
 
 ;-----------------------------------------------------------------------------
 ; uint32_t calc_cbp_sse2(const int16_t coeff[6*64]);

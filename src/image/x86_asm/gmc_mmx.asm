@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: gmc_mmx.asm,v 1.9 2008-12-02 13:44:55 Isibaar Exp $
+; * $Id: gmc_mmx.asm,v 1.10 2008-12-04 14:41:50 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -48,7 +48,7 @@ align SECTION_ALIGN
 Cst16:
 times 8 dw 16
 
-SECTION .rotext align=SECTION_ALIGN
+TEXT
 
 ;//////////////////////////////////////////////////////////////////////
 ;// mmx version

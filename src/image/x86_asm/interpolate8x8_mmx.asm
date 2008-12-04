@@ -77,7 +77,7 @@ mmx_mask2:
 ; Code
 ;=============================================================================
 
-SECTION .rotext align=SECTION_ALIGN
+TEXT
 
 cglobal interpolate8x8_halfpel_h_mmx
 cglobal interpolate8x8_halfpel_v_mmx

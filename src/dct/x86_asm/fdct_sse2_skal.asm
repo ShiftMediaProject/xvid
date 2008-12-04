@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: fdct_sse2_skal.asm,v 1.11 2008-12-01 14:45:45 Isibaar Exp $
+; * $Id: fdct_sse2_skal.asm,v 1.12 2008-12-04 14:41:50 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -195,7 +195,7 @@ Rounder1:  dw  1,1,1,1, 1,1,1,1
 ; Code
 ;=============================================================================
 
-SECTION .rotext align=SECTION_ALIGN
+TEXT
 
 cglobal idct_sse2_skal
 cglobal fdct_sse2_skal

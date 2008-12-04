@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: deintl_sse.asm,v 1.4 2008-11-26 01:04:34 Isibaar Exp $
+; * $Id: deintl_sse.asm,v 1.5 2008-12-04 14:41:50 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -46,7 +46,7 @@ align SECTION_ALIGN
 Mask_6b  times 16 db 0x3f
 Rnd_3b:  times 16 db 3
 
-SECTION .rotext align=SECTION_ALIGN
+TEXT
 
 ;//////////////////////////////////////////////////////////////////////
 ;// sse version

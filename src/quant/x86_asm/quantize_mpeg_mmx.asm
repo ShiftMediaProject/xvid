@@ -21,7 +21,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_mpeg_mmx.asm,v 1.13 2008-11-26 23:35:50 Isibaar Exp $
+; * $Id: quantize_mpeg_mmx.asm,v 1.14 2008-12-04 14:41:50 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
@@ -111,7 +111,7 @@ mmx_rounding:
 ; Code
 ;=============================================================================
 
-SECTION .rotext align=SECTION_ALIGN
+TEXT
 
 cglobal quant_mpeg_intra_mmx
 cglobal quant_mpeg_inter_mmx
@@ -187,7 +187,7 @@ quant_mpeg_intra_mmx:
   QUANT_MMX(7)
 
   ; calculate DC
-  movsx _EAX, word [_EAX]   ; data[0]
+  XVID_MOVSX _EAX, word [_EAX]   ; data[0]
   mov TMP0, prm4            ; dcscalar
   mov _EDX, _EAX 
   shr TMP0, 1               ; TMP0 = dcscalar/2

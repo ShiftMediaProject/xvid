@@ -20,7 +20,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_mpeg_xmm.asm,v 1.10 2008-11-26 02:21:02 Isibaar Exp $
+; * $Id: quantize_mpeg_xmm.asm,v 1.11 2008-12-04 14:41:50 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -137,7 +137,7 @@ dd 0
 ; Code
 ;=============================================================================
 
-SECTION .rotext align=SECTION_ALIGN
+TEXT
 
 cglobal quant_mpeg_inter_xmm
 cglobal dequant_mpeg_intra_3dne
@@ -432,7 +432,7 @@ dequant_mpeg_intra_3dne:
   psllw mm7, 2    ; << 2. See comment.
   mov TMP1, prm5 ; mpeg_quant_matrices	
   push _EBX
-  movsx _EBX, word [TMP0]
+  XVID_MOVSX _EBX, word [TMP0]
   pxor mm0, mm0
   pxor mm3, mm3
   push _ESI

@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: idct_3dne.asm,v 1.9 2008-11-26 01:04:34 Isibaar Exp $
+; * $Id: idct_3dne.asm,v 1.10 2008-12-04 14:41:50 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -199,7 +199,7 @@ tab_i_35_xmm:
 ; Code
 ;=============================================================================
 
-SECTION .rotext align=SECTION_ALIGN
+TEXT
 
 cglobal idct_3dne
 

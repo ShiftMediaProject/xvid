@@ -34,7 +34,7 @@ ALIGN SECTION_ALIGN
 mmx_one:
 	times 8 db 1
 
-SECTION .rotext align=SECTION_ALIGN
+TEXT
 
 cglobal interpolate8x8_halfpel_h_xmm
 cglobal interpolate8x8_halfpel_v_xmm

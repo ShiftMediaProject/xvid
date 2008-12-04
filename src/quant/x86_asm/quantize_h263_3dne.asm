@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_h263_3dne.asm,v 1.9 2008-11-26 01:04:34 Isibaar Exp $
+; * $Id: quantize_h263_3dne.asm,v 1.10 2008-12-04 14:41:50 Isibaar Exp $
 ; *
 ; *************************************************************************/
 ;
@@ -135,8 +135,7 @@ int_2048:
 ; Code
 ;=============================================================================
 
-SECTION .rotext align=SECTION_ALIGN
-
+TEXT
 
 ;-----------------------------------------------------------------------------
 ;
@@ -352,7 +351,7 @@ quant_h263_intra_3dne:
   mov _EBP, [_ESP + (4+4)*PTR_SIZE]   ; dcscalar
                                     ; NB -- there are 3 pushes in the function preambule and one more
                                     ; in "quant_intra 0", thus an added offset of 16 bytes
-  movsx _EAX, word [byte _ECX]        ; DC
+  XVID_MOVSX _EAX, word [byte _ECX] ; DC
 
   quant_intra 1
   mov _EDI, _EAX
@@ -399,7 +398,7 @@ ALIGN SECTION_ALIGN
 .q1loop:
   quant_intra1 0
   mov _EBP, [_ESP + (4+4)*PTR_SIZE]   ; dcscalar
-  movsx _EAX, word [byte _ECX]        ; DC
+  XVID_MOVSX _EAX, word [byte _ECX]        ; DC
 
   quant_intra1 1
   mov _EDI, _EAX
@@ -754,7 +753,7 @@ dequant_h263_intra_3dne:
 %endif
   push _EBP
   mov _EBX, mmx_2047
-  movsx _EBP, word [_ECX]
+  XVID_MOVSX _EBP, word [_ECX]
 %ifdef ARCH_IS_X86_64
   lea r9, [mmx_add]
   lea _EAX, [r9 + _EAX*8 - 8]    ; quant or quant-1

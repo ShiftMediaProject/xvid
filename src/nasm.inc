@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: nasm.inc,v 1.3 2008-12-01 14:45:45 Isibaar Exp $
+; * $Id: nasm.inc,v 1.4 2008-12-04 14:41:50 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -103,6 +103,11 @@ DEFAULT REL
 %define PTR_SIZE 8
 %define PTR_TYPE qword
 
+%ifdef __YASM_VERSION_ID__
+%define XVID_MOVSX movsxd
+%else
+%define XVID_MOVSX movsx
+%endif
 
 %else
 
@@ -149,6 +154,8 @@ BITS 32
 %define PUSH_XMM6_XMM7
 %define POP_XMM6_XMM7
 
+%define XVID_MOVSX movsx
+
 %endif
 
 
@@ -166,6 +173,10 @@ BITS 32
       %else
             SECTION .rodata align=SECTION_ALIGN
       %endif
+%endmacro
+
+%macro TEXT 0
+      SECTION .rotext align=SECTION_ALIGN
 %endmacro
 
 %macro cglobal 1
