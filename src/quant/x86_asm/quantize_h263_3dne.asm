@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_h263_3dne.asm,v 1.10 2008-12-04 14:41:50 Isibaar Exp $
+; * $Id: quantize_h263_3dne.asm,v 1.11 2008-12-04 18:30:36 Isibaar Exp $
 ; *
 ; *************************************************************************/
 ;
@@ -343,7 +343,7 @@ quant_h263_intra_3dne:
 %endif
 
   push _EBX
-  mov _EBX, mmzero
+  lea _EBX, [mmzero]
   push _EDI
   jz near .q1loop
 
@@ -351,18 +351,18 @@ quant_h263_intra_3dne:
   mov _EBP, [_ESP + (4+4)*PTR_SIZE]   ; dcscalar
                                     ; NB -- there are 3 pushes in the function preambule and one more
                                     ; in "quant_intra 0", thus an added offset of 16 bytes
-  XVID_MOVSX _EAX, word [byte _ECX] ; DC
+  movsx _EAX, word [byte _ECX]      ; DC
 
   quant_intra 1
-  mov _EDI, _EAX
-  sar _EDI, 31                       ; sign(DC)
-  shr _EBP, byte 1                   ; _EBP = dcscalar/2
+  mov _EDI, _EAX 
+  sar _EDI, 31                        ; sign(DC)
+  shr _EBP, byte 1                    ; _EBP = dcscalar/2
 
   quant_intra 2
   sub _EAX, _EDI                      ; DC (+1)
   xor _EBP, _EDI                      ; sign(DC) dcscalar /2  (-1)
   mov _EDI, [_ESP + (4+4)*PTR_SIZE]   ; dscalar
-  lea _EAX, [byte _EAX + _EBP]         ; DC + sign(DC) dcscalar/2
+  lea _EAX, [byte _EAX + _EBP]        ; DC + sign(DC) dcscalar/2
   mov _EBP, [byte _ESP]
 
   quant_intra 3
@@ -398,18 +398,18 @@ ALIGN SECTION_ALIGN
 .q1loop:
   quant_intra1 0
   mov _EBP, [_ESP + (4+4)*PTR_SIZE]   ; dcscalar
-  XVID_MOVSX _EAX, word [byte _ECX]        ; DC
+  movsx _EAX, word [byte _ECX]        ; DC
 
   quant_intra1 1
-  mov _EDI, _EAX
-  sar _EDI, 31                       ; sign(DC)
-  shr _EBP, byte 1                   ; _EBP = dcscalar /2
+  mov _EDI, _EAX 
+  sar _EDI, 31                        ; sign(DC)
+  shr _EBP, byte 1                    ; _EBP = dcscalar /2
 
   quant_intra1 2
   sub _EAX, _EDI                      ; DC (+1)
   xor _EBP, _EDI                      ; sign(DC) dcscalar /2  (-1)
   mov _EDI, [_ESP + (4+4)*PTR_SIZE]   ; dcscalar
-  lea _EAX, [byte _EAX + _EBP]         ; DC + sign(DC) dcscalar /2
+  lea _EAX, [byte _EAX + _EBP]        ; DC + sign(DC) dcscalar /2
   mov _EBP, [byte _ESP]
 
   quant_intra1 3
@@ -752,8 +752,8 @@ dequant_h263_intra_3dne:
   lea _EDI, [mmx_mul + _EAX*8 - 8]    ; 2*quant
 %endif
   push _EBP
-  mov _EBX, mmx_2047
-  XVID_MOVSX _EBP, word [_ECX]
+  lea _EBX, [mmx_2047]
+  movsx _EBP, word [_ECX]
 %ifdef ARCH_IS_X86_64
   lea r9, [mmx_add]
   lea _EAX, [r9 + _EAX*8 - 8]    ; quant or quant-1
@@ -761,7 +761,7 @@ dequant_h263_intra_3dne:
   lea _EAX, [mmx_add + _EAX*8 - 8]    ; quant or quant-1
 %endif
   push _ESI
-  mov _ESI, mmzero
+  lea _ESI, [mmzero]
   pxor mm7, mm7
   movq mm3, [_ECX+120]               ;B2 ; c  = coeff[i]
   pcmpeqw mm7, [_ECX+120]            ;B6 (c ==0) ? -1 : 0 (1st)
@@ -875,7 +875,7 @@ dequant_h263_inter_3dne:
 %else
   lea _EDI, [mmx_mul + _EAX*8 - 8]    ; 2*quant
 %endif
-  mov _EBX, mmx_2047
+  lea _EBX, [mmx_2047]
   pxor mm7, mm7
   movq mm3, [_ECX+120]               ;B2 ; c  = coeff[i]
   pcmpeqw mm7, [_ECX+120]            ;B6 (c ==0) ? -1 : 0 (1st)
@@ -886,7 +886,7 @@ dequant_h263_inter_3dne:
   lea _EAX, [mmx_add + _EAX*8 - 8]    ; quant or quant-1
 %endif
   psubw mm2, mm3                    ;-c ;B3 (1st dep)
-  mov _ESI, mmzero
+  lea _ESI, [mmzero]
   pmaxsw mm2, mm3                   ;|c|        ;B4 (2nd)
   pmullw mm2, [_EDI]                 ;*= 2Q      ;B8 (3rd+)
   psraw mm3, 15                     ; sign(c)   ;B7 (2nd)

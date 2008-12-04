@@ -210,7 +210,7 @@ ALIGN SECTION_ALIGN
   push _ESI
   pcmpeqb mm1, mm1
   pcmpeqb mm2, mm2
-  mov _ESI, mm_minusone
+  lea _ESI, [mm_minusone]
   psubusb mm1, [byte _EAX]
   psubusb mm2, [_EAX+TMP1]
   lea _EAX, [_EAX+2*TMP1]
@@ -489,7 +489,7 @@ ALIGN SECTION_ALIGN
 
   pcmpeqb mm1, mm1
   pcmpeqb mm2, mm2
-  mov _ESI, mm_minusone
+  lea _ESI, [mm_minusone]
   psubusb mm1, [byte _EAX]       ; line1
   psubusb mm2, [_EAX+TMP1]        ; line2
   lea _EAX, [_EAX+2*TMP1]          ; _EAX==line3

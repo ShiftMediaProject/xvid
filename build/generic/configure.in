@@ -13,12 +13,14 @@ AC_CONFIG_SRCDIR(configure.in)
 
 dnl Do not forget to increase that when needed.
 API_MAJOR="4"
-API_MINOR="1"
+API_MINOR="3"
 
-dnl NASM version requirement
+dnl NASM/YASM version requirement
+minimum_yasm_minor_version=7
 minimum_nasm_minor_version=0
 minimum_nasm_major_version=2
 nasm_prog="nasm"
+yasm_prog="yasm"
 
 dnl Default CFLAGS -- Big impact on overall speed
 our_cflags_defaults="-Wall"
@@ -344,6 +346,29 @@ if test "$ARCHITECTURE" = "IA32" -o "$ARCHITECTURE" = "X86_64" ; then
 
    found_nasm_comp_prog="no"
    chosen_asm_prog=""
+
+   dnl Check for yasm first
+   AC_CHECK_PROG([ac_yasm], [$yasm_prog], [yes], [no], , [yes])
+   if test "$ac_yasm" = "yes" ; then
+       dnl
+       dnl Checking yasm version
+       dnl
+       AC_MSG_CHECKING([for yasm version])
+       yasm_minor=`$yasm_prog --version | cut -d '.' -f 2 | cut -d ' ' -f 1`
+       if test -z $yasm_minor ; then
+          yasm_minor=-1
+       fi
+       AC_MSG_RESULT([$yasm_minor])
+
+       dnl Actually, yasm >= 0.6.2 should be ok
+       dnl But I'm too lazy to check also the patch version...
+       if test "$yasm_minor" -lt "$minimum_yasm_minor_version" ; then
+         AC_MSG_WARN([yasm version is too old])
+       else
+         found_nasm_comp_prog="yes"
+         chosen_asm_prog="$yasm_prog"
+       fi
+   fi
 
    dnl Check for nasm (not buggy version)
    if test "$found_nasm_comp_prog" = "no" ; then

@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: colorspace_yuv_mmx.asm,v 1.13 2008-12-04 14:41:50 Isibaar Exp $
+; * $Id: colorspace_yuv_mmx.asm,v 1.14 2008-12-04 18:30:36 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -126,7 +126,7 @@
   pop DST
 
 %ifdef ARCH_IS_X86_64
-  XVID_MOVSX _ECX, SRC_STRIDE
+  XVID_MOVSXD _ECX, SRC_STRIDE
   add SRC, _ECX
   mov ecx, DST_STRIDE
   add DST, _ECX
