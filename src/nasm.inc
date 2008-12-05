@@ -19,7 +19,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: nasm.inc,v 1.5 2008-12-04 18:30:36 Isibaar Exp $
+; * $Id: nasm.inc,v 1.6 2008-12-05 10:15:02 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -175,7 +175,11 @@ BITS 32
 %endmacro
 
 %macro TEXT 0
+%ifidn __OUTPUT_FORMAT__,macho
+      SECTION .text align=SECTION_ALIGN
+%else
       SECTION .rotext align=SECTION_ALIGN
+%endif
 %endmacro
 
 %macro cglobal 1
