@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: fdct_sse2_skal.asm,v 1.13 2008-12-05 10:15:02 Isibaar Exp $
+; * $Id: fdct_sse2_skal.asm,v 1.14 2008-12-05 10:33:47 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -604,6 +604,7 @@ fdct_sse2_skal:
   ret
 ENDFUNC
 
+; Mac-specific workaround for misaligned DCT tables
 ALIGN SECTION_ALIGN  
   times 8 dw 0 
 
