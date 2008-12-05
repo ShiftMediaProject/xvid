@@ -455,7 +455,7 @@ dnl intrinsic altivec functions and types as they are supported by both Apple
 dnl and GNU gcc with very slight changes to code which can be sumed up by:
 dnl
 dnl Apple:
-dnl  - compile with the option -faltivec
+dnl  - compile with the option -arch ppc -faltivec 
 dnl  - define vectors with parentheses vec = (0,0,0,0)
 dnl GNU
 dnl  - compile with -maltivec -mabi=altivec
@@ -480,7 +480,7 @@ cat > conftest.c << EOF
 #include <altivec.h>
 int main() { return(0); }
 EOF
-   if $CC -faltivec -c conftest.c 2>/dev/null 1>/dev/null || \
+   if $CC -arch ppc -faltivec -c conftest.c 2>/dev/null 1>/dev/null || \
       $CC -maltivec -mabi=altivec -c conftest.c 2>/dev/null 1>/dev/null ; then
         AC_MSG_RESULT(yes)
         SPECIFIC_CFLAGS="$SPECIFIC_CFLAGS -DHAVE_ALTIVEC_H"
@@ -504,9 +504,9 @@ int main()
   return(0);
 }
 EOF
-   if $CC $TEMP_ALTIVEC -faltivec -c conftest.c 2>/dev/null 1>/dev/null ; then
+   if $CC $TEMP_ALTIVEC -arch ppc -faltivec -c conftest.c 2>/dev/null 1>/dev/null ; then
         AC_MSG_RESULT([yes (Apple)])
-        SPECIFIC_CFLAGS="$SPECIFIC_CFLAGS -faltivec -DHAVE_ALTIVEC_PARENTHESES_DECL $TEMP_ALTIVEC"
+        SPECIFIC_CFLAGS="$SPECIFIC_CFLAGS -arch ppc -faltivec -DHAVE_ALTIVEC_PARENTHESES_DECL $TEMP_ALTIVEC"
 	PPC_ALTIVEC_SOURCES="SRC_PPC_ALTIVEC"
    else
 cat > conftest.c << EOF
