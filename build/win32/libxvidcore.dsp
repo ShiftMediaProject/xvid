@@ -141,7 +141,7 @@ InputPath=..\..\src\bitstream\x86_asm\cbp_mmx.asm
 InputName=cbp_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -153,7 +153,7 @@ InputPath=..\..\src\bitstream\x86_asm\cbp_mmx.asm
 InputName=cbp_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -172,8 +172,7 @@ InputPath=..\..\src\bitstream\x86_asm\cbp_sse2.asm
 InputName=cbp_sse2
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
-
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "libxvidcore - Win32 Debug"
@@ -184,7 +183,7 @@ InputPath=..\..\src\bitstream\x86_asm\cbp_sse2.asm
 InputName=cbp_sse2
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -247,8 +246,7 @@ InputPath=..\..\src\dct\x86_asm\fdct_mmx_ffmpeg.asm
 InputName=fdct_mmx_ffmpeg
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
-
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "libxvidcore - Win32 Debug"
@@ -259,7 +257,7 @@ InputPath=..\..\src\dct\x86_asm\fdct_mmx_ffmpeg.asm
 InputName=fdct_mmx_ffmpeg
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -278,7 +276,7 @@ InputPath=..\..\src\dct\x86_asm\fdct_mmx_skal.asm
 InputName=fdct_mmx_skal
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -290,7 +288,7 @@ InputPath=..\..\src\dct\x86_asm\fdct_mmx_skal.asm
 InputName=fdct_mmx_skal
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -309,7 +307,7 @@ InputPath=..\..\src\dct\x86_asm\fdct_sse2_skal.asm
 InputName=fdct_sse2_skal
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -321,7 +319,7 @@ InputPath=..\..\src\dct\x86_asm\fdct_sse2_skal.asm
 InputName=fdct_sse2_skal
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -340,7 +338,7 @@ InputPath=..\..\src\dct\x86_asm\idct_3dne.asm
 InputName=idct_3dne
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -352,7 +350,7 @@ InputPath=..\..\src\dct\x86_asm\idct_3dne.asm
 InputName=idct_3dne
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -371,7 +369,7 @@ InputPath=..\..\src\dct\x86_asm\idct_mmx.asm
 InputName=idct_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -383,7 +381,7 @@ InputPath=..\..\src\dct\x86_asm\idct_mmx.asm
 InputName=idct_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -402,7 +400,7 @@ InputPath=..\..\src\dct\x86_asm\idct_sse2_dmitry.asm
 InputName=idct_sse2_dmitry
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -414,7 +412,7 @@ InputPath=..\..\src\dct\x86_asm\idct_sse2_dmitry.asm
 InputName=idct_sse2_dmitry
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -470,7 +468,7 @@ InputPath=..\..\src\image\x86_asm\colorspace_rgb_mmx.asm
 InputName=colorspace_rgb_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -I"$(InputDir)"\ -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ -I"$(InputDir)"\ "$(InputPath)"
 
 # End Custom Build
 
@@ -483,7 +481,7 @@ InputPath=..\..\src\image\x86_asm\colorspace_rgb_mmx.asm
 InputName=colorspace_rgb_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -I"$(InputDir)"\ -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ -I"$(InputDir)"\ "$(InputPath)"
 
 # End Custom Build
 
@@ -503,7 +501,7 @@ InputPath=..\..\src\image\x86_asm\colorspace_yuv_mmx.asm
 InputName=colorspace_yuv_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -I"$(InputDir)"\ -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ -I"$(InputDir)"\ "$(InputPath)"
 
 # End Custom Build
 
@@ -516,7 +514,7 @@ InputPath=..\..\src\image\x86_asm\colorspace_yuv_mmx.asm
 InputName=colorspace_yuv_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -I"$(InputDir)"\ -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ -I"$(InputDir)"\ "$(InputPath)"
 
 # End Custom Build
 
@@ -536,7 +534,7 @@ InputPath=..\..\src\image\x86_asm\colorspace_yuyv_mmx.asm
 InputName=colorspace_yuyv_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -I"$(InputDir)"\ -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ -I"$(InputDir)"\ "$(InputPath)"
 
 # End Custom Build
 
@@ -549,7 +547,7 @@ InputPath=..\..\src\image\x86_asm\colorspace_yuyv_mmx.asm
 InputName=colorspace_yuyv_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -I"$(InputDir)"\ -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ -I"$(InputDir)"\ "$(InputPath)"
 
 # End Custom Build
 
@@ -568,7 +566,7 @@ InputPath=..\..\src\image\x86_asm\deintl_sse.asm
 InputName=deintl_sse
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -580,7 +578,7 @@ InputPath=..\..\src\image\x86_asm\deintl_sse.asm
 InputName=deintl_sse
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -599,7 +597,7 @@ InputPath=..\..\src\image\x86_asm\gmc_mmx.asm
 InputName=gmc_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -611,7 +609,7 @@ InputPath=..\..\src\image\x86_asm\gmc_mmx.asm
 InputName=gmc_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -630,7 +628,7 @@ InputPath=..\..\src\image\x86_asm\interpolate8x8_3dn.asm
 InputName=interpolate8x8_3dn
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -642,7 +640,7 @@ InputPath=..\..\src\image\x86_asm\interpolate8x8_3dn.asm
 InputName=interpolate8x8_3dn
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -661,7 +659,7 @@ InputPath=..\..\src\image\x86_asm\interpolate8x8_3dne.asm
 InputName=interpolate8x8_3dne
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -673,7 +671,7 @@ InputPath=..\..\src\image\x86_asm\interpolate8x8_3dne.asm
 InputName=interpolate8x8_3dne
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -692,7 +690,7 @@ InputPath=..\..\src\image\x86_asm\interpolate8x8_mmx.asm
 InputName=interpolate8x8_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -704,7 +702,7 @@ InputPath=..\..\src\image\x86_asm\interpolate8x8_mmx.asm
 InputName=interpolate8x8_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -723,7 +721,7 @@ InputPath=..\..\src\image\x86_asm\interpolate8x8_xmm.asm
 InputName=interpolate8x8_xmm
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -735,7 +733,7 @@ InputPath=..\..\src\image\x86_asm\interpolate8x8_xmm.asm
 InputName=interpolate8x8_xmm
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -754,7 +752,7 @@ InputPath=..\..\src\image\x86_asm\postprocessing_mmx.asm
 InputName=postprocessing_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -766,7 +764,7 @@ InputPath=..\..\src\image\x86_asm\postprocessing_mmx.asm
 InputName=postprocessing_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -785,7 +783,7 @@ InputPath=..\..\src\image\x86_asm\postprocessing_sse2.asm
 InputName=postprocessing_sse2
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -797,7 +795,7 @@ InputPath=..\..\src\image\x86_asm\postprocessing_sse2.asm
 InputName=postprocessing_sse2
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -816,7 +814,7 @@ InputPath=..\..\src\image\x86_asm\qpel_mmx.asm
 InputName=qpel_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -828,7 +826,7 @@ InputPath=..\..\src\image\x86_asm\qpel_mmx.asm
 InputName=qpel_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -847,7 +845,7 @@ InputPath=..\..\src\image\x86_asm\reduced_mmx.asm
 InputName=reduced_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -859,7 +857,7 @@ InputPath=..\..\src\image\x86_asm\reduced_mmx.asm
 InputName=reduced_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -947,7 +945,7 @@ InputPath=..\..\src\motion\x86_asm\sad_3dn.asm
 InputName=sad_3dn
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -959,7 +957,7 @@ InputPath=..\..\src\motion\x86_asm\sad_3dn.asm
 InputName=sad_3dn
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -978,7 +976,7 @@ InputPath=..\..\src\motion\x86_asm\sad_3dne.asm
 InputName=sad_3dne
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -990,7 +988,7 @@ InputPath=..\..\src\motion\x86_asm\sad_3dne.asm
 InputName=sad_3dne
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1009,7 +1007,7 @@ InputPath=..\..\src\motion\x86_asm\sad_mmx.asm
 InputName=sad_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1021,7 +1019,7 @@ InputPath=..\..\src\motion\x86_asm\sad_mmx.asm
 InputName=sad_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1040,7 +1038,7 @@ InputPath=..\..\src\motion\x86_asm\sad_sse2.asm
 InputName=sad_sse2
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1052,7 +1050,7 @@ InputPath=..\..\src\motion\x86_asm\sad_sse2.asm
 InputName=sad_sse2
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1071,7 +1069,7 @@ InputPath=..\..\src\motion\x86_asm\sad_xmm.asm
 InputName=sad_xmm
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1083,7 +1081,7 @@ InputPath=..\..\src\motion\x86_asm\sad_xmm.asm
 InputName=sad_xmm
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1190,7 +1188,7 @@ InputPath=..\..\src\quant\x86_asm\quantize_h263_3dne.asm
 InputName=quantize_h263_3dne
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1202,7 +1200,7 @@ InputPath=..\..\src\quant\x86_asm\quantize_h263_3dne.asm
 InputName=quantize_h263_3dne
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1221,7 +1219,7 @@ InputPath=..\..\src\quant\x86_asm\quantize_h263_mmx.asm
 InputName=quantize_h263_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1233,7 +1231,7 @@ InputPath=..\..\src\quant\x86_asm\quantize_h263_mmx.asm
 InputName=quantize_h263_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1252,7 +1250,7 @@ InputPath=..\..\src\quant\x86_asm\quantize_mpeg_mmx.asm
 InputName=quantize_mpeg_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1264,7 +1262,7 @@ InputPath=..\..\src\quant\x86_asm\quantize_mpeg_mmx.asm
 InputName=quantize_mpeg_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1283,7 +1281,7 @@ InputPath=..\..\src\quant\x86_asm\quantize_mpeg_xmm.asm
 InputName=quantize_mpeg_xmm
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1295,7 +1293,7 @@ InputPath=..\..\src\quant\x86_asm\quantize_mpeg_xmm.asm
 InputName=quantize_mpeg_xmm
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1346,7 +1344,7 @@ InputPath=..\..\src\utils\x86_asm\cpuid.asm
 InputName=cpuid
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1358,7 +1356,7 @@ InputPath=..\..\src\utils\x86_asm\cpuid.asm
 InputName=cpuid
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1377,7 +1375,7 @@ InputPath=..\..\src\utils\x86_asm\interlacing_mmx.asm
 InputName=interlacing_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1389,7 +1387,7 @@ InputPath=..\..\src\utils\x86_asm\interlacing_mmx.asm
 InputName=interlacing_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1408,7 +1406,7 @@ InputPath=..\..\src\utils\x86_asm\mem_transfer_3dne.asm
 InputName=mem_transfer_3dne
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1420,7 +1418,7 @@ InputPath=..\..\src\utils\x86_asm\mem_transfer_3dne.asm
 InputName=mem_transfer_3dne
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1439,7 +1437,7 @@ InputPath=..\..\src\utils\x86_asm\mem_transfer_mmx.asm
 InputName=mem_transfer_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1451,7 +1449,7 @@ InputPath=..\..\src\utils\x86_asm\mem_transfer_mmx.asm
 InputName=mem_transfer_mmx
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1554,7 +1552,7 @@ InputPath="..\..\src\plugins\x86_asm\plugin_ssim-a.asm"
 InputName=plugin_ssim-a
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
@@ -1566,7 +1564,7 @@ InputPath="..\..\src\plugins\x86_asm\plugin_ssim-a.asm"
 InputName=plugin_ssim-a
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasm -I"../../src/" -f win32 -DWINDOWS -o $(IntDir)\$(InputName).obj $(InputPath)
+	nasm -o "$(IntDir)\$(InputName).obj" -f win32 -DWINDOWS -I..\..\src\ "$(InputPath)"
 
 # End Custom Build
 
