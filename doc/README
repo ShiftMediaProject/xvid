@@ -12,6 +12,7 @@ NOTE FOR MacOS X PLATFORM
 
 Many versions of yasm/nasm are known to be buggy for Mach-O output.
 
-* yasm 0.7.99.2161 or later is required for MacOS X build. *
+* yasm 0.7.99.2161 or later is required for Mac OS X build. *
+* nasm 2.06rc2 or later is required for Mac OS X build *
 
-Last edited: $Date: 2008-12-09 10:42:38 $
+Last edited: $Date: 2009-01-07 16:32:31 $
