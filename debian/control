@@ -2,7 +2,7 @@ Source: xvidcore
 Section: libs
 Priority: optional
 Maintainer: Edouard Gomez <ed.gomez@free.fr>
-Build-Depends: debhelper (>= 5), nasm (>= 2.0.0) [i386]
+Build-Depends: debhelper (>= 5), nasm (>= 2.0.0) [i386 amd64]
 Standards-Version: 3.5.8
 
 Package: libxvidcore4
