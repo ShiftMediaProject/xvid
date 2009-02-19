@@ -1,18 +1,53 @@
-//*******************************************************************************
-//*										*
-//*	functions quant_inter and dequant_inter have been softwarepipelined	*
-//*	use was made of the pmpyshr2 instruction				*
-//*										*
-//*	by Christian Engel and Hans-Joachim Daniels				*
-//*	christian.engel@ira.uka.de hans-joachim.daniels@ira.uka.de		*
-//*										*
-//*	This was made for the ia64 DivX laboratory (yes, it was really called	*
-//*	this way, originally OpenDivX was intendet, but died shortly before our	*
-//*	work started (you will probably already know ...))			*
-//*	at the Universitat Karlsruhe (TH) held between April and July 2002	*
-//* 	http://www.info.uni-karlsruhe.de/~rubino/ia64p/				*
-//*										*
-//*******************************************************************************/
+// ****************************************************************************
+// *
+// *  XVID MPEG-4 VIDEO CODEC
+// *  - IA64 h.263 quantization -
+// *
+// *  Copyright(C) 2002 Christian Engel, Hans-Joachim Daniels
+// *
+// *  This program is free software; you can redistribute it and/or modify it
+// *  under the terms of the GNU General Public License as published by
+// *  the Free Software Foundation; either version 2 of the License, or
+// *  (at your option) any later version.
+// *
+// *  This program is distributed in the hope that it will be useful,
+// *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+// *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// *  GNU General Public License for more details.
+// *
+// *  You should have received a copy of the GNU General Public License
+// *  along with this program; if not, write to the Free Software
+// *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+// *
+// * $Id: quant_h263_ia64.s,v 1.7 2009-02-19 17:07:29 Isibaar Exp $
+// *
+// ***************************************************************************/
+//
+// ****************************************************************************
+// *                                                                            
+// *  quant_h263_ia64.s, IA-64 h.263 quantization                                  
+// *                                                                            
+// *  This version was implemented during an IA-64 practical training at 	
+// *  the University of Karlsruhe (http://i44w3.info.uni-karlsruhe.de/)		
+// *                                                                            
+// ****************************************************************************
+
+// *****************************************************************************
+// *									
+// *	functions quant_inter and dequant_inter have been softwarepipelined
+// *	use was made of the pmpyshr2 instruction				
+// *										
+// *	by Christian Engel and Hans-Joachim Daniels				
+// *	christian.engel@ira.uka.de hans-joachim.daniels@ira.uka.de		
+// *										
+// *	This was made for the ia64 DivX laboratory (yes, it was really called	
+// *	this way, originally OpenDivX was intendet, but died shortly before our	
+// *	work started (you will probably already know ...))			
+// *	at the Universitat Karlsruhe (TH) held between April and July 2002	
+// * 	http://www.info.uni-karlsruhe.de/~rubino/ia64p/				
+// *										
+// *****************************************************************************/
+
 	.file	"quant_h263_ia64.s"
 	.pred.safe_across_calls p1-p5,p16-p63
 		.section	.rodata
