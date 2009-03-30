@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.c,v 1.43 2008-11-28 10:58:07 Isibaar Exp $
+ * $Id: image.c,v 1.44 2009-03-30 14:40:05 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -390,15 +390,20 @@ safe_packed_conv(uint8_t * x_ptr, int x_stride,
 {
 	int width_opt, width_c, height_opt;
 
-    if (width==1 || height==1) return; /* forget about it */
+    if (width<0 || width==1 || height==1) return; /* forget about it */
 
 	if (func_opt != func_c && x_stride < size*((width+15)/16)*16)
 	{
 		width_opt = width & (~15);
 		width_c = (width - width_opt) & (~1);
 	}
-	else
+	else if (func_opt != func_c && !(width&1) && (size==3))
 	{
+        /* MMX reads 4 bytes per pixel for RGB/BGR */
+        width_opt = width - 2;
+        width_c = 2;
+    }
+    else {
         /* Enforce the width to be divisable by two. */
 		width_opt = width & (~1);
 		width_c = 0;
