@@ -48,7 +48,10 @@
 %define V_ADD	128
 
 ; Scaling used during conversion
-%define SCALEBITS 6
+%define SCALEBITS_OUT 6 
+%define SCALEBITS_IN  13
+
+%define FIX_ROUND (1<<(SCALEBITS_IN-1)) 
 
 ;=============================================================================
 ; Read only data
@@ -63,18 +66,18 @@ ALIGN SECTION_ALIGN
 ;-----------------------------------------------------------------------------
 ;         FIX(Y_B)	FIX(Y_G)	FIX(Y_R) Ignored
 
-bgr_y_mul: dw    25,      129,        66,      0
-bgr_u_mul: dw   112,      -74,       -38,      0
-bgr_v_mul: dw   -18,      -94,       112,      0
+bgr_y_mul: dw    803,     4129,      2105,      0
+bgr_u_mul: dw   3596,    -2384,     -1212,      0
+bgr_v_mul: dw   -582,    -3015,      3596,      0
 
 ;-----------------------------------------------------------------------------
 ; BGR->YV12 multiplication matrices
 ;-----------------------------------------------------------------------------
 ;         FIX(Y_R)	FIX(Y_G)	FIX(Y_B) Ignored
 
-rgb_y_mul: dw    66,      129,        25,      0
-rgb_u_mul: dw   -38,      -74,       112,      0
-rgb_v_mul: dw   112,      -94,       -18,      0
+rgb_y_mul: dw   2105,     4129,       803,      0
+rgb_u_mul: dw  -1212,    -2384,      3596,      0
+rgb_v_mul: dw   3596,    -3015,      -582,      0
 
 ;-----------------------------------------------------------------------------
 ; YV12->RGB data
@@ -151,22 +154,26 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
   push x_stride
 
   movd x_stride_d, mm0
-  shr x_stride, 8
+  add x_stride, FIX_ROUND
+  shr x_stride, SCALEBITS_IN 
   add x_stride, Y_ADD
   mov [y_ptr], dl                 ; y_ptr[0]
 
   movd x_stride_d, mm1
-  shr x_stride, 8
+  add x_stride, FIX_ROUND
+  shr x_stride, SCALEBITS_IN 
   add x_stride, Y_ADD
   mov [y_ptr + 1], dl             ; y_ptr[1]
 
   movd x_stride_d, mm2
-  shr x_stride, 8
+  add x_stride, FIX_ROUND
+  shr x_stride, SCALEBITS_IN 
   add x_stride, Y_ADD
   mov [y_ptr + y_stride + 0], dl       ; y_ptr[y_stride + 0]
 
   movd x_stride_d, mm3
-  shr x_stride, 8
+  add x_stride, FIX_ROUND
+  shr x_stride, SCALEBITS_IN 
   add x_stride, Y_ADD
   mov [y_ptr + y_stride + 1], dl       ; y_ptr[y_stride + 1]
 
@@ -182,12 +189,14 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
   paddd mm2, mm6
 
   movd x_stride_d, mm0
-  shr x_stride, 10
+  add x_stride, 4*FIX_ROUND
+  shr x_stride, (SCALEBITS_IN+2) 
   add x_stride, U_ADD
   mov [u_ptr], dl
 
   movd x_stride_d, mm2
-  shr x_stride, 10
+  add x_stride, 4*FIX_ROUND
+  shr x_stride, (SCALEBITS_IN+2) 
   add x_stride, V_ADD
   mov [v_ptr], dl
 
@@ -246,22 +255,26 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
   push x_stride
 
   movd x_stride_d, mm0
-  shr x_stride, 8
+  add x_stride, FIX_ROUND
+  shr x_stride, SCALEBITS_IN 
   add x_stride, Y_ADD
   mov [y_ptr], dl                 ; y_ptr[0]
 
   movd x_stride_d, mm1
-  shr x_stride, 8
+  add x_stride, FIX_ROUND
+  shr x_stride, SCALEBITS_IN 
   add x_stride, Y_ADD
   mov [y_ptr + 1], dl             ; y_ptr[1]
 
   movd x_stride_d, mm2
-  shr x_stride, 8
+  add x_stride, FIX_ROUND
+  shr x_stride, SCALEBITS_IN 
   add x_stride, Y_ADD
   mov [y_ptr + y_stride + 0], dl       ; y_ptr[y_stride + 0]
 
   movd x_stride_d, mm3
-  shr x_stride, 8
+  add x_stride, FIX_ROUND
+  shr x_stride, SCALEBITS_IN 
   add x_stride, Y_ADD
   mov [y_ptr + y_stride + 1], dl       ; y_ptr[y_stride + 1]
 
@@ -277,12 +290,14 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
   paddd mm2, mm6
 
   movd x_stride_d, mm0
-  shr x_stride, 10
+  add x_stride, 4*FIX_ROUND
+  shr x_stride, (SCALEBITS_IN+2) 
   add x_stride, U_ADD
   mov [u_ptr], dl
 
   movd x_stride_d, mm2
-  shr x_stride, 10
+  add x_stride, 4*FIX_ROUND
+  shr x_stride, (SCALEBITS_IN+2) 
   add x_stride, V_ADD
   mov [v_ptr], dl
 
@@ -341,8 +356,8 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
   movq [TEMP_Y1], mm0       ; y3y2y1y0 -> mm7
   psubsw mm1, mm2           ; g7g6g5g4 -> mm1
   psubsw mm0, mm6           ; g3g2g1g0 -> mm0
-  psraw mm1, SCALEBITS
-  psraw mm0, SCALEBITS
+  psraw mm1, SCALEBITS_OUT
+  psraw mm0, SCALEBITS_OUT
   packuswb mm0, mm1         ;g7g6g5g4g3g2g1g0 -> mm0
   movq [TEMP_G1], mm0
   movq mm0, [y_ptr+y_stride]       ; y7y6y5y4y3y2y1y0 -> mm0
@@ -357,8 +372,8 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
   psubsw mm1, mm2           ; g7g6g5g4 -> mm1
   movq mm2, mm0
   psubsw mm0, mm6           ; g3g2g1g0 -> mm0
-  psraw mm1, SCALEBITS
-  psraw mm0, SCALEBITS
+  psraw mm1, SCALEBITS_OUT
+  psraw mm0, SCALEBITS_OUT
   packuswb mm0, mm1         ; g7g6g5g4g3g2g1g0 -> mm0
   movq [TEMP_G2], mm0
   movq mm0, mm4
@@ -368,8 +383,8 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
   paddsw mm3, mm4           ; b7b6b5b4 -> mm3
   movq mm7, mm2             ; y3y2y1y0 -> mm7
   paddsw mm2, mm0           ; b3b2b1b0 -> mm2
-  psraw mm3, SCALEBITS
-  psraw mm2, SCALEBITS
+  psraw mm3, SCALEBITS_OUT
+  psraw mm2, SCALEBITS_OUT
   packuswb mm2, mm3         ; b7b6b5b4b3b2b1b0 -> mm2
   movq [TEMP_B2], mm2
   movq mm3, [TEMP_Y2]
@@ -378,8 +393,8 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
   paddsw mm3, mm4           ; b7b6b5b4 -> mm3
   movq mm4, mm2             ; TEMP_Y1 -> mm4
   paddsw mm2, mm0           ; b3b2b1b0 -> mm2
-  psraw mm3, SCALEBITS
-  psraw mm2, SCALEBITS
+  psraw mm3, SCALEBITS_OUT
+  psraw mm2, SCALEBITS_OUT
   packuswb mm2, mm3         ; b7b6b5b4b3b2b1b0 -> mm2
   movq [TEMP_B1], mm2
   movq mm0, mm5
@@ -387,13 +402,13 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
   punpcklwd mm0, mm0        ; v1v1v0v0 -> mm0
   paddsw mm1, mm5           ; r7r6r5r4 -> mm1
   paddsw mm7, mm0           ; r3r2r1r0 -> mm7
-  psraw mm1, SCALEBITS
-  psraw mm7, SCALEBITS
+  psraw mm1, SCALEBITS_OUT
+  psraw mm7, SCALEBITS_OUT
   packuswb mm7, mm1         ; r7r6r5r4r3r2r1r0 -> mm7 (TEMP_R2)
   paddsw mm6, mm5           ; r7r6r5r4 -> mm6
   paddsw mm4, mm0           ; r3r2r1r0 -> mm4
-  psraw mm6, SCALEBITS
-  psraw mm4, SCALEBITS
+  psraw mm6, SCALEBITS_OUT
+  psraw mm4, SCALEBITS_OUT
   packuswb mm4, mm6         ; r7r6r5r4r3r2r1r0 -> mm4 (TEMP_R1)
   movq mm0, [TEMP_B1]
   movq mm1, [TEMP_G1]

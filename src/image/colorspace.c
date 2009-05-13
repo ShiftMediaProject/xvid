@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: colorspace.c,v 1.14 2006-11-10 18:58:39 chl Exp $
+ * $Id: colorspace.c,v 1.15 2009-05-13 09:39:20 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -152,9 +152,9 @@ NAME(uint8_t * x_ptr, int x_stride,	\
 #define V_B_IN			0.071
 #define V_ADD_IN		128
 
-#define SCALEBITS_IN	8
+#define SCALEBITS_IN		13	
 #define FIX_IN(x)		((uint16_t) ((x) * (1L<<SCALEBITS_IN) + 0.5))
-
+#define FIX_ROUND		(1L<<(SCALEBITS_IN-1))
 
 /* rgb16/rgb16i input */
 
@@ -174,22 +174,22 @@ NAME(uint8_t * x_ptr, int x_stride,	\
 	r##UVID += r = C1##_R(rgb);				\
 	y_ptr[(ROW)*y_stride+0] =				\
 		(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +	\
-					FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;	\
+					FIX_IN(Y_B_IN) * b + FIX_ROUND) >> SCALEBITS_IN) + Y_ADD_IN;	\
 	rgb = *(uint16_t *) (x_ptr + ((ROW)*x_stride) + 2);	\
 	b##UVID += b = C1##_B(rgb);				\
 	g##UVID += g = C1##_G(rgb);				\
 	r##UVID += r = C1##_R(rgb);				\
 	y_ptr[(ROW)*y_stride+1] =				\
 		(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +			\
-					FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;
+					FIX_IN(Y_B_IN) * b + FIX_ROUND) >> SCALEBITS_IN) + Y_ADD_IN;
 
 #define READ_RGB16_UV(UV_ROW,UVID)	\
 	u_ptr[(UV_ROW)*uv_stride] =														\
 		(uint8_t) ((-FIX_IN(U_R_IN) * r##UVID - FIX_IN(U_G_IN) * g##UVID +			\
-					FIX_IN(U_B_IN) * b##UVID) >> (SCALEBITS_IN + 2)) + U_ADD_IN;	\
+					FIX_IN(U_B_IN) * b##UVID + 4*FIX_ROUND) >> (SCALEBITS_IN + 2)) + U_ADD_IN;	\
 	v_ptr[(UV_ROW)*uv_stride] =														\
 		(uint8_t) ((FIX_IN(V_R_IN) * r##UVID - FIX_IN(V_G_IN) * g##UVID -			\
-					FIX_IN(V_B_IN) * b##UVID) >> (SCALEBITS_IN + 2)) + V_ADD_IN;
+					FIX_IN(V_B_IN) * b##UVID + 4*FIX_ROUND) >> (SCALEBITS_IN + 2)) + V_ADD_IN;
 
 #define RGB16_TO_YV12_ROW(SIZE,C1,C2,C3,C4) \
 	/* nothing */
@@ -222,21 +222,21 @@ NAME(uint8_t * x_ptr, int x_stride,	\
 	b##UVID += b = x_ptr[(ROW)*x_stride+(C3)];						\
 	y_ptr[(ROW)*y_stride+0] =									\
 		(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +	\
-					FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;	\
+					FIX_IN(Y_B_IN) * b + FIX_ROUND) >> SCALEBITS_IN) + Y_ADD_IN;	\
 	r##UVID += r = x_ptr[(ROW)*x_stride+(SIZE)+(C1)];				\
 	g##UVID += g = x_ptr[(ROW)*x_stride+(SIZE)+(C2)];				\
 	b##UVID += b = x_ptr[(ROW)*x_stride+(SIZE)+(C3)];				\
 	y_ptr[(ROW)*y_stride+1] =									\
 		(uint8_t) ((FIX_IN(Y_R_IN) * r + FIX_IN(Y_G_IN) * g +	\
-					FIX_IN(Y_B_IN) * b) >> SCALEBITS_IN) + Y_ADD_IN;
+					FIX_IN(Y_B_IN) * b + FIX_ROUND) >> SCALEBITS_IN) + Y_ADD_IN;
 
 #define READ_RGB_UV(UV_ROW,UVID)	\
 	u_ptr[(UV_ROW)*uv_stride] =														\
 		(uint8_t) ((-FIX_IN(U_R_IN) * r##UVID - FIX_IN(U_G_IN) * g##UVID +			\
-					FIX_IN(U_B_IN) * b##UVID) >> (SCALEBITS_IN + 2)) + U_ADD_IN;	\
+					FIX_IN(U_B_IN) * b##UVID + 4*FIX_ROUND) >> (SCALEBITS_IN + 2)) + U_ADD_IN;	\
 	v_ptr[(UV_ROW)*uv_stride] =														\
 		(uint8_t) ((FIX_IN(V_R_IN) * r##UVID - FIX_IN(V_G_IN) * g##UVID -			\
-					FIX_IN(V_B_IN) * b##UVID) >> (SCALEBITS_IN + 2)) + V_ADD_IN;
+					FIX_IN(V_B_IN) * b##UVID + 4*FIX_ROUND) >> (SCALEBITS_IN + 2)) + V_ADD_IN;
 
 
 #define RGB_TO_YV12_ROW(SIZE,C1,C2,C3,C4) \
@@ -326,7 +326,7 @@ MAKE_COLORSPACE(uyvyi_to_yv12_c,   2,2,4, YUYVI_TO_YV12,  1,0,3,2)
 #define R_V_OUT			1.596
 #define V_ADD_OUT		128
 
-#define SCALEBITS_OUT	13
+#define SCALEBITS_OUT		13
 #define FIX_OUT(x)		((uint16_t) ((x) * (1L<<SCALEBITS_OUT) + 0.5))
 
 
