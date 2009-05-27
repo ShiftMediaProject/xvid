@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.64 2008-11-28 18:16:42 Isibaar Exp $
+ * $Id: xvid.h,v 1.65 2009-05-27 15:52:05 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -558,6 +558,12 @@ typedef struct{
     int cpu_flags; /* XVID_CPU_XXX flags */
 
 } xvid_plugin_ssim_t;
+
+typedef struct {
+        int version;
+
+        int method;      /* [in] masking method to apply. 0 for luminance masking, 1 for variance masking */
+} xvid_plugin_lumimasking_t;
 
 /*****************************************************************************
  *                             ENCODER API

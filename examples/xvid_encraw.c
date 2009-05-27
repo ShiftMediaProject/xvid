@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.37 2008-11-27 20:17:39 Isibaar Exp $
+ * $Id: xvid_encraw.c,v 1.38 2009-05-27 15:52:05 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -604,8 +604,9 @@ main(int argc,
 			ARG_TIMECODEFILE = argv[i];
 		} else if (strcmp("-dump", argv[i]) == 0) {
 			ARG_DUMP = 1;
-		} else if (strcmp("-lumimasking", argv[i]) == 0) {
-			ARG_LUMIMASKING = 1;
+		} else if (strcmp("-masking", argv[i]) == 0 && i < argc -1) {
+			i++;
+			ARG_LUMIMASKING = atoi(argv[i]);
 		} else if (strcmp("-type", argv[i]) == 0 && i < argc - 1) {
 			i++;
 			ARG_INPUTTYPE = atoi(argv[i]);
@@ -1581,7 +1582,7 @@ usage()
 	fprintf(stderr, " -interlaced [integer]          : interlaced encoding (BFF:1, TFF:2) (1)\n");
 	fprintf(stderr, " -nopacked                      : Disable packed mode\n");
 	fprintf(stderr, " -noclosed_gop                  : Disable closed GOP mode\n");
-	fprintf(stderr, " -lumimasking                   : use lumimasking algorithm\n");
+	fprintf(stderr, " -masking [integer]             : HVS masking mode (None:0, Lumi:1, Variance:2) (0)\n");
 	fprintf(stderr, " -stats                         : print stats about encoded frames\n");
 	fprintf(stderr, " -ssim [integer]                : prints ssim for every frame (accurate: 0 fast: 4) (2)\n");
 	fprintf(stderr, " -ssim_file filename            : outputs the ssim stats into a file\n");
@@ -1788,6 +1789,7 @@ enc_init(int use_assembler)
 	xvid_plugin_2pass1_t rc2pass1;
 	xvid_plugin_2pass2_t rc2pass2;
 	xvid_plugin_ssim_t ssim;
+        xvid_plugin_lumimasking_t masking;
 	//xvid_plugin_fixed_t rcfixed;
 	xvid_enc_plugin_t plugins[8];
 	xvid_gbl_init_t xvid_gbl_init;
@@ -1907,8 +1909,10 @@ enc_init(int use_assembler)
 
 
 	if (ARG_LUMIMASKING) {
+		memset(&masking, 0, sizeof(xvid_plugin_lumimasking_t));
+		masking.method = (ARG_LUMIMASKING==2);
 		plugins[xvid_enc_create.num_plugins].func = xvid_plugin_lumimasking;
-		plugins[xvid_enc_create.num_plugins].param = NULL;
+		plugins[xvid_enc_create.num_plugins].param = &masking;
 		xvid_enc_create.num_plugins++;
 	}
 
