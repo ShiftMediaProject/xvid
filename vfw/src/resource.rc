@@ -511,27 +511,27 @@ BEGIN
     COMBOBOX        IDC_QUANTTYPE,111,32,76,76,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     PUSHBUTTON      "Edit Matrix...",IDC_QUANTMATRIX,111,47,76,12
-    CONTROL         "Adaptive Quantization",IDC_LUMMASK,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,16,56,85,10
     CONTROL         "Interlaced Encoding",IDC_INTERLACING,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,16,72,79,8
+                    BS_AUTOCHECKBOX | WS_TABSTOP,16,82,79,8,
     CONTROL         "Quarter Pixel",IDC_QPEL,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,16,88,100,8
+                    WS_TABSTOP,16,98,100,8,
     CONTROL         "Global Motion Compensation",IDC_GMC,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,16,104,103,8
+                    BS_AUTOCHECKBOX | WS_TABSTOP,16,114,103,8
     CONTROL         "B-VOPs",IDC_BVOP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
-                    16,120,40,8
-    LTEXT           "Max consecutive BVOPs:",IDC_MAXBFRAMES_S,16,136,96,8
-    EDITTEXT        IDC_MAXBFRAMES,120,133,76,12,ES_AUTOHSCROLL | ES_NUMBER
-    EDITTEXT        IDC_BQUANTRATIO,120,147,76,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_BQUANTOFFSET,120,161,76,12,ES_AUTOHSCROLL
+                    16,128,40,8,
+    LTEXT           "Max consecutive BVOPs:",IDC_MAXBFRAMES_S,16,142,96,8
+    EDITTEXT        IDC_MAXBFRAMES,120,139,76,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_BQUANTRATIO,120,153,76,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_BQUANTOFFSET,120,167,76,12,ES_AUTOHSCROLL
     CONTROL         "Packed bitstream",IDC_PACKED,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,16,182,71,10
-    LTEXT           "Quantizer ratio:",IDC_BQUANTRATIO_S,16,150,89,8
-    LTEXT           "Quantizer offset:",IDC_BQUANTOFFSET_S,16,164,52,8
+                    WS_TABSTOP,16,188,71,10
+    LTEXT           "Quantizer ratio:",IDC_BQUANTRATIO_S,16,156,89,8
+    LTEXT           "Quantizer offset:",IDC_BQUANTOFFSET_S,16,170,52,8
     LTEXT           "Quantization type:",IDC_QUANTTYPE_S,16,36,85,8
     CONTROL         "Top field first",IDC_TFF,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,100,72,56,10
+                    WS_TABSTOP,100,82,56,10
+	COMBOBOX        IDC_LUMMASK,111,63,76,76, WS_TABSTOP | WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST
+    LTEXT           "Adaptive Quantization:", IDC_LUMMASK_S,16,65,72,8, SS_LEFT
 END
 
 IDD_ZONE DIALOG DISCARDABLE  0, 0, 212, 194
