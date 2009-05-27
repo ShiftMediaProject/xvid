@@ -1,4 +1,360 @@
-# Note that this ChangeLog covers only changes to the HEAD branch
+﻿# Note that this ChangeLog covers only changes to the HEAD branch
+
+---------------------
+Date: 2009/05/13 11:39:20
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+improved precision and rounding for RGB->YV12 conversion
+
+Members: 
+	src/image/colorspace.c:1.14->1.15 
+	src/image/x86_asm/colorspace_rgb_mmx.asm:1.11->1.12 
+
+---------------------
+Date: 2009/03/30 16:40:05
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+attempt at fixing a RGB24 access violation bug reported by Matthew Allen
+
+Members: 
+	src/image/image.c:1.43->1.44 
+
+---------------------
+Date: 2009/02/19 18:07:29
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+added proper license headers to the IA64 asm files
+
+Members: 
+	src/dct/ia64_asm/fdct_ia64.s:1.5->1.6 
+	src/dct/ia64_asm/idct_fini.s:1.1->1.2 
+	src/dct/ia64_asm/idct_ia64_ecc.s:1.1->1.2 
+	src/dct/ia64_asm/idct_ia64_gcc.s:1.1->1.2 
+	src/dct/ia64_asm/idct_init.s:1.1->1.2 
+	src/image/ia64_asm/interpolate8x8_ia64.s:1.5->1.6 
+	src/image/ia64_asm/interpolate8x8_ia64_exact.s:1.1->1.2 
+	src/motion/ia64_asm/calc_delta_1.s:1.1->1.2 
+	src/motion/ia64_asm/calc_delta_2.s:1.1->1.2 
+	src/motion/ia64_asm/calc_delta_3.s:1.1->1.2 
+	src/motion/ia64_asm/halfpel8_refine_ia64.s:1.3->1.4 
+	src/motion/ia64_asm/sad_ia64.s:1.7->1.8 
+	src/quant/ia64_asm/quant_h263_ia64.s:1.6->1.7 
+	src/utils/ia64_asm/mem_transfer_ia64.s:1.5->1.6 
+
+---------------------
+Date: 2009/02/18 23:09:37
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+amd64
+
+Members: 
+	debian/control:1.3->1.4 
+
+---------------------
+Date: 2009/02/18 16:10:19
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+- Some updates to license headers
+
+Members: 
+	src/image/x86_asm/colorspace_mmx.inc:1.8->1.9 
+	src/motion/motion.h:1.24->1.25 
+
+---------------------
+Date: 2009/01/07 17:32:31
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+Added note for OSX users that nasm >=2.06rc2 is required for MACH-O build
+
+Will auto-check in the configure script once 2.06 release is out...
+
+Members: 
+	doc/README:1.3->1.4 
+
+---------------------
+Date: 2009/01/07 17:22:02
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+added quotes around nasm include paths to fix problems with directory names containing spaces
+
+Members: 
+	build/win32/libxvidcore.dsp:1.15->1.16 
+	build/win32/libxvidcore_static.dsp:1.5->1.6 
+
+---------------------
+Date: 2008/12/15 11:22:07
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+added -D_WIN32_IE=0x0501 to CFLAGS
+
+Members: 
+	vfw/bin/Makefile:1.6->1.7 
+
+---------------------
+Date: 2008/12/09 11:42:38
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+Note for yasm version required for MacOS X
+
+Members: 
+	doc/README:1.2->1.3 
+
+---------------------
+Date: 2008/12/05 11:33:47
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+added a comment
+
+Members: 
+	src/dct/x86_asm/fdct_sse2_skal.asm:1.13->1.14 
+
+---------------------
+Date: 2008/12/05 11:18:52
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+Added -arch ppc for Apple gcc
+
+Members: 
+	build/generic/configure.in:1.27->1.28 
+
+---------------------
+Date: 2008/12/05 11:15:02
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+MacOS X specific changes
+
+Members: 
+	src/nasm.inc:1.5->1.6 
+	src/dct/x86_asm/fdct_sse2_skal.asm:1.12->1.13 
+
+---------------------
+Date: 2008/12/04 19:30:36
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+yasm compatibility
+
+Members: 
+	build/generic/configure.in:INITIAL->1.27 
+	src/nasm.inc:1.4->1.5 
+	src/image/x86_asm/colorspace_yuv_mmx.asm:1.13->1.14 
+	src/image/x86_asm/interpolate8x8_3dne.asm:1.12->1.13 
+	src/image/x86_asm/postprocessing_mmx.asm:1.11->1.12 
+	src/image/x86_asm/postprocessing_sse2.asm:1.14->1.15 
+	src/quant/x86_asm/quantize_h263_3dne.asm:1.10->1.11 
+	src/quant/x86_asm/quantize_h263_mmx.asm:1.14->1.15 
+	src/quant/x86_asm/quantize_mpeg_mmx.asm:1.14->1.15 
+	src/quant/x86_asm/quantize_mpeg_xmm.asm:1.11->1.12 
+
+---------------------
+Date: 2008/12/04 15:41:50
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+trying to add back yasm support
+
+Members: 
+	src/nasm.inc:INITIAL->1.4 
+	src/bitstream/x86_asm/cbp_mmx.asm:1.17->1.18 
+	src/bitstream/x86_asm/cbp_sse2.asm:1.12->1.13 
+	src/dct/x86_asm/fdct_mmx_ffmpeg.asm:1.8->1.9 
+	src/dct/x86_asm/fdct_mmx_skal.asm:1.10->1.11 
+	src/dct/x86_asm/fdct_sse2_skal.asm:INITIAL->1.12 
+	src/dct/x86_asm/idct_3dne.asm:1.9->1.10 
+	src/dct/x86_asm/idct_mmx.asm:1.13->1.14 
+	src/dct/x86_asm/idct_sse2_dmitry.asm:INITIAL->1.10 
+	src/image/x86_asm/colorspace_rgb_mmx.asm:1.10->1.11 
+	src/image/x86_asm/colorspace_yuv_mmx.asm:1.12->1.13 
+	src/image/x86_asm/colorspace_yuyv_mmx.asm:1.10->1.11 
+	src/image/x86_asm/deintl_sse.asm:1.4->1.5 
+	src/image/x86_asm/gmc_mmx.asm:INITIAL->1.10 
+	src/image/x86_asm/interpolate8x8_3dn.asm:1.12->1.13 
+	src/image/x86_asm/interpolate8x8_3dne.asm:1.11->1.12 
+	src/image/x86_asm/interpolate8x8_mmx.asm:1.23->1.24 
+	src/image/x86_asm/interpolate8x8_xmm.asm:1.13->1.14 
+	src/image/x86_asm/postprocessing_mmx.asm:1.10->1.11 
+	src/image/x86_asm/postprocessing_sse2.asm:1.13->1.14 
+	src/image/x86_asm/qpel_mmx.asm:1.9->1.10 
+	src/image/x86_asm/reduced_mmx.asm:1.10->1.11 
+	src/motion/x86_asm/sad_3dn.asm:1.12->1.13 
+	src/motion/x86_asm/sad_3dne.asm:1.10->1.11 
+	src/motion/x86_asm/sad_mmx.asm:1.20->1.21 
+	src/motion/x86_asm/sad_sse2.asm:1.18->1.19 
+	src/motion/x86_asm/sad_xmm.asm:1.13->1.14 
+	src/plugins/x86_asm/plugin_ssim-a.asm:1.11->1.12 
+	src/quant/x86_asm/quantize_h263_3dne.asm:1.9->1.10 
+	src/quant/x86_asm/quantize_h263_mmx.asm:INITIAL->1.14 
+	src/quant/x86_asm/quantize_mpeg_mmx.asm:1.13->1.14 
+	src/quant/x86_asm/quantize_mpeg_xmm.asm:1.10->1.11 
+	src/utils/x86_asm/cpuid.asm:INITIAL->1.18 
+	src/utils/x86_asm/interlacing_mmx.asm:1.10->1.11 
+	src/utils/x86_asm/mem_transfer_3dne.asm:1.11->1.12 
+	src/utils/x86_asm/mem_transfer_mmx.asm:1.20->1.21 
+
+---------------------
+Date: 2008/12/02 14:58:30
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+missing ENDFUNC
+
+Members: 
+	src/utils/x86_asm/cpuid.asm:1.16->1.17 
+
+---------------------
+Date: 2008/12/02 14:44:55
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+WIN64 XMM6/XMM7 bench and asm optimization patch by Andrew Dunstan
+
+Members: 
+	examples/xvid_bench.c:1.38->1.39 
+	src/bitstream/x86_asm/cbp_sse2.asm:1.11->1.12 
+	src/image/x86_asm/gmc_mmx.asm:1.8->1.9 
+	src/image/x86_asm/postprocessing_sse2.asm:1.12->1.13 
+	src/motion/x86_asm/sad_sse2.asm:1.17->1.18 
+	src/plugins/x86_asm/plugin_ssim-a.asm:1.10->1.11 
+	src/quant/x86_asm/quantize_h263_mmx.asm:1.12->1.13 
+	src/utils/emms.h:1.16->1.17 
+	src/utils/x86_asm/cpuid.asm:1.15->1.16 
+
+---------------------
+Date: 2008/12/01 16:22:37
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+fix for previous commit
+
+Members: 
+	src/image/x86_asm/colorspace_yuv_mmx.asm:1.11->1.12 
+
+---------------------
+Date: 2008/12/01 16:06:48
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+OSX/Leopard compilation fix by Guillaume Poirier
+
+Members: 
+	src/xvid.c:1.79->1.80 
+
+---------------------
+Date: 2008/12/01 16:00:44
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+ASM clean-up patch by Carlo Bramix
+
+Members: 
+	src/image/x86_asm/colorspace_mmx.inc:1.7->1.8 
+	src/image/x86_asm/colorspace_yuv_mmx.asm:1.10->1.11 
+	src/image/x86_asm/interpolate8x8_mmx.asm:1.22->1.23 
+	src/image/x86_asm/postprocessing_mmx.asm:1.9->1.10 
+	src/image/x86_asm/postprocessing_sse2.asm:1.11->1.12 
+	src/image/x86_asm/reduced_mmx.asm:1.9->1.10 
+
+---------------------
+Date: 2008/12/01 15:45:45
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+properly treat XMM6/XMM7 as non-volatile on WIN64 (to be tested)
+
+Members: 
+	src/nasm.inc:1.2->1.3 
+	src/bitstream/x86_asm/cbp_sse2.asm:1.10->1.11 
+	src/dct/x86_asm/fdct_sse2_skal.asm:1.10->1.11 
+	src/dct/x86_asm/idct_sse2_dmitry.asm:1.8->1.9 
+	src/image/x86_asm/gmc_mmx.asm:1.7->1.8 
+	src/image/x86_asm/postprocessing_sse2.asm:1.10->1.11 
+	src/motion/x86_asm/sad_sse2.asm:1.16->1.17 
+	src/plugins/x86_asm/plugin_ssim-a.asm:1.9->1.10 
+	src/quant/x86_asm/quantize_h263_mmx.asm:1.11->1.12 
+
+---------------------
+Date: 2008/11/30 19:05:42
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+finish up WIN64 compatibility
+
+Members: 
+	vfw/src/driverproc.c:1.10->1.11 
+
+---------------------
+Date: 2008/11/30 18:56:07
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+finish up WIN64 compatibility
+
+Members: 
+	vfw/src/config.c:1.37->1.38 
+	vfw/src/driverproc.c:1.9->1.10 
+	vfw/src/status.c:1.3->1.4 
+
+---------------------
+Date: 2008/11/30 17:36:44
+Author: Isibaar
+Branch: HEAD
+Tag: (none) 
+Log:
+VC8 win32 / x64 project files
+
+Members: 
+	build/win32/libxvidcore.sln:1.1->1.2 
+	build/win32/libxvidcore.vcproj:1.1->1.2 
+	build/win32/xvid_decraw.vcproj:INITIAL->1.1 
+	build/win32/xvid_encraw.vcproj:INITIAL->1.1 
+	dshow/dshow.vcproj:INITIAL->1.1 
+	dshow/src/CAbout.cpp:1.2->1.3 
+	dshow/src/CAbout.h:1.2->1.3 
+	dshow/src/Configure.cpp:1.5->1.6 
+	dshow/src/config.c:1.9->1.10 
+	src/nasm.inc:1.1->1.2 
+	src/portab.h:1.58->1.59 
+	src/xvid.c:INITIAL->1.79 
+	src/motion/gmc.c:1.9->1.10 
+	vfw/vfw.dsp:INITIAL->1.4 
+	vfw/vfw.vcproj:INITIAL->1.1 
+	vfw/src/config.c:1.36->1.37 
+	vfw/src/config.h:1.12->1.13 
+	vfw/src/driverproc.c:1.8->1.9 
 
 ---------------------
 Date: 2008/11/28 19:28:41

@@ -5,6 +5,7 @@
  *
  *  Copyright(C) 2002-2003 Peter Ross <pross@xvid.org>
  *               2002      Christoph Lampert <gruel@web.de>
+ *               2008      Jason Garrett-Glaser <darkshikari@gmail.com>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,11 +21,13 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: plugin_lumimasking.c,v 1.6 2006-05-06 04:37:15 syskin Exp $
+ * $Id: plugin_lumimasking.c,v 1.7 2009-05-27 15:52:05 Isibaar Exp $
  *
  ****************************************************************************/
 
 #include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 
 #include "../xvid.h"
 #include "../global.h"
@@ -39,6 +42,7 @@ typedef struct
 {
 	float *quant;
 	float *val;
+	int method;      
 } lumi_data_t;
 
 /*****************************************************************************
@@ -98,10 +102,12 @@ static int
 lumi_plg_create(xvid_plg_create_t *create, lumi_data_t **handle)
 {
 	lumi_data_t *lumi;
+	xvid_plugin_lumimasking_t *param = (xvid_plugin_lumimasking_t *) create->param;
 
 	if ((lumi = (lumi_data_t*)malloc(sizeof(lumi_data_t))) == NULL)
 		return(XVID_ERR_MEMORY);
 
+	lumi->method = 0;
 	lumi->quant = (float*)malloc(create->mb_width*create->mb_height*sizeof(float));
 	if (lumi->quant == NULL) {
 		free(lumi);
@@ -114,6 +120,9 @@ lumi_plg_create(xvid_plg_create_t *create, lumi_data_t **handle)
 		free(lumi);
 		return(XVID_ERR_MEMORY);
 	}
+
+	if (param != NULL) 
+		lumi->method = param->method;
 
 	/* Bind the data structure to the handle */
 	*handle = lumi;
@@ -172,12 +181,17 @@ lumi_plg_frame(lumi_data_t *handle, xvid_plg_data_t *data)
 	const float GlobalDarkThres = 60;
 	const float GlobalBrightThres = 170;
 
+	/* Arbitrary centerpoint for variance-based AQ.  Roughly the same as used in x264. */
+	float center = 14000.f;
+	/* Arbitrary strength for variance-based AQ. */
+	float strength = 0.2f;
+
 	if (data->type == XVID_TYPE_BVOP) return 0;
 
 	/* Do this for all macroblocks individually  */
 	for (j = 0; j < data->mb_height; j++) {
 		for (i = 0; i < data->mb_width; i++) {
-			int k, l, sum = 0;
+			int k, l, sum = 0, sum_of_squares = 0;	
 			unsigned char *ptr;
 
 			/* Initialize the current quant value to the frame quant */
@@ -189,49 +203,78 @@ lumi_plg_frame(lumi_data_t *handle, xvid_plg_data_t *data)
 			ptr  = data->current.plane[0];
 			ptr += 16*j*data->current.stride[0] + 16*i;
 
-			/* Accumulate luminance */
-			for (k = 0; k < 16; k++)
-				for (l = 0; l < 16; l++)
-					 sum += ptr[k*data->current.stride[0] + l];
+			if (handle->method) { /* Variance masking mode */
+				/* Accumulate sum and sum of squares over the MB */
+				for (k = 0; k < 16; k++) {
+ 					for (l = 0; l < 16; l++) {
+						int val = ptr[k*data->current.stride[0] + l];
+						sum += val;
+						sum_of_squares += val * val;
+					}
+				}
+				/* Variance = SSD - SAD^2 / (numpixels) */
+				int variance = sum_of_squares - sum * sum / 256;
+				handle->val[j*data->mb_width + i] = (float)variance;
+			}
+			else { /* Luminance masking mode */
+				/* Accumulate luminance */
+				for (k = 0; k < 16; k++)
+					for (l = 0; l < 16; l++)
+						 sum += ptr[k*data->current.stride[0] + l];
 			
-			handle->val[j*data->mb_width + i] = (float)sum/256.0f;
+				handle->val[j*data->mb_width + i] = (float)sum/256.0f;
 
-			/* Accumulate the global frame luminance */
-			global += (float)sum/256.0f;
-		}
-	}
-
-	/* Normalize the global luminance accumulator */
-	global /= data->mb_width*data->mb_height;
-
-	DarkThres = DarkThres*global/127.0f;
-	BrightThres = BrightThres*global/127.0f;
-
-
-	/* Apply luminance masking only to frames where the global luminance is
-	 * higher than DarkThreshold and lower than Bright Threshold */
-	 if ((global < GlobalBrightThres) && (global > GlobalDarkThres)) {
-
-		/* Apply the luminance masking formulas to all MBs */
-		for (i = 0; i < data->mb_height; i++) {
-			for (j = 0; j < data->mb_width; j++) {
-				if (handle->val[i*data->mb_width + j] < DarkThres)
-					handle->quant[i*data->mb_width + j] *= 1 + DarkAmpl * (DarkThres - handle->val[i*data->mb_width + j]) / DarkThres;
-				else if (handle->val[i*data->mb_width + j] > BrightThres)
-					handle->quant[i*data->mb_width + j] *= 1 + BrightAmpl * (handle->val[i*data->mb_width + j] - BrightThres) / (255 - BrightThres);
+				/* Accumulate the global frame luminance */
+				global += (float)sum/256.0f;
 			}
 		}
 	}
 
-	 /* Normalize the quantizer field */
-	 data->quant = normalize_quantizer_field(handle->quant,
+	if (handle->method) { /* Variance masking */
+		/* Apply the variance masking formula to all MBs */
+		for (i = 0; i < data->mb_height; i++)
+		{
+			for (j = 0; j < data->mb_width; j++)
+			{
+				float value = handle->val[i*data->mb_width + j];
+				float qscale_diff = strength * logf(value / center);
+				handle->quant[i*data->mb_width + j] *= (1.0f + qscale_diff);
+ 			}
+ 		}
+	}
+	else { /* Luminance masking */
+		/* Normalize the global luminance accumulator */
+		global /= data->mb_width*data->mb_height;
+
+		DarkThres = DarkThres*global/127.0f;
+		BrightThres = BrightThres*global/127.0f;
+
+
+		/* Apply luminance masking only to frames where the global luminance is
+		 * higher than DarkThreshold and lower than Bright Threshold */
+		 if ((global < GlobalBrightThres) && (global > GlobalDarkThres)) {
+
+			/* Apply the luminance masking formulas to all MBs */
+			for (i = 0; i < data->mb_height; i++) {
+				for (j = 0; j < data->mb_width; j++) {
+					if (handle->val[i*data->mb_width + j] < DarkThres)
+						handle->quant[i*data->mb_width + j] *= 1 + DarkAmpl * (DarkThres - handle->val[i*data->mb_width + j]) / DarkThres;
+					else if (handle->val[i*data->mb_width + j] > BrightThres)
+						handle->quant[i*data->mb_width + j] *= 1 + BrightAmpl * (handle->val[i*data->mb_width + j] - BrightThres) / (255 - BrightThres);
+				}
+			}
+		}
+	}
+
+	/* Normalize the quantizer field */
+	data->quant = normalize_quantizer_field(handle->quant,
 											 data->dquant,
 											 data->mb_width*data->mb_height,
 											 data->quant,
 											 MAX(2,data->quant + data->quant/2));
 
-	 /* Plugin job finished */
-	 return(0);
+	/* Plugin job finished */
+	return(0);
 }
 
 /*----------------------------------------------------------------------------
