@@ -421,6 +421,7 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 	xvid_plugin_single_t single;
 	xvid_plugin_2pass1_t pass1;
 	xvid_plugin_2pass2_t pass2;
+	xvid_plugin_lumimasking_t masking;
     xvid_gbl_info_t info;
 	int i;
 	HANDLE hFile;
@@ -546,9 +547,11 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 	}
 
 	/* lumimasking plugin */
-  	if ((profiles[codec->config.profile].flags & PROFILE_ADAPTQUANT) && codec->config.lum_masking) {
+  	if ((profiles[codec->config.profile].flags & PROFILE_ADAPTQUANT) && (codec->config.lum_masking>0)) {
+		memset(&masking, 0, sizeof(masking));
+		masking.method = (codec->config.lum_masking==2);
 		plugins[create.num_plugins].func = codec->xvid_plugin_lumimasking_func;
-		plugins[create.num_plugins].param = NULL;
+		plugins[create.num_plugins].param = &masking;
 		create.num_plugins++; 
 	}
 

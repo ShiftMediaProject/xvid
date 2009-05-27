@@ -772,6 +772,10 @@ static void adv_init(HWND hDlg, int idd, CONFIG * config)
 		SendDlgItemMessage(hDlg, IDC_QUANTTYPE, CB_ADDSTRING, 0, (LPARAM)"H.263");
 		SendDlgItemMessage(hDlg, IDC_QUANTTYPE, CB_ADDSTRING, 0, (LPARAM)"MPEG");
 		SendDlgItemMessage(hDlg, IDC_QUANTTYPE, CB_ADDSTRING, 0, (LPARAM)"MPEG-Custom");
+
+		SendDlgItemMessage(hDlg, IDC_LUMMASK, CB_ADDSTRING, 0, (LPARAM)"Off");
+		SendDlgItemMessage(hDlg, IDC_LUMMASK, CB_ADDSTRING, 0, (LPARAM)"Luminance-Masking");
+		SendDlgItemMessage(hDlg, IDC_LUMMASK, CB_ADDSTRING, 0, (LPARAM)"Variance-Masking");
 		break;
 
 	case IDD_AR:
@@ -1123,7 +1127,7 @@ static void adv_upload(HWND hDlg, int idd, CONFIG * config)
 		SendDlgItemMessage(hDlg, IDC_PROFILE_PROFILE, CB_SETCURSEL, config->profile, 0);
 
 		SendDlgItemMessage(hDlg, IDC_QUANTTYPE, CB_SETCURSEL, config->quant_type, 0);
-		CheckDlg(hDlg, IDC_LUMMASK, config->lum_masking);
+		SendDlgItemMessage(hDlg, IDC_LUMMASK, CB_SETCURSEL, config->lum_masking, 0);
   		CheckDlg(hDlg, IDC_INTERLACING, config->interlacing);
 		CheckDlg(hDlg, IDC_TFF, config->tff);
 		CheckDlg(hDlg, IDC_QPEL, config->qpel);
@@ -1299,7 +1303,7 @@ static void adv_download(HWND hDlg, int idd, CONFIG * config)
 		config->profile = SendDlgItemMessage(hDlg, IDC_PROFILE_PROFILE, CB_GETCURSEL, 0, 0);
 
 		config->quant_type = SendDlgItemMessage(hDlg, IDC_QUANTTYPE, CB_GETCURSEL, 0, 0);
-		config->lum_masking = IsDlgChecked(hDlg, IDC_LUMMASK);
+		config->lum_masking = SendDlgItemMessage(hDlg, IDC_LUMMASK, CB_GETCURSEL, 0, 0);
 		config->interlacing = IsDlgChecked(hDlg, IDC_INTERLACING);
 		config->tff = IsDlgChecked(hDlg, IDC_TFF);
 		config->qpel = IsDlgChecked(hDlg, IDC_QPEL);

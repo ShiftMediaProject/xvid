@@ -426,6 +426,7 @@
 #define IDC_LEVEL_VMV_S                 1402
 #define IDC_LEVEL_VCV_S                 1403
 #define IDC_LEVEL_LEVEL_G               1404
+#define IDC_LUMMASK_S                   1405
 
 // Next default values for new objects
 // 
@@ -433,7 +434,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1405
+#define _APS_NEXT_CONTROL_VALUE         1406
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
