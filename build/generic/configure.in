@@ -293,7 +293,7 @@ case "$target_os" in
 	if test x"$macosx_module" = x"no"; then
 	   AC_MSG_RESULT([dylib options])
 	   SHARED_LIB="libxvidcore.\$(API_MAJOR).\$(SHARED_EXTENSION)"
-	   SPECIFIC_LDFLAGS="-dynamiclib -flat_namespace -compatibility_version \$(API_MAJOR) -current_version \$(API_MAJOR).\$(API_MINOR) -install_name \$(libdir)/\$(SHARED_LIB)"
+	   SPECIFIC_LDFLAGS="-Wl,-read_only_relocs,suppress -dynamiclib -flat_namespace -compatibility_version \$(API_MAJOR) -current_version \$(API_MAJOR).\$(API_MINOR) -install_name \$(libdir)/\$(SHARED_LIB)"
 	else 
 	   AC_MSG_RESULT([module options])
  	   PRE_SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION)-temp.o"
