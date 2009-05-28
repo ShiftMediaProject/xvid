@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.80 2007-04-16 19:01:28 Skal Exp $
+ * $Id: decoder.c,v 1.81 2009-05-28 15:42:06 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -201,8 +201,11 @@ decoder_create(xvid_dec_create_t * create)
 
   dec->fixed_dimensions = (dec->width > 0 && dec->height > 0);
 
-  if (dec->fixed_dimensions)
-    return decoder_resize(dec);
+  if (dec->fixed_dimensions) {
+    int ret = decoder_resize(dec);
+    if (ret == XVID_ERR_MEMORY) create->handle = NULL;
+    return ret;
+  }
   else
     return 0;
 }
@@ -748,7 +751,7 @@ decoder_iframe(DECODER * dec,
         bound = read_video_packet_header(bs, dec, 0,
               &quant, NULL, NULL, &intra_dc_threshold);
         x = bound % mb_width;
-        y = bound / mb_width;
+        y = MIN((bound / mb_width), (mb_height-1));
       }
       mb = &dec->mbs[y * dec->mb_width + x];
 
@@ -975,7 +978,7 @@ decoder_pframe(DECODER * dec,
         bound = read_video_packet_header(bs, dec, fcode - 1,
           &quant, &fcode, NULL, &intra_dc_threshold);
         x = bound % mb_width;
-        y = bound / mb_width;
+        y = MIN((bound / mb_width), (mb_height-1));
       }
       mb = &dec->mbs[y * dec->mb_width + x];
 
@@ -1384,7 +1387,7 @@ decoder_bframe(DECODER * dec,
         int bound = read_video_packet_header(bs, dec, resync_len, &quant,
                            &fcode_forward, &fcode_backward, &intra_dc_threshold);
         x = bound % dec->mb_width;
-        y = bound / dec->mb_width;
+        y = MIN((bound / dec->mb_width), (dec->mb_height-1));
         /* reset predicted macroblocks */
         dec->p_fmv = dec->p_bmv = zeromv;
         /* update resync len with new fcodes */
