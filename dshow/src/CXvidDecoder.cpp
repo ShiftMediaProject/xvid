@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.cpp,v 1.16 2005-10-08 00:58:02 suxen_drol Exp $
+ * $Id: CXvidDecoder.cpp,v 1.17 2009-05-28 15:42:06 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -419,7 +419,7 @@ HRESULT CXvidDecoder::CheckInputType(const CMediaType * mtIn)
 			    return E_FAIL;
 		    if (xvid_decore_func(0, XVID_DEC_CREATE, &m_create, 0) < 0) {
           DPRINTF("*** XVID_DEC_CREATE error");
-			    return S_FALSE;
+			    return E_FAIL;
 		    }
 	    }
 
@@ -428,14 +428,15 @@ HRESULT CXvidDecoder::CheckInputType(const CMediaType * mtIn)
       m_frame.length = mpgvi->cbSequenceHeader;
       m_frame.output.csp = XVID_CSP_NULL;
 
-      if (xvid_decore_func(m_create.handle, XVID_DEC_DECODE, &m_frame, &stats) >= 0) {
+      int ret = 0;
+      if ((ret=xvid_decore_func(m_create.handle, XVID_DEC_DECODE, &m_frame, &stats)) >= 0) {
         /* honour video dimensions reported in VOL header */
 	      if (stats.type == XVID_TYPE_VOL) {
           hdr->biWidth = stats.data.vol.width;
           hdr->biHeight = stats.data.vol.height;
         }
       }
-
+      if (ret == XVID_ERR_MEMORY) return E_FAIL;
     }
   }
 	else
@@ -795,7 +796,7 @@ HRESULT CXvidDecoder::Transform(IMediaSample *pIn, IMediaSample *pOut)
 		if (xvid_decore_func(0, XVID_DEC_CREATE, &m_create, 0) < 0)
 		{
             DPRINTF("*** XVID_DEC_CREATE error");
-			return S_FALSE;
+			return E_FAIL;
 		}
 	}
 
@@ -862,8 +863,10 @@ repeat :
 	if (pIn->IsPreroll() != S_OK)
 	{
 		length = xvid_decore_func(m_create.handle, XVID_DEC_DECODE, &m_frame, &stats);
-
-		if (length < 0)
+                
+		if (length == XVID_ERR_MEMORY)
+			return E_FAIL;
+		else if (length < 0)
 		{
             DPRINTF("*** XVID_DEC_DECODE");
 			return S_FALSE;
@@ -907,7 +910,9 @@ repeat :
 		m_frame.general &= ~XVID_FILMEFFECT;
 
 		length = xvid_decore_func(m_create.handle, XVID_DEC_DECODE, &m_frame, &stats);
-		if (length < 0)
+		if (length == XVID_ERR_MEMORY)
+			return E_FAIL;
+		else if (length < 0)
 		{
             DPRINTF("*** XVID_DEC_DECODE");
 			return S_FALSE;
