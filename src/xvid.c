@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.80 2008-12-01 15:06:48 Isibaar Exp $
+ * $Id: xvid.c,v 1.81 2009-06-02 13:06:49 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -30,6 +30,17 @@
 
 #if !defined(_WIN32)
 #include <unistd.h>
+#endif
+
+#if defined(__APPLE__) && defined(__MACH__) && !defined(_SC_NPROCESSORS_CONF)
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#ifdef MAX
+#undef MAX
+#endif
+#ifdef MIN
+#undef MIN
+#endif
 #endif
 
 #include "xvid.h"
@@ -667,7 +678,7 @@ xvid_gbl_info(xvid_gbl_info_t * info)
 	info->actual_version = XVID_VERSION;
 	info->build = "xvid-1.3.0-dev";
 	info->cpu_flags = detect_cpu_flags();
-	info->num_threads = 0;
+	info->num_threads = 0; /* single-thread */
 
 #if defined(_WIN32)
 
@@ -677,9 +688,24 @@ xvid_gbl_info(xvid_gbl_info_t * info)
 	info->num_threads = siSysInfo.dwNumberOfProcessors; /* number of _logical_ cores */
   }
 
-#else
+#elif defined(_SC_NPROCESSORS_CONF) /* should be available on Apple too actually */
 
   info->num_threads = sysconf(_SC_NPROCESSORS_CONF);	
+
+#elif defined(__APPLE__) && defined(__MACH__)
+
+  {
+    size_t len;
+    int    mib[2], ncpu;
+
+    mib[0] = CTL_HW;
+    mib[1] = HW_NCPU;
+    len    = sizeof(ncpu);
+    if (sysctl(mib, 2, &ncpu, &len, NULL, 0) == 0)
+      info -> num_threads = ncpu;
+    else
+      info -> num_threads = 1;
+  }
 
 #endif
 
