@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: plugin_lumimasking.c,v 1.7 2009-05-27 15:52:05 Isibaar Exp $
+ * $Id: plugin_lumimasking.c,v 1.8 2009-06-02 13:06:54 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -204,6 +204,7 @@ lumi_plg_frame(lumi_data_t *handle, xvid_plg_data_t *data)
 			ptr += 16*j*data->current.stride[0] + 16*i;
 
 			if (handle->method) { /* Variance masking mode */
+				int variance = 0;
 				/* Accumulate sum and sum of squares over the MB */
 				for (k = 0; k < 16; k++) {
  					for (l = 0; l < 16; l++) {
@@ -213,7 +214,7 @@ lumi_plg_frame(lumi_data_t *handle, xvid_plg_data_t *data)
 					}
 				}
 				/* Variance = SSD - SAD^2 / (numpixels) */
-				int variance = sum_of_squares - sum * sum / 256;
+				variance = sum_of_squares - sum * sum / 256;
 				handle->val[j*data->mb_width + i] = (float)variance;
 			}
 			else { /* Luminance masking mode */
