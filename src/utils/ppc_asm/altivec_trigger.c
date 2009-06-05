@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: altivec_trigger.c,v 1.1 2004-04-05 20:36:37 edgomez Exp $
+ * $Id: altivec_trigger.c,v 1.2 2009-06-05 07:58:41 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -33,8 +33,11 @@
 void
 altivec_trigger(void)
 {
+#if !defined(__amigaos4__)
 	vector unsigned int var1 = (vector unsigned int)AVV(0);
 	vector unsigned int var2 = (vector unsigned int)AVV(1);
 	var1 = vec_add(var1, var2);
+#endif
 	return;
 }
+

@@ -22,7 +22,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: motion_smp.h,v 1.5 2008-11-26 01:04:34 Isibaar Exp $
+ * $Id: motion_smp.h,v 1.6 2009-06-05 07:58:41 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -44,6 +44,12 @@ static __inline int pthread_num_processors_np()
 	for(; p_aff != 0; p_aff>>=1) r += p_aff&1;
 	return r;
 }
+
+#elif defined(__amigaos4__)
+
+# include <pthread.h>
+# include <proto/dos.h>
+# define sched_yield() IDOS->Delay(1)
 
 #elif defined(SYS_BEOS)
 
