@@ -264,6 +264,7 @@ dnl ==========================================================================
 AC_MSG_CHECKING(for platform specific LDFLAGS/CFLAGS)
 SPECIFIC_LDFLAGS=""
 SPECIFIC_CFLAGS=""
+ALTIVEC_CFLAGS=""
 PRE_SHARED_LIB=""
 case "$target_os" in
      linux*|solaris*)
@@ -524,8 +525,9 @@ int main()
 EOF
    if $CC $TEMP_ALTIVEC -maltivec -mabi=altivec -c conftest.c 2>/dev/null 1>/dev/null ; then
         AC_MSG_RESULT([yes (GNU)])
-        SPECIFIC_CFLAGS="$SPECIFIC_CFLAGS -maltivec -mabi=altivec -DHAVE_ALTIVEC_BRACES_DECL $TEMP_ALTIVEC"
+        SPECIFIC_CFLAGS="$SPECIFIC_CFLAGS -DHAVE_ALTIVEC_BRACES_DECL $TEMP_ALTIVEC"
 	PPC_ALTIVEC_SOURCES="SRC_PPC_ALTIVEC"
+        ALTIVEC_CFLAGS="-maltivec -mabi=altivec"
    else
 	AC_MSG_RESULT([no (ppc support won't be compiled in)])
 	dnl Only C code can be compiled :-(
@@ -696,6 +698,7 @@ AC_SUBST(API_MINOR)
 AC_SUBST(STATIC_LIB)
 AC_SUBST(PRE_SHARED_LIB)
 AC_SUBST(SHARED_LIB)
+AC_SUBST(ALTIVEC_CFLAGS)
 
 dnl ==========================================================================
 dnl

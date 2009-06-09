@@ -98,6 +98,8 @@ $(BUILD_DIR):
 # Generic C rule
 #-----------------------------------------------------------------------------
 
+$(PPC_ALTIVEC_OBJECTS): CFLAGS+= $(ALTIVEC_CFLAGS)
+
 .c.$(OBJECT_EXTENSION):
 	@echo "  C: $(@D)/$(<F)"
 	@$(INSTALL) -d $(BUILD_DIR)/$(@D)
