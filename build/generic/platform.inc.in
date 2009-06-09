@@ -31,6 +31,7 @@ OBJECT_EXTENSION=@OBJECT_EXTENSION@
 
 CC=@CC@
 SPECIFIC_CFLAGS=@SPECIFIC_CFLAGS@
+ALTIVEC_CFLAGS=@ALTIVEC_CFLAGS@
 CFLAGS=@CFLAGS@
 
 # ============================================================================
