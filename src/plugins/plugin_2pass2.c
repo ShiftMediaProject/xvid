@@ -25,7 +25,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: plugin_2pass2.c,v 1.7 2005-03-27 03:59:42 suxen_drol Exp $
+ * $Id: plugin_2pass2.c,v 1.8 2009-07-01 09:25:38 Isibaar Exp $
  *
  *****************************************************************************/
 
@@ -954,7 +954,8 @@ statsfile_count_frames(rc_2pass2_t * rc, char * filename)
 	/* We are done with the file */
 	fclose(f);
 
-	return(0);
+	if (!rc->num_keyframes) return (-1); /* No keyframes? Then something is wrong */
+	else return(0);
 }
 
 /* open stats file(s) and read into rc->stats array */
