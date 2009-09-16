@@ -19,7 +19,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: colorspace_yuyv_mmx.asm,v 1.11 2008-12-04 14:41:50 Isibaar Exp $
+; * $Id: colorspace_yuyv_mmx.asm,v 1.12 2009-09-16 17:07:58 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -341,7 +341,4 @@ MAKE_COLORSPACE  yv12_to_uyvy_mmx,0,    2,16,2,  YV12_TO_YUYV, 1, -1
 MAKE_COLORSPACE  yv12_to_yuyvi_mmx,0,   2,8,4,  YV12_TO_YUYVI, 0, -1
 MAKE_COLORSPACE  yv12_to_uyvyi_mmx,0,   2,8,4,  YV12_TO_YUYVI, 1, -1
 
-%ifidn __OUTPUT_FORMAT__,elf
-section ".note.GNU-stack" noalloc noexec nowrite progbits
-%endif
-
+NON_EXEC_STACK

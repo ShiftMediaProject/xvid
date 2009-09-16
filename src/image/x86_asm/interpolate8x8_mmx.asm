@@ -1323,8 +1323,4 @@ interpolate8x8_halfpel_hv_add_mmx:
   ret
 ENDFUNC
 
-
-%ifidn __OUTPUT_FORMAT__,elf
-section ".note.GNU-stack" noalloc noexec nowrite progbits
-%endif
-
+NON_EXEC_STACK
