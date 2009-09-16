@@ -20,7 +20,7 @@
 ; *  along with this program ; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: quantize_mpeg_xmm.asm,v 1.12 2008-12-04 18:30:36 Isibaar Exp $
+; * $Id: quantize_mpeg_xmm.asm,v 1.13 2009-09-16 17:07:58 Isibaar Exp $
 ; *
 ; ***************************************************************************/
 
@@ -618,8 +618,4 @@ ALIGN SECTION_ALIGN
   ret
 ENDFUNC
 
-
-%ifidn __OUTPUT_FORMAT__,elf
-section ".note.GNU-stack" noalloc noexec nowrite progbits
-%endif
-
+NON_EXEC_STACK
