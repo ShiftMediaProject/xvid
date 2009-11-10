@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbcoding.c,v 1.57 2008-11-26 01:04:34 Isibaar Exp $
+ * $Id: mbcoding.c,v 1.58 2009-11-10 14:06:58 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -588,7 +588,7 @@ CodeBlockInter(const FRAMEINFO * const frame,
 			CodeVector(bs, pMB->pmvs[i].x, frame->fcode);
 			CodeVector(bs, pMB->pmvs[i].y, frame->fcode);
 
-#ifdef _DEBUG
+#if 0 /* #ifdef _DEBUG */
 			if (i == 0) /* for simplicity */ {
 				int coded_length = BitstreamPos(bs) - bits;
 				int estimated_length = d_mv_bits(pMB->pmvs[i].x, pMB->pmvs[i].y, zeroMV, frame->fcode, 0);
