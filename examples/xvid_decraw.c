@@ -20,7 +20,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.24 2006-02-15 19:16:39 Isibaar Exp $
+ * $Id: xvid_decraw.c,v 1.25 2010-01-05 09:25:19 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -56,6 +56,7 @@
 
 #define USE_PNM 0
 #define USE_TGA 1
+#define USE_YUV 2
 
 static int XDIM = 0;
 static int YDIM = 0;
@@ -90,6 +91,7 @@ static void usage();
 static int write_image(char *prefix, unsigned char *image);
 static int write_pnm(char *filename, unsigned char *image);
 static int write_tga(char *filename, unsigned char *image);
+static int write_yuv(char *filename, unsigned char *image);
 
 const char * type2str(int type)
 {
@@ -174,6 +176,8 @@ int main(int argc, char *argv[])
 			i++;
 			if (strcmp(argv[i], "tga") == 0) {
 				FORMAT = USE_TGA;
+			} else if (strcmp(argv[i], "yuv") == 0) {
+				FORMAT = USE_YUV;
 			} else {
 				FORMAT = USE_PNM;
 			}
@@ -210,6 +214,9 @@ int main(int argc, char *argv[])
 
 	/* PNM/PGM format can't handle 16/32 bit data */
 	if (BPP != 1 && BPP != 3 && FORMAT == USE_PNM) {
+		FORMAT = USE_TGA;
+	}
+	if (BPP != 1 && FORMAT == USE_YUV) {
 		FORMAT = USE_TGA;
 	}
 
@@ -368,7 +375,12 @@ int main(int argc, char *argv[])
 				
 		/* Save output frame if required */
 		if (ARG_SAVEDECOUTPUT) {
-			sprintf(filename, "%sdec%05d", filepath, filenr);
+			if (FORMAT == USE_YUV) {
+				sprintf(filename, "%sdec", filepath);
+			}
+			else {
+				sprintf(filename, "%sdec%05d", filepath, filenr);
+			}
 			if(write_image(filename, out_buffer)) {
 				fprintf(stderr,
 						"Error writing decoded frame %s\n",
@@ -416,7 +428,12 @@ int main(int argc, char *argv[])
 
 		/* Save output frame if required */
 		if (ARG_SAVEDECOUTPUT) {
-			sprintf(filename, "%sdec%05d", filepath, filenr);
+			if (FORMAT == USE_YUV) {
+				sprintf(filename, "%sdec", filepath);
+			}
+			else {
+				sprintf(filename, "%sdec%05d", filepath, filenr);
+			}
 			if(write_image(filename, out_buffer)) {
 				fprintf(stderr,
 						"Error writing decoded frame %s\n",
@@ -473,7 +490,7 @@ static void usage()
 	fprintf(stderr, " -i string      : input filename (default=stdin)\n");
 	fprintf(stderr, " -d             : save decoder output\n");
 	fprintf(stderr, " -c csp         : choose colorspace output (rgb16, rgb24, rgb32, yv12, i420)\n");
-	fprintf(stderr, " -f format      : choose output file format (tga, pnm, pgm)\n");
+	fprintf(stderr, " -f format      : choose output file format (tga, pnm, pgm, yuv)\n");
 	fprintf(stderr, " -m             : save mpeg4 raw stream to individual files\n");
 	fprintf(stderr, " -help          : This help message\n");
 	fprintf(stderr, " (* means default)\n");
@@ -513,6 +530,8 @@ static int write_image(char *prefix, unsigned char *image)
 		ext = "pgm";
 	} else if (FORMAT == USE_PNM && BPP == 3) {
 		ext = "pnm";
+	} else if (FORMAT == USE_YUV) {
+		ext = "yuv";
 	} else if (FORMAT == USE_TGA) {
 		ext = "tga";
 	} else {
@@ -524,6 +543,8 @@ static int write_image(char *prefix, unsigned char *image)
 
 	if (FORMAT == USE_PNM) {
 		ret = write_pnm(filename, image);
+	} else if (FORMAT == USE_YUV) {
+		ret = write_yuv(filename, image);
 	} else {
 		ret = write_tga(filename, image);
 	}
@@ -644,6 +665,31 @@ static int write_pnm(char *filename, unsigned char *image)
 			fputc(image[i+1], f);
 			fputc(image[i+2], f);
 #endif
+		}
+	}
+
+	fclose(f);
+
+	return 0;
+}
+
+static int write_yuv(char *filename, unsigned char *image)
+{
+	FILE * f;
+
+	f = fopen(filename, "ab+");
+	if ( f == NULL) {
+		return -1;
+	}
+
+	if (BPP == 1) {
+		int i;
+
+		fwrite(image, 1, XDIM*YDIM, f);
+
+		for (i=0; i<YDIM/2;i++) {
+			fwrite(image+XDIM*YDIM + i*XDIM/2, 1, XDIM/2, f);
+			fwrite(image+5*XDIM*YDIM/4 + i*XDIM/2, 1, XDIM/2, f);
 		}
 	}
 
