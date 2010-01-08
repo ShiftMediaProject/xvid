@@ -20,7 +20,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.25 2010-01-05 09:25:19 Isibaar Exp $
+ * $Id: xvid_decraw.c,v 1.26 2010-01-08 10:03:09 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -88,7 +88,7 @@ static int dec_main(unsigned char *istream,
 					xvid_dec_stats_t *xvid_dec_stats);
 static int dec_stop();
 static void usage();
-static int write_image(char *prefix, unsigned char *image);
+static int write_image(char *prefix, unsigned char *image, int filenr);
 static int write_pnm(char *filename, unsigned char *image);
 static int write_tga(char *filename, unsigned char *image);
 static int write_yuv(char *filename, unsigned char *image);
@@ -375,13 +375,9 @@ int main(int argc, char *argv[])
 				
 		/* Save output frame if required */
 		if (ARG_SAVEDECOUTPUT) {
-			if (FORMAT == USE_YUV) {
-				sprintf(filename, "%sdec", filepath);
-			}
-			else {
-				sprintf(filename, "%sdec%05d", filepath, filenr);
-			}
-			if(write_image(filename, out_buffer)) {
+			sprintf(filename, "%sdec", filepath);
+
+			if(write_image(filename, out_buffer, filenr)) {
 				fprintf(stderr,
 						"Error writing decoded frame %s\n",
 						filename);
@@ -428,13 +424,9 @@ int main(int argc, char *argv[])
 
 		/* Save output frame if required */
 		if (ARG_SAVEDECOUTPUT) {
-			if (FORMAT == USE_YUV) {
-				sprintf(filename, "%sdec", filepath);
-			}
-			else {
-				sprintf(filename, "%sdec%05d", filepath, filenr);
-			}
-			if(write_image(filename, out_buffer)) {
+			sprintf(filename, "%sdec", filepath);
+
+			if(write_image(filename, out_buffer, filenr)) {
 				fprintf(stderr,
 						"Error writing decoded frame %s\n",
 						filename);
@@ -520,7 +512,7 @@ msecond()
  *              output functions
  ****************************************************************************/
 
-static int write_image(char *prefix, unsigned char *image)
+static int write_image(char *prefix, unsigned char *image, int filenr)
 {
 	char filename[1024];
 	char *ext;
@@ -539,7 +531,15 @@ static int write_image(char *prefix, unsigned char *image)
 		exit(-1);
 	}
 
-	sprintf(filename, "%s.%s", prefix, ext);
+	if (FORMAT == USE_YUV) {
+		sprintf(filename, "%s.%s", prefix, ext);
+
+		if (!filenr) { 
+			FILE *fp = fopen(filename, "wb"); 
+			fclose(fp); 
+		}
+	} else
+		sprintf(filename, "%s%05d.%s", prefix, filenr, ext);
 
 	if (FORMAT == USE_PNM) {
 		ret = write_pnm(filename, image);
@@ -682,16 +682,7 @@ static int write_yuv(char *filename, unsigned char *image)
 		return -1;
 	}
 
-	if (BPP == 1) {
-		int i;
-
-		fwrite(image, 1, XDIM*YDIM, f);
-
-		for (i=0; i<YDIM/2;i++) {
-			fwrite(image+XDIM*YDIM + i*XDIM/2, 1, XDIM/2, f);
-			fwrite(image+5*XDIM*YDIM/4 + i*XDIM/2, 1, XDIM/2, f);
-		}
-	}
+	fwrite(image, 1, 3*XDIM*YDIM/2, f);
 
 	fclose(f);
 
