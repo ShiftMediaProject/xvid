@@ -3,9 +3,9 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Encoder main module -
  *
- *  Copyright(C) 2002	  Michael Militzer <isibaar@xvid.org>
- *			   2002-2003 Peter Ross <pross@xvid.org>
- *			   2002	  Daniel Smith <danielsmith@astroboymail.com>
+ *  Copyright(C) 2002-2010 Michael Militzer <isibaar@xvid.org>
+ *               2002-2003 Peter Ross <pross@xvid.org>
+ *               2002      Daniel Smith <danielsmith@astroboymail.com>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.130 2007-02-08 13:10:24 Isibaar Exp $
+ * $Id: encoder.c,v 1.131 2010-03-09 10:00:14 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -435,7 +435,7 @@ enc_create(xvid_enc_create_t * create)
 	/* timestamp stuff */
 
 	pEnc->mbParam.m_stamp = 0;
-	pEnc->m_framenum = 0;
+	pEnc->m_framenum = create->start_frame_num;
 	pEnc->current->stamp = 0;
 	pEnc->reference->stamp = 0;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  *  XVID MPEG-4 VIDEO CODEC
- *  - XviD plugin: performs a lumimasking algorithm on encoded frame  -
+ *  - Xvid plugin: performs a lumimasking algorithm on encoded frame  -
  *
  *  Copyright(C) 2002-2003 Peter Ross <pross@xvid.org>
  *               2002      Christoph Lampert <gruel@web.de>
@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: plugin_lumimasking.c,v 1.8 2009-06-02 13:06:54 Isibaar Exp $
+ * $Id: plugin_lumimasking.c,v 1.9 2010-03-09 10:00:14 Isibaar Exp $
  *
  ****************************************************************************/
 
