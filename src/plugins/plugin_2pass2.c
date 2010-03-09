@@ -1,15 +1,15 @@
 /******************************************************************************
  *
- *  XviD Bit Rate Controller Library
+ *  Xvid Bit Rate Controller Library
  *  - VBR 2 pass bitrate controller implementation -
  *
- *  Copyright (C)      2002 Foxer <email?>
+ *  Copyright (C)      2002 Benjamin Lambert <foxer@hotmail.com>
  *                     2002 Dirk Knop <dknop@gwdg.de>
  *                2002-2003 Edouard Gomez <ed.gomez@free.fr>
  *                     2003 Pete Ross <pross@xvid.org>
  *
  *  This curve treatment algorithm is the one originally implemented by Foxer
- *  and tuned by Dirk Knop for the XviD vfw frontend.
+ *  and tuned by Dirk Knop for the Xvid vfw frontend.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: plugin_2pass2.c,v 1.8 2009-07-01 09:25:38 Isibaar Exp $
+ * $Id: plugin_2pass2.c,v 1.9 2010-03-09 10:00:14 Isibaar Exp $
  *
  *****************************************************************************/
 
@@ -219,6 +219,8 @@ typedef struct
 	 *--------------------------------*/
 	double desired_total;
 	double real_total;
+	
+	int scaled_frames;
 } rc_2pass2_t;
 
 
@@ -344,6 +346,7 @@ rc_2pass2_create(xvid_plg_create_t * create, rc_2pass2_t **handle)
 
 	rc->fq_error = 0;
 	rc->min_quant = 1;
+	rc->scaled_frames = 0;
 
 	/* Count frames (and intra frames) in the stats file, store the result into
 	 * the rc structure */
@@ -794,8 +797,10 @@ rc_2pass2_before(rc_2pass2_t * rc, xvid_plg_data_t * data)
 		rc->last_quant[s->type-1] = data->quant;
 
 	/* Don't forget to force 1st pass frame type ;-) */
-	data->type = s->type;
+	if (rc->scaled_frames)
+		data->type = s->type;
 
+	rc->scaled_frames++;
 	return 0;
 }
 

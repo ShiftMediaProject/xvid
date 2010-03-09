@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- *  XviD Standard Plugins
+ *  Xvid Standard Plugins
  *  - single-pass bitrate controller implementation -
  *
  *  Copyright(C) 2002-2004 Benjamin Lambert <foxer@hotmail.com>
@@ -20,7 +20,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: plugin_single.c,v 1.3 2004-08-10 22:34:32 edgomez Exp $
+ * $Id: plugin_single.c,v 1.4 2010-03-09 10:00:14 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -30,7 +30,7 @@
 #include "../xvid.h"
 #include "../image/image.h"
 
-#define DEFAULT_INITIAL_QUANTIZER 4
+#define DEFAULT_INITIAL_QUANTIZER 8
 
 #define DEFAULT_BITRATE 900000	/* 900kbps */
 #define DEFAULT_DELAY_FACTOR 16

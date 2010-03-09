@@ -4,6 +4,7 @@
  *  - Native API implementation  -
  *
  *  Copyright(C) 2001-2004 Peter Ross <pross@xvid.org>
+ *               2002-2010 Michael Militzer <isibaar@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.82 2009-06-05 07:58:41 Isibaar Exp $
+ * $Id: xvid.c,v 1.83 2010-03-09 10:00:14 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -180,7 +181,7 @@ detect_cpu_flags(void)
 
 
 /*****************************************************************************
- * XviD Init Entry point
+ * Xvid Init Entry point
  *
  * Well this function initialize all internal function pointers according
  * to the CPU features forced by the library client or autodetected (depending
@@ -776,7 +777,7 @@ xvid_gbl_convert(xvid_gbl_convert_t* convert)
 }
 
 /*****************************************************************************
- * XviD Global Entry point
+ * Xvid Global Entry point
  *
  * Well this function initialize all internal function pointers according
  * to the CPU features forced by the library client or autodetected (depending
@@ -809,7 +810,7 @@ xvid_global(void *handle,
 }
 
 /*****************************************************************************
- * XviD Native decoder entry point
+ * Xvid Native decoder entry point
  *
  * This function is just a wrapper to all the option cases.
  *
@@ -841,7 +842,7 @@ xvid_decore(void *handle,
 
 
 /*****************************************************************************
- * XviD Native encoder entry point
+ * Xvid Native encoder entry point
  *
  * This function is just a wrapper to all the option cases.
  *

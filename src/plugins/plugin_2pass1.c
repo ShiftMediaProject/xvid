@@ -1,12 +1,12 @@
 /******************************************************************************
  *
- *  XviD Bit Rate Controller Library
+ *  Xvid Bit Rate Controller Library
  *  - VBR 2 pass bitrate controler implementation -
  *
  *  Copyright (C) 2002-2003 Edouard Gomez <ed.gomez@free.fr>
  *
  *  The curve treatment algorithm is the one implemented by Foxer <email?> and
- *  Dirk Knop <dknop@gwdg.de> for the XviD vfw dynamic library.
+ *  Dirk Knop <dknop@gwdg.de> for the Xvid vfw dynamic library.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: plugin_2pass1.c,v 1.3 2004-07-18 12:46:44 syskin Exp $
+ * $Id: plugin_2pass1.c,v 1.4 2010-03-09 10:00:14 Isibaar Exp $
  *
  *****************************************************************************/
 

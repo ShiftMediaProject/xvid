@@ -6,7 +6,7 @@
  *  Copyright (c) 2001 Michael Niedermayer <michaelni@gmx.at>
  *
  *  Originally distributed under the GNU LGPL License (ffmpeg).
- *  It is licensed under the GNU GPL for the XviD tree.
+ *  It is licensed under the GNU GPL for the Xvid tree.
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: simple_idct.c,v 1.5 2004-04-05 20:36:36 edgomez Exp $
+ * $Id: simple_idct.c,v 1.6 2010-03-09 10:00:14 Isibaar Exp $
  *
  ****************************************************************************/
 

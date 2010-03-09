@@ -6,6 +6,7 @@
  *  Copyright(C) 2002-2003 Christoph Lampert <gruel@web.de>
  *               2002-2003 Edouard Gomez <ed.gomez@free.fr>
  *               2003      Peter Ross <pross@xvid.org>
+ *               2003-2010 Michael Militzer <isibaar@xvid.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,7 +22,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.38 2009-05-27 15:52:05 Isibaar Exp $
+ * $Id: xvid_encraw.c,v 1.39 2010-03-09 10:00:22 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -54,12 +55,15 @@
 #endif
 
 #include "xvid.h"
+#include "portab.h" /* for pthread */
 
 #ifdef XVID_MKV_OUTPUT
 #include "matroska.cpp"
 #endif
 
 #undef READ_PNM
+
+//#define USE_APP_LEVEL_THREADING /* Should xvid_encraw app use multi-threading? */
 
 /*****************************************************************************
  *                            Quality presets
@@ -121,7 +125,7 @@ static const int vop_presets[] = {
  ****************************************************************************/
 
 #define MAX_ZONES   64
-
+#define MAX_ENC_INSTANCES 4
 #define DEFAULT_QUANT 400
 
 typedef struct
@@ -145,6 +149,24 @@ typedef struct
 	int quants[32];
 } frame_stats_t;
 
+typedef struct
+{
+	pthread_t handle;       /* thread's handle */
+
+	int start_num;          /* begin/end of sequence */
+	int stop_num; 
+	
+	char *outfilename;      /* output filename */
+	char *statsfilename1;   /* pass1 statsfile */
+
+	int input_num; 
+
+	int totalsize;          /* encoder stats */
+	double totalenctime; 
+	float totalPSNR[3];
+ 	frame_stats_t framestats[7];
+} enc_sequence_data_t;
+
 /* Maximum number of frames to encode */
 #define ABS_MAXFRAMENR -1 /* no limit */
 
@@ -162,8 +184,9 @@ typedef struct
 
 static zone_t ZONES[MAX_ZONES];
 static 	int NUM_ZONES = 0;
-static 	frame_stats_t framestats[7];
 
+static 	int ARG_NUM_APP_THREADS = 1;
+static 	int ARG_CPU_FLAGS = 0;
 static 	int ARG_STATS = 0;
 static 	int ARG_SSIM = -1;
 static 	char* ARG_SSIM_PATH = NULL;
@@ -187,20 +210,8 @@ static 	int ARG_INPUTTYPE = 0;
 static 	int ARG_SAVEMPEGSTREAM = 0;
 static 	int ARG_SAVEINDIVIDUAL = 0;
 static 	char *ARG_OUTPUTFILE = NULL;
-#ifdef XVID_AVI_OUTPUT
 static 	char *ARG_AVIOUTPUTFILE = NULL;
-#endif
-#ifdef XVID_MKV_OUTPUT
 static 	char *ARG_MKVOUTPUTFILE = NULL;
-#endif
-#ifdef XVID_AVI_INPUT
-static 	PAVISTREAM avi_stream = NULL;
-static 	PAVIFILE avi_file = NULL;
-static 	LPBITMAPINFOHEADER info_header = NULL;
-static 	PGETFRAME get_frame = NULL;
-#else
-#define get_frame NULL
-#endif
 static 	char *ARG_TIMECODEFILE = NULL;
 static 	int XDIM = 0;
 static 	int YDIM = 0;
@@ -249,8 +260,7 @@ static 	int ARG_PROGRESS = 0;
 static 	int ARG_COLORSPACE = XVID_CSP_YV12;
 	/* the path where to save output */
 static char filepath[256] = "./";
-	/* Internal structures (handles) for encoding and decoding */
-static 	void *enc_handle = NULL;
+
 static 	unsigned char qmatrix_intra[64];
 static 	unsigned char qmatrix_inter[64];
 
@@ -292,17 +302,20 @@ static int read_yuvdata(FILE * handle,
 						unsigned char *image);
 
 /* Encoder related functions */
-static int enc_init(int use_assembler);
-static int enc_info();
-static int enc_stop();
-static int enc_main(unsigned char *image,
-					unsigned char *bitstream,
-					int *key,
-					int *stats_type,
-					int *stats_quant,
-					int *stats_length,
-					int stats[3],
-					int framenum);
+static void enc_gbl(int use_assembler);
+static int  enc_init(void **enc_handle, char *stats_pass1, int start_num);
+static int  enc_info();
+static int  enc_stop(void *enc_handle);
+static int  enc_main(void *enc_handle,
+					 unsigned char *image,
+			 		 unsigned char *bitstream,
+					 int *key,
+					 int *stats_type,
+					 int *stats_quant,
+					 int *stats_length,
+					 int stats[3],
+					 int framenum);
+static void encode_sequence(enc_sequence_data_t *h);
 
 /* Zone Related Functions */
 static void apply_zone_modifiers(xvid_enc_frame_t * frame, int framenum);
@@ -321,43 +334,30 @@ int
 main(int argc,
 	 char *argv[])
 {
-
-	unsigned char *mp4_buffer = NULL;
-	unsigned char *in_buffer = NULL;
-	unsigned char *out_buffer = NULL;
-
-	double enctime;
 	double totalenctime = 0.;
 	float totalPSNR[3] = {0., 0., 0.};
+
 	FILE *statsfile;
+	frame_stats_t framestats[7];
 
-	int totalsize;
-	int result;
-	int m4v_size;
-	int key;
-	int stats_type;
-	int stats_quant;
-	int stats_length;
+	int input_num = 0;
+	int totalsize = 0;
 	int use_assembler = 1;
-	int fakenvop = 0;
 	int i;
-	int nvop_counter;
 
-	int input_num;
-	int output_num;
-
-	char filename[256];
-
-	FILE *in_file = stdin;
-	FILE *out_file = NULL;
-	FILE *time_file = NULL;
-
-#ifdef XVID_AVI_OUTPUT
-	int avierr;
-	PAVIFILE myAVIFile=NULL;
-	PAVISTREAM myAVIStream=NULL;
-	AVISTREAMINFO myAVIStreamInfo;
+#if defined(XVID_AVI_INPUT)
+	PAVIFILE avi_in = NULL;
+	PAVISTREAM avi_in_stream = NULL;
+ 	PGETFRAME get_frame = NULL;
+#else
+#define get_frame NULL
+#endif
+#if defined(XVID_AVI_OUTPUT)
+	PAVIFILE myAVIFile = NULL;
+	PAVISTREAM myAVIStream = NULL;
 	BITMAPINFOHEADER myBitmapInfoHeader;
+#endif
+#if defined(XVID_AVI_INPUT) || defined(XVID_AVI_OUTPUT)
 	AVIFileInit();
 #endif
 #ifdef XVID_MKV_OUTPUT
@@ -367,13 +367,16 @@ main(int argc,
 #endif
 
 	printf("xvid_encraw - raw mpeg4 bitstream encoder ");
-	printf("written by Christoph Lampert 2002-2003\n\n");
+	printf("written by Christoph Lampert\n\n");
 
-	/* Is there a dumb XviD coder ? */
+	/* Is there a dumb Xvid coder ? */
 	if(ME_ELEMENTS != VOP_ELEMENTS) {
 		fprintf(stderr, "Presets' arrays should have the same number of elements -- Please fill a bug to xvid-devel@xvid.org\n");
 		return(-1);
 	}
+
+	/* Clear framestats */
+	memset(framestats, 0, sizeof(framestats));
 
 /*****************************************************************************
  *                            Command line parsing
@@ -830,18 +833,14 @@ main(int argc,
 		return (-1);
 	}
 
-	if (ARG_INPUTFILE == NULL || strcmp(ARG_INPUTFILE, "stdin") == 0) {
-		in_file = stdin;
-	} else {
+	if (ARG_INPUTFILE != NULL) {
 #ifdef XVID_AVI_INPUT
       if (strcmp(ARG_INPUTFILE+(strlen(ARG_INPUTFILE)-3), "avs")==0 ||
           strcmp(ARG_INPUTFILE+(strlen(ARG_INPUTFILE)-3), "avi")==0 ||
 		  ARG_INPUTTYPE==2)
       {
 		  AVISTREAMINFO avi_info;
-#ifndef XVID_AVI_OUTPUT
-		  AVIFileInit();
-#endif
+
 		  FILE *avi_fp = fopen(ARG_INPUTFILE, "rb");
 		  if (avi_fp == NULL) {
 			  fprintf(stderr, "Couldn't open file '%s'!\n", ARG_INPUTFILE);
@@ -849,24 +848,24 @@ main(int argc,
 		  }
 		  fclose(avi_fp);
 
-		  if (AVIFileOpen(&avi_file, ARG_INPUTFILE, OF_READ, NULL) != AVIERR_OK) {
+		  if (AVIFileOpen(&avi_in, ARG_INPUTFILE, OF_READ, NULL) != AVIERR_OK) {
 			  fprintf(stderr, "Can't open avi/avs file %s\n", ARG_INPUTFILE);
 			  AVIFileExit();
 			  return(-1);
 		  }
 
-		  if (AVIFileGetStream(avi_file, &avi_stream, streamtypeVIDEO, 0) != AVIERR_OK) {
+		  if (AVIFileGetStream(avi_in, &avi_in_stream, streamtypeVIDEO, 0) != AVIERR_OK) {
 			  fprintf(stderr, "Can't open stream from file '%s'!\n", ARG_INPUTFILE);
-			  AVIFileRelease(avi_file);
+			  AVIFileRelease(avi_in);
 			  AVIFileExit();
 			  return (-1);
 		  }
 
-		  AVIFileRelease(avi_file);
+		  AVIFileRelease(avi_in);
 
-		  if(AVIStreamInfo(avi_stream, &avi_info, sizeof(AVISTREAMINFO)) != AVIERR_OK) {
+		  if(AVIStreamInfo(avi_in_stream, &avi_info, sizeof(AVISTREAMINFO)) != AVIERR_OK) {
 			  fprintf(stderr, "Can't get stream info from file '%s'!\n", ARG_INPUTFILE);
-			  AVIStreamRelease(avi_stream);
+			  AVIStreamRelease(avi_in_stream);
 			  AVIFileExit();
 			  return (-1);
 		  }
@@ -877,7 +876,7 @@ main(int argc,
 				  avi_info.fccHandler%256, (avi_info.fccHandler>>8)%256, (avi_info.fccHandler>>16)%256,
 				  (avi_info.fccHandler>>24)%256);
 			  size = sizeof(myBitmapInfoHeader);
-			  AVIStreamReadFormat(avi_stream, 0, &myBitmapInfoHeader, &size);
+			  AVIStreamReadFormat(avi_in_stream, 0, &myBitmapInfoHeader, &size);
 			  if (size==0)
 				  fprintf(stderr, "AVIStreamReadFormat read 0 bytes.\n");
 			  else {
@@ -892,10 +891,10 @@ main(int argc,
 				  myBitmapInfoHeader.biCompression = MAKEFOURCC('Y', 'V', '1', '2');
 				  myBitmapInfoHeader.biBitCount = 12;
 				  myBitmapInfoHeader.biSizeImage = (myBitmapInfoHeader.biWidth*myBitmapInfoHeader.biHeight)*3/2;
-				  get_frame = AVIStreamGetFrameOpen(avi_stream, &myBitmapInfoHeader);
+				  get_frame = AVIStreamGetFrameOpen(avi_in_stream, &myBitmapInfoHeader);
 			  }
 			  if (get_frame == NULL) {
-				AVIStreamRelease(avi_stream);
+				AVIStreamRelease(avi_in_stream);
 				AVIFileExit();
 				return (-1);
 			  } 
@@ -932,27 +931,25 @@ main(int argc,
 		  }
 
 		  ARG_INPUTTYPE = 2;
-    }
-    else
+
+	  	  if (get_frame) AVIStreamGetFrameClose(get_frame);
+		  if (avi_in_stream) AVIStreamRelease(avi_in_stream);
+      }
+      else
 #endif
 		{
-			in_file = fopen(ARG_INPUTFILE, "rb");
+			FILE *in_file = fopen(ARG_INPUTFILE, "rb");
+			int pos = 0;
 			if (in_file == NULL) {
 				fprintf(stderr, "Error opening input file %s\n", ARG_INPUTFILE);
 				return (-1);
 			}
-		}
-	}
-
-	// This should be after the avi input opening stuff
-	if (ARG_TIMECODEFILE != NULL) {
-		time_file = fopen(ARG_TIMECODEFILE, "r");
-		if (time_file==NULL) {
-			fprintf(stderr, "Couldn't open timecode file '%s'!\n", ARG_TIMECODEFILE);
-			return(-1);
-		}
-		else {
-			fscanf(time_file, "# timecode format v2\n");
+#ifdef USE_APP_LEVEL_THREADING
+			fseek(in_file, 0, SEEK_END); /* Determine input size */
+			pos = ftell(in_file);
+			ARG_MAXFRAMENR = pos / IMAGE_SIZE(XDIM, YDIM); /* PGM, header size ?? */
+#endif
+			fclose(in_file);
 		}
 	}
 
@@ -976,6 +973,370 @@ main(int argc,
 	if (ARG_SINGLE && (!ARG_BITRATE) && (!ARG_CQ))
 			ARG_CQ = DEFAULT_QUANT;
 
+		/* Init xvidcore */
+    enc_gbl(use_assembler);
+
+#ifdef USE_APP_LEVEL_THREADING
+	if (ARG_INPUTFILE == NULL || strcmp(ARG_INPUTFILE, "stdin") == 0 ||
+	    ARG_NUM_APP_THREADS <= 1 || ARG_THREADS != 0 ||
+	    ARG_TIMECODEFILE != NULL || ARG_AVIOUTPUTFILE != NULL ||
+	    ARG_INPUTTYPE == 1 || ARG_MKVOUTPUTFILE != NULL)		/* TODO: PGM input */
+#endif /* Spawn just one encoder instance */
+	{		
+		enc_sequence_data_t enc_data;
+		memset(&enc_data, 0, sizeof(enc_sequence_data_t));
+		
+		if (!ARG_THREADS) ARG_THREADS = ARG_NUM_APP_THREADS;
+		ARG_NUM_APP_THREADS = 1;
+
+		enc_data.outfilename = ARG_OUTPUTFILE;
+		enc_data.statsfilename1 = ARG_PASS1;
+		enc_data.start_num = ARG_STARTFRAMENR;
+		enc_data.stop_num = ARG_MAXFRAMENR;
+		
+			/* Encode input */
+		encode_sequence(&enc_data);
+
+			/* Copy back stats */
+		input_num = enc_data.input_num;
+		totalsize = enc_data.totalsize;
+		totalenctime = enc_data.totalenctime;
+		for (i=0; i < 3; i++) totalPSNR[i] = enc_data.totalPSNR[i];
+		memcpy(framestats, enc_data.framestats, sizeof(framestats));
+	}
+#ifdef USE_APP_LEVEL_THREADING
+	else { /* Split input into sequences and create multiple encoder instances */
+		int k;
+		void *status;
+		FILE *f_out = NULL, *f_stats = NULL;
+
+		enc_sequence_data_t enc_data[MAX_ENC_INSTANCES];
+		char outfile[MAX_ENC_INSTANCES][256];
+		char statsfilename[MAX_ENC_INSTANCES][256];
+
+		for (k = 0; k < MAX_ENC_INSTANCES; k++)
+			memset(&enc_data[k], 0, sizeof(enc_sequence_data_t));
+
+			/* Overwrite internal encoder threading */
+		if (ARG_NUM_APP_THREADS > MAX_ENC_INSTANCES) {
+			ARG_THREADS = (int) (ARG_NUM_APP_THREADS / MAX_ENC_INSTANCES);
+			ARG_NUM_APP_THREADS = MAX_ENC_INSTANCES;
+		}
+		else
+			ARG_THREADS = -1;
+
+		enc_data[0].outfilename = ARG_OUTPUTFILE;
+		enc_data[0].statsfilename1 = ARG_PASS1;
+		enc_data[0].start_num = ARG_STARTFRAMENR;
+		enc_data[0].stop_num = (ARG_MAXFRAMENR-ARG_STARTFRAMENR)/ARG_NUM_APP_THREADS;
+
+		for (k = 1; k < ARG_NUM_APP_THREADS; k++) {
+			sprintf(outfile[k], "%s.%03d", ARG_OUTPUTFILE, k);
+			enc_data[k].outfilename = outfile[k];
+			if (ARG_PASS1) {
+				sprintf(statsfilename[k], "%s.%03d", ARG_PASS1, k);
+				enc_data[k].statsfilename1 = statsfilename[k];
+			}
+			enc_data[k].start_num = (ARG_MAXFRAMENR-ARG_STARTFRAMENR)/ARG_NUM_APP_THREADS;
+			enc_data[k].stop_num = ((k+1)*(ARG_MAXFRAMENR-ARG_STARTFRAMENR))/ARG_NUM_APP_THREADS;
+		}
+
+			/* Start multiple encoder threads in parallel */
+		for (k = 1; k < ARG_NUM_APP_THREADS; k++) {
+			pthread_create(&enc_data[k].handle, NULL, (void*)encode_sequence, (void*)&enc_data[k]);
+		}
+
+			/* Encode first sequence in this thread */
+		encode_sequence(&enc_data[0]);
+
+			/* Wait until encoder threads have finished */
+		for (k = 1; k < ARG_NUM_APP_THREADS; k++) {
+			pthread_join(enc_data[k].handle, &status);
+		}
+
+			/* Join encoder stats and encoder output files */
+		if (ARG_OUTPUTFILE)
+			f_out = fopen(enc_data[0].outfilename, "ab+");
+		if (ARG_PASS1)
+			f_stats = fopen(enc_data[0].statsfilename1, "ab+");
+
+		for (k = 0; k < ARG_NUM_APP_THREADS; k++) {
+				/* Join stats */
+			input_num += enc_data[k].input_num;
+			totalsize += enc_data[k].totalsize;
+			totalenctime = MAX(totalenctime, enc_data[k].totalenctime);
+
+			for (i=0; i < 3; i++) totalPSNR[i] += enc_data[k].totalPSNR[i];
+			for (i=0; i < 8; i++) {
+				int l;
+				framestats[i].count += enc_data[k].framestats[i].count;
+				framestats[i].size += enc_data[k].framestats[i].size;
+				for (l=0; l < 32; l++)
+					framestats[i].quants[l] += enc_data[k].framestats[i].quants[l];
+			}
+				/* Join output files */
+			if ((k > 0) && (f_out != NULL)) {
+				int ch;
+				FILE *f = fopen(enc_data[k].outfilename, "rb");
+				while((ch = fgetc(f)) != EOF) { fputc(ch, f_out); }
+				fclose(f);
+				remove(enc_data[k].outfilename);
+			}
+				/* Join first pass stats files */
+			if ((k > 0) && (f_stats != NULL)) {
+				char str[256];
+				FILE *f = fopen(enc_data[k].statsfilename1, "r");
+				while(fgets(str, sizeof(str), f) != NULL) {
+					if (str[0] != '#' && strlen(str) > 3)
+						fputs(str, f_stats);
+				}
+				fclose(f);
+				remove(enc_data[k].statsfilename1);
+			}
+		}
+		if (f_out) fclose(f_out);
+		if (f_stats) fclose(f_stats);
+	}
+#endif
+
+/*****************************************************************************
+ *         Calculate totals and averages for output, print results
+ ****************************************************************************/
+
+ printf("\n");
+	printf("Tot: enctime(ms) =%7.2f,               length(bytes) = %7d\n",
+		   totalenctime, (int) totalsize);
+
+	if (input_num > 0) {
+		totalsize /= input_num;
+		totalenctime /= input_num;
+		totalPSNR[0] /= input_num;
+		totalPSNR[1] /= input_num;
+		totalPSNR[2] /= input_num;
+	} else {
+		totalsize = -1;
+		totalenctime = -1;
+	}
+
+	printf("Avg: enctime(ms) =%7.2f, fps =%7.2f, length(bytes) = %7d",
+		   totalenctime, 1000 / totalenctime, (int) totalsize);
+   if (ARG_STATS) {
+       printf(", psnr y = %2.2f, psnr u = %2.2f, psnr v = %2.2f",
+    		  totalPSNR[0],totalPSNR[1],totalPSNR[2]);
+	}
+	printf("\n");
+	if (framestats[XVID_TYPE_IVOP].count) {
+		printf("I frames: %6d frames, size = %7d/%7d, quants = %2d / %.2f / %2d\n", \
+			framestats[XVID_TYPE_IVOP].count, framestats[XVID_TYPE_IVOP].size/framestats[XVID_TYPE_IVOP].count, \
+			framestats[XVID_TYPE_IVOP].size, minquant(framestats[XVID_TYPE_IVOP].quants), \
+			avgquant(framestats[XVID_TYPE_IVOP]), maxquant(framestats[XVID_TYPE_IVOP].quants));
+	}
+	if (framestats[XVID_TYPE_PVOP].count) {
+		printf("P frames: %6d frames, size = %7d/%7d, quants = %2d / %.2f / %2d\n", \
+			framestats[XVID_TYPE_PVOP].count, framestats[XVID_TYPE_PVOP].size/framestats[XVID_TYPE_PVOP].count, \
+			framestats[XVID_TYPE_PVOP].size, minquant(framestats[XVID_TYPE_PVOP].quants), \
+			avgquant(framestats[XVID_TYPE_PVOP]), maxquant(framestats[XVID_TYPE_PVOP].quants));
+	}
+	if (framestats[XVID_TYPE_BVOP].count) {
+		printf("B frames: %6d frames, size = %7d/%7d, quants = %2d / %.2f / %2d\n", \
+			framestats[XVID_TYPE_BVOP].count, framestats[XVID_TYPE_BVOP].size/framestats[XVID_TYPE_BVOP].count, \
+			framestats[XVID_TYPE_BVOP].size, minquant(framestats[XVID_TYPE_BVOP].quants), \
+			avgquant(framestats[XVID_TYPE_BVOP]), maxquant(framestats[XVID_TYPE_BVOP].quants));
+	}
+	if (framestats[XVID_TYPE_SVOP].count) {
+		printf("S frames: %6d frames, size = %7d/%7d, quants = %2d / %.2f / %2d\n", \
+			framestats[XVID_TYPE_SVOP].count, framestats[XVID_TYPE_SVOP].size/framestats[XVID_TYPE_SVOP].count, \
+			framestats[XVID_TYPE_SVOP].size, minquant(framestats[XVID_TYPE_SVOP].quants), \
+			avgquant(framestats[XVID_TYPE_SVOP]), maxquant(framestats[XVID_TYPE_SVOP].quants));
+	}
+	if (framestats[5].count) {
+		printf("N frames: %6d frames, size = %7d/%7d\n", \
+			framestats[5].count, framestats[5].size/framestats[5].count, \
+			framestats[5].size);
+	}
+
+
+/*****************************************************************************
+ *                            Xvid PART  Stop
+ ****************************************************************************/
+
+  release_all:
+
+#if defined(XVID_AVI_INPUT) || defined(XVID_AVI_OUTPUT)
+	AVIFileExit();
+#endif
+
+	return (0);
+
+}
+
+/*****************************************************************************
+ *               Encode a sequence
+ ****************************************************************************/
+
+void encode_sequence(enc_sequence_data_t *h) {
+
+	/* Internal structures (handles) for encoding */
+	void *enc_handle = NULL;
+
+	int start_num = h->start_num; 
+	int stop_num = h->stop_num; 
+	char *outfilename = h->outfilename; 
+	float *totalPSNR = h->totalPSNR;
+
+	int input_num;
+	int totalsize; 
+	double totalenctime = 0.; 
+
+	unsigned char *mp4_buffer = NULL;
+	unsigned char *in_buffer = NULL;
+	unsigned char *out_buffer = NULL;
+
+	double enctime;
+
+	int result;
+	int output_num;
+	int nvop_counter;
+	int m4v_size;
+	int key;
+	int stats_type;
+	int stats_quant;
+	int stats_length;
+	int fakenvop = 0;
+
+	FILE *in_file = stdin;
+	FILE *out_file = NULL;
+	FILE *time_file = NULL;
+
+	char filename[256];
+
+#if defined(XVID_AVI_INPUT)
+	PAVIFILE avi_in = NULL;
+	PAVISTREAM avi_in_stream = NULL;
+ 	PGETFRAME get_frame = NULL;
+#else
+#define get_frame NULL
+#endif
+#if defined(XVID_AVI_OUTPUT)
+	int avierr;
+	PAVIFILE myAVIFile=NULL;
+	PAVISTREAM myAVIStream=NULL;
+	AVISTREAMINFO myAVIStreamInfo;
+	BITMAPINFOHEADER myBitmapInfoHeader;
+#endif
+
+	if (ARG_INPUTFILE == NULL || strcmp(ARG_INPUTFILE, "stdin") == 0) {
+		in_file = stdin;
+	} else {
+#ifdef XVID_AVI_INPUT
+      if (strcmp(ARG_INPUTFILE+(strlen(ARG_INPUTFILE)-3), "avs")==0 ||
+          strcmp(ARG_INPUTFILE+(strlen(ARG_INPUTFILE)-3), "avi")==0 ||
+		  ARG_INPUTTYPE==2)
+      {
+		  AVISTREAMINFO avi_info;
+		  FILE *avi_fp = fopen(ARG_INPUTFILE, "rb");
+
+		  if (ARG_NUM_APP_THREADS > 1)
+			  CoInitializeEx(0, COINIT_MULTITHREADED);
+
+		  if (avi_fp == NULL) {
+			  fprintf(stderr, "Couldn't open file '%s'!\n", ARG_INPUTFILE);
+			  return;
+		  }
+		  fclose(avi_fp);
+
+		  if (AVIFileOpen(&avi_in, ARG_INPUTFILE, OF_READ, NULL) != AVIERR_OK) {
+			  fprintf(stderr, "Can't open avi/avs file %s\n", ARG_INPUTFILE);
+			  AVIFileExit();
+			  return;
+		  }
+
+		  if (AVIFileGetStream(avi_in, &avi_in_stream, streamtypeVIDEO, 0) != AVIERR_OK) {
+			  fprintf(stderr, "Can't open stream from file '%s'!\n", ARG_INPUTFILE);
+			  AVIFileRelease(avi_in);
+			  AVIFileExit();
+			  return;
+		  }
+
+		  AVIFileRelease(avi_in);
+
+		  if(AVIStreamInfo(avi_in_stream, &avi_info, sizeof(AVISTREAMINFO)) != AVIERR_OK) {
+			  fprintf(stderr, "Can't get stream info from file '%s'!\n", ARG_INPUTFILE);
+			  AVIStreamRelease(avi_in_stream);
+			  AVIFileExit();
+			  return;
+		  }
+
+	      if (avi_info.fccHandler != MAKEFOURCC('Y', 'V', '1', '2')) {
+			  LONG size;
+			  fprintf(stderr, "Non YV12 input colorspace %c%c%c%c! Attempting conversion...\n",
+				  avi_info.fccHandler%256, (avi_info.fccHandler>>8)%256, (avi_info.fccHandler>>16)%256,
+				  (avi_info.fccHandler>>24)%256);
+			  size = sizeof(myBitmapInfoHeader);
+			  AVIStreamReadFormat(avi_in_stream, 0, &myBitmapInfoHeader, &size);
+			  if (size==0)
+				  fprintf(stderr, "AVIStreamReadFormat read 0 bytes.\n");
+			  else {
+				  fprintf(stderr, "AVIStreamReadFormat read %d bytes.\n", size);
+				  fprintf(stderr, "width = %d, height = %d, planes = %d\n", myBitmapInfoHeader.biWidth,
+					  myBitmapInfoHeader.biHeight, myBitmapInfoHeader.biPlanes);
+				  fprintf(stderr, "Compression = %c%c%c%c, %d\n",
+					  myBitmapInfoHeader.biCompression%256, (myBitmapInfoHeader.biCompression>>8)%256,
+					  (myBitmapInfoHeader.biCompression>>16)%256, (myBitmapInfoHeader.biCompression>>24)%256,
+					  myBitmapInfoHeader.biCompression);
+				  fprintf(stderr, "Bits Per Pixel = %d\n", myBitmapInfoHeader.biBitCount);
+				  myBitmapInfoHeader.biCompression = MAKEFOURCC('Y', 'V', '1', '2');
+				  myBitmapInfoHeader.biBitCount = 12;
+				  myBitmapInfoHeader.biSizeImage = (myBitmapInfoHeader.biWidth*myBitmapInfoHeader.biHeight)*3/2;
+				  get_frame = AVIStreamGetFrameOpen(avi_in_stream, &myBitmapInfoHeader);
+			  }
+			  if (get_frame == NULL) {
+				AVIStreamRelease(avi_in_stream);
+				AVIFileExit();
+				return;
+			  } 
+			  else {
+				unsigned char *temp;
+				fprintf(stderr, "AVIStreamGetFrameOpen successful.\n");
+				temp = (unsigned char*)AVIStreamGetFrame(get_frame, 0);
+				if (temp != NULL) {
+					int i;
+					for (i = 0; i < ((DWORD*)temp)[0]; i++) {
+						fprintf(stderr, "%2d ", temp[i]);
+					}
+					fprintf(stderr, "\n");
+				}
+			  }
+			  if (avi_info.fccHandler == MAKEFOURCC('D', 'I', 'B', ' ')) {
+				  AVIStreamGetFrameClose(get_frame);
+				  get_frame = NULL;
+				  ARG_COLORSPACE = XVID_CSP_BGR | XVID_CSP_VFLIP;
+			  }
+		  }
+    }
+    else
+#endif
+		{
+			in_file = fopen(ARG_INPUTFILE, "rb");
+			if (in_file == NULL) {
+				fprintf(stderr, "Error opening input file %s\n", ARG_INPUTFILE);
+				return;
+			}
+		}
+	}
+
+	// This should be after the avi input opening stuff
+	if (ARG_TIMECODEFILE != NULL) {
+		time_file = fopen(ARG_TIMECODEFILE, "r");
+		if (time_file==NULL) {
+			fprintf(stderr, "Couldn't open timecode file '%s'!\n", ARG_TIMECODEFILE);
+			return;
+		}
+		else {
+			fscanf(time_file, "# timecode format v2\n");
+		}
+	}
+
 	if (ARG_INPUTTYPE==1) {
 #ifndef READ_PNM
 		if (read_pgmheader(in_file)) {
@@ -984,15 +1345,16 @@ main(int argc,
 #endif
 			fprintf(stderr,
 					"Wrong input format, I want YUV encapsulated in PGM\n");
-			return (-1);
+			return;
 		}
 	}
 
 	/* Jump to the starting frame */
-	if (ARG_INPUTTYPE == 0)
-		fseek(in_file, ARG_STARTFRAMENR*IMAGE_SIZE(XDIM, YDIM), SEEK_SET);
+	if (ARG_INPUTTYPE == 0) /* TODO: Other input formats ??? */
+		fseek(in_file, start_num*IMAGE_SIZE(XDIM, YDIM), SEEK_SET);
 
-	/* now we know the sizes, so allocate memory */
+
+		/* now we know the sizes, so allocate memory */
 	if (get_frame == NULL) 
 	{
 		in_buffer = (unsigned char *) malloc(4*XDIM*YDIM);
@@ -1006,11 +1368,11 @@ main(int argc,
 		goto free_all_memory;
 
 /*****************************************************************************
- *                            XviD PART  Start
+ *                            Xvid PART  Start
  ****************************************************************************/
 
 
-	result = enc_init(use_assembler);
+	result = enc_init(&enc_handle, h->statsfilename1, h->start_num);
 	if (result) {
 		fprintf(stderr, "Encore INIT problem, return value %d\n", result);
 		goto release_all;
@@ -1022,9 +1384,9 @@ main(int argc,
 
 	if (ARG_SAVEMPEGSTREAM) {
 
-		if (ARG_OUTPUTFILE) {
-			if ((out_file = fopen(ARG_OUTPUTFILE, "w+b")) == NULL) {
-				fprintf(stderr, "Error opening output file %s\n", ARG_OUTPUTFILE);
+		if (outfilename) {
+			if ((out_file = fopen(outfilename, "w+b")) == NULL) {
+				fprintf(stderr, "Error opening output file %s\n", outfilename);
 				goto release_all;
 			}
 		}
@@ -1119,8 +1481,8 @@ main(int argc,
 
 	result = 0;
 
-	input_num = 0;				/* input frame counter */
-	output_num = 0;				/* output frame counter */
+	input_num = 0;                      /* input frame counter */
+	output_num = start_num;             /* output frame counter */
 
 	nvop_counter = 0;
 
@@ -1129,7 +1491,7 @@ main(int argc,
 		char *type;
 		int sse[3];
 
-		if (input_num >= ARG_MAXFRAMENR && ARG_MAXFRAMENR > 0) {
+		if ((input_num+start_num) >= stop_num && stop_num > 0) {
 			result = 1;
 		}
 
@@ -1138,13 +1500,13 @@ main(int argc,
 			if (ARG_INPUTTYPE==2) {
 				/* read avs/avi data (YUV-format) */
 				if (get_frame != NULL) {
-					in_buffer = (unsigned char*)AVIStreamGetFrame(get_frame, input_num+ARG_STARTFRAMENR);
+					in_buffer = (unsigned char*)AVIStreamGetFrame(get_frame, input_num+start_num);
 					if (in_buffer == NULL)
 						result = 1;
 					else
 						in_buffer += ((DWORD*)in_buffer)[0];
 				} else {
-					if(AVIStreamRead(avi_stream, input_num+ARG_STARTFRAMENR, 1, in_buffer, 4*XDIM*YDIM, NULL, NULL ) != AVIERR_OK)
+					if(AVIStreamRead(avi_in_stream, input_num+start_num, 1, in_buffer, 4*XDIM*YDIM, NULL, NULL ) != AVIERR_OK)
 						result = 1;
 				}
 			} else
@@ -1166,7 +1528,7 @@ main(int argc,
  *                       Encode and decode this frame
  ****************************************************************************/
 
-		if (input_num >= (unsigned int)ARG_MAXFRAMENR-1 && ARG_MAXBFRAMES) {
+		if ((input_num+start_num) >= (unsigned int)(stop_num-1) && ARG_MAXBFRAMES) {
 			stats_type = XVID_TYPE_PVOP;
 		}
 		else
@@ -1174,7 +1536,7 @@ main(int argc,
 
 		enctime = msecond();
 		m4v_size =
-			enc_main(!result ? in_buffer : 0, mp4_buffer, &key, &stats_type,
+			enc_main(enc_handle, !result ? in_buffer : 0, mp4_buffer, &key, &stats_type,
 					 &stats_quant, &stats_length, sse, input_num);
 		enctime = msecond() - enctime;
 
@@ -1202,20 +1564,20 @@ main(int argc,
 			}
 
 			if (stats_length > 8) {
-				framestats[stats_type].count++;
-				framestats[stats_type].quants[stats_quant]++;
-				framestats[stats_type].size += stats_length;
+				h->framestats[stats_type].count++;
+				h->framestats[stats_type].quants[stats_quant]++;
+				h->framestats[stats_type].size += stats_length;
 			}
 			else {
-				framestats[5].count++;
-				framestats[5].quants[stats_quant]++;
-				framestats[5].size += stats_length;
+				h->framestats[5].count++;
+				h->framestats[5].quants[stats_quant]++;
+				h->framestats[5].size += stats_length;
 			}
 
 #define SSE2PSNR(sse, width, height) ((!(sse))?0.0f : 48.131f - 10*(float)log10((float)(sse)/((float)((width)*(height)))))
 
 			if (ARG_PROGRESS == 0) {
-				printf("%5d: key=%i, time= %6.0f, len= %7d", !result ? input_num : -1,
+				printf("%5d: key=%i, time= %6.0f, len= %7d", !result ? (input_num+start_num) : -1,
 					key, (float) enctime, (int) m4v_size);
 				printf(" | type=%s, quant= %2d, len= %7d", type, stats_quant,
 				   stats_length);
@@ -1228,15 +1590,15 @@ main(int argc,
 				}
 				printf("\n");
 			} else {
-				if (input_num % ARG_PROGRESS == 1) {
-					if (ARG_MAXFRAMENR > 0) {
+				if ((input_num) % ARG_PROGRESS == 1) {
+					if (stop_num > 0) {
 						fprintf(stderr, "\r%7d frames(%3d%%) encoded, %6.2f fps, Average Bitrate = %5.0fkbps", \
-							input_num, input_num*100/ARG_MAXFRAMENR, input_num*1000/totalenctime, \
-							(((totalsize/1000)*ARG_FRAMERATE)*8)/input_num);
+							(ARG_NUM_APP_THREADS*input_num), (input_num)*100/(stop_num-start_num), (ARG_NUM_APP_THREADS*input_num)*1000/(totalenctime), \
+							((((totalsize)/1000)*ARG_FRAMERATE)*8)/(input_num));
 					} else {
 						fprintf(stderr, "\r%7d frames encoded, %6.2f fps, Average Bitrate = %5.0fkbps", \
-							input_num, input_num*1000/totalenctime, \
-							(((totalsize/1000)*ARG_FRAMERATE)*8)/input_num);
+							(ARG_NUM_APP_THREADS*input_num), (ARG_NUM_APP_THREADS*input_num)*1000/(totalenctime), \
+							((((totalsize)/1000)*ARG_FRAMERATE)*8)/(input_num));
 					}
 				}
 			}
@@ -1300,7 +1662,7 @@ main(int argc,
 					removedivxp((char*)mp4_buffer, m4v_size);
 
 				/* Save ES stream */
-				if (ARG_OUTPUTFILE && out_file && !(fakenvop && m4v_size <= 8)) {
+				if (outfilename && out_file && !(fakenvop && m4v_size <= 8)) {
 						fwrite(mp4_buffer, 1, m4v_size, out_file);
 				}
 #ifdef XVID_MKV_OUTPUT
@@ -1314,7 +1676,8 @@ main(int argc,
 				fakenvop=0;
 		}
 
-		input_num++;
+		if (!result)
+			(input_num)++;
 
 		/* Read the header if it's pgm stream */
 		if (!result && (ARG_INPUTTYPE==1))
@@ -1326,80 +1689,19 @@ main(int argc,
 	} while (1);
 
 
-
-/*****************************************************************************
- *         Calculate totals and averages for output, print results
- ****************************************************************************/
-
- printf("\n");
-	printf("Tot: enctime(ms) =%7.2f,               length(bytes) = %7d\n",
-		   totalenctime, (int) totalsize);
-
-	if (input_num > 0) {
-		totalsize /= input_num;
-		totalenctime /= input_num;
-		totalPSNR[0] /= input_num;
-		totalPSNR[1] /= input_num;
-		totalPSNR[2] /= input_num;
-	} else {
-		totalsize = -1;
-		totalenctime = -1;
-	}
-
-	printf("Avg: enctime(ms) =%7.2f, fps =%7.2f, length(bytes) = %7d",
-		   totalenctime, 1000 / totalenctime, (int) totalsize);
-   if (ARG_STATS) {
-       printf(", psnr y = %2.2f, psnr u = %2.2f, psnr v = %2.2f",
-    		  totalPSNR[0],totalPSNR[1],totalPSNR[2]);
-	}
-	printf("\n");
-	if (framestats[XVID_TYPE_IVOP].count) {
-		printf("I frames: %6d frames, size = %7d/%7d, quants = %2d / %.2f / %2d\n", \
-			framestats[XVID_TYPE_IVOP].count, framestats[XVID_TYPE_IVOP].size/framestats[XVID_TYPE_IVOP].count, \
-			framestats[XVID_TYPE_IVOP].size, minquant(framestats[XVID_TYPE_IVOP].quants), \
-			avgquant(framestats[XVID_TYPE_IVOP]), maxquant(framestats[XVID_TYPE_IVOP].quants));
-	}
-	if (framestats[XVID_TYPE_PVOP].count) {
-		printf("P frames: %6d frames, size = %7d/%7d, quants = %2d / %.2f / %2d\n", \
-			framestats[XVID_TYPE_PVOP].count, framestats[XVID_TYPE_PVOP].size/framestats[XVID_TYPE_PVOP].count, \
-			framestats[XVID_TYPE_PVOP].size, minquant(framestats[XVID_TYPE_PVOP].quants), \
-			avgquant(framestats[XVID_TYPE_PVOP]), maxquant(framestats[XVID_TYPE_PVOP].quants));
-	}
-	if (framestats[XVID_TYPE_BVOP].count) {
-		printf("B frames: %6d frames, size = %7d/%7d, quants = %2d / %.2f / %2d\n", \
-			framestats[XVID_TYPE_BVOP].count, framestats[XVID_TYPE_BVOP].size/framestats[XVID_TYPE_BVOP].count, \
-			framestats[XVID_TYPE_BVOP].size, minquant(framestats[XVID_TYPE_BVOP].quants), \
-			avgquant(framestats[XVID_TYPE_BVOP]), maxquant(framestats[XVID_TYPE_BVOP].quants));
-	}
-	if (framestats[XVID_TYPE_SVOP].count) {
-		printf("S frames: %6d frames, size = %7d/%7d, quants = %2d / %.2f / %2d\n", \
-			framestats[XVID_TYPE_SVOP].count, framestats[XVID_TYPE_SVOP].size/framestats[XVID_TYPE_SVOP].count, \
-			framestats[XVID_TYPE_SVOP].size, minquant(framestats[XVID_TYPE_SVOP].quants), \
-			avgquant(framestats[XVID_TYPE_SVOP]), maxquant(framestats[XVID_TYPE_SVOP].quants));
-	}
-	if (framestats[5].count) {
-		printf("N frames: %6d frames, size = %7d/%7d\n", \
-			framestats[5].count, framestats[5].size/framestats[5].count, \
-			framestats[5].size);
-	}
-
-
-/*****************************************************************************
- *                            XviD PART  Stop
- ****************************************************************************/
-
   release_all:
+
+  h->input_num = input_num;
+  h->totalenctime = totalenctime;
+  h->totalsize = totalsize;
 
 #ifdef XVID_AVI_INPUT
 	if (get_frame) AVIStreamGetFrameClose(get_frame);
-	if (avi_stream) AVIStreamRelease(avi_stream);
-#ifndef XVID_AVI_OUTPUT
-	AVIFileExit();
-#endif
+	if (avi_in_stream) AVIStreamRelease(avi_in_stream);
 #endif
 
 	if (enc_handle) {
-		result = enc_stop();
+		result = enc_stop(enc_handle);
 		if (result)
 			fprintf(stderr, "Encore RELEASE problem return value %d\n",
 					result);
@@ -1409,11 +1711,12 @@ main(int argc,
 		fclose(in_file);
 	if (out_file)
 		fclose(out_file);
+	if (time_file)
+		fclose(time_file);
 
 #ifdef XVID_AVI_OUTPUT
 	if (myAVIStream) AVIStreamRelease(myAVIStream);
 	if (myAVIFile) AVIFileRelease(myAVIFile);
-	AVIFileExit();
 #endif
 #ifdef XVID_MKV_OUTPUT
 	if (myMKVStream) MKVStreamRelease(myMKVStream);
@@ -1424,17 +1727,13 @@ main(int argc,
 	free(out_buffer);
 	free(mp4_buffer);
 	free(in_buffer);
-
-	return (0);
-
 }
-
 
 /*****************************************************************************
  *                        "statistical" functions
  *
  *  these are not needed for encoding or decoding, but for measuring
- *  time and quality, there in nothing specific to XviD in these
+ *  time and quality, there in nothing specific to Xvid in these
  *
  *****************************************************************************/
 
@@ -1616,7 +1915,7 @@ usage()
  *                       Input and output functions
  *
  *      the are small and simple routines to read and write PGM and YUV
- *      image. It's just for convenience, again nothing specific to XviD
+ *      image. It's just for convenience, again nothing specific to Xvid
  *
  *****************************************************************************/
 
@@ -1778,26 +2077,14 @@ rawenc_debug(void *handle,
 
 #define FRAMERATE_INCR 1001
 
-
-/* Initialize encoder for first use, pass all needed parameters to the codec */
-static int
-enc_init(int use_assembler)
+/* Gobal encoder init, once per process */
+void 
+enc_gbl(int use_assembler)
 {
-	int xerr;
-	//xvid_plugin_cbr_t cbr;
-    xvid_plugin_single_t single;
-	xvid_plugin_2pass1_t rc2pass1;
-	xvid_plugin_2pass2_t rc2pass2;
-	xvid_plugin_ssim_t ssim;
-        xvid_plugin_lumimasking_t masking;
-	//xvid_plugin_fixed_t rcfixed;
-	xvid_enc_plugin_t plugins[8];
 	xvid_gbl_init_t xvid_gbl_init;
-	xvid_enc_create_t xvid_enc_create;
-	int i;
 
 	/*------------------------------------------------------------------------
-	 * XviD core initialization
+	 * Xvid core initialization
 	 *----------------------------------------------------------------------*/
 
 	/* Set version -- version checking will done by xvidcore */
@@ -1818,12 +2105,30 @@ enc_init(int use_assembler)
 		xvid_gbl_init.cpu_flags = XVID_CPU_FORCE;
 	}
 
-	/* Initialize XviD core -- Should be done once per __process__ */
+	/* Initialize Xvid core -- Should be done once per __process__ */
 	xvid_global(NULL, XVID_GBL_INIT, &xvid_gbl_init, NULL);
+    ARG_CPU_FLAGS = xvid_gbl_init.cpu_flags;
 	enc_info();
+}
+
+/* Initialize encoder for first use, pass all needed parameters to the codec */
+static int
+enc_init(void **enc_handle, char *stats_pass1, int start_num)
+{
+	int xerr;
+	//xvid_plugin_cbr_t cbr;
+    xvid_plugin_single_t single;
+	xvid_plugin_2pass1_t rc2pass1;
+	xvid_plugin_2pass2_t rc2pass2;
+	xvid_plugin_ssim_t ssim;
+        xvid_plugin_lumimasking_t masking;
+	//xvid_plugin_fixed_t rcfixed;
+	xvid_enc_plugin_t plugins[8];
+	xvid_enc_create_t xvid_enc_create;
+	int i;
 
 	/*------------------------------------------------------------------------
-	 * XviD encoder initialization
+	 * Xvid encoder initialization
 	 *----------------------------------------------------------------------*/
 
 	/* Version again */
@@ -1886,10 +2191,10 @@ enc_init(int use_assembler)
 		xvid_enc_create.num_plugins++;
 	}
 
-	if (ARG_PASS1) {
+	if (stats_pass1) {
 		memset(&rc2pass1, 0, sizeof(xvid_plugin_2pass1_t));
 		rc2pass1.version = XVID_VERSION;
-		rc2pass1.filename = ARG_PASS1;
+		rc2pass1.filename = stats_pass1;
 		if (ARG_FULL1PASS)
 			prepare_full1pass_zones();
 		plugins[xvid_enc_create.num_plugins].func = xvid_plugin_2pass1;
@@ -1939,7 +2244,7 @@ enc_init(int use_assembler)
 			ssim.stat_path = ARG_SSIM_PATH;
 		}
 
-        ssim.cpu_flags = xvid_gbl_init.cpu_flags;
+        ssim.cpu_flags = ARG_CPU_FLAGS;
 		ssim.b_visualize = 0;
 		plugins[xvid_enc_create.num_plugins].param = &ssim;
 		xvid_enc_create.num_plugins++;
@@ -1981,6 +2286,9 @@ enc_init(int use_assembler)
 	/* Frame drop ratio */
 	xvid_enc_create.frame_drop_ratio = ARG_FRAMEDROP;
 
+	/* Start frame number */
+	xvid_enc_create.start_frame_num = start_num;
+
 	/* Global encoder options */
 	xvid_enc_create.global = 0;
 
@@ -1997,7 +2305,7 @@ enc_init(int use_assembler)
 	xerr = xvid_encore(NULL, XVID_ENC_CREATE, &xvid_enc_create, NULL);
 
 	/* Retrieve the encoder instance from the structure */
-	enc_handle = xvid_enc_create.handle;
+	*enc_handle = xvid_enc_create.handle;
 
 	free(xvid_enc_create.zones);
 
@@ -2040,14 +2348,13 @@ enc_info()
 		fprintf(stderr, "TSC ");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Detected %d cpus,", xvid_gbl_info.num_threads);
-	if (!ARG_THREADS)
-		ARG_THREADS = xvid_gbl_info.num_threads;
-	fprintf(stderr, " using %d threads.\n", ARG_THREADS);
+	ARG_NUM_APP_THREADS = xvid_gbl_info.num_threads;
+	fprintf(stderr, " using %d threads.\n", (!ARG_THREADS) ? ARG_NUM_APP_THREADS : ARG_THREADS);
 	return ret;
 }
 
 static int
-enc_stop()
+enc_stop(void *enc_handle)
 {
 	int xerr;
 
@@ -2058,7 +2365,8 @@ enc_stop()
 }
 
 static int
-enc_main(unsigned char *image,
+enc_main(void *enc_handle,
+		 unsigned char *image,
 		 unsigned char *bitstream,
 		 int *key,
 		 int *stats_type,

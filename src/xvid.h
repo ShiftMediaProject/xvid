@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * XVID MPEG-4 VIDEO CODEC
- * - XviD Main header file -
+ * - Xvid Main header file -
  *
  *  Copyright(C) 2001-2004 Peter Ross <pross@xvid.org>
  *
@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.65 2009-05-27 15:52:05 Isibaar Exp $
+ * $Id: xvid.h,v 1.66 2010-03-09 10:00:14 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -73,7 +73,7 @@ extern "C" {
  * doesnt hurt but not increasing it could cause difficulty for decoders in the
  * future
  */
-#define XVID_BS_VERSION 55 
+#define XVID_BS_VERSION 56 
 
 /*****************************************************************************
  * error codes
@@ -762,6 +762,9 @@ typedef struct {
 	/* ---------------------------------------------- */
 
 	void *handle;                /* [out] encoder instance handle */
+
+	/* ------- v1.3.x ------- */
+	int start_frame_num;         /* [in:opt] frame number of start frame relative to zones definitions. allows to encode sub-sequences */
 } xvid_enc_create_t;
 
 

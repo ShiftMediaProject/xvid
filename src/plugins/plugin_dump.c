@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  *  XVID MPEG-4 VIDEO CODEC
- *  - XviD plugin: dump pgm files of original and encoded frames  -
+ *  - Xvid plugin: dump pgm files of original and encoded frames  -
  *
  *  Copyright(C) 2003 Peter Ross <pross@xvid.org>
  *
@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: plugin_dump.c,v 1.3 2006-08-23 20:27:22 Skal Exp $
+ * $Id: plugin_dump.c,v 1.4 2010-03-09 10:00:14 Isibaar Exp $
  *
  ****************************************************************************/
 

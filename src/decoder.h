@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.h,v 1.18 2006-03-27 11:21:48 Skal Exp $
+ * $Id: decoder.h,v 1.19 2010-03-09 10:00:14 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -105,7 +105,7 @@ typedef struct
 	int newpred_enable;
 	int reduced_resolution_enable;
 
-	/* The bitstream version if it's a XviD stream */
+	/* The bitstream version if it's a Xvid stream */
 	int bs_version;
 
 	/* image */
