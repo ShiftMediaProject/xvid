@@ -22,7 +22,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.39 2010-03-09 10:00:22 Isibaar Exp $
+ * $Id: xvid_encraw.c,v 1.40 2010-03-09 14:56:02 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1037,7 +1037,7 @@ main(int argc,
 				sprintf(statsfilename[k], "%s.%03d", ARG_PASS1, k);
 				enc_data[k].statsfilename1 = statsfilename[k];
 			}
-			enc_data[k].start_num = (ARG_MAXFRAMENR-ARG_STARTFRAMENR)/ARG_NUM_APP_THREADS;
+			enc_data[k].start_num = k*((ARG_MAXFRAMENR-ARG_STARTFRAMENR)/ARG_NUM_APP_THREADS);
 			enc_data[k].stop_num = ((k+1)*(ARG_MAXFRAMENR-ARG_STARTFRAMENR))/ARG_NUM_APP_THREADS;
 		}
 
