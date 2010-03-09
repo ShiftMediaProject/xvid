@@ -20,7 +20,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.26 2010-01-08 10:03:09 Isibaar Exp $
+ * $Id: xvid_decraw.c,v 1.27 2010-03-09 09:20:05 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -66,6 +66,7 @@ static char *ARG_INPUTFILE = NULL;
 static int CSP = XVID_CSP_I420;
 static int BPP = 1;
 static int FORMAT = USE_PNM;
+static int POSTPROC = 0;
 
 static char filepath[256] = "./";
 static void *dec_handle = NULL;
@@ -122,7 +123,7 @@ int main(int argc, char *argv[])
 	long totalsize;
 	int status;
   
-	int use_assembler = 0;
+	int use_assembler = 1;
 	int debug_level = 0;
   
 	char filename[256];
@@ -132,7 +133,7 @@ int main(int argc, char *argv[])
 	int i;
 
 	printf("xvid_decraw - raw mpeg4 bitstream decoder ");
-	printf("written by Christoph Lampert 2002-2003\n\n");
+	printf("written by Christoph Lampert\n\n");
 
 /*****************************************************************************
  * Command line parsing
@@ -140,8 +141,8 @@ int main(int argc, char *argv[])
 
 	for (i=1; i< argc; i++) {
  
-		if (strcmp("-asm", argv[i]) == 0 ) {
-			use_assembler = 1;
+		if (strcmp("-noasm", argv[i]) == 0 ) {
+			use_assembler = 0;
 		} else if (strcmp("-debug", argv[i]) == 0 && i < argc - 1 ) {
 			i++;
 			if (sscanf(argv[i], "0x%x", &debug_level) != 1) {
@@ -172,6 +173,11 @@ int main(int argc, char *argv[])
 				CSP = XVID_CSP_I420;
 				BPP = 1;
 			}
+		} else if (strcmp("-postproc", argv[i]) == 0 && i < argc - 1 ) {
+			i++;
+			POSTPROC = atoi(argv[i]);
+			if (POSTPROC < 0) POSTPROC = 0;
+			if (POSTPROC > 2) POSTPROC = 2;
 		} else if (strcmp("-f", argv[i]) == 0 && i < argc -1) {
 			i++;
 			if (strcmp(argv[i], "tga") == 0) {
@@ -231,7 +237,7 @@ int main(int argc, char *argv[])
 		goto free_all_memory;	
     
 /*****************************************************************************
- *        XviD PART  Start
+ *        Xvid PART  Start
  ****************************************************************************/
 
 	status = dec_init(use_assembler, debug_level);
@@ -451,7 +457,7 @@ int main(int argc, char *argv[])
 	}
 		
 /*****************************************************************************
- *      XviD PART  Stop
+ *      Xvid PART  Stop
  ****************************************************************************/
 
  release_all:
@@ -477,12 +483,13 @@ static void usage()
 
 	fprintf(stderr, "Usage : xvid_decraw [OPTIONS]\n");
 	fprintf(stderr, "Options :\n");
-	fprintf(stderr, " -asm           : use assembly optimizations (default=disabled)\n");
+	fprintf(stderr, " -noasm         : don't use assembly optimizations (default=enabled)\n");
 	fprintf(stderr, " -debug         : debug level (debug=0)\n");
 	fprintf(stderr, " -i string      : input filename (default=stdin)\n");
 	fprintf(stderr, " -d             : save decoder output\n");
 	fprintf(stderr, " -c csp         : choose colorspace output (rgb16, rgb24, rgb32, yv12, i420)\n");
 	fprintf(stderr, " -f format      : choose output file format (tga, pnm, pgm, yuv)\n");
+	fprintf(stderr, " -postproc      : postprocessing level (0=off, 1=deblock, 2=deblock+dering)\n");
 	fprintf(stderr, " -m             : save mpeg4 raw stream to individual files\n");
 	fprintf(stderr, " -help          : This help message\n");
 	fprintf(stderr, " (* means default)\n");
@@ -707,7 +714,7 @@ dec_init(int use_assembler, int debug_level)
 	memset(&xvid_dec_create, 0, sizeof(xvid_dec_create_t));
 
 	/*------------------------------------------------------------------------
-	 * XviD core initialization
+	 * Xvid core initialization
 	 *----------------------------------------------------------------------*/
 
 	/* Version */
@@ -728,7 +735,7 @@ dec_init(int use_assembler, int debug_level)
 	xvid_global(NULL, 0, &xvid_gbl_init, NULL);
 
 	/*------------------------------------------------------------------------
-	 * XviD encoder initialization
+	 * Xvid decoder initialization
 	 *----------------------------------------------------------------------*/
 
 	/* Version */
@@ -769,7 +776,12 @@ dec_main(unsigned char *istream,
 	xvid_dec_stats->version = XVID_VERSION;
 
 	/* No general flags to set */
-	xvid_dec_frame.general          = 0;
+	if (POSTPROC == 1)
+		xvid_dec_frame.general          = XVID_DEBLOCKY | XVID_DEBLOCKUV;
+	else if (POSTPROC==2)
+		xvid_dec_frame.general          = XVID_DEBLOCKY | XVID_DEBLOCKUV | XVID_DERINGY | XVID_DERINGUV;
+	else
+		xvid_dec_frame.general          = 0;
 
 	/* Input stream */
 	xvid_dec_frame.bitstream        = istream;
