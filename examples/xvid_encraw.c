@@ -22,7 +22,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.40 2010-03-09 14:56:02 Isibaar Exp $
+ * $Id: xvid_encraw.c,v 1.41 2010-03-09 16:25:17 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -344,27 +344,6 @@ main(int argc,
 	int totalsize = 0;
 	int use_assembler = 1;
 	int i;
-
-#if defined(XVID_AVI_INPUT)
-	PAVIFILE avi_in = NULL;
-	PAVISTREAM avi_in_stream = NULL;
- 	PGETFRAME get_frame = NULL;
-#else
-#define get_frame NULL
-#endif
-#if defined(XVID_AVI_OUTPUT)
-	PAVIFILE myAVIFile = NULL;
-	PAVISTREAM myAVIStream = NULL;
-	BITMAPINFOHEADER myBitmapInfoHeader;
-#endif
-#if defined(XVID_AVI_INPUT) || defined(XVID_AVI_OUTPUT)
-	AVIFileInit();
-#endif
-#ifdef XVID_MKV_OUTPUT
-	PMKVFILE myMKVFile=NULL;
-	PMKVSTREAM myMKVStream=NULL;
-	MKVSTREAMINFO myMKVStreamInfo;
-#endif
 
 	printf("xvid_encraw - raw mpeg4 bitstream encoder ");
 	printf("written by Christoph Lampert\n\n");
@@ -834,14 +813,20 @@ main(int argc,
 	}
 
 	if (ARG_INPUTFILE != NULL) {
-#ifdef XVID_AVI_INPUT
+#if defined(XVID_AVI_INPUT)
       if (strcmp(ARG_INPUTFILE+(strlen(ARG_INPUTFILE)-3), "avs")==0 ||
           strcmp(ARG_INPUTFILE+(strlen(ARG_INPUTFILE)-3), "avi")==0 ||
 		  ARG_INPUTTYPE==2)
       {
+		  PAVIFILE avi_in = NULL;
+		  PAVISTREAM avi_in_stream = NULL;
+		  PGETFRAME get_frame = NULL;
+		  BITMAPINFOHEADER myBitmapInfoHeader;
 		  AVISTREAMINFO avi_info;
-
 		  FILE *avi_fp = fopen(ARG_INPUTFILE, "rb");
+
+		  AVIFileInit();
+
 		  if (avi_fp == NULL) {
 			  fprintf(stderr, "Couldn't open file '%s'!\n", ARG_INPUTFILE);
 			  return (-1);
@@ -934,6 +919,7 @@ main(int argc,
 
 	  	  if (get_frame) AVIStreamGetFrameClose(get_frame);
 		  if (avi_in_stream) AVIStreamRelease(avi_in_stream);
+		  AVIFileExit();
       }
       else
 #endif
@@ -1162,12 +1148,7 @@ main(int argc,
 
   release_all:
 
-#if defined(XVID_AVI_INPUT) || defined(XVID_AVI_OUTPUT)
-	AVIFileExit();
-#endif
-
 	return (0);
-
 }
 
 /*****************************************************************************
@@ -1210,19 +1191,29 @@ void encode_sequence(enc_sequence_data_t *h) {
 
 	char filename[256];
 
+#ifdef XVID_MKV_OUTPUT
+	PMKVFILE myMKVFile = NULL;
+	PMKVSTREAM myMKVStream = NULL;
+	MKVSTREAMINFO myMKVStreamInfo;
+#endif
 #if defined(XVID_AVI_INPUT)
 	PAVIFILE avi_in = NULL;
 	PAVISTREAM avi_in_stream = NULL;
  	PGETFRAME get_frame = NULL;
+	BITMAPINFOHEADER myBitmapInfoHeader;
 #else
 #define get_frame NULL
 #endif
 #if defined(XVID_AVI_OUTPUT)
 	int avierr;
-	PAVIFILE myAVIFile=NULL;
-	PAVISTREAM myAVIStream=NULL;
+	PAVIFILE myAVIFile = NULL;
+	PAVISTREAM myAVIStream = NULL;
 	AVISTREAMINFO myAVIStreamInfo;
-	BITMAPINFOHEADER myBitmapInfoHeader;
+#endif
+#if defined(XVID_AVI_INPUT) || defined(XVID_AVI_OUTPUT)
+	if (ARG_NUM_APP_THREADS > 1)
+		CoInitializeEx(0, COINIT_MULTITHREADED);
+	AVIFileInit();
 #endif
 
 	if (ARG_INPUTFILE == NULL || strcmp(ARG_INPUTFILE, "stdin") == 0) {
@@ -1235,9 +1226,6 @@ void encode_sequence(enc_sequence_data_t *h) {
       {
 		  AVISTREAMINFO avi_info;
 		  FILE *avi_fp = fopen(ARG_INPUTFILE, "rb");
-
-		  if (ARG_NUM_APP_THREADS > 1)
-			  CoInitializeEx(0, COINIT_MULTITHREADED);
 
 		  if (avi_fp == NULL) {
 			  fprintf(stderr, "Couldn't open file '%s'!\n", ARG_INPUTFILE);
@@ -1721,6 +1709,9 @@ void encode_sequence(enc_sequence_data_t *h) {
 #ifdef XVID_MKV_OUTPUT
 	if (myMKVStream) MKVStreamRelease(myMKVStream);
 	if (myMKVFile) MKVFileRelease(myMKVFile);
+#endif
+#if defined(XVID_AVI_INPUT) || defined(XVID_AVI_OUTPUT)
+	AVIFileExit();
 #endif
 
   free_all_memory:
