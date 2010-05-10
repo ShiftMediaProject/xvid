@@ -1036,11 +1036,11 @@ LRESULT decompress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpb
 	RegOpenKeyEx(XVID_REG_KEY, XVID_REG_PARENT "\\" XVID_REG_CHILD, 0, KEY_READ, &hKey);
 
 	REG_GET_N("Brightness", pp_brightness, 0);
-	REG_GET_N("Deblock_Y",  pp_dy, 0)
-	REG_GET_N("Deblock_UV", pp_duv, 0)
-	REG_GET_N("Dering_Y",  pp_dry, 0)
-	REG_GET_N("Dering_UV", pp_druv, 0)
-	REG_GET_N("FilmEffect", pp_fe, 0)
+	REG_GET_N("Deblock_Y",  pp_dy, 0);
+	REG_GET_N("Deblock_UV", pp_duv, 0);
+	REG_GET_N("Dering_Y",  pp_dry, 0);
+	REG_GET_N("Dering_UV", pp_druv, 0);
+	REG_GET_N("FilmEffect", pp_fe, 0);
 
 	RegCloseKey(hKey);
 
