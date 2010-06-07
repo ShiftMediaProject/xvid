@@ -16,7 +16,7 @@ API_MAJOR="4"
 API_MINOR="3"
 
 dnl NASM/YASM version requirement
-minimum_yasm_minor_version=8
+minimum_yasm_major_version=1
 minimum_nasm_minor_version=0
 minimum_nasm_major_version=2
 nasm_prog="nasm"
@@ -355,15 +355,15 @@ if test "$ARCHITECTURE" = "IA32" -o "$ARCHITECTURE" = "X86_64" ; then
        dnl Checking yasm version
        dnl
        AC_MSG_CHECKING([for yasm version])
-       yasm_minor=`$yasm_prog --version | cut -d '.' -f 2 | cut -d ' ' -f 1`
-       if test -z $yasm_minor ; then
-          yasm_minor=-1
+       yasm_major=`$yasm_prog --version | head -1 | cut -d '.' -f 1 | cut -d ' ' -f 2`
+       if test -z $yasm_major ; then
+          yasm_major=-1
        fi
-       AC_MSG_RESULT([$yasm_minor])
+       AC_MSG_RESULT([$yasm_major])
 
        dnl Actually, yasm >= 0.7.99.2161 should be ok
        dnl But I'm too lazy to check also the patch version...
-       if test "$yasm_minor" -lt "$minimum_yasm_minor_version" ; then
+       if test "$yasm_major" -lt "$minimum_yasm_major_version" ; then
          AC_MSG_WARN([yasm version is too old])
        else
          found_nasm_comp_prog="yes"
