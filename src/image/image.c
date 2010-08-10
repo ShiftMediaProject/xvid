@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.c,v 1.44 2009-03-30 14:40:05 Isibaar Exp $
+ * $Id: image.c,v 1.45 2010-08-10 15:00:12 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -149,7 +149,7 @@ image_setedges(IMAGE * image,
 
 	/* According to the Standard Clause 7.6.4, padding is done starting at 16
 	 * pixel width and height multiples. This was not respected in old xvids */
-	if (bs_version == 0 || bs_version >= SETEDGES_BUG_BEFORE) {
+	if (bs_version >= SETEDGES_BUG_BEFORE) {
 		width  = (width+15)&~15;
 		height = (height+15)&~15;
 	}

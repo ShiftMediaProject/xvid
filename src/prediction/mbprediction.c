@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbprediction.c,v 1.18 2005-11-22 10:23:01 suxen_drol Exp $
+ * $Id: mbprediction.c,v 1.19 2010-08-10 15:00:21 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -226,7 +226,7 @@ add_acdc(MACROBLOCK * pMB,
 
 	dct_codes[0] += predictors[0];	/* dc prediction */
 	pCurrent[0] = dct_codes[0]*iDcScaler;
-	if (!bsversion || bsversion > BS_VERSION_BUGGY_DC_CLIPPING) {
+	if (bsversion > BS_VERSION_BUGGY_DC_CLIPPING) {
 		pCurrent[0] = CLIP(pCurrent[0], -2048, 2047);
 	}
 
