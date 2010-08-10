@@ -999,6 +999,7 @@ LRESULT decompress_get_format(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO 
 
 LRESULT decompress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiOutput)
 {
+	BITMAPINFOHEADER * inhdr = &lpbiInput->bmiHeader;
 	xvid_gbl_init_t init;
 	xvid_dec_create_t create;
 	HKEY hKey;
@@ -1008,13 +1009,14 @@ LRESULT decompress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpb
 	memset(&init, 0, sizeof(init));
 	init.version = XVID_VERSION;
 	init.cpu_flags = codec->config.cpu;
-  init.debug = codec->config.debug;
+	init.debug = codec->config.debug;
 	codec->xvid_global_func(0, XVID_GBL_INIT, &init, NULL);
 
 	memset(&create, 0, sizeof(create));
 	create.version = XVID_VERSION;
 	create.width = lpbiInput->bmiHeader.biWidth;
 	create.height = lpbiInput->bmiHeader.biHeight;
+	create.fourcc = inhdr->biCompression;
 
 	switch(codec->xvid_decore_func(0, XVID_DEC_CREATE, &create, NULL)) 
 	{
