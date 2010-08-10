@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.82 2010-08-10 14:17:23 Isibaar Exp $
+ * $Id: decoder.c,v 1.83 2010-08-10 15:00:34 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -199,7 +199,7 @@ decoder_create(xvid_dec_create_t * create)
 
   if (create->fourcc == ((int)('X')|((int)('V')<<8)| 
                          ((int)('I')<<16)|((int)('D')<<24))) { /* XVID */
-    dec->bs_version = 1; /* Initially assume oldest xvid version */ 
+    dec->bs_version = 0; /* Initially assume oldest xvid version */ 
   }
   else {
 	dec->bs_version = 0xffff; /* Initialize to very high value -> assume bugfree stream */

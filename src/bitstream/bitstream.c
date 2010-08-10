@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.c,v 1.58 2007-07-24 09:43:10 Isibaar Exp $
+ * $Id: bitstream.c,v 1.59 2010-08-10 15:00:06 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1022,6 +1022,11 @@ BitstreamReadHeaders(Bitstream * bs,
 				dec->packed_mode = (i == 3 && packed == 'p');
 				DPRINTF(XVID_DEBUG_HEADER, "divx version=%i, build=%i packed=%i\n",
 						version, build, dec->packed_mode);
+			}
+
+			if ((dec->bs_version == 0) && (build > 0) &&
+				(build != 1393)) { /* non-xvid stream with xvid fourcc */
+				dec->bs_version = 0xffff;
 			}
 
 		} else					/* start_code == ? */
