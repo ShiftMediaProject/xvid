@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.66 2010-03-09 10:00:14 Isibaar Exp $
+ * $Id: xvid.h,v 1.67 2010-08-10 14:17:23 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -73,7 +73,7 @@ extern "C" {
  * doesnt hurt but not increasing it could cause difficulty for decoders in the
  * future
  */
-#define XVID_BS_VERSION 56 
+#define XVID_BS_VERSION 57 
 
 /*****************************************************************************
  * error codes
@@ -236,13 +236,14 @@ extern int xvid_global(void *handle, int opt, void *param1, void *param2);
 extern int xvid_decore(void *handle, int opt, void *param1, void *param2);
 
 /* XVID_DEC_CREATE param 1
-	image width & height may be specified here when the dimensions are
-	known in advance. */
+	image width & height as well as FourCC code may be specified 
+	here when known in advance (e.g. being read from container) */
 typedef struct {
 	int version;
-	int width;     /* [in:opt] image width */
-	int height;    /* [in:opt] image width */
-	void * handle; /* [out]	   decore context handle */
+	int width;      /* [in:opt] image width */
+	int height;     /* [in:opt] image width */
+	void * handle;  /* [out]    decore context handle */
+	int fourcc;     /* [in:opt] fourcc of the video */
 } xvid_dec_create_t;
 
 
