@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.67 2010-08-10 14:17:23 Isibaar Exp $
+ * $Id: xvid.h,v 1.68 2010-09-13 07:38:09 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -129,6 +129,9 @@ typedef struct {
 #define XVID_PROFILE_S_L1    0x01
 #define XVID_PROFILE_S_L2    0x02
 #define XVID_PROFILE_S_L3    0x03
+#define XVID_PROFILE_S_L4a   0x04
+#define XVID_PROFILE_S_L5    0x05
+#define XVID_PROFILE_S_L6    0x06
 #define XVID_PROFILE_ARTS_L1 0x91 /* advanced realtime simple */
 #define XVID_PROFILE_ARTS_L2 0x92
 #define XVID_PROFILE_ARTS_L3 0x93

@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.h,v 1.32 2006-07-10 08:09:59 syskin Exp $
+ * $Id: encoder.h,v 1.33 2010-09-13 07:38:09 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -99,7 +99,6 @@ typedef struct
 	uint32_t last_quant_initialized_intra; /* needed for mpeg matrices initialization */
 } MBParam;
 
-
 typedef struct
 {
 	int iTextBits;
@@ -112,7 +111,6 @@ typedef struct
 	int iMVBits;
 } Statistics;
 
-
 /* encoding queue */
 typedef struct
 {
@@ -121,7 +119,6 @@ typedef struct
 	unsigned char quant_inter_matrix[64];
 	IMAGE image;
 } QUEUEINFO;
-
 
 typedef struct
 {
@@ -154,7 +151,6 @@ typedef struct
 	Statistics sStat;
 	int is_edged, is_interpolated;
 } FRAMEINFO;
-
 
 #include "motion/motion_smp.h"
 
@@ -256,7 +252,6 @@ get_fcode(uint16_t sr)
 	else
 		return 0;
 }
-
 
 /*****************************************************************************
  * Prototypes

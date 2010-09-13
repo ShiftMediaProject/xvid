@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: global.h,v 1.25 2005-12-09 04:45:35 syskin Exp $
+ * $Id: global.h,v 1.26 2010-09-13 07:38:09 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -48,7 +48,6 @@
 #define MODE_DIRECT_NONE_MV	4
 #define MODE_DIRECT_NO4V	5
 
-
 /*
  * vop coding types
  * intra, prediction, backward, sprite, not_coded
@@ -73,15 +72,12 @@ type2coding(int xvid_type)
 	return xvid_type - 1;
 }
 
-
 typedef struct
 {
 	int x;
 	int y;
 }
 VECTOR;
-
-
 
 typedef struct
 {
@@ -168,7 +164,6 @@ typedef struct
 }
 IMAGE;
 
-
 typedef struct
 {
 	uint32_t bufa;
@@ -182,9 +177,7 @@ typedef struct
 }
 Bitstream;
 
-
 #define MBPRED_SIZE  15
-
 
 typedef struct
 {
