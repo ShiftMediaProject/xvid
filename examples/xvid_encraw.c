@@ -22,7 +22,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.42 2010-04-01 12:16:48 Isibaar Exp $
+ * $Id: xvid_encraw.c,v 1.43 2010-10-10 19:20:03 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -189,6 +189,7 @@ static 	int ARG_NUM_APP_THREADS = 1;
 static 	int ARG_CPU_FLAGS = 0;
 static 	int ARG_STATS = 0;
 static 	int ARG_SSIM = -1;
+static 	int ARG_PSNRHVSM = 0;
 static 	char* ARG_SSIM_PATH = NULL;
 static 	int ARG_DUMP = 0;
 static 	int ARG_LUMIMASKING = 0;
@@ -388,8 +389,8 @@ main(int argc,
 				ARG_BITRATE = atoi(argv[i+1]);
 			if (ARG_BITRATE) {
 				i++;
-				if (ARG_BITRATE <= 10000)
-					/* if given parameter is <= 10000, assume it means kbps */
+				if (ARG_BITRATE <= 20000)
+					/* if given parameter is <= 20000, assume it means kbps */
 					ARG_BITRATE *= 1000;
 			}
 			else
@@ -578,6 +579,8 @@ main(int argc,
 				i++;
 				ARG_SSIM = atoi(argv[i]);
 			}
+		} else if (strcmp("-psnrhvsm", argv[i]) == 0) {
+			ARG_PSNRHVSM = 1;
 		} else if (strcmp("-ssim_file", argv[i]) == 0 && i < argc -1) {
 			i++;
 			ARG_SSIM_PATH = argv[i];
@@ -1876,6 +1879,7 @@ usage()
 	fprintf(stderr, " -stats                         : print stats about encoded frames\n");
 	fprintf(stderr, " -ssim [integer]                : prints ssim for every frame (accurate: 0 fast: 4) (2)\n");
 	fprintf(stderr, " -ssim_file filename            : outputs the ssim stats into a file\n");
+	fprintf(stderr, " -psnrhvsm                      : prints psnr-hvs-m metric for every frame\n");
 	fprintf(stderr, " -debug                         : activates xvidcore internal debugging output\n");
 	fprintf(stderr, " -vop_debug                     : print some info directly into encoded frames\n");
 	fprintf(stderr, " -nochromame                    : Disable chroma motion estimation\n");
@@ -2112,7 +2116,7 @@ enc_init(void **enc_handle, char *stats_pass1, int start_num)
 	xvid_plugin_2pass1_t rc2pass1;
 	xvid_plugin_2pass2_t rc2pass2;
 	xvid_plugin_ssim_t ssim;
-        xvid_plugin_lumimasking_t masking;
+    xvid_plugin_lumimasking_t masking;
 	//xvid_plugin_fixed_t rcfixed;
 	xvid_enc_plugin_t plugins[8];
 	xvid_enc_create_t xvid_enc_create;
@@ -2238,6 +2242,12 @@ enc_init(void **enc_handle, char *stats_pass1, int start_num)
         ssim.cpu_flags = ARG_CPU_FLAGS;
 		ssim.b_visualize = 0;
 		plugins[xvid_enc_create.num_plugins].param = &ssim;
+		xvid_enc_create.num_plugins++;
+	}
+
+	if (ARG_PSNRHVSM>0) {
+        plugins[xvid_enc_create.num_plugins].func = xvid_plugin_psnrhvsm;
+		plugins[xvid_enc_create.num_plugins].param = NULL;
 		xvid_enc_create.num_plugins++;
 	}
 
