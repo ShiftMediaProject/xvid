@@ -3,7 +3,7 @@
  * XVID MPEG-4 VIDEO CODEC
  * - Xvid Main header file -
  *
- *  Copyright(C) 2001-2004 Peter Ross <pross@xvid.org>
+ *  Copyright(C) 2001-2010 Peter Ross <pross@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.68 2010-09-13 07:38:09 Isibaar Exp $
+ * $Id: xvid.h,v 1.69 2010-10-10 19:19:55 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -492,7 +492,8 @@ extern xvid_plugin_func xvid_plugin_lumimasking;  /* lumimasking */
 extern xvid_plugin_func xvid_plugin_psnr;	/* write psnr values to stdout */
 extern xvid_plugin_func xvid_plugin_dump;	/* dump before and after yuvpgms */
 
-extern xvid_plugin_func xvid_plugin_ssim;	/*write ssim values to stdout*/
+extern xvid_plugin_func xvid_plugin_ssim;	    /*write ssim values to stdout*/
+extern xvid_plugin_func xvid_plugin_psnrhvsm;	/*write psnrhvsm values to stdout*/
 
 
 /* single pass rate control

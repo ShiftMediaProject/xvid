@@ -3455,6 +3455,10 @@
 					/>
 				</FileConfiguration>
 			</File>
+ 			<File
+				RelativePath="..\..\src\plugins\plugin_psnrhvsm.c"
+			>
+			</File>
 			<File
 				RelativePath="..\..\src\plugins\plugin_psnr.c"
 				>
