@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Configure from command line  -
  *
- *  Copyright(C) 2002-2004 Peter Ross <pross@xvid.org>
+ *  Copyright(C) 2002-2010 Peter Ross <pross@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: Configure.cpp,v 1.6 2008-11-30 16:36:44 Isibaar Exp $
+ * $Id: Configure.cpp,v 1.7 2010-10-16 12:20:30 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -30,7 +30,7 @@
 #include "resource.h"
 
 
-static HINSTANCE g_xvid_hInst;
+HINSTANCE g_xvid_hInst;
 
 
 INT_PTR adv_dialog(HWND hwndOwner)

@@ -693,6 +693,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\src\xvid.ico"
+				>
+			</File>
+			<File
 				RelativePath="src\XviD_logo.bmp"
 				>
 			</File>
