@@ -1,9 +1,10 @@
 /*****************************************************************************
  *
  *  XVID MPEG-4 VIDEO CODEC
- *  - XviD Decoder part of the DShow Filter  -
+ *  - Xvid Decoder part of the DShow Filter  -
  *
- *  Copyright(C) 2002-2004 Peter Ross <pross@xvid.org>
+ *  Copyright(C) 2002-2010 Peter Ross <pross@xvid.org>
+ *               2003-2010 Michael Militzer <michael@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.cpp,v 1.18 2010-08-10 14:17:40 Isibaar Exp $
+ * $Id: CXvidDecoder.cpp,v 1.19 2010-10-16 12:20:30 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -43,7 +44,7 @@
 	C:\DX90SDK\Samples\C++\DirectShow\BaseClasses\Debug
 */
 
-
+//#define XVID_USE_TRAYICON
 
 #include <windows.h>
 
@@ -55,7 +56,11 @@
 #endif
 #include <dvdmedia.h>	// VIDEOINFOHEADER2
 
-#include <xvid.h>		// XviD API
+#include <shellapi.h>
+
+#include <xvid.h>		// Xvid API
+
+#include "resource.h"
 
 #include "IXvidDecoder.h"
 #include "CXvidDecoder.h"
@@ -149,10 +154,41 @@ CFactoryTemplate g_Templates[] =
 
 };
 
-
 /* note: g_cTemplates must be global; used by strmbase.lib(dllentry.cpp,dllsetup.cpp) */
 int g_cTemplates = sizeof(g_Templates) / sizeof(CFactoryTemplate);
 
+#ifdef XVID_USE_TRAYICON
+extern HINSTANCE g_xvid_hInst;
+
+static int GUI_Page = 0;
+extern "C" void CALLBACK Configure(HWND hWndParent, HINSTANCE hInstParent, LPSTR lpCmdLine, int nCmdShow );
+
+LRESULT CALLBACK msg_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch ( uMsg )
+	{
+	case WM_ICONMESSAGE:
+		switch(lParam)
+		{
+		case WM_LBUTTONDBLCLK:
+			if (!GUI_Page) {
+				GUI_Page = 1;
+				Configure(hwnd, g_xvid_hInst, "", 1);
+				GUI_Page = 0;
+			}
+			break;
+		default:
+			return DefWindowProc(hwnd, uMsg, wParam, lParam);
+		};
+		break;
+	
+	default:
+		return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	}
+	
+	return TRUE; /* ok */
+}
+#endif
 
 STDAPI DllRegisterServer()
 {
@@ -211,6 +247,10 @@ CXvidDecoder::CXvidDecoder(LPUNKNOWN punk, HRESULT *phr) :
 
     xvid_decore_func = NULL; // Hmm, some strange errors appearing if I try to initialize...
     xvid_global_func = NULL; // ...this in constructor's init-list. So, they assigned here.
+
+#ifdef XVID_USE_TRAYICON
+	MSG_hwnd = NULL;
+#endif
 
     LoadRegistryInfo();
 
@@ -353,6 +393,20 @@ CXvidDecoder::~CXvidDecoder()
 {
     DPRINTF("Destructor");
 	CloseLib();
+
+#ifdef XVID_USE_TRAYICON
+	if (MSG_hwnd != NULL) {
+		NOTIFYICONDATA nid;
+		nid.cbSize = sizeof(NOTIFYICONDATA);
+		nid.hWnd = MSG_hwnd;
+		nid.uID = 100;
+	
+		Shell_NotifyIcon(NIM_DELETE, &nid); 
+
+		DestroyWindow(MSG_hwnd);
+		MSG_hwnd = NULL;
+	}
+#endif
 }
 
 
@@ -742,9 +796,80 @@ HRESULT CXvidDecoder::SetMediaType(PIN_DIRECTION direction, const CMediaType *pm
 HRESULT CXvidDecoder::CheckTransform(const CMediaType *mtIn, const CMediaType *mtOut)
 {
 	DPRINTF("CheckTransform");
+
 	return S_OK;
 }
 
+/* input/output pin connection complete */
+
+HRESULT CXvidDecoder::CompleteConnect(PIN_DIRECTION direction, IPin *pReceivePin)
+{
+	DPRINTF("CompleteConnect");
+
+#ifdef XVID_USE_TRAYICON
+	if ((direction == PINDIR_OUTPUT) && (MSG_hwnd == NULL)) 
+	{
+		WNDCLASSEX wc; 
+
+		wc.cbSize = sizeof(WNDCLASSEX);
+		wc.lpfnWndProc = msg_proc;
+		wc.style = CS_HREDRAW | CS_VREDRAW;
+		wc.cbWndExtra = 0;
+		wc.cbClsExtra = 0;
+		wc.hInstance = (HINSTANCE) g_xvid_hInst;
+		wc.hbrBackground = (HBRUSH) GetStockObject(NULL_BRUSH);
+		wc.lpszMenuName = NULL;
+		wc.lpszClassName = "XVID_MSG_WINDOW";
+		wc.hIcon = NULL;
+		wc.hIconSm = NULL;
+		wc.hCursor = NULL;
+		RegisterClassEx(&wc);
+
+		MSG_hwnd = CreateWindowEx(0, "XVID_MSG_WINDOW", NULL, 0, CW_USEDEFAULT, 
+                                  CW_USEDEFAULT, 0, 0, HWND_MESSAGE, NULL, (HINSTANCE) g_xvid_hInst, NULL);
+
+		/* display the tray icon */
+		NOTIFYICONDATA nid;    
+	
+		nid.cbSize = sizeof(NOTIFYICONDATA);  
+		nid.hWnd = MSG_hwnd;  
+		nid.uID = 100;  
+		nid.uVersion = NOTIFYICON_VERSION;  
+		nid.uCallbackMessage = WM_ICONMESSAGE;  
+		nid.hIcon = LoadIcon(g_xvid_hInst, MAKEINTRESOURCE(IDI_ICON));  
+		strcpy_s(nid.szTip, 19, "Xvid Video Decoder");  
+		nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
+	
+		Shell_NotifyIcon(NIM_ADD, &nid); 
+	}
+#endif
+
+	return S_OK;
+}
+
+/* input/output pin disconnected */
+HRESULT CXvidDecoder::BreakConnect(PIN_DIRECTION direction)
+{
+	DPRINTF("BreakConnect");
+
+#ifdef XVID_USE_TRAYICON
+	if ((direction == PINDIR_OUTPUT) && (MSG_hwnd != NULL)) {
+		NOTIFYICONDATA nid;
+
+		nid.cbSize = sizeof(NOTIFYICONDATA);
+		nid.hWnd = MSG_hwnd;
+		nid.uID = 100;
+		nid.uVersion = NOTIFYICON_VERSION;  
+	
+		if(Shell_NotifyIcon(NIM_DELETE, &nid) == TRUE) {
+			DestroyWindow(MSG_hwnd);
+			MSG_hwnd = NULL;
+		}
+	}
+#endif
+
+	return S_OK;
+}
 
 /* alloc output buffer */
 

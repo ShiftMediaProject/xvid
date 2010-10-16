@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - XviD Decoder part of the DShow Filter  -
  *
- *  Copyright(C) 2002-2003 Peter Ross <pross@xvid.org>
+ *  Copyright(C) 2002-2010 Peter Ross <pross@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.h,v 1.7 2008-11-26 10:11:31 Isibaar Exp $
+ * $Id: CXvidDecoder.h,v 1.8 2010-10-16 12:20:30 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -68,6 +68,9 @@ public :
 	CXvidDecoder(LPUNKNOWN punk, HRESULT *phr);
 	~CXvidDecoder();
 
+	HRESULT CompleteConnect(PIN_DIRECTION direction, IPin *pReceivePin);
+	HRESULT BreakConnect(PIN_DIRECTION dir);
+
 	HRESULT CheckInputType(const CMediaType * mtIn);
 	HRESULT GetMediaType(int iPos, CMediaType * pmt);
 	HRESULT SetMediaType(PIN_DIRECTION direction, const CMediaType *pmt);
@@ -96,8 +99,13 @@ private :
 	bool forced_ar;
 
 	int rgb_flip;
-
+#ifdef XVID_USE_TRAYICON
+	HWND MSG_hwnd; /* message handler window */
 };
+#define WM_ICONMESSAGE (WM_USER + 1)
+#else
+};
+#endif
 
 static const int PARS[][2] = {
 	{1, 1},
@@ -107,6 +115,5 @@ static const int PARS[][2] = {
 	{40, 33},
 	{0, 0},
 };
-
 
 #endif /* _FILTER_H_ */

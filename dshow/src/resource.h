@@ -9,6 +9,7 @@
 #define VERSION_RES_MAJOR_VER           8
 #define IDD_ABOUT                       102
 #define IDB_LOGO                        103
+#define IDI_ICON                        104
 #define IDC_BRIGHTNESS                  1002
 #define IDC_DEBLOCK_UV                  1003
 #define IDC_DEBLOCK_Y                   1004
@@ -32,7 +33,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        105
+#define _APS_NEXT_RESOURCE_VALUE        106
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1016
 #define _APS_NEXT_SYMED_VALUE           101
