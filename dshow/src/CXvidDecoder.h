@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.h,v 1.8 2010-10-16 12:20:30 Isibaar Exp $
+ * $Id: CXvidDecoder.h,v 1.9 2010-10-17 18:31:46 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -28,7 +28,6 @@
 
 #include <xvid.h>
 #include "IXvidDecoder.h"
-
 
 #define XVID_NAME_L		L"Xvid MPEG-4 Video Decoder"
 
@@ -56,7 +55,13 @@ DEFINE_GUID(CLSID_MP4V_UC,		mmioFOURCC('M','P','4','V'), 0x0000, 0x0010, 0x80, 0
 DEFINE_GUID(CLSID_MEDIASUBTYPE_IYUV, 0x56555949, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
 
 
-class CXvidDecoder : public CVideoTransformFilter, public IXvidDecoder, public ISpecifyPropertyPages
+class CXvidDecoder : 
+	public CVideoTransformFilter, 
+	public IXvidDecoder, 
+	public ISpecifyPropertyPages
+#if defined(XVID_USE_MFT)
+    ,public IMFTransform
+#endif
 {
 
 public :
@@ -83,6 +88,34 @@ public :
 	STDMETHODIMP GetPages(CAUUID * pPages);
 	STDMETHODIMP FreePages(CAUUID * pPages);
 
+  /* IMFTransform */
+#if defined(XVID_USE_MFT) 
+	STDMETHODIMP MFTGetStreamLimits(DWORD *pdwInputMinimum, DWORD *pdwInputMaximum, DWORD *pdwOutputMinimum, DWORD *pdwOutputMaximum);
+	STDMETHODIMP MFTGetStreamCount(DWORD *pcInputStreams, DWORD *pcOutputStreams);
+	STDMETHODIMP MFTGetStreamIDs(DWORD dwInputIDArraySize, DWORD *pdwInputIDs, DWORD dwOutputIDArraySize, DWORD *pdwOutputIDs);
+	STDMETHODIMP MFTGetInputStreamInfo(DWORD dwInputStreamID, MFT_INPUT_STREAM_INFO *pStreamInfo);
+	STDMETHODIMP MFTGetOutputStreamInfo(DWORD dwOutputStreamID, MFT_OUTPUT_STREAM_INFO *pStreamInfo);
+	STDMETHODIMP GetAttributes(IMFAttributes** pAttributes);
+	STDMETHODIMP GetInputStreamAttributes(DWORD dwInputStreamID, IMFAttributes **ppAttributes);
+	STDMETHODIMP GetOutputStreamAttributes(DWORD dwOutputStreamID, IMFAttributes **ppAttributes);
+	STDMETHODIMP MFTDeleteInputStream(DWORD dwStreamID);
+	STDMETHODIMP MFTAddInputStreams(DWORD cStreams, DWORD *adwStreamIDs);
+	STDMETHODIMP MFTGetInputAvailableType(DWORD dwInputStreamID, DWORD dwTypeIndex, IMFMediaType **ppType);
+	STDMETHODIMP MFTGetOutputAvailableType(DWORD dwOutputStreamID, DWORD dwTypeIndex, IMFMediaType **ppType);
+	STDMETHODIMP MFTSetInputType(DWORD dwInputStreamID, IMFMediaType *pType, DWORD dwFlags);
+	STDMETHODIMP MFTSetOutputType(DWORD dwOutputStreamID, IMFMediaType *pType, DWORD dwFlags);
+	STDMETHODIMP MFTGetInputCurrentType(DWORD dwInputStreamID, IMFMediaType **ppType);
+	STDMETHODIMP MFTGetOutputCurrentType(DWORD dwOutputStreamID, IMFMediaType **ppType);
+	STDMETHODIMP MFTGetInputStatus(DWORD dwInputStreamID, DWORD *pdwFlags);
+	STDMETHODIMP MFTGetOutputStatus(DWORD *pdwFlags);
+	STDMETHODIMP MFTSetOutputBounds(LONGLONG hnsLowerBound, LONGLONG hnsUpperBound);
+	STDMETHODIMP MFTProcessEvent(DWORD dwInputStreamID, IMFMediaEvent *pEvent);
+	STDMETHODIMP MFTProcessMessage(MFT_MESSAGE_TYPE eMessage, ULONG_PTR ulParam);
+
+	STDMETHODIMP MFTProcessInput(DWORD dwInputStreamID, IMFSample *pSample, DWORD dwFlags);
+	STDMETHODIMP MFTProcessOutput(DWORD dwFlags, DWORD cOutputBufferCount, MFT_OUTPUT_DATA_BUFFER *pOutputSamples, DWORD *pdwStatus);
+#endif  /* XVID_USE_MFT */
+
 private :
 
 	HRESULT ChangeColorspace(GUID subtype, GUID formattype, void * format);
@@ -99,6 +132,32 @@ private :
 	bool forced_ar;
 
 	int rgb_flip;
+	int out_stride;
+
+	/* mft stuff */
+#if defined(XVID_USE_MFT)
+	BOOL HasPendingOutput() const { return m_frame.output.plane[1] != NULL; }
+
+	HRESULT OnSetInputType(IMFMediaType *pmt);
+	HRESULT OnCheckInputType(IMFMediaType *pmt);
+
+	HRESULT OnSetOutputType(IMFMediaType *pmt);
+
+	IMFMediaType *m_pInputType;
+	IMFMediaType *m_pOutputType;
+
+	CRITICAL_SECTION m_mft_lock;
+	REFERENCE_TIME m_timestamp;
+	REFERENCE_TIME m_timelength;
+
+	int m_discont;
+
+	/* Used to construct or interpolate missing timestamps */
+	REFERENCE_TIME m_rtFrame;
+	MFRatio m_frameRate;
+	UINT64 m_duration;
+#endif
+
 #ifdef XVID_USE_TRAYICON
 	HWND MSG_hwnd; /* message handler window */
 };
