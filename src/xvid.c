@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.83 2010-03-09 10:00:14 Isibaar Exp $
+ * $Id: xvid.c,v 1.84 2010-10-17 17:46:43 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -763,6 +763,15 @@ xvid_gbl_convert(xvid_gbl_convert_t* convert)
 			img.v = (uint8_t*)convert->input.plane[0] + convert->input.stride[0]*height;
 			img.u = (uint8_t*)convert->input.plane[0] + convert->input.stride[0]*height + (convert->input.stride[0]/2)*height2;
 			image_output(&img, width, height, width,
+						(uint8_t**)convert->output.plane, convert->output.stride,
+						convert->output.csp, convert->interlacing);
+			break;
+		
+		case XVID_CSP_INTERNAL :
+			img.y = (uint8_t*)convert->input.plane[0];
+			img.u = (uint8_t*)convert->input.plane[1];
+			img.v = (uint8_t*)convert->input.plane[2];
+			image_output(&img, width, height, convert->input.stride[0],
 						(uint8_t**)convert->output.plane, convert->output.stride,
 						convert->output.csp, convert->interlacing);
 			break;
