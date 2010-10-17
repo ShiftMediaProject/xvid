@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.cpp,v 1.20 2010-10-17 18:31:46 Isibaar Exp $
+ * $Id: CXvidDecoder.cpp,v 1.21 2010-10-17 18:36:12 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -44,8 +44,8 @@
 	C:\DX90SDK\Samples\C++\DirectShow\BaseClasses\Debug
 */
 
-//#define XVID_USE_MFT
-//#define XVID_USE_TRAYICON
+#define XVID_USE_MFT
+#define XVID_USE_TRAYICON
 
 #include <windows.h>
 
@@ -1553,7 +1553,7 @@ HRESULT CXvidDecoder::MFTSetOutputType(DWORD dwOutputStreamID, IMFMediaType *pTy
 	
 	EnterCriticalSection(&m_mft_lock);
 	
-	/* Actually set the type or just test it?
+	/* Actually set the type or just test it? */
 	BOOL bReallySet = ((dwFlags & MFT_SET_TYPE_TEST_ONLY) == 0);
 	
 	/* If we have samples pending the type can't be changed right now */
