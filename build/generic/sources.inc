@@ -35,6 +35,7 @@ SRC_GENERIC = \
 	plugins/plugin_dump.c \
 	plugins/plugin_psnr.c \
 	plugins/plugin_ssim.c \
+	plugins/plugin_psnrhvsm.c \
 	quant/quant_h263.c \
 	quant/quant_matrix.c \
 	quant/quant_mpeg.c \
