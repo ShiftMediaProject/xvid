@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.cpp,v 1.21 2010-10-17 18:36:12 Isibaar Exp $
+ * $Id: CXvidDecoder.cpp,v 1.22 2010-10-29 14:33:39 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -170,6 +170,7 @@ int g_cTemplates = sizeof(g_Templates) / sizeof(CFactoryTemplate);
 extern HINSTANCE g_xvid_hInst;
 
 static int GUI_Page = 0;
+static int Tray_Icon = 0;
 extern "C" void CALLBACK Configure(HWND hWndParent, HINSTANCE hInstParent, LPSTR lpCmdLine, int nCmdShow );
 
 LRESULT CALLBACK msg_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -190,7 +191,17 @@ LRESULT CALLBACK msg_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			return DefWindowProc(hwnd, uMsg, wParam, lParam);
 		};
 		break;
+
+	case WM_DESTROY:
+		NOTIFYICONDATA nid;
+		ZeroMemory(&nid,sizeof(NOTIFYICONDATA));
+
+		nid.cbSize = NOTIFYICONDATA_V1_SIZE;
+		nid.hWnd = hwnd;
+		nid.uID = 1456;
 	
+		Shell_NotifyIcon(NIM_DELETE, &nid);
+		Tray_Icon = 0;
 	default:
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
@@ -300,10 +311,6 @@ CXvidDecoder::CXvidDecoder(LPUNKNOWN punk, HRESULT *phr) :
 
     xvid_decore_func = NULL; // Hmm, some strange errors appearing if I try to initialize...
     xvid_global_func = NULL; // ...this in constructor's init-list. So, they assigned here.
-
-#ifdef XVID_USE_TRAYICON
-	MSG_hwnd = NULL;
-#endif
 
 #if defined(XVID_USE_MFT)
 	InitializeCriticalSection(&m_mft_lock);
@@ -456,21 +463,23 @@ void CXvidDecoder::CloseLib()
 CXvidDecoder::~CXvidDecoder()
 {
     DPRINTF("Destructor");
-	CloseLib();
 
 #ifdef XVID_USE_TRAYICON
-	if (MSG_hwnd != NULL) {
+	if (Tray_Icon) { /* Destroy tray icon */
 		NOTIFYICONDATA nid;
-		nid.cbSize = sizeof(NOTIFYICONDATA);
-		nid.hWnd = MSG_hwnd;
-		nid.uID = 100;
-	
-		Shell_NotifyIcon(NIM_DELETE, &nid); 
+		ZeroMemory(&nid,sizeof(NOTIFYICONDATA));
 
-		DestroyWindow(MSG_hwnd);
-		MSG_hwnd = NULL;
+		nid.cbSize = NOTIFYICONDATA_V1_SIZE;
+		nid.hWnd = MSG_hwnd;
+		nid.uID = 1456;
+	
+		Shell_NotifyIcon(NIM_DELETE, &nid);
+		Tray_Icon = 0;
 	}
 #endif
+
+	/* Close xvidcore library */
+	CloseLib();
 
 #if defined(XVID_USE_MFT)
 	DeleteCriticalSection(&m_mft_lock);
@@ -874,7 +883,7 @@ HRESULT CXvidDecoder::CompleteConnect(PIN_DIRECTION direction, IPin *pReceivePin
 	DPRINTF("CompleteConnect");
 
 #ifdef XVID_USE_TRAYICON
-	if ((direction == PINDIR_OUTPUT) && (MSG_hwnd == NULL)) 
+	if ((direction == PINDIR_OUTPUT) && (Tray_Icon == 0)) 
 	{
 		WNDCLASSEX wc; 
 
@@ -897,17 +906,20 @@ HRESULT CXvidDecoder::CompleteConnect(PIN_DIRECTION direction, IPin *pReceivePin
 
 		/* display the tray icon */
 		NOTIFYICONDATA nid;    
-	
-		nid.cbSize = sizeof(NOTIFYICONDATA);  
+		ZeroMemory(&nid,sizeof(NOTIFYICONDATA));
+
+		nid.cbSize = NOTIFYICONDATA_V1_SIZE;
 		nid.hWnd = MSG_hwnd;  
-		nid.uID = 100;  
-		nid.uVersion = NOTIFYICON_VERSION;  
+		nid.uID = 1456;  
 		nid.uCallbackMessage = WM_ICONMESSAGE;  
 		nid.hIcon = LoadIcon(g_xvid_hInst, MAKEINTRESOURCE(IDI_ICON));  
 		strcpy_s(nid.szTip, 19, "Xvid Video Decoder");  
 		nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
 	
 		Shell_NotifyIcon(NIM_ADD, &nid); 
+
+		DestroyIcon(nid.hIcon);
+		Tray_Icon = 1;
 	}
 #endif
 
@@ -918,22 +930,6 @@ HRESULT CXvidDecoder::CompleteConnect(PIN_DIRECTION direction, IPin *pReceivePin
 HRESULT CXvidDecoder::BreakConnect(PIN_DIRECTION direction)
 {
 	DPRINTF("BreakConnect");
-
-#ifdef XVID_USE_TRAYICON
-	if ((direction == PINDIR_OUTPUT) && (MSG_hwnd != NULL)) {
-		NOTIFYICONDATA nid;
-
-		nid.cbSize = sizeof(NOTIFYICONDATA);
-		nid.hWnd = MSG_hwnd;
-		nid.uID = 100;
-		nid.uVersion = NOTIFYICON_VERSION;  
-	
-		if(Shell_NotifyIcon(NIM_DELETE, &nid) == TRUE) {
-			DestroyWindow(MSG_hwnd);
-			MSG_hwnd = NULL;
-		}
-	}
-#endif
 
 	return S_OK;
 }
@@ -1584,7 +1580,7 @@ HRESULT CXvidDecoder::MFTSetOutputType(DWORD dwOutputStreamID, IMFMediaType *pTy
 	}
 	
 #ifdef XVID_USE_TRAYICON
-	if (SUCCEEDED(hr) && MSG_hwnd == NULL) /* Create message passing window */
+	if (SUCCEEDED(hr) && Tray_Icon == 0) /* Create message passing window */
 	{
 		WNDCLASSEX wc; 
 
@@ -1607,17 +1603,20 @@ HRESULT CXvidDecoder::MFTSetOutputType(DWORD dwOutputStreamID, IMFMediaType *pTy
 
 		/* display the tray icon */
 		NOTIFYICONDATA nid;    
-	
-		nid.cbSize = sizeof(NOTIFYICONDATA);  
+		ZeroMemory(&nid,sizeof(NOTIFYICONDATA));
+
+		nid.cbSize = NOTIFYICONDATA_V1_SIZE;
 		nid.hWnd = MSG_hwnd;  
-		nid.uID = 100;  
-		nid.uVersion = NOTIFYICON_VERSION;  
+		nid.uID = 1456;  
 		nid.uCallbackMessage = WM_ICONMESSAGE;  
 		nid.hIcon = LoadIcon(g_xvid_hInst, MAKEINTRESOURCE(IDI_ICON));  
 		strcpy_s(nid.szTip, 19, "Xvid Video Decoder");  
 		nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
 	
 		Shell_NotifyIcon(NIM_ADD, &nid); 
+
+		DestroyIcon(nid.hIcon);
+		Tray_Icon = 1;
 	}
 #endif
 
