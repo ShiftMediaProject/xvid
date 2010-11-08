@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: plugin_psnrhvsm.c,v 1.1 2010-10-10 19:19:46 Isibaar Exp $
+ * $Id: plugin_psnrhvsm.c,v 1.2 2010-11-08 20:20:39 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -48,7 +48,6 @@
 
 typedef struct { 
 
-	int pixels; /* width*height */
 	uint64_t mse_sum; /* for avrg psnrhvsm */
 	long frame_cnt;
 
@@ -76,7 +75,7 @@ static const float Mask_Coeff[64] =
 	  0.019290f, 0.011815f, 0.011080f, 0.010412f, 0.007972f, 0.010000f, 0.009426f, 0.010203f
 	};
 
-#if 1 /* Floating-point implementation */
+#if 0 /* Floating-point implementation */
 
 static uint32_t Calc_MSE_H(int16_t *DCT_A, int16_t *DCT_B, uint8_t *IMG_A, uint8_t *IMG_B, int stride)
 {
@@ -85,6 +84,7 @@ static uint32_t Calc_MSE_H(int16_t *DCT_A, int16_t *DCT_B, uint8_t *IMG_A, uint8
 	uint32_t Local[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 	uint32_t Local_Square[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 	float MASK_A = 0.f, MASK_B = 0.f;
+	float Mult1 = 1.f, Mult2 = 1.f;
 	uint32_t MSE_H = 0;
 
 	/* Step 1: Calculate CSF weighted energy of DCT coefficients */
@@ -98,14 +98,16 @@ static uint32_t Calc_MSE_H(int16_t *DCT_A, int16_t *DCT_B, uint8_t *IMG_A, uint8
 	/* Step 2: Determine local variances compared to entire block variance */
 	for (y = 0; y < 2; y++) {
 		for (x = 0; x < 2; x++) {
-			for (i = 0; i < 4; i++) {
-				uint8_t A = IMG_A[y*4*stride + 4*x + i];
-				uint8_t B = IMG_B[y*4*stride + 4*x + i];
+			for (j = 0; j < 4; j++) {
+				for (i = 0; i < 4; i++) {
+					uint8_t A = IMG_A[(y*4+j)*stride + 4*x + i];
+					uint8_t B = IMG_B[(y*4+j)*stride + 4*x + i];
 
-				Local[y*2 + x] += A;
-				Local[y*2 + x + 4] += B;
-				Local_Square[y*2 + x] += A*A;
-				Local_Square[y*2 + x + 4] += B*B;
+					Local[y*2 + x] += A;
+					Local[y*2 + x + 4] += B;
+					Local_Square[y*2 + x] += A*A;
+					Local_Square[y*2 + x + 4] += B*B;
+				}
 			}
 		}
 	}
@@ -123,8 +125,14 @@ static uint32_t Calc_MSE_H(int16_t *DCT_A, int16_t *DCT_B, uint8_t *IMG_A, uint8
 	Global_B = (Local_Square[4]<<6) - Global_B*Global_B; /* 64*Var(D) */
 
 	/* Step 3: Calculate contrast masking threshold */
-	MASK_A = (float)sqrt(MASK_A*((float)(Local[0]+Local[1]+Local[2]+Local[3])/((float)Global_A/4.f)))/32.f;
-	MASK_B = (float)sqrt(MASK_B*((float)(Local[4]+Local[5]+Local[6]+Local[7])/((float)Global_B/4.f)))/32.f;
+	if (Global_A) 
+		Mult1 = (float)(Local[0]+Local[1]+Local[2]+Local[3])/((float)(Global_A)/4.f);
+
+	if (Global_B)
+		Mult2 = (float)(Local[4]+Local[5]+Local[6]+Local[7])/((float)(Global_B)/4.f);
+
+	MASK_A = (float)sqrt(MASK_A * Mult1) / 32.f;
+	MASK_B = (float)sqrt(MASK_B * Mult2) / 32.f;
 
 	if (MASK_B > MASK_A) MASK_A = MASK_B; /* MAX(MASK_A, MASK_B) */
 
@@ -182,6 +190,21 @@ static const uint16_t iCSF_Coeff[64] =
 	   366,  286,  277,  269,  235, 264, 256, 266
 	};
 
+static __inline uint32_t isqrt(unsigned long n)
+{
+    uint32_t c = 0x8000;
+    uint32_t g = 0x8000;
+
+    for(;;) {
+        if(g*g > n)
+            g ^= c;
+        c >>= 1;
+        if(c == 0)
+            return g;
+        g |= c;
+    }
+}
+
 static uint32_t Calc_MSE_H(int16_t *DCT_A, int16_t *DCT_B, uint8_t *IMG_A, uint8_t *IMG_B, int stride)
 {
 	int x, y, i, j;
@@ -205,14 +228,16 @@ static uint32_t Calc_MSE_H(int16_t *DCT_A, int16_t *DCT_B, uint8_t *IMG_A, uint8
 	/* Step 2: Determine local variances compared to entire block variance */
 	for (y = 0; y < 2; y++) {
 		for (x = 0; x < 2; x++) {
-			for (i = 0; i < 4; i++) {
-				uint8_t A = IMG_A[y*4*stride + 4*x + i];
-				uint8_t B = IMG_B[y*4*stride + 4*x + i];
+			for (j = 0; j < 4; j++) {
+				for (i = 0; i < 4; i++) {
+					uint8_t A = IMG_A[(y*4+j)*stride + 4*x + i];
+					uint8_t B = IMG_B[(y*4+j)*stride + 4*x + i];
 
-				Local[y*2 + x] += A;
-				Local[y*2 + x + 4] += B;
-				Local_Square[y*2 + x] += A*A;
-				Local_Square[y*2 + x + 4] += B*B;
+					Local[y*2 + x] += A;
+					Local[y*2 + x + 4] += B;
+					Local_Square[y*2 + x] += A*A;
+					Local_Square[y*2 + x + 4] += B*B;
+				}
 			}
 		}
 	}
@@ -231,18 +256,22 @@ static uint32_t Calc_MSE_H(int16_t *DCT_A, int16_t *DCT_B, uint8_t *IMG_A, uint8
 
 	/* Step 3: Calculate contrast masking threshold */
 	{ 
-		float MASK_A, MASK_B; /* TODO */
+		uint32_t MASK_A, MASK_B;
+		uint32_t Mult1 = 64, Mult2 = 64;
 
-		MASK_A = (float)((double)(Sum_A + 4) / 8.);
-		MASK_B = (float)((double)(Sum_B + 4) / 8.);
+		if (Global_A) 
+			Mult1 = ((Local[0]+Local[1]+Local[2]+Local[3])<<8) / Global_A;
 
-		MASK_A = sqrt(MASK_A*((float)(Local[0]+Local[1]+Local[2]+Local[3])/((float)Global_A/4.f)))/32.f;
-		MASK_B = sqrt(MASK_B*((float)(Local[4]+Local[5]+Local[6]+Local[7])/((float)Global_B/4.f)))/32.f;
+		if (Global_B)
+			Mult2 = ((Local[4]+Local[5]+Local[6]+Local[7])<<8) / Global_B;
+
+		MASK_A = isqrt(2*Sum_A*Mult1) + 16;
+		MASK_B = isqrt(2*Sum_B*Mult2) + 16;
 
 		if (MASK_B > MASK_A)  /* MAX(MASK_A, MASK_B) */
-			MASK = (uint32_t) (MASK_B * 1024.f + 0.5f);
+			MASK = (uint32_t) MASK_B;
 		else
-			MASK = (uint32_t) (MASK_A * 1024.f + 0.5f);
+			MASK = (uint32_t) MASK_A;
 	}
 
 	/* Step 4: Calculate MSE of DCT coeffs reduced by masking effect */
@@ -272,13 +301,11 @@ static uint32_t Calc_MSE_H(int16_t *DCT_A, int16_t *DCT_B, uint8_t *IMG_A, uint8
 static void psnrhvsm_after(xvid_plg_data_t *data, psnrhvsm_data_t *psnrhvsm)
 {
 	DECLARE_ALIGNED_MATRIX(DCT, 2, 64, int16_t, CACHE_LINE);
-	int x, y, stride = data->original.stride[0];
+	uint32_t x, y, stride = data->original.stride[0];
 	int16_t *DCT_A = &DCT[0], *DCT_B = &DCT[64];
 	uint8_t *IMG_A = (uint8_t *) data->original.plane[0];
 	uint8_t *IMG_B = (uint8_t *) data->current.plane[0];
-	uint32_t MSE_H = 0;
-
-	psnrhvsm->pixels = data->width * data->height;
+	uint64_t MSE_H = 0;
 
 	for (y = 0; y < data->height; y += 8) {
 		for (x = 0; x < data->width; x += 8) {
@@ -301,10 +328,11 @@ static void psnrhvsm_after(xvid_plg_data_t *data, psnrhvsm_data_t *psnrhvsm)
 		}
 	}
 
-	psnrhvsm->mse_sum += MSE_H;
+	x = 4*MSE_H / (data->width * data->height);
+	psnrhvsm->mse_sum += x;
 	psnrhvsm->frame_cnt++;
 
-	printf("       psnrhvsm: %2.2f\n", sse_to_PSNR(MSE_H, 256*psnrhvsm->pixels));
+	printf("       psnrhvsm: %2.2f\n", sse_to_PSNR(x, 1024));
 }
 
 static int psnrhvsm_create(xvid_plg_create_t *create, void **handle)
@@ -314,8 +342,6 @@ static int psnrhvsm_create(xvid_plg_create_t *create, void **handle)
 
 	psnrhvsm->mse_sum = 0;
 	psnrhvsm->frame_cnt = 0;
-
-	psnrhvsm->pixels = 0;
 
 	*(handle) = (void*) psnrhvsm;
 	return 0;
@@ -345,7 +371,7 @@ int xvid_plugin_psnrhvsm(void *handle, int opt, void *param1, void *param2)
 					MSE_H = (uint32_t) (psnrhvsm->mse_sum / psnrhvsm->frame_cnt);
 
 					emms();
-					printf("Average psnrhvsm: %2.2f\n", sse_to_PSNR(MSE_H, 256*psnrhvsm->pixels));
+					printf("Average psnrhvsm: %2.2f\n", sse_to_PSNR(MSE_H, 1024));
 					free(psnrhvsm);
 				}
 			}
