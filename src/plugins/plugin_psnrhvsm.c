@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: plugin_psnrhvsm.c,v 1.2 2010-11-08 20:20:39 Isibaar Exp $
+ * $Id: plugin_psnrhvsm.c,v 1.3 2010-11-10 21:25:16 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -48,7 +48,10 @@
 
 typedef struct { 
 
-	uint64_t mse_sum; /* for avrg psnrhvsm */
+	uint64_t mse_sum_y; /* for avrg psnr-hvs-m */
+	uint64_t mse_sum_u;
+	uint64_t mse_sum_v;
+
 	long frame_cnt;
 
 } psnrhvsm_data_t; /* internal plugin data */
@@ -154,8 +157,10 @@ static uint32_t Calc_MSE_H(int16_t *DCT_A, int16_t *DCT_B, uint8_t *IMG_A, uint8
 	return MSE_H; /* Fixed-point value right-shifted by eight */
 }
 
-#else /* First draft of a fixed-point implementation.
-	     Might serve as a template for MMX/SSE code */
+#else 
+
+/* First draft of a fixed-point implementation.
+   Might serve as a template for MMX/SSE code */
 
 static const uint16_t iMask_Coeff[64] = 
 	{     0, 59577, 65535, 40959, 27306, 16384, 12850, 10743,
@@ -301,15 +306,17 @@ static uint32_t Calc_MSE_H(int16_t *DCT_A, int16_t *DCT_B, uint8_t *IMG_A, uint8
 static void psnrhvsm_after(xvid_plg_data_t *data, psnrhvsm_data_t *psnrhvsm)
 {
 	DECLARE_ALIGNED_MATRIX(DCT, 2, 64, int16_t, CACHE_LINE);
-	uint32_t x, y, stride = data->original.stride[0];
+	int32_t x, y, u, v; 
 	int16_t *DCT_A = &DCT[0], *DCT_B = &DCT[64];
-	uint8_t *IMG_A = (uint8_t *) data->original.plane[0];
-	uint8_t *IMG_B = (uint8_t *) data->current.plane[0];
-	uint64_t MSE_H = 0;
+	uint64_t sse_y = 0, sse_u = 0, sse_v = 0;
 
-	for (y = 0; y < data->height; y += 8) {
-		for (x = 0; x < data->width; x += 8) {
-			int offset = y*stride + x;
+	for (y = 0; y < data->height>>3; y++) {
+		uint8_t *IMG_A = (uint8_t *) data->original.plane[0];
+		uint8_t *IMG_B = (uint8_t *) data->current.plane[0];
+		uint32_t stride = data->original.stride[0];
+
+		for (x = 0; x < data->width>>3; x++) { /* non multiple of 8 handling ?? */
+			int offset = (y<<3)*stride + (x<<3);
 
 			emms();
 
@@ -324,15 +331,62 @@ static void psnrhvsm_after(xvid_plg_data_t *data, psnrhvsm_data_t *psnrhvsm)
 			emms();
 
 			/* Calculate MSE_H reduced by contrast masking effect */
-			MSE_H += Calc_MSE_H(DCT_A, DCT_B, IMG_A + offset, IMG_B + offset, stride);
+			sse_y += Calc_MSE_H(DCT_A, DCT_B, IMG_A + offset, IMG_B + offset, stride);
 		}
 	}
 
-	x = 4*MSE_H / (data->width * data->height);
-	psnrhvsm->mse_sum += x;
+	for (y = 0; y < data->height>>4; y++) {
+		uint8_t *U_A = (uint8_t *) data->original.plane[1];
+		uint8_t *V_A = (uint8_t *) data->original.plane[2];
+		uint8_t *U_B = (uint8_t *) data->current.plane[1];
+		uint8_t *V_B = (uint8_t *) data->current.plane[2];
+		uint32_t stride_uv = data->current.stride[1];
+
+		for (x = 0; x < data->width>>4; x++) { /* non multiple of 8 handling ?? */
+			int offset = (y<<3)*stride_uv + (x<<3);
+
+			emms();
+
+			/* Transfer data */
+			transfer_8to16copy(DCT_A, U_A + offset, stride_uv);
+			transfer_8to16copy(DCT_B, U_B + offset, stride_uv);
+
+			/* Perform DCT */
+			fdct(DCT_A);
+			fdct(DCT_B);
+
+			emms();
+
+			/* Calculate MSE_H reduced by contrast masking effect */
+			sse_u += Calc_MSE_H(DCT_A, DCT_B, U_A + offset, U_B + offset, stride_uv);
+
+			emms();
+
+			/* Transfer data */
+			transfer_8to16copy(DCT_A, V_A + offset, stride_uv);
+			transfer_8to16copy(DCT_B, V_B + offset, stride_uv);
+
+			/* Perform DCT */
+			fdct(DCT_A);
+			fdct(DCT_B);
+
+			emms();
+
+			/* Calculate MSE_H reduced by contrast masking effect */
+			sse_v += Calc_MSE_H(DCT_A, DCT_B, V_A + offset, V_B + offset, stride_uv);
+		}
+	}
+
+	y = (int32_t) ( 4*sse_y / (data->width * data->height));
+	u = (int32_t) (16*sse_u / (data->width * data->height));
+	v = (int32_t) (16*sse_v / (data->width * data->height));
+
+	psnrhvsm->mse_sum_y += y;
+	psnrhvsm->mse_sum_u += u;
+	psnrhvsm->mse_sum_v += v;
 	psnrhvsm->frame_cnt++;
 
-	printf("       psnrhvsm: %2.2f\n", sse_to_PSNR(x, 1024));
+	printf("       psnrhvsm y: %2.2f, psnrhvsm u: %2.2f, psnrhvsm v: %2.2f\n", sse_to_PSNR(y, 1024), sse_to_PSNR(u, 1024), sse_to_PSNR(v, 1024));
 }
 
 static int psnrhvsm_create(xvid_plg_create_t *create, void **handle)
@@ -340,7 +394,10 @@ static int psnrhvsm_create(xvid_plg_create_t *create, void **handle)
 	psnrhvsm_data_t *psnrhvsm;
 	psnrhvsm = (psnrhvsm_data_t *) malloc(sizeof(psnrhvsm_data_t));
 
-	psnrhvsm->mse_sum = 0;
+	psnrhvsm->mse_sum_y = 0;
+	psnrhvsm->mse_sum_u = 0;
+	psnrhvsm->mse_sum_v = 0;
+
 	psnrhvsm->frame_cnt = 0;
 
 	*(handle) = (void*) psnrhvsm;
@@ -364,14 +421,17 @@ int xvid_plugin_psnrhvsm(void *handle, int opt, void *param1, void *param2)
 			break;
 		case(XVID_PLG_DESTROY):
 			{
-				uint32_t MSE_H;
+				uint32_t y, u, v;
 				psnrhvsm_data_t *psnrhvsm = (psnrhvsm_data_t *)handle;
 				
 				if (psnrhvsm) {
-					MSE_H = (uint32_t) (psnrhvsm->mse_sum / psnrhvsm->frame_cnt);
+					y = (uint32_t) (psnrhvsm->mse_sum_y / psnrhvsm->frame_cnt);
+					u = (uint32_t) (psnrhvsm->mse_sum_u / psnrhvsm->frame_cnt);
+					v = (uint32_t) (psnrhvsm->mse_sum_v / psnrhvsm->frame_cnt);
 
 					emms();
-					printf("Average psnrhvsm: %2.2f\n", sse_to_PSNR(MSE_H, 1024));
+					printf("Average psnrhvsm y: %2.2f, psnrhvsm u: %2.2f, psnrhvsm v: %2.2f\n", 
+						sse_to_PSNR(y, 1024), sse_to_PSNR(u, 1024), sse_to_PSNR(v, 1024));
 					free(psnrhvsm);
 				}
 			}
