@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.83 2010-08-10 15:00:34 Isibaar Exp $
+ * $Id: decoder.c,v 1.84 2010-11-12 10:10:40 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1660,7 +1660,7 @@ repeat:
     goto repeat;
   }
 
-  dec->p_bmv.x = dec->p_bmv.y = dec->p_fmv.y = dec->p_fmv.y = 0;  /* init pred vector to 0 */
+  dec->p_bmv.x = dec->p_bmv.y = dec->p_fmv.x = dec->p_fmv.y = 0;  /* init pred vector to 0 */
 
   /* packed_mode: special-N_VOP treament */
   if (dec->packed_mode && coding_type == N_VOP) {
