@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.69 2010-10-10 19:19:55 Isibaar Exp $
+ * $Id: xvid.h,v 1.70 2010-11-16 14:42:07 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -541,11 +541,13 @@ typedef struct {
 	int container_frame_overhead; /* [in] How many bytes the controller has to compensate per frame due to container format overhead */
 
 /* ------- v1.1.x ------- */
-	int vbv_size;                 /* [in] buffer size (bits) */
+	int vbv_size;                 /* [in] buffer size (bits) If this is zero, VBV check is disabled.*/
 	int vbv_initial;              /* [in] initial buffer occupancy (bits) */
 	int vbv_maxrate;              /* [in] max processing bitrate (bits per second) */
-	int vbv_peakrate;             /* [in:opt] max average bitrate over 3 seconds (bits per second) */
-
+	int vbv_peakrate;             /* [in:opt] max average bitrate over 1 second (bits per second).
+								   *          This is used for diagnostics only and won't affect the actual peak bitrate.
+								   *          This is not a problem as long as vbv_peakrate > vbv_size + vbv_maxrate which
+								   *          guarantees that vbv_peakrate won't be exceeded. */
 }xvid_plugin_2pass2_t;
 
 

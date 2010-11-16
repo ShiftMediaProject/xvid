@@ -22,7 +22,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.43 2010-10-10 19:20:03 Isibaar Exp $
+ * $Id: xvid_encraw.c,v 1.44 2010-11-16 14:42:07 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -700,7 +700,7 @@ main(int argc,
 			ARG_VBVMAXRATE = atoi(argv[i]);
 		} else if (strcmp("-vbvpeak", argv[i]) == 0 && i < argc -1) {
 			i++;
-			ARG_VBVPEAKRATE = atoi(argv[i])*3;
+			ARG_VBVPEAKRATE = atoi(argv[i]);
 		} else if (strcmp("-reaction", argv[i]) == 0 && i < argc -1) {
 			i++;
 			ARG_REACTION = atoi(argv[i]);
@@ -2178,7 +2178,7 @@ enc_init(void **enc_handle, char *stats_pass1, int start_num)
 		rc2pass2.vbv_size     =  ARG_VBVSIZE;
 		rc2pass2.vbv_initial  =  (ARG_VBVSIZE*3)/4;
 		rc2pass2.vbv_maxrate  =  ARG_VBVMAXRATE;
-		rc2pass2.vbv_peakrate =  ARG_VBVPEAKRATE*3;
+		rc2pass2.vbv_peakrate =  ARG_VBVPEAKRATE;
 
 
 		plugins[xvid_enc_create.num_plugins].func = xvid_plugin_2pass2;

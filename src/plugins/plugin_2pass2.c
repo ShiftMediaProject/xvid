@@ -25,7 +25,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: plugin_2pass2.c,v 1.9 2010-03-09 10:00:14 Isibaar Exp $
+ * $Id: plugin_2pass2.c,v 1.10 2010-11-16 14:42:07 Isibaar Exp $
  *
  *****************************************************************************/
 
@@ -1446,17 +1446,17 @@ scaled_curve_apply_advanced_parameters(rc_2pass2_t * rc)
  * aren't...)
  *
  * DivX profiles have 2 criteria: VBV as in MPEG standard
- *                                a limit on peak bitrate for any 3 seconds
+ *                                a limit on peak bitrate for any 1 second
  *
  * But if VBV is fulfilled, peakrate is automatically fulfilled in any profile
- * define so far, so we check for it (for completeness) but correct only VBV
+ * defined so far, so we check for it (for completeness) but correct only VBV
  *
  *****************************************************************************/
 
 #define VBV_COMPLIANT 0
-#define VBV_UNDERFLOW 1 /* video buffer runs empty */
-#define VBV_OVERFLOW 2  /* doesn't exist for VBR encoding */
-#define VBV_PEAKRATE 4  /* peak bitrate (within 3s) violated */
+#define VBV_UNDERFLOW 1  /* video buffer runs empty */
+#define VBV_OVERFLOW  2  /* doesn't exist for VBR encoding */
+#define VBV_PEAKRATE  4  /* peak bitrate (within 1s) violated */
 
 static int
 check_curve_for_vbv_compliancy(rc_2pass2_t * rc, const float fps)
@@ -1464,14 +1464,14 @@ check_curve_for_vbv_compliancy(rc_2pass2_t * rc, const float fps)
 	/* We do all calculations in float, for higher accuracy,
 	 * and in bytes for convenience.
 	 *
-	 * typical values from DivX Home Theater profile:
+	 * typical values from e.g. Home profile:
 	 *  vbv_size= 384*1024 (384kB)
 	 *  vbv_initial= 288*1024 (75% fill)
 	 *  maxrate= 4854000 (4.854MBps)
 	 *  peakrate= 8000000 (8MBps)
 	 *
-	 *  PAL: offset3s = 75 (3 seconds of 25fps)
-	 *  NTSC: offset3s = 90 (3 seconds of 29.97fps) or 72 (3 seconds of 23.976fps)
+	 *  PAL: offset1s = 25 (1 second of 25fps)
+	 *  NTSC: offset1s = 30 (1 second of 29.97fps) or 24 (1 second of 23.976fps)
 	 */
 
 	const float vbv_size = (float)rc->param.vbv_size/8.f;
@@ -1482,8 +1482,8 @@ check_curve_for_vbv_compliancy(rc_2pass2_t * rc, const float fps)
 	const float peakrate = (float)rc->param.vbv_peakrate;
 	const float r0 = (int)(maxrate/fps+0.5)/8.f;
 
-	int bytes3s = 0;
-	int offset3s = (int)(3.f*fps+0.5);
+	int bytes1s = 0;
+	int offset1s = (int)(1.f*fps+0.5);
 	int i;
 
 	/* 1Gbit should be enough to inuitialize the vbvmin
@@ -1491,13 +1491,13 @@ check_curve_for_vbv_compliancy(rc_2pass2_t * rc, const float fps)
 	vbvmin = 1000*1000*1000;
 
 	for (i=0; i<rc->num_frames; i++) {
-		/* DivX 3s peak bitrate check  */
-		bytes3s += rc->stats[i].scaled_length;
-		if (i>=offset3s)
-			bytes3s -= rc->stats[i-offset3s].scaled_length;
+		/* DivX 1s peak bitrate check  */
+		bytes1s += rc->stats[i].scaled_length;
+		if (i>=offset1s)
+			bytes1s -= rc->stats[i-offset1s].scaled_length;
 
     /* ignore peakrate constraint if peakrate is <= 0.f */
-		if (peakrate>0.f && 8.f*bytes3s > 3*peakrate)
+		if (peakrate>0.f && 8.f*bytes1s > peakrate)
 			return(VBV_PEAKRATE);
 
 		/* update vbv fill level */

@@ -514,10 +514,7 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 		pass2.vbv_size = profiles[codec->config.profile].max_vbv_size;
 		pass2.vbv_initial = (profiles[codec->config.profile].max_vbv_size*3)/4; /* 75% */
 		pass2.vbv_maxrate = profiles[codec->config.profile].max_bitrate;
-
-    // XXX: xvidcore current provides a "peak bits over 3secs" constraint.
-    //      according to the latest dxn literature, a 1sec constraint is now used
-    pass2.vbv_peakrate = profiles[codec->config.profile].vbv_peakrate * 3;
+		pass2.vbv_peakrate = profiles[codec->config.profile].vbv_peakrate;
 
 		plugins[create.num_plugins].func = codec->xvid_plugin_2pass2_func;
 		plugins[create.num_plugins].param = &pass2;

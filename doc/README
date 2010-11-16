@@ -11,8 +11,11 @@ NOTE FOR MacOS X PLATFORM
 -------------------------
 
 Many versions of yasm/nasm are known to be buggy for Mach-O output.
+Whereas nasm seems to be less reliable than yasm. Therefore, yasm
+is highly recommended for Mac OS X target.
 
 * yasm 0.7.99.2161 or later is required for Mac OS X build. *
-* nasm 2.06rc2 or later is required for Mac OS X build *
 
-Last edited: $Date: 2009-01-07 16:32:31 $
+http://www.tortall.net/projects/yasm/
+
+Last edited: $Date: 2010-11-16 14:42:07 $
