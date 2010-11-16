@@ -31,7 +31,7 @@ like cygwin and minsys on Win32 platforms.
    - make (GNU make, BSD make, Solaris make)
    - a C library providing ANSI C functions like malloc/free/realloc
      and some other standard functions.
-   - nasm on ia32 platforms for MMX/SSE optimized code.
+   - yasm or nasm on ia32/x86_64 platforms for MMX/SSE optimized code.
 
  
   1.b/ How to build from a release tarball
@@ -175,7 +175,7 @@ If all went right, you're now able to install the package:
   2.a/ Requirements.
   ------------------
 
-    - MS VisualDev 6 Processor Pack 5 or MS VisualDev 7
+    - MS Visual C++ 2005 or later
     - nasm installed as 'nasm' in the msvc binary search paths.
 
   2.b/ How to build the VFW frontend from a release tarball.
@@ -184,14 +184,14 @@ If all went right, you're now able to install the package:
 Download the latest source distribution from http://www.xvid.org/ and
 uncompress it on your disk. Let's call this directory ${xvidcore}.
 
-    - Open the workspace xvidcore.dsw located in
+    - Open the workspace libxvidcore.sln located in
       ${xvidcore}/build/win32.
     - Then choose the libxvidcore project as the Active project of the
       workspace.
     - Make sure the Active configuration is
       'libxvidcore Win32 Release'
     - Build the project (F7)
-    - Open the project vfw.dsp file located in ${xvidcore}/vfw.
+    - Open the project vfw.vcproj file located in ${xvidcore}/vfw.
     - Make sure the Active configuration is
       'vfw Win32 Release'
     - Build the project (F7)
@@ -202,7 +202,7 @@ uncompress it on your disk. Let's call this directory ${xvidcore}.
   2.c/ How to build from CVS.
   ---------------------------
 
-You have first to retrieve the sources from the xvid CVS repository
+You have first to retrieve the sources from the Xvid CVS repository
 using a tool like WinCVS. Then follow the normal steps explained in
 the previous section.
 
@@ -213,4 +213,4 @@ NB: your CVS program may not convert text files to the cr/lf windows
     opening the .dsp file in WordPad and saving it. It should now be
     in cr/lf format.
 
-Last edited: $Date: 2004-03-22 22:36:23 $
+Last edited: $Date: 2010-11-16 14:42:07 $
