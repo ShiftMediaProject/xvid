@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual C++ Express 2008
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libxvidcore", "libxvidcore.vcproj", "{64954A96-C813-4A92-87AD-DD733A5404AF}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xvid_decraw", "xvid_decraw.vcproj", "{C499489E-1438-4118-A5D6-CADFE611AFB4}"

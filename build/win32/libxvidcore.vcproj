@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="8,00"
 	Name="libxvidcore"
 	ProjectGUID="{64954A96-C813-4A92-87AD-DD733A5404AF}"
-	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -83,8 +82,6 @@
 				ModuleDefinitionFile="..\generic\libxvidcore.def"
 				ProgramDatabaseFile=".\Release/xvidcore.pdb"
 				SubSystem="2"
-				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
 				ImportLibrary="bin\xvidcore.dll.a"
 				TargetMachine="1"
 			/>
@@ -107,6 +104,9 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -178,8 +178,6 @@
 				ModuleDefinitionFile="..\generic\libxvidcore.def"
 				ProgramDatabaseFile="$(IntDir)/xvidcore.pdb"
 				SubSystem="2"
-				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
 				ImportLibrary="bin\x64\xvidcore.dll.a"
 				TargetMachine="17"
 			/>
@@ -202,6 +200,9 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -273,8 +274,6 @@
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/xvidcore.pdb"
 				SubSystem="2"
-				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
 				ImportLibrary="bin\xvidcore.dll.a"
 				TargetMachine="1"
 			/>
@@ -297,6 +296,9 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -368,8 +370,6 @@
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(IntDir)\xvidcore.pdb"
 				SubSystem="2"
-				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
 				ImportLibrary="bin\x64\xvidcore.dll.a"
 				TargetMachine="17"
 			/>
@@ -392,6 +392,9 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -425,11 +428,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\doc\README"
+				RelativePath="..\..\README"
 				>
 			</File>
 			<File
-				RelativePath="..\..\README"
+				RelativePath="..\..\doc\README"
 				>
 			</File>
 			<File
@@ -3452,6 +3455,10 @@
 					/>
 				</FileConfiguration>
 			</File>
+ 			<File
+				RelativePath="..\..\src\plugins\plugin_psnrhvsm.c"
+			>
+			</File>
 			<File
 				RelativePath="..\..\src\plugins\plugin_psnr.c"
 				>
@@ -3487,10 +3494,6 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\..\src\plugins\plugin_psnrhvsm.c"
-				>
 			</File>
 			<File
 				RelativePath="..\..\src\plugins\plugin_single.c"
