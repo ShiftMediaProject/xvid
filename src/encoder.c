@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.131 2010-03-09 10:00:14 Isibaar Exp $
+ * $Id: encoder.c,v 1.132 2010-11-23 11:00:35 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1884,7 +1884,7 @@ FrameCodeP(Encoder * pEnc,
 #if 0
 	DPRINTF(XVID_DEBUG_DEBUG, "kmu %i %i %i\n", current->sStat.kblks, current->sStat.mblks, current->sStat.ublks);
 #endif
-	if (current->sStat.kblks + current->sStat.mblks <=
+	if (current->sStat.kblks + current->sStat.mblks <
 		(pParam->frame_drop_ratio * mb_width * mb_height) / 100 &&
 		( (pEnc->bframenum_head >= pEnc->bframenum_tail) || !(pEnc->mbParam.global_flags & XVID_GLOBAL_CLOSED_GOP)) )
 	{
