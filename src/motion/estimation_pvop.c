@@ -4,7 +4,7 @@
  *  - Motion Estimation for P- and S- VOPs  -
  *
  *  Copyright(C) 2002 Christoph Lampert <gruel@web.de>
- *               2002 Michael Militzer <michael@xvid.org>
+ *               2002-2010 Michael Militzer <michael@xvid.org>
  *               2002-2003 Radoslaw Czyz <xvid@syskin.cjb.net>
  *
  *  This program is free software ; you can redistribute it and/or modify
@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_pvop.c,v 1.22 2006-04-19 15:42:19 syskin Exp $
+ * $Id: estimation_pvop.c,v 1.23 2010-11-28 15:18:21 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1006,9 +1006,9 @@ MotionEstimateSMP(SMPmotionData * h)
 	const uint32_t mb_height = pParam->mb_height;
 	const uint32_t iEdgedWidth = pParam->edged_width;
 	int stat_thresh = 0;
-	int MVmax = 0, mvSum = 0, mvCount = 0;
 	int y_step = h->y_step;
 	int start_y = h->start_y;
+	int MVmax = 0, mvSum = 0, mvCount = 0;
 
 	uint32_t x, y;
 	int sad00;

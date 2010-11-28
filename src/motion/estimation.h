@@ -4,7 +4,7 @@
  *  - Motion Estimation related header -
  *
  *  Copyright(C) 2002 Christoph Lampert <gruel@web.de>
- *               2002 Michael Militzer <michael@xvid.org>
+ *               2002-2010 Michael Militzer <michael@xvid.org>
  *               2002-2003 Radoslaw Czyz <xvid@syskin.cjb.net>
  *
  *  This program is free software ; you can redistribute it and/or modify
@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation.h,v 1.13 2005-12-09 04:39:49 syskin Exp $
+ * $Id: estimation.h,v 1.14 2010-11-28 15:18:21 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -30,6 +30,7 @@
 
 #include "../portab.h"
 #include "../global.h"
+#include "sad.h"
 
 /* hard coded motion search parameters */
 
@@ -116,8 +117,18 @@ typedef struct
 	const uint16_t * mpeg_quant_matrices;			/* current MPEG quantization matrices */
 	int lambda[6];				/* R-D lambdas for all 6 blocks */
 	unsigned int quant_sq;		/* quant squared - saves many multiplications in VHQ */
-
+	uint32_t rel_var8[6];		/* relative variances for all 6 sub-blocks */
+	int metric;					/* distortion metric for R-D optimizations, currently: PSNR=0, PSNRHVSM=1 */
 } SearchData;
+
+static __inline uint32_t 
+masked_sseh8_16bit(int16_t * const orig, 
+                   int16_t * const rec,
+                   const uint32_t rel_var8)
+{
+	uint16_t mask = ((isqrt(2*coeff8_energy(orig)*rel_var8) + 48) >> 6);
+	return (5*sseh8_16bit(orig, rec, (uint16_t) mask)) >> 7;
+}
 
 typedef void(CheckFunc)(const int x, const int y,
 						SearchData * const Data,
@@ -192,6 +203,7 @@ ModeDecision_BVOP_RD(SearchData * const Data_d,
 					 VECTOR * f_predMV,
 					 VECTOR * b_predMV,
 					 const uint32_t MotionFlags,
+			 		 const uint32_t VopFlags,
 					 const MBParam * const pParam,
 					 int x, int y,
 					 int best_sad);

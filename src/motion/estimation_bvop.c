@@ -4,7 +4,7 @@
  *  - Motion Estimation for B-VOPs  -
  *
  *  Copyright(C) 2002 Christoph Lampert <gruel@web.de>
- *               2002 Michael Militzer <michael@xvid.org>
+ *               2002-2010 Michael Militzer <michael@xvid.org>
  *               2002-2003 Radoslaw Czyz <xvid@syskin.cjb.net>
  *
  *  This program is free software ; you can redistribute it and/or modify
@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.25 2006-02-25 01:20:41 syskin Exp $
+ * $Id: estimation_bvop.c,v 1.26 2010-11-28 15:18:21 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1081,7 +1081,7 @@ MotionEstimationBVOP(MBParam * const pParam,
 
 			if (frame->vop_flags & XVID_VOP_RD_BVOP) 
 				ModeDecision_BVOP_RD(&Data_d, &Data_b, &Data_f, &Data_i, 
-					pMB, b_mb, &f_predMV, &b_predMV, frame->motion_flags, pParam, i, j, best_sad);
+					pMB, b_mb, &f_predMV, &b_predMV, frame->motion_flags, frame->vop_flags, pParam, i, j, best_sad);
 			else
 				ModeDecision_BVOP_SAD(&Data_d, &Data_b, &Data_f, &Data_i, pMB, b_mb, &f_predMV, &b_predMV);
 
@@ -1272,7 +1272,7 @@ SMPMotionEstimationBVOP(SMPmotionData * h)
 
 			if (frame->vop_flags & XVID_VOP_RD_BVOP) 
 				ModeDecision_BVOP_RD(&Data_d, &Data_b, &Data_f, &Data_i, 
-					pMB, b_mb, &f_predMV, &b_predMV, frame->motion_flags, pParam, i, j, best_sad);
+					pMB, b_mb, &f_predMV, &b_predMV, frame->motion_flags, frame->vop_flags, pParam, i, j, best_sad);
 			else
 				ModeDecision_BVOP_SAD(&Data_d, &Data_b, &Data_f, &Data_i, pMB, b_mb, &f_predMV, &b_predMV);
 

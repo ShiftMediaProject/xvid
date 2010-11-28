@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Sum Of Absolute Difference header  -
  *
- *  Copyright(C) 2001-2003 Peter Ross <pross@xvid.org>
+ *  Copyright(C) 2001-2010 Peter Ross <pross@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: sad.h,v 1.24 2008-11-26 01:04:34 Isibaar Exp $
+ * $Id: sad.h,v 1.25 2010-11-28 15:18:21 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -180,5 +180,70 @@ sse8Func_8bit sse8_8bit_c;
 #if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
 sse8Func_8bit sse8_8bit_mmx;
 #endif
+
+typedef uint32_t (sseh8Func_16bit)(const int16_t * cur,
+								   const int16_t * ref,
+								   uint16_t mask);
+typedef sseh8Func_16bit *sseh8Func_16bitPtr;
+extern sseh8Func_16bitPtr sseh8_16bit;
+
+sseh8Func_16bit sseh8_16bit_c;
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
+sseh8Func_16bit sseh8_16bit_sse2;
+#endif
+
+typedef uint32_t (coeff8_energyFunc)(const int16_t * cur);
+typedef coeff8_energyFunc *coeff8_energyFunc_Ptr;
+extern coeff8_energyFunc_Ptr coeff8_energy;
+
+coeff8_energyFunc coeff8_energy_c;
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
+coeff8_energyFunc coeff8_energy_sse2;
+#endif
+
+typedef uint32_t (blocksum8Func)(const int8_t * cur, int stride, 
+								 uint16_t sums[4], uint32_t squares[4]);
+typedef blocksum8Func *blocksum8Func_Ptr;
+extern blocksum8Func_Ptr blocksum8;
+
+blocksum8Func blocksum8_c;
+#if defined(ARCH_IS_IA32) || defined(ARCH_IS_X86_64)
+blocksum8Func blocksum8_sse2;
+#endif
+
+/* Coeffs for MSE_H calculation */
+
+static const int16_t Inv_iMask_Coeff[64] = {    
+       0,   155,   128,   328,   737,  2048,  3329,  4763,
+     184,   184,   251,   462,   865,  4306,  4608,  3872,
+     251,   216,   328,   737,  2048,  4159,  6094,  4014,
+     251,   370,   620,  1076,  3329,  9688,  8192,  4920,
+     415,   620,  1752,  4014,  5919, 15207, 13579,  7589,
+     737,  1568,  3872,  5243,  8398, 13844, 16345, 10834,
+    3073,  5243,  7787,  9688, 13579, 18741, 18433, 13057,
+    6636, 10834, 11552, 12294, 16056, 12800, 13579, 12545
+};
+
+static const uint16_t iCSF_Coeff[64] = { 
+	26353, 38331, 42164, 26353, 17568, 10541, 8268, 6912,
+	35137, 35137, 30117, 22192, 16217,  7270, 7027, 7666,
+	30117, 32434, 26353, 17568, 10541,  7397, 6111, 7529,
+	30117, 24803, 19166, 14539,  8268,  4846, 5271, 6801,
+	23425, 19166, 11396,  7529,  6201,  3868, 4094, 5476,
+	17568, 12047,  7666,  6588,  5205,  4054, 3731, 4583,
+	 8605,  6588,  5406,  4846,  4094,  3485, 3514, 4175,
+	 5856,  4583,  4438,  4302,  3765,  4216, 4094, 4259
+};
+
+static const uint16_t iCSF_Round[64] = {  
+	1, 1, 1, 1, 2, 3, 4, 5,
+	1, 1, 1, 1, 2, 5, 5, 4,
+	1, 1, 1, 2, 3, 4, 5, 4,
+	1, 1, 2, 2, 4, 7, 6, 5,
+	1, 2, 3, 4, 5, 8, 8, 6,
+	2, 3, 4, 5, 6, 8, 9, 7,
+	4, 5, 6, 7, 8, 9, 9, 8,
+	6, 7, 7, 8, 9, 8, 8, 8
+};
 
 #endif							/* _ENCODER_SAD_H_ */

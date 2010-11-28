@@ -4,6 +4,7 @@
  *  - Rate-Distortion Based Motion Estimation for B- VOPs  -
  *
  *  Copyright(C) 2004 Radoslaw Czyz <xvid@syskin.cjb.net>
+ *  Copyright(C) 2010 Michael Militzer <michael@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_rd_based_bvop.c,v 1.10 2005-12-09 04:45:35 syskin Exp $
+ * $Id: estimation_rd_based_bvop.c,v 1.11 2010-11-28 15:18:21 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -45,7 +46,6 @@
 /* rd = BITS_MULT*bits + LAMBDA*distortion */
 #define LAMBDA		( (int)(BITS_MULT*1.0) )
 
-
 static __inline unsigned int
 Block_CalcBits_BVOP(int16_t * const coeff,
 				int16_t * const data,
@@ -57,7 +57,9 @@ Block_CalcBits_BVOP(int16_t * const coeff,
 				const unsigned int lambda,
 				const uint16_t * mpeg_quant_matrices,
 				const unsigned int quant_sq,
-				int * const cbpcost)
+				int * const cbpcost,
+				const unsigned int rel_var8,
+				const unsigned int metric)
 {
 	int sum;
 	int bits;
@@ -77,7 +79,9 @@ Block_CalcBits_BVOP(int16_t * const coeff,
 		if (quant_type) dequant_h263_inter(dqcoeff, coeff, quant, mpeg_quant_matrices);
 		else dequant_mpeg_inter(dqcoeff, coeff, quant, mpeg_quant_matrices);
 
-		distortion = sse8_16bit(data, dqcoeff, 8*sizeof(int16_t));
+		if (metric) distortion = masked_sseh8_16bit(data, dqcoeff, rel_var8);
+		else distortion = sse8_16bit(data, dqcoeff, 8*sizeof(int16_t));
+
 	} else {
 		const static int16_t zero_block[64] =
 			{
@@ -91,7 +95,10 @@ Block_CalcBits_BVOP(int16_t * const coeff,
 				0, 0, 0, 0, 0, 0, 0, 0,
 			};
 		bits = 0;
-		distortion = sse8_16bit(data, zero_block, 8*sizeof(int16_t));
+
+		if (metric) distortion = masked_sseh8_16bit(data, (int16_t * const) zero_block, rel_var8);
+		else distortion = sse8_16bit(data, (int16_t * const) zero_block, 8*sizeof(int16_t));
+
 	}
 
 	return bits + (lambda*distortion)/quant_sq;
@@ -109,7 +116,9 @@ Block_CalcBits_BVOP_direct(int16_t * const coeff,
 				const unsigned int lambda,
 				const uint16_t * mpeg_quant_matrices,
 				const unsigned int quant_sq,
-				int * const cbpcost)
+				int * const cbpcost,
+				const unsigned int rel_var8,
+				const unsigned int metric)
 {
 	int sum;
 	int bits;
@@ -129,7 +138,9 @@ Block_CalcBits_BVOP_direct(int16_t * const coeff,
 		if (quant_type) dequant_h263_inter(dqcoeff, coeff, quant, mpeg_quant_matrices);
 		else dequant_mpeg_inter(dqcoeff, coeff, quant, mpeg_quant_matrices);
 
-		distortion = sse8_16bit(data, dqcoeff, 8*sizeof(int16_t));
+		if (metric) distortion = masked_sseh8_16bit(data, dqcoeff, rel_var8);
+		else distortion = sse8_16bit(data, dqcoeff, 8*sizeof(int16_t));
+
 	} else {
 		const static int16_t zero_block[64] =
 			{
@@ -143,7 +154,10 @@ Block_CalcBits_BVOP_direct(int16_t * const coeff,
 				0, 0, 0, 0, 0, 0, 0, 0,
 			};
 		bits = 0;
-		distortion = sse8_16bit(data, zero_block, 8*sizeof(int16_t));
+
+		if (metric) distortion = masked_sseh8_16bit(data, (int16_t * const) zero_block, rel_var8);
+		else distortion = sse8_16bit(data, (int16_t * const) zero_block, 8*sizeof(int16_t));
+
 	}
 
 	return bits + (lambda*distortion)/quant_sq;
@@ -181,7 +195,7 @@ CheckCandidateRDBF(const int x, const int y, SearchData * const data, const unsi
 		transfer_8to16subro(in, data->Cur + s, ptr + s, data->iEdgedWidth);
 		rd += Block_CalcBits_BVOP(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type,
 								&cbp, i, data->scan_table, data->lambda[i], data->mpeg_quant_matrices, 
-								data->quant_sq, &cbpcost);
+								data->quant_sq, &cbpcost, data->rel_var8[i], data->metric);
 		if (rd >= data->iMinSAD[0]) return;
 	}
 
@@ -194,7 +208,7 @@ CheckCandidateRDBF(const int x, const int y, SearchData * const data, const unsi
 	transfer_8to16subro(in, data->CurU, ptr, data->iEdgedWidth/2);
 	rd += Block_CalcBits_BVOP(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type,
 								&cbp, 4, data->scan_table, data->lambda[4], data->mpeg_quant_matrices, 
-								data->quant_sq, &cbpcost);
+								data->quant_sq, &cbpcost, data->rel_var8[4], data->metric);
 	if (rd >= data->iMinSAD[0]) return;
 
 	/* chroma V */
@@ -202,7 +216,7 @@ CheckCandidateRDBF(const int x, const int y, SearchData * const data, const unsi
 	transfer_8to16subro(in, data->CurV, ptr, data->iEdgedWidth/2);
 	rd += Block_CalcBits_BVOP(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type, 
 								&cbp, 5, data->scan_table, data->lambda[5], data->mpeg_quant_matrices, 
-								data->quant_sq, &cbpcost);
+								data->quant_sq, &cbpcost, data->rel_var8[5], data->metric);
 
 	if (rd < data->iMinSAD[0]) {
 		data->iMinSAD[0] = rd;
@@ -261,7 +275,7 @@ CheckCandidateRDDirect(const int x, const int y, SearchData * const data, const 
 		transfer_8to16sub2ro(in, data->Cur + s, ReferenceF, ReferenceB, data->iEdgedWidth);
 		rd += Block_CalcBits_BVOP_direct(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type, 
 										&cbp, k, data->scan_table, data->lambda[k], data->mpeg_quant_matrices, 
-										data->quant_sq, &cbpcost);
+										data->quant_sq, &cbpcost, data->rel_var8[k], data->metric);
 		if (rd > *(data->iMinSAD)) return;
 	}
 	
@@ -277,7 +291,7 @@ CheckCandidateRDDirect(const int x, const int y, SearchData * const data, const 
 	transfer_8to16sub2ro(in, data->CurU, ReferenceF, ReferenceB, data->iEdgedWidth/2);
 	rd += Block_CalcBits_BVOP_direct(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type,
 									&cbp, 4, data->scan_table, data->lambda[4], data->mpeg_quant_matrices,
-									data->quant_sq, &cbpcost);
+									data->quant_sq, &cbpcost, data->rel_var8[4], data->metric);
 	if (rd >= data->iMinSAD[0]) return;
 
 	/* chroma V */
@@ -286,7 +300,7 @@ CheckCandidateRDDirect(const int x, const int y, SearchData * const data, const 
 	transfer_8to16sub2ro(in, data->CurV, ReferenceF, ReferenceB, data->iEdgedWidth/2);
 	rd += Block_CalcBits_BVOP_direct(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type,
 									&cbp, 5, data->scan_table, data->lambda[5], data->mpeg_quant_matrices,
-									data->quant_sq, &cbpcost);
+									data->quant_sq, &cbpcost, data->rel_var8[5], data->metric);
 
 	if (cbp || x != 0 || y != 0)
 		rd += BITS_MULT * d_mv_bits(x, y, zeroMV, 1, 0);
@@ -351,7 +365,7 @@ CheckCandidateRDInt(const int x, const int y, SearchData * const data, const uns
 		transfer_8to16sub2ro(in, data->Cur + s, ReferenceF + s, ReferenceB + s, data->iEdgedWidth);
 		rd += Block_CalcBits_BVOP(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type, &cbp,
 								i, data->scan_table, data->lambda[i], data->mpeg_quant_matrices,
-								data->quant_sq, &cbpcost);
+								data->quant_sq, &cbpcost, data->rel_var8[i], data->metric);
 	}
 
 	/* chroma */
@@ -366,7 +380,7 @@ CheckCandidateRDInt(const int x, const int y, SearchData * const data, const uns
 	transfer_8to16sub2ro(in, data->CurU, ReferenceF, ReferenceB, data->iEdgedWidth/2);
 	rd += Block_CalcBits_BVOP(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type, &cbp,
 								4, data->scan_table, data->lambda[4], data->mpeg_quant_matrices, 
-								data->quant_sq, &cbpcost);
+								data->quant_sq, &cbpcost, data->rel_var8[4], data->metric);
 	if (rd >= data->iMinSAD[0]) return;
 
 
@@ -376,7 +390,7 @@ CheckCandidateRDInt(const int x, const int y, SearchData * const data, const uns
 	transfer_8to16sub2ro(in, data->CurV, ReferenceF, ReferenceB, data->iEdgedWidth/2);
 	rd += Block_CalcBits_BVOP(coeff, in, data->dctSpace + 128, data->iQuant, data->quant_type, &cbp,
 								5, data->scan_table, data->lambda[5], data->mpeg_quant_matrices,
-								data->quant_sq, &cbpcost);
+								data->quant_sq, &cbpcost, data->rel_var8[5], data->metric);
 
 	if (rd < *(data->iMinSAD)) {
 		*data->iMinSAD = rd;
@@ -482,6 +496,7 @@ ModeDecision_BVOP_RD(SearchData * const Data_d,
 					 VECTOR * f_predMV,
 					 VECTOR * b_predMV,
 					 const uint32_t MotionFlags,
+					 const uint32_t VopFlags,
 					 const MBParam * const pParam,
 					 int x, int y,
 					 int best_sad)
@@ -495,6 +510,8 @@ ModeDecision_BVOP_RD(SearchData * const Data_d,
 	int no_of_checks = 0;
 
 	int order[4] = {MODE_DIRECT, MODE_FORWARD, MODE_BACKWARD, MODE_INTERPOLATE};
+
+	Data_d->metric = Data_b->metric = Data_f->metric = Data_i->metric = !!(VopFlags & XVID_VOP_RD_PSNRHVSM);
 
 	Data_d->scan_table = Data_b->scan_table = Data_f->scan_table = Data_i->scan_table 
 		= /*VopFlags & XVID_VOP_ALTERNATESCAN ? scan_tables[2] : */scan_tables[0];
@@ -510,6 +527,11 @@ ModeDecision_BVOP_RD(SearchData * const Data_d,
 		Data_b->lambda[i] = lam;
 		Data_f->lambda[i] = lam;
 		Data_i->lambda[i] = lam;
+
+		Data_d->rel_var8[i] = pMB->rel_var8[i];
+		Data_b->rel_var8[i] = pMB->rel_var8[i];
+		Data_f->rel_var8[i] = pMB->rel_var8[i];
+		Data_i->rel_var8[i] = pMB->rel_var8[i];
 	}
 
 	/* find the best order of evaluation - smallest SAD comes first, because *if* it means smaller RD,

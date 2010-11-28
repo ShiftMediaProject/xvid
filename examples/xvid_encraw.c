@@ -22,7 +22,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.44 2010-11-16 14:42:07 Isibaar Exp $
+ * $Id: xvid_encraw.c,v 1.45 2010-11-28 15:19:07 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -231,6 +231,7 @@ static 	int ARG_QPEL = 0;
 static 	int ARG_TURBO = 0;
 static 	int ARG_VHQMODE = 1;
 static 	int ARG_BVHQ = 0;
+static 	int ARG_QMETRIC = 0;
 static 	int ARG_CLOSED_GOP = 1;
 static 	int ARG_CHROMAME = 1;
 static 	int ARG_PAR = 1;
@@ -551,6 +552,9 @@ main(int argc,
 		} else if (strcmp("-vhqmode", argv[i]) == 0 && i < argc - 1) {
 			i++;
 			ARG_VHQMODE = atoi(argv[i]);
+		} else if (strcmp("-metric", argv[i]) == 0 && i < argc - 1) {
+			i++;
+			ARG_QMETRIC = atoi(argv[i]);
 		} else if (strcmp("-framerate", argv[i]) == 0 && i < argc - 1) {
 			int exponent;
 			i++;
@@ -1868,6 +1872,7 @@ usage()
 	fprintf(stderr, " -quality integer               : quality ([0..%d]) (6)\n", ME_ELEMENTS - 1);
 	fprintf(stderr, " -vhqmode integer               : level of R-D optimizations ([0..4]) (1)\n");
 	fprintf(stderr, " -bvhq                          : use R-D optimizations for B-frames\n");
+	fprintf(stderr, " -metric integer                : distortion metric for R-D opt (PSNR:0, PSNRHVSM: 1)\n");
 	fprintf(stderr, " -qpel                          : use quarter pixel ME\n");
 	fprintf(stderr, " -gmc                           : use global motion compensation\n");
 	fprintf(stderr, " -qtype   integer               : quantization type (H263:0, MPEG4:1) (0)\n");
@@ -1879,7 +1884,7 @@ usage()
 	fprintf(stderr, " -stats                         : print stats about encoded frames\n");
 	fprintf(stderr, " -ssim [integer]                : prints ssim for every frame (accurate: 0 fast: 4) (2)\n");
 	fprintf(stderr, " -ssim_file filename            : outputs the ssim stats into a file\n");
-	fprintf(stderr, " -psnrhvsm                      : prints psnr-hvs-m metric for every frame\n");
+	fprintf(stderr, " -psnrhvsm                      : prints PSNRHVSM metric for every frame\n");
 	fprintf(stderr, " -debug                         : activates xvidcore internal debugging output\n");
 	fprintf(stderr, " -vop_debug                     : print some info directly into encoded frames\n");
 	fprintf(stderr, " -nochromame                    : Disable chroma motion estimation\n");
@@ -2481,6 +2486,9 @@ enc_main(void *enc_handle,
 
 	if (ARG_BVHQ) 
 		xvid_enc_frame.vop_flags |= XVID_VOP_RD_BVOP;
+
+	if (ARG_QMETRIC == 1)
+		xvid_enc_frame.vop_flags |= XVID_VOP_RD_PSNRHVSM;
 
 	switch (ARG_VHQMODE) /* this is the same code as for vfw */
 	{

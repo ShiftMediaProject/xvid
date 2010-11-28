@@ -3,7 +3,8 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Sum Of Absolute Difference related code -
  *
- *  Copyright(C) 2001-2003 Peter Ross <pross@xvid.org>
+ *  Copyright(C) 2001-2010 Peter Ross <pross@xvid.org>
+ *               2010      Michael Militzer <michael@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: sad.c,v 1.16 2004-04-12 15:49:56 edgomez Exp $
+ * $Id: sad.c,v 1.17 2010-11-28 15:18:21 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -37,6 +38,10 @@ dev16FuncPtr dev16;
 sad16vFuncPtr sad16v;
 sse8Func_16bitPtr sse8_16bit;
 sse8Func_8bitPtr sse8_8bit;
+
+sseh8Func_16bitPtr sseh8_16bit;
+coeff8_energyFunc_Ptr coeff8_energy;
+blocksum8Func_Ptr blocksum8;
 
 sadInitFuncPtr sadInit;
 
@@ -328,4 +333,93 @@ sse8_8bit_c(const uint8_t * b1,
 	}
 
 	return(sse);
+}
+
+
+/* PSNR-HVS-M helper functions */
+
+static const int16_t iMask_Coeff[64] = { 
+        0, 29788, 32767, 20479, 13653, 8192, 6425, 5372,
+    27306, 27306, 23405, 17246, 12603, 5650, 5461, 5958,
+    23405, 25205, 20479, 13653,  8192, 5749, 4749, 5851,
+    23405, 19275, 14894, 11299,  6425, 3766, 4096, 5285,
+    18204, 14894,  8856,  5851,  4819, 3006, 3181, 4255,
+    13653,  9362,  5958,  5120,  4045, 3151, 2900, 3562,
+     6687,  5120,  4201,  3766,  3181, 2708, 2730, 3244,
+     4551,  3562,  3449,  3344,  2926, 3277, 3181, 3310
+};
+
+/* Calculate CSF weighted energy of DCT coefficients */
+
+uint32_t 
+coeff8_energy_c(const int16_t * dct)
+{
+	int x, y;
+	uint32_t sum_a = 0;
+
+	for (y = 0; y < 8; y += 2) {
+		for (x = 0; x < 8; x += 2) {
+			int16_t a0 = ((dct[y*8+x]<<4) * iMask_Coeff[y*8+x]) >> 16;
+			int16_t a1 = ((dct[y*8+x+1]<<4) * iMask_Coeff[y*8+x+1]) >> 16;
+			int16_t a2 = ((dct[(y+1)*8+x]<<4) * iMask_Coeff[(y+1)*8+x]) >> 16;
+			int16_t a3 = ((dct[(y+1)*8+x+1]<<4) * iMask_Coeff[(y+1)*8+x+1]) >> 16;
+
+			sum_a += ((a0*a0 + a1*a1 + a2*a2 + a3*a3) >> 3);
+		}
+	}
+
+	return sum_a;
+}
+
+/* Calculate MSE of DCT coeffs reduced by masking effect */
+
+uint32_t 
+sseh8_16bit_c(const int16_t * cur, const int16_t * ref, uint16_t mask)
+{
+	int j, i;
+	uint32_t mse_h = 0;
+
+	for (j = 0; j < 8; j++) {
+		for (i = 0; i < 8; i++) {
+			uint32_t t = (mask * Inv_iMask_Coeff[j*8+i] + 32) >> 7;
+			uint16_t u = abs(cur[j*8+i] - ref[j*8+i]) << 4;
+			uint16_t thresh = (t < 65536) ? t : 65535;
+
+			if (u < thresh)	
+				u = 0; /* The error is not perceivable */
+			else 
+				u -= thresh; 
+
+			u = ((u + iCSF_Round[j*8 + i]) * iCSF_Coeff[j*8 + i]) >> 16;
+
+			mse_h += (uint32_t) (u * u);
+		}
+	}
+
+	return mse_h;
+}
+
+/* Sums all pixels of 8x8 block */
+
+uint32_t
+blocksum8_c(const int8_t * cur, int stride, uint16_t sums[4], uint32_t squares[4])
+{
+	int i, j;
+	uint32_t sum = 0;
+
+	sums[0] = sums[1] = sums[2] = sums[3] = 0;
+	squares[0] = squares[1] = squares[2] = squares[3] = 0;
+
+	for (j = 0; j < 8; j++) {
+		for (i = 0; i < 8; i++) {
+			uint8_t p = cur[j*stride + i];
+
+			sums[(j>>2)*2 + (i>>2)] += p;
+			squares[(j>>2)*2 + (i>>2)] += p*p;
+
+			sum += p;
+		}
+	}
+
+	return sum;
 }
