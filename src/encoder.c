@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.132 2010-11-23 11:00:35 Isibaar Exp $
+ * $Id: encoder.c,v 1.133 2010-11-28 15:18:21 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -888,13 +888,13 @@ static void call_plugins(Encoder * pEnc, FRAMEINFO * frame, IMAGE * original,
 					for (k = 0; k < 6; k++) {
 						frame->mbs[j*pEnc->mbParam.mb_width + i].lambda[k] = 
 							(int) ((float)(1<<LAMBDA_EXP) * data.lambda[6 * (j * data.mb_width + i) + k]);
-			}
+					}
 		} else {
 			for (j = 0; j<pEnc->mbParam.mb_height; j++)
 				for (i = 0; i<pEnc->mbParam.mb_width; i++)
 					for (k = 0; k < 6; k++) {
 						frame->mbs[j*pEnc->mbParam.mb_width + i].lambda[k] = 1<<LAMBDA_EXP;
-			}
+					}
 		}
 
 
@@ -996,7 +996,6 @@ simplify_par(int *par_width, int *par_height)
 
 	return;
 }
-
 
 /*****************************************************************************
  * IPB frame encoder entry point
@@ -1656,6 +1655,11 @@ FrameCodeP(Encoder * pEnc,
 
 	current->coding_type = P_VOP;
 
+	if (current->vop_flags & XVID_VOP_RD_PSNRHVSM) {
+		image_block_variance(&current->image, pParam->edged_width, current->mbs, 
+		                     pParam->mb_width, pParam->mb_height);
+	}
+
 	call_plugins(pEnc, pEnc->current, NULL, XVID_PLG_FRAME, NULL, NULL, NULL);
 
 	SetMacroblockQuants(&pEnc->mbParam, current);
@@ -2003,6 +2007,12 @@ FrameCodeB(Encoder * pEnc,
 	}
 
 	frame->coding_type = B_VOP;
+
+	if (pEnc->current->vop_flags & XVID_VOP_RD_PSNRHVSM) {
+		image_block_variance(&pEnc->current->image, pEnc->mbParam.edged_width, pEnc->current->mbs, 
+		                     pEnc->mbParam.mb_width, pEnc->mbParam.mb_height);
+	}
+
 	call_plugins(pEnc, frame, NULL, XVID_PLG_FRAME, NULL, NULL, NULL);
 
 	frame->fcode = frame->bcode = pEnc->current->fcode;

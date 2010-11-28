@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Image management functions -
  *
- *  Copyright(C) 2001-2004 Peter Ross <pross@xvid.org>
+ *  Copyright(C) 2001-2010 Peter Ross <pross@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.c,v 1.45 2010-08-10 15:00:12 Isibaar Exp $
+ * $Id: image.c,v 1.46 2010-11-28 15:18:21 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -860,6 +860,51 @@ long plane_sse(uint8_t *orig,
 	}
 
 	return (sse);
+}
+
+void image_block_variance(IMAGE * orig_image,
+				          uint16_t stride, 
+				          MACROBLOCK *mbs,
+				          uint16_t mb_width, 
+				          uint16_t mb_height)
+{
+	DECLARE_ALIGNED_MATRIX(sums, 1, 4, uint16_t, CACHE_LINE);
+	DECLARE_ALIGNED_MATRIX(squares, 1, 4, uint32_t, CACHE_LINE);
+	
+	int x, y, i, j;
+	uint8_t *orig = orig_image->y;
+
+	for (y = 0; y < mb_height; y++) {
+		for (x = 0; x < mb_width; x++) {
+			MACROBLOCK *pMB = &mbs[x + y * mb_width];
+			uint32_t var4[4];
+			uint32_t sum = 0, square = 0;
+
+			for (j = 0; j < 2; j++) {
+				for (i = 0; i < 2; i++) {
+					int lsum = blocksum8(orig + ((y<<4) + (j<<3))*stride + (x<<4) + (i<<3), 
+										 stride, sums, squares);
+					int lsquare = (squares[0] + squares[1] + squares[2] + squares[3]);
+
+					sum += lsum;
+					square += lsquare;
+
+					var4[0] = (squares[0]<<4) - sums[0]*sums[0];
+					var4[1] = (squares[1]<<4) - sums[1]*sums[1];
+					var4[2] = (squares[2]<<4) - sums[2]*sums[2];
+					var4[3] = (squares[3]<<4) - sums[3]*sums[3];
+
+					pMB->rel_var8[j*2 + i] = lsquare - lsum*lsum;
+					
+					if (pMB->rel_var8[j*2 + i])
+						pMB->rel_var8[j*2 + i] = 256*(var4[0] + var4[1] + var4[2] + var4[3]) / 
+												 pMB->rel_var8[j*2 + i]; /* 4*(Var(Di)/Var(D)) */
+					else 
+						pMB->rel_var8[j*2 + i] = 64;
+				}
+			}
+		}
+	}
 }
 
 #if 0

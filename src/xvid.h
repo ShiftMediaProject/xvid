@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.70 2010-11-16 14:42:07 Isibaar Exp $
+ * $Id: xvid.h,v 1.71 2010-11-28 15:18:21 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -73,7 +73,7 @@ extern "C" {
  * doesnt hurt but not increasing it could cause difficulty for decoders in the
  * future
  */
-#define XVID_BS_VERSION 57 
+#define XVID_BS_VERSION 58 
 
 /*****************************************************************************
  * error codes
@@ -369,7 +369,6 @@ typedef struct {
 #define XVID_REQPSNR     (1<<1) /* plugin requires psnr between the uncompressed and compressed image*/
 #define XVID_REQDQUANTS  (1<<2) /* plugin requires access to the dquant table */
 #define XVID_REQLAMBDA   (1<<3) /* plugin requires access to the lambda table */
-
 
 typedef struct
 {
@@ -669,6 +668,7 @@ extern int xvid_encore(void *handle, int opt, void *param1, void *param2);
 #define XVID_VOP_MODEDECISION_RD      (1<< 8) /* enable DCT-ME and use it for mode decision */
 #define XVID_VOP_FAST_MODEDECISION_RD (1<<12) /* use simplified R-D mode decision */
 #define XVID_VOP_RD_BVOP              (1<<13) /* enable rate-distortion mode decision in b-frames */
+#define XVID_VOP_RD_PSNRHVSM          (1<<14) /* use PSNR-HVS-M as metric for rate-distortion optimizations */
 
 /* Only valid for vol_flags|=XVID_VOL_INTERLACING */
 #define XVID_VOP_TOPFIELDFIRST        (1<< 9) /* set top-field-first flag  */

@@ -1,10 +1,10 @@
 /*****************************************************************************
  *
  *  XVID MPEG-4 VIDEO CODEC
- *  - MB Transfert/Quantization functions -
+ *  - MB Transfer/Quantization functions -
  *
- *  Copyright(C) 2001-2003  Peter Ross <pross@xvid.org>
- *               2001-2003  Michael Militzer <isibaar@xvid.org>
+ *  Copyright(C) 2001-2010  Peter Ross <pross@xvid.org>
+ *               2001-2010  Michael Militzer <michael@xvid.org>
  *               2003       Edouard Gomez <ed.gomez@free.fr>
  *
  *  This program is free software ; you can redistribute it and/or modify
@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbtransquant.c,v 1.32 2006-07-10 08:09:59 syskin Exp $
+ * $Id: mbtransquant.c,v 1.33 2010-11-28 15:18:21 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -40,6 +40,7 @@
 #include "../dct/fdct.h"
 #include "../dct/idct.h"
 #include "../quant/quant.h"
+#include "../motion/sad.h"
 #include "../encoder.h"
 
 #include  "../quant/quant_matrix.h"
@@ -187,7 +188,9 @@ dct_quantize_trellis_c(int16_t *const Out,
 					   const uint16_t * const QuantMatrix,
 					   int Non_Zero,
 					   int Sum,
-					   int Lambda_Mod);
+					   int Lambda_Mod,
+					   const uint32_t rel_var8,
+					   const int Metric);
 
 /* Quantize all blocks -- Inter mode */
 static __inline uint8_t
@@ -240,7 +243,9 @@ MBQuantInter(const MBParam * pParam,
 										 matrix,
 										 63,
 										 sum,
-										 pMB->lambda[i]);
+										 pMB->lambda[i],
+										 pMB->rel_var8[i],
+										 !!(frame->vop_flags & XVID_VOP_RD_PSNRHVSM));
 		}
 		stop_quant_timer();
 
@@ -763,6 +768,23 @@ Find_Last(const int16_t *C, const uint16_t *Zigzag, int i)
 
 #define TRELLIS_MIN_EFFORT	3
 
+static __inline uint32_t calc_mseh(int16_t dQ, uint16_t mask, 
+                                   const int index, const int Lambda)
+{
+	uint32_t t = (mask * Inv_iMask_Coeff[index] + 32) >> 7;
+	uint16_t u = abs(dQ) << 4;
+	uint16_t thresh = (t < 65536) ? t : 65535;
+
+	if (u <= thresh)	
+		u = 0; /* The error is not perceivable */
+	else 
+		u -= thresh; 
+
+	u = ((u + iCSF_Round[index]) * iCSF_Coeff[index]) >> 16;
+
+	return (((Lambda*u*u)>>4) + 4*Lambda*dQ*dQ) / 5;
+}
+
 /* this routine has been strippen of all debug code */
 static int
 dct_quantize_trellis_c(int16_t *const Out,
@@ -772,7 +794,9 @@ dct_quantize_trellis_c(int16_t *const Out,
 					   const uint16_t * const QuantMatrix,
 					   int Non_Zero,
 					   int Sum,
-					   int Lambda_Mod)
+					   int Lambda_Mod,
+					   const uint32_t rel_var8,
+					   const int Metric)
 {
 
 	/* Note: We should search last non-zero coeffs on *real* DCT input coeffs
@@ -797,6 +821,8 @@ dct_quantize_trellis_c(int16_t *const Out,
 
 	int i, j;
 
+	uint32_t mask = (Metric) ? ((isqrt(2*coeff8_energy(In)*rel_var8) + 48) >> 6) : 0;
+
 	/* source (w/ CBP penalty) */
 	Run_Costs[-1] = 2<<TL_SHIFT;
 
@@ -812,7 +838,7 @@ dct_quantize_trellis_c(int16_t *const Out,
 
 		const int AC = In[Zigzag[i]];
 		const int Level1 = Out[Zigzag[i]];
-		const unsigned int Dist0 = Lambda* AC*AC;
+		const unsigned int Dist0 = (Metric) ? (calc_mseh(AC, mask, Zigzag[i], Lambda)) : (Lambda* AC*AC);
 		uint32_t Best_Cost = 0xf0000000;
 		Last_Cost += Dist0;
 
@@ -829,7 +855,7 @@ dct_quantize_trellis_c(int16_t *const Out,
 				Nodes[i].Level = 1;
 				dQ = Lev0 - AC;
 			}
-			Cost0 = Lambda*dQ*dQ;
+			Cost0 = (Metric) ? (calc_mseh(dQ, mask, Zigzag[i], Lambda)) : (Lambda*dQ*dQ);
 
 			Nodes[i].Run = 1;
 			Best_Cost = (Code_Len20[0]<<TL_SHIFT) + Run_Costs[i-1]+Cost0;
@@ -884,8 +910,14 @@ dct_quantize_trellis_c(int16_t *const Out,
 				Tbl_L2_Last = (Level2>=- 6) ? B16_17_Code_Len_Last[Level2^-1] : Code_Len0;
 			}
 
-			Dist1 = Lambda*dQ1*dQ1;
-			Dist2 = Lambda*dQ2*dQ2;
+			if (Metric) {
+				Dist1 = calc_mseh(dQ1, mask, Zigzag[i], Lambda);
+				Dist2 = calc_mseh(dQ2, mask, Zigzag[i], Lambda);
+			}
+			else {
+				Dist1 = Lambda*dQ1*dQ1;
+				Dist2 = Lambda*dQ2*dQ2;
+			}
 			dDist21 = Dist2-Dist1;
 
 			for(Run=i-Run_Start; Run>0; --Run)

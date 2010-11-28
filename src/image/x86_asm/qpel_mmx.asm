@@ -6,7 +6,7 @@
 ; *
 ; *  This file is part of Xvid, a free MPEG-4 video encoder/decoder
 ; *
-; *  Xvid is free software; you can rDST_PTRstribute it and/or modify it
+; *  Xvid is free software; you can redistribute it and/or modify it
 ; *  under the terms of the GNU General Public License as published by
 ; *  the Free Software Foundation; either version 2 of the License, or
 ; *  (at your option) any later version.
@@ -20,7 +20,7 @@
 ; *  along with this program; if not, write to the Free Software
 ; *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 ; *
-; * $Id: qpel_mmx.asm,v 1.12 2010-03-09 10:00:14 Isibaar Exp $
+; * $Id: qpel_mmx.asm,v 1.13 2010-11-28 15:18:21 Isibaar Exp $
 ; *
 ; *************************************************************************/
 
