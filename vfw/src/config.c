@@ -3,6 +3,8 @@
  *	XVID VFW FRONTEND
  *	config
  *
+ *	Copyright(C) Peter Ross <pross@xvid.org>
+ *
  *	This program is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -17,48 +19,14 @@
  *	along with this program; if not, write to the Free Software
  *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *************************************************************************/
-
-/**************************************************************************
- *
- *	History:
- *
- *	15.06.2002	added bframes options
- *	21.04.2002	fixed custom matrix support, tried to get dll size down
- *	17.04.2002	re-enabled lumi masking in 1st pass
- *	15.04.2002	updated cbr support
- *	07.04.2002	min keyframe interval checkbox
- *				2-pass max bitrate and overflow customization
- *	04.04.2002	interlacing support
- *				hinted ME support
- *	24.03.2002	daniel smith <danielsmith@astroboymail.com>
- *				added Foxer's new CBR engine
- *				- cbr_buffer is being used as reaction delay (quick hack)
- *	23.03.2002	daniel smith <danielsmith@astroboymail.com>
- *				added load defaults button
- *				merged foxer's alternative 2-pass code (2-pass alt tab)
- *				added proper tooltips
- *				moved registry data into reg_ints/reg_strs arrays
- *				added DEBUGERR output on errors instead of returning
- *	16.03.2002	daniel smith <danielsmith@astroboymail.com>
- *				rewrote/restructured most of file
- *				added tooltips (kind of - dirty message hook method)
- *				split tabs into a main dialog / advanced prop sheet
- *				advanced controls are now enabled/disabled by mode
- *				added modulated quantization, DX50 fourcc
- *	11.03.2002  Min Chen <chenm001@163.com>
- *			  now get Core Version use xvid_init()
- *	05.03.2002  Min Chen <chenm001@163.com>
- *				Add Core version display to about box
- *	01.12.2001	inital version; (c)2001 peter ross <pross@xvid.org>
+ * $Id: config.c,v 1.41 2010-12-02 06:46:07 Isibaar Exp $
  *
  *************************************************************************/
-
 
 #include <windows.h>
 #include <commctrl.h>
 #include <stdio.h>  /* sprintf */
-#include <xvid.h>	/* XviD API */
+#include <xvid.h>	/* Xvid API */
 
 #include "debug.h"
 #include "config.h"
@@ -115,49 +83,49 @@ BOOL CALLBACK enum_tooltips(HWND hWnd, LPARAM lParam)
 const profile_t profiles[] =
 {
 /*  name                p@l    w    h    fps  obj Tvmv vmv    vcv    ac%   vbv        pkt     bps    vbv_peak dbf flags */
-  { "Simple @ L0",      0x08,  176, 144, 15,  1,  198,   99,   1485, 100,  10*16368,  2048,   64000,        0, -1, PROFILE_S },
+#ifndef EXTRA_PROFILES
+  { "Xvid Mobile",  "Xvid Mobile",  0x00,  352, 240, 30,  1,  990,  330,   9900, 100,  128*8192,    -1, 1334850,  8000000,  5, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_PACKED|PROFILE_MPEGQUANT|PROFILE_QPEL|PROFILE_XVID },
+  { "Xvid Home",    "Xvid Home",    0x00,  720, 576, 25,  1, 4860, 1620,  40500, 100,  384*8192,    -1, 4854000,  8000000,  5, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_PACKED|PROFILE_MPEGQUANT|PROFILE_QPEL|PROFILE_INTERLACE|PROFILE_XVID },
+  { "Xvid HD 720",  "Xvid HD 720",  0x00, 1280, 720, 30,  1,10800, 3600, 108000, 100,  768*8192,    -1, 9708400, 16000000,  5, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_PACKED|PROFILE_MPEGQUANT|PROFILE_QPEL|PROFILE_INTERLACE|PROFILE_XVID },
+  { "Xvid HD 1080",	"Xvid HD 1080", 0x00, 1920,1080, 30,  1,24480, 8160, 244800, 100, 2047*8192,    -1,20480000, 36000000,  5, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_PACKED|PROFILE_MPEGQUANT|PROFILE_QPEL|PROFILE_INTERLACE|PROFILE_XVID },
+#else
+  { "Handheld",	         "Handheld",		  0x00,  176, 144, 15,  1,  198,   99,   1485, 100,   32*8192,    -1,  537600,   800000,  0, PROFILE_ADAPTQUANT|PROFILE_EXTRA },
+  { "Portable NTSC",     "Portable NTSC",	  0x00,  352, 240, 30,  1,  990,  330,  36000, 100,  384*8192,    -1, 4854000,  8000000,  1, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_PACKED|PROFILE_EXTRA },
+  { "Portable PAL",	     "Portable PAL",	  0x00,  352, 288, 25,  1, 1188,  396,  36000, 100,  384*8192,    -1, 4854000,  8000000,  1, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_PACKED|PROFILE_EXTRA },
+  { "Home Theatre NTSC", "Home Theatre NTSC", 0x00,  720, 480, 30,  1, 4050, 1350,  40500, 100,  384*8192,    -1, 4854000,  8000000,  1, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_PACKED|PROFILE_INTERLACE|PROFILE_EXTRA },
+  { "Home Theatre PAL",  "Home Theatre PAL",  0x00,  720, 576, 25,  1, 4860, 1620,  40500, 100,  384*8192,    -1, 4854000,  8000000,  1, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_PACKED|PROFILE_INTERLACE|PROFILE_EXTRA },
+  { "HDTV",	             "HDTV",			  0x00, 1280, 720, 30,  1,10800, 3600, 108000, 100,  768*8192,    -1, 9708400, 16000000,  2, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_PACKED|PROFILE_INTERLACE|PROFILE_EXTRA },
+#endif
+
+  { "MPEG4 Simple @ L0", "MPEG4 SP @ L0",     0x08,  176, 144, 15,  1,  198,   99,   1485, 100,  10*16368,  2048,   64000,        0, -1, PROFILE_S },
   /* simple@l0: max f_code=1, intra_dc_vlc_threshold=0 */
   /* if ac preidition is used, adaptive quantization must not be used */
   /* <=qcif must be used */
-  { "Simple @ L1",      0x01,  176, 144, 15,  4,  198,   99,   1485, 100,  10*16368,  2048,   64000,        0, -1, PROFILE_S|PROFILE_ADAPTQUANT },
-  { "Simple @ L2",      0x02,  352, 288, 15,  4,  792,  396,   5940, 100,  40*16368,  4096,  128000,        0, -1, PROFILE_S|PROFILE_ADAPTQUANT },
-  { "Simple @ L3",      0x03,  352, 288, 30,  4,  792,  396,  11880, 100,  40*16368,  8192,  384000,        0, -1, PROFILE_S|PROFILE_ADAPTQUANT },
+  { "MPEG4 Simple @ L1", "MPEG4 SP @ L1",     0x01,  176, 144, 15,  4,  198,   99,   1485, 100,  10*16368,  2048,   64000,        0, -1, PROFILE_S|PROFILE_ADAPTQUANT },
+  { "MPEG4 Simple @ L2", "MPEG4 SP @ L2",     0x02,  352, 288, 15,  4,  792,  396,   5940, 100,  40*16368,  4096,  128000,        0, -1, PROFILE_S|PROFILE_ADAPTQUANT },
+  { "MPEG4 Simple @ L3", "MPEG4 SP @ L3",     0x03,  352, 288, 30,  4,  792,  396,  11880, 100,  40*16368,  8192,  384000,        0, -1, PROFILE_S|PROFILE_ADAPTQUANT },
   /* From ISO/IEC 14496-2:2004/FPDAM 2: New Levels for Simple Profile */
-  { "Simple @ L4a",     0x04,  640, 480, 30,  4, 2400, 1200,  36000, 100,  80*16368, 16384, 4000000,        0, -1, PROFILE_S|PROFILE_ADAPTQUANT },
-  { "Simple @ L5",      0x05,  720, 576, 30,  4, 3240, 1620,  40500, 100, 112*16368, 16384, 8000000,        0, -1, PROFILE_S|PROFILE_ADAPTQUANT },
+  { "MPEG4 Simple @ L4a","MPEG4 SP @ L4a",    0x04,  640, 480, 30,  4, 2400, 1200,  36000, 100,  80*16368, 16384, 4000000,        0, -1, PROFILE_S|PROFILE_ADAPTQUANT },
+  { "MPEG4 Simple @ L5", "MPEG4 SP @ L5",     0x05,  720, 576, 30,  4, 3240, 1620,  40500, 100, 112*16368, 16384, 8000000,        0, -1, PROFILE_S|PROFILE_ADAPTQUANT },
   /* From ISO/IEC 14496-2:2004/FPDAM 4: Simple profile level 6 */
-  { "Simple @ L6",      0x06, 1280, 720, 30,  4, 7200, 3600, 108000, 100, 248*16368, 16384,12000000,        0, -1, PROFILE_S|PROFILE_ADAPTQUANT },
+  { "MPEG4 Simple @ L6", "MPEG4 SP @ L6",     0x06, 1280, 720, 30,  4, 7200, 3600, 108000, 100, 248*16368, 16384,12000000,        0, -1, PROFILE_S|PROFILE_ADAPTQUANT },
 
 #if 0 /* since rrv encoding is no longer support, these profiles have little use */
-  { "ARTS @ L1",        0x91,  176, 144, 15,  4,  198,   99,   1485, 100,  10*16368,  8192,   64000,        0, -1, PROFILE_ARTS },
-  { "ARTS @ L2",        0x92,  352, 288, 15,  4,  792,  396,   5940, 100,  40*16368, 16384,  128000,        0, -1, PROFILE_ARTS },
-  { "ARTS @ L3",        0x93,  352, 288, 30,  4,  792,  396,  11880, 100,  40*16368, 16384,  384000,        0, -1, PROFILE_ARTS },
-  { "ARTS @ L4",        0x94,  352, 288, 30, 16,  792,  396,  11880, 100,  80*16368, 16384, 2000000,        0, -1, PROFILE_ARTS },
+  { "MPEG4 ARTS @ L1", "MPEG4 ARTS @ L1",       0x91,  176, 144, 15,  4,  198,   99,   1485, 100,  10*16368,  8192,   64000,        0, -1, PROFILE_ARTS },
+  { "MPEG4 ARTS @ L2", "MPEG4 ARTS @ L2",       0x92,  352, 288, 15,  4,  792,  396,   5940, 100,  40*16368, 16384,  128000,        0, -1, PROFILE_ARTS },
+  { "MPEG4 ARTS @ L3", "MPEG4 ARTS @ L3",       0x93,  352, 288, 30,  4,  792,  396,  11880, 100,  40*16368, 16384,  384000,        0, -1, PROFILE_ARTS },
+  { "MPEG4 ARTS @ L4", "MPEG4 ARTS @ L4",       0x94,  352, 288, 30, 16,  792,  396,  11880, 100,  80*16368, 16384, 2000000,        0, -1, PROFILE_ARTS },
 #endif
 
-  { "Advanced Simple @ L0",          0xf0,  176, 144, 30,  1,  297,   99,   2970, 100,  10*16368,  2048,  128000,        0, -1, PROFILE_AS },
-  { "Advanced Simple @ L1",          0xf1,  176, 144, 30,  4,  297,   99,   2970, 100,  10*16368,  2048,  128000,        0, -1, PROFILE_AS },
-  { "Advanced Simple @ L2",          0xf2,  352, 288, 15,  4, 1188,  396,   5940, 100,  40*16368,  4096,  384000,        0, -1, PROFILE_AS },
-  { "Advanced Simple @ L3",          0xf3,  352, 288, 30,  4, 1188,  396,  11880, 100,  40*16368,  4096,  768000,        0, -1, PROFILE_AS },
+  { "MPEG4 Advanced Simple @ L0", "MPEG4 ASP @ L0",         0xf0,  176, 144, 30,  1,  297,   99,   2970, 100,  10*16368,  2048,  128000,        0, -1, PROFILE_AS },
+  { "MPEG4 Advanced Simple @ L1", "MPEG4 ASP @ L1",         0xf1,  176, 144, 30,  4,  297,   99,   2970, 100,  10*16368,  2048,  128000,        0, -1, PROFILE_AS },
+  { "MPEG4 Advanced Simple @ L2", "MPEG4 ASP @ L2",         0xf2,  352, 288, 15,  4, 1188,  396,   5940, 100,  40*16368,  4096,  384000,        0, -1, PROFILE_AS },
+  { "MPEG4 Advanced Simple @ L3", "MPEG4 ASP @ L3",         0xf3,  352, 288, 30,  4, 1188,  396,  11880, 100,  40*16368,  4096,  768000,        0, -1, PROFILE_AS },
  /*  ISMA Profile 1, (ASP) @ L3b (CIF, 1.5 Mb/s) CIF(352x288), 30fps, 1.5Mbps max ??? */
-  { "Advanced Simple @ L4",          0xf4,  352, 576, 30,  4, 2376,  792,  23760,  50,  80*16368,  8192, 3000000,        0, -1, PROFILE_AS },
-  { "Advanced Simple @ L5",          0xf5,  720, 576, 30,  4, 4860, 1620,  48600,  25, 112*16368, 16384, 8000000,        0, -1, PROFILE_AS },
+  { "MPEG4 Advanced Simple @ L4", "MPEG4 ASP @ L4",         0xf4,  352, 576, 30,  4, 2376,  792,  23760,  50,  80*16368,  8192, 3000000,        0, -1, PROFILE_AS },
+  { "MPEG4 Advanced Simple @ L5", "MPEG4 ASP @ L5",         0xf5,  720, 576, 30,  4, 4860, 1620,  48600,  25, 112*16368, 16384, 8000000,        0, -1, PROFILE_AS },
 
-#ifndef EXTRA_PROFILES
-  { "Mobile",            0x00,  352, 240, 30,  1,  990,  330,  36000, 100,  128*8192,    -1, 1334850,  8000000,  5, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_PACKED|PROFILE_MPEGQUANT|PROFILE_QPEL },
-  { "Portable",          0x00,  640, 480, 30,  1, 3600, 1200,  36000, 100,  384*8192,    -1, 4854000,  8000000,  5, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_PACKED|PROFILE_MPEGQUANT|PROFILE_QPEL|PROFILE_INTERLACE },
-  { "Home",              0x00,  720, 576, 25,  1, 4860, 1620,  40500, 100,  384*8192,    -1, 4854000,  8000000,  5, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_PACKED|PROFILE_MPEGQUANT|PROFILE_QPEL|PROFILE_INTERLACE },
-  { "Highdef",           0x00, 1280, 720, 30,  1,10800, 3600, 108000, 100,  768*8192,    -1, 9708400, 16000000,  5, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_PACKED|PROFILE_MPEGQUANT|PROFILE_QPEL|PROFILE_INTERLACE },
-#else
-  { "Handheld",			 0x00,  176, 144, 15,  1,  198,   99,   1485, 100,   32*8192,    -1,  537600,   800000,  0, PROFILE_ADAPTQUANT|PROFILE_EXTRA },
-  { "Portable NTSC",	 0x00,  352, 240, 30,  1,  990,  330,  36000, 100,  384*8192,    -1, 4854000,  8000000,  1, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_PACKED|PROFILE_EXTRA },
-  { "Portable PAL",		 0x00,  352, 288, 25,  1, 1188,  396,  36000, 100,  384*8192,    -1, 4854000,  8000000,  1, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_PACKED|PROFILE_EXTRA },
-  { "Home Theatre NTSC", 0x00,  720, 480, 30,  1, 4050, 1350,  40500, 100,  384*8192,    -1, 4854000,  8000000,  1, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_PACKED|PROFILE_INTERLACE|PROFILE_EXTRA },
-  { "Home Theatre PAL",  0x00,  720, 576, 25,  1, 4860, 1620,  40500, 100,  384*8192,    -1, 4854000,  8000000,  1, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_PACKED|PROFILE_INTERLACE|PROFILE_EXTRA },
-  { "HDTV",				 0x00, 1280, 720, 30,  1,10800, 3600, 108000, 100,  768*8192,    -1, 9708400, 16000000,  2, PROFILE_4MV|PROFILE_ADAPTQUANT|PROFILE_BVOP|PROFILE_PACKED|PROFILE_INTERLACE|PROFILE_EXTRA },
-#endif
-
-  { "(unrestricted)",   0x00,    0,   0,  0,  0,    0,    0,      0, 100,   0*16368,    -1,       0,        0, -1, 0xffffffff & ~(PROFILE_EXTRA | PROFILE_PACKED)},
+  { "(unrestricted)", "(unrestricted)",  0x00,    0,   0,  0,  0,    0,    0,      0, 100,   0*16368,    -1,       0,        0, -1, 0xffffffff & ~(PROFILE_EXTRA | PROFILE_PACKED)},
 };
 
 
@@ -315,8 +283,8 @@ static const REG_INT reg_ints[] = {
 };
 
 static const REG_STR reg_strs[] = {
-	{"profile",					reg.profile_name,				"(unrestricted)"},
-  {"quality",         reg.quality_name,       QUALITY_GENERAL_STRING},
+	{"profile",					reg.profile_name,				"Xvid Home"},
+	{"quality",         reg.quality_name,       QUALITY_GENERAL_STRING},
 	{"stats",					reg.stats,						CONFIG_2PASS_FILE},
 };
 
@@ -406,7 +374,10 @@ void config_reg_get(CONFIG * config)
   /* find profile table index */
 	reg.profile = 0;
 	for (i=0; i<sizeof(profiles)/sizeof(profile_t); i++) {
-		if (lstrcmpi(profiles[i].name, reg.profile_name) == 0) {
+		char perm1[255] = {"Xvid "}, perm2[255] = {"MPEG4 "};
+		if (lstrcmpi(profiles[i].name, reg.profile_name) == 0 || 
+			lstrcmpi(profiles[i].name, lstrcat(perm1, reg.profile_name)) == 0 ||
+			lstrcmpi(profiles[i].name, lstrcat(perm2, reg.profile_name)) == 0) { /* legacy names */
 			reg.profile = i;
 		}
 	}
@@ -508,7 +479,7 @@ void config_reg_set(CONFIG * config)
 }
 
 
-/* clear XviD registry key, load defaults */
+/* clear Xvid registry key, load defaults */
 
 static void config_reg_default(CONFIG * config)
 {
@@ -898,6 +869,40 @@ static void adv_mode(HWND hDlg, int idd, CONFIG * config)
 		EnableDlgWindow(hDlg, IDC_BQUANTRATIO_S,	bvops);
 		EnableDlgWindow(hDlg, IDC_BQUANTOFFSET_S,   bvops);
 		EnableDlgWindow(hDlg, IDC_PACKED,		   bvops && !(profiles[profile].flags & PROFILE_PACKED));
+
+		switch(profile) {
+		case 0:
+			{
+				HICON profile_icon = LoadImage(g_hInst, MAKEINTRESOURCE(IDI_MOBILE), IMAGE_ICON, 0, 0, 0);
+				SendDlgItemMessage(hDlg, IDC_PROFILE_LOGO, STM_SETIMAGE, IMAGE_ICON, (LPARAM)profile_icon); 
+			}
+			break;
+		case 1:
+			{
+				HICON profile_icon = LoadImage(g_hInst, MAKEINTRESOURCE(IDI_HOME), IMAGE_ICON, 0, 0, 0);
+				SendDlgItemMessage(hDlg, IDC_PROFILE_LOGO, STM_SETIMAGE, IMAGE_ICON, (LPARAM)profile_icon); 
+			}
+			break;
+		case 2:
+			{
+				HICON profile_icon = LoadImage(g_hInst, MAKEINTRESOURCE(IDI_HD720), IMAGE_ICON, 0, 0, 0);
+				SendDlgItemMessage(hDlg, IDC_PROFILE_LOGO, STM_SETIMAGE, IMAGE_ICON, (LPARAM)profile_icon); 
+			}
+			break;
+		case 3:
+			{
+				HICON profile_icon = LoadImage(g_hInst, MAKEINTRESOURCE(IDI_HD1080), IMAGE_ICON, 0, 0, 0);
+				SendDlgItemMessage(hDlg, IDC_PROFILE_LOGO, STM_SETIMAGE, IMAGE_ICON, (LPARAM)profile_icon); 
+			}
+			break;
+		default:
+			SendDlgItemMessage(hDlg, IDC_PROFILE_LOGO, STM_SETIMAGE, IMAGE_ICON, (LPARAM)NULL); 
+			break;
+		}
+		if (profile < 4) 
+			ShowWindow(GetDlgItem(hDlg, IDC_PROFILE_LABEL), SW_HIDE);
+		else
+			ShowWindow(GetDlgItem(hDlg, IDC_PROFILE_LABEL), SW_SHOW);
 		break;
 
 	case IDD_AR:
@@ -965,6 +970,41 @@ static void adv_mode(HWND hDlg, int idd, CONFIG * config)
       EnableDlgWindow(hDlg, IDC_LEVEL_PEAKRATE_S, en_pr);
       EnableDlgWindow(hDlg, IDC_LEVEL_PEAKRATE,   en_pr);
     }
+
+		switch(profile) {
+		case 0:
+			{
+				HICON profile_icon = LoadImage(g_hInst, MAKEINTRESOURCE(IDI_MOBILE), IMAGE_ICON, 0, 0, 0);
+				SendDlgItemMessage(hDlg, IDC_PROFILE_LOGO, STM_SETIMAGE, IMAGE_ICON, (LPARAM)profile_icon); 
+			}
+			break;
+		case 1:
+			{
+				HICON profile_icon = LoadImage(g_hInst, MAKEINTRESOURCE(IDI_HOME), IMAGE_ICON, 0, 0, 0);
+				SendDlgItemMessage(hDlg, IDC_PROFILE_LOGO, STM_SETIMAGE, IMAGE_ICON, (LPARAM)profile_icon); 
+			}
+			break;
+		case 2:
+			{
+				HICON profile_icon = LoadImage(g_hInst, MAKEINTRESOURCE(IDI_HD720), IMAGE_ICON, 0, 0, 0);
+				SendDlgItemMessage(hDlg, IDC_PROFILE_LOGO, STM_SETIMAGE, IMAGE_ICON, (LPARAM)profile_icon); 
+			}
+			break;
+		case 3:
+			{
+				HICON profile_icon = LoadImage(g_hInst, MAKEINTRESOURCE(IDI_HD1080), IMAGE_ICON, 0, 0, 0);
+				SendDlgItemMessage(hDlg, IDC_PROFILE_LOGO, STM_SETIMAGE, IMAGE_ICON, (LPARAM)profile_icon); 
+			}
+			break;
+		default:
+			SendDlgItemMessage(hDlg, IDC_PROFILE_LOGO, STM_SETIMAGE, IMAGE_ICON, (LPARAM)NULL); 
+			break;
+		}
+		if (profile < 4) 
+			ShowWindow(GetDlgItem(hDlg, IDC_PROFILE_LABEL), SW_HIDE);
+		else
+			ShowWindow(GetDlgItem(hDlg, IDC_PROFILE_LABEL), SW_SHOW);
+
 		break;
 
 	case IDD_BITRATE :
@@ -1279,7 +1319,11 @@ static void adv_upload(HWND hDlg, int idd, CONFIG * config)
 
   case IDD_ENC:
 		SetDlgItemInt(hDlg, IDC_NUMTHREADS, config->num_threads, FALSE);
-		SendDlgItemMessage(hDlg, IDC_FOURCC, CB_SETCURSEL, config->fourcc_used, 0);
+		if(profiles[config->profile].flags & PROFILE_XVID)
+			SendDlgItemMessage(hDlg, IDC_FOURCC, CB_SETCURSEL, 0, 0);
+		else
+			SendDlgItemMessage(hDlg, IDC_FOURCC, CB_SETCURSEL, config->fourcc_used, 0);
+		EnableDlgWindow(hDlg, IDC_FOURCC, (!(profiles[config->profile].flags & PROFILE_XVID)));
 		CheckDlg(hDlg, IDC_VOPDEBUG, config->vop_debug);
 		CheckDlg(hDlg, IDC_DISPLAY_STATUS, config->display_status);
 		break;
@@ -1476,7 +1520,8 @@ static void adv_download(HWND hDlg, int idd, CONFIG * config)
 
   case IDD_ENC :
 		config->num_threads = min(4, config_get_uint(hDlg, IDC_NUMTHREADS, config->num_threads));
-		config->fourcc_used = SendDlgItemMessage(hDlg, IDC_FOURCC, CB_GETCURSEL, 0, 0);
+		if(!(profiles[config->profile].flags & PROFILE_XVID))
+		  config->fourcc_used = SendDlgItemMessage(hDlg, IDC_FOURCC, CB_GETCURSEL, 0, 0);
 		config->vop_debug = IsDlgChecked(hDlg, IDC_VOPDEBUG);
 		config->display_status = IsDlgChecked(hDlg, IDC_DISPLAY_STATUS);
 		break;
@@ -1939,7 +1984,7 @@ INT_PTR CALLBACK main_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		config = (CONFIG*)lParam;
 
 		for (i=0; i<sizeof(profiles)/sizeof(profile_t); i++)
-			SendDlgItemMessage(hDlg, IDC_PROFILE, CB_ADDSTRING, 0, (LPARAM)profiles[i].name);
+			SendDlgItemMessage(hDlg, IDC_PROFILE, CB_ADDSTRING, 0, (LPARAM)profiles[i].short_name);
 
 		SendDlgItemMessage(hDlg, IDC_MODE, CB_ADDSTRING, 0, (LPARAM)"Single pass");
 		SendDlgItemMessage(hDlg, IDC_MODE, CB_ADDSTRING, 0, (LPARAM)"Twopass - 1st pass");

@@ -3,7 +3,7 @@
  *	XVID MPEG-4 VFW FRONTEND
  *	- driverproc main -
  *
- *  Copyright(C) 2001-2003 Peter Ross <pross@xvid.org>
+ *  Copyright(C) Peter Ross <pross@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: driverproc.c,v 1.11 2008-11-30 18:05:42 Isibaar Exp $
+ * $Id: driverproc.c,v 1.12 2010-12-02 06:46:07 Isibaar Exp $
  *
  ****************************************************************************/
 

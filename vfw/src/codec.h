@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - VFW codec header  -
  *
- *  Copyright(C) 2002-2003 Anonymous <xvid-devel@xvid.org>
+ *  Copyright(C) Peter Ross <pross@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: codec.h,v 1.6 2008-11-26 10:11:16 Isibaar Exp $
+ * $Id: codec.h,v 1.7 2010-12-02 06:46:07 Isibaar Exp $
  *
  ****************************************************************************/
 #ifndef _CODEC_H_
