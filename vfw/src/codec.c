@@ -3,6 +3,8 @@
  *	XVID VFW FRONTEND
  *	codec
  *
+ *	Copyright(C) Peter Ross <pross@xvid.org>
+ *
  *	This program is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -17,33 +19,7 @@
  *	along with this program; if not, write to the Free Software
  *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *************************************************************************/
-
-/**************************************************************************
- *
- *	History:
- *
- *	12.07.2002	num_threads
- *	23.06.2002	XVID_CPU_CHKONLY; loading speed up
- *	25.04.2002	ICDECOMPRESS_PREROLL
- *	17.04.2002	re-enabled lumi masking for 1st pass
- *	15.04.2002	updated cbr support
- *	04.04.2002	separated 2-pass code to 2pass.c
- *				interlacing support
- *				hinted ME support
- *	23.03.2002	daniel smith <danielsmith@astroboymail.com>
- *				changed inter4v to only be in modes 5 or 6
- *				fixed null mode crash ?
- *				merged foxer's alternative 2-pass code
- *				added DEBUGERR output on errors instead of returning
- *	16.03.2002	daniel smith <danielsmith@astroboymail.com>
- *				changed BITMAPV4HEADER to BITMAPINFOHEADER
- *					- prevents memcpy crash in compress_get_format()
- *				credits are processed in external 2pass mode
- *				motion search precision = 0 now effective in 2-pass
- *				modulated quantization
- *				added DX50 fourcc
- *	01.12.2001	inital version; (c)2001 peter ross <pross@xvid.org>
+ * $Id: codec.c,v 1.27 2010-12-02 06:46:07 Isibaar Exp $
  *
  *************************************************************************/
 
@@ -221,7 +197,7 @@ LRESULT compress_get_format(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * 
 	outhdr->biClrUsed = 0;
 	outhdr->biClrImportant = 0;
 
-	if (codec->config.fourcc_used == 0)
+	if ((codec->config.fourcc_used == 0) || (profiles[codec->config.profile].flags & PROFILE_XVID))
 	{
 		outhdr->biCompression = FOURCC_XVID;
 	}

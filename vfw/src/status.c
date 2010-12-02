@@ -1,9 +1,9 @@
 /******************************************************************************
  *
- * XviD Video-for-Windows Frontend
+ * Xvid Video-for-Windows Frontend
  * Quantizer histogram and encoding status window
  *
- * Copyright (C) 2003 Peter Ross <pross@xvid.org>
+ * Copyright (C) Peter Ross <pross@xvid.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: status.c,v 1.4 2008-11-30 17:56:07 Isibaar Exp $
+ * $Id: status.c,v 1.5 2010-12-02 06:46:07 Isibaar Exp $
  *
  *****************************************************************************/
 

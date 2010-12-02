@@ -1,5 +1,5 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
+// Microsoft Visual C++ generated include file.
 // Used by resource.rc
 //
 #define IDC_LICENSE                     3
@@ -30,8 +30,12 @@
 #define IDD_LICENSE                     129
 #define IDR_GPL                         131
 #define IDD_COMMON                      132
-#define WIZ_CYDLG                       140
-#define PROP_MIN_CYDLG                  144
+#define WIZ_CYDLG                       133
+#define PROP_MIN_CYDLG                  134
+#define IDI_MOBILE                      135
+#define IDI_HOME                        136
+#define IDI_HD720                       137
+#define IDI_HD1080                      138
 #define PROP_SM_CYDLG                   188
 #define PROP_MIN_CXDLG                  212
 #define PROP_MED_CYDLG                  215
@@ -427,14 +431,16 @@
 #define IDC_LEVEL_VCV_S                 1403
 #define IDC_LEVEL_LEVEL_G               1404
 #define IDC_LUMMASK_S                   1405
+#define IDC_PROFILE_LOGO                1406
+#define IDC_PROFILE_LABEL               1407
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        133
+#define _APS_NEXT_RESOURCE_VALUE        139
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1406
+#define _APS_NEXT_CONTROL_VALUE         1408
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

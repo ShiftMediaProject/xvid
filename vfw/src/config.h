@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - VFW configuration header  -
  *
- *  Copyright(C) 2002-2003 Anonymous <xvid-devel@xvid.org>
+ *  Copyright(C) Peter Ross <pross@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,9 +19,10 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: config.h,v 1.13 2008-11-30 16:36:44 Isibaar Exp $
+ * $Id: config.h,v 1.14 2010-12-02 06:46:07 Isibaar Exp $
  *
  ****************************************************************************/
+
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
@@ -42,7 +43,7 @@ extern HINSTANCE g_hInst;
 
 /* min/max bitrate when not specified by profile */
 #define DEFAULT_MIN_KBPS	16
-#define DEFAULT_MAX_KBPS	10000
+#define DEFAULT_MAX_KBPS	20480
 #define DEFAULT_QUANT		400
 
 /* registry stuff */
@@ -59,13 +60,13 @@ extern HINSTANCE g_hInst;
 #define CONFIG_2PASS_FILE ".\\video.pass"
 
 /* codec modes */
-#define RC_MODE_1PASS		  0
-#define RC_MODE_2PASS1		 1
-#define RC_MODE_2PASS2		 2
-#define RC_MODE_NULL		   3
+#define RC_MODE_1PASS			0
+#define RC_MODE_2PASS1			1
+#define RC_MODE_2PASS2			2
+#define RC_MODE_NULL			3
 
-#define RC_ZONE_WEIGHT		 0
-#define RC_ZONE_QUANT		  1
+#define RC_ZONE_WEIGHT			0
+#define RC_ZONE_QUANT			1
 
 /* vhq modes */
 #define VHQ_OFF					0
@@ -246,7 +247,7 @@ typedef struct REG_STR
 #define PROFILE_4MV		    0x00000040
 #define PROFILE_PACKED      0x00000080
 #define PROFILE_EXTRA       0x00000100
-
+#define PROFILE_XVID        0x00000200
 
 static const int PARS[][2] = {
 	{1, 1},
@@ -263,6 +264,7 @@ static const int PARS[][2] = {
 typedef struct
 {
 	char * name;
+	char * short_name;
 	int id;		 /* mpeg-4 profile id; iso/iec 14496-2:2001 table G-1 */
 	int width;
 	int height;
