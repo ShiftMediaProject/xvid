@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_rd_based.c,v 1.15 2010-11-28 15:18:21 Isibaar Exp $
+ * $Id: estimation_rd_based.c,v 1.16 2010-12-18 16:02:00 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -371,7 +371,7 @@ findRD_inter4v(SearchData * const Data,
 				MACROBLOCK * const pMB, const MACROBLOCK * const pMBs,
 				const int x, const int y,
 				const MBParam * const pParam, const uint32_t MotionFlags,
-				const VECTOR * const backup)
+				const VECTOR * const backup, const int bound)
 {
 
 	unsigned int cbp = 0, t = 0, i;
@@ -400,11 +400,11 @@ findRD_inter4v(SearchData * const Data,
 		Data8->rel_var8[0] = Data->rel_var8[i];
 
 		if(Data->qpel) {
-			Data8->predMV = get_qpmv2(pMBs, pParam->mb_width, 0, x, y, i);
+			Data8->predMV = get_qpmv2(pMBs, pParam->mb_width, bound, x, y, i);
 			if (i != 0)	t = d_mv_bits(	Data8->currentQMV->x, Data8->currentQMV->y,
 										Data8->predMV, Data8->iFcode, 0) - 2;
 		} else {
-			Data8->predMV = get_pmv2(pMBs, pParam->mb_width, 0, x, y, i);
+			Data8->predMV = get_pmv2(pMBs, pParam->mb_width, bound, x, y, i);
 			if (i != 0)	t = d_mv_bits(	Data8->currentMV->x, Data8->currentMV->y,
 										Data8->predMV, Data8->iFcode, 0) - 2;
 		}
@@ -645,7 +645,8 @@ xvid_me_ModeDecision_RD(SearchData * const Data,
 				const IMAGE * const pCurrent,
 				const IMAGE * const pRef,
 				const IMAGE * const vGMC,
-				const int coding_type)
+				const int coding_type,
+				const int bound)
 {
 	int mode = MODE_INTER;
 	int mcsel = 0;
@@ -689,7 +690,7 @@ xvid_me_ModeDecision_RD(SearchData * const Data,
 
 	if (inter4v) {
 		int v4_rd;
-		v4_rd = findRD_inter4v(Data, pMB, pMBs, x, y, pParam, MotionFlags, backup);
+		v4_rd = findRD_inter4v(Data, pMB, pMBs, x, y, pParam, MotionFlags, backup, bound);
 		if (v4_rd < min_rd) {
 			Data->iMinSAD[0] = min_rd = v4_rd;
 			mode = MODE_INTER4V;
@@ -753,7 +754,8 @@ xvid_me_ModeDecision_Fast(SearchData * const Data,
 			const IMAGE * const pCurrent,
 			const IMAGE * const pRef,
 			const IMAGE * const vGMC,
-			const int coding_type)
+			const int coding_type,
+			const int bound)
 {
 	int mode = MODE_INTER;
 	int mcsel = 0;
@@ -865,7 +867,7 @@ xvid_me_ModeDecision_Fast(SearchData * const Data,
 
 		if (inter4v) {
 			int v4_rd;
-			v4_rd = findRD_inter4v(Data, pMB, pMBs, x, y, pParam, MotionFlags, backup);
+			v4_rd = findRD_inter4v(Data, pMB, pMBs, x, y, pParam, MotionFlags, backup, bound);
 			if (v4_rd < min_rd) {
 				Data->iMinSAD[0] = min_rd = v4_rd;
 				mode = MODE_INTER4V;
@@ -941,7 +943,7 @@ xvid_me_ModeDecision_Fast(SearchData * const Data,
 
 			if(mode == MODE_INTER4V) {
 				int v4_rd;
-				v4_rd = findRD_inter4v(Data, pMB, pMBs, x, y, pParam, MotionFlags, backup);
+				v4_rd = findRD_inter4v(Data, pMB, pMBs, x, y, pParam, MotionFlags, backup, bound);
 				if (v4_rd < min_rd) {
 					Data->iMinSAD[0] = min_rd = v4_rd;
 					mode = MODE_INTER4V;

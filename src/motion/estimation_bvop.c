@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.26 2010-11-28 15:18:21 Isibaar Exp $
+ * $Id: estimation_bvop.c,v 1.27 2010-12-18 16:02:00 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1097,27 +1097,30 @@ MotionEstimationBVOP(MBParam * const pParam,
 
 
 void
-SMPMotionEstimationBVOP(SMPmotionData * h)
+SMPMotionEstimationBVOP(SMPData * h)
 {
-	const MBParam * const pParam = h->pParam;
-	const FRAMEINFO * const frame = h->current;
-	const int32_t time_bp = h->time_bp;
-	const int32_t time_pp = h->time_pp;
-	/* forward (past) reference */
-	const MACROBLOCK * const f_mbs = h->f_mbs;
-	const IMAGE * const f_ref = h->fRef;
-	const IMAGE * const f_refH = h->fRefH;
-	const IMAGE * const f_refV = h->fRefV;
-	const IMAGE * const f_refHV = h->fRefHV;
-	/* backward (future) reference */
-	const FRAMEINFO * const b_reference = h->reference;
-	const IMAGE * const b_ref = h->pRef;
-	const IMAGE * const b_refH = h->pRefH;
-	const IMAGE * const b_refV = h->pRefV;
-	const IMAGE * const b_refHV = h->pRefHV;
+	Encoder *pEnc = (Encoder *) h->pEnc;
 
+	const MBParam * const pParam = &pEnc->mbParam;
+	const FRAMEINFO * const frame = h->current;
+	const int32_t time_bp = (int32_t)(pEnc->current->stamp - frame->stamp);
+	const int32_t time_pp = (int32_t)(pEnc->current->stamp - pEnc->reference->stamp);
+	/* forward (past) reference */
+	const IMAGE * const f_ref = &pEnc->reference->image;
+	const IMAGE * const f_refH = &pEnc->f_refh;
+	const IMAGE * const f_refV = &pEnc->f_refv;
+	const IMAGE * const f_refHV = &pEnc->f_refhv;
+	/* backward (future) reference */
+	const FRAMEINFO * const b_reference = pEnc->current;
+	const IMAGE * const b_ref = &pEnc->current->image;
+	const IMAGE * const b_refH = &pEnc->vInterH;
+	const IMAGE * const b_refV = &pEnc->vInterV;
+	const IMAGE * const b_refHV = &pEnc->vInterHV;
+
+	int y_row = h->y_row;
 	int y_step = h->y_step;
 	int start_y = h->start_y;
+	int stop_y = h->stop_y;
 	int * complete_count_self = h->complete_count_self;
 	const int * complete_count_above = h->complete_count_above;
 	int max_mbs;
@@ -1161,12 +1164,12 @@ SMPMotionEstimationBVOP(SMPmotionData * h)
 
 	max_mbs = 0;
 
-	for (j = start_y; j < pParam->mb_height; j += y_step) {
-		if (j == 0) max_mbs = pParam->mb_width; /* we can process all blocks of the first row */
+	for (j = (start_y+y_row); j < stop_y; j += y_step) {
+		if (j == start_y) max_mbs = pParam->mb_width; /* we can process all blocks of the first row */
 
 		f_predMV = b_predMV = zeroMV;	/* prediction is reset at left boundary */
 
-		for (i = 0; i < pParam->mb_width; i++) {
+		for (i = 0; i < (int) pParam->mb_width; i++) {
 			MACROBLOCK * const pMB = frame->mbs + i + j * pParam->mb_width;
 			const MACROBLOCK * const b_mb = b_mbs + i + j * pParam->mb_width;
 			pMB->mode = -1;
@@ -1182,7 +1185,7 @@ SMPMotionEstimationBVOP(SMPmotionData * h)
 				if (above_count == pParam->mb_width) {
 					/* full line above is ready */
 					above_count = pParam->mb_width+1;
-					if (j < pParam->mb_height-y_step) {
+					if (j < stop_y-y_step) {
 						/* this is not last line, grab a portion of MBs from the next line too */
 						above_count += MAX(0, complete_count_above[1] - 1);
 					}

@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Encoder related header  -
  *
- *  Copyright(C) 2002-2003 Michael Militzer <isibaar@xvid.org>
+ *  Copyright(C) 2002-2010 Michael Militzer <isibaar@xvid.org>
  *               2002-2003 Peter Ross <pross@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.h,v 1.33 2010-09-13 07:38:09 Isibaar Exp $
+ * $Id: encoder.h,v 1.34 2010-12-18 16:02:00 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -213,12 +213,14 @@ typedef struct
     QUEUEINFO closed_qframe;	/* qFrame, only valid when >= 0 */
 
 	/* multithreaded stuff */
-	int num_threads;			/* number of additional threads */
-	SMPmotionData * motionData;	/* data structures used to pass all thread-specific data */
+	int num_threads;			/* number of encoder threads */
+	SMPData * smpData;			/* data structures used to pass all thread-specific data */
 
 	int m_framenum; /* debug frame num counter; unlike iFrameNum, does not reset at ivop */
 
 	float fMvPrevSigma;
+
+	int num_slices;			/* number of slices to code */
 } Encoder;
 
 /*****************************************************************************

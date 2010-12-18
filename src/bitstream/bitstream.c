@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.c,v 1.59 2010-08-10 15:00:06 Isibaar Exp $
+ * $Id: bitstream.c,v 1.60 2010-12-18 16:02:00 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1072,7 +1072,8 @@ bs_put_matrix(Bitstream * bs,
 void
 BitstreamWriteVolHeader(Bitstream * const bs,
 						const MBParam * pParam,
-						const FRAMEINFO * const frame)
+						const FRAMEINFO * const frame,
+						const int num_slices)
 {
 	static const unsigned int vo_id = 0;
 	static const unsigned int vol_id = 0;
@@ -1237,7 +1238,12 @@ BitstreamWriteVolHeader(Bitstream * const bs,
 	}
 
 	BitstreamPutBit(bs, 1);		/* complexity_estimation_disable */
-	BitstreamPutBit(bs, 1);		/* resync_marker_disable */
+
+	if (num_slices > 1)
+		BitstreamPutBit(bs, 0);		/* resync_marker_enabled */
+	else
+		BitstreamPutBit(bs, 1);		/* resync_marker_disabled */
+
 	BitstreamPutBit(bs, 0);		/* data_partitioned */
 
 	if (vol_ver_id != 1) {
@@ -1446,12 +1452,11 @@ void write_video_packet_header(Bitstream * const bs,
 
     if (frame->coding_type == I_VOP)
       nbitsresyncmarker = NUMBITS_VP_RESYNC_MARKER;  /* 16 zeros followed by a 1. */
-    else if (frame->coding_type == P_VOP)
-      nbitsresyncmarker = NUMBITS_VP_RESYNC_MARKER-1 + frame->fcode;
-    else /* B_VOP */
-      nbitsresyncmarker = MAX(NUMBITS_VP_RESYNC_MARKER+1, NUMBITS_VP_RESYNC_MARKER-1 + MAX(frame->fcode, frame->bcode));
+    else if (frame->coding_type == B_VOP) /* B_VOP */
+      nbitsresyncmarker = MAX(NUMBITS_VP_RESYNC_MARKER+1, NUMBITS_VP_RESYNC_MARKER + MAX(frame->fcode, frame->bcode) - 1);
+    else /*(frame->coding_type == P_VOP)*/
+		nbitsresyncmarker = NUMBITS_VP_RESYNC_MARKER + frame->fcode - 1;
 
-    BitstreamPadAlways(bs);
     BitstreamPutBits(bs, RESYNC_MARKER, nbitsresyncmarker);
     BitstreamPutBits(bs, mbnum, mbnum_bits);
     BitstreamPutBits(bs, frame->quant, 5);

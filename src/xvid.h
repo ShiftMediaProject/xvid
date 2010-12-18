@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.72 2010-12-18 10:13:30 Isibaar Exp $
+ * $Id: xvid.h,v 1.73 2010-12-18 16:02:00 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -57,7 +57,7 @@ extern "C" {
 #define XVID_API_MAJOR(a)        (((a)>>16) & 0xff)
 #define XVID_API_MINOR(a)        (((a)>> 0) & 0xff)
 
-#define XVID_VERSION             XVID_MAKE_VERSION(1,3,-63)
+#define XVID_VERSION             XVID_MAKE_VERSION(1,3,-31)
 #define XVID_API                 XVID_MAKE_API(4, 3)
 
 #define XVID_UNSTABLE
@@ -73,7 +73,7 @@ extern "C" {
  * doesnt hurt but not increasing it could cause difficulty for decoders in the
  * future
  */
-#define XVID_BS_VERSION 58 
+#define XVID_BS_VERSION 59 
 
 /*****************************************************************************
  * error codes
@@ -748,7 +748,7 @@ typedef struct {
 	int num_plugins;             /* [in:opt] number of plugins */
 	xvid_enc_plugin_t * plugins; /*          ^^ plugin array */
 
-	int num_threads;             /* [in:opt] number of threads */
+	int num_threads;             /* [in:opt] number of threads to use in encoder */
 	int max_bframes;             /* [in:opt] max sequential bframes (0=disable bframes) */
 
 	int global;                  /* [in:opt] global flags; controls encoding behavior */
@@ -774,6 +774,7 @@ typedef struct {
 
 	/* ------- v1.3.x ------- */
 	int start_frame_num;         /* [in:opt] frame number of start frame relative to zones definitions. allows to encode sub-sequences */
+	int num_slices;              /* [in:opt] number of slices to code for each frame */
 } xvid_enc_create_t;
 
 

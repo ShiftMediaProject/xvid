@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation.h,v 1.14 2010-11-28 15:18:21 Isibaar Exp $
+ * $Id: estimation.h,v 1.15 2010-12-18 16:02:00 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -177,7 +177,8 @@ xvid_me_ModeDecision_RD(SearchData * const Data,
 		const IMAGE * const pCurrent,
 		const IMAGE * const pRef,
 		const IMAGE * const vGMC,
-		const int coding_type);
+		const int coding_type,
+		const int bound);
 
 void
 xvid_me_ModeDecision_Fast(SearchData * const Data,
@@ -191,7 +192,8 @@ xvid_me_ModeDecision_Fast(SearchData * const Data,
 		const IMAGE * const pCurrent,
 		const IMAGE * const pRef,
 		const IMAGE * const vGMC,
-		const int coding_type);
+		const int coding_type,
+		const int bound);
 
 void 
 ModeDecision_BVOP_RD(SearchData * const Data_d,

@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbprediction.c,v 1.19 2010-08-10 15:00:21 Isibaar Exp $
+ * $Id: mbprediction.c,v 1.20 2010-12-18 16:02:00 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -409,7 +409,8 @@ MBPrediction(FRAMEINFO * frame,
 			 uint32_t x,
 			 uint32_t y,
 			 uint32_t mb_width,
-			 int16_t qcoeff[6 * 64])
+			 int16_t qcoeff[6 * 64],
+			 const int bound)
 {
 
 	int32_t j;
@@ -426,7 +427,7 @@ MBPrediction(FRAMEINFO * frame,
 			iDcScaler = get_dc_scaler(iQuant, j<4);
 
 			predict_acdc(frame->mbs, x, y, mb_width, j, &qcoeff[j * 64],
-						 iQuant, iDcScaler, predictors[j], 0);
+						 iQuant, iDcScaler, predictors[j], bound);
 
 			if ((frame->vop_flags & XVID_VOP_HQACPRED))
 				S += calc_acdc_bits(pMB, j, &qcoeff[j * 64], iDcScaler, predictors[j]);

@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: motion_comp.c,v 1.23 2004-12-05 13:01:27 syskin Exp $
+ * $Id: motion_comp.c,v 1.24 2010-12-18 16:02:00 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -170,12 +170,11 @@ MBMotionCompensation(MACROBLOCK * const mb,
 					const uint32_t height,
 					const uint32_t edged_width,
 					const int32_t quarterpel,
-					const int32_t rounding)
+					const int32_t rounding,
+					const uint8_t * const tmp)
 {
 	int32_t dx;
 	int32_t dy;
-
-	uint8_t * const tmp = refv->u;
 
 	if (mb->mode == MODE_NOT_CODED) {	/* quick copy for early SKIP */
 /* early SKIP is only activated in P-VOPs, not in S-VOPs, so mcsel can never be 1 */
@@ -269,14 +268,14 @@ MBMotionCompensationBVOP(MBParam * pParam,
 						const IMAGE * const b_refh,
 						const IMAGE * const b_refv,
 						const IMAGE * const b_refhv,
-						int16_t * dct_codes)
+						int16_t * dct_codes,
+						const uint8_t * const tmp)
 {
 	const uint32_t edged_width = pParam->edged_width;
 	int32_t dx, dy, b_dx, b_dy, sumx, sumy, b_sumx, b_sumy;
 	int k;
 	const int quarterpel = pParam->vol_flags & XVID_VOL_QUARTERPEL;
 	const uint8_t * ptr1, * ptr2;
-	uint8_t * const tmp = f_refv->u;
 	const VECTOR * const fmvs = (quarterpel ? mb->qmvs : mb->mvs);
 	const VECTOR * const bmvs = (quarterpel ? mb->b_qmvs : mb->b_mvs);
 
