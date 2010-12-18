@@ -4,7 +4,7 @@
  *  - Decoder Module -
  *
  *  Copyright(C) 2002      MinChen <chenm001@163.com>
- *               2002-2004 Peter Ross <pross@xvid.org>
+ *               2002-2010 Peter Ross <pross@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.84 2010-11-12 10:10:40 Isibaar Exp $
+ * $Id: decoder.c,v 1.85 2010-12-18 10:13:30 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -171,6 +171,8 @@ decoder_create(xvid_dec_create_t * create)
 
   dec->width = create->width;
   dec->height = create->height;
+
+  dec->num_threads = MAX(0, create->num_threads);
 
   image_null(&dec->cur);
   image_null(&dec->refn[0]);
@@ -1531,7 +1533,7 @@ static void decoder_output(DECODER * dec, IMAGE * img, MACROBLOCK * mbs,
     image_copy(&dec->tmp, img, dec->edged_width, dec->height);
     image_postproc(&dec->postproc, &dec->tmp, dec->edged_width,
              mbs, dec->mb_width, dec->mb_height, dec->mb_width,
-             frame->general, brightness, dec->frames, (coding_type == B_VOP));
+             frame->general, brightness, dec->frames, (coding_type == B_VOP), dec->num_threads);
     img = &dec->tmp;
   }
 

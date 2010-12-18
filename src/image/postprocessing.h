@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Postprocessing header  -
  *
- *  Copyright(C) 2003 Michael Militzer <isibaar@xvid.org>
+ *  Copyright(C) 2003-2010 Michael Militzer <isibaar@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: postprocessing.h,v 1.6 2004-07-15 10:08:22 suxen_drol Exp $
+ * $Id: postprocessing.h,v 1.7 2010-12-18 10:13:38 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -49,10 +49,27 @@ typedef struct {
 	int prev_quant;
 } XVID_POSTPROC;
 
+typedef struct
+{
+	pthread_t handle;		/* thread's handle */
+
+	XVID_POSTPROC *tbls;
+	IMAGE * img;
+	const MACROBLOCK * mbs;
+
+	int stride;
+	int start_x;
+	int stop_x;
+	int start_y;
+	int stop_y; 
+	int mb_stride;
+	int flags;
+} SMPDeblock;
+
 void
 image_postproc(XVID_POSTPROC *tbls, IMAGE * img, int edged_width,
 				const MACROBLOCK * mbs, int mb_width, int mb_height, int mb_stride,
-				int flags, int brightness, int frame_num, int bvop);
+				int flags, int brightness, int frame_num, int bvop, int threads);
 
 void deblock8x8_h(XVID_POSTPROC *tbls, uint8_t *img, int stride, int quant, int dering);
 void deblock8x8_v(XVID_POSTPROC *tbls, uint8_t *img, int stride, int quant, int dering);
