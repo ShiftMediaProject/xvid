@@ -20,15 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.cpp,v 1.23 2010-10-29 16:39:07 Isibaar Exp $
- *
- ****************************************************************************/
-
-/****************************************************************************
- *
- * 2003/12/11 - added some additional options, mainly to make the deblocking
- *              code from xvidcore available. Most of the new code is taken
- *              from Nic's dshow filter, (C) Nic, http://nic.dnsalias.com
+ * $Id: CXvidDecoder.cpp,v 1.24 2010-12-18 10:16:46 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -339,6 +331,10 @@ HRESULT CXvidDecoder::OpenLib()
 	memset(&init, 0, sizeof(init));
 	init.version = XVID_VERSION;
 
+	xvid_gbl_info_t info;
+	memset(&info, 0, sizeof(info));
+	info.version = XVID_VERSION;
+
 	m_hdll = LoadLibrary(XVID_DLL_NAME);
 	if (m_hdll == NULL) {
 		DPRINTF("dll load failed");
@@ -373,9 +369,20 @@ HRESULT CXvidDecoder::OpenLib()
 		return E_FAIL;
 	}
 
+	if (xvid_global_func(0, XVID_GBL_INFO, &info, NULL) < 0)
+	{
+        xvid_global_func = NULL;
+        xvid_decore_func = NULL;
+        FreeLibrary(m_hdll);
+        m_hdll = NULL;
+		MessageBox(0, "xvid_global() failed", "Error", MB_TOPMOST);
+		return E_FAIL;
+	}
+
 	memset(&m_create, 0, sizeof(m_create));
 	m_create.version = XVID_VERSION;
 	m_create.handle = NULL;
+	m_create.num_threads = (!g_config.num_threads) ? info.num_threads : g_config.num_threads;
 
 	memset(&m_frame, 0, sizeof(m_frame));
 	m_frame.version = XVID_VERSION;
