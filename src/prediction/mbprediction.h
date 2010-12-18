@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Prediction header -
  *
- *  Copyright(C) 2002-2003 xvid team <xvid-devel@xvid.org>
+ *  Copyright(C) 2002-2010 Michael Militzer <michael@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbprediction.h,v 1.25 2005-09-13 12:12:15 suxen_drol Exp $
+ * $Id: mbprediction.h,v 1.26 2010-12-18 16:02:00 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -43,7 +43,8 @@ void MBPrediction(FRAMEINFO * frame,	/* <-- The parameter for ACDC and MV predic
 				uint32_t x_pos,	/* <-- The x position of the MB to be searched	*/
 				uint32_t y_pos,	/* <-- The y position of the MB to be searched	*/
 				uint32_t x_dim,	/* <-- Number of macroblocks in a row		*/
-				int16_t * qcoeff);	/* <-> The quantized DCT coefficients	*/
+				int16_t * qcoeff,	/* <-> The quantized DCT coefficients	*/
+				const int bound);
 
 void add_acdc(MACROBLOCK * pMB,
 			uint32_t block,

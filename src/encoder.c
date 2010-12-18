@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.133 2010-11-28 15:18:21 Isibaar Exp $
+ * $Id: encoder.c,v 1.134 2010-12-18 16:02:00 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -444,34 +444,67 @@ enc_create(xvid_enc_create_t * create)
 	pEnc->iFrameNum = 0;
 	pEnc->fMvPrevSigma = -1;
 
+	/* slices */
+	pEnc->num_slices = MIN(MAX(1, create->num_slices), (int) pEnc->mbParam.mb_height);
+
 	/* multithreaded stuff */
 	if (create->num_threads > 0) {
-		int t = create->num_threads;
-		int rows_per_thread = (pEnc->mbParam.mb_height+t-1)/t;
+		int t = MIN(create->num_threads, (int) (pEnc->mbParam.mb_height>>1)); /* at least two rows per thread */
+		int threads_per_slice = MAX(1, (t / pEnc->num_slices));
+		int rows_per_thread = (pEnc->mbParam.mb_height + threads_per_slice - 1) / threads_per_slice;
+
 		pEnc->num_threads = t;
-		pEnc->motionData = xvid_malloc(t*sizeof(SMPmotionData), CACHE_LINE);
-		if (!pEnc->motionData) 
+		pEnc->smpData = xvid_malloc(t*sizeof(SMPData), CACHE_LINE);
+		if (!pEnc->smpData) 
 			goto xvid_err_nosmp;
-		
+
+		/* tmp bitstream buffer for slice coding */
+		pEnc->smpData[0].tmp_buffer = xvid_malloc(16*pEnc->mbParam.edged_width*pEnc->mbParam.mb_height*sizeof(uint8_t), CACHE_LINE);
+		if (! pEnc->smpData[0].tmp_buffer) goto xvid_err_nosmp;
+
 		for (n = 0; n < t; n++) {
-			pEnc->motionData[n].complete_count_self =
+			int s = MIN(pEnc->num_threads, pEnc->num_slices);
+
+			pEnc->smpData[n].complete_count_self =
 				xvid_malloc(rows_per_thread * sizeof(int), CACHE_LINE);
 
-			if (!pEnc->motionData[n].complete_count_self)
+			if (!pEnc->smpData[n].complete_count_self)
 				goto xvid_err_nosmp;
-		
+
+			if (n > 0 && n < s) {
+				pEnc->smpData[n].bs = (Bitstream *) xvid_malloc(sizeof(Bitstream), CACHE_LINE);
+				if (!pEnc->smpData[n].bs)
+					goto xvid_err_nosmp;
+
+				pEnc->smpData[n].sStat = (Statistics *) xvid_malloc(sizeof(Statistics), CACHE_LINE);
+				if (!pEnc->smpData[n].sStat)
+					goto xvid_err_nosmp;
+
+				pEnc->smpData[n].tmp_buffer = pEnc->smpData[0].tmp_buffer + 16*(((n-1)*pEnc->mbParam.edged_width*pEnc->mbParam.mb_height)/s);
+				BitstreamInit(pEnc->smpData[n].bs, pEnc->smpData[n].tmp_buffer, 0);
+			}
+
 			if (n != 0) 
-				pEnc->motionData[n].complete_count_above = 
-					pEnc->motionData[n-1].complete_count_self;
+				pEnc->smpData[n].complete_count_above = 
+					pEnc->smpData[n-1].complete_count_self;
 		}
-		pEnc->motionData[0].complete_count_above =
-			pEnc->motionData[t-1].complete_count_self - 1;
+		pEnc->smpData[0].complete_count_above =
+			pEnc->smpData[t-1].complete_count_self - 1;
 
 	} else {
   xvid_err_nosmp:
 		/* no SMP */
+		if (pEnc->smpData) {
+			if (pEnc->smpData[0].tmp_buffer) 
+				xvid_free(pEnc->smpData[0].tmp_buffer);
+		}
+		else {
+			pEnc->smpData = xvid_malloc(1*sizeof(SMPData), CACHE_LINE);
+			if (pEnc->smpData == NULL) 
+				goto xvid_err_memory5;
+		}
+
 		create->num_threads = 0;
-		pEnc->motionData = NULL;
 	}
 
 	create->handle = (void *) pEnc;
@@ -687,11 +720,16 @@ enc_destroy(Encoder * pEnc)
 		xvid_free(pEnc->zones);
 
 	if (pEnc->num_threads > 0) {
-		for (i = 0; i < pEnc->num_threads; i++)
-			xvid_free(pEnc->motionData[i].complete_count_self);
+		for (i = 1; i < MAX(1, MIN(pEnc->num_threads, pEnc->num_slices)); i++) {
+			xvid_free(pEnc->smpData[i].bs);
+			xvid_free(pEnc->smpData[i].sStat);
+		}
+		if (pEnc->smpData[0].tmp_buffer) xvid_free(pEnc->smpData[0].tmp_buffer);
 
-		xvid_free(pEnc->motionData);
+		for (i = 0; i < pEnc->num_threads; i++)
+			xvid_free(pEnc->smpData[i].complete_count_self);
 	}
+	xvid_free(pEnc->smpData);
 
 	xvid_free(pEnc);
 
@@ -1491,10 +1529,8 @@ static void SetMacroblockQuants(MBParam * const pParam, FRAMEINFO * frame)
 
 
 static __inline void
-CodeIntraMB(Encoder * pEnc,
-			MACROBLOCK * pMB)
+CodeIntraMB(MACROBLOCK * pMB)
 {
-
 	pMB->mode = MODE_INTRA;
 
 	/* zero mv statistics */
@@ -1508,20 +1544,111 @@ CodeIntraMB(Encoder * pEnc,
 	}
 }
 
+static void
+SliceCodeI(SMPData *data)
+{
+	Encoder *pEnc = (Encoder *) data->pEnc;
+	Bitstream *bs = (Bitstream *) data->bs;
 
+	uint16_t x, y;
+	int mb_width = pEnc->mbParam.mb_width;
+	int mb_height = pEnc->mbParam.mb_height;
+
+	int bound = 0, num_slices = pEnc->num_slices;
+	FRAMEINFO *const current = pEnc->current;
+
+	DECLARE_ALIGNED_MATRIX(dct_codes, 6, 64, int16_t, CACHE_LINE);
+	DECLARE_ALIGNED_MATRIX(qcoeff, 6, 64, int16_t, CACHE_LINE);
+
+	if (data->start_y > 0) { /* write resync marker */
+		bound = data->start_y*mb_width;
+		write_video_packet_header(bs, &pEnc->mbParam, current, bound);
+	}
+
+	for (y = data->start_y; y < data->stop_y; y++) {
+		int new_bound = mb_width * ((((y*num_slices) / mb_height) * mb_height + (num_slices-1)) / num_slices);
+
+		if (new_bound > bound) {
+			bound = new_bound;
+			BitstreamPadAlways(bs);
+			write_video_packet_header(bs, &pEnc->mbParam, current, bound);
+		}
+
+		for (x = 0; x < mb_width; x++) {
+			MACROBLOCK *pMB = &current->mbs[x + y * mb_width];
+
+			CodeIntraMB(pMB);
+
+			MBTransQuantIntra(&pEnc->mbParam, current, pMB, x, y,
+							  dct_codes, qcoeff);
+
+			start_timer();
+			MBPrediction(current, x, y, mb_width, qcoeff, bound);
+			stop_prediction_timer();
+
+			start_timer();
+			MBCoding(current, pMB, qcoeff, bs, data->sStat);
+			stop_coding_timer();
+
+		}
+	}
+
+	emms();
+	BitstreamPadAlways(bs);
+}
+
+static __inline void
+SerializeBitstreams(Encoder *pEnc, FRAMEINFO *current, Bitstream *bs, int num_threads)
+{
+	int k;
+	uint32_t pos = BitstreamLength(bs);
+
+	for (k = 1; k < num_threads; k++) {
+		uint32_t len = BitstreamLength(pEnc->smpData[k].bs);
+
+		memcpy((void *)((ptr_t)bs->start + pos), 
+			   (void *)((ptr_t)pEnc->smpData[k].bs->start), len);
+
+		current->length = pos += len;
+
+		/* collect stats */
+		current->sStat.iTextBits += pEnc->smpData[k].sStat->iTextBits;
+		current->sStat.kblks += pEnc->smpData[k].sStat->kblks;
+		current->sStat.mblks += pEnc->smpData[k].sStat->mblks;
+		current->sStat.ublks += pEnc->smpData[k].sStat->ublks;
+		current->sStat.iMVBits += pEnc->smpData[k].sStat->iMVBits;
+	}
+
+	if (num_threads > 1) {
+		uint32_t pos32 = pos>>2;
+		bs->tail = bs->start + pos32;
+		bs->pos = 8*(pos - (pos32<<2));
+		bs->buf = 0;
+
+		if (bs->pos > 0) {
+			uint32_t pos8 = bs->pos/8;
+			memset((void *)((ptr_t)bs->tail+pos8), 0, (4-pos8));
+			pos = *bs->tail;
+#ifndef ARCH_IS_BIG_ENDIAN
+			BSWAP(pos);
+#endif
+			bs->buf = pos;
+		}
+	}
+}
 
 static int
 FrameCodeI(Encoder * pEnc,
 		   Bitstream * bs)
 {
 	int bits = BitstreamPos(bs);
-	int mb_width = pEnc->mbParam.mb_width;
+	int bound = 0, num_slices = pEnc->num_slices;
+	int num_threads = MAX(1, MIN(pEnc->num_threads, num_slices));
+	int slices_per_thread = (num_slices*1024 / num_threads);
+	int mb_width = pEnc->mbParam.mb_width; 
 	int mb_height = pEnc->mbParam.mb_height;
-
-	DECLARE_ALIGNED_MATRIX(dct_codes, 6, 64, int16_t, CACHE_LINE);
-	DECLARE_ALIGNED_MATRIX(qcoeff, 6, 64, int16_t, CACHE_LINE);
-
-	uint16_t x, y;
+	void * status = NULL;
+	uint16_t k;
 
 	pEnc->mbParam.m_rounding_type = 1;
 	pEnc->current->rounding_type = pEnc->mbParam.m_rounding_type;
@@ -1531,7 +1658,7 @@ FrameCodeI(Encoder * pEnc,
 
 	SetMacroblockQuants(&pEnc->mbParam, pEnc->current);
 
-	BitstreamWriteVolHeader(bs, &pEnc->mbParam, pEnc->current);
+	BitstreamWriteVolHeader(bs, &pEnc->mbParam, pEnc->current, num_slices);
 
 	set_timecodes(pEnc->current,pEnc->reference,pEnc->mbParam.fbase);
 
@@ -1540,34 +1667,48 @@ FrameCodeI(Encoder * pEnc,
 	BitstreamWriteVopHeader(bs, &pEnc->mbParam, pEnc->current, 1, pEnc->current->mbs[0].quant);
 
 	pEnc->current->sStat.iTextBits = 0;
-	pEnc->current->sStat.iMVBits = 0;
-	pEnc->current->sStat.kblks = mb_width * mb_height;
-	pEnc->current->sStat.mblks = pEnc->current->sStat.ublks = 0;
 
-	for (y = 0; y < mb_height; y++)
-		for (x = 0; x < mb_width; x++) {
-			MACROBLOCK *pMB =
-				&pEnc->current->mbs[x + y * pEnc->mbParam.mb_width];
+	/* multithreaded intra coding - dispatch threads */
+	for (k = 0; k < num_threads; k++) {
+		int add = ((slices_per_thread + 512) >> 10);
 
-			CodeIntraMB(pEnc, pMB);
+		slices_per_thread += ((num_slices*1024 / num_threads) - add*1024);
 
-			MBTransQuantIntra(&pEnc->mbParam, pEnc->current, pMB, x, y,
-							  dct_codes, qcoeff);
+		pEnc->smpData[k].pEnc = (void *) pEnc;
+		pEnc->smpData[k].stop_y = (((bound+add) * mb_height + (num_slices-1)) / num_slices);
+		pEnc->smpData[k].start_y = ((bound * mb_height + (num_slices-1)) / num_slices);
 
-			start_timer();
-			MBPrediction(pEnc->current, x, y, pEnc->mbParam.mb_width, qcoeff);
-			stop_prediction_timer();
+		bound += add;
 
-			start_timer();
-			MBCoding(pEnc->current, pMB, qcoeff, bs, &pEnc->current->sStat);
-			stop_coding_timer();
+		if (k > 0) {
+			BitstreamReset(pEnc->smpData[k].bs);
+			pEnc->smpData[k].sStat->iTextBits = 0;
 		}
+	}
+	pEnc->smpData[0].bs = bs;
+	pEnc->smpData[0].sStat = &pEnc->current->sStat;
+	
+	/* create threads */
+	for (k = 1; k < num_threads; k++) {
+		pthread_create(&pEnc->smpData[k].handle, NULL, 
+		               (void*)SliceCodeI, (void*)&pEnc->smpData[k]);
+	}
 
-	emms();
+	SliceCodeI(&pEnc->smpData[0]);
 
-	BitstreamPadAlways(bs); /* next_start_code() at the end of VideoObjectPlane() */
+	/* wait until all threads are finished */
+	for (k = 1; k < num_threads; k++) {
+		pthread_join(pEnc->smpData[k].handle, &status);
+	}
 
-	pEnc->current->length = (BitstreamPos(bs) - bits) / 8;
+	pEnc->current->length = BitstreamLength(bs) - (bits/8);
+
+	/* reassemble the pieces together */
+	SerializeBitstreams(pEnc, pEnc->current, bs, num_threads);
+
+	pEnc->current->sStat.iMVBits = 0;
+	pEnc->current->sStat.mblks = pEnc->current->sStat.ublks = 0;
+	pEnc->current->sStat.kblks = pEnc->mbParam.mb_width * pEnc->mbParam.mb_height;
 
 	pEnc->fMvPrevSigma = -1;
 	pEnc->mbParam.m_fcode = 2;
@@ -1604,23 +1745,171 @@ updateFcode(Statistics * sStat, Encoder * pEnc)
 
 #define BFRAME_SKIP_THRESHHOLD 30
 
-/* FrameCodeP also handles S(GMC)-VOPs */
-static int
-FrameCodeP(Encoder * pEnc,
-		   Bitstream * bs)
+static void
+SliceCodeP(SMPData *data)
 {
-	int bits = BitstreamPos(bs);
+	Encoder *pEnc = (Encoder *) data->pEnc;
+	Bitstream *bs = (Bitstream *) data->bs;
+
+	int x, y, k;
+	FRAMEINFO *const current = pEnc->current;
+	FRAMEINFO *const reference = pEnc->reference;
+	MBParam * const pParam = &pEnc->mbParam;
+	IMAGE *pRef = &reference->image;
+	int mb_width = pParam->mb_width;
+	int mb_height = pParam->mb_height;
 
 	DECLARE_ALIGNED_MATRIX(dct_codes, 6, 64, int16_t, CACHE_LINE);
 	DECLARE_ALIGNED_MATRIX(qcoeff, 6, 64, int16_t, CACHE_LINE);
 
-	int x, y, k;
+	int bound = 0, num_slices = pEnc->num_slices;
+
+	if (data->start_y > 0) { /* write resync marker */
+		bound = data->start_y*mb_width;
+		write_video_packet_header(bs, pParam, current, bound);
+	}
+
+	for (y = data->start_y; y < data->stop_y; y++) {
+		int new_bound = mb_width * ((((y*num_slices) / mb_height) * mb_height + (num_slices-1)) / num_slices);
+
+		if (new_bound > bound) {
+			bound = new_bound;
+			BitstreamPadAlways(bs);
+			write_video_packet_header(bs, pParam, current, bound);
+		}
+
+		for (x = 0; x < mb_width; x++) {
+			MACROBLOCK *pMB = &current->mbs[x + y * pParam->mb_width];
+			int skip_possible;
+
+			if (pMB->mode == MODE_INTRA || pMB->mode == MODE_INTRA_Q) {
+				CodeIntraMB(pMB);
+				MBTransQuantIntra(pParam, current, pMB, x, y,
+								  dct_codes, qcoeff);
+
+				start_timer();
+				MBPrediction(current, x, y, pParam->mb_width, qcoeff, bound);
+				stop_prediction_timer();
+
+				data->sStat->kblks++;
+
+				MBCoding(current, pMB, qcoeff, bs, data->sStat);
+				stop_coding_timer();
+				continue;
+			}
+
+			start_timer();
+			MBMotionCompensation(pMB, x, y, &reference->image,
+								 &pEnc->vInterH, &pEnc->vInterV,
+								 &pEnc->vInterHV, &pEnc->vGMC,
+								 &current->image,
+								 dct_codes, pParam->width,
+								 pParam->height,
+								 pParam->edged_width,
+								 (current->vol_flags & XVID_VOL_QUARTERPEL),
+								 current->rounding_type,
+								 data->RefQ);
+
+			stop_comp_timer();
+
+			pMB->field_pred = 0;
+
+			if (pMB->cbp != 0) {
+				pMB->cbp = MBTransQuantInter(pParam, current, pMB, x, y,
+				                             dct_codes, qcoeff);
+			}
+
+			if (pMB->dquant != 0)
+				MBSetDquant(pMB, x, y, pParam);
+
+
+			if (pMB->cbp || pMB->mvs[0].x || pMB->mvs[0].y ||
+				   pMB->mvs[1].x || pMB->mvs[1].y || pMB->mvs[2].x ||
+				   pMB->mvs[2].y || pMB->mvs[3].x || pMB->mvs[3].y) {
+				data->sStat->mblks++;
+			}  else {
+				data->sStat->ublks++;
+			}
+
+			start_timer();
+
+			/* Finished processing the MB, now check if to CODE or SKIP */
+
+			skip_possible = (pMB->cbp == 0) && (pMB->mode == MODE_INTER);
+
+			if (current->coding_type == S_VOP)
+				skip_possible &= (pMB->mcsel == 1);
+			else { /* PVOP */
+				const VECTOR * const mv = (pParam->vol_flags & XVID_VOL_QUARTERPEL) ?
+										pMB->qmvs : pMB->mvs;
+				skip_possible &= ((mv->x|mv->y) == 0);
+			}
+
+			if ((pMB->mode == MODE_NOT_CODED) || (skip_possible)) {
+				/* This is a candidate for SKIPping, but for P-VOPs check intermediate B-frames first */
+				int bSkip = 1;
+
+				if (current->coding_type == P_VOP) {	/* special rule for P-VOP's SKIP */
+					for (k = pEnc->bframenum_head; k < pEnc->bframenum_tail; k++) {
+						int iSAD;
+						iSAD = sad16(reference->image.y + 16*y*pParam->edged_width + 16*x,
+										pEnc->bframes[k]->image.y + 16*y*pParam->edged_width + 16*x,
+										pParam->edged_width, BFRAME_SKIP_THRESHHOLD * pMB->quant);
+						if (iSAD >= BFRAME_SKIP_THRESHHOLD * pMB->quant) {
+							bSkip = 0; /* could not SKIP */
+							if (pParam->vol_flags & XVID_VOL_QUARTERPEL) {
+								VECTOR predMV = get_qpmv2(current->mbs, pParam->mb_width, bound, x, y, 0);
+								pMB->pmvs[0].x = - predMV.x;
+								pMB->pmvs[0].y = - predMV.y;
+							} else {
+								VECTOR predMV = get_pmv2(current->mbs, pParam->mb_width, bound, x, y, 0);
+								pMB->pmvs[0].x = - predMV.x;
+								pMB->pmvs[0].y = - predMV.y;
+							}
+							pMB->mode = MODE_INTER;
+							pMB->cbp = 0;
+							break;
+						}
+					}
+				}
+
+				if (bSkip) {
+					/* do SKIP */
+					pMB->mode = MODE_NOT_CODED;
+					MBSkip(bs);
+					stop_coding_timer();
+					continue;	/* next MB */
+				}
+			}
+
+			/* ordinary case: normal coded INTER/INTER4V block */
+			MBCoding(current, pMB, qcoeff, bs, data->sStat);
+			stop_coding_timer();
+		}
+	}
+
+	BitstreamPadAlways(bs); /* next_start_code() at the end of VideoObjectPlane() */
+	emms();
+}
+
+/* FrameCodeP also handles S(GMC)-VOPs */
+static int
+FrameCodeP(Encoder * pEnc, Bitstream * bs)
+{
+	int bits = BitstreamPos(bs);
+
 	FRAMEINFO *const current = pEnc->current;
 	FRAMEINFO *const reference = pEnc->reference;
 	MBParam * const pParam = &pEnc->mbParam;
 	int mb_width = pParam->mb_width;
 	int mb_height = pParam->mb_height;
 	int coded = 1;
+
+	int k = 0, bound = 0, num_slices = pEnc->num_slices;
+	int num_threads = MAX(1, MIN(pEnc->num_threads, num_slices));
+	void * status = NULL;
+	int slices_per_thread = (num_slices*1024 / num_threads);
+	int threads_per_slice = (pEnc->num_threads*1024 / num_threads);
 
 	IMAGE *pRef = &reference->image;
 
@@ -1665,10 +1954,10 @@ FrameCodeP(Encoder * pEnc,
 	SetMacroblockQuants(&pEnc->mbParam, current);
 
 	start_timer();
-	if (current->vol_flags & XVID_VOL_GMC )	/* GMC only for S(GMC)-VOPs */
+	if (current->vol_flags & XVID_VOL_GMC)	/* GMC only for S(GMC)-VOPs */
 	{	int gmcval;
 		current->warp = GlobalMotionEst( current->mbs, pParam, current, reference,
-								 &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV);
+								 &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV, num_slices);
 
 		if (current->motion_flags & XVID_ME_GME_REFINE) {
 			gmcval = GlobalMotionEstRefine(&current->warp,
@@ -1715,53 +2004,68 @@ FrameCodeP(Encoder * pEnc,
 		}
 	}
 
-
 	if (pEnc->num_threads > 0) {
+
 		/* multithreaded motion estimation - dispatch threads */
+		while (k < pEnc->num_threads) {
+			int i, add_s = (slices_per_thread + 512) >> 10;
+			int add_t = (threads_per_slice + 512) >> 10;
+			
+			int start_y = (bound * mb_height + (num_slices-1)) / num_slices;
+			int stop_y = ((bound+add_s) * mb_height + (num_slices-1)) / num_slices;
+			int rows_per_thread = (stop_y - start_y + add_t - 1) / add_t;
 
-		void * status;
-		int rows_per_thread = (pParam->mb_height + pEnc->num_threads - 1)/pEnc->num_threads;
+			slices_per_thread += ((num_slices*1024 / num_threads) - add_s*1024);
+			threads_per_slice += ((pEnc->num_threads*1024 / num_threads) - add_t*1024);
 
-		for (k = 0; k < pEnc->num_threads; k++) {
-			memset(pEnc->motionData[k].complete_count_self, 0, rows_per_thread * sizeof(int));
-			pEnc->motionData[k].pParam = &pEnc->mbParam;
-			pEnc->motionData[k].current = current;
-			pEnc->motionData[k].reference = reference;
-			pEnc->motionData[k].pRefH = &pEnc->vInterH;
-			pEnc->motionData[k].pRefV = &pEnc->vInterV;
-			pEnc->motionData[k].pRefHV = &pEnc->vInterHV;
-			pEnc->motionData[k].pGMC = &pEnc->vGMC;
-			pEnc->motionData[k].y_step = pEnc->num_threads;
-			pEnc->motionData[k].start_y = k;
-			/* todo: sort out temp space once and for all */
-			pEnc->motionData[k].RefQ = pEnc->vInterH.u + 16*k*pParam->edged_width;
+			for (i = 0; i < add_t; i++) {
+				memset(pEnc->smpData[k+i].complete_count_self, 0, rows_per_thread * sizeof(int));
+
+				pEnc->smpData[k+i].pEnc = (void *) pEnc;
+				pEnc->smpData[k+i].y_row = i;
+				pEnc->smpData[k+i].y_step = add_t;
+				pEnc->smpData[k+i].stop_y = stop_y;
+				pEnc->smpData[k+i].start_y = start_y;
+
+				/* todo: sort out temp space once and for all */
+				pEnc->smpData[k+i].RefQ = (((k+i)&1) ? pEnc->vInterV.u : pEnc->vInterV.v) + 
+											16*((k+i)>>1)*pParam->edged_width;
+			}
+			
+			pEnc->smpData[k].complete_count_above =
+				pEnc->smpData[k+add_t-1].complete_count_self - 1;
+
+			bound += add_s;
+			k += add_t;
 		}
 
 		for (k = 1; k < pEnc->num_threads; k++) {
-			pthread_create(&pEnc->motionData[k].handle, NULL, 
-				(void*)MotionEstimateSMP, (void*)&pEnc->motionData[k]);
+			pthread_create(&pEnc->smpData[k].handle, NULL, 
+				(void*)MotionEstimateSMP, (void*)&pEnc->smpData[k]);
 		}
 
-		MotionEstimateSMP(&pEnc->motionData[0]);
+		MotionEstimateSMP(&pEnc->smpData[0]);
 
 		for (k = 1; k < pEnc->num_threads; k++) {
-			pthread_join(pEnc->motionData[k].handle, &status);
+			pthread_join(pEnc->smpData[k].handle, &status);
 		}
 
 		current->fcode = 0;
 		for (k = 0; k < pEnc->num_threads; k++) {
-			current->sStat.iMvSum += pEnc->motionData[k].mvSum;
-			current->sStat.iMvCount += pEnc->motionData[k].mvCount;
-			if (pEnc->motionData[k].minfcode > current->fcode)
-				current->fcode = pEnc->motionData[k].minfcode;
+			current->sStat.iMvSum += pEnc->smpData[k].mvSum;
+			current->sStat.iMvCount += pEnc->smpData[k].mvCount;
+			if (pEnc->smpData[k].minfcode > current->fcode)
+				current->fcode = pEnc->smpData[k].minfcode;
 		}
 
 	} else {
+
 		/* regular ME */
 
 		MotionEstimation(&pEnc->mbParam, current, reference,
 						 &pEnc->vInterH, &pEnc->vInterV, &pEnc->vInterHV,
-						 &pEnc->vGMC, 256*4096);
+						 &pEnc->vGMC, 256*4096, num_slices);
+
 	}
 
 	stop_motion_timer();
@@ -1770,124 +2074,59 @@ FrameCodeP(Encoder * pEnc,
 
 	BitstreamWriteVopHeader(bs, &pEnc->mbParam, current, 1, current->mbs[0].quant);
 
-	for (y = 0; y < mb_height; y++) {
-		for (x = 0; x < mb_width; x++) {
-			MACROBLOCK *pMB = &current->mbs[x + y * pParam->mb_width];
-			int skip_possible;
+	/* multithreaded inter coding - dispatch threads */
 
-			if (pMB->mode == MODE_INTRA || pMB->mode == MODE_INTRA_Q) {
-				CodeIntraMB(pEnc, pMB);
-				MBTransQuantIntra(&pEnc->mbParam, current, pMB, x, y,
-								  dct_codes, qcoeff);
+	bound = 0; 
+	slices_per_thread = (num_slices*1024 / num_threads);
 
-				start_timer();
-				MBPrediction(current, x, y, pParam->mb_width, qcoeff);
-				stop_prediction_timer();
+	for (k = 0; k < num_threads; k++) {
+		int add = ((slices_per_thread + 512) >> 10);
 
-				current->sStat.kblks++;
+		slices_per_thread += ((num_slices*1024 / num_threads) - add*1024);
 
-				MBCoding(current, pMB, qcoeff, bs, &current->sStat);
-				stop_coding_timer();
-				continue;
-			}
+		pEnc->smpData[k].pEnc = (void *) pEnc;
+		pEnc->smpData[k].stop_y = (((bound+add) * mb_height + (num_slices-1)) / num_slices);
+		pEnc->smpData[k].start_y = ((bound * mb_height + (num_slices-1)) / num_slices);
+		pEnc->smpData[k].RefQ = ((k&1) ? pEnc->vInterV.u : pEnc->vInterV.v) + 16*(k>>1)*pParam->edged_width;
 
-			start_timer();
-			MBMotionCompensation(pMB, x, y, &reference->image,
-								 &pEnc->vInterH, &pEnc->vInterV,
-								 &pEnc->vInterHV, &pEnc->vGMC,
-								 &current->image,
-								 dct_codes, pParam->width,
-								 pParam->height,
-								 pParam->edged_width,
-								 (current->vol_flags & XVID_VOL_QUARTERPEL),
-								 current->rounding_type);
+		bound += add;
 
-			stop_comp_timer();
-
-			pMB->field_pred = 0;
-
-			if (pMB->cbp != 0) {
-				pMB->cbp = MBTransQuantInter(&pEnc->mbParam, current, pMB, x, y,
-									  dct_codes, qcoeff);
-			}
-
-			if (pMB->dquant != 0)
-				MBSetDquant(pMB, x, y, &pEnc->mbParam);
-
-
-			if (pMB->cbp || pMB->mvs[0].x || pMB->mvs[0].y ||
-				   pMB->mvs[1].x || pMB->mvs[1].y || pMB->mvs[2].x ||
-				   pMB->mvs[2].y || pMB->mvs[3].x || pMB->mvs[3].y) {
-				current->sStat.mblks++;
-			}  else {
-				current->sStat.ublks++;
-			}
-
-			start_timer();
-
-			/* Finished processing the MB, now check if to CODE or SKIP */
-
-			skip_possible = (pMB->cbp == 0) && (pMB->mode == MODE_INTER);
-
-			if (current->coding_type == S_VOP)
-				skip_possible &= (pMB->mcsel == 1);
-			else { /* PVOP */
-				const VECTOR * const mv = (pParam->vol_flags & XVID_VOL_QUARTERPEL) ?
-										pMB->qmvs : pMB->mvs;
-				skip_possible &= ((mv->x|mv->y) == 0);
-			}
-
-			if ((pMB->mode == MODE_NOT_CODED) || (skip_possible)) {
-				/* This is a candidate for SKIPping, but for P-VOPs check intermediate B-frames first */
-				int bSkip = 1;
-
-				if (current->coding_type == P_VOP) {	/* special rule for P-VOP's SKIP */
-
-					for (k = pEnc->bframenum_head; k < pEnc->bframenum_tail; k++) {
-						int iSAD;
-						iSAD = sad16(reference->image.y + 16*y*pParam->edged_width + 16*x,
-										pEnc->bframes[k]->image.y + 16*y*pParam->edged_width + 16*x,
-										pParam->edged_width, BFRAME_SKIP_THRESHHOLD * pMB->quant);
-						if (iSAD >= BFRAME_SKIP_THRESHHOLD * pMB->quant) {
-							bSkip = 0; /* could not SKIP */
-							if (pParam->vol_flags & XVID_VOL_QUARTERPEL) {
-								VECTOR predMV = get_qpmv2(current->mbs, pParam->mb_width, 0, x, y, 0);
-								pMB->pmvs[0].x = - predMV.x;
-								pMB->pmvs[0].y = - predMV.y;
-							} else {
-								VECTOR predMV = get_pmv2(current->mbs, pParam->mb_width, 0, x, y, 0);
-								pMB->pmvs[0].x = - predMV.x;
-								pMB->pmvs[0].y = - predMV.y;
-							}
-							pMB->mode = MODE_INTER;
-							pMB->cbp = 0;
-							break;
-						}
-					}
-				}
-
-				if (bSkip) {
-					/* do SKIP */
-					pMB->mode = MODE_NOT_CODED;
-					MBSkip(bs);
-					stop_coding_timer();
-					continue;	/* next MB */
-				}
-			}
-
-			/* ordinary case: normal coded INTER/INTER4V block */
-			MBCoding(current, pMB, qcoeff, bs, &pEnc->current->sStat);
-			stop_coding_timer();
+		if (k > 0) {
+			pEnc->smpData[k].sStat->iTextBits = pEnc->smpData[k].sStat->kblks = 
+			pEnc->smpData[k].sStat->mblks = pEnc->smpData[k].sStat->ublks = 
+			pEnc->smpData[k].sStat->iMVBits = 0;
+			
+			BitstreamReset(pEnc->smpData[k].bs);
 		}
 	}
+	pEnc->smpData[0].bs = bs;
+	pEnc->smpData[0].sStat = &current->sStat;
 
-	emms();
+	/* create threads */
+	for (k = 1; k < num_threads; k++) {
+		pthread_create(&pEnc->smpData[k].handle, NULL, 
+			(void*)SliceCodeP, (void*)&pEnc->smpData[k]);
+	}
+
+	SliceCodeP(&pEnc->smpData[0]);
+
+	/* wait until all threads are finished */
+	for (k = 1; k < num_threads; k++) {
+		pthread_join(pEnc->smpData[k].handle, &status);
+	}
+
+	current->length = BitstreamLength(bs) - (bits/8);
+
+	/* reassemble the pieces together */
+	SerializeBitstreams(pEnc, pEnc->current, bs, num_threads);
+
 	updateFcode(&current->sStat, pEnc);
 
 	/* frame drop code */
 #if 0
 	DPRINTF(XVID_DEBUG_DEBUG, "kmu %i %i %i\n", current->sStat.kblks, current->sStat.mblks, current->sStat.ublks);
 #endif
+
 	if (current->sStat.kblks + current->sStat.mblks <
 		(pParam->frame_drop_ratio * mb_width * mb_height) / 100 &&
 		( (pEnc->bframenum_head >= pEnc->bframenum_tail) || !(pEnc->mbParam.global_flags & XVID_GLOBAL_CLOSED_GOP)) )
@@ -1911,6 +2150,10 @@ FrameCodeP(Encoder * pEnc,
 		memcpy(current->mbs, reference->mbs, sizeof(MACROBLOCK) * mb_width * mb_height);
 		coded = 0;
 	
+		BitstreamPadAlways(bs); /* next_start_code() at the end of VideoObjectPlane() */
+
+		current->length = (BitstreamPos(bs) - bits) / 8;
+
 	} else {
 
 		pEnc->current->is_edged = 0; /* not edged */
@@ -1939,13 +2182,88 @@ FrameCodeP(Encoder * pEnc,
 	}
 	*/
 
-	BitstreamPadAlways(bs); /* next_start_code() at the end of VideoObjectPlane() */
-
-	current->length = (BitstreamPos(bs) - bits) / 8;
-
 	return coded;
 }
 
+static void
+SliceCodeB(SMPData *data)
+{
+	Encoder *pEnc = (Encoder *) data->pEnc;
+	Bitstream *bs = (Bitstream *) data->bs;
+
+	DECLARE_ALIGNED_MATRIX(dct_codes, 6, 64, int16_t, CACHE_LINE);
+	DECLARE_ALIGNED_MATRIX(qcoeff, 6, 64, int16_t, CACHE_LINE);
+
+	int x, y;
+	FRAMEINFO * const frame = (FRAMEINFO * const) data->current;
+	MBParam * const pParam = &pEnc->mbParam;
+	int mb_width = pParam->mb_width;
+	int mb_height = pParam->mb_height;
+	IMAGE *f_ref = &pEnc->reference->image;
+	IMAGE *b_ref = &pEnc->current->image;
+
+	int bound = data->start_y*mb_width;
+	int num_slices = pEnc->num_slices;
+
+	if (data->start_y > 0) { /* write resync marker */
+		write_video_packet_header(bs, pParam, frame, bound);
+	}
+
+	for (y = data->start_y; y < data->stop_y; y++) {
+		int new_bound = mb_width * ((((y*num_slices) / mb_height) * mb_height + (num_slices-1)) / num_slices);
+
+		if (new_bound > bound) {
+			bound = new_bound;
+			BitstreamPadAlways(bs);
+			write_video_packet_header(bs, pParam, frame, bound);
+		}
+
+		for (x = 0; x < mb_width; x++) {
+			MACROBLOCK * const mb = &frame->mbs[x + y * pEnc->mbParam.mb_width];
+
+			/* decoder ignores mb when refence block is INTER(0,0), CBP=0 */
+			if (mb->mode == MODE_NOT_CODED) {
+				if (pParam->plugin_flags & XVID_REQORIGINAL) {
+					MBMotionCompensation(mb, x, y, f_ref, NULL, f_ref, NULL, NULL, &frame->image,
+										 NULL, 0, 0, pParam->edged_width, 0, 0, data->RefQ);
+				}
+				continue;
+			}
+
+			mb->quant = frame->quant;
+
+			if (mb->cbp != 0 || pParam->plugin_flags & XVID_REQORIGINAL) {
+				/* we have to motion-compensate, transfer etc, 
+					because there might be blocks to code */
+
+				MBMotionCompensationBVOP(pParam, mb, x, y, &frame->image,
+										 f_ref, &pEnc->f_refh, &pEnc->f_refv,
+										 &pEnc->f_refhv, b_ref, &pEnc->vInterH,
+										 &pEnc->vInterV, &pEnc->vInterHV, dct_codes, 
+										 data->RefQ);
+
+				mb->cbp = MBTransQuantInterBVOP(pParam, frame, mb, x, y,  dct_codes, qcoeff);
+			}
+			
+			if (mb->mode == MODE_DIRECT_NO4V)
+				mb->mode = MODE_DIRECT;
+
+			if (mb->mode == MODE_DIRECT && (mb->cbp | mb->pmvs[3].x | mb->pmvs[3].y) == 0)
+				mb->mode = MODE_DIRECT_NONE_MV;	/* skipped */
+			else 
+				if (frame->vop_flags & XVID_VOP_GREYSCALE)
+					/* keep only bits 5-2 -- Chroma blocks will just be skipped by MBCodingBVOP */
+					mb->cbp &= 0x3C;
+
+			start_timer();
+			MBCodingBVOP(frame, mb, qcoeff, frame->fcode, frame->bcode, bs, data->sStat);
+			stop_coding_timer();
+		}
+	}
+
+	BitstreamPadAlways(bs); /* next_start_code() at the end of VideoObjectPlane() */
+	emms();
+}
 
 static void
 FrameCodeB(Encoder * pEnc,
@@ -1953,12 +2271,18 @@ FrameCodeB(Encoder * pEnc,
 		   Bitstream * bs)
 {
 	int bits = BitstreamPos(bs);
-	DECLARE_ALIGNED_MATRIX(dct_codes, 6, 64, int16_t, CACHE_LINE);
-	DECLARE_ALIGNED_MATRIX(qcoeff, 6, 64, int16_t, CACHE_LINE);
-	uint32_t x, y;
+	int k = 0, bound = 0, num_slices = pEnc->num_slices;
+	int num_threads = MAX(1, MIN(pEnc->num_threads, num_slices));
+	void * status = NULL;
+	int slices_per_thread = (num_slices*1024 / num_threads);
+	int threads_per_slice = (pEnc->num_threads*1024 / num_threads);
 
 	IMAGE *f_ref = &pEnc->reference->image;
 	IMAGE *b_ref = &pEnc->current->image;
+
+	MBParam * const pParam = &pEnc->mbParam;
+	int mb_width = pParam->mb_width;
+	int mb_height = pParam->mb_height;
 
 	#ifdef BFRAMES_DEC_DEBUG
 	FILE *fp;
@@ -2018,52 +2342,64 @@ FrameCodeB(Encoder * pEnc,
 	frame->fcode = frame->bcode = pEnc->current->fcode;
 
 	start_timer();
+
 	if (pEnc->num_threads > 0) {
-		void * status;
-		int k;
+
 		/* multithreaded motion estimation - dispatch threads */
-		int rows_per_thread = (pEnc->mbParam.mb_height + pEnc->num_threads - 1)/pEnc->num_threads;
+		while (k < pEnc->num_threads) {
+			int i, add_s = (slices_per_thread + 512) >> 10;
+			int add_t = (threads_per_slice + 512) >> 10;
+			
+			int start_y = (bound * mb_height + (num_slices-1)) / num_slices;
+			int stop_y = ((bound+add_s) * mb_height + (num_slices-1)) / num_slices;
+			int rows_per_thread = (stop_y - start_y + add_t - 1) / add_t;
 
-		for (k = 0; k < pEnc->num_threads; k++) {
-			memset(pEnc->motionData[k].complete_count_self, 0, rows_per_thread * sizeof(int));
-			pEnc->motionData[k].pParam = &pEnc->mbParam;
-			pEnc->motionData[k].current = frame;
-			pEnc->motionData[k].reference = pEnc->current;
-			pEnc->motionData[k].fRef = f_ref;
-			pEnc->motionData[k].fRefH = &pEnc->f_refh;
-			pEnc->motionData[k].fRefV = &pEnc->f_refv;
-			pEnc->motionData[k].fRefHV = &pEnc->f_refhv;
-			pEnc->motionData[k].pRef = b_ref;
-			pEnc->motionData[k].pRefH = &pEnc->vInterH;
-			pEnc->motionData[k].pRefV = &pEnc->vInterV;
-			pEnc->motionData[k].pRefHV = &pEnc->vInterHV;
-			pEnc->motionData[k].time_bp = (int32_t)(pEnc->current->stamp - frame->stamp);
-			pEnc->motionData[k].time_pp = (int32_t)(pEnc->current->stamp - pEnc->reference->stamp);
-			pEnc->motionData[k].y_step = pEnc->num_threads;
-			pEnc->motionData[k].start_y = k;
-			/* todo: sort out temp space once and for all */
-			pEnc->motionData[k].RefQ = pEnc->vInterH.u + 16*k*pEnc->mbParam.edged_width;
+			slices_per_thread += ((num_slices*1024 / num_threads) - add_s*1024);
+			threads_per_slice += ((pEnc->num_threads*1024 / num_threads) - add_t*1024);
+
+			for (i = 0; i < add_t; i++) {
+				memset(pEnc->smpData[k+i].complete_count_self, 0, rows_per_thread * sizeof(int));
+
+				pEnc->smpData[k+i].pEnc = (void *) pEnc;
+				pEnc->smpData[k+i].current = frame;
+
+				pEnc->smpData[k+i].y_row = i;
+				pEnc->smpData[k+i].y_step = add_t;
+				pEnc->smpData[k+i].stop_y = stop_y;
+				pEnc->smpData[k+i].start_y = start_y;
+
+				/* todo: sort out temp space once and for all */
+				pEnc->smpData[k+i].RefQ = (((k+i)&1) ? pEnc->vInterV.u : pEnc->vInterV.v) + 
+											16*((k+i)>>1)*pParam->edged_width;
+			}
+			
+			pEnc->smpData[k].complete_count_above =
+				pEnc->smpData[k+add_t-1].complete_count_self - 1;
+
+			bound += add_s;
+			k += add_t;
 		}
 
 		for (k = 1; k < pEnc->num_threads; k++) {
-			pthread_create(&pEnc->motionData[k].handle, NULL, 
-				(void*)SMPMotionEstimationBVOP, (void*)&pEnc->motionData[k]);
+			pthread_create(&pEnc->smpData[k].handle, NULL, 
+				(void*)SMPMotionEstimationBVOP, (void*)&pEnc->smpData[k]);
 		}
 
-		SMPMotionEstimationBVOP(&pEnc->motionData[0]);
+		SMPMotionEstimationBVOP(&pEnc->smpData[0]);
 
 		for (k = 1; k < pEnc->num_threads; k++) {
-			pthread_join(pEnc->motionData[k].handle, &status);
+			pthread_join(pEnc->smpData[k].handle, &status);
 		}
 
 		frame->fcode = frame->bcode = 0;
 		for (k = 0; k < pEnc->num_threads; k++) {
-			if (pEnc->motionData[k].minfcode > frame->fcode)
-				frame->fcode = pEnc->motionData[k].minfcode;
-			if (pEnc->motionData[k].minbcode > frame->bcode)
-				frame->bcode = pEnc->motionData[k].minbcode;
+			if (pEnc->smpData[k].minfcode > frame->fcode)
+				frame->fcode = pEnc->smpData[k].minfcode;
+			if (pEnc->smpData[k].minbcode > frame->bcode)
+				frame->bcode = pEnc->smpData[k].minbcode;
 		}
 	} else {
+
 		MotionEstimationBVOP(&pEnc->mbParam, frame,
 							 ((int32_t)(pEnc->current->stamp - frame->stamp)),				/* time_bp */
 							 ((int32_t)(pEnc->current->stamp - pEnc->reference->stamp)), 	/* time_pp */
@@ -2077,6 +2413,7 @@ FrameCodeB(Encoder * pEnc,
 	set_timecodes(frame, pEnc->reference,pEnc->mbParam.fbase);
 	BitstreamWriteVopHeader(bs, &pEnc->mbParam, frame, 1, frame->quant);
 
+	/* reset stats */
 	frame->sStat.iTextBits = 0;
 	frame->sStat.iMVBits = 0;
 	frame->sStat.iMvSum = 0;
@@ -2084,55 +2421,49 @@ FrameCodeB(Encoder * pEnc,
 	frame->sStat.kblks = frame->sStat.mblks = frame->sStat.ublks = 0;
 	frame->sStat.mblks = pEnc->mbParam.mb_width * pEnc->mbParam.mb_height;
 	frame->sStat.kblks = frame->sStat.ublks = 0;
+		
+	/* multithreaded inter coding - dispatch threads */
+	bound = 0; 
+	slices_per_thread = (num_slices*1024 / num_threads);
+	
+	for (k = 0; k < num_threads; k++) {
+		int add = ((slices_per_thread + 512) >> 10);
 
-	for (y = 0; y < pEnc->mbParam.mb_height; y++) {
-		for (x = 0; x < pEnc->mbParam.mb_width; x++) {
-			MACROBLOCK * const mb = &frame->mbs[x + y * pEnc->mbParam.mb_width];
+		slices_per_thread += ((num_slices*1024 / num_threads) - add*1024);
 
-			/* decoder ignores mb when refence block is INTER(0,0), CBP=0 */
-			if (mb->mode == MODE_NOT_CODED) {
-				if (pEnc->mbParam.plugin_flags & XVID_REQORIGINAL) {
-					MBMotionCompensation(mb, x, y, f_ref, NULL, f_ref, NULL, NULL, &frame->image,
-											NULL, 0, 0, pEnc->mbParam.edged_width, 0, 0);
-				}
-				continue;
-			}
+		pEnc->smpData[k].pEnc = (void *) pEnc;
+		pEnc->smpData[k].current = frame;
+		pEnc->smpData[k].stop_y = (((bound+add) * mb_height + (num_slices-1)) / num_slices);
+		pEnc->smpData[k].start_y = ((bound * mb_height + (num_slices-1)) / num_slices);
+		bound += add;
 
-			mb->quant = frame->quant;
+		/* todo: sort out temp space once and for all */
+		pEnc->smpData[k].RefQ = ((k&1) ? pEnc->vInterV.u : pEnc->vInterV.v) + 16*(k>>1)*pParam->edged_width;
 
-			if (mb->cbp != 0 || pEnc->mbParam.plugin_flags & XVID_REQORIGINAL) {
-				/* we have to motion-compensate, transfer etc, 
-					because there might be blocks to code */
-
-				MBMotionCompensationBVOP(&pEnc->mbParam, mb, x, y, &frame->image,
-										 f_ref, &pEnc->f_refh, &pEnc->f_refv,
-										 &pEnc->f_refhv, b_ref, &pEnc->vInterH,
-										 &pEnc->vInterV, &pEnc->vInterHV,
-										 dct_codes);
-
-				mb->cbp = MBTransQuantInterBVOP(&pEnc->mbParam, frame, mb, x, y,  dct_codes, qcoeff);
-			}
-			
-			if (mb->mode == MODE_DIRECT_NO4V)
-				mb->mode = MODE_DIRECT;
-
-			if (mb->mode == MODE_DIRECT && (mb->cbp | mb->pmvs[3].x | mb->pmvs[3].y) == 0)
-				mb->mode = MODE_DIRECT_NONE_MV;	/* skipped */
-			else 
-				if (frame->vop_flags & XVID_VOP_GREYSCALE)
-					/* keep only bits 5-2 -- Chroma blocks will just be skipped by MBCodingBVOP */
-					mb->cbp &= 0x3C;
-
-			start_timer();
-			MBCodingBVOP(frame, mb, qcoeff, frame->fcode, frame->bcode, bs,
-						 &frame->sStat);
-			stop_coding_timer();
+		if (k > 0) {
+			BitstreamReset(pEnc->smpData[k].bs);
+			pEnc->smpData[k].sStat->iTextBits = pEnc->smpData[k].sStat->kblks = 
+			pEnc->smpData[k].sStat->mblks = pEnc->smpData[k].sStat->ublks = pEnc->smpData[k].sStat->iMVBits = 0;
 		}
 	}
-	emms();
 
-	BitstreamPadAlways(bs); /* next_start_code() at the end of VideoObjectPlane() */
-	frame->length = (BitstreamPos(bs) - bits) / 8;
+	for (k = 1; k < num_threads; k++) {
+		pthread_create(&pEnc->smpData[k].handle, NULL, 
+			(void*)SliceCodeB, (void*)&pEnc->smpData[k]);
+	}
+
+	pEnc->smpData[0].bs = bs;
+	pEnc->smpData[0].sStat = &frame->sStat;
+	SliceCodeB(&pEnc->smpData[0]);
+
+	for (k = 1; k < num_threads; k++) {
+		pthread_join(pEnc->smpData[k].handle, &status);
+	}
+
+	frame->length = BitstreamLength(bs) - (bits/8);
+
+	/* reassemble the pieces together */
+	SerializeBitstreams(pEnc, frame, bs, num_threads);
 
 #ifdef BFRAMES_DEC_DEBUG
 	if (!first){

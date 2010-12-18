@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.h,v 1.24 2006-09-03 08:46:56 Skal Exp $
+ * $Id: bitstream.h,v 1.25 2010-12-18 16:02:00 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -137,7 +137,8 @@ int BitstreamReadHeaders(Bitstream * bs,
 
 void BitstreamWriteVolHeader(Bitstream * const bs,
 							 const MBParam * pParam,
-							 const FRAMEINFO * const frame);
+							 const FRAMEINFO * const frame,
+							 const int num_slices);
 
 void BitstreamWriteVopHeader(Bitstream * const bs,
 							 const MBParam * pParam,

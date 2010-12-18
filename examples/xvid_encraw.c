@@ -22,7 +22,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.45 2010-11-28 15:19:07 Isibaar Exp $
+ * $Id: xvid_encraw.c,v 1.46 2010-12-18 16:02:08 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -257,6 +257,7 @@ static 	int ARG_VBVSIZE = 0;
 static 	int ARG_VBVMAXRATE = 0;
 static 	int ARG_VBVPEAKRATE = 0;
 static 	int ARG_THREADS = 0;
+static 	int ARG_SLICES = 1;
 static 	int ARG_VFR = 0;
 static 	int ARG_PROGRESS = 0;
 static 	int ARG_COLORSPACE = XVID_CSP_YV12;
@@ -447,6 +448,9 @@ main(int argc,
 		} else if (strcmp("-threads", argv[i]) == 0 && i < argc -1) {
 			i++;
 			ARG_THREADS = atoi(argv[i]);
+		} else if (strcmp("-slices", argv[i]) == 0 && i < argc -1) {
+			i++;
+			ARG_SLICES = atoi(argv[i]);
 		} else if (strcmp("-bquant_ratio", argv[i]) == 0 && i < argc - 1) {
 			i++;
 			ARG_BQRATIO = atoi(argv[i]);
@@ -1898,6 +1902,7 @@ usage()
 	fprintf(stderr, " -drop    integer               : Frame Drop Ratio (0..100) (0)\n");
 	fprintf(stderr, " -start   integer               : Starting frame number\n");
 	fprintf(stderr, " -threads integer               : Number of threads\n");
+	fprintf(stderr, " -slices  integer               : Number of slices\n");
 	fprintf(stderr, " -progress [integer]            : Show progress updates every n frames (10)\n");
 	fprintf(stderr, " -par     integer[:integer]     : Set Pixel Aspect Ratio.\n");
 	fprintf(stderr, "                                  1 = 1:1\n");
@@ -2265,6 +2270,7 @@ enc_init(void **enc_handle, char *stats_pass1, int start_num)
 #endif
 
 	xvid_enc_create.num_threads = ARG_THREADS;
+	xvid_enc_create.num_slices  = ARG_SLICES;
 
 	/* Frame rate  */
 	xvid_enc_create.fincr = ARG_DWSCALE;

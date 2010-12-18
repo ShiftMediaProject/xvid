@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_gmc.c,v 1.5 2004-12-05 04:53:01 syskin Exp $
+ * $Id: estimation_gmc.c,v 1.6 2010-12-18 16:02:00 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -68,14 +68,15 @@ GMEanalyzeMB (	const uint8_t * const pCur,
 				const int y,
 				const MBParam * const pParam,
 				MACROBLOCK * const pMBs,
-				SearchData * const Data)
+				SearchData * const Data,
+				const int bound)
 {
 
 	MACROBLOCK * const pMB = &pMBs[x + y * pParam->mb_width];
 
 	Data->iMinSAD[0] = MV_MAX_ERROR;
 
-	Data->predMV = get_pmv2(pMBs, pParam->mb_width, 0, x, y, 0);
+	Data->predMV = get_pmv2(pMBs, pParam->mb_width, bound, x, y, 0);
 
 	get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, x, y, 4,
 				pParam->width, pParam->height, 16, 1);
@@ -122,12 +123,16 @@ GMEanalysis(const MBParam * const pParam,
 			const FRAMEINFO * const reference,
 			const IMAGE * const pRefH,
 			const IMAGE * const pRefV,
-			const IMAGE * const pRefHV)
+			const IMAGE * const pRefHV,
+			const int num_slices)
 {
 	uint32_t x, y;
 	MACROBLOCK * const pMBs = current->mbs;
 	const IMAGE * const pCurrent = &current->image;
 	const IMAGE * const pReference = &reference->image;
+	int bound = 0;
+	const uint32_t mb_width = pParam->mb_width;
+	const uint32_t mb_height = pParam->mb_height;
 
 	SearchData Data;
 	memset(&Data, 0, sizeof(SearchData));
@@ -140,8 +145,9 @@ GMEanalysis(const MBParam * const pParam,
 	if (sadInit) (*sadInit) ();
 
 	for (y = 0; y < pParam->mb_height; y ++) {
+		bound = mb_width * ((((y*num_slices) / mb_height) * mb_height + (num_slices-1))/ num_slices);
 		for (x = 0; x < pParam->mb_width; x ++) {
-			GMEanalyzeMB(pCurrent->y, pReference->y, pRefH->y, pRefV->y, pRefHV->y, x, y, pParam, pMBs, &Data);
+			GMEanalyzeMB(pCurrent->y, pReference->y, pRefH->y, pRefV->y, pRefHV->y, x, y, pParam, pMBs, &Data, bound);
 		}
 	}
 	return;
@@ -154,7 +160,8 @@ GlobalMotionEst(MACROBLOCK * const pMBs,
 				const FRAMEINFO * const reference,
 				const IMAGE * const pRefH,
 				const IMAGE * const pRefV,
-				const IMAGE * const pRefHV)
+				const IMAGE * const pRefHV,
+				const int num_slices)
 {
 
 	const int deltax=8;		/* upper bound for difference between a MV and it's neighbour MVs */
@@ -178,7 +185,7 @@ GlobalMotionEst(MACROBLOCK * const pMBs,
 
 	gmc.duv[0].x = gmc.duv[0].y = gmc.duv[1].x = gmc.duv[1].y = gmc.duv[2].x = gmc.duv[2].y = 0;
 
-	GMEanalysis(pParam,current, reference, pRefH, pRefV, pRefHV);
+	GMEanalysis(pParam,current, reference, pRefH, pRefV, pRefHV, num_slices);
 
 	/* block based ME isn't done, yet, so do a quick presearch */
 

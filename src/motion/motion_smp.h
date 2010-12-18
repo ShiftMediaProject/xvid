@@ -22,7 +22,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: motion_smp.h,v 1.7 2010-03-09 10:00:14 Isibaar Exp $
+ * $Id: motion_smp.h,v 1.8 2010-12-18 16:02:00 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -32,35 +32,28 @@
 typedef struct
 {
 	pthread_t handle;		/* thread's handle */
-	const MBParam * pParam;
-	const FRAMEINFO * current;
-	const FRAMEINFO * reference;
-	const IMAGE * pRefH;
-	const IMAGE * pRefV;
-	const IMAGE * pRefHV;
-	const IMAGE * pGMC;
+	const FRAMEINFO *current;
 	uint8_t * RefQ;
+	int y_row;
 	int y_step;
 	int start_y;
+	int stop_y;
 	int * complete_count_self;
 	int * complete_count_above;
 	
-	/* bvop stuff */
-	int time_bp, time_pp;
-	const MACROBLOCK * f_mbs;
-	const IMAGE * pRef;
-	const IMAGE * fRef;
-	const IMAGE * fRefH;
-	const IMAGE * fRefV;
-	const IMAGE * fRefHV;
-
 	int MVmax, mvSum, mvCount;		/* out */
 
-	int minfcode, minbcode;
-} SMPmotionData;
+	uint32_t minfcode, minbcode;
+
+	uint8_t *tmp_buffer;
+	Bitstream *bs;
+
+	Statistics *sStat;
+	void *pEnc;
+} SMPData;
 
 
-void MotionEstimateSMP(SMPmotionData * h);
-void SMPMotionEstimationBVOP(SMPmotionData * h);
+void MotionEstimateSMP(SMPData * h);
+void SMPMotionEstimationBVOP(SMPData * h);
 
 #endif /* SMP_MOTION_H */

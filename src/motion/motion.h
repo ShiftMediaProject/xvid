@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: motion.h,v 1.25 2009-02-18 15:10:27 Isibaar Exp $
+ *  $Id: motion.h,v 1.26 2010-12-18 16:02:00 Isibaar Exp $
  *
  ***************************************************************************/
 
@@ -54,7 +54,8 @@ void MotionEstimation(MBParam * const pParam,
 					const IMAGE * const pRefV,
 					const IMAGE * const pRefHV,
 					const IMAGE * const pGMC,
-					const uint32_t iLimit);
+					const uint32_t iLimit,
+					const int num_slices);
 
 void
 MotionEstimationBVOP(MBParam * const pParam,
@@ -78,7 +79,8 @@ GMEanalysis(const MBParam * const pParam,
 			const FRAMEINFO * const reference,
 			const IMAGE * const pRefH,
 			const IMAGE * const pRefV,
-			const IMAGE * const pRefHV);
+			const IMAGE * const pRefHV,
+			const int num_slices);
 
 WARPPOINTS
 GlobalMotionEst(MACROBLOCK * const pMBs,
@@ -87,7 +89,8 @@ GlobalMotionEst(MACROBLOCK * const pMBs,
 				const FRAMEINFO * const reference,
 				const IMAGE * const pRefH,
 				const IMAGE * const pRefV,
-				const IMAGE * const pRefHV);
+				const IMAGE * const pRefHV,
+				const int num_slices);
 
 int
 GlobalMotionEstRefine(
@@ -139,7 +142,8 @@ MBMotionCompensation(MACROBLOCK * const mb,
 					const uint32_t height,
 					const uint32_t edged_width,
 					const int32_t quarterpel,
-					const int32_t rounding);
+					const int32_t rounding,
+					const uint8_t * const tmp);
 
 void
 MBMotionCompensationBVOP(MBParam * pParam,
@@ -155,6 +159,7 @@ MBMotionCompensationBVOP(MBParam * pParam,
 							const IMAGE * const b_refh,
 							const IMAGE * const b_refv,
 							const IMAGE * const b_refhv,
-							int16_t * dct_codes);
+							int16_t * dct_codes,
+							const uint8_t * const tmp);
 
 #endif							/* _MOTION_H_ */
