@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.71 2010-11-28 15:18:21 Isibaar Exp $
+ * $Id: xvid.h,v 1.72 2010-12-18 10:13:30 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -57,7 +57,7 @@ extern "C" {
 #define XVID_API_MAJOR(a)        (((a)>>16) & 0xff)
 #define XVID_API_MINOR(a)        (((a)>> 0) & 0xff)
 
-#define XVID_VERSION             XVID_MAKE_VERSION(1,3,-127)
+#define XVID_VERSION             XVID_MAKE_VERSION(1,3,-63)
 #define XVID_API                 XVID_MAKE_API(4, 3)
 
 #define XVID_UNSTABLE
@@ -246,7 +246,9 @@ typedef struct {
 	int width;      /* [in:opt] image width */
 	int height;     /* [in:opt] image width */
 	void * handle;  /* [out]    decore context handle */
-	int fourcc;     /* [in:opt] fourcc of the video */
+/* ------- v1.3.x ------- */
+	int fourcc;     /* [in:opt] fourcc of the input video */
+	int num_threads;/* [in:opt] number of threads to use in decoder */
 } xvid_dec_create_t;
 
 

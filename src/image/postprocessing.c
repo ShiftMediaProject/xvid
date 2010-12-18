@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Postprocessing  functions -
  *
- *  Copyright(C) 2003-2004 Michael Militzer <isibaar@xvid.org>
+ *  Copyright(C) 2003-2010 Michael Militzer <isibaar@xvid.org>
  *                    2004 Marc Fauconneau
  *
  *  This program is free software ; you can redistribute it and/or modify
@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: postprocessing.c,v 1.5 2008-11-27 00:47:03 Isibaar Exp $
+ * $Id: postprocessing.c,v 1.6 2010-12-18 10:13:38 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -53,56 +53,138 @@ void init_postproc(XVID_POSTPROC *tbls)
 	init_noise(tbls);
 }
 
+void 
+stripe_deblock_h(SMPDeblock *h)
+{
+	const int stride = h->stride;
+	const int stride2 = stride /2;
+
+	int i,j;
+	int quant;
+
+	/* luma: j,i in block units */
+	if ((h->flags & XVID_DEBLOCKY))
+	{
+		int dering = h->flags & XVID_DERINGY;
+
+		for (j = 1; j < h->stop_y; j++)		/* horizontal luma deblocking */
+		for (i = h->start_x; i < h->stop_x; i++)
+		{
+			quant = h->mbs[(j+0)/2*h->mb_stride + (i/2)].quant;
+			deblock8x8_h(h->tbls, h->img->y + j*8*stride + i*8, stride, quant, dering);
+		}
+	}
+
+	/* chroma */
+	if ((h->flags & XVID_DEBLOCKUV))
+	{
+		int dering = h->flags & XVID_DERINGUV;
+
+		for (j = 1; j < h->stop_y/2; j++)		/* horizontal deblocking */
+		for (i = h->start_x/2; i < h->stop_x/2; i++)
+		{
+			quant = h->mbs[(j+0)*h->mb_stride + i].quant;
+			deblock8x8_h(h->tbls, h->img->u + j*8*stride2 + i*8, stride2, quant, dering);
+			deblock8x8_h(h->tbls, h->img->v + j*8*stride2 + i*8, stride2, quant, dering);
+		}
+	}
+}
+
+void 
+stripe_deblock_v(SMPDeblock *h)
+{
+	const int stride = h->stride;
+	const int stride2 = stride /2;
+
+	int i,j;
+	int quant;
+
+	/* luma: j,i in block units */
+	if ((h->flags & XVID_DEBLOCKY))
+	{
+		int dering = h->flags & XVID_DERINGY;
+
+		for (j = h->start_y; j < h->stop_y; j++)		/* vertical deblocking */
+		for (i = 1; i < h->stop_x; i++)
+		{
+			quant = h->mbs[(j+0)/2*h->mb_stride + (i/2)].quant;
+			deblock8x8_v(h->tbls, h->img->y + j*8*stride + i*8, stride, quant, dering);
+		}
+	}
+
+	/* chroma */
+	if ((h->flags & XVID_DEBLOCKUV))
+	{
+		int dering = h->flags & XVID_DERINGUV;
+
+		for (j = h->start_y/2; j < h->stop_y/2; j++)		/* vertical deblocking */	
+		for (i = 1; i < h->stop_x/2; i++)
+		{
+			quant = h->mbs[(j+0)*h->mb_stride + i].quant;
+			deblock8x8_v(h->tbls, h->img->u + j*8*stride2 + i*8, stride2, quant, dering);
+			deblock8x8_v(h->tbls, h->img->v + j*8*stride2 + i*8, stride2, quant, dering);
+		}
+	}
+}
+
 void
 image_postproc(XVID_POSTPROC *tbls, IMAGE * img, int edged_width,
 				const MACROBLOCK * mbs, int mb_width, int mb_height, int mb_stride,
-				int flags, int brightness, int frame_num, int bvop)
+				int flags, int brightness, int frame_num, int bvop, int threads)
 {
-	const int edged_width2 = edged_width /2;
-	int i,j;
-	int quant;
-	int dering = flags & XVID_DERINGY;
+	int k, num_threads = MAX(1, MIN(threads, 4));
+	SMPDeblock data[4];
+	void *status = NULL;
 
-	/* luma: j,i in block units */
-	if ((flags & XVID_DEBLOCKY))
-	{
-		for (j = 1; j < mb_height*2; j++)		/* horizontal deblocking */
-		for (i = 0; i < mb_width*2; i++)
-		{
-			quant = mbs[(j+0)/2*mb_stride + (i/2)].quant;
-			deblock8x8_h(tbls, img->y + j*8*edged_width + i*8, edged_width, quant, dering);
-		}
+	/* horizontal deblocking, dispatch threads */
+	for (k = 0; k < num_threads; k++) {
+		data[k].flags = flags;
+		data[k].img = img;
+		data[k].mb_stride = mb_stride;
+		data[k].mbs = mbs;
+		data[k].stride = edged_width;
+		data[k].tbls = tbls;
 
-		for (j = 0; j < mb_height*2; j++)		/* vertical deblocking */
-		for (i = 1; i < mb_width*2; i++)
-		{
-			quant = mbs[(j+0)/2*mb_stride + (i/2)].quant;
-			deblock8x8_v(tbls, img->y + j*8*edged_width + i*8, edged_width, quant, dering);
-		}
+		data[k].start_x = (k*mb_width / num_threads)*2;
+		data[k].stop_x = ((k+1)*mb_width / num_threads)*2;
+
+		data[k].stop_y = mb_height*2;
+	}
+
+	/* create threads */
+	for (k = 1; k < num_threads; k++) {
+		pthread_create(&data[k].handle, NULL, 
+		               (void*)stripe_deblock_h, (void*)&data[k]);
+	}
+
+	stripe_deblock_h(&data[0]);
+
+	/* wait until all threads are finished */
+	for (k = 1; k < num_threads; k++) {
+		pthread_join(data[k].handle, &status);
 	}
 
 
-	/* chroma */
-	if ((flags & XVID_DEBLOCKUV))
-	{
-		dering = flags & XVID_DERINGUV;
-
-		for (j = 1; j < mb_height; j++)		/* horizontal deblocking */
-		for (i = 0; i < mb_width; i++)
-		{
-			quant = mbs[(j+0)*mb_stride + i].quant;
-			deblock8x8_h(tbls, img->u + j*8*edged_width2 + i*8, edged_width2, quant, dering);
-			deblock8x8_h(tbls, img->v + j*8*edged_width2 + i*8, edged_width2, quant, dering);
-		}
-
-		for (j = 0; j < mb_height; j++)		/* vertical deblocking */	
-		for (i = 1; i < mb_width; i++)
-		{
-			quant = mbs[(j+0)*mb_stride + i].quant;
-			deblock8x8_v(tbls, img->u + j*8*edged_width2 + i*8, edged_width2, quant, dering);
-			deblock8x8_v(tbls, img->v + j*8*edged_width2 + i*8, edged_width2, quant, dering);
-		}
+	/* vertical deblocking, dispatch threads */
+	for (k = 0; k < num_threads; k++) {
+		data[k].start_y = (k*mb_height / num_threads)*2;
+		data[k].stop_y = ((k+1)*mb_height / num_threads)*2;
+		data[k].stop_x = mb_width*2;
 	}
+
+	/* create threads */
+	for (k = 1; k < num_threads; k++) {
+		pthread_create(&data[k].handle, NULL, 
+		               (void*)stripe_deblock_v, (void*)&data[k]);
+	}
+
+	stripe_deblock_v(&data[0]);
+
+	/* wait until all threads are finished */
+	for (k = 1; k < num_threads; k++) {
+		pthread_join(data[k].handle, &status);
+	}
+
 
 	if (!bvop)
 		tbls->prev_quant = mbs->quant;

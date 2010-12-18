@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Decoder related header -
  *
- *  Copyright(C) 2002-2003 Peter Ross <pross@xvid.org>
+ *  Copyright(C) 2002-2010 Peter Ross <pross@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.h,v 1.19 2010-03-09 10:00:14 Isibaar Exp $
+ * $Id: decoder.h,v 1.20 2010-12-18 10:13:30 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -163,6 +163,8 @@ typedef struct
 
 	/* Tells if the reference image is edged or not */
 	int is_edged[2];
+
+	int num_threads;
 }
 DECODER;
 
