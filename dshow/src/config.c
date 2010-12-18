@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: config.c,v 1.10 2008-11-30 16:36:44 Isibaar Exp $
+ * $Id: config.c,v 1.11 2010-12-18 10:16:46 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -54,6 +54,7 @@ void LoadRegistryInfo()
 	REG_GET_N("Supported_4CC",  g_config.supported_4cc, 0)
 	REG_GET_N("Videoinfo_Compat",  g_config.videoinfo_compat, 0)
 	REG_GET_N("Decoder_Aspect_Ratio",  g_config.aspect_ratio, 0)
+	REG_GET_N("num_threads",  g_config.num_threads, 0)
 
 	RegCloseKey(hKey);
 }

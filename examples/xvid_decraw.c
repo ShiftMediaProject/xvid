@@ -20,7 +20,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.27 2010-03-09 09:20:05 Isibaar Exp $
+ * $Id: xvid_decraw.c,v 1.28 2010-12-18 10:17:35 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -67,6 +67,7 @@ static int CSP = XVID_CSP_I420;
 static int BPP = 1;
 static int FORMAT = USE_PNM;
 static int POSTPROC = 0;
+static 	int ARG_THREADS = 0;
 
 static char filepath[256] = "./";
 static void *dec_handle = NULL;
@@ -187,6 +188,9 @@ int main(int argc, char *argv[])
 			} else {
 				FORMAT = USE_PNM;
 			}
+		} else if (strcmp("-threads", argv[i]) == 0 && i < argc -1) {
+			i++;
+			ARG_THREADS = atoi(argv[i]);
 		} else if (strcmp("-help", argv[i]) == 0) {
 			usage();
 			return(0);
@@ -490,6 +494,7 @@ static void usage()
 	fprintf(stderr, " -c csp         : choose colorspace output (rgb16, rgb24, rgb32, yv12, i420)\n");
 	fprintf(stderr, " -f format      : choose output file format (tga, pnm, pgm, yuv)\n");
 	fprintf(stderr, " -postproc      : postprocessing level (0=off, 1=deblock, 2=deblock+dering)\n");
+	fprintf(stderr, " -threads int   : number of threads\n");
 	fprintf(stderr, " -m             : save mpeg4 raw stream to individual files\n");
 	fprintf(stderr, " -help          : This help message\n");
 	fprintf(stderr, " (* means default)\n");
@@ -708,14 +713,49 @@ dec_init(int use_assembler, int debug_level)
 
 	xvid_gbl_init_t   xvid_gbl_init;
 	xvid_dec_create_t xvid_dec_create;
+	xvid_gbl_info_t   xvid_gbl_info;
 
 	/* Reset the structure with zeros */
 	memset(&xvid_gbl_init, 0, sizeof(xvid_gbl_init_t));
 	memset(&xvid_dec_create, 0, sizeof(xvid_dec_create_t));
+	memset(&xvid_gbl_info, 0, sizeof(xvid_gbl_info));
 
 	/*------------------------------------------------------------------------
 	 * Xvid core initialization
 	 *----------------------------------------------------------------------*/
+
+	xvid_gbl_info.version = XVID_VERSION;
+	xvid_global(NULL, XVID_GBL_INFO, &xvid_gbl_info, NULL);
+
+	if (xvid_gbl_info.build != NULL) {
+		fprintf(stderr, "xvidcore build version: %s\n", xvid_gbl_info.build);
+	}
+	fprintf(stderr, "Bitstream version: %d.%d.%d\n", XVID_VERSION_MAJOR(xvid_gbl_info.actual_version), XVID_VERSION_MINOR(xvid_gbl_info.actual_version), XVID_VERSION_PATCH(xvid_gbl_info.actual_version));
+	fprintf(stderr, "Detected CPU flags: ");
+	if (xvid_gbl_info.cpu_flags & XVID_CPU_ASM)
+		fprintf(stderr, "ASM ");
+	if (xvid_gbl_info.cpu_flags & XVID_CPU_MMX)
+		fprintf(stderr, "MMX ");
+	if (xvid_gbl_info.cpu_flags & XVID_CPU_MMXEXT)
+		fprintf(stderr, "MMXEXT ");
+	if (xvid_gbl_info.cpu_flags & XVID_CPU_SSE)
+		fprintf(stderr, "SSE ");
+	if (xvid_gbl_info.cpu_flags & XVID_CPU_SSE2)
+		fprintf(stderr, "SSE2 ");
+	if (xvid_gbl_info.cpu_flags & XVID_CPU_SSE3)
+		fprintf(stderr, "SSE3 ");
+	if (xvid_gbl_info.cpu_flags & XVID_CPU_SSE41)
+		fprintf(stderr, "SSE41 ");
+    if (xvid_gbl_info.cpu_flags & XVID_CPU_3DNOW)
+		fprintf(stderr, "3DNOW ");
+	if (xvid_gbl_info.cpu_flags & XVID_CPU_3DNOWEXT)
+		fprintf(stderr, "3DNOWEXT ");
+	if (xvid_gbl_info.cpu_flags & XVID_CPU_TSC)
+		fprintf(stderr, "TSC ");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "Detected %d cpus,", xvid_gbl_info.num_threads);
+	if (!ARG_THREADS) ARG_THREADS = xvid_gbl_info.num_threads;
+	fprintf(stderr, " using %d threads.\n", ARG_THREADS);
 
 	/* Version */
 	xvid_gbl_init.version = XVID_VERSION;
@@ -747,6 +787,8 @@ dec_init(int use_assembler, int debug_level)
 	 */
 	xvid_dec_create.width = 0;
 	xvid_dec_create.height = 0;
+
+	xvid_dec_create.num_threads = ARG_THREADS;
 
 	ret = xvid_decore(NULL, XVID_DEC_CREATE, &xvid_dec_create, NULL);
 

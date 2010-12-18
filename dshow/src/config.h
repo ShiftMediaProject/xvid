@@ -40,6 +40,7 @@ typedef struct
 	unsigned int supported_4cc;
 	int videoinfo_compat;
 	int aspect_ratio;
+	int num_threads;
 } CONFIG;
 
 
