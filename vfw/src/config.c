@@ -19,7 +19,7 @@
  *	along with this program; if not, write to the Free Software
  *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: config.c,v 1.42 2010-12-21 16:56:42 Isibaar Exp $
+ * $Id: config.c,v 1.43 2010-12-21 20:23:06 Isibaar Exp $
  *
  *************************************************************************/
 
@@ -125,15 +125,15 @@ const profile_t profiles[] =
   { "MPEG4 Advanced Simple @ L4", "MPEG4 ASP @ L4",         0xf4,  352, 576, 30,  4, 2376,  792,  23760,  50,  80*16368,  8192, 3000000,        0, -1, PROFILE_AS },
   { "MPEG4 Advanced Simple @ L5", "MPEG4 ASP @ L5",         0xf5,  720, 576, 30,  4, 4860, 1620,  48600,  25, 112*16368, 16384, 8000000,        0, -1, PROFILE_AS },
 
-  { "(unrestricted)", "(unrestricted)",  0x00,    0,   0,  0,  0,    0,    0,      0, 100,   0*16368,    -1,       0,        0, -1, 0xffffffff & ~(PROFILE_EXTRA | PROFILE_PACKED)},
+  { "(unrestricted)", "(unrestricted)",  0x00,    0,   0,  0,  0,    0,    0,      0, 100,   0*16368,    -1,       0,        0, -1, 0xffffffff & ~(PROFILE_EXTRA | PROFILE_PACKED | PROFILE_XVID)},
 };
 
 
 const quality_t quality_table[] = 
 {
-    /* name                 |  m  vhq  bf cme  tbo  kfi  fdr  | iquant pquant bquant trellis */
-  { "Real-time",               1,  0,  0,  0,  0,  300,  0,     1, 31, 1, 31, 1, 31,   0   },
-  { QUALITY_GENERAL_STRING,    6,  1,  0,  1,  0,  300,  0,     1, 31, 1, 31, 1, 31,   1   },
+    /* name                 |  m  vhq mtc bf cme  tbo  kfi  fdr  | iquant pquant bquant trellis */
+  { "Real-time",               1,  0,  0,  0,  0,  0,  300,  0,     1, 31, 1, 31, 1, 31,   0   },
+  { QUALITY_GENERAL_STRING,    6,  1,  0,  0,  1,  0,  300,  0,     1, 31, 1, 31, 1, 31,   1   },
 };
 
 const int quality_table_num = sizeof(quality_table)/sizeof(quality_t);
@@ -201,6 +201,7 @@ static const REG_INT reg_ints[] = {
 	{"bquant_ratio",			&reg.bquant_ratio,				150},   /* 100-base float */
 	{"bquant_offset",			&reg.bquant_offset,				100},   /* 100-base float */
 	{"packed",					&reg.packed,					1},
+	{"num_slices", 				&reg.num_slices,				1},
 
 	/* aspect ratio */
 	{"ar_mode",					&reg.ar_mode,					0},
@@ -252,7 +253,7 @@ static const REG_INT reg_ints[] = {
 	{"vhq_bframe",				&reg.quality_user.vhq_bframe,				0},
 	{"chromame",				&reg.quality_user.chromame,					1},
 	{"turbo",					&reg.quality_user.turbo,						0},
-	{"max_key_interval",		&reg.quality_user.max_key_interval,			300},
+	{"max_key_interval",		&reg.quality_user.max_key_interval,			250},
 	{"frame_drop_ratio",		&reg.quality_user.frame_drop_ratio,			0},
 
 	/* quant */
@@ -269,10 +270,10 @@ static const REG_INT reg_ints[] = {
 	{"debug",					&reg.debug,						0x0},
 	{"vop_debug",				&reg.vop_debug,					0},
 	{"display_status",			&reg.display_status,			1},
+	{"cpu_flags", 				&reg.cpu,						0},
 
 	/* smp */
 	{"num_threads",				&reg.num_threads,				0},
-	{"num_slices", 				&reg.num_slices,				1},
 
 	/* decoder, shared with dshow */
 	{"Brightness",				&pp_brightness,					0},
@@ -353,9 +354,6 @@ void config_reg_get(CONFIG * config)
 		FreeLibrary(m_hdll);
 	}
 
-	reg.cpu = info.cpu_flags;
-	reg.num_threads = info.num_threads;
-
 	RegOpenKeyEx(XVID_REG_KEY, XVID_REG_PARENT "\\" XVID_REG_CHILD, 0, KEY_READ, &hKey);
 
 	/* read integer values */
@@ -420,8 +418,10 @@ void config_reg_get(CONFIG * config)
 		memcpy(&config->zones[i], &stmp, sizeof(zone_t));
 	}
 
-	if (config->num_threads == 0)
-		config->num_threads = info.num_threads; /* old autodetect */
+	if (!(config->cpu&XVID_CPU_FORCE)) {
+		config->cpu = info.cpu_flags;
+		config->num_threads = info.num_threads; /* autodetect */
+	}
 
 	RegCloseKey(hKey);
 }
