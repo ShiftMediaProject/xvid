@@ -19,7 +19,7 @@
  *	along with this program; if not, write to the Free Software
  *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: config.c,v 1.41 2010-12-02 06:46:07 Isibaar Exp $
+ * $Id: config.c,v 1.42 2010-12-21 16:56:42 Isibaar Exp $
  *
  *************************************************************************/
 
@@ -248,6 +248,7 @@ static const REG_INT reg_ints[] = {
 	/* motion */
 	{"motion_search",			&reg.quality_user.motion_search,				6},
 	{"vhq_mode",				&reg.quality_user.vhq_mode,					1},
+	{"vhq_metric",				&reg.quality_user.vhq_metric,				0},
 	{"vhq_bframe",				&reg.quality_user.vhq_bframe,				0},
 	{"chromame",				&reg.quality_user.chromame,					1},
 	{"turbo",					&reg.quality_user.turbo,						0},
@@ -271,7 +272,8 @@ static const REG_INT reg_ints[] = {
 
 	/* smp */
 	{"num_threads",				&reg.num_threads,				0},
-	
+	{"num_slices", 				&reg.num_slices,				1},
+
 	/* decoder, shared with dshow */
 	{"Brightness",				&pp_brightness,					0},
 	{"Deblock_Y",				&pp_dy,							0},
@@ -352,6 +354,7 @@ void config_reg_get(CONFIG * config)
 	}
 
 	reg.cpu = info.cpu_flags;
+	reg.num_threads = info.num_threads;
 
 	RegOpenKeyEx(XVID_REG_KEY, XVID_REG_PARENT "\\" XVID_REG_CHILD, 0, KEY_READ, &hKey);
 
@@ -416,6 +419,9 @@ void config_reg_get(CONFIG * config)
 
 		memcpy(&config->zones[i], &stmp, sizeof(zone_t));
 	}
+
+	if (config->num_threads == 0)
+		config->num_threads = info.num_threads; /* old autodetect */
 
 	RegCloseKey(hKey);
 }
@@ -819,6 +825,9 @@ static void adv_init(HWND hDlg, int idd, CONFIG * config)
 		SendDlgItemMessage(hDlg, IDC_VHQ, CB_ADDSTRING, 0, (LPARAM)"2 - Limited Search");
 		SendDlgItemMessage(hDlg, IDC_VHQ, CB_ADDSTRING, 0, (LPARAM)"3 - Medium Search");
 		SendDlgItemMessage(hDlg, IDC_VHQ, CB_ADDSTRING, 0, (LPARAM)"4 - Wide Search");
+
+		SendDlgItemMessage(hDlg, IDC_VHQ_METRIC, CB_ADDSTRING, 0, (LPARAM)"0 - PSNR");
+		SendDlgItemMessage(hDlg, IDC_VHQ_METRIC, CB_ADDSTRING, 0, (LPARAM)"1 - PSNR-HVS-M");
 		break;
 
 	case IDD_ENC :
@@ -1158,6 +1167,8 @@ static void adv_mode(HWND hDlg, int idd, CONFIG * config)
 		EnableDlgWindow(hDlg, IDC_CPU_SSE4, 	cpu_force);
         EnableDlgWindow(hDlg, IDC_CPU_3DNOW,	cpu_force);
 		EnableDlgWindow(hDlg, IDC_CPU_3DNOWEXT,	cpu_force);
+		EnableDlgWindow(hDlg, IDC_NUMTHREADS,   cpu_force);
+		EnableDlgWindow(hDlg, IDC_NUMTHREADS_STATIC,   cpu_force);
 		break;
 	}
 }
@@ -1263,6 +1274,7 @@ static void adv_upload(HWND hDlg, int idd, CONFIG * config)
 
 		SendDlgItemMessage(hDlg, IDC_MOTION, CB_SETCURSEL, quality_preset->motion_search, 0);
 		SendDlgItemMessage(hDlg, IDC_VHQ, CB_SETCURSEL, quality_preset->vhq_mode, 0);
+		SendDlgItemMessage(hDlg, IDC_VHQ_METRIC, CB_SETCURSEL, quality_preset->vhq_metric, 0);
 		CheckDlg(hDlg, IDC_VHQ_BFRAME, quality_preset->vhq_bframe);
 		CheckDlg(hDlg, IDC_CHROMAME, quality_preset->chromame);
 		CheckDlg(hDlg, IDC_TURBO, quality_preset->turbo);
@@ -1271,6 +1283,7 @@ static void adv_upload(HWND hDlg, int idd, CONFIG * config)
 
     EnableDlgWindow(hDlg, IDC_MOTION,     userdef);
     EnableDlgWindow(hDlg, IDC_VHQ,        userdef);
+    EnableDlgWindow(hDlg, IDC_VHQ_METRIC, userdef);
     EnableDlgWindow(hDlg, IDC_VHQ_BFRAME, userdef);
     EnableDlgWindow(hDlg, IDC_CHROMAME,   userdef);
     EnableDlgWindow(hDlg, IDC_TURBO,      userdef);
@@ -1315,10 +1328,10 @@ static void adv_upload(HWND hDlg, int idd, CONFIG * config)
 		CheckRadioButton(hDlg, IDC_CPU_AUTO, IDC_CPU_FORCE,
 			config->cpu & XVID_CPU_FORCE ? IDC_CPU_FORCE : IDC_CPU_AUTO );
 		set_dlgitem_hex(hDlg, IDC_DEBUG, config->debug);
+		SetDlgItemInt(hDlg, IDC_NUMTHREADS, config->num_threads, FALSE);
     break;
 
   case IDD_ENC:
-		SetDlgItemInt(hDlg, IDC_NUMTHREADS, config->num_threads, FALSE);
 		if(profiles[config->profile].flags & PROFILE_XVID)
 			SendDlgItemMessage(hDlg, IDC_FOURCC, CB_SETCURSEL, 0, 0);
 		else
@@ -1474,6 +1487,7 @@ static void adv_download(HWND hDlg, int idd, CONFIG * config)
     if (config->quality==quality_table_num) {
       config->quality_user.motion_search = SendDlgItemMessage(hDlg, IDC_MOTION, CB_GETCURSEL, 0, 0);
 		  config->quality_user.vhq_mode = SendDlgItemMessage(hDlg, IDC_VHQ, CB_GETCURSEL, 0, 0);
+		  config->quality_user.vhq_metric = SendDlgItemMessage(hDlg, IDC_VHQ_METRIC, CB_GETCURSEL, 0, 0);
 		  config->quality_user.vhq_bframe = IsDlgButtonChecked(hDlg, IDC_VHQ_BFRAME);
 		  config->quality_user.chromame = IsDlgChecked(hDlg, IDC_CHROMAME);
 		  config->quality_user.turbo = IsDlgChecked(hDlg, IDC_TURBO);
@@ -1515,11 +1529,11 @@ static void adv_download(HWND hDlg, int idd, CONFIG * config)
         config->cpu |= IsDlgChecked(hDlg, IDC_CPU_3DNOW)	? XVID_CPU_3DNOW : 0;
 		config->cpu |= IsDlgChecked(hDlg, IDC_CPU_3DNOWEXT) ? XVID_CPU_3DNOWEXT : 0;
 		config->cpu |= IsDlgChecked(hDlg, IDC_CPU_FORCE)	? XVID_CPU_FORCE : 0;
-    config->debug = get_dlgitem_hex(hDlg, IDC_DEBUG, config->debug);
+	    config->debug = get_dlgitem_hex(hDlg, IDC_DEBUG, config->debug);
+		config->num_threads = min(16, config_get_uint(hDlg, IDC_NUMTHREADS, config->num_threads));
     break;
 
   case IDD_ENC :
-		config->num_threads = min(4, config_get_uint(hDlg, IDC_NUMTHREADS, config->num_threads));
 		if(!(profiles[config->profile].flags & PROFILE_XVID))
 		  config->fourcc_used = SendDlgItemMessage(hDlg, IDC_FOURCC, CB_GETCURSEL, 0, 0);
 		config->vop_debug = IsDlgChecked(hDlg, IDC_VOPDEBUG);

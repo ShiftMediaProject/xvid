@@ -19,7 +19,7 @@
  *	along with this program; if not, write to the Free Software
  *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: codec.c,v 1.27 2010-12-02 06:46:07 Isibaar Exp $
+ * $Id: codec.c,v 1.28 2010-12-21 16:56:42 Isibaar Exp $
  *
  *************************************************************************/
 
@@ -401,7 +401,7 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
     xvid_gbl_info_t info;
 	int i;
 	HANDLE hFile;
-  const quality_t* quality_preset = (codec->config.quality==quality_table_num) ?
+	const quality_t* quality_preset = (codec->config.quality==quality_table_num) ?
     &codec->config.quality_user : &quality_table[codec->config.quality];
 
 	CONFIG tmpCfg; /* if we want to alter config to suit our needs, it shouldn't be visible to user later */
@@ -426,6 +426,12 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 
 	memset(&create, 0, sizeof(create));
 	create.version = XVID_VERSION;
+
+    /* Encoder threads */
+    if (codec->config.cpu & XVID_CPU_FORCE)
+		create.num_threads = codec->config.num_threads;
+	else 
+        create.num_threads = info.num_threads; /* Autodetect */
 
 	/* plugins */
 	create.plugins = plugins;
@@ -577,15 +583,6 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
       create.global |= XVID_GLOBAL_DIVX5_USERDATA;
 
 	create.frame_drop_ratio = quality_preset->frame_drop_ratio;
-
-    /* Encoder threads */
-    if (codec->config.num_threads == 0)
-        create.num_threads = info.num_threads; /* Autodetect */
-    else if (codec->config.num_threads == 1)
-        create.num_threads = -1; /* Single-threaded, disable SMP */
-    else 
-        create.num_threads = codec->config.num_threads;
-
 
 	switch(codec->xvid_encore_func(0, XVID_ENC_CREATE, &create, NULL))
 	{
@@ -798,6 +795,9 @@ LRESULT compress(CODEC * codec, ICCOMPRESS * icc)
 		break;
 	}
 
+	if (quality_preset->vhq_metric == 1)
+		frame.vop_flags |= XVID_VOP_RD_PSNRHVSM;
+
 	frame.input.plane[0] = icc->lpInput;
 	frame.input.stride[0] = CALC_BI_STRIDE(icc->lpbiInput->biWidth, icc->lpbiInput->biBitCount);
 
@@ -974,6 +974,7 @@ LRESULT decompress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpb
 {
 	BITMAPINFOHEADER * inhdr = &lpbiInput->bmiHeader;
 	xvid_gbl_init_t init;
+	xvid_gbl_info_t info;
 	xvid_dec_create_t create;
 	HKEY hKey;
 
@@ -985,11 +986,21 @@ LRESULT decompress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpb
 	init.debug = codec->config.debug;
 	codec->xvid_global_func(0, XVID_GBL_INIT, &init, NULL);
 
+	memset(&info, 0, sizeof(info));
+	info.version = XVID_VERSION;
+	codec->xvid_global_func(0, XVID_GBL_INFO, &info, NULL);
+
 	memset(&create, 0, sizeof(create));
 	create.version = XVID_VERSION;
 	create.width = lpbiInput->bmiHeader.biWidth;
 	create.height = lpbiInput->bmiHeader.biHeight;
 	create.fourcc = inhdr->biCompression;
+
+    /* Decoder threads */
+    if (codec->config.cpu & XVID_CPU_FORCE)
+		create.num_threads = codec->config.num_threads;
+	else 
+        create.num_threads = info.num_threads; /* Autodetect */
 
 	switch(codec->xvid_decore_func(0, XVID_DEC_CREATE, &create, NULL)) 
 	{
