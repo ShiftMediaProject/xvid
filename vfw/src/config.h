@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: config.h,v 1.15 2010-12-21 16:56:42 Isibaar Exp $
+ * $Id: config.h,v 1.16 2010-12-21 20:23:07 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -103,9 +103,9 @@ typedef struct
 #define QUALITY_GENERAL_STRING  "General purpose"
 #define QUALITY_USER_STRING   	"(User defined)"
 typedef struct {
-  char * name;
-  /* motion */
-  int motion_search;
+	char * name;
+	/* motion */
+	int motion_search;
 	int vhq_mode;
 	int vhq_metric;
 	int vhq_bframe;
