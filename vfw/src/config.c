@@ -19,7 +19,7 @@
  *	along with this program; if not, write to the Free Software
  *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: config.c,v 1.43 2010-12-21 20:23:06 Isibaar Exp $
+ * $Id: config.c,v 1.44 2010-12-22 16:52:12 Isibaar Exp $
  *
  *************************************************************************/
 
@@ -869,6 +869,7 @@ static void adv_mode(HWND hDlg, int idd, CONFIG * config)
 		EnableDlgWindow(hDlg, IDC_TFF, IsDlgChecked(hDlg, IDC_INTERLACING));
 		EnableDlgWindow(hDlg, IDC_QPEL, profiles[profile].flags&PROFILE_QPEL);
 		EnableDlgWindow(hDlg, IDC_GMC, profiles[profile].flags&PROFILE_GMC);
+		EnableDlgWindow(hDlg, IDC_SLICES, profiles[profile].flags&PROFILE_RESYNCMARKER);
 
 		bvops = (profiles[profile].flags&PROFILE_BVOP) && IsDlgChecked(hDlg, IDC_BVOP);
 		EnableDlgWindow(hDlg, IDC_MAXBFRAMES,	   bvops);
@@ -1188,6 +1189,7 @@ static void adv_upload(HWND hDlg, int idd, CONFIG * config)
 		CheckDlg(hDlg, IDC_TFF, config->tff);
 		CheckDlg(hDlg, IDC_QPEL, config->qpel);
   		CheckDlg(hDlg, IDC_GMC, config->gmc);
+		CheckDlg(hDlg, IDC_SLICES, (config->num_slices != 1));
 		CheckDlg(hDlg, IDC_BVOP, config->use_bvop);
 
 		SetDlgItemInt(hDlg, IDC_MAXBFRAMES, config->max_bframes, FALSE);
@@ -1370,6 +1372,7 @@ static void adv_download(HWND hDlg, int idd, CONFIG * config)
 		config->tff = IsDlgChecked(hDlg, IDC_TFF);
 		config->qpel = IsDlgChecked(hDlg, IDC_QPEL);
 		config->gmc = IsDlgChecked(hDlg, IDC_GMC);
+		config->num_slices = (IsDlgChecked(hDlg, IDC_SLICES) ? ((config->num_slices < 2) ? 0 : config->num_slices) : 1);
 
 		config->use_bvop = IsDlgChecked(hDlg, IDC_BVOP);
 		config->max_bframes = config_get_uint(hDlg, IDC_MAXBFRAMES, config->max_bframes);
