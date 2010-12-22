@@ -3,7 +3,7 @@ CodingStyle
 
 
 This is a short document describing the preferred coding style for the
-XviD  core library.   Coding  style  is very  personal,  and we  won't
+Xvid  core library.   Coding  style  is very  personal,  and we  won't
 _force_  our   views  on  anybody.   But  if   everybody  who  submits
 patches/codes to the  CVS respect this coding style,  the whole source
 would be easier to read/understand for all the others developers.
@@ -18,7 +18,7 @@ the source code bigger.
 
 In short,  8-char indents would have  made things easier  to read, and
 would have the  added benefit of warning you  when you're nesting your
-functions too deep. But because of  some parts of the XviD code source
+functions too deep. But because of  some parts of the Xvid code source
 has to use  lot of if/else/for statements together,  we have chosen to
 set the standard tab length to 4 characters.
 
@@ -94,7 +94,7 @@ have  descriptive  names, as  do  global  functions.   If you  have  a
 function that counts the number  of active users, you should call that
 "count_active_users()"   or  similar,   you  should   _not_   call  it
 "cntusr()". Try not  to use global variables as  they break reentrancy
-and XviD aims to be (in a long term) a threadable library.
+and Xvid aims to be (in a long term) a threadable library.
 
 
 Encoding the  type of  a function into  the name  (so-called Hungarian
@@ -140,7 +140,7 @@ generally easily keep track of about 7 different things, anything more
 and it gets confused.  You know you're brilliant, but maybe you'd like
 to understand what you did 2 weeks from now.
 
-NB :  This chapter does  not apply very  well to some XviD  parts, but
+NB :  This chapter does  not apply very  well to some Xvid  parts, but
 keep this "philosphy" in mind anyway.
 
 
@@ -175,7 +175,7 @@ values.  To do the latter, you  can stick the following in your .emacs
 file:
 
 (defun xvid-c-mode ()
-  "C mode with adjusted defaults for use with the XviD Sources."
+  "C mode with adjusted defaults for use with the Xvid Sources."
   (interactive)
   (c-mode)
   (message "Loading xvid-c-mode")
@@ -227,7 +227,7 @@ remember: "indent" is not a fix for bad programming.
 
 			Chapter 8: Reentrance
 
-Well, at  the moment, XviD is  not a reentrant  library because during
+Well, at  the moment, Xvid is  not a reentrant  library because during
 its development, some mistakes have  been comited. But reentrance is a
 long term aim  for this project so you should not  write code which is
 not reentrant.
@@ -254,7 +254,7 @@ natural size  of the CPU :  32 bit on  32 bit CPUs (x86,  powerpc) and
 64bit on 64 bit CPUs (ultra sparc, AMD hammer, Intel Itanium, Motorola
 powerpc64)
 
-But  don't forget  that  the  minimum platform  targeted  by the  XviD
+But  don't forget  that  the  minimum platform  targeted  by the  Xvid
 library is a  32bit cpu. So a  'int' should (never say 'is'  in such a
 case) always be 32bit long (or bigger)
 
@@ -279,4 +279,4 @@ For the moment, the supported platforms are :
   - *BSD (same archs as GNU/Linux)
   - Solaris.
 
-Last edited: $Date: 2004-03-22 22:36:23 $
+Last edited: $Date: 2010-12-22 16:52:52 $
