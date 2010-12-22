@@ -434,6 +434,7 @@
 #define IDC_PROFILE_LOGO                1406
 #define IDC_PROFILE_LABEL               1407
 #define IDC_VHQ_METRIC                  1408
+#define IDC_SLICES                      1409
 
 // Next default values for new objects
 // 
@@ -441,7 +442,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        139
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1409
+#define _APS_NEXT_CONTROL_VALUE         1410
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

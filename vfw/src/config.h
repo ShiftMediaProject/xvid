@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: config.h,v 1.16 2010-12-21 20:23:07 Isibaar Exp $
+ * $Id: config.h,v 1.17 2010-12-22 16:52:12 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -241,16 +241,17 @@ typedef struct REG_STR
 } REG_STR;
 
 
-#define PROFILE_ADAPTQUANT  0x00000001
-#define PROFILE_BVOP		0x00000002
-#define PROFILE_MPEGQUANT	0x00000004
-#define PROFILE_INTERLACE	0x00000008
-#define PROFILE_QPEL		0x00000010
-#define PROFILE_GMC			0x00000020
-#define PROFILE_4MV		    0x00000040
-#define PROFILE_PACKED      0x00000080
-#define PROFILE_EXTRA       0x00000100
-#define PROFILE_XVID        0x00000200
+#define PROFILE_ADAPTQUANT   0x00000001
+#define PROFILE_BVOP		 0x00000002
+#define PROFILE_MPEGQUANT	 0x00000004
+#define PROFILE_INTERLACE	 0x00000008
+#define PROFILE_QPEL		 0x00000010
+#define PROFILE_GMC			 0x00000020
+#define PROFILE_4MV		     0x00000040
+#define PROFILE_PACKED       0x00000080
+#define PROFILE_EXTRA        0x00000100
+#define PROFILE_XVID         0x00000200
+#define PROFILE_RESYNCMARKER 0x00000400
 
 static const int PARS[][2] = {
 	{1, 1},

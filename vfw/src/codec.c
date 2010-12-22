@@ -19,7 +19,7 @@
  *	along with this program; if not, write to the Free Software
  *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: codec.c,v 1.28 2010-12-21 16:56:42 Isibaar Exp $
+ * $Id: codec.c,v 1.29 2010-12-22 16:52:12 Isibaar Exp $
  *
  *************************************************************************/
 
@@ -432,6 +432,24 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 		create.num_threads = codec->config.num_threads;
 	else 
         create.num_threads = info.num_threads; /* Autodetect */
+
+	/* Encoder slices */
+	if ((profiles[codec->config.profile].flags & PROFILE_RESYNCMARKER) && codec->config.num_slices != 1) {
+		
+		if (codec->config.num_slices == 0) { /* auto */
+			int rows = (lpbiInput->bmiHeader.biHeight + 15) / 16;
+			int slices = (rows > 36) ? 2 : 1;
+
+			create.num_slices = (rows > 45) ? 4 : slices;
+
+			if (create.num_slices > create.num_threads) 
+				create.num_slices = create.num_threads;
+		}
+		else {
+			create.num_slices = codec->config.num_slices;
+		}
+
+	}
 
 	/* plugins */
 	create.plugins = plugins;
