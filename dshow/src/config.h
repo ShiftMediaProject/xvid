@@ -41,6 +41,7 @@ typedef struct
 	int videoinfo_compat;
 	int aspect_ratio;
 	int num_threads;
+	DWORD cpu;
 } CONFIG;
 
 
