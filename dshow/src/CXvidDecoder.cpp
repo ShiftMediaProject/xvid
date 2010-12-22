@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.cpp,v 1.24 2010-12-18 10:16:46 Isibaar Exp $
+ * $Id: CXvidDecoder.cpp,v 1.25 2010-12-22 15:21:13 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -36,8 +36,8 @@
 	C:\DX90SDK\Samples\C++\DirectShow\BaseClasses\Debug
 */
 
-// #define XVID_USE_MFT
-// #define XVID_USE_TRAYICON
+#define XVID_USE_MFT
+#define XVID_USE_TRAYICON
 
 #include <windows.h>
 
@@ -330,6 +330,7 @@ HRESULT CXvidDecoder::OpenLib()
 	xvid_gbl_init_t init;
 	memset(&init, 0, sizeof(init));
 	init.version = XVID_VERSION;
+	init.cpu_flags = g_config.cpu;
 
 	xvid_gbl_info_t info;
 	memset(&info, 0, sizeof(info));
@@ -382,7 +383,14 @@ HRESULT CXvidDecoder::OpenLib()
 	memset(&m_create, 0, sizeof(m_create));
 	m_create.version = XVID_VERSION;
 	m_create.handle = NULL;
-	m_create.num_threads = (!g_config.num_threads) ? info.num_threads : g_config.num_threads;
+    /* Decoder threads */
+    if (g_config.cpu & XVID_CPU_FORCE) {
+		m_create.num_threads = g_config.num_threads;
+	}
+	else {
+        m_create.num_threads = info.num_threads; /* Autodetect */
+		g_config.num_threads = info.num_threads;
+	}
 
 	memset(&m_frame, 0, sizeof(m_frame));
 	m_frame.version = XVID_VERSION;
@@ -1585,7 +1593,6 @@ HRESULT CXvidDecoder::MFTSetOutputType(DWORD dwOutputStreamID, IMFMediaType *pTy
 			hr = OnSetOutputType(pType);
 		}
 	}
-	
 #ifdef XVID_USE_TRAYICON
 	if (SUCCEEDED(hr) && Tray_Icon == 0) /* Create message passing window */
 	{
@@ -1619,7 +1626,7 @@ HRESULT CXvidDecoder::MFTSetOutputType(DWORD dwOutputStreamID, IMFMediaType *pTy
 		nid.hIcon = LoadIcon(g_xvid_hInst, MAKEINTRESOURCE(IDI_ICON));  
 		strcpy_s(nid.szTip, 19, "Xvid Video Decoder");  
 		nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
-	
+		
 		Shell_NotifyIcon(NIM_ADD, &nid); 
 
 		DestroyIcon(nid.hIcon);
@@ -1955,6 +1962,9 @@ END_LOOP:
 		
 		if (FAILED(pSample->GetSampleDuration(&m_timelength))) {
 			m_timelength = INVALID_TIME;
+		}
+		if (m_timestamp != INVALID_TIME && stats.type == XVID_TYPE_IVOP) {
+			m_rtFrame = m_timestamp;
 		}
 	}
 	
