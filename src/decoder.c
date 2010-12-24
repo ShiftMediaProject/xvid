@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.85 2010-12-18 10:13:30 Isibaar Exp $
+ * $Id: decoder.c,v 1.86 2010-12-24 13:49:58 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1391,17 +1391,6 @@ decoder_bframe(DECODER * dec,
       MACROBLOCK *last_mb = &dec->last_mbs[y * dec->mb_width + x];
       int intra_dc_threshold; /* fake variable */
 
-      if (check_resync_marker(bs, resync_len)) {
-        int bound = read_video_packet_header(bs, dec, resync_len, &quant,
-                           &fcode_forward, &fcode_backward, &intra_dc_threshold);
-        x = bound % dec->mb_width;
-        y = MIN((bound / dec->mb_width), (dec->mb_height-1));
-        /* reset predicted macroblocks */
-        dec->p_fmv = dec->p_bmv = zeromv;
-        /* update resync len with new fcodes */
-        resync_len = get_resync_len_b(fcode_backward, fcode_forward);
-      }
-
       mv =
       mb->b_mvs[0] = mb->b_mvs[1] = mb->b_mvs[2] = mb->b_mvs[3] =
       mb->mvs[0] = mb->mvs[1] = mb->mvs[2] = mb->mvs[3] = zeromv;
@@ -1419,6 +1408,20 @@ decoder_bframe(DECODER * dec,
         decoder_mbinter(dec, mb, x, y, mb->cbp, bs, 0, 1, 1);
         continue;
       }
+
+      if (check_resync_marker(bs, resync_len)) {
+        int bound = read_video_packet_header(bs, dec, resync_len, &quant,
+                           &fcode_forward, &fcode_backward, &intra_dc_threshold);
+
+		bound = MAX(0, bound--); /* valid bound must always be >0 */
+        x = bound % dec->mb_width;
+        y = MIN((bound / dec->mb_width), (dec->mb_height-1));
+        /* reset predicted macroblocks */
+        dec->p_fmv = dec->p_bmv = zeromv;
+        /* update resync len with new fcodes */
+        resync_len = get_resync_len_b(fcode_backward, fcode_forward);
+		continue; /* re-init loop */
+	  }
 
       if (!BitstreamGetBit(bs)) { /* modb=='0' */
         const uint8_t modb2 = BitstreamGetBit(bs);
