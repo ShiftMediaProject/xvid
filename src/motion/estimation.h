@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation.h,v 1.15 2010-12-18 16:02:00 Isibaar Exp $
+ * $Id: estimation.h,v 1.16 2010-12-24 13:21:35 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -208,7 +208,8 @@ ModeDecision_BVOP_RD(SearchData * const Data_d,
 			 		 const uint32_t VopFlags,
 					 const MBParam * const pParam,
 					 int x, int y,
-					 int best_sad);
+					 int best_sad,
+					 int force_direct);
 
 unsigned int
 getMinFcode(const int MVmax);

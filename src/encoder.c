@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.134 2010-12-18 16:02:00 Isibaar Exp $
+ * $Id: encoder.c,v 1.135 2010-12-24 13:20:07 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1855,7 +1855,9 @@ SliceCodeP(SMPData *data)
 						iSAD = sad16(reference->image.y + 16*y*pParam->edged_width + 16*x,
 										pEnc->bframes[k]->image.y + 16*y*pParam->edged_width + 16*x,
 										pParam->edged_width, BFRAME_SKIP_THRESHHOLD * pMB->quant);
-						if (iSAD >= BFRAME_SKIP_THRESHHOLD * pMB->quant) {
+						if (iSAD >= BFRAME_SKIP_THRESHHOLD * pMB->quant || ((bound > 1) &&
+							((y*mb_width+x == bound) || (y*mb_width+x == bound+1)))) { /* Some third-party decoders have problems with coloc skip MB before or after 
+																					   resync marker in BVOP. We avoid any ambiguity and force no skip at slice boundary */
 							bSkip = 0; /* could not SKIP */
 							if (pParam->vol_flags & XVID_VOL_QUARTERPEL) {
 								VECTOR predMV = get_qpmv2(current->mbs, pParam->mb_width, bound, x, y, 0);
@@ -2206,19 +2208,15 @@ SliceCodeB(SMPData *data)
 	int num_slices = pEnc->num_slices;
 
 	if (data->start_y > 0) { /* write resync marker */
-		write_video_packet_header(bs, pParam, frame, bound);
+		write_video_packet_header(bs, pParam, frame, bound+1);
 	}
 
-	for (y = data->start_y; y < data->stop_y; y++) {
+	for (y = data->start_y; y < MIN(data->stop_y+1, mb_height); y++) {
 		int new_bound = mb_width * ((((y*num_slices) / mb_height) * mb_height + (num_slices-1)) / num_slices);
+		int stop_x = (y == data->stop_y) ? 1 : mb_width;
+		int start_x = (y == data->start_y && y > 0) ? 1 : 0;
 
-		if (new_bound > bound) {
-			bound = new_bound;
-			BitstreamPadAlways(bs);
-			write_video_packet_header(bs, pParam, frame, bound);
-		}
-
-		for (x = 0; x < mb_width; x++) {
+		for (x = start_x; x < stop_x; x++) {
 			MACROBLOCK * const mb = &frame->mbs[x + y * pEnc->mbParam.mb_width];
 
 			/* decoder ignores mb when refence block is INTER(0,0), CBP=0 */
@@ -2228,6 +2226,12 @@ SliceCodeB(SMPData *data)
 										 NULL, 0, 0, pParam->edged_width, 0, 0, data->RefQ);
 				}
 				continue;
+			}
+
+			if (new_bound > bound && x > 0) {
+				bound = new_bound;
+				BitstreamPadAlways(bs);
+				write_video_packet_header(bs, pParam, frame, y*mb_width+x);
 			}
 
 			mb->quant = frame->quant;
@@ -2406,7 +2410,8 @@ FrameCodeB(Encoder * pEnc,
 							 pEnc->reference->mbs, f_ref,
 							 &pEnc->f_refh, &pEnc->f_refv, &pEnc->f_refhv,
 							 pEnc->current, b_ref, &pEnc->vInterH,
-							 &pEnc->vInterV, &pEnc->vInterHV);
+							 &pEnc->vInterV, &pEnc->vInterHV,
+							 pEnc->num_slices);
 	}
 	stop_motion_timer();
 
