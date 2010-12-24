@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: motion.h,v 1.26 2010-12-18 16:02:00 Isibaar Exp $
+ *  $Id: motion.h,v 1.27 2010-12-24 13:21:35 Isibaar Exp $
  *
  ***************************************************************************/
 
@@ -71,7 +71,8 @@ MotionEstimationBVOP(MBParam * const pParam,
 						const IMAGE * const b_ref,
 						const IMAGE * const b_refH,
 						const IMAGE * const b_refV,
-						const IMAGE * const b_refHV);
+						const IMAGE * const b_refHV,
+						const int num_slices);
 
 void
 GMEanalysis(const MBParam * const pParam,

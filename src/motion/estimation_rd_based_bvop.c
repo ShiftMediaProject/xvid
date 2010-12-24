@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_rd_based_bvop.c,v 1.11 2010-11-28 15:18:21 Isibaar Exp $
+ * $Id: estimation_rd_based_bvop.c,v 1.12 2010-12-24 13:21:35 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -499,7 +499,8 @@ ModeDecision_BVOP_RD(SearchData * const Data_d,
 					 const uint32_t VopFlags,
 					 const MBParam * const pParam,
 					 int x, int y,
-					 int best_sad)
+					 int best_sad,
+					 int force_direct)
 {
 	int mode = MODE_DIRECT, k;
 	int f_rd, b_rd, i_rd, d_rd, best_rd;
@@ -532,6 +533,11 @@ ModeDecision_BVOP_RD(SearchData * const Data_d,
 		Data_b->rel_var8[i] = pMB->rel_var8[i];
 		Data_f->rel_var8[i] = pMB->rel_var8[i];
 		Data_i->rel_var8[i] = pMB->rel_var8[i];
+	}
+
+	if (force_direct) {
+		best_rd = 0;
+		goto set_mode; /* bypass checks for non-direct modes */
 	}
 
 	/* find the best order of evaluation - smallest SAD comes first, because *if* it means smaller RD,
@@ -587,6 +593,8 @@ ModeDecision_BVOP_RD(SearchData * const Data_d,
 		best_rd = 0;
 	}
 
+
+set_mode:
 	pMB->sad16 = best_rd;
 	pMB->mode = mode;
 

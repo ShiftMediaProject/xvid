@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.27 2010-12-18 16:02:00 Isibaar Exp $
+ * $Id: estimation_bvop.c,v 1.28 2010-12-24 13:21:35 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -800,7 +800,8 @@ ModeDecision_BVOP_SAD(const SearchData * const Data_d,
 					  MACROBLOCK * const pMB,
 					  const MACROBLOCK * const b_mb,
 					  VECTOR * f_predMV,
-					  VECTOR * b_predMV)
+					  VECTOR * b_predMV, 
+					  int force_direct)
 {
 	int mode = MODE_DIRECT, k;
 	int best_sad, f_sad, b_sad, i_sad;
@@ -811,6 +812,9 @@ ModeDecision_BVOP_SAD(const SearchData * const Data_d,
 	b_sad = Data_b->iMinSAD[0] + 3*Data_d->lambda16;
 	f_sad = Data_f->iMinSAD[0] + 4*Data_d->lambda16;
 	i_sad = Data_i->iMinSAD[0] + 2*Data_d->lambda16;
+
+	if (force_direct)
+		goto set_mode; /* bypass checks for non-direct modes */
 
 	if (b_sad < best_sad) {
 		mode = MODE_BACKWARD;
@@ -827,6 +831,7 @@ ModeDecision_BVOP_SAD(const SearchData * const Data_d,
 		best_sad = i_sad;
 	}
 
+set_mode:
 	pMB->sad16 = best_sad;
 	pMB->mode = mode;
 	pMB->cbp = 63;
@@ -961,7 +966,8 @@ MotionEstimationBVOP(MBParam * const pParam,
 					 const IMAGE * const b_ref,
 					 const IMAGE * const b_refH,
 					 const IMAGE * const b_refV,
-					 const IMAGE * const b_refHV)
+					 const IMAGE * const b_refHV,
+					 const int num_slices)
 {
 	uint32_t i, j;
 	int32_t best_sad = 256*4096;
@@ -971,6 +977,8 @@ MotionEstimationBVOP(MBParam * const pParam,
 
 	VECTOR f_predMV, b_predMV;
 
+	int mb_width = pParam->mb_width;
+	int mb_height = pParam->mb_height;
 	int MVmaxF = 0, MVmaxB = 0;
 	const int32_t TRB = time_pp - time_bp;
 	const int32_t TRD = time_pp;
@@ -1000,12 +1008,16 @@ MotionEstimationBVOP(MBParam * const pParam,
 	Data_b.iFcode = Data_i.bFcode = frame->bcode = b_reference->fcode;
 
 	for (j = 0; j < pParam->mb_height; j++) {
+		int new_bound = mb_width * ((((j*num_slices) / mb_height) * mb_height + (num_slices-1)) / num_slices);
 
 		f_predMV = b_predMV = zeroMV;	/* prediction is reset at left boundary */
 
 		for (i = 0; i < pParam->mb_width; i++) {
 			MACROBLOCK * const pMB = frame->mbs + i + j * pParam->mb_width;
 			const MACROBLOCK * const b_mb = b_mbs + i + j * pParam->mb_width;
+			int force_direct = (((j*mb_width+i)==new_bound) && (j > 0)) ? 1 : 0; /* MTK decoder chipsets do NOT reset predMVs upon resync marker in BVOPs. We workaround this problem 
+																				    by placing the slice border on second MB in a row and then force the first MB to be direct mode */
+
 			pMB->mode = -1;
 
 			initialize_searchData(&Data_d, &Data_f, &Data_b, &Data_i,
@@ -1081,9 +1093,9 @@ MotionEstimationBVOP(MBParam * const pParam,
 
 			if (frame->vop_flags & XVID_VOP_RD_BVOP) 
 				ModeDecision_BVOP_RD(&Data_d, &Data_b, &Data_f, &Data_i, 
-					pMB, b_mb, &f_predMV, &b_predMV, frame->motion_flags, frame->vop_flags, pParam, i, j, best_sad);
+					pMB, b_mb, &f_predMV, &b_predMV, frame->motion_flags, frame->vop_flags, pParam, i, j, best_sad, force_direct);
 			else
-				ModeDecision_BVOP_SAD(&Data_d, &Data_b, &Data_f, &Data_i, pMB, b_mb, &f_predMV, &b_predMV);
+				ModeDecision_BVOP_SAD(&Data_d, &Data_b, &Data_f, &Data_i, pMB, b_mb, &f_predMV, &b_predMV, force_direct);
 
 			maxMotionBVOP(&MVmaxF, &MVmaxB, pMB, Data_d.qpel);
 
@@ -1117,6 +1129,9 @@ SMPMotionEstimationBVOP(SMPData * h)
 	const IMAGE * const b_refV = &pEnc->vInterV;
 	const IMAGE * const b_refHV = &pEnc->vInterHV;
 
+	int mb_width = pParam->mb_width;
+	int mb_height = pParam->mb_height;
+	int num_slices = pEnc->num_slices;
 	int y_row = h->y_row;
 	int y_step = h->y_step;
 	int start_y = h->start_y;
@@ -1165,6 +1180,8 @@ SMPMotionEstimationBVOP(SMPData * h)
 	max_mbs = 0;
 
 	for (j = (start_y+y_row); j < stop_y; j += y_step) {
+		int new_bound = mb_width * ((((j*num_slices) / mb_height) * mb_height + (num_slices-1)) / num_slices);
+
 		if (j == start_y) max_mbs = pParam->mb_width; /* we can process all blocks of the first row */
 
 		f_predMV = b_predMV = zeroMV;	/* prediction is reset at left boundary */
@@ -1172,6 +1189,8 @@ SMPMotionEstimationBVOP(SMPData * h)
 		for (i = 0; i < (int) pParam->mb_width; i++) {
 			MACROBLOCK * const pMB = frame->mbs + i + j * pParam->mb_width;
 			const MACROBLOCK * const b_mb = b_mbs + i + j * pParam->mb_width;
+			int force_direct = (((j*mb_width+i)==new_bound) && (j > 0)) ? 1 : 0; /* MTK decoder chipsets do NOT reset predMVs upon resync marker in BVOPs. We workaround this problem 
+																				    by placing the slice border on second MB in a row and then force the first MB to be direct mode */
 			pMB->mode = -1;
 
 			initialize_searchData(&Data_d, &Data_f, &Data_b, &Data_i,
@@ -1275,9 +1294,9 @@ SMPMotionEstimationBVOP(SMPData * h)
 
 			if (frame->vop_flags & XVID_VOP_RD_BVOP) 
 				ModeDecision_BVOP_RD(&Data_d, &Data_b, &Data_f, &Data_i, 
-					pMB, b_mb, &f_predMV, &b_predMV, frame->motion_flags, frame->vop_flags, pParam, i, j, best_sad);
+					pMB, b_mb, &f_predMV, &b_predMV, frame->motion_flags, frame->vop_flags, pParam, i, j, best_sad, force_direct);
 			else
-				ModeDecision_BVOP_SAD(&Data_d, &Data_b, &Data_f, &Data_i, pMB, b_mb, &f_predMV, &b_predMV);
+				ModeDecision_BVOP_SAD(&Data_d, &Data_b, &Data_f, &Data_i, pMB, b_mb, &f_predMV, &b_predMV, force_direct);
 
 			*complete_count_self = i+1;
 			current_mb++;
