@@ -9,6 +9,7 @@
 		xvid_plugin_lumimasking; 
 		xvid_plugin_dump; 
 		xvid_plugin_psnr;
-		xvid_plugin_ssim; 
+		xvid_plugin_ssim;
+		xvid_plugin_psnrhvsm;
 	local: *;
 };
