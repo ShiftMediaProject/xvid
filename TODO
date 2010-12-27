@@ -6,10 +6,12 @@ This file lists the TODO items
 Outstanding items:
 ------------------
 xvidcore
-* MMX MPEG4 quantization precision.
 * update/fix CBR plugin
   - misses target bitrate, bitrate burst in static motion/high motion
     transitions
+* parallel slice decoding (pre-parse for resync marker boundaries)
+* filter/deblock reference frames before ME ("true motion")
+* PSNR-HVS-M adaptive quantization
 
 examples
 * profile/level support within xvid_encraw
@@ -23,15 +25,21 @@ vfw
 * user settings management
 
 directshow
-* manual aspect ratio setting (1:1, 4:3, 16:9, Custom)
 * option to display libxvidcore version and bitstream ontop of video
-  hopefuly, using smooth fonts, not image_printf().
+  hopefully, using smooth fonts, not image_printf().
 
 
 
 Completed items:
 ----------------
-
+* clusterable two-pass coding
+* multi-threaded decoder deblocking
+* parallel slice coding
+* multi-threaded motion estimation
+* manual aspect ratio setting (1:1, 4:3, 16:9, Custom)
+* MMX MPEG4 quantization precision.
+* sse3/sse4 SIMD optimizations.
+* x86_64 optimizations for xvidcore.
 * remove divx4 api (ed.gomez)
 * remove VOP_TYPE enumerations (peter)
 * remove HINTed ME stuff (ed.gomez)
@@ -61,4 +69,4 @@ Completed items:
 * video buffer verifier (christoph)
 
 
-Last edited: $Date: 2005-10-09 07:38:33 $
+Last edited: $Date: 2010-12-27 16:39:31 $
