@@ -19,7 +19,7 @@
  *	along with this program; if not, write to the Free Software
  *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: config.c,v 1.44 2010-12-22 16:52:12 Isibaar Exp $
+ * $Id: config.c,v 1.45 2010-12-27 16:11:05 Isibaar Exp $
  *
  *************************************************************************/
 
@@ -253,7 +253,7 @@ static const REG_INT reg_ints[] = {
 	{"vhq_bframe",				&reg.quality_user.vhq_bframe,				0},
 	{"chromame",				&reg.quality_user.chromame,					1},
 	{"turbo",					&reg.quality_user.turbo,						0},
-	{"max_key_interval",		&reg.quality_user.max_key_interval,			250},
+	{"max_key_interval",		&reg.quality_user.max_key_interval,			300},
 	{"frame_drop_ratio",		&reg.quality_user.frame_drop_ratio,			0},
 
 	/* quant */

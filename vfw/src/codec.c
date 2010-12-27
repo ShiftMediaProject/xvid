@@ -19,7 +19,7 @@
  *	along with this program; if not, write to the Free Software
  *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: codec.c,v 1.29 2010-12-22 16:52:12 Isibaar Exp $
+ * $Id: codec.c,v 1.30 2010-12-27 16:11:05 Isibaar Exp $
  *
  *************************************************************************/
 
@@ -438,15 +438,15 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 		
 		if (codec->config.num_slices == 0) { /* auto */
 			int rows = (lpbiInput->bmiHeader.biHeight + 15) / 16;
-			int slices = (rows > 36) ? 2 : 1;
+			int slices = (rows > 36) ? 4 : 1; /* use multiple slices only for HD resolutions */
 
-			create.num_slices = (rows > 45) ? 4 : slices;
+			create.num_slices = (rows > 45) ? 8 : slices;
 
 			if (create.num_slices > create.num_threads) 
 				create.num_slices = create.num_threads;
 		}
 		else {
-			create.num_slices = codec->config.num_slices;
+			create.num_slices = codec->config.num_slices; /* force manual value - by registry edit */
 		}
 
 	}
