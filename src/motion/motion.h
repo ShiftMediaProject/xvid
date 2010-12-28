@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- *  $Id: motion.h,v 1.27 2010-12-24 13:21:35 Isibaar Exp $
+ *  $Id: motion.h,v 1.27.2.1 2010-12-28 19:19:57 Isibaar Exp $
  *
  ***************************************************************************/
 
@@ -144,7 +144,7 @@ MBMotionCompensation(MACROBLOCK * const mb,
 					const uint32_t edged_width,
 					const int32_t quarterpel,
 					const int32_t rounding,
-					const uint8_t * const tmp);
+					uint8_t * const tmp);
 
 void
 MBMotionCompensationBVOP(MBParam * pParam,
@@ -161,6 +161,6 @@ MBMotionCompensationBVOP(MBParam * pParam,
 							const IMAGE * const b_refv,
 							const IMAGE * const b_refhv,
 							int16_t * dct_codes,
-							const uint8_t * const tmp);
+							uint8_t * const tmp);
 
 #endif							/* _MOTION_H_ */

@@ -25,7 +25,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: plugin_2pass2.c,v 1.10 2010-11-16 14:42:07 Isibaar Exp $
+ * $Id: plugin_2pass2.c,v 1.10.2.1 2010-12-28 19:19:57 Isibaar Exp $
  *
  *****************************************************************************/
 
@@ -467,7 +467,7 @@ rc_2pass2_create(xvid_plg_create_t * create, rc_2pass2_t **handle)
 
 	/* vbv_size==0 switches VBV check off */
 	if (rc->param.vbv_size > 0)  {
-		const double fps = (double)create->fbase/(double)create->fincr;
+		const float fps = (float)((double)create->fbase/(double)create->fincr);
 		int status = check_curve_for_vbv_compliancy(rc, fps);
 
 		if (status) {
@@ -1361,7 +1361,7 @@ scaled_curve_apply_advanced_parameters(rc_2pass2_t * rc)
 		if (rc->count[i] == 0 || rc->pb_iboost_tax_ratio == 0) {
 			rc->avg_length[i] = 1;
 		} else {
-			rc->avg_length[i] = rc->tot_scaled_length[i];
+			rc->avg_length[i] = (double)rc->tot_scaled_length[i];
 
 			if (i == (XVID_TYPE_IVOP-1)) {
 				/* I Frames total has to be added the boost total */
@@ -1544,7 +1544,7 @@ scale_curve_for_vbv_compliancy(rc_2pass2_t * rc, const float fps)
 	const float vbv_size = (float)rc->param.vbv_size/8.f;
 	const float vbv_initial = (float)rc->param.vbv_initial/8.f;
 
-	const float maxrate = 0.9*rc->param.vbv_maxrate;
+	const float maxrate = 0.9f*rc->param.vbv_maxrate;
 	const float vbv_low = 0.10f*vbv_size;
 	const float r0 = (int)(maxrate/fps+0.5)/8.f;
 

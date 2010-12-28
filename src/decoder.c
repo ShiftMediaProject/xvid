@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: decoder.c,v 1.86 2010-12-24 13:49:58 Isibaar Exp $
+ * $Id: decoder.c,v 1.86.2.1 2010-12-28 19:19:57 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1413,7 +1413,7 @@ decoder_bframe(DECODER * dec,
         int bound = read_video_packet_header(bs, dec, resync_len, &quant,
                            &fcode_forward, &fcode_backward, &intra_dc_threshold);
 
-		bound = MAX(0, bound--); /* valid bound must always be >0 */
+		bound = MAX(0, bound-1); /* valid bound must always be >0 */
         x = bound % dec->mb_width;
         y = MIN((bound / dec->mb_width), (dec->mb_height-1));
         /* reset predicted macroblocks */

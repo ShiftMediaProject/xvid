@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: sad.h,v 1.25 2010-11-28 15:18:21 Isibaar Exp $
+ * $Id: sad.h,v 1.25.2.1 2010-12-28 19:19:57 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -201,7 +201,7 @@ coeff8_energyFunc coeff8_energy_c;
 coeff8_energyFunc coeff8_energy_sse2;
 #endif
 
-typedef uint32_t (blocksum8Func)(const int8_t * cur, int stride, 
+typedef uint32_t (blocksum8Func)(const uint8_t * cur, int stride, 
 								 uint16_t sums[4], uint32_t squares[4]);
 typedef blocksum8Func *blocksum8Func_Ptr;
 extern blocksum8Func_Ptr blocksum8;

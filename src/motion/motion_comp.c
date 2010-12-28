@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: motion_comp.c,v 1.24 2010-12-18 16:02:00 Isibaar Exp $
+ * $Id: motion_comp.c,v 1.24.2.1 2010-12-28 19:19:57 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -171,7 +171,7 @@ MBMotionCompensation(MACROBLOCK * const mb,
 					const uint32_t edged_width,
 					const int32_t quarterpel,
 					const int32_t rounding,
-					const uint8_t * const tmp)
+					uint8_t * const tmp)
 {
 	int32_t dx;
 	int32_t dy;
@@ -269,7 +269,7 @@ MBMotionCompensationBVOP(MBParam * pParam,
 						const IMAGE * const b_refv,
 						const IMAGE * const b_refhv,
 						int16_t * dct_codes,
-						const uint8_t * const tmp)
+						uint8_t * const tmp)
 {
 	const uint32_t edged_width = pParam->edged_width;
 	int32_t dx, dy, b_dx, b_dy, sumx, sumy, b_sumx, b_sumy;

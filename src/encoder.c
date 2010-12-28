@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.135 2010-12-24 13:20:07 Isibaar Exp $
+ * $Id: encoder.c,v 1.135.2.1 2010-12-28 19:19:57 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1645,7 +1645,6 @@ FrameCodeI(Encoder * pEnc,
 	int bound = 0, num_slices = pEnc->num_slices;
 	int num_threads = MAX(1, MIN(pEnc->num_threads, num_slices));
 	int slices_per_thread = (num_slices*1024 / num_threads);
-	int mb_width = pEnc->mbParam.mb_width; 
 	int mb_height = pEnc->mbParam.mb_height;
 	void * status = NULL;
 	uint16_t k;
@@ -1755,7 +1754,6 @@ SliceCodeP(SMPData *data)
 	FRAMEINFO *const current = pEnc->current;
 	FRAMEINFO *const reference = pEnc->reference;
 	MBParam * const pParam = &pEnc->mbParam;
-	IMAGE *pRef = &reference->image;
 	int mb_width = pParam->mb_width;
 	int mb_height = pParam->mb_height;
 
@@ -2285,7 +2283,6 @@ FrameCodeB(Encoder * pEnc,
 	IMAGE *b_ref = &pEnc->current->image;
 
 	MBParam * const pParam = &pEnc->mbParam;
-	int mb_width = pParam->mb_width;
 	int mb_height = pParam->mb_height;
 
 	#ifdef BFRAMES_DEC_DEBUG
