@@ -1,8 +1,8 @@
 +--------------------------------------------------------------------+
-|                      XviD core lib examples                        |
+|                      xvidcore lib examples                         |
 +--------------------------------------------------------------------+
 
-In this directory can find some examples how to use XviD MPEG4 codec 
+In this directory can find some examples how to use Xvid MPEG4 codec 
 in your own programs. 
 
 ** cactus.pgm.bz2

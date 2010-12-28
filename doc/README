@@ -10,12 +10,12 @@ platforms.
 NOTE FOR MacOS X PLATFORM
 -------------------------
 
-Many versions of yasm/nasm are known to be buggy for Mach-O output.
-Whereas nasm seems to be less reliable than yasm. Therefore, yasm
+Many versions of yasm/nasm are known to be buggy for Mach-O output,
+whereas nasm seems to be less reliable than yasm. Therefore, yasm
 is highly recommended for Mac OS X target.
 
-* yasm 0.7.99.2161 or later is required for Mac OS X build. *
+* yasm 1.0 or later is required to build xvidcore. *
 
 http://www.tortall.net/projects/yasm/
 
-Last edited: $Date: 2010-11-16 14:42:07 $
+Last edited: $Date: 2010-12-28 16:34:55 $

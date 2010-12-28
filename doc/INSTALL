@@ -184,6 +184,8 @@ If all went right, you're now able to install the package:
 Download the latest source distribution from http://www.xvid.org/ and
 uncompress it on your disk. Let's call this directory ${xvidcore}.
 
+    - Make sure your ${xvidcore} directory name does not contain spaces.
+      MS Visual C++ can have issues handling file names with whitespace.
     - Open the workspace libxvidcore.sln located in
       ${xvidcore}/build/win32.
     - Then choose the libxvidcore project as the Active project of the
@@ -213,4 +215,4 @@ NB: your CVS program may not convert text files to the cr/lf windows
     opening the .dsp file in WordPad and saving it. It should now be
     in cr/lf format.
 
-Last edited: $Date: 2010-11-16 14:42:07 $
+Last edited: $Date: 2010-12-28 16:34:55 $
