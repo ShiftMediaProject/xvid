@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: sad.c,v 1.17 2010-11-28 15:18:21 Isibaar Exp $
+ * $Id: sad.c,v 1.17.2.1 2010-12-28 19:19:57 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -402,7 +402,7 @@ sseh8_16bit_c(const int16_t * cur, const int16_t * ref, uint16_t mask)
 /* Sums all pixels of 8x8 block */
 
 uint32_t
-blocksum8_c(const int8_t * cur, int stride, uint16_t sums[4], uint32_t squares[4])
+blocksum8_c(const uint8_t * cur, int stride, uint16_t sums[4], uint32_t squares[4])
 {
 	int i, j;
 	uint32_t sum = 0;

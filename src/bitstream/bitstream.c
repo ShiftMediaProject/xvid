@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.c,v 1.60 2010-12-18 16:02:00 Isibaar Exp $
+ * $Id: bitstream.c,v 1.60.2.1 2010-12-28 19:19:57 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1258,7 +1258,7 @@ BitstreamWriteVolHeader(Bitstream * const bs,
 	/* divx5 userdata string */
 #define DIVX5_ID ((char *)"DivX503b1393")
   if ((pParam->global_flags & XVID_GLOBAL_DIVX5_USERDATA)) {
-    BitstreamWriteUserData(bs, DIVX5_ID, strlen(DIVX5_ID));
+    BitstreamWriteUserData(bs, DIVX5_ID, (uint32_t) strlen(DIVX5_ID));
   	if (pParam->max_bframes > 0 && (pParam->global_flags & XVID_GLOBAL_PACKED))
       BitstreamPutBits(bs, 'p', 8);
 	}
@@ -1271,7 +1271,7 @@ BitstreamWriteVolHeader(Bitstream * const bs,
 				xvid_user_format,
 				XVID_BS_VERSION,
 				(frame->vop_flags & XVID_VOP_CARTOON)?'C':'\0');
-		BitstreamWriteUserData(bs, xvid_user_data, strlen(xvid_user_data));
+		BitstreamWriteUserData(bs, xvid_user_data, (uint32_t) strlen(xvid_user_data));
 	}
 }
 
@@ -1392,7 +1392,7 @@ BitstreamWriteUserData(Bitstream * const bs,
 						const char *data,
 						const unsigned int length)
 {
-	int i;
+	unsigned int i;
 
 	BitstreamPad(bs);
 	BitstreamPutBits(bs, USERDATA_START_CODE, 32);

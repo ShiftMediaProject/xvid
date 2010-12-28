@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_pvop.c,v 1.24 2010-12-18 16:02:00 Isibaar Exp $
+ * $Id: estimation_pvop.c,v 1.24.2.1 2010-12-28 19:19:57 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -908,14 +908,11 @@ MotionEstimation(MBParam * const pParam,
 	const uint32_t mb_height = pParam->mb_height;
 	const uint32_t iEdgedWidth = pParam->edged_width;
 	const uint32_t MotionFlags = MakeGoodMotionFlags(current->motion_flags, current->vop_flags, current->vol_flags);
-	int stat_thresh = 0;
 	int bound = 0;
 	int MVmax = 0, mvSum = 0, mvCount = 0;
 
 	uint32_t x, y;
 	int sad00;
-	int skip_thresh = INITIAL_SKIP_THRESH * \
-		(current->vop_flags & XVID_VOP_MODEDECISION_RD ? 2:1);
 	int block = 0;
 
 	/* some pre-initialized thingies for SearchP */
@@ -1015,7 +1012,6 @@ MotionEstimateSMP(SMPData * h)
 	const int mb_width = pParam->mb_width;
 	const int mb_height = pParam->mb_height;
 	const uint32_t iEdgedWidth = pParam->edged_width;
-	int stat_thresh = 0;
 	int bound = 0;
 	int num_slices = pEnc->num_slices;
 	int y_step = h->y_step;
@@ -1026,8 +1022,6 @@ MotionEstimateSMP(SMPData * h)
 
 	int x, y;
 	int sad00;
-	int skip_thresh = INITIAL_SKIP_THRESH * \
-		(current->vop_flags & XVID_VOP_MODEDECISION_RD ? 2:1);
 	int block = (start_y+y_row)*mb_width;
 	int * complete_count_self = h->complete_count_self;
 	const volatile int * complete_count_above = h->complete_count_above;

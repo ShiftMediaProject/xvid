@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: bitstream.h,v 1.25 2010-12-18 16:02:00 Isibaar Exp $
+ * $Id: bitstream.h,v 1.25.2.1 2010-12-28 19:19:57 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -204,7 +204,7 @@ BitstreamInit(Bitstream * const bs,
 #endif
 	bs->bufb = tmp;
 
-	bs->pos = bs->initpos = bitpos*8;
+	bs->pos = bs->initpos = (uint32_t) bitpos*8;
 	/* preserve the intervening bytes */
 	if (bs->initpos > 0)
 		bs->buf = bs->bufa & (0xffffffff << (32 - bs->initpos));

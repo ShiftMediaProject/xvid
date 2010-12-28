@@ -20,7 +20,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_decraw.c,v 1.28 2010-12-18 10:17:35 Isibaar Exp $
+ * $Id: xvid_decraw.c,v 1.28.2.1 2010-12-28 19:19:57 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
  ****************************************************************************/
 
 	/* Fill the buffer */
-	useful_bytes = fread(mp4_buffer, 1, BUFFER_SIZE, in_file);
+	useful_bytes = (int) fread(mp4_buffer, 1, BUFFER_SIZE, in_file);
 
 	totaldectime = 0;
 	totalsize = 0;
@@ -274,7 +274,7 @@ int main(int argc, char *argv[])
 		 * then fill it.
 		 */
 		if (mp4_ptr > mp4_buffer + BUFFER_SIZE/2) {
-			int already_in_buffer = (mp4_buffer + BUFFER_SIZE - mp4_ptr);
+			int already_in_buffer = (int)(mp4_buffer + BUFFER_SIZE - mp4_ptr);
 
 			/* Move data if needed */
 			if (already_in_buffer > 0)
@@ -285,9 +285,9 @@ int main(int argc, char *argv[])
 
 			/* read new data */
             if(!feof(in_file)) {
-				useful_bytes += fread(mp4_buffer + already_in_buffer,
-									  1, BUFFER_SIZE - already_in_buffer,
-									  in_file);
+				useful_bytes += (int) fread(mp4_buffer + already_in_buffer,
+									        1, BUFFER_SIZE - already_in_buffer,
+									        in_file);
 			}
 		}
 

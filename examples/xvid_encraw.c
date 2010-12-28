@@ -22,7 +22,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.46 2010-12-18 16:02:08 Isibaar Exp $
+ * $Id: xvid_encraw.c,v 1.46.2.1 2010-12-28 19:19:57 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -485,7 +485,7 @@ main(int argc,
 				memset(&ZONES[NUM_ZONES], 0, sizeof(zone_t));
 
 				ZONES[NUM_ZONES].frame = startframe;
-				ZONES[NUM_ZONES].modifier = atof(options)*100;
+				ZONES[NUM_ZONES].modifier = (int)atof(options)*100;
 				if (toupper(c)=='Q')
 					ZONES[NUM_ZONES].mode = XVID_ZONE_QUANT;
 				else if (toupper(c)=='W')
@@ -498,7 +498,7 @@ main(int argc,
 				if ((frameoptions=strchr(options, ','))!=NULL) {
 					int readchar=0, count;
 					frameoptions++;
-					while (readchar<strlen(frameoptions)) {
+					while (readchar<(int)strlen(frameoptions)) {
 						if (sscanf(frameoptions+readchar, "%d%n", &(ZONES[NUM_ZONES].bvop_threshold), &count)==1) {
 							readchar += count;
 						}
@@ -536,7 +536,7 @@ main(int argc,
 			else {
 				ZONES[NUM_ZONES].mode = XVID_ZONE_WEIGHT;
 			}
-			ZONES[NUM_ZONES].modifier = atof(argv[i+2])*100;
+			ZONES[NUM_ZONES].modifier = (int)atof(argv[i+2])*100;
 			i++;
             ZONES[NUM_ZONES].frame = atoi(argv[i]);
 			i++;
@@ -563,12 +563,12 @@ main(int argc,
 			int exponent;
 			i++;
 			ARG_FRAMERATE = (float) atof(argv[i]);
-			exponent = strcspn(argv[i], ".");
-			if (exponent<strlen(argv[i]))
-				exponent=pow(10.0, (int)(strlen(argv[i])-1-exponent));
+			exponent = (int) strcspn(argv[i], ".");
+			if (exponent<(int)strlen(argv[i]))
+				exponent=(int)pow(10.0, (int)(strlen(argv[i])-1-exponent));
 			else
 				exponent=1;
-			ARG_DWRATE = atof(argv[i])*exponent;
+			ARG_DWRATE = (int)atof(argv[i])*exponent;
 			ARG_DWSCALE = exponent;
 			exponent = gcd(ARG_DWRATE, ARG_DWSCALE);
 			ARG_DWRATE /= exponent;
@@ -900,7 +900,7 @@ main(int argc,
 				temp = (unsigned char*)AVIStreamGetFrame(get_frame, 0);
 				if (temp != NULL) {
 					int i;
-					for (i = 0; i < ((DWORD*)temp)[0]; i++) {
+					for (i = 0; i < (int)((DWORD*)temp)[0]; i++) {
 						fprintf(stderr, "%2d ", temp[i]);
 					}
 					fprintf(stderr, "\n");
@@ -916,7 +916,7 @@ main(int argc,
           if (ARG_MAXFRAMENR<0)
 			ARG_MAXFRAMENR = avi_info.dwLength-ARG_STARTFRAMENR;
 		  else
-			ARG_MAXFRAMENR = min(ARG_MAXFRAMENR, avi_info.dwLength-ARG_STARTFRAMENR);
+			ARG_MAXFRAMENR = min(ARG_MAXFRAMENR, (int) (avi_info.dwLength-ARG_STARTFRAMENR));
 
 		  XDIM = avi_info.rcFrame.right - avi_info.rcFrame.left;
 		  YDIM = avi_info.rcFrame.bottom - avi_info.rcFrame.top;
@@ -963,7 +963,7 @@ main(int argc,
 				fprintf(stderr, "Parameter conflict: Do not specify both -bitrate and -size\n");
 				goto release_all;
 		} else
-			ARG_BITRATE = ((ARG_TARGETSIZE * 8) / (ARG_MAXFRAMENR / ARG_FRAMERATE)) * 1024;
+			ARG_BITRATE = (int) (((ARG_TARGETSIZE * 8) / (ARG_MAXFRAMENR / ARG_FRAMERATE)) * 1024);
 	}
 
 		/* Set constant quant to default if no bitrate given for single pass */
@@ -1300,7 +1300,7 @@ void encode_sequence(enc_sequence_data_t *h) {
 				temp = (unsigned char*)AVIStreamGetFrame(get_frame, 0);
 				if (temp != NULL) {
 					int i;
-					for (i = 0; i < ((DWORD*)temp)[0]; i++) {
+					for (i = 0; i < (int)((DWORD*)temp)[0]; i++) {
 						fprintf(stderr, "%2d ", temp[i]);
 					}
 					fprintf(stderr, "\n");
@@ -1527,7 +1527,7 @@ void encode_sequence(enc_sequence_data_t *h) {
  *                       Encode and decode this frame
  ****************************************************************************/
 
-		if ((input_num+start_num) >= (unsigned int)(stop_num-1) && ARG_MAXBFRAMES) {
+		if ((unsigned int)(input_num+start_num) >= (unsigned int)(stop_num-1) && ARG_MAXBFRAMES) {
 			stats_type = XVID_TYPE_PVOP;
 		}
 		else
@@ -1931,7 +1931,7 @@ read_pgmheader(FILE * handle)
 	int bytes, xsize, ysize, depth;
 	char dummy[2];
 
-	bytes = fread(dummy, 1, 2, handle);
+	bytes = (int) fread(dummy, 1, 2, handle);
 
 	if ((bytes < 2) || (dummy[0] != 'P') || (dummy[1] != '5'))
 		return (1);
@@ -2591,7 +2591,7 @@ prepare_cquant_zones() {
 
 		ZONES[NUM_ZONES].frame = 0;
 		ZONES[NUM_ZONES].mode = XVID_ZONE_QUANT;
-		ZONES[NUM_ZONES].modifier = ARG_CQ;
+		ZONES[NUM_ZONES].modifier = (int) ARG_CQ;
 		ZONES[NUM_ZONES].type = XVID_TYPE_AUTO;
 		ZONES[NUM_ZONES].greyscale = 0;
 		ZONES[NUM_ZONES].chroma_opt = 0;
@@ -2607,7 +2607,7 @@ prepare_cquant_zones() {
 	for(i = 0; i < NUM_ZONES; i++)
 		if (ZONES[i].mode == XVID_ZONE_WEIGHT) {
 			ZONES[i].mode = XVID_ZONE_QUANT;
-			ZONES[i].modifier = (100*ARG_CQ) / ZONES[i].modifier;
+			ZONES[i].modifier = (int) ((100*ARG_CQ) / ZONES[i].modifier);
 		}
 }
 
@@ -2676,7 +2676,7 @@ void removedivxp(char *buf, int bufsize) {
 	int i;
 	char* userdata;
 
-	for (i=0; i <= (bufsize-sizeof(userdata_start_code)); i++) {
+	for (i=0; i <= (int)(bufsize-sizeof(userdata_start_code)); i++) {
 		if (memcmp((void*)userdata_start_code, (void*)(buf+i), strlen(userdata_start_code))==0) {
 			if ((userdata = strstr(buf+i+4, "DivX"))!=NULL) {
 				userdata[strlen(userdata)-1] = '\0';
