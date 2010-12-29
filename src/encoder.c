@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.135.2.1 2010-12-28 19:19:57 Isibaar Exp $
+ * $Id: encoder.c,v 1.135.2.2 2010-12-29 22:29:51 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -2302,7 +2302,7 @@ FrameCodeB(Encoder * pEnc,
 		image_setedges(f_ref, pEnc->mbParam.edged_width,
 					   pEnc->mbParam.edged_height, pEnc->mbParam.width,
 					   pEnc->mbParam.height, 0);
-		pEnc->current->is_edged = 1;	
+		pEnc->reference->is_edged = 1;
 	}
 
 	if (pEnc->reference->is_interpolated != 0) {
@@ -2333,8 +2333,8 @@ FrameCodeB(Encoder * pEnc,
 
 	frame->coding_type = B_VOP;
 
-	if (pEnc->current->vop_flags & XVID_VOP_RD_PSNRHVSM) {
-		image_block_variance(&pEnc->current->image, pEnc->mbParam.edged_width, pEnc->current->mbs, 
+	if ((frame->vop_flags & XVID_VOP_RD_PSNRHVSM) && (frame->vop_flags & XVID_VOP_RD_BVOP)) {
+		image_block_variance(&frame->image, pEnc->mbParam.edged_width, frame->mbs, 
 		                     pEnc->mbParam.mb_width, pEnc->mbParam.mb_height);
 	}
 
