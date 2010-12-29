@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_rd_based.c,v 1.16 2010-12-18 16:02:00 Isibaar Exp $
+ * $Id: estimation_rd_based.c,v 1.16.2.1 2010-12-29 22:29:44 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -120,7 +120,8 @@ Block_CalcBitsIntra(MACROBLOCK * pMB,
 					unsigned int lambda,
 					const uint16_t * mpeg_quant_matrices,
 					const unsigned int quant_sq,
-					const unsigned int metric)
+					const unsigned int metric,
+					const int bound)
 {
 	int direction;
 	int16_t *pCurrent;
@@ -139,7 +140,7 @@ Block_CalcBitsIntra(MACROBLOCK * pMB,
 	}
 
 	predict_acdc(pMB-(x+mb_width*y), x, y, mb_width, block, qcoeff,
-				quant, iDcScaler, predictors, 0);
+				quant, iDcScaler, predictors, bound);
 	
 	direction = pMB->acpred_directions[block];
 	pCurrent = (int16_t*)pMB->pred_values[block];
@@ -535,7 +536,7 @@ findRD_inter4v(SearchData * const Data,
 
 static int
 findRD_intra(SearchData * const Data, MACROBLOCK * pMB,
-			 const int x, const int y, const int mb_width)
+			 const int x, const int y, const int mb_width, const int bound)
 {
 	unsigned int cbp[2] = {0, 0}, bits[2], i;
 	/* minimum number of bits that WILL be coded in intra - mcbpc 5, cby 2 acdc flag - 1 and DC coeffs - 4*3+2*2 */
@@ -553,7 +554,8 @@ findRD_intra(SearchData * const Data, MACROBLOCK * pMB,
 
 		distortion = Block_CalcBitsIntra(pMB, x, y, mb_width, i, in, coeff, dqcoeff,
 								predictors[i], iQuant, Data->quant_type, bits, cbp, 
-								Data->lambda[i], Data->mpeg_quant_matrices, Data->quant_sq, Data->metric);
+								Data->lambda[i], Data->mpeg_quant_matrices, Data->quant_sq, 
+								Data->metric, bound);
 		bits1 += distortion + BITS_MULT * bits[0];
 		bits2 += distortion + BITS_MULT * bits[1];
 
@@ -568,7 +570,8 @@ findRD_intra(SearchData * const Data, MACROBLOCK * pMB,
 	transfer_8to16copy(in, Data->CurU, Data->iEdgedWidth/2);
 	distortion = Block_CalcBitsIntra(pMB, x, y, mb_width, 4, in, coeff, dqcoeff,
 									predictors[4], iQuant, Data->quant_type, bits, cbp, 
-									Data->lambda[4], Data->mpeg_quant_matrices, Data->quant_sq, Data->metric);
+									Data->lambda[4], Data->mpeg_quant_matrices, Data->quant_sq, 
+									Data->metric, bound);
 	bits1 += distortion + BITS_MULT * bits[0];
 	bits2 += distortion + BITS_MULT * bits[1];
 
@@ -579,7 +582,8 @@ findRD_intra(SearchData * const Data, MACROBLOCK * pMB,
 	transfer_8to16copy(in, Data->CurV, Data->iEdgedWidth/2);
 	distortion = Block_CalcBitsIntra(pMB, x, y, mb_width, 5, in, coeff, dqcoeff,
 									predictors[5], iQuant, Data->quant_type, bits, cbp, 
-									Data->lambda[5], Data->mpeg_quant_matrices, Data->quant_sq, Data->metric);
+									Data->lambda[5], Data->mpeg_quant_matrices, Data->quant_sq, 
+									Data->metric, bound);
 
 	bits1 += distortion + BITS_MULT * bits[0];
 	bits2 += distortion + BITS_MULT * bits[1];
@@ -700,7 +704,7 @@ xvid_me_ModeDecision_RD(SearchData * const Data,
 	
 	/* there is no way for INTRA to take less than 24 bits - go to findRD_intra() for calculations */
 	if (min_rd > 24*BITS_MULT) { 
-		intra_rd = findRD_intra(Data, pMB, x, y, pParam->mb_width);
+		intra_rd = findRD_intra(Data, pMB, x, y, pParam->mb_width, bound);
 		if (intra_rd < min_rd) {
 			*Data->iMinSAD = min_rd = intra_rd;
 			mode = MODE_INTRA;
@@ -952,7 +956,7 @@ xvid_me_ModeDecision_Fast(SearchData * const Data,
 			}
 		}
 
-		intra_rd = findRD_intra(Data, pMB, x, y, pParam->mb_width);
+		intra_rd = findRD_intra(Data, pMB, x, y, pParam->mb_width, bound);
 		if (intra_rd < min_rd) {
 			*Data->iMinSAD = min_rd = intra_rd;
 			mode = MODE_INTRA;

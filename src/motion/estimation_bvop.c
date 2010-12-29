@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: estimation_bvop.c,v 1.28 2010-12-24 13:21:35 Isibaar Exp $
+ * $Id: estimation_bvop.c,v 1.28.2.1 2010-12-29 22:29:44 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -396,28 +396,45 @@ PreparePredictionsBF(VECTOR * const pmv, const int x, const int y,
 							const uint32_t iWcount,
 							const MACROBLOCK * const pMB,
 							const uint32_t mode_curr,
-							const VECTOR hint)
+							const VECTOR hint, const int bound)
 {
+	int lx, ly;		/* left */
+	int tx, ty;		/* top */
+	int rtx, rty;	/* top-right */
+	int ltx, lty;	/* top-left */
+	int lpos, tpos, rtpos, ltpos;
+
+	lx  = x - 1;	ly  = y;
+	tx  = x;		ty  = y - 1;
+	rtx = x + 1;	rty = y - 1;
+	ltx = x - 1;	lty = y - 1;
+
+	lpos  =  lx +  ly * iWcount;
+	rtpos = rtx + rty * iWcount;
+	tpos  =  tx +  ty * iWcount;
+	ltpos = ltx + lty * iWcount;
+
+
 	/* [0] is prediction */
 	/* [1] is zero */
 	pmv[1].x = pmv[1].y = 0; 
 
 	pmv[2].x = hint.x; pmv[2].y = hint.y;
 
-	if ((y != 0)&&(x != (int)(iWcount+1))) {			/* [3] top-right neighbour */
+	if (rtpos >= bound && rtx < (int)iWcount) {			/* [3] top-right neighbour */
 		pmv[3] = ChoosePred(pMB+1-iWcount, mode_curr);
 	} else pmv[3].x = pmv[3].y = 0;
 
-	if (y != 0) {
-		pmv[4] = ChoosePred(pMB-iWcount, mode_curr);
+ 	if (tpos >= bound) {
+		pmv[4] = ChoosePred(pMB-iWcount, mode_curr);	/* [4] top */
 	} else pmv[4].x = pmv[4].y = 0;
 
-	if (x != 0) {
-		pmv[5] = ChoosePred(pMB-1, mode_curr);
+	if (lpos >= bound && lx >= 0) {
+		pmv[5] = ChoosePred(pMB-1, mode_curr);			/* [5] left */
 	} else pmv[5].x = pmv[5].y = 0;
 
-	if (x != 0 && y != 0) {
-		pmv[6] = ChoosePred(pMB-1-iWcount, mode_curr);
+	if (ltpos >= bound && ltx >= 0) {
+		pmv[6] = ChoosePred(pMB-1-iWcount, mode_curr);	/* [6] top-left */
 	} else pmv[6].x = pmv[6].y = 0;
 }
 
@@ -432,7 +449,7 @@ SearchBF_initial(const int x, const int y,
 			int32_t * const best_sad,
 			const int32_t mode_current,
 			SearchData * const Data,
-			VECTOR hint)
+			VECTOR hint, const int bound)
 {
 
 	int i;
@@ -451,7 +468,7 @@ SearchBF_initial(const int x, const int y,
 		hint.x /= 2; hint.y /= 2;
 	}
 
-	PreparePredictionsBF(pmv, x, y, pParam->mb_width, pMB, mode_current, hint);
+	PreparePredictionsBF(pmv, x, y, pParam->mb_width, pMB, mode_current, hint, bound);
 
 	Data->currentMV->x = Data->currentMV->y = 0;
 
@@ -1046,10 +1063,10 @@ MotionEstimationBVOP(MBParam * const pParam,
 			}
 
 			SearchBF_initial(i, j, frame->motion_flags, frame->fcode, pParam, pMB,
-						&f_predMV, &best_sad, MODE_FORWARD, &Data_f, Data_d.currentMV[1]);
+						&f_predMV, &best_sad, MODE_FORWARD, &Data_f, Data_d.currentMV[1], new_bound);
 
 			SearchBF_initial(i, j, frame->motion_flags, frame->bcode, pParam, pMB,
-						&b_predMV, &best_sad, MODE_BACKWARD, &Data_b, Data_d.currentMV[2]);
+						&b_predMV, &best_sad, MODE_BACKWARD, &Data_b, Data_d.currentMV[2], new_bound);
 
 			if (frame->motion_flags&XVID_ME_BFRAME_EARLYSTOP)
 				fb_thresh = best_sad;
@@ -1245,10 +1262,10 @@ SMPMotionEstimationBVOP(SMPData * h)
 			}
 
 			SearchBF_initial(i, j, frame->motion_flags, frame->fcode, pParam, pMB,
-						&f_predMV, &best_sad, MODE_FORWARD, &Data_f, Data_d.currentMV[1]);
+						&f_predMV, &best_sad, MODE_FORWARD, &Data_f, Data_d.currentMV[1], new_bound);
 
 			SearchBF_initial(i, j, frame->motion_flags, frame->bcode, pParam, pMB,
-						&b_predMV, &best_sad, MODE_BACKWARD, &Data_b, Data_d.currentMV[2]);
+						&b_predMV, &best_sad, MODE_BACKWARD, &Data_b, Data_d.currentMV[2], new_bound);
 
 			if (frame->motion_flags&XVID_ME_BFRAME_EARLYSTOP)
 				fb_thresh = best_sad;
