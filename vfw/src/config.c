@@ -19,7 +19,7 @@
  *	along with this program; if not, write to the Free Software
  *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: config.c,v 1.45 2010-12-27 16:11:05 Isibaar Exp $
+ * $Id: config.c,v 1.45.2.1 2010-12-30 22:07:43 Isibaar Exp $
  *
  *************************************************************************/
 
@@ -2010,7 +2010,7 @@ INT_PTR CALLBACK main_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SendDlgItemMessage(hDlg, IDC_MODE, CB_ADDSTRING, 0, (LPARAM)"Null test speed");
 #endif
 
-		for (i=0; i<quality_table_num; i++)
+		for (i=0; i<(unsigned int)quality_table_num; i++)
 			SendDlgItemMessage(hDlg, IDC_QUALITY, CB_ADDSTRING, 0, (LPARAM)quality_table[i].name);
     SendDlgItemMessage(hDlg, IDC_QUALITY, CB_ADDSTRING, 0, (LPARAM)QUALITY_USER_STRING);
 

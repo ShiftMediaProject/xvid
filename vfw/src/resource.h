@@ -30,12 +30,12 @@
 #define IDD_LICENSE                     129
 #define IDR_GPL                         131
 #define IDD_COMMON                      132
-#define WIZ_CYDLG                       133
-#define PROP_MIN_CYDLG                  134
 #define IDI_MOBILE                      135
 #define IDI_HOME                        136
 #define IDI_HD720                       137
 #define IDI_HD1080                      138
+#define WIZ_CYDLG                       140
+#define PROP_MIN_CYDLG                  144
 #define PROP_SM_CYDLG                   188
 #define PROP_MIN_CXDLG                  212
 #define PROP_MED_CYDLG                  215
