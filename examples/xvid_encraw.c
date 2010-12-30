@@ -22,7 +22,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.46.2.1 2010-12-28 19:19:57 Isibaar Exp $
+ * $Id: xvid_encraw.c,v 1.46.2.2 2010-12-30 11:47:06 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -485,7 +485,7 @@ main(int argc,
 				memset(&ZONES[NUM_ZONES], 0, sizeof(zone_t));
 
 				ZONES[NUM_ZONES].frame = startframe;
-				ZONES[NUM_ZONES].modifier = (int)atof(options)*100;
+				ZONES[NUM_ZONES].modifier = (int)(atof(options)*100);
 				if (toupper(c)=='Q')
 					ZONES[NUM_ZONES].mode = XVID_ZONE_QUANT;
 				else if (toupper(c)=='W')
@@ -536,7 +536,7 @@ main(int argc,
 			else {
 				ZONES[NUM_ZONES].mode = XVID_ZONE_WEIGHT;
 			}
-			ZONES[NUM_ZONES].modifier = (int)atof(argv[i+2])*100;
+			ZONES[NUM_ZONES].modifier = (int)(atof(argv[i+2])*100);
 			i++;
             ZONES[NUM_ZONES].frame = atoi(argv[i]);
 			i++;
@@ -568,7 +568,7 @@ main(int argc,
 				exponent=(int)pow(10.0, (int)(strlen(argv[i])-1-exponent));
 			else
 				exponent=1;
-			ARG_DWRATE = (int)atof(argv[i])*exponent;
+			ARG_DWRATE = (int)(atof(argv[i])*exponent);
 			ARG_DWSCALE = exponent;
 			exponent = gcd(ARG_DWRATE, ARG_DWSCALE);
 			ARG_DWRATE /= exponent;
