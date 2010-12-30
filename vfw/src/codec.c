@@ -19,7 +19,7 @@
  *	along with this program; if not, write to the Free Software
  *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: codec.c,v 1.30 2010-12-27 16:11:05 Isibaar Exp $
+ * $Id: codec.c,v 1.30.2.1 2010-12-30 22:07:43 Isibaar Exp $
  *
  *************************************************************************/
 
@@ -437,13 +437,21 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 	if ((profiles[codec->config.profile].flags & PROFILE_RESYNCMARKER) && codec->config.num_slices != 1) {
 		
 		if (codec->config.num_slices == 0) { /* auto */
-			int rows = (lpbiInput->bmiHeader.biHeight + 15) / 16;
-			int slices = (rows > 36) ? 4 : 1; /* use multiple slices only for HD resolutions */
+			int mb_width = (lpbiInput->bmiHeader.biWidth + 15) / 16;
+			int mb_height = (lpbiInput->bmiHeader.biHeight + 15) / 16;
 
-			create.num_slices = (rows > 45) ? 8 : slices;
+			int slices = (int)((mb_width*mb_height) / 811); /* use multiple slices only above SD resolutions for now */
 
-			if (create.num_slices > create.num_threads) 
-				create.num_slices = create.num_threads;
+			if (slices > 1) {
+				if (create.num_threads <= 1)
+					slices &= ~1; /* make even */
+				else if (create.num_threads <= slices)
+					slices = (slices / create.num_threads) * create.num_threads; /* multiple of threads */
+				else if (create.num_threads % slices)
+					slices = (!(create.num_threads%2)) ? (create.num_threads/2) : (create.num_threads/3);
+			}
+
+			create.num_slices = slices;
 		}
 		else {
 			create.num_slices = codec->config.num_slices; /* force manual value - by registry edit */
