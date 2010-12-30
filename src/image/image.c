@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.c,v 1.46 2010-11-28 15:18:21 Isibaar Exp $
+ * $Id: image.c,v 1.46.2.1 2010-12-30 11:46:58 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -872,7 +872,9 @@ void image_block_variance(IMAGE * orig_image,
 	DECLARE_ALIGNED_MATRIX(squares, 1, 4, uint32_t, CACHE_LINE);
 	
 	int x, y, i, j;
-	uint8_t *orig = orig_image->y;
+	uint8_t *orig_y = orig_image->y;
+	uint8_t *orig_u = orig_image->u;
+	uint8_t *orig_v = orig_image->v;
 
 	for (y = 0; y < mb_height; y++) {
 		for (x = 0; x < mb_width; x++) {
@@ -880,11 +882,12 @@ void image_block_variance(IMAGE * orig_image,
 			uint32_t var4[4];
 			uint32_t sum = 0, square = 0;
 
+			/* y-blocks */
 			for (j = 0; j < 2; j++) {
 				for (i = 0; i < 2; i++) {
-					int lsum = blocksum8(orig + ((y<<4) + (j<<3))*stride + (x<<4) + (i<<3), 
+					int lsum = blocksum8(orig_y + ((y<<4) + (j<<3))*stride + (x<<4) + (i<<3), 
 										 stride, sums, squares);
-					int lsquare = (squares[0] + squares[1] + squares[2] + squares[3]);
+					int lsquare = (squares[0] + squares[1] + squares[2] + squares[3])<<6;
 
 					sum += lsum;
 					square += lsquare;
@@ -895,14 +898,58 @@ void image_block_variance(IMAGE * orig_image,
 					var4[3] = (squares[3]<<4) - sums[3]*sums[3];
 
 					pMB->rel_var8[j*2 + i] = lsquare - lsum*lsum;
-					
 					if (pMB->rel_var8[j*2 + i])
-						pMB->rel_var8[j*2 + i] = 256*(var4[0] + var4[1] + var4[2] + var4[3]) / 
+						pMB->rel_var8[j*2 + i] = ((var4[0] + var4[1] + var4[2] + var4[3])<<8) / 
 												 pMB->rel_var8[j*2 + i]; /* 4*(Var(Di)/Var(D)) */
 					else 
 						pMB->rel_var8[j*2 + i] = 64;
 				}
 			}
+
+			/* u */
+			{
+				int lsum = blocksum8(orig_u + (y<<3)*(stride>>1) + (x<<3), 
+									 stride, sums, squares);
+				int lsquare = (squares[0] + squares[1] + squares[2] + squares[3])<<6;
+
+				sum += lsum;
+				square += lsquare;
+
+				var4[0] = (squares[0]<<4) - sums[0]*sums[0];
+				var4[1] = (squares[1]<<4) - sums[1]*sums[1];
+				var4[2] = (squares[2]<<4) - sums[2]*sums[2];
+				var4[3] = (squares[3]<<4) - sums[3]*sums[3];
+
+				pMB->rel_var8[4] = lsquare - lsum*lsum;
+				if (pMB->rel_var8[4])
+					pMB->rel_var8[4] = ((var4[0] + var4[1] + var4[2] + var4[3])<<8) / 
+										 pMB->rel_var8[4]; /* 4*(Var(Di)/Var(D)) */
+				else 
+					pMB->rel_var8[4] = 64;
+			}
+
+			/* v */
+			{
+				int lsum = blocksum8(orig_v + (y<<3)*(stride>>1) + (x<<3), 
+									 stride, sums, squares);
+				int lsquare = (squares[0] + squares[1] + squares[2] + squares[3])<<6;
+
+				sum += lsum;
+				square += lsquare;
+
+				var4[0] = (squares[0]<<4) - sums[0]*sums[0];
+				var4[1] = (squares[1]<<4) - sums[1]*sums[1];
+				var4[2] = (squares[2]<<4) - sums[2]*sums[2];
+				var4[3] = (squares[3]<<4) - sums[3]*sums[3];
+
+				pMB->rel_var8[5] = lsquare - lsum*lsum;
+				if (pMB->rel_var8[5])
+					pMB->rel_var8[5] = ((var4[0] + var4[1] + var4[2] + var4[3])<<8) / 
+										 pMB->rel_var8[5]; /* 4*(Var(Di)/Var(D)) */
+				else 
+					pMB->rel_var8[5] = 64;
+			}
+
 		}
 	}
 }
