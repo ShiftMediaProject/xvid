@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.135.2.2 2010-12-29 22:29:51 Isibaar Exp $
+ * $Id: encoder.c,v 1.135.2.3 2010-12-31 10:20:22 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1609,7 +1609,8 @@ SerializeBitstreams(Encoder *pEnc, FRAMEINFO *current, Bitstream *bs, int num_th
 		memcpy((void *)((ptr_t)bs->start + pos), 
 			   (void *)((ptr_t)pEnc->smpData[k].bs->start), len);
 
-		current->length = pos += len;
+		current->length += len;
+		pos += len;
 
 		/* collect stats */
 		current->sStat.iTextBits += pEnc->smpData[k].sStat->iTextBits;
