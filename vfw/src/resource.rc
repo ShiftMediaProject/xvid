@@ -19,8 +19,10 @@
 // Neutral resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
+#ifdef _WIN32
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #pragma code_page(1252)
+#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -591,7 +593,7 @@ END
 // Bitmap
 //
 
-IDB_LOGO                BITMAP                  "C:\\workspace\\xvidcore_head\\vfw\\src\\XviD_logo.bmp"
+IDB_LOGO                BITMAP                  "XviD_logo.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -829,17 +831,6 @@ BEGIN
     IDC_ZONE_FORCEIVOP      "Force a keyframe at the beginnig of the zone"
 END
 
-#endif    // Neutral resources
-/////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////
-// Deutsch (Deutschland) resources
-
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DEU)
-LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
-#pragma code_page(1252)
-
 /////////////////////////////////////////////////////////////////////////////
 //
 // Icon
@@ -851,7 +842,7 @@ IDI_MOBILE              ICON                    "mobile_40.ico"
 IDI_HOME                ICON                    "home_40.ico"
 IDI_HD1080              ICON                    "hd1080_40.ico"
 IDI_HD720               ICON                    "hd720_40.ico"
-#endif    // Deutsch (Deutschland) resources
+#endif    // Neutral resources
 /////////////////////////////////////////////////////////////////////////////
 
 
