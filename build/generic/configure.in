@@ -428,8 +428,13 @@ if test "$ARCHITECTURE" = "IA32" -o "$ARCHITECTURE" = "X86_64" ; then
 	       MARK_FUNCS=""
                ;;
            *darwin*)
-               AC_MSG_RESULT([macho])
-               NASM_FORMAT="macho"
+               if test "$ARCHITECTURE" = "X86_64" ; then
+                   AC_MSG_RESULT([macho64])
+                   NASM_FORMAT="macho64"
+               else
+                   AC_MSG_RESULT([macho32])
+                   NASM_FORMAT="macho32"
+               fi
                PREFIX="-DPREFIX"
                MARK_FUNCS=""
                ;;
