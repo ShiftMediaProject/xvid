@@ -50,6 +50,7 @@ SPECIFIC_LDFLAGS=@SPECIFIC_LDFLAGS@
 API_MAJOR=@API_MAJOR@
 API_MINOR=@API_MINOR@
 RANLIB=@RANLIB@
+AR=@AR@
 
 # ============================================================================
 # Installation

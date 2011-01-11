@@ -128,6 +128,7 @@ dnl Check for the ranlib program to generate static library index
 dnl ==========================================================================
 
 AC_PROG_RANLIB
+AC_CHECK_TOOL([AR], [ar], [ar-not-found])
 
 dnl ==========================================================================
 dnl
@@ -694,6 +695,7 @@ AC_SUBST(SPECIFIC_CFLAGS)
 AC_SUBST(DCT_IA64_SOURCES)
 AC_SUBST(PPC_ALTIVEC_SOURCES)
 AC_SUBST(RANLIB)
+AC_SUBST(AR)
 AC_SUBST(API_MAJOR)
 AC_SUBST(API_MINOR)
 AC_SUBST(STATIC_LIB)

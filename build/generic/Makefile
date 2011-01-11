@@ -111,7 +111,7 @@ $(PPC_ALTIVEC_OBJECTS): CFLAGS+= $(ALTIVEC_CFLAGS)
 
 $(STATIC_LIB): $(BUILD_DIR) $(OBJECTS)
 	@echo "  L: $(@F)"
-	@cd $(BUILD_DIR) && ar rc $(@F) $(OBJECTS) && $(RANLIB) $(@F)
+	@cd $(BUILD_DIR) && $(AR) rc $(@F) $(OBJECTS) && $(RANLIB) $(@F)
 
 #-----------------------------------------------------------------------------
 # Shared Library
