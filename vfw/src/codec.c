@@ -19,7 +19,7 @@
  *	along with this program; if not, write to the Free Software
  *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: codec.c,v 1.30.2.1 2010-12-30 22:07:43 Isibaar Exp $
+ * $Id: codec.c,v 1.30.2.2 2011-01-27 13:13:16 Isibaar Exp $
  *
  *************************************************************************/
 
@@ -919,13 +919,14 @@ LRESULT decompress_query(CODEC * codec, BITMAPINFO *lpbiInput, BITMAPINFO *lpbiO
 {
 	BITMAPINFOHEADER * inhdr = &lpbiInput->bmiHeader;
 	BITMAPINFOHEADER * outhdr = &lpbiOutput->bmiHeader;
+	int in_csp = XVID_CSP_NULL, out_csp = XVID_CSP_NULL;
 
 	if (lpbiInput == NULL) 
 	{
 		return ICERR_ERROR;
 	}
 
-	if (inhdr->biCompression != FOURCC_XVID && inhdr->biCompression != FOURCC_DIVX && inhdr->biCompression != FOURCC_DX50 && get_colorspace(inhdr) == XVID_CSP_NULL)
+	if (inhdr->biCompression != FOURCC_XVID && inhdr->biCompression != FOURCC_DIVX && inhdr->biCompression != FOURCC_DX50 && (in_csp = get_colorspace(inhdr)) != XVID_CSP_YV12)
 	{
 		return ICERR_BADFORMAT;
 	}
@@ -935,9 +936,12 @@ LRESULT decompress_query(CODEC * codec, BITMAPINFO *lpbiInput, BITMAPINFO *lpbiO
 		return ICERR_OK;
 	}
 
+	out_csp = get_colorspace(outhdr);
+
 	if (inhdr->biWidth != outhdr->biWidth ||
 		inhdr->biHeight != outhdr->biHeight ||
-		get_colorspace(outhdr) == XVID_CSP_NULL) 
+		out_csp == XVID_CSP_NULL ||
+		(in_csp == XVID_CSP_YV12 && in_csp != out_csp)) 
 	{
 		return ICERR_BADFORMAT;
 	}
