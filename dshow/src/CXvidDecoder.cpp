@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.cpp,v 1.25.2.1 2010-12-28 19:19:57 Isibaar Exp $
+ * $Id: CXvidDecoder.cpp,v 1.25.2.2 2011-01-27 13:18:13 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -130,7 +130,7 @@ const AMOVIESETUP_FILTER sudXvidDecoder =
 {
 	&CLSID_XVID,			// Filter CLSID
 	XVID_NAME_L,			// Filter name
-	MERIT_PREFERRED,		// Its merit
+	MERIT_PREFERRED+2,		// Its merit
 	sizeof(psudPins) / sizeof(AMOVIESETUP_PIN),	// Number of pins
 	psudPins				// Pin details
 };
