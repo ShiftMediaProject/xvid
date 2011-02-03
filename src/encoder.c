@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.135.2.3 2010-12-31 10:20:22 Isibaar Exp $
+ * $Id: encoder.c,v 1.135.2.4 2011-02-03 15:12:34 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -2130,7 +2130,8 @@ FrameCodeP(Encoder * pEnc, Bitstream * bs)
 
 	if (current->sStat.kblks + current->sStat.mblks <
 		(pParam->frame_drop_ratio * mb_width * mb_height) / 100 &&
-		( (pEnc->bframenum_head >= pEnc->bframenum_tail) || !(pEnc->mbParam.global_flags & XVID_GLOBAL_CLOSED_GOP)) )
+		( (pEnc->bframenum_head >= pEnc->bframenum_tail) || !(pEnc->mbParam.global_flags & XVID_GLOBAL_CLOSED_GOP)) &&
+		(current->coding_type == P_VOP) )
 	{
 		current->sStat.kblks = current->sStat.mblks = current->sStat.iTextBits = 0;
 		current->sStat.ublks = mb_width * mb_height;
