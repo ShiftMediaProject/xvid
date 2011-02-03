@@ -22,7 +22,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid_encraw.c,v 1.46.2.2 2010-12-30 11:47:06 Isibaar Exp $
+ * $Id: xvid_encraw.c,v 1.46.2.3 2011-02-03 15:01:06 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -200,7 +200,7 @@ static 	char *ARG_PASS1 = 0;
 static 	char *ARG_PASS2 = 0;
 //static int ARG_QUALITY = ME_ELEMENTS - 1;
 static 	int ARG_QUALITY = 6;
-static 	float ARG_FRAMERATE = 25.00f;
+static 	float ARG_FRAMERATE = 0.f;
 static 	int ARG_DWRATE = 25;
 static 	int ARG_DWSCALE = 1;
 static 	int ARG_MAXFRAMENR = ABS_MAXFRAMENR;
@@ -353,7 +353,7 @@ main(int argc,
 
 	/* Is there a dumb Xvid coder ? */
 	if(ME_ELEMENTS != VOP_ELEMENTS) {
-		fprintf(stderr, "Presets' arrays should have the same number of elements -- Please fill a bug to xvid-devel@xvid.org\n");
+		fprintf(stderr, "Presets' arrays should have the same number of elements -- Please file a bug to xvid-devel@xvid.org\n");
 		return(-1);
 	}
 
@@ -753,7 +753,7 @@ main(int argc,
 				i++;
 			else
 				ARG_PROGRESS = 10;
-		} else if (strcmp("-help", argv[i])) {
+		} else if (strcmp("-help", argv[i]) == 0) {
 			usage();
 			return (0);
 		} else {
@@ -951,8 +951,7 @@ main(int argc,
 	}
 
 	if (ARG_FRAMERATE <= 0) {
-		fprintf(stderr, "Wrong Framerate %f\n", ARG_FRAMERATE);
-		return (-1);
+		ARG_FRAMERATE = 25.00f; /* default value */
 	}
 
 	if (ARG_TARGETSIZE) {
@@ -1410,7 +1409,7 @@ void encode_sequence(enc_sequence_data_t *h) {
 			myAVIStreamInfo.dwRate = ARG_DWRATE;
 			myAVIStreamInfo.dwLength = ARG_MAXFRAMENR;
 			myAVIStreamInfo.dwQuality = 10000;
-			SetRect(&myAVIStreamInfo.rcFrame, 0, 0, YDIM, XDIM);
+			SetRect(&myAVIStreamInfo.rcFrame, 0, 0, XDIM, YDIM);
 
 			if (avierr=AVIFileOpen(&myAVIFile, ARG_AVIOUTPUTFILE, OF_CREATE|OF_WRITE, NULL)) {
 				fprintf(stderr, "AVIFileOpen failed opening output file %s, error code %d\n", ARG_AVIOUTPUTFILE, avierr);
@@ -1839,7 +1838,7 @@ usage()
 	fprintf(stderr,	" -bquant_offset integer: bframe quantizer offset (100)\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Rate control options:\n");
-	fprintf(stderr, " -framerate float               : target framerate (25.0)\n");
+	fprintf(stderr, " -framerate float               : target framerate (auto)\n");
 	fprintf(stderr,	" -bitrate   [integer]           : target bitrate in kbps (700)\n");
 	fprintf(stderr, " -size      integer			 : target size in kilobytes\n");
     fprintf(stderr,	" -single                        : single pass mode (default)\n");
