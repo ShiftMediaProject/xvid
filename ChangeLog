@@ -1,6 +1,264 @@
 # Note that this ChangeLog covers only changes to the HEAD branch
 
 ---------------------
+Date: 2011/02/14 17:58:54
+Author: Isibaar
+Branch: release-1_3-branch
+Tag: (none) 
+Log:
+Support for additional third-party FourCCs (based on Jawor's patch with some small fixes)
+
+Members: 
+	dshow/src/CXvidDecoder.cpp:1.25.2.2->1.25.2.3 
+	dshow/src/CXvidDecoder.h:1.9->1.9.2.1 
+	dshow/src/config.c:1.12->1.12.2.1 
+	dshow/src/config.h:1.8->1.8.2.1 
+	dshow/src/resource.h:1.5->1.5.2.1 
+	dshow/src/xvid.ax.rc:1.8->1.8.2.1 
+
+---------------------
+Date: 2011/02/03 16:12:34
+Author: Isibaar
+Branch: release-1_3-branch
+Tag: (none) 
+Log:
+skip possible only for P_VOP (Jawor)
+
+Members: 
+	src/encoder.c:1.135.2.3->1.135.2.4 
+
+---------------------
+Date: 2011/02/03 16:01:06
+Author: Isibaar
+Branch: release-1_3-branch
+Tag: (none) 
+Log:
+auto framerate detection if possible, some other minor cosmetics (derived from Jawor's patches)
+
+Members: 
+	examples/xvid_encraw.c:1.46.2.2->1.46.2.3 
+
+---------------------
+Date: 2011/01/27 14:18:13
+Author: Isibaar
+Branch: release-1_3-branch
+Tag: (none) 
+Log:
+Increased filter merit
+
+Members: 
+	dshow/src/CXvidDecoder.cpp:1.25.2.1->1.25.2.2 
+
+---------------------
+Date: 2011/01/27 14:13:16
+Author: Isibaar
+Branch: release-1_3-branch
+Tag: (none) 
+Log:
+Ensure that colorspace pass-through is enabled really just for FOURCC_YV12
+
+Members: 
+	vfw/src/codec.c:1.30.2.1->1.30.2.2 
+
+---------------------
+Date: 2011/01/11 12:37:52
+Author: Isibaar
+Branch: release-1_3-branch
+Tag: (none) 
+Log:
+don't hardcode "ar" tool (thanks to Bin Tian)
+
+Members: 
+	build/generic/Makefile:1.18->1.18.2.1 
+	build/generic/configure.in:1.33.2.1->1.33.2.2 
+	build/generic/platform.inc.in:1.8->1.8.2.1 
+
+---------------------
+Date: 2011/01/09 14:20:50
+Author: Isibaar
+Branch: release-1_3-branch
+Tag: (none) 
+Log:
+update for macho64
+
+Members: 
+	src/nasm.inc:1.7->1.7.2.1 
+
+---------------------
+Date: 2011/01/06 15:12:29
+Author: Isibaar
+Branch: release-1_3-branch
+Tag: (none) 
+Log:
+patch for darwin 64-bit target (thanks to Bin Tian)
+
+Members: 
+	build/generic/configure.in:1.33->1.33.2.1 
+
+---------------------
+Date: 2011/01/03 09:31:22
+Author: Isibaar
+Branch: release-1_3-branch
+Tag: (none) 
+Log:
+removed absolute logo path (thanks to Brendan Brewster)
+
+Members: 
+	vfw/src/resource.rc:1.30->1.30.2.1 
+
+---------------------
+Date: 2010/12/31 11:20:22
+Author: Isibaar
+Branch: #CVSPS_NO_BRANCH
+Tag: rc1_1_3_0 
+Log:
+fix some typo
+
+Members: 
+	src/encoder.c:1.135.2.2->1.135.2.3 
+
+---------------------
+Date: 2010/12/30 23:59:31
+Author: Isibaar
+Branch: #CVSPS_NO_BRANCH
+Tag: (none) 
+Log:
+CVS corruption again
+
+Members: 
+	vfw/src/hd1080_40.ico:1.1->1.1.2.1 
+	vfw/src/hd720_40.ico:1.1->1.1.2.1 
+	vfw/src/home_40.ico:1.1->1.1.2.1 
+	vfw/src/mobile_40.ico:1.1->1.1.2.1 
+
+---------------------
+Date: 2010/12/30 23:07:43
+Author: Isibaar
+Branch: #CVSPS_NO_BRANCH
+Tag: (none) 
+Log:
+changed num_slice determination logic
+
+Members: 
+	vfw/src/codec.c:1.30->1.30.2.1 
+	vfw/src/config.c:1.45->1.45.2.1 
+	vfw/src/resource.h:1.15->1.15.2.1 
+
+---------------------
+Date: 2010/12/30 12:46:58
+Author: Isibaar
+Branch: #CVSPS_NO_BRANCH
+Tag: (none) 
+Log:
+more bug squashing
+
+Members: 
+	examples/xvid_encraw.c:1.46.2.1->1.46.2.2 
+	src/image/image.c:1.46->1.46.2.1 
+
+---------------------
+Date: 2010/12/29 23:29:51
+Author: Isibaar
+Branch: release-1_3-branch
+Tag: (none) 
+Log:
+bug fixing...
+
+Members: 
+	src/encoder.c:1.135.2.1->1.135.2.2 
+
+---------------------
+Date: 2010/12/29 23:29:44
+Author: Isibaar
+Branch: #CVSPS_NO_BRANCH
+Tag: (none) 
+Log:
+bug fixing...
+
+Members: 
+	src/motion/estimation_bvop.c:1.28->1.28.2.1 
+	src/motion/estimation_rd_based.c:1.16->1.16.2.1 
+
+---------------------
+Date: 2010/12/28 20:19:57
+Author: Isibaar
+Branch: #CVSPS_NO_BRANCH
+Tag: (none) 
+Log:
+get rid off compiler warnings
+
+Members: 
+	build/win32/libxvidcore.vcproj:1.5->1.5.2.1 
+	build/win32/xvid_decraw.vcproj:1.3->1.3.2.1 
+	build/win32/xvid_encraw.vcproj:1.4->1.4.2.1 
+	dshow/dshow.vcproj:1.3->1.3.2.1 
+	dshow/src/CXvidDecoder.cpp:1.25->1.25.2.1 
+	examples/xvid_decraw.c:1.28->1.28.2.1 
+	src/decoder.c:1.86->1.86.2.1 
+	src/bitstream/bitstream.c:1.60->1.60.2.1 
+	src/bitstream/bitstream.h:1.25->1.25.2.1 
+	src/motion/estimation_pvop.c:1.24->1.24.2.1 
+	src/motion/motion.h:1.27->1.27.2.1 
+	src/motion/motion_comp.c:1.24->1.24.2.1 
+	src/motion/sad.c:1.17->1.17.2.1 
+	src/motion/sad.h:1.25->1.25.2.1 
+	src/plugins/plugin_2pass2.c:1.10->1.10.2.1 
+	src/plugins/plugin_single.c:1.4->1.4.2.1 
+	src/quant/quant_matrix.c:1.16->1.16.4.1 
+	vfw/vfw.vcproj:1.1->1.1.4.1 
+
+---------------------
+Date: 2010/12/28 20:19:57
+Author: Isibaar
+Branch: release-1_3-branch
+Tag: (none) 
+Log:
+get rid off compiler warnings
+
+Members: 
+	examples/xvid_encraw.c:1.46->1.46.2.1 
+	src/encoder.c:1.135->1.135.2.1 
+
+---------------------
+Date: 2010/12/28 17:34:55
+Author: Isibaar
+Branch: #CVSPS_NO_BRANCH
+Tag: (none) 
+Log:
+updated readme and debian files
+
+Members: 
+	debian/changelog:1.3->1.3.2.1 
+	debian/copyright:1.1->1.1.4.1 
+	doc/INSTALL:1.3->1.3.2.1 
+	doc/README:1.5->1.5.2.1 
+	examples/README:1.3->1.3.6.1 
+
+---------------------
+Date: 2010/12/28 17:04:31
+Author: Isibaar
+Branch: #CVSPS_NO_BRANCH
+Tag: (none) 
+Log:
+set version info to xvid-1.3.0-rc1
+
+Members: 
+	src/xvid.c:1.85->1.85.2.1 
+	src/xvid.h:1.74->1.74.2.1 
+
+---------------------
+Date: 2010/12/27 17:39:31
+Author: Isibaar
+Branch: HEAD
+Tag: tag-branching-1_3_0 
+Log:
+updated changelog
+
+Members: 
+	ChangeLog:INITIAL->1.17 
+	TODO:1.8->1.9 
+
+---------------------
 Date: 2010/12/27 17:11:05
 Author: Isibaar
 Branch: HEAD
