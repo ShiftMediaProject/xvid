@@ -17,7 +17,7 @@ extern "C" {
 
 
 /* config struct */
-#define SUPPORT_DX50		(1<<0)
+#define SUPPORT_3IVX		(1<<0)
 #define SUPPORT_DIVX		(1<<1)
 #define SUPPORT_MP4V		(1<<2)
 

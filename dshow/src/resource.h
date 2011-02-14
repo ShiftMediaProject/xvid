@@ -22,7 +22,7 @@
 #define IDC_DIVX                        1010
 #define IDC_COMPAT                      1011
 #define IDC_MP4V                        1012
-#define IDC_DX50                        1013
+#define IDC_3IVX                        1013
 #define IDC_DERINGUV                    1014
 #define IDC_USE_AR                      1015
 #define VERSION_RES_LANGUAGE            0x409
