@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: config.c,v 1.12 2010-12-22 15:21:13 Isibaar Exp $
+ * $Id: config.c,v 1.12.2.1 2011-02-14 16:58:54 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -144,7 +144,7 @@ INT_PTR CALLBACK adv_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SendMessage(hBrightness, TBM_SETPOS, (WPARAM)TRUE, (LPARAM) g_config.nBrightness);
 
 		// Load Aspect Ratio Box
-		SendMessage(GetDlgItem(hwnd, IDC_USE_AR), CB_ADDSTRING, 0, (LPARAM)"Auto (mpeg-4 first)"); 
+		SendMessage(GetDlgItem(hwnd, IDC_USE_AR), CB_ADDSTRING, 0, (LPARAM)"Auto (MPEG-4 first)"); 
 		SendMessage(GetDlgItem(hwnd, IDC_USE_AR), CB_ADDSTRING, 0, (LPARAM)"Auto (external first)"); 
 		SendMessage(GetDlgItem(hwnd, IDC_USE_AR), CB_ADDSTRING, 0, (LPARAM)"4:3"); 
 		SendMessage(GetDlgItem(hwnd, IDC_USE_AR), CB_ADDSTRING, 0, (LPARAM)"16:9"); 
@@ -164,7 +164,7 @@ INT_PTR CALLBACK adv_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		// 4CC checkbuttons
 		SendMessage(GetDlgItem(hwnd, IDC_DIVX), BM_SETCHECK, g_config.supported_4cc & SUPPORT_DIVX, 0);
-		SendMessage(GetDlgItem(hwnd, IDC_DX50), BM_SETCHECK, g_config.supported_4cc & SUPPORT_DX50, 0);
+		SendMessage(GetDlgItem(hwnd, IDC_3IVX), BM_SETCHECK, g_config.supported_4cc & SUPPORT_3IVX, 0);
 		SendMessage(GetDlgItem(hwnd, IDC_MP4V), BM_SETCHECK, g_config.supported_4cc & SUPPORT_MP4V, 0);
 		SendMessage(GetDlgItem(hwnd, IDC_COMPAT), BM_SETCHECK, g_config.videoinfo_compat, 0);
 
@@ -217,8 +217,8 @@ INT_PTR CALLBACK adv_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case IDC_DIVX:
 			g_config.supported_4cc ^= SUPPORT_DIVX;
 			break;
-		case IDC_DX50:
-			g_config.supported_4cc ^= SUPPORT_DX50;
+		case IDC_3IVX:
+			g_config.supported_4cc ^= SUPPORT_3IVX;
 			break;
 		case IDC_MP4V:
 			g_config.supported_4cc ^= SUPPORT_MP4V;

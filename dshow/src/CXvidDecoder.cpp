@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.cpp,v 1.25.2.2 2011-01-27 13:18:13 Isibaar Exp $
+ * $Id: CXvidDecoder.cpp,v 1.25.2.3 2011-02-14 16:58:54 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -89,6 +89,22 @@ const AMOVIESETUP_MEDIATYPE sudInputPinTypes[] =
 	{ &MEDIATYPE_Video, &CLSID_DIVX_UC },
 	{ &MEDIATYPE_Video, &CLSID_DX50 },
 	{ &MEDIATYPE_Video, &CLSID_DX50_UC },
+	{ &MEDIATYPE_Video, &CLSID_3IVX },
+	{ &MEDIATYPE_Video, &CLSID_3IVX_UC },
+	{ &MEDIATYPE_Video, &CLSID_3IV0 },
+	{ &MEDIATYPE_Video, &CLSID_3IV0_UC },
+	{ &MEDIATYPE_Video, &CLSID_3IV1 },
+	{ &MEDIATYPE_Video, &CLSID_3IV1_UC },
+	{ &MEDIATYPE_Video, &CLSID_3IV2 },
+	{ &MEDIATYPE_Video, &CLSID_3IV2_UC },
+	{ &MEDIATYPE_Video, &CLSID_LMP4 },
+	{ &MEDIATYPE_Video, &CLSID_LMP4_UC },
+	{ &MEDIATYPE_Video, &CLSID_RMP4 },
+	{ &MEDIATYPE_Video, &CLSID_RMP4_UC },
+	{ &MEDIATYPE_Video, &CLSID_SMP4 },
+	{ &MEDIATYPE_Video, &CLSID_SMP4_UC },
+	{ &MEDIATYPE_Video, &CLSID_HDX4 },
+	{ &MEDIATYPE_Video, &CLSID_HDX4_UC },
 	{ &MEDIATYPE_Video, &CLSID_MP4V },
   { &MEDIATYPE_Video, &CLSID_MP4V_UC },
 };
@@ -603,24 +619,43 @@ HRESULT CXvidDecoder::CheckInputType(const CMediaType * mtIn)
   
   switch(hdr->biCompression)
   {
-  case FOURCC_mp4v:
-	case FOURCC_MP4V:
+	case FOURCC_mp4v :
+	case FOURCC_MP4V :
+	case FOURCC_lmp4 :
+	case FOURCC_LMP4 :
+	case FOURCC_rmp4 :
+	case FOURCC_RMP4 :
+	case FOURCC_smp4 :
+	case FOURCC_SMP4 :
+	case FOURCC_hdx4 :
+	case FOURCC_HDX4 :
 		if (!(g_config.supported_4cc & SUPPORT_MP4V)) {
 			CloseLib();
 			return VFW_E_TYPE_NOT_ACCEPTED;
 		}
 		break;	
+	case FOURCC_divx :
 	case FOURCC_DIVX :
+	case FOURCC_dx50 :
+	case FOURCC_DX50 :
 		if (!(g_config.supported_4cc & SUPPORT_DIVX)) {
 			CloseLib();
 			return VFW_E_TYPE_NOT_ACCEPTED;
 		}
 		break;
-	case FOURCC_DX50 :
-		if (!(g_config.supported_4cc & SUPPORT_DX50)) {
+	case FOURCC_3ivx :
+	case FOURCC_3IVX :
+	case FOURCC_3iv0 :
+	case FOURCC_3IV0 :
+	case FOURCC_3iv1 :
+	case FOURCC_3IV1 :
+	case FOURCC_3iv2 :
+	case FOURCC_3IV2 :
+		if (!(g_config.supported_4cc & SUPPORT_3IVX)) {
 			CloseLib();
 			return VFW_E_TYPE_NOT_ACCEPTED;
 		}
+	case FOURCC_xvid :
 	case FOURCC_XVID :
 		break;
 		
@@ -1335,17 +1370,33 @@ HRESULT CXvidDecoder::MFTGetInputAvailableType(DWORD dwInputStreamID, DWORD dwTy
 	bs_guid_table[i++] = (GUID *)&CLSID_XVID;
 	bs_guid_table[i++] = (GUID *)&CLSID_XVID_UC;
 	
-	if (g_config.supported_4cc & SUPPORT_DX50) {
-		bs_guid_table[i++] = (GUID *)&CLSID_DX50;
-		bs_guid_table[i++] = (GUID *)&CLSID_DX50_UC;
+	if (g_config.supported_4cc & SUPPORT_3IVX) {
+		bs_guid_table[i++] = (GUID *)&CLSID_3IVX;
+		bs_guid_table[i++] = (GUID *)&CLSID_3IVX_UC;
+		bs_guid_table[i++] = (GUID *)&CLSID_3IV0;
+		bs_guid_table[i++] = (GUID *)&CLSID_3IV0_UC;
+		bs_guid_table[i++] = (GUID *)&CLSID_3IV1;
+		bs_guid_table[i++] = (GUID *)&CLSID_3IV1_UC;
+		bs_guid_table[i++] = (GUID *)&CLSID_3IV2;
+		bs_guid_table[i++] = (GUID *)&CLSID_3IV2_UC;
 	}
 	if (g_config.supported_4cc & SUPPORT_DIVX) {
 		bs_guid_table[i++] = (GUID *)&CLSID_DIVX;
 		bs_guid_table[i++] = (GUID *)&CLSID_DIVX_UC;
+		bs_guid_table[i++] = (GUID *)&CLSID_DX50;
+		bs_guid_table[i++] = (GUID *)&CLSID_DX50_UC;
 	}
 	if (g_config.supported_4cc & SUPPORT_MP4V) {
 		bs_guid_table[i++] = (GUID *)&CLSID_MP4V;
 		bs_guid_table[i++] = (GUID *)&CLSID_MP4V_UC;
+		bs_guid_table[i++] = (GUID *)&CLSID_LMP4;
+		bs_guid_table[i++] = (GUID *)&CLSID_LMP4_UC;
+		bs_guid_table[i++] = (GUID *)&CLSID_RMP4;
+		bs_guid_table[i++] = (GUID *)&CLSID_RMP4_UC;
+		bs_guid_table[i++] = (GUID *)&CLSID_SMP4;
+		bs_guid_table[i++] = (GUID *)&CLSID_SMP4_UC;
+		bs_guid_table[i++] = (GUID *)&CLSID_HDX4;
+		bs_guid_table[i++] = (GUID *)&CLSID_HDX4_UC;
 	}
 
 	const GUID *subtype;
@@ -2145,7 +2196,11 @@ HRESULT CXvidDecoder::OnCheckInputType(IMFMediaType *pmt)
 		hr = pmt->GetGUID(MF_MT_SUBTYPE, &subtype);
 	}
 	
-	if (subtype == CLSID_MP4V || subtype == CLSID_MP4V_UC) {
+	if (subtype == CLSID_MP4V || subtype == CLSID_MP4V_UC ||
+	    subtype == CLSID_LMP4 || subtype == CLSID_LMP4_UC ||
+	    subtype == CLSID_RMP4 || subtype == CLSID_RMP4_UC ||
+	    subtype == CLSID_SMP4 || subtype == CLSID_SMP4_UC ||
+	    subtype == CLSID_HDX4 || subtype == CLSID_HDX4_UC) {
 		if (!(g_config.supported_4cc & SUPPORT_MP4V)) {
 			CloseLib();
 			hr = MF_E_INVALIDTYPE;
@@ -2160,11 +2215,21 @@ HRESULT CXvidDecoder::OnCheckInputType(IMFMediaType *pmt)
 		else m_create.fourcc = FOURCC_DIVX;
 	}
 	else if (subtype == CLSID_DX50 || subtype == CLSID_DX50_UC) {
-		if (!(g_config.supported_4cc & SUPPORT_DX50)) {
+		if (!(g_config.supported_4cc & SUPPORT_DIVX)) {
 			CloseLib();
 			hr = MF_E_INVALIDTYPE;
 		}
 		else m_create.fourcc = FOURCC_DX50;
+	}
+	else if (subtype == CLSID_3IVX || subtype == CLSID_3IVX_UC ||
+	         subtype == CLSID_3IV0 || subtype == CLSID_3IV0_UC ||
+	         subtype == CLSID_3IV1 || subtype == CLSID_3IV1_UC ||
+	         subtype == CLSID_3IV2 || subtype == CLSID_3IV2_UC) {
+		if (!(g_config.supported_4cc & SUPPORT_3IVX)) {
+			CloseLib();
+			hr = MF_E_INVALIDTYPE;
+		}
+		else m_create.fourcc = FOURCC_3IVX;
 	}
 	else if (subtype == CLSID_XVID || subtype == CLSID_XVID_UC) {
 		m_create.fourcc = FOURCC_XVID;
