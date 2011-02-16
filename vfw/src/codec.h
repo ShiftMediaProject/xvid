@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: codec.h,v 1.7 2010-12-02 06:46:07 Isibaar Exp $
+ * $Id: codec.h,v 1.7.2.1 2011-02-16 19:04:39 Isibaar Exp $
  *
  ****************************************************************************/
 #ifndef _CODEC_H_
@@ -35,6 +35,12 @@
 #define FOURCC_XVID	mmioFOURCC('X','V','I','D')
 #define FOURCC_DIVX	mmioFOURCC('D','I','V','X')
 #define FOURCC_DX50 mmioFOURCC('D','X','5','0')
+#define FOURCC_MP4V	mmioFOURCC('M','P','4','V')
+#define FOURCC_xvid	mmioFOURCC('x','v','i','d')
+#define FOURCC_divx	mmioFOURCC('d','i','v','x')
+#define FOURCC_dx50	mmioFOURCC('d','x','5','0')
+#define FOURCC_mp4v	mmioFOURCC('m','p','4','v')
+
 /* yuyu		4:2:2 16bit, y-u-y-v, packed*/
 #define FOURCC_YUYV	mmioFOURCC('Y','U','Y','V')
 #define FOURCC_YUY2	mmioFOURCC('Y','U','Y','2')

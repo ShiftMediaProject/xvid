@@ -19,7 +19,7 @@
  *	along with this program; if not, write to the Free Software
  *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: codec.c,v 1.30.2.2 2011-01-27 13:13:16 Isibaar Exp $
+ * $Id: codec.c,v 1.30.2.3 2011-02-16 19:04:39 Isibaar Exp $
  *
  *************************************************************************/
 
@@ -608,7 +608,12 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
     if ((profiles[codec->config.profile].flags & PROFILE_EXTRA))
       create.global |= XVID_GLOBAL_DIVX5_USERDATA;
 
-	create.frame_drop_ratio = quality_preset->frame_drop_ratio;
+	if ((profiles[codec->config.profile].flags & PROFILE_EXTRA) || 
+		(profiles[codec->config.profile].flags & PROFILE_XVID)) {
+  	  create.frame_drop_ratio = 0;
+	} else {
+  	  create.frame_drop_ratio = quality_preset->frame_drop_ratio;
+	}
 
 	switch(codec->xvid_encore_func(0, XVID_ENC_CREATE, &create, NULL))
 	{
@@ -926,7 +931,9 @@ LRESULT decompress_query(CODEC * codec, BITMAPINFO *lpbiInput, BITMAPINFO *lpbiO
 		return ICERR_ERROR;
 	}
 
-	if (inhdr->biCompression != FOURCC_XVID && inhdr->biCompression != FOURCC_DIVX && inhdr->biCompression != FOURCC_DX50 && (in_csp = get_colorspace(inhdr)) != XVID_CSP_YV12)
+	if (inhdr->biCompression != FOURCC_XVID && inhdr->biCompression != FOURCC_DIVX && inhdr->biCompression != FOURCC_DX50 && inhdr->biCompression != FOURCC_MP4V &&
+		inhdr->biCompression != FOURCC_xvid && inhdr->biCompression != FOURCC_divx && inhdr->biCompression != FOURCC_dx50 && inhdr->biCompression != FOURCC_mp4v &&
+		(in_csp = get_colorspace(inhdr)) != XVID_CSP_YV12)
 	{
 		return ICERR_BADFORMAT;
 	}
@@ -1084,7 +1091,12 @@ LRESULT decompress(CODEC * codec, ICDECOMPRESS * icd)
 	/* --- yv12 --- */	
 	if (icd->lpbiInput->biCompression != FOURCC_XVID &&
 		 icd->lpbiInput->biCompression != FOURCC_DIVX &&
-		 icd->lpbiInput->biCompression != FOURCC_DX50)
+		 icd->lpbiInput->biCompression != FOURCC_DX50 &&
+		 icd->lpbiInput->biCompression != FOURCC_MP4V &&
+		 icd->lpbiInput->biCompression != FOURCC_xvid &&
+		 icd->lpbiInput->biCompression != FOURCC_divx &&
+		 icd->lpbiInput->biCompression != FOURCC_dx50 &&
+		 icd->lpbiInput->biCompression != FOURCC_mp4v)
 	{
 		xvid_gbl_convert_t convert;
 

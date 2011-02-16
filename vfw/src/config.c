@@ -19,7 +19,7 @@
  *	along with this program; if not, write to the Free Software
  *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: config.c,v 1.45.2.1 2010-12-30 22:07:43 Isibaar Exp $
+ * $Id: config.c,v 1.45.2.2 2011-02-16 19:04:39 Isibaar Exp $
  *
  *************************************************************************/
 
@@ -853,6 +853,7 @@ static void adv_mode(HWND hDlg, int idd, CONFIG * config)
 	int cpu_force;
 	int custom_quant, bvops;
 	int ar_mode, ar_par;
+	int qpel_checked, mot_srch_prec, vhq_enabled, bvhq_enabled;
 
 	switch(idd) {
 	case IDD_PROFILE :
@@ -1171,6 +1172,26 @@ static void adv_mode(HWND hDlg, int idd, CONFIG * config)
 		EnableDlgWindow(hDlg, IDC_NUMTHREADS,   cpu_force);
 		EnableDlgWindow(hDlg, IDC_NUMTHREADS_STATIC,   cpu_force);
 		break;
+
+	case IDD_MOTION:
+		{
+			const int userdef = (config->quality==quality_table_num);
+			if (userdef) {
+				bvops = (profiles[config->profile].flags&PROFILE_BVOP) && config->use_bvop;
+				qpel_checked = (profiles[config->profile].flags&PROFILE_QPEL) && config->qpel;
+				mot_srch_prec = SendDlgItemMessage(hDlg, IDC_MOTION, CB_GETCURSEL, 0, 0);
+				vhq_enabled = SendDlgItemMessage(hDlg, IDC_VHQ, CB_GETCURSEL, 0, 0);
+				bvhq_enabled = IsDlgButtonChecked(hDlg, IDC_VHQ_BFRAME);
+				EnableDlgWindow(hDlg, IDC_VHQ, mot_srch_prec);
+				EnableDlgWindow(hDlg, IDC_VHQ_BFRAME, mot_srch_prec && bvops && vhq_enabled);
+				EnableDlgWindow(hDlg, IDC_CHROMAME, mot_srch_prec);
+				EnableDlgWindow(hDlg, IDC_TURBO, mot_srch_prec && (bvops || qpel_checked));
+				EnableDlgWindow(hDlg, IDC_VHQ_METRIC, mot_srch_prec && (vhq_enabled || bvhq_enabled));
+				EnableDlgWindow(hDlg, IDC_FRAMEDROP, mot_srch_prec);
+				EnableDlgWindow(hDlg, IDC_MAXKEY, mot_srch_prec);
+			}
+			break;
+		}
 	}
 }
 
@@ -1273,6 +1294,10 @@ static void adv_upload(HWND hDlg, int idd, CONFIG * config)
     {
     const int userdef = (config->quality==quality_table_num);
     const quality_t* quality_preset = userdef ? &config->quality_user : &quality_table[config->quality];
+    int bvops = (profiles[config->profile].flags&PROFILE_BVOP) && config->use_bvop;
+    int qpel_checked = (profiles[config->profile].flags&PROFILE_QPEL) && config->qpel;
+    int bvops_qpel_motion = (bvops || qpel_checked) && quality_preset->motion_search;
+    int vhq_or_bvhq = quality_preset->vhq_mode || quality_preset->vhq_bframe;
 
 		SendDlgItemMessage(hDlg, IDC_MOTION, CB_SETCURSEL, quality_preset->motion_search, 0);
 		SendDlgItemMessage(hDlg, IDC_VHQ, CB_SETCURSEL, quality_preset->vhq_mode, 0);
@@ -1284,13 +1309,14 @@ static void adv_upload(HWND hDlg, int idd, CONFIG * config)
 		SetDlgItemInt(hDlg, IDC_MAXKEY, quality_preset->max_key_interval, FALSE);
 
     EnableDlgWindow(hDlg, IDC_MOTION,     userdef);
-    EnableDlgWindow(hDlg, IDC_VHQ,        userdef);
-    EnableDlgWindow(hDlg, IDC_VHQ_METRIC, userdef);
-    EnableDlgWindow(hDlg, IDC_VHQ_BFRAME, userdef);
-    EnableDlgWindow(hDlg, IDC_CHROMAME,   userdef);
-    EnableDlgWindow(hDlg, IDC_TURBO,      userdef);
-    EnableDlgWindow(hDlg, IDC_FRAMEDROP,  userdef);
-    EnableDlgWindow(hDlg, IDC_MAXKEY,     userdef);
+    EnableDlgWindow(hDlg, IDC_VHQ,        userdef && quality_preset->motion_search);
+    EnableDlgWindow(hDlg, IDC_VHQ_METRIC, userdef && vhq_or_bvhq);
+    EnableDlgWindow(hDlg, IDC_VHQ_BFRAME, userdef && bvops);
+    EnableDlgWindow(hDlg, IDC_CHROMAME,   userdef && quality_preset->motion_search);
+    EnableDlgWindow(hDlg, IDC_TURBO,      userdef && bvops_qpel_motion);
+    EnableDlgWindow(hDlg, IDC_FRAMEDROP,  userdef && quality_preset->motion_search);
+    EnableDlgWindow(hDlg, IDC_MAXKEY,     userdef && quality_preset->motion_search);
+
 		break;
     }
 
@@ -1712,6 +1738,8 @@ static INT_PTR CALLBACK adv_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			 LOWORD(wParam) == IDC_LEVEL_PROFILE ||
 			 LOWORD(wParam) == IDC_QUANTTYPE ||
 			 LOWORD(wParam) == IDC_ASPECT_RATIO ||
+ 			 LOWORD(wParam) == IDC_MOTION ||
+			 LOWORD(wParam) == IDC_VHQ ||
 			 LOWORD(wParam) == IDC_BITRATE_CFORMAT ||
 			 LOWORD(wParam) == IDC_BITRATE_AFORMAT ||
 			 LOWORD(wParam) == IDC_BITRATE_FPS)) {
