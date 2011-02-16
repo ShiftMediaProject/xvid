@@ -39,7 +39,7 @@ BEGIN
     CONTROL         "Full quality first pass",IDC_FULL1PASS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,38,83,12
     CONTROL         "Discard first pass",IDC_DISCARD1PASS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,127,38,69,12
     LTEXT           "Stats filename:",IDC_STATIC,8,6,52,12,SS_CENTERIMAGE
-    CTEXT           "If you don't discard first pass but keep full quality disabled,\nthe resulting 1st pass stream might not be mpeg-4 compliant.",IDC_STATIC,7,114,197,35
+    CTEXT           "If you don't discard first pass but keep full quality disabled,\nthe resulting 1st pass stream might not be MPEG-4 compliant.",IDC_STATIC,7,114,197,35
     CTEXT           "Full quality first pass is only useful if you want to keep the resulting stream.\nIt doesn't improve quality of second pass and normally should be disabled.",IDC_STATIC,7,71,197,35
 END
 
@@ -300,14 +300,14 @@ END
 
 IDD_ABOUT DIALOG 0, 0, 192, 165
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Xvid MPEG4 Video Codec"
+CAPTION "Xvid MPEG-4 Video Codec"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CTEXT           "Xvid is copyrighted software. It may be distributed\naccording to the terms of the GNU GPL license.",IDC_STATIC,12,112,168,20
     CTEXT           "WEBSITE",IDC_WEBSITE,60,92,72,8,SS_NOTIFY | SS_CENTERIMAGE
     CTEXT           "BUILD",IDC_BUILD,8,28,176,8,SS_CENTERIMAGE
     CONTROL         "IDB_LOGO",IDC_STATIC,"Static",SS_BITMAP,24,56,15,13
-    CTEXT           "Xvid MPEG4 video codec",IDC_STATIC,8,16,176,12
+    CTEXT           "Xvid MPEG-4 video codec",IDC_STATIC,8,16,176,12
     GROUPBOX        "About",IDC_STATIC,4,4,184,132
     DEFPUSHBUTTON   "OK",IDOK,102,144,80,14
     CTEXT           "CORE",IDC_CORE,8,40,176,8,SS_CENTERIMAGE
@@ -341,7 +341,7 @@ BEGIN
     CONTROL         "Quarter Pixel",IDC_QPEL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,106,100,8
     CONTROL         "Global Motion Compensation",IDC_GMC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,118,103,8
     CONTROL         "B-VOPs",IDC_BVOP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,146,40,8
-    LTEXT           "Max consecutive BVOPs:",IDC_MAXBFRAMES_S,16,158,96,8
+    LTEXT           "Max consecutive B-VOPs:",IDC_MAXBFRAMES_S,16,158,96,8
     EDITTEXT        IDC_MAXBFRAMES,124,155,76,12,ES_AUTOHSCROLL | ES_NUMBER
     EDITTEXT        IDC_BQUANTRATIO,124,169,76,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_BQUANTOFFSET,124,183,76,12,ES_AUTOHSCROLL
@@ -374,7 +374,7 @@ BEGIN
     CONTROL         "Begin with keyframe",IDC_ZONE_FORCEIVOP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,124,92,8
     CONTROL         "Greyscale encoding",IDC_ZONE_GREYSCALE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,138,79,10
     CONTROL         "Chroma optimizer enabled",IDC_ZONE_CHROMAOPT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,152,97,10
-    LTEXT           "BVOP sensitivity:",IDC_ZONE_BVOPTHRESHOLD_S,16,170,76,8
+    LTEXT           "B-VOP sensitivity:",IDC_ZONE_BVOPTHRESHOLD_S,16,170,76,8
     EDITTEXT        IDC_ZONE_BVOPTHRESHOLD,100,168,84,12,ES_AUTOHSCROLL
     LTEXT           "Start frame #:",IDC_STATIC,8,6,52,10
     GROUPBOX        "Rate control",IDC_STATIC,7,22,198,90
@@ -510,7 +510,7 @@ BEGIN
     GROUPBOX        "",IDC_STATIC,7,7,196,127,BS_CENTER
     GROUPBOX        "",IDC_STATIC,7,81,196,52,BS_CENTER
     CTEXT           "X :",IDC_STATIC,25,60,10,10
-    LTEXT           "Aspect Ratio is written to mpeg-4 bitstream, but unfortunately is likely to be ignored if video stream is encapsulated in a general-purpose container (like .avi, .ogm., .mkv).",IDC_STATIC,7,138,197,27
+    LTEXT           "Aspect Ratio is written to MPEG-4 bitstream, but unfortunately is likely to be ignored if video stream is encapsulated in a general-purpose container (like .avi, .ogm., .mkv).",IDC_STATIC,7,138,197,27
     LTEXT           "Therefore, be aware that using different aspect ratio than default might be ignored by some players, especially when decoded on Windows.\n\nUse at your own risk.",IDC_STATIC,7,168,197,41
     CTEXT           "Y :",IDC_STATIC,86,60,10,10
     CTEXT           "Y :",IDC_STATIC,86,112,10,10
@@ -703,7 +703,7 @@ BEGIN
     IDC_INTERLACING         "Encodes frames as interlaced - only use if your source contains interlacing artifacts (i.e. fields instead of progressive frames)"
     IDC_OVERDEG             "How much of the overflow the codec can eat into during oversized sections\nLarger values will prevent oversized files better, but will also spoil quantizer distribution more."
     IDC_MAXBFRAMES          "Maximum number of sequential B-frames."
-    IDC_BQUANTRATIO         "Ratio used to calculate the b-frame quantizer.\n\nBVOP quant = (AVG(past VOP quant, future VOP quant) * quant ratio + quant offset)"
+    IDC_BQUANTRATIO         "Ratio used to calculate the B-frame quantizer.\n\nB-VOP quant = (AVG(past VOP quant, future VOP quant) * quant ratio + quant offset)"
     IDC_OVERIMP             "How much of the overflow the codec can eat into during undersized sections.\nLarger values will prevent undersized files better, but will also spoil quantizer distribution more."
     IDC_CBR_REACTIONDELAY   "Determines how slowly it will adjust the current encoding quality based upon scene intensity - this has the strongest influence on quality"
     IDC_CBR_AVERAGINGPERIOD "Determines how slowly it adapts to the current adjusted quality"
@@ -714,7 +714,7 @@ END
 STRINGTABLE
 BEGIN
     IDC_FRAMEDROP           "Frame dropping ratio. 0 = no frame dropping .. 100 = drop all frames."
-    IDC_KFREDUCTION         "Reduction of bitrate for the first consecutive i-frames. The last i-frame will get treated normally."
+    IDC_KFREDUCTION         "Reduction of bitrate for the first consecutive i-frames. The last I-frame will get treated normally."
     IDC_GMC                 "Use Global Motion Compensation."
 END
 
@@ -762,7 +762,7 @@ STRINGTABLE
 BEGIN
     IDC_QPEL                "Use Quarter PixEL resolution for encoding for a more precise motion compensation"
     IDC_CHROMAME            "Use chroma information to detect motion (slower)."
-    IDC_BQUANTOFFSET        "B-frame quantizer offset from last p-frame quantizer; refer to b-frame quant ratio (above)"
+    IDC_BQUANTOFFSET        "B-frame quantizer offset from last P-frame quantizer; refer to B-frame quant ratio (above)"
     IDC_VHQ                 "VHQ enables an additional search process to increase quality (much slower)."
 END
 
@@ -786,7 +786,7 @@ END
 STRINGTABLE
 BEGIN
     IDC_PROFILE_PROFILE     "Restrict the usage of MPEG-4 tools and limit the encoded bitrate such that bitstreams are compatible with hardware decoders."
-    IDC_BVOP_THRESHOLD      "Change the amount of b-frames in this zone. Recommended values are between -20 (almost no b-vops) and 30 (many b-vops).\nThe hardcoded maximum in profile/level will never be exceeded"
+    IDC_BVOP_THRESHOLD      "Change the amount of B-frames in this zone. Recommended values are between -20 (almost no B-VOPs) and 30 (many B-VOPs).\nThe hardcoded maximum in profile/level will never be exceeded"
 END
 
 STRINGTABLE
@@ -803,7 +803,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDC_TURBO               "Faster motion estimation for b-frames and quarterpel"
+    IDC_TURBO               "Faster motion estimation for B-frames and quarterpel"
     IDC_BITRATE_TSIZE       "Target file or media size"
 END
 
