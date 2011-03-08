@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.74.2.3 2011-03-08 19:18:44 Isibaar Exp $
+ * $Id: xvid.h,v 1.74.2.4 2011-03-08 21:07:00 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -57,7 +57,7 @@ extern "C" {
 #define XVID_API_MAJOR(a)        (((a)>>16) & 0xff)
 #define XVID_API_MINOR(a)        (((a)>> 0) & 0xff)
 
-#define XVID_VERSION             XVID_MAKE_VERSION(1,3,0)
+#define XVID_VERSION             XVID_MAKE_VERSION(1,3,1)
 #define XVID_API                 XVID_MAKE_API(4, 3)
 
 /* Bitstream Version
