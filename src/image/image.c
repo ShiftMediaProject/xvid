@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: image.c,v 1.46.2.1 2010-12-30 11:46:58 Isibaar Exp $
+ * $Id: image.c,v 1.46.2.2 2011-03-08 19:18:34 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -127,8 +127,10 @@ image_copy(IMAGE * image1,
 	memcpy(image1->v, image2->v, edged_width * height / 4);
 }
 
-/* setedges bug was fixed in this BS version */
+/* setedges bug was in this BS versions */
 #define SETEDGES_BUG_BEFORE		18
+#define SETEDGES_BUG_AFTER		57
+#define SETEDGES_BUG_REFIXED		63
 
 void
 image_setedges(IMAGE * image,
@@ -149,7 +151,9 @@ image_setedges(IMAGE * image,
 
 	/* According to the Standard Clause 7.6.4, padding is done starting at 16
 	 * pixel width and height multiples. This was not respected in old xvids */
-	if (bs_version >= SETEDGES_BUG_BEFORE) {
+	if (bs_version >= SETEDGES_BUG_BEFORE &&
+		bs_version <  SETEDGES_BUG_AFTER || 
+		bs_version >= SETEDGES_BUG_REFIXED) {
 		width  = (width+15)&~15;
 		height = (height+15)&~15;
 	}

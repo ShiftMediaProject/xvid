@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.135.2.4 2011-02-03 15:12:34 Isibaar Exp $
+ * $Id: encoder.c,v 1.135.2.5 2011-03-08 19:18:44 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -1917,7 +1917,7 @@ FrameCodeP(Encoder * pEnc, Bitstream * bs)
 	if (!reference->is_edged) {	
 		start_timer();
 		image_setedges(pRef, pParam->edged_width, pParam->edged_height,
-					   pParam->width, pParam->height, 0);
+					   pParam->width, pParam->height, XVID_BS_VERSION);
 		stop_edges_timer();
 		reference->is_edged = 1;
 	}
@@ -2303,7 +2303,7 @@ FrameCodeB(Encoder * pEnc,
 	if (!pEnc->reference->is_edged) {
 		image_setedges(f_ref, pEnc->mbParam.edged_width,
 					   pEnc->mbParam.edged_height, pEnc->mbParam.width,
-					   pEnc->mbParam.height, 0);
+					   pEnc->mbParam.height, XVID_BS_VERSION);
 		pEnc->reference->is_edged = 1;
 	}
 
@@ -2320,7 +2320,7 @@ FrameCodeB(Encoder * pEnc,
 	if (!pEnc->current->is_edged) {
 		image_setedges(b_ref, pEnc->mbParam.edged_width,
 					   pEnc->mbParam.edged_height, pEnc->mbParam.width,
-					   pEnc->mbParam.height, 0);
+					   pEnc->mbParam.height, XVID_BS_VERSION);
 		pEnc->current->is_edged = 1;
 	}
 
