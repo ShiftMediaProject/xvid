@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: CXvidDecoder.cpp,v 1.25.2.3 2011-02-14 16:58:54 Isibaar Exp $
+ * $Id: CXvidDecoder.cpp,v 1.25.2.4 2011-03-17 15:13:25 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -816,7 +816,7 @@ if ( USE_RG565 )
 /* (internal function) change colorspace */
 #define CALC_BI_STRIDE(width,bitcount)  ((((width * bitcount) + 31) & ~31) >> 3)
 
-HRESULT CXvidDecoder::ChangeColorspace(GUID subtype, GUID formattype, void * format)
+HRESULT CXvidDecoder::ChangeColorspace(GUID subtype, GUID formattype, void * format, int noflip)
 {
 	DWORD biWidth;
 
@@ -838,6 +838,8 @@ HRESULT CXvidDecoder::ChangeColorspace(GUID subtype, GUID formattype, void * for
 	{
 		return S_FALSE;
 	}
+
+	if (noflip) rgb_flip = 0;
 
 	if (subtype == CLSID_MEDIASUBTYPE_IYUV)
 	{
@@ -912,7 +914,7 @@ HRESULT CXvidDecoder::SetMediaType(PIN_DIRECTION direction, const CMediaType *pm
 	
 	if (direction == PINDIR_OUTPUT)
 	{
-		return ChangeColorspace(*pmt->Subtype(), *pmt->FormatType(), pmt->Format());
+		return ChangeColorspace(*pmt->Subtype(), *pmt->FormatType(), pmt->Format(), 0);
 	}
 	
 	return S_OK;
@@ -1049,7 +1051,7 @@ HRESULT CXvidDecoder::Transform(IMediaSample *pIn, IMediaSample *pOut)
 	{
 		HRESULT result;
 
-		result = ChangeColorspace(mtOut->subtype, mtOut->formattype, mtOut->pbFormat);
+		result = ChangeColorspace(mtOut->subtype, mtOut->formattype, mtOut->pbFormat, 0);
 		DeleteMediaType(mtOut);
 
 		if (result != S_OK)
@@ -1630,7 +1632,7 @@ HRESULT CXvidDecoder::MFTSetOutputType(DWORD dwOutputStreamID, IMFMediaType *pTy
 			hr = MFCreateAMMediaTypeFromMFMediaType(pType, GUID_NULL, &am);
 			
 			if (SUCCEEDED(hr)) {
-				if (FAILED(ChangeColorspace(am->subtype, am->formattype, am->pbFormat))) {
+				if (FAILED(ChangeColorspace(am->subtype, am->formattype, am->pbFormat, 1))) {
 					DPRINTF("(MFT)InternalCheckOutputType (MF_E_INVALIDTYPE)");
 					return MF_E_INVALIDTYPE;
 				}
