@@ -77,14 +77,14 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="msvcrt.lib winmm.lib strmbase.lib comctl32.lib Shlwapi.lib mfplat.lib mfuuid.lib"
+				AdditionalDependencies="libcmt.lib winmm.lib strmbase.lib comctl32.lib Shlwapi.lib mfplat.lib mfuuid.lib"
 				OutputFile="bin\xvid.ax"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				IgnoreAllDefaultLibraries="true"
 				ModuleDefinitionFile=".\src\xvid.ax.def"
 				ProgramDatabaseFile=".\Release/xvid.pdb"
-				EntryPointSymbol="DllMain"
+				EntryPointSymbol="_DllMainCRTStartup@12"
 				ImportLibrary=".\Release/xvid.lib"
 				TargetMachine="1"
 			/>
@@ -174,7 +174,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="msvcrt.lib winmm.lib strmbasd.lib comctl32.lib Shlwapi.lib mfplat.lib mfuuid.lib"
+				AdditionalDependencies="libcmtd.lib winmm.lib strmbasd.lib comctl32.lib Shlwapi.lib mfplat.lib mfuuid.lib"
 				OutputFile="bin\xvid.ax"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -182,7 +182,7 @@
 				ModuleDefinitionFile=".\src\xvid.ax.def"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/xvid.pdb"
-				EntryPointSymbol="DllMain"
+				EntryPointSymbol="_DllMainCRTStartup@12"
 				ImportLibrary=".\Debug/xvid.lib"
 				TargetMachine="1"
 			/>
@@ -274,14 +274,14 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="msvcrt.lib winmm.lib strmbase.lib comctl32.lib Shlwapi.lib mfplat.lib mfuuid.lib"
+				AdditionalDependencies="libcmt.lib winmm.lib strmbase.lib comctl32.lib Shlwapi.lib mfplat.lib mfuuid.lib"
 				OutputFile="bin\x64\xvid.ax"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				IgnoreAllDefaultLibraries="true"
 				ModuleDefinitionFile=".\src\xvid.ax.def"
 				ProgramDatabaseFile="$(IntDir)\xvid.pdb"
-				EntryPointSymbol="DllMain"
+				EntryPointSymbol="_DllMainCRTStartup"
 				ImportLibrary="$(IntDir)\xvid.lib"
 				TargetMachine="17"
 			/>
@@ -371,15 +371,15 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="msvcrt.lib winmm.lib strmbasd.lib comctl32.lib Shlwapi.lib mfplat.lib mfuuid.lib"
-				OutputFile="bin\xvid.ax"
+				AdditionalDependencies="libcmtd.lib winmm.lib strmbasd.lib comctl32.lib Shlwapi.lib mfplat.lib mfuuid.lib"
+				OutputFile="bin\x64\xvid.ax"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				IgnoreAllDefaultLibraries="true"
 				ModuleDefinitionFile=".\src\xvid.ax.def"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(IntDir)\xvid.pdb"
-				EntryPointSymbol="DllMain"
+				EntryPointSymbol="_DllMainCRTStartup"
 				ImportLibrary="$(IntDir)\xvid.lib"
 				TargetMachine="17"
 			/>
