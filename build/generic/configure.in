@@ -74,6 +74,19 @@ AC_ARG_ENABLE(assembly,
 		  fi],
 		 [assembly="yes"])
 
+dnl pthread code
+AC_ARG_ENABLE(pthread,
+                AC_HELP_STRING([--disable-pthread],
+                                 [Disable pthread dependent code]),
+                 [if test "$enable_pthread" = "no" ; then
+                     pthread="no"
+                  else
+                     if test "$enable_pthread" = "yes" ; then
+                        pthread="yes"
+                     fi
+                  fi],
+                 [pthread="yes"])
+
 dnl Build as a module not a shared lib on darwin
 AC_ARG_ENABLE(macosx_module,
 		AC_HELP_STRING([--enable-macosx_module],
@@ -592,7 +605,8 @@ dnl Check for pthread
 dnl
 dnl ==========================================================================
 
-AC_CHECK_HEADER(
+if test x"$pthread" = x"yes" ; then
+   AC_CHECK_HEADER(
 	[pthread.h],
 	[AC_CHECK_LIB(
 		[pthread],
@@ -601,6 +615,9 @@ AC_CHECK_HEADER(
 		 SPECIFIC_LDFLAGS="$SPECIFIC_LDFLAGS -lpthread"],
 		AC_MSG_WARN(Pthread not supported. No SMP support))],
 	AC_MSG_WARN(Pthread not supported. No SMP support))
+else
+   AC_MSG_WARN(Pthread support disabled. No SMP support)
+fi
 
 dnl ==========================================================================
 dnl 

@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: postprocessing.c,v 1.6 2010-12-18 10:13:38 Isibaar Exp $
+ * $Id: postprocessing.c,v 1.6.2.1 2011-04-07 19:07:36 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -132,9 +132,14 @@ image_postproc(XVID_POSTPROC *tbls, IMAGE * img, int edged_width,
 				const MACROBLOCK * mbs, int mb_width, int mb_height, int mb_stride,
 				int flags, int brightness, int frame_num, int bvop, int threads)
 {
-	int k, num_threads = MAX(1, MIN(threads, 4));
-	SMPDeblock data[4];
+	int k;
+#ifndef HAVE_PTHREAD
+	int num_threads = 1;
+#else
+	int num_threads = MAX(1, MIN(threads, 4));
 	void *status = NULL;
+#endif
+	SMPDeblock data[4];
 
 	/* horizontal deblocking, dispatch threads */
 	for (k = 0; k < num_threads; k++) {
@@ -150,20 +155,21 @@ image_postproc(XVID_POSTPROC *tbls, IMAGE * img, int edged_width,
 
 		data[k].stop_y = mb_height*2;
 	}
-
+#ifdef HAVE_PTHREAD
 	/* create threads */
 	for (k = 1; k < num_threads; k++) {
 		pthread_create(&data[k].handle, NULL, 
 		               (void*)stripe_deblock_h, (void*)&data[k]);
 	}
-
+#endif
 	stripe_deblock_h(&data[0]);
 
+#ifdef HAVE_PTHREAD
 	/* wait until all threads are finished */
 	for (k = 1; k < num_threads; k++) {
 		pthread_join(data[k].handle, &status);
 	}
-
+#endif
 
 	/* vertical deblocking, dispatch threads */
 	for (k = 0; k < num_threads; k++) {
@@ -172,19 +178,21 @@ image_postproc(XVID_POSTPROC *tbls, IMAGE * img, int edged_width,
 		data[k].stop_x = mb_width*2;
 	}
 
+#ifdef HAVE_PTHREAD
 	/* create threads */
 	for (k = 1; k < num_threads; k++) {
 		pthread_create(&data[k].handle, NULL, 
 		               (void*)stripe_deblock_v, (void*)&data[k]);
 	}
-
+#endif
 	stripe_deblock_v(&data[0]);
 
+#ifdef HAVE_PTHREAD
 	/* wait until all threads are finished */
 	for (k = 1; k < num_threads; k++) {
 		pthread_join(data[k].handle, &status);
 	}
-
+#endif
 
 	if (!bvop)
 		tbls->prev_quant = mbs->quant;

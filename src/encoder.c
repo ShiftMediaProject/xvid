@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: encoder.c,v 1.135.2.5 2011-03-08 19:18:44 Isibaar Exp $
+ * $Id: encoder.c,v 1.135.2.6 2011-04-07 19:07:36 Isibaar Exp $
  *
  ****************************************************************************/
 
@@ -449,7 +449,11 @@ enc_create(xvid_enc_create_t * create)
 
 	/* multithreaded stuff */
 	if (create->num_threads > 0) {
+#ifndef HAVE_PTHREAD
+		int t = MAX(1, create->num_threads);
+#else
 		int t = MIN(create->num_threads, (int) (pEnc->mbParam.mb_height>>1)); /* at least two rows per thread */
+#endif
 		int threads_per_slice = MAX(1, (t / pEnc->num_slices));
 		int rows_per_thread = (pEnc->mbParam.mb_height + threads_per_slice - 1) / threads_per_slice;
 
@@ -1647,7 +1651,9 @@ FrameCodeI(Encoder * pEnc,
 	int num_threads = MAX(1, MIN(pEnc->num_threads, num_slices));
 	int slices_per_thread = (num_slices*1024 / num_threads);
 	int mb_height = pEnc->mbParam.mb_height;
+#ifdef HAVE_PTHREAD
 	void * status = NULL;
+#endif
 	uint16_t k;
 
 	pEnc->mbParam.m_rounding_type = 1;
@@ -1687,19 +1693,23 @@ FrameCodeI(Encoder * pEnc,
 	}
 	pEnc->smpData[0].bs = bs;
 	pEnc->smpData[0].sStat = &pEnc->current->sStat;
-	
+
+#ifdef HAVE_PTHREAD	
 	/* create threads */
 	for (k = 1; k < num_threads; k++) {
 		pthread_create(&pEnc->smpData[k].handle, NULL, 
 		               (void*)SliceCodeI, (void*)&pEnc->smpData[k]);
 	}
+#endif
 
 	SliceCodeI(&pEnc->smpData[0]);
 
+#ifdef HAVE_PTHREAD
 	/* wait until all threads are finished */
 	for (k = 1; k < num_threads; k++) {
 		pthread_join(pEnc->smpData[k].handle, &status);
 	}
+#endif
 
 	pEnc->current->length = BitstreamLength(bs) - (bits/8);
 
@@ -1908,9 +1918,11 @@ FrameCodeP(Encoder * pEnc, Bitstream * bs)
 
 	int k = 0, bound = 0, num_slices = pEnc->num_slices;
 	int num_threads = MAX(1, MIN(pEnc->num_threads, num_slices));
+#ifdef HAVE_PTHREAD
 	void * status = NULL;
-	int slices_per_thread = (num_slices*1024 / num_threads);
 	int threads_per_slice = (pEnc->num_threads*1024 / num_threads);
+#endif
+        int slices_per_thread = (num_slices*1024 / num_threads);
 
 	IMAGE *pRef = &reference->image;
 
@@ -2005,6 +2017,7 @@ FrameCodeP(Encoder * pEnc, Bitstream * bs)
 		}
 	}
 
+#ifdef HAVE_PTHREAD
 	if (pEnc->num_threads > 0) {
 
 		/* multithreaded motion estimation - dispatch threads */
@@ -2059,7 +2072,9 @@ FrameCodeP(Encoder * pEnc, Bitstream * bs)
 				current->fcode = pEnc->smpData[k].minfcode;
 		}
 
-	} else {
+	} else 
+#endif
+	{
 
 		/* regular ME */
 
@@ -2103,18 +2118,22 @@ FrameCodeP(Encoder * pEnc, Bitstream * bs)
 	pEnc->smpData[0].bs = bs;
 	pEnc->smpData[0].sStat = &current->sStat;
 
+#ifdef HAVE_PTHREAD
 	/* create threads */
 	for (k = 1; k < num_threads; k++) {
 		pthread_create(&pEnc->smpData[k].handle, NULL, 
 			(void*)SliceCodeP, (void*)&pEnc->smpData[k]);
 	}
+#endif
 
 	SliceCodeP(&pEnc->smpData[0]);
 
+#ifdef HAVE_PTHREAD
 	/* wait until all threads are finished */
 	for (k = 1; k < num_threads; k++) {
 		pthread_join(pEnc->smpData[k].handle, &status);
 	}
+#endif
 
 	current->length = BitstreamLength(bs) - (bits/8);
 
@@ -2277,9 +2296,11 @@ FrameCodeB(Encoder * pEnc,
 	int bits = BitstreamPos(bs);
 	int k = 0, bound = 0, num_slices = pEnc->num_slices;
 	int num_threads = MAX(1, MIN(pEnc->num_threads, num_slices));
+#ifdef HAVE_PTHREAD
 	void * status = NULL;
-	int slices_per_thread = (num_slices*1024 / num_threads);
 	int threads_per_slice = (pEnc->num_threads*1024 / num_threads);
+#endif
+        int slices_per_thread = (num_slices*1024 / num_threads);
 
 	IMAGE *f_ref = &pEnc->reference->image;
 	IMAGE *b_ref = &pEnc->current->image;
@@ -2346,6 +2367,7 @@ FrameCodeB(Encoder * pEnc,
 
 	start_timer();
 
+#ifdef HAVE_PTHREAD
 	if (pEnc->num_threads > 0) {
 
 		/* multithreaded motion estimation - dispatch threads */
@@ -2401,7 +2423,9 @@ FrameCodeB(Encoder * pEnc,
 			if (pEnc->smpData[k].minbcode > frame->bcode)
 				frame->bcode = pEnc->smpData[k].minbcode;
 		}
-	} else {
+	} else
+#endif 
+	{
 
 		MotionEstimationBVOP(&pEnc->mbParam, frame,
 							 ((int32_t)(pEnc->current->stamp - frame->stamp)),				/* time_bp */
@@ -2451,18 +2475,22 @@ FrameCodeB(Encoder * pEnc,
 		}
 	}
 
+#ifdef HAVE_PTHREAD
 	for (k = 1; k < num_threads; k++) {
 		pthread_create(&pEnc->smpData[k].handle, NULL, 
 			(void*)SliceCodeB, (void*)&pEnc->smpData[k]);
 	}
+#endif
 
 	pEnc->smpData[0].bs = bs;
 	pEnc->smpData[0].sStat = &frame->sStat;
 	SliceCodeB(&pEnc->smpData[0]);
 
+#ifdef HAVE_PTHREAD
 	for (k = 1; k < num_threads; k++) {
 		pthread_join(pEnc->smpData[k].handle, &status);
 	}
+#endif
 
 	frame->length = BitstreamLength(bs) - (bits/8);
 
