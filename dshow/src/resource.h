@@ -25,6 +25,7 @@
 #define IDC_3IVX                        1013
 #define IDC_DERINGUV                    1014
 #define IDC_USE_AR                      1015
+#define IDC_CORE                        1016
 #define VERSION_RES_LANGUAGE            0x409
 #define VERSION_RES_CHARSET             1252
 #define IDC_STATIC                      -1
@@ -35,7 +36,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        106
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1016
+#define _APS_NEXT_CONTROL_VALUE         1017
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

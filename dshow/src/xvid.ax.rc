@@ -33,8 +33,8 @@ IDD_ABOUT DIALOG DISCARDABLE  0, 0, 216, 267
 STYLE WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         IDB_LOGO,IDC_STATIC,"Static",SS_BITMAP,36,7,142,29
-    CTEXT           "Xvid MPEG-4 Video Codec",IDC_STATIC,36,34,142,15,
+    CONTROL         IDB_LOGO,IDC_STATIC,"Static",SS_BITMAP,36,6,142,29
+    CTEXT           "Xvid MPEG-4 Video Codec",IDC_CORE,36,33,142,16,
                     SS_CENTERIMAGE | SS_SUNKEN
     GROUPBOX        "Brightness",IDC_STATIC,7,54,202,39
     CONTROL         "Slider1",IDC_BRIGHTNESS,"msctls_trackbar32",

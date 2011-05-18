@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Configuration processing -
  *
- *  Copyright(C) 2002-2004 Peter Ross <pross@xvid.org>
+ *  Copyright(C) 2002-2011 Peter Ross <pross@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 
 #include <windows.h>
 #include <commctrl.h>
+#include <xvid.h>
 #include "config.h"
 #include "debug.h"
 #include "resource.h"
@@ -127,6 +128,32 @@ INT_PTR CALLBACK adv_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 
 	case WM_INITDIALOG:
+		{
+			xvid_gbl_info_t info;
+			char core[100];
+			HINSTANCE m_hdll;
+
+			memset(&info, 0, sizeof(info));
+			info.version = XVID_VERSION;
+
+			m_hdll = LoadLibrary(XVID_DLL_NAME);
+			if (m_hdll != NULL) {
+
+				((int (__cdecl *)(void *, int, void *, void *))GetProcAddress(m_hdll, "xvid_global"))
+					(0, XVID_GBL_INFO, &info, NULL);
+
+				wsprintf(core, "Xvid MPEG-4 Video Codec v%d.%d.%d",
+					XVID_VERSION_MAJOR(info.actual_version),
+					XVID_VERSION_MINOR(info.actual_version),
+					XVID_VERSION_PATCH(info.actual_version));
+
+				FreeLibrary(m_hdll);
+			} else {
+				wsprintf(core, "xvidcore.dll not found!");
+			}
+
+			SetDlgItemText(hwnd, IDC_CORE, core);
+		}
 
 		// Load Force Colorspace Box
 		SendMessage(GetDlgItem(hwnd, IDC_COLORSPACE), CB_ADDSTRING, 0, (LPARAM)"No Force"); 
