@@ -3,8 +3,8 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Xvid Decoder part of the DShow Filter  -
  *
- *  Copyright(C) 2002-2010 Peter Ross <pross@xvid.org>
- *               2003-2010 Michael Militzer <michael@xvid.org>
+ *  Copyright(C) 2002-2011 Peter Ross <pross@xvid.org>
+ *               2003-2011 Michael Militzer <michael@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -311,8 +311,6 @@ STDMETHODIMP CXvidDecoder::NonDelegatingQueryInterface(REFIID riid, void **ppv)
 
 
 /* constructor */
-
-#define XVID_DLL_NAME "xvidcore.dll"
 
 CXvidDecoder::CXvidDecoder(LPUNKNOWN punk, HRESULT *phr) :
     CVideoTransformFilter(NAME("CXvidDecoder"), punk, CLSID_XVID), m_hdll (NULL)
