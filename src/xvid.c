@@ -3,8 +3,8 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Native API implementation  -
  *
- *  Copyright(C) 2001-2004 Peter Ross <pross@xvid.org>
- *               2002-2010 Michael Militzer <isibaar@xvid.org>
+ *  Copyright(C) 2001-2011 Peter Ross <pross@xvid.org>
+ *               2002-2011 Michael Militzer <isibaar@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -700,7 +700,7 @@ xvid_gbl_info(xvid_gbl_info_t * info)
 		return XVID_ERR_VERSION;
 
 	info->actual_version = XVID_VERSION;
-	info->build = "xvid-1.3.1";
+	info->build = "xvid-1.3.2";
 	info->cpu_flags = detect_cpu_flags();
 	info->num_threads = 0; /* single-thread */
 
