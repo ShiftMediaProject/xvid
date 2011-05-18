@@ -22,7 +22,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: plugin_2pass1.c,v 1.4 2010-03-09 10:00:14 Isibaar Exp $
+ * $Id$
  *
  *****************************************************************************/
 

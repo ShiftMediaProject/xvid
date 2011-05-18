@@ -3,7 +3,8 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Inverse DCT  -
  *
- *  Copyright (C) 2006-2011 Xvid Solutions GmbH
+ *  These routines are from Independent JPEG Group's free JPEG software
+ *  Copyright (C) 1991-1998, Thomas G. Lane (see the file README.IJG)
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,317 +20,362 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: idct.c,v 1.9 2005-11-22 10:23:01 suxen_drol Exp $
+ * $Id$
  *
  ****************************************************************************/
 
+/* Copyright (C) 1996, MPEG Software Simulation Group. All Rights Reserved. */
+
 /*
- *  Authors: Skal
+ * Disclaimer of Warranty
  *
- *  Walken IDCT
- *  Alternative idct implementations for decoding compatibility
+ * These software programs are available to the user without any license fee or
+ * royalty on an "as is" basis.  The MPEG Software Simulation Group disclaims
+ * any and all warranties, whether express, implied, or statuary, including any
+ * implied warranties or merchantability or of fitness for a particular
+ * purpose.  In no event shall the copyright-holder be liable for any
+ * incidental, punitive, or consequential damages of any kind whatsoever
+ * arising from the use of these programs.
  *
- *  NOTE: this "C" version is not the original one,
- *  but is modified to yield the same error profile
- *  than the MMX version.
+ * This disclaimer of warranty extends to the user of these programs and user's
+ * customers, employees, agents, transferees, successors, and assigns.
  *
- ************************************************************************/
+ * The MPEG Software Simulation Group does not represent or warrant that the
+ * programs furnished hereunder are free of infringement of any third-party
+ * patents.
+ *
+ * Commercial implementations of MPEG-1 and MPEG-2 video, including shareware,
+ * are subject to royalty fees to patent holders.  Many of these patents are
+ * general enough such that they are unavoidable regardless of implementation
+ * design.
+ *
+ * MPEG2AVI
+ * --------
+ * v0.16B33 renamed the initialization function to init_idct_int32()
+ * v0.16B32 removed the unused idct_row() and idct_col() functions
+ * v0.16B3  changed var declarations to static, to enforce data align
+ * v0.16B22  idct_FAST() renamed to idct_int32()
+ *        also merged idct_FAST() into a single function, to help VC++
+ *        optimize it.
+ *
+ * v0.14  changed int to long, to avoid confusion when compiling on x86
+ *        platform ( in VC++ "int" -> 32bits )
+ */
+
+/**********************************************************/
+/* inverse two dimensional DCT, Chen-Wang algorithm       */
+/* (cf. IEEE ASSP-32, pp. 803-816, Aug. 1984)             */
+/* 32-bit integer arithmetic (8 bit coefficients)         */
+/* 11 mults, 29 adds per DCT                              */
+/*                                      sE, 18.8.91       */
+/**********************************************************/
+/* coefficients extended to 12 bit for IEEE1180-1990      */
+/* compliance                           sE,  2.1.94       */
+/**********************************************************/
+
+/* this code assumes >> to be a two's-complement arithmetic */
+/* right shift: (-2)>>1 == -1 , (-3)>>1 == -2               */
 
 #include "idct.h"
+
+#define W1 2841					/* 2048*sqrt(2)*cos(1*pi/16) */
+#define W2 2676					/* 2048*sqrt(2)*cos(2*pi/16) */
+#define W3 2408					/* 2048*sqrt(2)*cos(3*pi/16) */
+#define W5 1609					/* 2048*sqrt(2)*cos(5*pi/16) */
+#define W6 1108					/* 2048*sqrt(2)*cos(6*pi/16) */
+#define W7 565					/* 2048*sqrt(2)*cos(7*pi/16) */
+
+/* private data
+ * Initialized by idct_int32_init so it's mostly RO data,
+ * doesn't hurt thread safety */
+static short iclip[1024];		/* clipping table */
+static short *iclp;
+
+/* private prototypes */
+
+/* row (horizontal) IDCT
+ *
+ *           7                       pi         1
+ * dst[k] = sum c[l] * src[l] * cos( -- * ( k + - ) * l )
+ *          l=0                      8          2
+ *
+ * where: c[0]    = 128
+ *        c[1..7] = 128*sqrt(2)
+ */
+
+#if 0
+static void idctrow(blk)
+short *blk;
+{
+  int X0, X1, X2, X3, X4, X5, X6, X7, X8;
+
+  /* shortcut  */
+  if (!((X1 = blk[4]<<11) | (X2 = blk[6]) | (X3 = blk[2]) |
+        (X4 = blk[1]) | (X5 = blk[7]) | (X6 = blk[5]) | (X7 = blk[3])))
+  {
+    blk[0]=blk[1]=blk[2]=blk[3]=blk[4]=blk[5]=blk[6]=blk[7]=blk[0]<<3;
+    return;
+  }
+
+  X0 = (blk[0]<<11) + 128; /* for proper rounding in the fourth stage  */
+
+  /* first stage  */
+  X8 = W7*(X4+X5);
+  X4 = X8 + (W1-W7)*X4;
+  X5 = X8 - (W1+W7)*X5;
+  X8 = W3*(X6+X7);
+  X6 = X8 - (W3-W5)*X6;
+  X7 = X8 - (W3+W5)*X7;
+
+  /* second stage  */
+  X8 = X0 + X1;
+  X0 -= X1;
+  X1 = W6*(X3+X2);
+  X2 = X1 - (W2+W6)*X2;
+  X3 = X1 + (W2-W6)*X3;
+  X1 = X4 + X6;
+  X4 -= X6;
+  X6 = X5 + X7;
+  X5 -= X7;
+
+  /* third stage  */
+  X7 = X8 + X3;
+  X8 -= X3;
+  X3 = X0 + X2;
+  X0 -= X2;
+  X2 = (181*(X4+X5)+128)>>8;
+  X4 = (181*(X4-X5)+128)>>8;
+
+  /* fourth stage  */
+  blk[0] = (X7+X1)>>8;
+  blk[1] = (X3+X2)>>8;
+  blk[2] = (X0+X4)>>8;
+  blk[3] = (X8+X6)>>8;
+  blk[4] = (X8-X6)>>8;
+  blk[5] = (X0-X4)>>8;
+  blk[6] = (X3-X2)>>8;
+  blk[7] = (X7-X1)>>8;
+}
+#endif
+
+/* column (vertical) IDCT
+ *
+ *             7                         pi         1
+ * dst[8*k] = sum c[l] * src[8*l] * cos( -- * ( k + - ) * l )
+ *            l=0                        8          2
+ *
+ * where: c[0]    = 1/1024
+ *        c[1..7] = (1/1024)*sqrt(2)
+ */
+
+#if 0
+static void idctcol(blk)
+short *blk;
+{
+  int X0, X1, X2, X3, X4, X5, X6, X7, X8;
+
+  /* shortcut  */
+  if (!((X1 = (blk[8*4]<<8)) | (X2 = blk[8*6]) | (X3 = blk[8*2]) |
+        (X4 = blk[8*1]) | (X5 = blk[8*7]) | (X6 = blk[8*5]) | (X7 = blk[8*3])))
+  {
+    blk[8*0]=blk[8*1]=blk[8*2]=blk[8*3]=blk[8*4]=blk[8*5]=blk[8*6]=blk[8*7]=
+      iclp[(blk[8*0]+32)>>6];
+    return;
+  }
+
+  X0 = (blk[8*0]<<8) + 8192;
+
+  /* first stage  */
+  X8 = W7*(X4+X5) + 4;
+  X4 = (X8+(W1-W7)*X4)>>3;
+  X5 = (X8-(W1+W7)*X5)>>3;
+  X8 = W3*(X6+X7) + 4;
+  X6 = (X8-(W3-W5)*X6)>>3;
+  X7 = (X8-(W3+W5)*X7)>>3;
+
+  /* second stage */
+  X8 = X0 + X1;
+  X0 -= X1;
+  X1 = W6*(X3+X2) + 4;
+  X2 = (X1-(W2+W6)*X2)>>3;
+  X3 = (X1+(W2-W6)*X3)>>3;
+  X1 = X4 + X6;
+  X4 -= X6;
+  X6 = X5 + X7;
+  X5 -= X7;
+
+  /* third stage  */
+  X7 = X8 + X3;
+  X8 -= X3;
+  X3 = X0 + X2;
+  X0 -= X2;
+  X2 = (181*(X4+X5)+128)>>8;
+  X4 = (181*(X4-X5)+128)>>8;
+
+  /* fourth stage */
+  blk[8*0] = iclp[(X7+X1)>>14];
+  blk[8*1] = iclp[(X3+X2)>>14];
+  blk[8*2] = iclp[(X0+X4)>>14];
+  blk[8*3] = iclp[(X8+X6)>>14];
+  blk[8*4] = iclp[(X8-X6)>>14];
+  blk[8*5] = iclp[(X0-X4)>>14];
+  blk[8*6] = iclp[(X3-X2)>>14];
+  blk[8*7] = iclp[(X7-X1)>>14];
+}
+#endif
 
 /* function pointer */
 idctFuncPtr idct;
 
-#define XVID_DSP_CLIP_255(x)   ( ((x)&~255) ? ((-(x)) >> (8*sizeof((x))-1))&0xff : (x) )
-
-#define ROW_SHIFT 11
-#define COL_SHIFT 6
-
-// #define FIX(x)   (int)((x) * (1<<ROW_SHIFT))
-#define Rnd0 65536 // 1<<(COL_SHIFT+ROW_SHIFT-1);
-#define Rnd1 3597  // FIX (1.75683487303);
-#define Rnd2 2260  // FIX (1.10355339059);
-#define Rnd3 1203  // FIX (0.587788325588);
-#define Rnd4 0
-#define Rnd5 120   // FIX (0.058658283817);
-#define Rnd6 512   // FIX (0.25);
-#define Rnd7 512   // FIX (0.25);
-#undef FIX
-
-static const int Tab04[] = { 22725, 21407, 19266, 16384, 12873,  8867, 4520 };
-static const int Tab17[] = { 31521, 29692, 26722, 22725, 17855, 12299, 6270 };
-static const int Tab26[] = { 29692, 27969, 25172, 21407, 16819, 11585, 5906 };
-static const int Tab35[] = { 26722, 25172, 22654, 19266, 15137, 10426, 5315 };
-
-static int Idct_Row(short * In, const int * const Tab, int Rnd)
+/* two dimensional inverse discrete cosine transform */
+void
+idct_int32(short *const block)
 {
-  const int C1 = Tab[0];
-  const int C2 = Tab[1];
-  const int C3 = Tab[2];
-  const int C4 = Tab[3];
-  const int C5 = Tab[4];
-  const int C6 = Tab[5];
-  const int C7 = Tab[6];
 
-  const int Right = In[5]|In[6]|In[7];
-  const int Left  = In[1]|In[2]|In[3];
-  if (!(Right | In[4]))
-  {
-    const int K = C4*In[0] + Rnd;
-    if (Left)
-    {
-      const int a0 = K + C2*In[2];
-      const int a1 = K + C6*In[2];
-      const int a2 = K - C6*In[2];
-      const int a3 = K - C2*In[2];
+	/*
+	 * idct_int32_init() must be called before the first call to this
+	 * function!
+	 */
 
-      const int b0 = C1*In[1] + C3*In[3];
-      const int b1 = C3*In[1] - C7*In[3];
-      const int b2 = C5*In[1] - C1*In[3];
-      const int b3 = C7*In[1] - C5*In[3];
 
-      In[0] = (a0 + b0) >> ROW_SHIFT;
-      In[1] = (a1 + b1) >> ROW_SHIFT;
-      In[2] = (a2 + b2) >> ROW_SHIFT;
-      In[3] = (a3 + b3) >> ROW_SHIFT;
-      In[4] = (a3 - b3) >> ROW_SHIFT;
-      In[5] = (a2 - b2) >> ROW_SHIFT;
-      In[6] = (a1 - b1) >> ROW_SHIFT;
-      In[7] = (a0 - b0) >> ROW_SHIFT;
-    }
-    else
-    {
-      const int a0 = K >> ROW_SHIFT;
-      if (a0) {
-        In[0] = In[1] = In[2] = In[3] =
-        In[4] = In[5] = In[6] = In[7] = a0;
-      }
-      else return 0;
-    }
-  }
-  else if (!(Left|Right))
-  {
-    const int a0 = (Rnd + C4*(In[0]+In[4])) >> ROW_SHIFT;
-    const int a1 = (Rnd + C4*(In[0]-In[4])) >> ROW_SHIFT;
+#if 0
+	int i;
+	long i;
 
-    In[0] = a0;
-    In[3] = a0;
-    In[4] = a0;
-    In[7] = a0;
-    In[1] = a1;
-    In[2] = a1;
-    In[5] = a1;
-    In[6] = a1;
-  }
-  else
-  {
-    const int K = C4*In[0] + Rnd;
-    const int a0 = K + C2*In[2] + C4*In[4] + C6*In[6];
-    const int a1 = K + C6*In[2] - C4*In[4] - C2*In[6];
-    const int a2 = K - C6*In[2] - C4*In[4] + C2*In[6];
-    const int a3 = K - C2*In[2] + C4*In[4] - C6*In[6];
+	for (i=0; i<8; i++)
+		idctrow(block+8*i);
 
-    const int b0 = C1*In[1] + C3*In[3] + C5*In[5] + C7*In[7];
-    const int b1 = C3*In[1] - C7*In[3] - C1*In[5] - C5*In[7];
-    const int b2 = C5*In[1] - C1*In[3] + C7*In[5] + C3*In[7];
-    const int b3 = C7*In[1] - C5*In[3] + C3*In[5] - C1*In[7];
+	for (i=0; i<8; i++)
+		idctcol(block+i);
+#endif
 
-    In[0] = (a0 + b0) >> ROW_SHIFT;
-    In[1] = (a1 + b1) >> ROW_SHIFT;
-    In[2] = (a2 + b2) >> ROW_SHIFT;
-    In[3] = (a3 + b3) >> ROW_SHIFT;
-    In[4] = (a3 - b3) >> ROW_SHIFT;
-    In[5] = (a2 - b2) >> ROW_SHIFT;
-    In[6] = (a1 - b1) >> ROW_SHIFT;
-    In[7] = (a0 - b0) >> ROW_SHIFT;
-  }
-  return 1;
-}
+	short *blk;
+	long i;
+	long X0, X1, X2, X3, X4, X5, X6, X7, X8;
 
-#define Tan1  0x32ec
-#define Tan2  0x6a0a
-#define Tan3  0xab0e
-#define Sqrt2 0x5a82
 
-#define MULT(c,x, n)  ( ((c) * (x)) >> (n) )
-// 12b version => #define MULT(c,x, n)  ( (((c)>>3) * (x)) >> ((n)-3) )
-// 12b zero-testing version:
+	for (i = 0; i < 8; i++)		/* idct rows */
+	{
+		blk = block + (i << 3);
+		if (!
+			((X1 = blk[4] << 11) | (X2 = blk[6]) | (X3 = blk[2]) | (X4 =
+																	blk[1]) |
+			 (X5 = blk[7]) | (X6 = blk[5]) | (X7 = blk[3]))) {
+			blk[0] = blk[1] = blk[2] = blk[3] = blk[4] = blk[5] = blk[6] =
+				blk[7] = blk[0] << 3;
+			continue;
+		}
 
-#define BUTF(a, b, tmp) \
-  (tmp) = (a)+(b);      \
-  (b)   = (a)-(b);      \
-  (a)   = (tmp)
+		X0 = (blk[0] << 11) + 128;	/* for proper rounding in the fourth stage  */
 
-#define LOAD_BUTF(m1, m2, a, b, tmp, S) \
-  (m1) = (S)[(a)] + (S)[(b)];           \
-  (m2) = (S)[(a)] - (S)[(b)]
+		/* first stage  */
+		X8 = W7 * (X4 + X5);
+		X4 = X8 + (W1 - W7) * X4;
+		X5 = X8 - (W1 + W7) * X5;
+		X8 = W3 * (X6 + X7);
+		X6 = X8 - (W3 - W5) * X6;
+		X7 = X8 - (W3 + W5) * X7;
 
-static void Idct_Col_8(short * const In)
+		/* second stage  */
+		X8 = X0 + X1;
+		X0 -= X1;
+		X1 = W6 * (X3 + X2);
+		X2 = X1 - (W2 + W6) * X2;
+		X3 = X1 + (W2 - W6) * X3;
+		X1 = X4 + X6;
+		X4 -= X6;
+		X6 = X5 + X7;
+		X5 -= X7;
+
+		/* third stage  */
+		X7 = X8 + X3;
+		X8 -= X3;
+		X3 = X0 + X2;
+		X0 -= X2;
+		X2 = (181 * (X4 + X5) + 128) >> 8;
+		X4 = (181 * (X4 - X5) + 128) >> 8;
+
+		/* fourth stage  */
+
+		blk[0] = (short) ((X7 + X1) >> 8);
+		blk[1] = (short) ((X3 + X2) >> 8);
+		blk[2] = (short) ((X0 + X4) >> 8);
+		blk[3] = (short) ((X8 + X6) >> 8);
+		blk[4] = (short) ((X8 - X6) >> 8);
+		blk[5] = (short) ((X0 - X4) >> 8);
+		blk[6] = (short) ((X3 - X2) >> 8);
+		blk[7] = (short) ((X7 - X1) >> 8);
+
+	}							/* end for ( i = 0; i < 8; ++i ) IDCT-rows */
+
+
+
+	for (i = 0; i < 8; i++)		/* idct columns */
+	{
+		blk = block + i;
+		/* shortcut  */
+		if (!
+			((X1 = (blk[8 * 4] << 8)) | (X2 = blk[8 * 6]) | (X3 =
+															 blk[8 *
+																 2]) | (X4 =
+																		blk[8 *
+																			1])
+			 | (X5 = blk[8 * 7]) | (X6 = blk[8 * 5]) | (X7 = blk[8 * 3]))) {
+			blk[8 * 0] = blk[8 * 1] = blk[8 * 2] = blk[8 * 3] = blk[8 * 4] =
+				blk[8 * 5] = blk[8 * 6] = blk[8 * 7] =
+				iclp[(blk[8 * 0] + 32) >> 6];
+			continue;
+		}
+
+		X0 = (blk[8 * 0] << 8) + 8192;
+
+		/* first stage  */
+		X8 = W7 * (X4 + X5) + 4;
+		X4 = (X8 + (W1 - W7) * X4) >> 3;
+		X5 = (X8 - (W1 + W7) * X5) >> 3;
+		X8 = W3 * (X6 + X7) + 4;
+		X6 = (X8 - (W3 - W5) * X6) >> 3;
+		X7 = (X8 - (W3 + W5) * X7) >> 3;
+
+		/* second stage  */
+		X8 = X0 + X1;
+		X0 -= X1;
+		X1 = W6 * (X3 + X2) + 4;
+		X2 = (X1 - (W2 + W6) * X2) >> 3;
+		X3 = (X1 + (W2 - W6) * X3) >> 3;
+		X1 = X4 + X6;
+		X4 -= X6;
+		X6 = X5 + X7;
+		X5 -= X7;
+
+		/* third stage  */
+		X7 = X8 + X3;
+		X8 -= X3;
+		X3 = X0 + X2;
+		X0 -= X2;
+		X2 = (181 * (X4 + X5) + 128) >> 8;
+		X4 = (181 * (X4 - X5) + 128) >> 8;
+
+		/* fourth stage  */
+		blk[8 * 0] = iclp[(X7 + X1) >> 14];
+		blk[8 * 1] = iclp[(X3 + X2) >> 14];
+		blk[8 * 2] = iclp[(X0 + X4) >> 14];
+		blk[8 * 3] = iclp[(X8 + X6) >> 14];
+		blk[8 * 4] = iclp[(X8 - X6) >> 14];
+		blk[8 * 5] = iclp[(X0 - X4) >> 14];
+		blk[8 * 6] = iclp[(X3 - X2) >> 14];
+		blk[8 * 7] = iclp[(X7 - X1) >> 14];
+	}
+
+}								/* end function idct_int32(block) */
+
+
+void
+idct_int32_init(void)
 {
-  int mm0, mm1, mm2, mm3, mm4, mm5, mm6, mm7, Spill;
+	int i;
 
-    // odd
-
-  mm4 = (int)In[7*8];
-  mm5 = (int)In[5*8];
-  mm6 = (int)In[3*8];
-  mm7 = (int)In[1*8];
-
-  mm0 = MULT(Tan1, mm4, 16) + mm7;
-  mm1 = MULT(Tan1, mm7, 16) - mm4;
-  mm2 = MULT(Tan3, mm5, 16) + mm6;
-  mm3 = MULT(Tan3, mm6, 16) - mm5;
-
-  mm7 = mm0 + mm2;
-  mm4 = mm1 - mm3;
-  mm0 = mm0 - mm2;
-  mm1 = mm1 + mm3;
-  mm6 = mm0 + mm1;
-  mm5 = mm0 - mm1;
-  mm5 = 2*MULT(Sqrt2, mm5, 16);  // 2*sqrt2
-  mm6 = 2*MULT(Sqrt2, mm6, 16);  // Watch out: precision loss but done to match
-                                 // the pmulhw used in mmx/sse versions
-  
-    // even
-
-  mm1 = (int)In[2*8];
-  mm2 = (int)In[6*8];
-  mm3 = MULT(Tan2,mm2, 16) + mm1;
-  mm2 = MULT(Tan2,mm1, 16) - mm2;
-
-  LOAD_BUTF(mm0, mm1, 0*8, 4*8, Spill, In);
-
-  BUTF(mm0, mm3, Spill);
-  BUTF(mm0, mm7, Spill);
-  In[8*0] = (int16_t) (mm0 >> COL_SHIFT);
-  In[8*7] = (int16_t) (mm7 >> COL_SHIFT);
-  BUTF(mm3, mm4, mm0);
-  In[8*3] = (int16_t) (mm3 >> COL_SHIFT);
-  In[8*4] = (int16_t) (mm4 >> COL_SHIFT);
-
-  BUTF(mm1, mm2, mm0);
-  BUTF(mm1, mm6, mm0);
-  In[8*1] = (int16_t) (mm1 >> COL_SHIFT);
-  In[8*6] = (int16_t) (mm6 >> COL_SHIFT);
-  BUTF(mm2, mm5, mm0);
-  In[8*2] = (int16_t) (mm2 >> COL_SHIFT);
-  In[8*5] = (int16_t) (mm5 >> COL_SHIFT);
-}
-
-static void Idct_Col_4(short * const In)
-{
-  int mm0, mm1, mm2, mm3, mm4, mm5, mm6, mm7, Spill;
-
-    // odd
-
-  mm0 = (int)In[1*8];
-  mm2 = (int)In[3*8];
-
-  mm1 = MULT(Tan1, mm0, 16);
-  mm3 = MULT(Tan3, mm2, 16);
-
-  mm7 = mm0 + mm2;
-  mm4 = mm1 - mm3;
-  mm0 = mm0 - mm2;
-  mm1 = mm1 + mm3;
-  mm6 = mm0 + mm1;
-  mm5 = mm0 - mm1;
-  mm6 = 2*MULT(Sqrt2, mm6, 16);  // 2*sqrt2
-  mm5 = 2*MULT(Sqrt2, mm5, 16);
-
-    // even
-
-  mm0 = mm1 = (int)In[0*8];
-  mm3 = (int)In[2*8];
-  mm2 = MULT(Tan2,mm3, 16);
-
-  BUTF(mm0, mm3, Spill);
-  BUTF(mm0, mm7, Spill);
-  In[8*0] = (int16_t) (mm0 >> COL_SHIFT);
-  In[8*7] = (int16_t) (mm7 >> COL_SHIFT);
-  BUTF(mm3, mm4, mm0);
-  In[8*3] = (int16_t) (mm3 >> COL_SHIFT);
-  In[8*4] = (int16_t) (mm4 >> COL_SHIFT);
-
-  BUTF(mm1, mm2, mm0);
-  BUTF(mm1, mm6, mm0);
-  In[8*1] = (int16_t) (mm1 >> COL_SHIFT);
-  In[8*6] = (int16_t) (mm6 >> COL_SHIFT);
-  BUTF(mm2, mm5, mm0);
-  In[8*2] = (int16_t) (mm2 >> COL_SHIFT);
-  In[8*5] = (int16_t) (mm5 >> COL_SHIFT);
-}
-
-static void Idct_Col_3(short * const In)
-{
-  int mm0, mm1, mm2, mm3, mm4, mm5, mm6, mm7, Spill;
-
-    // odd
-
-  mm7 = (int)In[1*8];
-  mm4 = MULT(Tan1, mm7, 16);
-
-  mm6 = mm7 + mm4;
-  mm5 = mm7 - mm4;
-  mm6 = 2*MULT(Sqrt2, mm6, 16);  // 2*sqrt2
-  mm5 = 2*MULT(Sqrt2, mm5, 16);
-
-    // even
-
-  mm0 = mm1 = (int)In[0*8];
-  mm3 = (int)In[2*8];
-  mm2 = MULT(Tan2,mm3, 16);
-
-  BUTF(mm0, mm3, Spill);
-  BUTF(mm0, mm7, Spill);
-  In[8*0] = (int16_t) (mm0 >> COL_SHIFT);
-  In[8*7] = (int16_t) (mm7 >> COL_SHIFT);
-  BUTF(mm3, mm4, mm0);
-  In[8*3] = (int16_t) (mm3 >> COL_SHIFT);
-  In[8*4] = (int16_t) (mm4 >> COL_SHIFT);
-
-  BUTF(mm1, mm2, mm0);
-  BUTF(mm1, mm6, mm0);
-  In[8*1] = (int16_t) (mm1 >> COL_SHIFT);
-  In[8*6] = (int16_t) (mm6 >> COL_SHIFT);
-  BUTF(mm2, mm5, mm0);
-  In[8*2] = (int16_t) (mm2 >> COL_SHIFT);
-  In[8*5] = (int16_t) (mm5 >> COL_SHIFT);
-}
-
-#undef Tan1
-#undef Tan2
-#undef Tan3
-#undef Sqrt2
-
-#undef ROW_SHIFT
-#undef COL_SHIFT
-
-//////////////////////////////////////////////////////////
-
-void idct_int32(short *const In)
-{
-  int i, Rows = 0x07;
-
-  Idct_Row(In + 0*8, Tab04, Rnd0);
-  Idct_Row(In + 1*8, Tab17, Rnd1);
-  Idct_Row(In + 2*8, Tab26, Rnd2);
-  if (Idct_Row(In + 3*8, Tab35, Rnd3)) Rows |= 0x08;
-  if (Idct_Row(In + 4*8, Tab04, Rnd4)) Rows |= 0x10;
-  if (Idct_Row(In + 5*8, Tab35, Rnd5)) Rows |= 0x20;
-  if (Idct_Row(In + 6*8, Tab26, Rnd6)) Rows |= 0x40;
-  if (Idct_Row(In + 7*8, Tab17, Rnd7)) Rows |= 0x80;
-
-  if (Rows&0xf0) {
-    for(i=0; i<8; i++)
-      Idct_Col_8(In + i);
-  }
-  else if (Rows&0x08) {
-    for(i=0; i<8; i++)
-      Idct_Col_4(In + i);
-  }
-  else {
-    for(i=0; i<8; i++)
-      Idct_Col_3(In + i);
-  }
+	iclp = iclip + 512;
+	for (i = -512; i < 512; i++)
+		iclp[i] = (i < -256) ? -256 : ((i > 255) ? 255 : i);
 }

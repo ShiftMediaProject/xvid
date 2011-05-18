@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.h,v 1.74.2.4 2011-03-08 21:07:00 Isibaar Exp $
+ * $Id$
  *
  ****************************************************************************/
 

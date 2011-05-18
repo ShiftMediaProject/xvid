@@ -21,7 +21,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: motion_inlines.h,v 1.5 2007-04-28 16:30:20 syskin Exp $
+ * $Id$
  *
  ****************************************************************************/
 

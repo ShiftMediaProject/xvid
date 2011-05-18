@@ -3,7 +3,8 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Forward DCT  -
  *
- *  Copyright (C) 2006-2011 Xvid Solutions GmbH
+ *  These routines are from Independent JPEG Group's free JPEG software
+ *  Copyright (C) 1991-1998, Thomas G. Lane (see the file README.IJG)
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,294 +20,269 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: fdct.c,v 1.7 2004-03-22 22:36:23 edgomez Exp $
+ * $Id$
  *
  ****************************************************************************/
 
+/* Copyright (C) 1996, MPEG Software Simulation Group. All Rights Reserved. */
+
 /*
- *  Authors: Skal
+ * Disclaimer of Warranty
  *
- *  "Fast and precise" LLM implementation of FDCT/IDCT, where
- *  rotations are decomposed using:
- *    tmp = (x+y).cos t
- *    x' = tmp + y.(sin t - cos t)
- *    y' = tmp - x.(sin t + cos t)
+ * These software programs are available to the user without any license fee or
+ * royalty on an "as is" basis.  The MPEG Software Simulation Group disclaims
+ * any and all warranties, whether express, implied, or statuary, including any
+ * implied warranties or merchantability or of fitness for a particular
+ * purpose.  In no event shall the copyright-holder be liable for any
+ * incidental, punitive, or consequential damages of any kind whatsoever
+ * arising from the use of these programs.
  *
- *  See details at the end of this file...
+ * This disclaimer of warranty extends to the user of these programs and user's
+ * customers, employees, agents, transferees, successors, and assigns.
  *
- * Reference (e.g.):
- *  Loeffler C., Ligtenberg A., and Moschytz C.S.:
- *    Practical Fast 1D DCT Algorithm with Eleven Multiplications,
- *  Proc. ICASSP 1989, 988-991.
+ * The MPEG Software Simulation Group does not represent or warrant that the
+ * programs furnished hereunder are free of infringement of any third-party
+ * patents.
  *
- *  IEEE-1180-like error specs for FDCT:
- * Peak error:   1.0000
- * Peak MSE:     0.0340
- * Overall MSE:  0.0200
- * Peak ME:      0.0191
- * Overall ME:   -0.0033
+ * Commercial implementations of MPEG-1 and MPEG-2 video, including shareware,
+ * are subject to royalty fees to patent holders.  Many of these patents are
+ * general enough such that they are unavoidable regardless of implementation
+ * design.
  *
- ********************************************************/
+ */
+
+/* This routine is a slow-but-accurate integer implementation of the
+ * forward DCT (Discrete Cosine Transform). Taken from the IJG software
+ *
+ * A 2-D DCT can be done by 1-D DCT on each row followed by 1-D DCT
+ * on each column.  Direct algorithms are also available, but they are
+ * much more complex and seem not to be any faster when reduced to code.
+ *
+ * This implementation is based on an algorithm described in
+ *   C. Loeffler, A. Ligtenberg and G. Moschytz, "Practical Fast 1-D DCT
+ *   Algorithms with 11 Multiplications", Proc. Int'l. Conf. on Acoustics,
+ *   Speech, and Signal Processing 1989 (ICASSP '89), pp. 988-991.
+ * The primary algorithm described there uses 11 multiplies and 29 adds.
+ * We use their alternate method with 12 multiplies and 32 adds.
+ * The advantage of this method is that no data path contains more than one
+ * multiplication; this allows a very simple and accurate implementation in
+ * scaled fixed-point arithmetic, with a minimal number of shifts.
+ *
+ * The poop on this scaling stuff is as follows:
+ *
+ * Each 1-D DCT step produces outputs which are a factor of sqrt(N)
+ * larger than the true DCT outputs.  The final outputs are therefore
+ * a factor of N larger than desired; since N=8 this can be cured by
+ * a simple right shift at the end of the algorithm.  The advantage of
+ * this arrangement is that we save two multiplications per 1-D DCT,
+ * because the y0 and y4 outputs need not be divided by sqrt(N).
+ * In the IJG code, this factor of 8 is removed by the quantization step
+ * (in jcdctmgr.c), here it is removed.
+ *
+ * We have to do addition and subtraction of the integer inputs, which
+ * is no problem, and multiplication by fractional constants, which is
+ * a problem to do in integer arithmetic.  We multiply all the constants
+ * by CONST_SCALE and convert them to integer constants (thus retaining
+ * CONST_BITS bits of precision in the constants).  After doing a
+ * multiplication we have to divide the product by CONST_SCALE, with proper
+ * rounding, to produce the correct output.  This division can be done
+ * cheaply as a right shift of CONST_BITS bits.  We postpone shifting
+ * as long as possible so that partial sums can be added together with
+ * full fractional precision.
+ *
+ * The outputs of the first pass are scaled up by PASS1_BITS bits so that
+ * they are represented to better-than-integral precision.  These outputs
+ * require 8 + PASS1_BITS + 3 bits; this fits in a 16-bit word
+ * with the recommended scaling.  (For 12-bit sample data, the intermediate
+ * array is INT32 anyway.)
+ *
+ * To avoid overflow of the 32-bit intermediate results in pass 2, we must
+ * have 8 + CONST_BITS + PASS1_BITS <= 26.  Error analysis
+ * shows that the values given below are the most effective.
+ *
+ * We can gain a little more speed, with a further compromise in accuracy,
+ * by omitting the addition in a descaling shift.  This yields an incorrectly
+ * rounded result half the time...
+ */
 
 #include "fdct.h"
+
+#define USE_ACCURATE_ROUNDING
+
+#define RIGHT_SHIFT(x, shft)  ((x) >> (shft))
+
+#ifdef USE_ACCURATE_ROUNDING
+#define ONE ((int) 1)
+#define DESCALE(x, n)  RIGHT_SHIFT((x) + (ONE << ((n) - 1)), n)
+#else
+#define DESCALE(x, n)  RIGHT_SHIFT(x, n)
+#endif
+
+#define CONST_BITS  13
+#define PASS1_BITS  2
+
+#define FIX_0_298631336  ((int)  2446)	/* FIX(0.298631336) */
+#define FIX_0_390180644  ((int)  3196)	/* FIX(0.390180644) */
+#define FIX_0_541196100  ((int)  4433)	/* FIX(0.541196100) */
+#define FIX_0_765366865  ((int)  6270)	/* FIX(0.765366865) */
+#define FIX_0_899976223  ((int)  7373)	/* FIX(0.899976223) */
+#define FIX_1_175875602  ((int)  9633)	/* FIX(1.175875602) */
+#define FIX_1_501321110  ((int) 12299)	/* FIX(1.501321110) */
+#define FIX_1_847759065  ((int) 15137)	/* FIX(1.847759065) */
+#define FIX_1_961570560  ((int) 16069)	/* FIX(1.961570560) */
+#define FIX_2_053119869  ((int) 16819)	/* FIX(2.053119869) */
+#define FIX_2_562915447  ((int) 20995)	/* FIX(2.562915447) */
+#define FIX_3_072711026  ((int) 25172)	/* FIX(3.072711026) */
 
 /* function pointer */
 fdctFuncPtr fdct;
 
 /*
-//////////////////////////////////////////////////////////
-*/
+ * Perform an integer forward DCT on one block of samples.
+ */
 
-#define BUTF(a, b, tmp) \
-  (tmp) = (a)+(b);      \
-  (b)   = (a)-(b);      \
-  (a)   = (tmp)
-
-#define LOAD_BUTF(m1, m2, a, b, tmp, S) \
-  (m1) = (S)[(a)] + (S)[(b)];           \
-  (m2) = (S)[(a)] - (S)[(b)]
-
-#define ROTATE(m1,m2,c,k1,k2,tmp,Fix,Rnd) \
-  (tmp) = ( (m1) + (m2) )*(c);            \
-  (m1) *= k1;                             \
-  (m2) *= k2;                             \
-  (tmp) += (Rnd);                         \
-  (m1) = ((m1)+(tmp))>>(Fix);             \
-  (m2) = ((m2)+(tmp))>>(Fix);
-
-#define ROTATE2(m1,m2,c,k1,k2,tmp) \
-  (tmp) = ( (m1) + (m2) )*(c);     \
-  (m1) *= k1;                      \
-  (m2) *= k2;                      \
-  (m1) = (m1)+(tmp);               \
-  (m2) = (m2)+(tmp);
-
-#define ROTATE0(m1,m2,c,k1,k2,tmp) \
-  (m1) = ( (m2) )*(c);             \
-  (m2) = (m2)*k2+(m1);
-
-#define SHIFTL(x,n)   ((x)<<(n))
-#define SHIFTR(x, n)  ((x)>>(n))
-#define HALF(n)       (1<<((n)-1))
-
-#define IPASS 3
-#define FPASS 2
-#define FIX  16
-
-#if 1
-
-#define ROT6_C     35468
-#define ROT6_SmC   50159
-#define ROT6_SpC  121095
-#define ROT17_C    77062
-#define ROT17_SmC  25571
-#define ROT17_SpC 128553
-#define ROT37_C    58981
-#define ROT37_SmC  98391
-#define ROT37_SpC  19571
-#define ROT13_C   167963
-#define ROT13_SmC 134553
-#define ROT13_SpC 201373
-
-#else
-
-#include <math.h>
-#define FX(x) ( (int)floor((x)*(1<<FIX) + .5 ) )
-
-static const double c1 = cos(1.*M_PI/16);
-static const double c2 = cos(2.*M_PI/16);
-static const double c3 = cos(3.*M_PI/16);
-static const double c4 = cos(4.*M_PI/16);
-static const double c5 = cos(5.*M_PI/16);
-static const double c6 = cos(6.*M_PI/16);
-static const double c7 = cos(7.*M_PI/16);
-
-static const int ROT6_C   = FX(c2-c6);  // 0.541
-static const int ROT6_SmC = FX(2*c6);   // 0.765
-static const int ROT6_SpC = FX(2*c2);   // 1.847
-
-static const int ROT17_C   = FX(c1+c7);  // 1.175
-static const int ROT17_SmC = FX(2*c7);   // 0.390
-static const int ROT17_SpC = FX(2*c1);   // 1.961
-
-static const int ROT37_C   = FX((c3-c7)/c4);  // 0.899
-static const int ROT37_SmC = FX(2*(c5+c7));   // 1.501
-static const int ROT37_SpC = FX(2*(c1-c3));   // 0.298
-
-static const int ROT13_C   = FX((c1+c3)/c4);  // 2.562
-static const int ROT13_SmC = FX(2*(c3+c7));   // 2.053
-static const int ROT13_SpC = FX(2*(c1+c5));   // 3.072
-
-#endif
-
-/*
-//////////////////////////////////////////////////////////
-// Forward transform 
-*/
-
-void fdct_int32( short *const In )
+void
+fdct_int32(short *const block)
 {
-  short *pIn;
-  int i;
+	int tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+	int tmp10, tmp11, tmp12, tmp13;
+	int z1, z2, z3, z4, z5;
+	short *blkptr;
+	int *dataptr;
+	int data[64];
+	int i;
 
-  pIn = In;
-  for(i=8; i>0; --i)
-  {
-    int mm0, mm1, mm2, mm3, mm4, mm5, mm6, mm7, Spill;
+	/* Pass 1: process rows. */
+	/* Note results are scaled up by sqrt(8) compared to a true DCT; */
+	/* furthermore, we scale the results by 2**PASS1_BITS. */
 
-      // even
+	dataptr = data;
+	blkptr = block;
+	for (i = 0; i < 8; i++) {
+		tmp0 = blkptr[0] + blkptr[7];
+		tmp7 = blkptr[0] - blkptr[7];
+		tmp1 = blkptr[1] + blkptr[6];
+		tmp6 = blkptr[1] - blkptr[6];
+		tmp2 = blkptr[2] + blkptr[5];
+		tmp5 = blkptr[2] - blkptr[5];
+		tmp3 = blkptr[3] + blkptr[4];
+		tmp4 = blkptr[3] - blkptr[4];
 
-    LOAD_BUTF(mm1,mm6, 1, 6, mm0, pIn);
-    LOAD_BUTF(mm2,mm5, 2, 5, mm0, pIn);
-    LOAD_BUTF(mm3,mm4, 3, 4, mm0, pIn);
-    LOAD_BUTF(mm0,mm7, 0, 7, Spill, pIn);
+		/* Even part per LL&M figure 1 --- note that published figure is faulty;
+		 * rotator "sqrt(2)*c1" should be "sqrt(2)*c6".
+		 */
 
-    BUTF(mm1, mm2, Spill);
-    BUTF(mm0, mm3, Spill);
+		tmp10 = tmp0 + tmp3;
+		tmp13 = tmp0 - tmp3;
+		tmp11 = tmp1 + tmp2;
+		tmp12 = tmp1 - tmp2;
 
-    ROTATE(mm3, mm2, ROT6_C, ROT6_SmC, -ROT6_SpC, Spill, FIX-FPASS, HALF(FIX-FPASS));
-    pIn[2] = mm3;
-    pIn[6] = mm2;
+		dataptr[0] = (tmp10 + tmp11) << PASS1_BITS;
+		dataptr[4] = (tmp10 - tmp11) << PASS1_BITS;
 
-    BUTF(mm0, mm1, Spill);
-    pIn[0] = SHIFTL(mm0, FPASS);
-    pIn[4] = SHIFTL(mm1, FPASS);
+		z1 = (tmp12 + tmp13) * FIX_0_541196100;
+		dataptr[2] =
+			DESCALE(z1 + tmp13 * FIX_0_765366865, CONST_BITS - PASS1_BITS);
+		dataptr[6] =
+			DESCALE(z1 + tmp12 * (-FIX_1_847759065), CONST_BITS - PASS1_BITS);
 
+		/* Odd part per figure 8 --- note paper omits factor of sqrt(2).
+		 * cK represents cos(K*pi/16).
+		 * i0..i3 in the paper are tmp4..tmp7 here.
+		 */
 
-      // odd
+		z1 = tmp4 + tmp7;
+		z2 = tmp5 + tmp6;
+		z3 = tmp4 + tmp6;
+		z4 = tmp5 + tmp7;
+		z5 = (z3 + z4) * FIX_1_175875602;	/* sqrt(2) * c3 */
 
-    mm3 = mm5 + mm7;
-    mm2 = mm4 + mm6;
-    ROTATE(mm2, mm3,  ROT17_C, -ROT17_SpC, -ROT17_SmC, mm0, FIX-FPASS, HALF(FIX-FPASS));
-    ROTATE(mm4, mm7, -ROT37_C,  ROT37_SpC,  ROT37_SmC, mm0, FIX-FPASS, HALF(FIX-FPASS));
-    mm7 += mm3;
-    mm4 += mm2;
-    pIn[1] = mm7;
-    pIn[7] = mm4;
+		tmp4 *= FIX_0_298631336;	/* sqrt(2) * (-c1+c3+c5-c7) */
+		tmp5 *= FIX_2_053119869;	/* sqrt(2) * ( c1+c3-c5+c7) */
+		tmp6 *= FIX_3_072711026;	/* sqrt(2) * ( c1+c3+c5-c7) */
+		tmp7 *= FIX_1_501321110;	/* sqrt(2) * ( c1+c3-c5-c7) */
+		z1 *= -FIX_0_899976223;	/* sqrt(2) * (c7-c3) */
+		z2 *= -FIX_2_562915447;	/* sqrt(2) * (-c1-c3) */
+		z3 *= -FIX_1_961570560;	/* sqrt(2) * (-c3-c5) */
+		z4 *= -FIX_0_390180644;	/* sqrt(2) * (c5-c3) */
 
-    ROTATE(mm5, mm6, -ROT13_C,  ROT13_SmC,  ROT13_SpC, mm0, FIX-FPASS, HALF(FIX-FPASS));
-    mm5 += mm3;
-    mm6 += mm2;
-    pIn[3] = mm6;
-    pIn[5] = mm5;
+		z3 += z5;
+		z4 += z5;
 
-    pIn  += 8;
-  }
+		dataptr[7] = DESCALE(tmp4 + z1 + z3, CONST_BITS - PASS1_BITS);
+		dataptr[5] = DESCALE(tmp5 + z2 + z4, CONST_BITS - PASS1_BITS);
+		dataptr[3] = DESCALE(tmp6 + z2 + z3, CONST_BITS - PASS1_BITS);
+		dataptr[1] = DESCALE(tmp7 + z1 + z4, CONST_BITS - PASS1_BITS);
 
-  pIn = In;
-  for(i=8; i>0; --i)
-  {
-    int mm0, mm1, mm2, mm3, mm4, mm5, mm6, mm7, Spill;
+		dataptr += 8;			/* advance pointer to next row */
+		blkptr += 8;
+	}
 
-      // even
+	/* Pass 2: process columns.
+	 * We remove the PASS1_BITS scaling, but leave the results scaled up
+	 * by an overall factor of 8.
+	 */
 
-    LOAD_BUTF(mm1,mm6, 1*8, 6*8, mm0, pIn);
-    LOAD_BUTF(mm2,mm5, 2*8, 5*8, mm0, pIn);
-    BUTF(mm1, mm2, mm0);
+	dataptr = data;
+	for (i = 0; i < 8; i++) {
+		tmp0 = dataptr[0] + dataptr[56];
+		tmp7 = dataptr[0] - dataptr[56];
+		tmp1 = dataptr[8] + dataptr[48];
+		tmp6 = dataptr[8] - dataptr[48];
+		tmp2 = dataptr[16] + dataptr[40];
+		tmp5 = dataptr[16] - dataptr[40];
+		tmp3 = dataptr[24] + dataptr[32];
+		tmp4 = dataptr[24] - dataptr[32];
 
-    LOAD_BUTF(mm3,mm4, 3*8, 4*8, mm0, pIn);
-    LOAD_BUTF(mm0,mm7, 0*8, 7*8, Spill, pIn);
-    BUTF(mm0, mm3, Spill);
+		/* Even part per LL&M figure 1 --- note that published figure is faulty;
+		 * rotator "sqrt(2)*c1" should be "sqrt(2)*c6".
+		 */
 
-    ROTATE(mm3, mm2, ROT6_C, ROT6_SmC, -ROT6_SpC, Spill, 0,  HALF(FIX+FPASS+3));
-    pIn[2*8] = (int16_t)SHIFTR(mm3,FIX+FPASS+3);
-    pIn[6*8] = (int16_t)SHIFTR(mm2,FIX+FPASS+3);
+		tmp10 = tmp0 + tmp3;
+		tmp13 = tmp0 - tmp3;
+		tmp11 = tmp1 + tmp2;
+		tmp12 = tmp1 - tmp2;
 
-    mm0 += HALF(FPASS+3) - 1;
-    BUTF(mm0, mm1, Spill);
-    pIn[0*8] = (int16_t)SHIFTR(mm0, FPASS+3);
-    pIn[4*8] = (int16_t)SHIFTR(mm1, FPASS+3);
+		dataptr[0] = DESCALE(tmp10 + tmp11, PASS1_BITS);
+		dataptr[32] = DESCALE(tmp10 - tmp11, PASS1_BITS);
 
-      // odd
+		z1 = (tmp12 + tmp13) * FIX_0_541196100;
+		dataptr[16] =
+			DESCALE(z1 + tmp13 * FIX_0_765366865, CONST_BITS + PASS1_BITS);
+		dataptr[48] =
+			DESCALE(z1 + tmp12 * (-FIX_1_847759065), CONST_BITS + PASS1_BITS);
 
-    mm3 = mm5 + mm7;
-    mm2 = mm4 + mm6;
+		/* Odd part per figure 8 --- note paper omits factor of sqrt(2).
+		 * cK represents cos(K*pi/16).
+		 * i0..i3 in the paper are tmp4..tmp7 here.
+		 */
 
-    ROTATE(mm2, mm3,  ROT17_C, -ROT17_SpC, -ROT17_SmC, mm0, 0, HALF(FIX+FPASS+3));
-    ROTATE2(mm4, mm7, -ROT37_C,  ROT37_SpC,  ROT37_SmC, mm0);
-    mm7 += mm3;
-    mm4 += mm2;
-    pIn[7*8] = (int16_t)SHIFTR(mm4,FIX+FPASS+3);
-    pIn[1*8] = (int16_t)SHIFTR(mm7,FIX+FPASS+3);
+		z1 = tmp4 + tmp7;
+		z2 = tmp5 + tmp6;
+		z3 = tmp4 + tmp6;
+		z4 = tmp5 + tmp7;
+		z5 = (z3 + z4) * FIX_1_175875602;	/* sqrt(2) * c3 */
 
-    ROTATE2(mm5, mm6, -ROT13_C,  ROT13_SmC,  ROT13_SpC, mm0);
-    mm5 += mm3;
-    mm6 += mm2;
-    pIn[5*8] = (int16_t)SHIFTR(mm5,FIX+FPASS+3);
-    pIn[3*8] = (int16_t)SHIFTR(mm6,FIX+FPASS+3);
+		tmp4 *= FIX_0_298631336;	/* sqrt(2) * (-c1+c3+c5-c7) */
+		tmp5 *= FIX_2_053119869;	/* sqrt(2) * ( c1+c3-c5+c7) */
+		tmp6 *= FIX_3_072711026;	/* sqrt(2) * ( c1+c3+c5-c7) */
+		tmp7 *= FIX_1_501321110;	/* sqrt(2) * ( c1+c3-c5-c7) */
+		z1 *= -FIX_0_899976223;	/* sqrt(2) * (c7-c3) */
+		z2 *= -FIX_2_562915447;	/* sqrt(2) * (-c1-c3) */
+		z3 *= -FIX_1_961570560;	/* sqrt(2) * (-c3-c5) */
+		z4 *= -FIX_0_390180644;	/* sqrt(2) * (c5-c3) */
 
-    pIn++;
-  }
+		z3 += z5;
+		z4 += z5;
+
+		dataptr[56] = DESCALE(tmp4 + z1 + z3, CONST_BITS + PASS1_BITS);
+		dataptr[40] = DESCALE(tmp5 + z2 + z4, CONST_BITS + PASS1_BITS);
+		dataptr[24] = DESCALE(tmp6 + z2 + z3, CONST_BITS + PASS1_BITS);
+		dataptr[8] = DESCALE(tmp7 + z1 + z4, CONST_BITS + PASS1_BITS);
+
+		dataptr++;				/* advance pointer to next column */
+	}
+	/* descale */
+	for (i = 0; i < 64; i++)
+		block[i] = (short int) DESCALE(data[i], 3);
 }
-#undef FIX
-#undef FPASS
-#undef IPASS
-
-#undef BUTF
-#undef LOAD_BUTF
-#undef ROTATE
-#undef ROTATE2
-#undef SHIFTL
-#undef SHIFTR
-
-//////////////////////////////////////////////////////////
-//   - Data flow schematics for FDCT -
-// Output is scaled by 2.sqrt(2)
-// Initial butterflies (in0/in7, etc.) are not fully depicted.
-// Note: Rot6 coeffs are multiplied by sqrt(2).
-//////////////////////////////////////////////////////////
-/*
- <---------Stage1 =even part=----------->
-
- in3 mm3  +_____.___-___________.____* out6
-  x              \ /            |
- in4 mm4          \             |
-                 / \            |
- in0 mm0  +_____o___+__.___-___ | ___* out4
-  x                     \ /     |
- in7 mm7                 \    (Rot6)
-                        / \     |
- in1 mm1  +_____o___+__o___+___ | ___* out0
-  x              \ /            |
- in6 mm6          /             |
-                 / \            |
- in2 mm2  +_____.___-___________o____* out2
-  x
- in5 mm5
-
- <---------Stage2 =odd part=---------------->
-
- mm7*___._________.___-___[xSqrt2]___* out3
-        |          \ /
-      (Rot3)        \
-        |          / \
- mm5*__ | ___o____o___+___.___-______* out7
-        |    |             \ /
-        |  (Rot1)           \
-        |    |             / \
- mm6*__ |____.____o___+___o___+______* out1
-        |          \ /
-        |           /
-        |          / \
- mm4*___o_________.___-___[xSqrt2]___* out5
-
-
-
-    Alternative schematics for stage 2:
-    -----------------------------------
-
- mm7 *___[xSqrt2]____o___+____o_______* out1
-                      \ /     |
-                       /    (Rot1)
-                      / \     |
- mm6 *____o___+______.___-___ | __.___* out5
-           \ /                |   |
-            /                 |   |
-           / \                |   |
- mm5 *____.___-______.___-____.__ | __* out7
-                      \ /         |
-                       \        (Rot3)
-                      / \         |
- mm4 *___[xSqrt2]____o___+________o___* out3
-
-*/

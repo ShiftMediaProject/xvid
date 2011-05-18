@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Inverse DCT header  -
  *
- *  Copyright(C) 2001-2011 Michael Militzer <michael@xvid.org>
+ *  Copyright(C) 2001-2003 Michael Militzer <isibaar@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,14 +19,12 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: idct.h,v 1.13 2008-11-26 01:04:34 Isibaar Exp $
+ * $Id$
  *
  ****************************************************************************/
 
 #ifndef _IDCT_H_
 #define _IDCT_H_
-
-#include "../portab.h"
 
 void idct_int32_init();
 void idct_ia64_init();
