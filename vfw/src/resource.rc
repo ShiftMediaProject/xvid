@@ -412,7 +412,7 @@ BEGIN
     LTEXT           "Profile",IDC_STATIC,9,6,22,8
     ICON            IDI_MOBILE,IDC_PROFILE_LOGO,10,15,20,20,SS_REALSIZEIMAGE,WS_EX_ACCEPTFILES
     LTEXT           "Profile @ Level:",IDC_PROFILE_LABEL,11,23,52,8,NOT WS_VISIBLE
-    CTEXT           "To ensure best playback of your videos, watch out for standalone video devices carrying one of the Xvid logos!",IDC_STATIC,10,194,195,18
+    CTEXT           "To ensure best playback of your videos, keep an eye out for standalone video devices carrying one of the Xvid logos!",IDC_STATIC,10,194,195,18
 END
 
 IDD_DEC DIALOG 0, 0, 212, 212
