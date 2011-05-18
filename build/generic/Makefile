@@ -68,7 +68,7 @@ VPATH     = $(SRC_DIR):$(BUILD_DIR)
 
 .SUFFIXES: .$(OBJECT_EXTENSION) .$(ASSEMBLY_EXTENSION) .c
 
-all: $(STATIC_LIB) $(SHARED_LIB)
+all: info $(STATIC_LIB) $(SHARED_LIB)
 	@echo
 	@echo "---------------------------------------------------------------"
 	@echo " Xvid has been successfully built."
