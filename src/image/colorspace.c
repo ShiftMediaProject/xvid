@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: colorspace.c,v 1.15 2009-05-13 09:39:20 Isibaar Exp $
+ * $Id$
  *
  ****************************************************************************/
 

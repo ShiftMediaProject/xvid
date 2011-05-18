@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: quant_h263_altivec.c,v 1.2 2004-12-09 23:02:54 edgomez Exp $
+ * $Id$
  *
  ****************************************************************************/
 

@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: sad.h,v 1.25.2.1 2010-12-28 19:19:57 Isibaar Exp $
+ * $Id$
  *
  ****************************************************************************/
 

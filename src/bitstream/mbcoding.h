@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: mbcoding.h,v 1.13 2004-07-10 17:49:31 edgomez Exp $
+ * $Id$
  *
  ****************************************************************************/
 

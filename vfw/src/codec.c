@@ -19,7 +19,7 @@
  *	along with this program; if not, write to the Free Software
  *	Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: codec.c,v 1.30.2.3 2011-02-16 19:04:39 Isibaar Exp $
+ * $Id$
  *
  *************************************************************************/
 

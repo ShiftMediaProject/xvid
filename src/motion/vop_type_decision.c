@@ -19,7 +19,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: vop_type_decision.c,v 1.5 2004-12-05 04:53:01 syskin Exp $
+ * $Id$
  *
  ****************************************************************************/
 

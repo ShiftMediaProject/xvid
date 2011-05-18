@@ -20,7 +20,7 @@
  *  along with this program ; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  *
- * $Id: xvid.c,v 1.85.2.3 2011-03-08 21:07:00 Isibaar Exp $
+ * $Id$
  *
  ****************************************************************************/
 
