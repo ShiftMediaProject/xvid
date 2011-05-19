@@ -36,10 +36,11 @@
 	C:\DX90SDK\Samples\C++\DirectShow\BaseClasses\Debug
 */
 
-/*
+#ifdef ENABLE_MFT
 #define XVID_USE_MFT
+#endif
+
 #define XVID_USE_TRAYICON
-*/
 
 #include <windows.h>
 
