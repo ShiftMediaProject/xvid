@@ -41,7 +41,9 @@
 ##############################################################################
 
 include sources.inc
+ifeq ($(findstring $(MAKECMDGOALS), clean distclean mrproper),)
 include platform.inc
+endif
 
 RM = rm -rf
 
