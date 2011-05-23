@@ -206,7 +206,6 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 	cpu_flags = (init->cpu_flags & XVID_CPU_FORCE) ? init->cpu_flags : detect_cpu_flags();
 
 	/* Initialize the function pointers */
-	idct_int32_init();
 	init_vlc_tables();
 
 	/* Fixed Point Forward/Inverse DCT transformations */
