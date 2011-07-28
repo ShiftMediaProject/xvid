@@ -237,7 +237,7 @@ SHARED_EXTENSION=""
 STATIC_EXTENSION=""
 OBJECT_EXTENSION=""
 case "$target_os" in
-     *bsd*|linux*|beos|irix*|solaris*)
+     *bsd*|linux*|beos|irix*|solaris*|gnu*)
 	AC_MSG_RESULT([.so .a .o])
 	STATIC_EXTENSION="a"
 	SHARED_EXTENSION="so"
@@ -281,7 +281,7 @@ SPECIFIC_CFLAGS=""
 ALTIVEC_CFLAGS=""
 PRE_SHARED_LIB=""
 case "$target_os" in
-     linux*|solaris*)
+     linux*|solaris*|gnu*)
 	AC_MSG_RESULT([ok])
 	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
 	SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR).\$(API_MINOR)"
@@ -419,7 +419,7 @@ if test "$ARCHITECTURE" = "IA32" -o "$ARCHITECTURE" = "X86_64" ; then
    if test "$found_nasm_comp_prog" = "yes" ; then
        AC_MSG_CHECKING([for asm object format])
        case "$target_os" in
-           *bsd*|linux*|beos|irix*|solaris*)
+           *bsd*|linux*|beos|irix*|solaris*|gnu*)
                if test "$ARCHITECTURE" = "X86_64" ; then
                    AC_MSG_RESULT([elf64])
                    NASM_FORMAT="elf64"
