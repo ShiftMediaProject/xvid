@@ -649,26 +649,9 @@ dnl Some gcc flags can't be used for gcc >= 3.4.0
 dnl ==========================================================================
 
 if test "$GCC" = "yes" ; then
-cat << EOF > test.c
-#include <stdio.h>
-int main(int argc, char **argv)
-{
-	if (*argv[[1]] == 'M') {
-		printf("%d", __GNUC__);
-	}
-	if (*argv[[1]] == 'm') {
-		printf("%d", __GNUC_MINOR__);
-	}
-	return 0;
-}
-EOF
-	$CC -o gcc-ver test.c
-	
-	GCC_MAJOR=`./gcc-ver M`
-	GCC_MINOR=`./gcc-ver m`
 
-	rm -f test.c
-	rm -f gcc-ver
+	GCC_MAJOR=`$CC -dumpversion | cut -d . -f 1`
+	GCC_MINOR=`$CC -dumpversion | cut -d . -f 2`
 
 	# GCC 4.x
 	if test "${GCC_MAJOR}" -gt 3 ; then
