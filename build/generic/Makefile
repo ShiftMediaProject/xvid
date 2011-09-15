@@ -141,16 +141,25 @@ $(SHARED_LIB): $(BUILD_DIR) $(OBJECTS)
 #-----------------------------------------------------------------------------
 
 install: $(BUILD_DIR)/$(STATIC_LIB) $(BUILD_DIR)/$(SHARED_LIB)
-	@echo "  D: $(libdir)"
-	@$(INSTALL) -d $(DESTDIR)$(libdir)
-	@echo "  I: $(libdir)/$(SHARED_LIB)"
-	@$(INSTALL) -m 644 $(BUILD_DIR)/$(SHARED_LIB) $(DESTDIR)$(libdir)/$(SHARED_LIB)
-	@echo "  I: $(libdir)/$(STATIC_LIB)"
-	@$(INSTALL) -m 644 $(BUILD_DIR)/$(STATIC_LIB) $(DESTDIR)$(libdir)/$(STATIC_LIB)
 	@echo "  D: $(includedir)"
 	@$(INSTALL) -d $(DESTDIR)$(includedir)
 	@echo "  I: $(includedir)/xvid.h"
 	@$(INSTALL) -m 644 $(SRC_DIR)/xvid.h $(DESTDIR)$(includedir)/xvid.h
+	@echo "  D: $(libdir)"
+	@$(INSTALL) -d $(DESTDIR)$(libdir)
+	@echo "  I: $(libdir)/$(STATIC_LIB)"
+	@$(INSTALL) -m 644 $(BUILD_DIR)/$(STATIC_LIB) $(DESTDIR)$(libdir)/$(STATIC_LIB)
+ifeq ($(SHARED_EXTENSION),dll)
+	@echo "  I: $(libdir)/$(SHARED_LIB).a"
+	@$(INSTALL) -m 644 $(BUILD_DIR)/$(SHARED_LIB).a $(DESTDIR)$(libdir)/$(SHARED_LIB).a
+	@echo "  D: $(bindir)"
+	@$(INSTALL) -d $(DESTDIR)$(bindir)
+	@echo "  I: $(bindir)/$(SHARED_LIB)"
+	@$(INSTALL) -m 755 $(BUILD_DIR)/$(SHARED_LIB) $(DESTDIR)$(bindir)/$(SHARED_LIB)
+else
+	@echo "  I: $(libdir)/$(SHARED_LIB)"
+	@$(INSTALL) -m 644 $(BUILD_DIR)/$(SHARED_LIB) $(DESTDIR)$(libdir)/$(SHARED_LIB)
+endif
 
 #-----------------------------------------------------------------------------
 # Platorm specific file -- dumb rules for people executing make before
