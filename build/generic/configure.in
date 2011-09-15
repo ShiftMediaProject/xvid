@@ -144,6 +144,12 @@ AC_PROG_RANLIB
 AC_CHECK_TOOL([AR], [ar], [ar-not-found])
 
 dnl ==========================================================================
+dnl Check for the egrep program
+dnl ==========================================================================
+
+AC_PROG_EGREP
+
+dnl ==========================================================================
 dnl
 dnl This part looks for:
 dnl
@@ -438,8 +444,16 @@ if test "$ARCHITECTURE" = "IA32" -o "$ARCHITECTURE" = "X86_64" ; then
                    AC_MSG_RESULT([win32])
                    NASM_FORMAT="win32"
                fi
-	       PREFIX="-DWINDOWS"
-	       MARK_FUNCS=""
+               PREFIX="-DWINDOWS"
+               if test "$GCC" = "yes" ; then
+                   echo 'int main(void) {return 0;}' > conftest.c
+                   $CC -S -o conftest conftest.c
+                   if test `$EGREP -c '_main:' conftest` -eq 0 ; then
+                       PREFIX="$PREFIX -DNO_PREFIX"
+                   fi
+                   rm -f conftest*
+               fi
+               MARK_FUNCS=""
                ;;
            *darwin*)
                if test "$ARCHITECTURE" = "X86_64" ; then
