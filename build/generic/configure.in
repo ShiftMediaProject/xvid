@@ -620,15 +620,35 @@ dnl
 dnl ==========================================================================
 
 if test x"$pthread" = x"yes" ; then
-   AC_CHECK_HEADER(
-	[pthread.h],
-	[AC_CHECK_LIB(
-		[pthread],
-		[pthread_create],
-		[SPECIFIC_CFLAGS="$SPECIFIC_CFLAGS -DHAVE_PTHREAD"
-		 SPECIFIC_LDFLAGS="$SPECIFIC_LDFLAGS -lpthread"],
-		AC_MSG_WARN(Pthread not supported. No SMP support))],
-	AC_MSG_WARN(Pthread not supported. No SMP support))
+	case "$target_os" in
+	    mingw32*)
+	        AC_CHECK_HEADER(
+		    [pthread.h],
+		    [AC_CHECK_LIB(
+			[pthreadGC2],
+			[pthread_create],
+			[SPECIFIC_CFLAGS="$SPECIFIC_CFLAGS -DHAVE_PTHREAD"
+			 SPECIFIC_LDFLAGS="$SPECIFIC_LDFLAGS -lpthreadGC2"],
+			[AC_CHECK_LIB(
+			    [pthread],
+			    [pthread_create],
+			    [SPECIFIC_CFLAGS="$SPECIFIC_CFLAGS -DHAVE_PTHREAD"
+			     SPECIFIC_LDFLAGS="$SPECIFIC_LDFLAGS -lpthread"],
+			    AC_MSG_WARN(Pthread not supported. No SMP support))])],
+		    AC_MSG_WARN(Pthread not supported. No SMP support))
+		;;
+	    *)
+		AC_CHECK_HEADER(
+		    [pthread.h],
+		    [AC_CHECK_LIB(
+			[pthread],
+			[pthread_create],
+			[SPECIFIC_CFLAGS="$SPECIFIC_CFLAGS -DHAVE_PTHREAD"
+			 SPECIFIC_LDFLAGS="$SPECIFIC_LDFLAGS -lpthread"],
+			AC_MSG_WARN(Pthread not supported. No SMP support))],
+		    AC_MSG_WARN(Pthread not supported. No SMP support))
+		;;
+	esac
 else
    AC_MSG_WARN(Pthread support disabled. No SMP support)
 fi
