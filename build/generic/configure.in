@@ -255,7 +255,7 @@ case "$target_os" in
 	SHARED_EXTENSION="dll"
 	OBJECT_EXTENSION="obj"
 	;;
-     darwin*|raphsody*)
+     darwin*)
 	if test x"$macosx_module" = x"yes"; then
 	   AC_MSG_RESULT([.so .a .o])
 	   SHARED_EXTENSION="so"
@@ -308,7 +308,7 @@ case "$target_os" in
 	SPECIFIC_LDFLAGS="-shared -Wl,--dll,--out-implib,\$@.a libxvidcore.def"
 	SPECIFIC_CFLAGS=""
 	;;
-     darwin*|raphsody*)
+     darwin*)
 	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
 	SPECIFIC_CFLAGS="-fPIC -fno-common -no-cpp-precomp"
 	if test x"$macosx_module" = x"no"; then
