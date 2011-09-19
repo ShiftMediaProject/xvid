@@ -150,6 +150,12 @@ dnl ==========================================================================
 AC_PROG_EGREP
 
 dnl ==========================================================================
+dnl Check how the system supports symlinks.
+dnl ==========================================================================
+
+AC_PROG_LN_S
+
+dnl ==========================================================================
 dnl
 dnl This part looks for:
 dnl
@@ -286,11 +292,15 @@ SPECIFIC_LDFLAGS=""
 SPECIFIC_CFLAGS=""
 ALTIVEC_CFLAGS=""
 PRE_SHARED_LIB=""
+SO_API_MAJOR_LINK=""
+SO_LINK=""
 case "$target_os" in
      linux*|solaris*|gnu*)
 	AC_MSG_RESULT([ok])
 	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
 	SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR).\$(API_MINOR)"
+	SO_API_MAJOR_LINK="libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR)"
+	SO_LINK="libxvidcore.\$(SHARED_EXTENSION)"
 	SPECIFIC_LDFLAGS="-Wl,-soname,libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR) -shared -Wl,--version-script=libxvidcore.ld -lc -lm"
 	SPECIFIC_CFLAGS="-fPIC"
 	;;
@@ -298,6 +308,8 @@ case "$target_os" in
 	AC_MSG_RESULT([ok])
 	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
 	SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR).\$(API_MINOR)"
+	SO_API_MAJOR_LINK="libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR)"
+	SO_LINK="libxvidcore.\$(SHARED_EXTENSION)"
 	SPECIFIC_LDFLAGS="-Wl,-soname,libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR) -shared -lc -lm"
 	SPECIFIC_CFLAGS="-fPIC"
 	;;
@@ -729,12 +741,15 @@ AC_SUBST(SPECIFIC_LDFLAGS)
 AC_SUBST(SPECIFIC_CFLAGS)
 AC_SUBST(DCT_IA64_SOURCES)
 AC_SUBST(PPC_ALTIVEC_SOURCES)
+AC_SUBST(LN_S)
 AC_SUBST(RANLIB)
 AC_SUBST(AR)
 AC_SUBST(API_MAJOR)
 AC_SUBST(API_MINOR)
 AC_SUBST(STATIC_LIB)
 AC_SUBST(PRE_SHARED_LIB)
+AC_SUBST(SO_API_MAJOR_LINK)
+AC_SUBST(SO_LINK)
 AC_SUBST(SHARED_LIB)
 AC_SUBST(ALTIVEC_CFLAGS)
 
