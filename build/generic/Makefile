@@ -159,6 +159,10 @@ ifeq ($(SHARED_EXTENSION),dll)
 else
 	@echo "  I: $(libdir)/$(SHARED_LIB)"
 	@$(INSTALL) -m 644 $(BUILD_DIR)/$(SHARED_LIB) $(DESTDIR)$(libdir)/$(SHARED_LIB)
+	@test -z "$(SO_API_MAJOR_LINK)" || \
+		$(LN_S) $(SHARED_LIB) $(DESTDIR)$(libdir)/$(SO_API_MAJOR_LINK)
+	@test -z "$(SO_LINK)" || \
+		$(LN_S) $(SHARED_LIB) $(DESTDIR)$(libdir)/$(SO_LINK)
 endif
 
 #-----------------------------------------------------------------------------

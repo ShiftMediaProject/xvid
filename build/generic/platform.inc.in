@@ -58,6 +58,7 @@ AR=@AR@
 # ============================================================================
 
 INSTALL=@INSTALL@
+LN_S=@LN_S@
 DESTDIR=
 prefix=@prefix@
 exec_prefix=@exec_prefix@
@@ -81,3 +82,5 @@ PPC_ALTIVEC_OBJECTS=$(@PPC_ALTIVEC_SOURCES@:.c=.@OBJECT_EXTENSION@)
 STATIC_LIB=@STATIC_LIB@
 SHARED_LIB=@SHARED_LIB@
 PRE_SHARED_LIB=@PRE_SHARED_LIB@
+SO_API_MAJOR_LINK=@SO_API_MAJOR_LINK@
+SO_LINK=@SO_LINK@
