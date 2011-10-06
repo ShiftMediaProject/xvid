@@ -272,7 +272,7 @@ lumi_plg_frame(lumi_data_t *handle, xvid_plg_data_t *data)
 											 data->dquant,
 											 data->mb_width*data->mb_height,
 											 data->quant,
-											 MAX(2,data->quant + data->quant/2));
+											 MAX(data->quant+2,data->quant + data->quant/2));
 
 	/* Plugin job finished */
 	return(0);
