@@ -57,7 +57,7 @@ extern "C" {
 #define XVID_API_MAJOR(a)        (((a)>>16) & 0xff)
 #define XVID_API_MINOR(a)        (((a)>> 0) & 0xff)
 
-#define XVID_VERSION             XVID_MAKE_VERSION(1,3,2)
+#define XVID_VERSION             XVID_MAKE_VERSION(1,3,3)
 #define XVID_API                 XVID_MAKE_API(4, 3)
 
 /* Bitstream Version
