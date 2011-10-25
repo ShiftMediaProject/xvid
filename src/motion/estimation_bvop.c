@@ -809,6 +809,26 @@ SearchInterpolate_final(const int x, const int y,
 	if (Data->iMinSAD[0] < *best_sad) *best_sad = Data->iMinSAD[0];
 }
 
+static void
+SearchInterpolate_final_fast(const int x, const int y,
+							 const uint32_t MotionFlags,
+							 const MBParam * const pParam,
+							 int32_t * const best_sad,
+							 SearchData * const Data)
+{
+	/* qpel refinement */
+	if (Data->qpel) {
+		Data->qpel_precision = 1;
+		get_range(&Data->min_dx, &Data->max_dx, &Data->min_dy, &Data->max_dy, 
+			x, y, 4, pParam->width, pParam->height, Data->iFcode, 2);
+		
+		Data->currentQMV[0].x = 2 * Data->currentMV[0].x;
+		Data->currentQMV[0].y = 2 * Data->currentMV[0].y;
+		Data->currentQMV[1].x = 2 * Data->currentMV[1].x;
+		Data->currentQMV[1].y = 2 * Data->currentMV[1].y;
+	}
+}
+
 static void 
 ModeDecision_BVOP_SAD(const SearchData * const Data_d,
 					  const SearchData * const Data_b,
@@ -1083,9 +1103,13 @@ MotionEstimationBVOP(MBParam * const pParam,
 								  &Data_i, Data_f.currentMV[0], Data_b.currentMV[0]);
 
 			if (((Data_i.iMinSAD[0] < best_sad +(best_sad>>3)) && !(frame->motion_flags&XVID_ME_FAST_MODEINTERPOLATE))
-				|| Data_i.iMinSAD[0] <= best_sad)
+				|| Data_i.iMinSAD[0] <= best_sad) {
 
 				SearchInterpolate_final(i, j, frame->motion_flags, pParam, &best_sad, &Data_i);
+			}
+			else {
+				SearchInterpolate_final_fast(i, j, frame->motion_flags, pParam, &best_sad, &Data_i);
+			}
 			
 			if (Data_d.iMinSAD[0] <= 2*best_sad)
 				if ((!(frame->motion_flags&XVID_ME_SKIP_DELTASEARCH) && (best_sad > 750))
