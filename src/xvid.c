@@ -367,7 +367,7 @@ int xvid_gbl_init(xvid_gbl_init_t * init)
 
 		/* Quantization related functions */
 		quant_h263_intra   = quant_h263_intra_mmx;
-                quant_h263_inter   = quant_h263_inter_mmx;
+		quant_h263_inter   = quant_h263_inter_mmx;
 		dequant_h263_intra = dequant_h263_intra_mmx;
 		dequant_h263_inter = dequant_h263_inter_mmx;
 		quant_mpeg_intra   = quant_mpeg_intra_mmx;
