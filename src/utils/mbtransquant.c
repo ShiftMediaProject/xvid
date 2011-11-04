@@ -782,7 +782,7 @@ static __inline uint32_t calc_mseh(int16_t dQ, uint16_t mask,
 
 	u = ((u + iCSF_Round[index]) * iCSF_Coeff[index]) >> 16;
 
-	return (((Lambda*u*u)>>4) + 4*Lambda*dQ*dQ) / 5;
+	return Lambda*((((u*u)>>4) + 4*(dQ*dQ))/5);
 }
 
 /* this routine has been strippen of all debug code */
