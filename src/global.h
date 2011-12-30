@@ -251,8 +251,12 @@ get_dc_scaler(uint32_t quant,
 
 /* useful macros */
 
+#ifndef MIN
 #define MIN(X, Y) ((X)<(Y)?(X):(Y))
+#endif
+#ifndef MAX
 #define MAX(X, Y) ((X)>(Y)?(X):(Y))
+#endif
 /* #define ABS(X)    (((X)>0)?(X):-(X)) */
 #define SIGN(X)   (((X)>0)?1:-1)
 #define CLIP(X,AMIN,AMAX)   (((X)<(AMIN)) ? (AMIN) : ((X)>(AMAX)) ? (AMAX) : (X))
