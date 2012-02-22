@@ -4,7 +4,7 @@
  *  - Xvid Decoder part of the DShow Filter  -
  *
  *  Copyright(C) 2002-2011 Peter Ross <pross@xvid.org>
- *               2003-2011 Michael Militzer <michael@xvid.org>
+ *               2003-2012 Michael Militzer <michael@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -39,8 +39,6 @@
 #ifdef ENABLE_MFT
 #define XVID_USE_MFT
 #endif
-
-#define XVID_USE_TRAYICON
 
 #include <windows.h>
 
@@ -177,7 +175,6 @@ CFactoryTemplate g_Templates[] =
 /* note: g_cTemplates must be global; used by strmbase.lib(dllentry.cpp,dllsetup.cpp) */
 int g_cTemplates = sizeof(g_Templates) / sizeof(CFactoryTemplate);
 
-#ifdef XVID_USE_TRAYICON
 extern HINSTANCE g_xvid_hInst;
 
 static int GUI_Page = 0;
@@ -219,7 +216,6 @@ LRESULT CALLBACK msg_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	
 	return TRUE; /* ok */
 }
-#endif
 
 STDAPI DllRegisterServer()
 {
@@ -335,6 +331,21 @@ CXvidDecoder::CXvidDecoder(LPUNKNOWN punk, HRESULT *phr) :
     LoadRegistryInfo();
 
     *phr = OpenLib();
+	
+	{
+		TCHAR lpFilename[MAX_PATH];
+		int sLen = GetModuleFileName(NULL, lpFilename, MAX_PATH);
+#ifdef _UNICODE
+		if ((sLen >= 11) && (_wcsnicmp(&(lpFilename[sLen - 11]), TEXT("dllhost.exe"), 11) == 0)) {
+#else
+		if ((sLen >= 11) && (_strnicmp(&(lpFilename[sLen - 11]), TEXT("dllhost.exe"), 11) == 0)) {
+#endif
+			if (Tray_Icon == 0) Tray_Icon = -1; // create no tray icon upon thumbnail generation
+		}
+		else
+			if (Tray_Icon == -1) Tray_Icon = 0; // can show tray icon
+	}
+
 }
 
 HRESULT CXvidDecoder::OpenLib()
@@ -496,8 +507,7 @@ CXvidDecoder::~CXvidDecoder()
 {
     DPRINTF("Destructor");
 
-#ifdef XVID_USE_TRAYICON
-	if (Tray_Icon) { /* Destroy tray icon */
+	if (Tray_Icon > 0) { /* Destroy tray icon */
 		NOTIFYICONDATA nid;
 		ZeroMemory(&nid,sizeof(NOTIFYICONDATA));
 
@@ -508,7 +518,6 @@ CXvidDecoder::~CXvidDecoder()
 		Shell_NotifyIcon(NIM_DELETE, &nid);
 		Tray_Icon = 0;
 	}
-#endif
 
 	/* Close xvidcore library */
 	CloseLib();
@@ -935,8 +944,7 @@ HRESULT CXvidDecoder::CompleteConnect(PIN_DIRECTION direction, IPin *pReceivePin
 {
 	DPRINTF("CompleteConnect");
 
-#ifdef XVID_USE_TRAYICON
-	if ((direction == PINDIR_OUTPUT) && (Tray_Icon == 0)) 
+	if ((direction == PINDIR_OUTPUT) && (Tray_Icon == 0)&& (g_config.bTrayIcon != 0)) 
 	{
 		WNDCLASSEX wc; 
 
@@ -974,7 +982,6 @@ HRESULT CXvidDecoder::CompleteConnect(PIN_DIRECTION direction, IPin *pReceivePin
 		DestroyIcon(nid.hIcon);
 		Tray_Icon = 1;
 	}
-#endif
 
 	return S_OK;
 }
@@ -1647,8 +1654,8 @@ HRESULT CXvidDecoder::MFTSetOutputType(DWORD dwOutputStreamID, IMFMediaType *pTy
 			hr = OnSetOutputType(pType);
 		}
 	}
-#ifdef XVID_USE_TRAYICON
-	if (SUCCEEDED(hr) && Tray_Icon == 0) /* Create message passing window */
+
+	if (SUCCEEDED(hr) && (Tray_Icon == 0) && (g_config.bTrayIcon != 0))  /* Create message passing window */
 	{
 		WNDCLASSEX wc; 
 
@@ -1686,7 +1693,6 @@ HRESULT CXvidDecoder::MFTSetOutputType(DWORD dwOutputStreamID, IMFMediaType *pTy
 		DestroyIcon(nid.hIcon);
 		Tray_Icon = 1;
 	}
-#endif
 
 	LeaveCriticalSection(&m_mft_lock);
 	return hr;

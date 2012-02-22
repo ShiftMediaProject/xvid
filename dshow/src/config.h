@@ -3,7 +3,7 @@
  *  XVID MPEG-4 VIDEO CODEC
  *  - Configuration processing header file -
  *
- *  Copyright(C) 2002-2011 Peter Ross <pross@xvid.org>
+ *  Copyright(C) 2002-2012 Peter Ross <pross@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -67,6 +67,7 @@ typedef struct
 	int aspect_ratio;
 	int num_threads;
 	DWORD cpu;
+	int bTrayIcon;
 } CONFIG;
 
 
