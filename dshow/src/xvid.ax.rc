@@ -29,7 +29,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 // Dialog
 //
 
-IDD_ABOUT DIALOG DISCARDABLE  0, 0, 216, 267
+IDD_ABOUT DIALOG DISCARDABLE  0, 0, 216, 296
 STYLE WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -62,7 +62,7 @@ BEGIN
     GROUPBOX        "Other MPEG-4 video support",IDC_STATIC,7,187,202,29
     CONTROL         "Other",IDC_MP4V,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     160,198,38,13
-    PUSHBUTTON      "Reset",IDC_RESET,79,252,50,12
+    PUSHBUTTON      "Reset",IDC_RESET,79,282,50,12
     LTEXT           "Output Colourspace",IDC_STATIC,136,151,67,9
     CONTROL         "Dering (UV)",IDC_DERINGUV,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,98,123,53,10
@@ -71,6 +71,9 @@ BEGIN
                     233,109,8
     COMBOBOX        IDC_USE_AR,135,230,68,95,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
+    CONTROL         "Display Tray-Icon when playing back Xvid video",IDC_TRAYICON,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,260,182,13
+    GROUPBOX        "GUI Options",IDC_STATIC,7,250,202,29
 END
 
 
