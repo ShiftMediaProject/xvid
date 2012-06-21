@@ -1936,6 +1936,7 @@ read_pgmheader(FILE * handle)
 		return (1);
 
 	fscanf(handle, "%d %d %d", &xsize, &ysize, &depth);
+	fread(&dummy, 1, 1, handle);
 	if ((xsize > 4096) || (ysize > 4096*3/2) || (depth != 255)) {
 		fprintf(stderr, "%d %d %d\n", xsize, ysize, depth);
 		return (2);
@@ -1953,7 +1954,6 @@ read_pgmdata(FILE * handle,
 			 unsigned char *image)
 {
 	int i;
-	char dummy;
 
 	unsigned char *y = image;
 	unsigned char *u = image + XDIM * YDIM;
@@ -1973,9 +1973,6 @@ read_pgmdata(FILE * handle,
 		u += XDIM / 2;
 		v += XDIM / 2;
 	}
-
-	/*  I don't know why, but this seems needed */
-	fread(&dummy, 1, 1, handle);
 
 	return (0);
 }
