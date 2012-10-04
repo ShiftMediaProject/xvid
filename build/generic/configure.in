@@ -318,7 +318,7 @@ case "$target_os" in
 	STATIC_LIB="xvidcore.\$(STATIC_EXTENSION)"
 	SHARED_LIB="xvidcore.\$(SHARED_EXTENSION)"
 	SPECIFIC_LDFLAGS="-shared -Wl,--dll,--out-implib,\$@.a libxvidcore.def"
-	SPECIFIC_CFLAGS=""
+	SPECIFIC_CFLAGS="-mno-cygwin"
 	;;
      darwin*)
 	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
@@ -706,6 +706,7 @@ if test "$GCC" = "yes" ; then
 		CFLAGS=`echo $CFLAGS | sed s,'-fmove-all-movables','',g`
 		CFLAGS=`echo $CFLAGS | sed s,'-fnew-ra','',g`
 		CFLAGS=`echo $CFLAGS | sed s,'-fwritable-strings','',g`
+                SPECIFIC_CFLAGS=`echo $SPECIFIC_CFLAGS | sed s,'-mno-cygwin','',g`
 	fi
 
 	# GCC 3.4.x
