@@ -249,7 +249,7 @@ SHARED_EXTENSION=""
 STATIC_EXTENSION=""
 OBJECT_EXTENSION=""
 case "$target_os" in
-     *bsd*|linux*|beos|irix*|solaris*|gnu*)
+     *bsd*|linux*|beos|irix*|solaris*|gnu*|*qnx*)
 	AC_MSG_RESULT([.so .a .o])
 	STATIC_EXTENSION="a"
 	SHARED_EXTENSION="so"
@@ -295,7 +295,7 @@ PRE_SHARED_LIB=""
 SO_API_MAJOR_LINK=""
 SO_LINK=""
 case "$target_os" in
-     linux*|solaris*|gnu*)
+     linux*|solaris*|gnu*|*qnx*)
 	AC_MSG_RESULT([ok])
 	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
 	SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR).\$(API_MINOR)"
@@ -437,7 +437,7 @@ if test "$ARCHITECTURE" = "IA32" -o "$ARCHITECTURE" = "X86_64" ; then
    if test "$found_nasm_comp_prog" = "yes" ; then
        AC_MSG_CHECKING([for asm object format])
        case "$target_os" in
-           *bsd*|linux*|beos|irix*|solaris*|gnu*)
+           *bsd*|linux*|beos|irix*|solaris*|gnu*|*qnx*)
                if test "$ARCHITECTURE" = "X86_64" ; then
                    AC_MSG_RESULT([elf64])
                    NASM_FORMAT="elf64"
@@ -657,7 +657,12 @@ if test x"$pthread" = x"yes" ; then
 			[pthread_create],
 			[SPECIFIC_CFLAGS="$SPECIFIC_CFLAGS -DHAVE_PTHREAD"
 			 SPECIFIC_LDFLAGS="$SPECIFIC_LDFLAGS -lpthread"],
-			AC_MSG_WARN(Pthread not supported. No SMP support))],
+		            [AC_CHECK_LIB(
+		            [c],
+		            [pthread_create],
+		            [SPECIFIC_CFLAGS="$SPECIFIC_CFLAGS -DHAVE_PTHREAD"
+		             SPECIFIC_LDFLAGS="$SPECIFIC_LDFLAGS"],
+				AC_MSG_WARN(Pthread not supported. No SMP support))])],
 		    AC_MSG_WARN(Pthread not supported. No SMP support))
 		;;
 	esac
