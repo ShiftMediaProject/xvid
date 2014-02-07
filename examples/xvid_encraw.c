@@ -1063,7 +1063,7 @@ main(int argc,
 			totalenctime = MAX(totalenctime, enc_data[k].totalenctime);
 
 			for (i=0; i < 3; i++) totalPSNR[i] += enc_data[k].totalPSNR[i];
-			for (i=0; i < 8; i++) {
+			for (i=0; i < 7; i++) {
 				int l;
 				framestats[i].count += enc_data[k].framestats[i].count;
 				framestats[i].size += enc_data[k].framestats[i].size;
@@ -1830,7 +1830,9 @@ usage()
 #ifdef XVID_AVI_OUTPUT
 	fprintf(stderr, " -avi string: save an AVI file for the complete sequence\n");
 #endif
+#ifdef XVID_MKV_OUTPUT
 	fprintf(stderr, " -mkv string: save a MKV file for the complete sequence\n");
+#endif
 	fprintf(stderr, "\n");
 	fprintf(stderr, "BFrames options:\n");
 	fprintf(stderr, " -max_bframes   integer: max bframes (2)\n");
@@ -1840,7 +1842,7 @@ usage()
 	fprintf(stderr, "Rate control options:\n");
 	fprintf(stderr, " -framerate float               : target framerate (auto)\n");
 	fprintf(stderr,	" -bitrate   [integer]           : target bitrate in kbps (700)\n");
-	fprintf(stderr, " -size      integer			 : target size in kilobytes\n");
+	fprintf(stderr, " -size      integer             : target size in kilobytes\n");
     fprintf(stderr,	" -single                        : single pass mode (default)\n");
 	fprintf(stderr, " -cq        float               : single pass constant quantizer\n");
 	fprintf(stderr, " -pass1     [filename]          : twopass mode (first pass)\n");
