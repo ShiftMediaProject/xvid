@@ -1210,7 +1210,6 @@ void encode_sequence(enc_sequence_data_t *h) {
 	PAVIFILE avi_in = NULL;
 	PAVISTREAM avi_in_stream = NULL;
  	PGETFRAME get_frame = NULL;
-	BITMAPINFOHEADER myBitmapInfoHeader;
 #else
 #define get_frame NULL
 #endif
@@ -1221,6 +1220,7 @@ void encode_sequence(enc_sequence_data_t *h) {
 	AVISTREAMINFO myAVIStreamInfo;
 #endif
 #if defined(XVID_AVI_INPUT) || defined(XVID_AVI_OUTPUT)
+	BITMAPINFOHEADER myBitmapInfoHeader;
 	if (ARG_NUM_APP_THREADS > 1)
 		CoInitializeEx(0, COINIT_MULTITHREADED);
 	AVIFileInit();
