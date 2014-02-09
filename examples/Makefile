@@ -8,9 +8,16 @@
 
 include ../build/generic/platform.inc
 
+# is make running into windows?
+ifdef SYSTEMROOT
+  EXTRALIBS = -lole32 -lavifil32 -lpthread -lm
+else
+  EXTRALIBS = -lpthread -lc -lm
+endif
+
 HDIR    = -I../src
 CFLAGS  = -g $(ARCHITECTURE) $(BUS) $(ENDIANNESS) $(FEATURES) $(SPECIFIC_CFLAGS)
-LDFLAGS = -lc -lm ../build/generic/=build/$(STATIC_LIB) -lpthread
+LDFLAGS = ../build/generic/=build/$(STATIC_LIB) $(EXTRALIBS)
 
 SOURCES= xvid_encraw.c xvid_decraw.c xvid_bench.c
 OBJECTS=$(SOURCES:.c=.o)
