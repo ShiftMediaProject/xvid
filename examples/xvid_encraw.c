@@ -126,7 +126,13 @@ static const int vop_presets[] = {
 
 #define MAX_ZONES   64
 #define MAX_ENC_INSTANCES 4
+#define MAX_XDIM 4096
+#define MAX_YDIM 4096
 #define DEFAULT_QUANT 400
+#define DEFAULT_BITRATE 700000 /* bitrate expressed in bps, not kbps */
+#define DEFAULT_INTERLACING 1  /* 1:BFF, 2:TFF */
+#define DEFAULT_SSIM 2
+#define DEFAULT_PROGRESS 10    /* show progress every 10 frames by default */
 
 typedef struct
 {
@@ -187,9 +193,7 @@ static 	int NUM_ZONES = 0;
 
 static 	int ARG_NUM_APP_THREADS = 1;
 static 	int ARG_CPU_FLAGS = 0;
-static 	int ARG_STATS = 0;
 static 	int ARG_SSIM = -1;
-static 	int ARG_PSNRHVSM = 0;
 static 	char* ARG_SSIM_PATH = NULL;
 static 	int ARG_DUMP = 0;
 static 	int ARG_LUMIMASKING = 0;
@@ -219,21 +223,12 @@ static 	int YDIM = 0;
 static 	int ARG_BQRATIO = 150;
 static 	int ARG_BQOFFSET = 100;
 static	int ARG_MAXBFRAMES = 2;
-static 	int ARG_PACKED = 1;
 static 	int ARG_DEBUG = 0;
-static 	int ARG_VOPDEBUG = 0;
-static 	int ARG_TRELLIS = 1;
 static 	int ARG_QTYPE = 0;
 static 	int ARG_QMATRIX = 0;
-static 	int ARG_GMC = 0;
 static 	int ARG_INTERLACING = 0;
-static 	int ARG_QPEL = 0;
-static 	int ARG_TURBO = 0;
 static 	int ARG_VHQMODE = 1;
-static 	int ARG_BVHQ = 0;
 static 	int ARG_QMETRIC = 0;
-static 	int ARG_CLOSED_GOP = 1;
-static 	int ARG_CHROMAME = 1;
 static 	int ARG_PAR = 1;
 static 	int ARG_PARHEIGHT;
 static 	int ARG_PARWIDTH;
@@ -263,6 +258,20 @@ static 	int ARG_PROGRESS = 0;
 static 	int ARG_COLORSPACE = XVID_CSP_YV12;
 	/* the path where to save output */
 static char filepath[256] = "./";
+
+/* on/off options */
+static  int ARG_USE_ASSEMBLER = 1;
+static  int ARG_TURBO         = 0;
+static  int ARG_BVHQ          = 0;
+static  int ARG_QPEL          = 0;
+static  int ARG_GMC           = 0;
+static  int ARG_PACKED        = 1;
+static  int ARG_CLOSED_GOP    = 1;
+static  int ARG_STATS         = 0;
+static  int ARG_PSNRHVSM      = 0;
+static  int ARG_VOPDEBUG      = 0;
+static  int ARG_CHROMAME      = 1;
+static  int ARG_TRELLIS       = 1;
 
 static 	unsigned char qmatrix_intra[64];
 static 	unsigned char qmatrix_inter[64];
@@ -345,7 +354,7 @@ main(int argc,
 
 	int input_num = 0;
 	int totalsize = 0;
-	int use_assembler = 1;
+	int use_assembler = ARG_USE_ASSEMBLER;
 	int i;
 
 	printf("xvid_encraw - raw mpeg4 bitstream encoder ");
@@ -396,7 +405,7 @@ main(int argc,
 					ARG_BITRATE *= 1000;
 			}
 			else
-				ARG_BITRATE = 700000;
+				ARG_BITRATE = DEFAULT_BITRATE;
 		} else if (strcmp("-size", argv[i]) == 0 && i < argc - 1) {
 			i++;
 			ARG_TARGETSIZE = atoi(argv[i]);
@@ -445,6 +454,8 @@ main(int argc,
 			ARG_PACKED = 2;
 		} else if (strcmp("-nochromame", argv[i]) == 0) {
 			ARG_CHROMAME = 0;
+		} else if (strcmp("-chromame", argv[i]) == 0) {
+			ARG_CHROMAME = 1;
 		} else if (strcmp("-threads", argv[i]) == 0 && i < argc -1) {
 			i++;
 			ARG_THREADS = atoi(argv[i]);
@@ -581,14 +592,18 @@ main(int argc,
 			ARG_INPUTFILE = argv[i];
 		} else if (strcmp("-stats", argv[i]) == 0) {
 			ARG_STATS = 1;
+		} else if (strcmp("-nostats", argv[i]) == 0) {
+			ARG_STATS = 0;
 		} else if (strcmp("-ssim", argv[i]) == 0) {
-			ARG_SSIM = 2;
+			ARG_SSIM = DEFAULT_SSIM;
 			if ((i < argc - 1) && (*argv[i+1] != '-')) {
 				i++;
 				ARG_SSIM = atoi(argv[i]);
 			}
 		} else if (strcmp("-psnrhvsm", argv[i]) == 0) {
 			ARG_PSNRHVSM = 1;
+		} else if (strcmp("-nopsnrhvsm", argv[i]) == 0) {
+			ARG_PSNRHVSM = 0;
 		} else if (strcmp("-ssim_file", argv[i]) == 0 && i < argc -1) {
 			i++;
 			ARG_SSIM_PATH = argv[i];
@@ -679,22 +694,34 @@ main(int argc,
 #endif
 		} else if (strcmp("-vop_debug", argv[i]) == 0) {
 			ARG_VOPDEBUG = 1;
+		} else if (strcmp("-novop_debug", argv[i]) == 0) {
+			ARG_VOPDEBUG = 0;
+		} else if (strcmp("-trellis", argv[i]) == 0) {
+			ARG_TRELLIS = 1;
 		} else if (strcmp("-notrellis", argv[i]) == 0) {
 			ARG_TRELLIS = 0;
 		} else if (strcmp("-bvhq", argv[i]) == 0) {
 			ARG_BVHQ = 1;
+		} else if (strcmp("-nobvhq", argv[i]) == 0) {
+			ARG_BVHQ = 0;
 		} else if (strcmp("-qpel", argv[i]) == 0) {
 			ARG_QPEL = 1;
+		} else if (strcmp("-noqpel", argv[i]) == 0) {
+			ARG_QPEL = 0;
 		} else if (strcmp("-turbo", argv[i]) == 0) {
 			ARG_TURBO = 1;
+		} else if (strcmp("-noturbo", argv[i]) == 0) {
+			ARG_TURBO = 0;
 		} else if (strcmp("-gmc", argv[i]) == 0) {
 			ARG_GMC = 1;
+		} else if (strcmp("-nogmc", argv[i]) == 0) {
+			ARG_GMC = 0;
 		} else if (strcmp("-interlaced", argv[i]) == 0) {
 			if ((i < argc - 1) && (*argv[i+1] != '-')) {
 				i++;
 				ARG_INTERLACING = atoi(argv[i]);
 			} else {
-				ARG_INTERLACING = 1;
+				ARG_INTERLACING = DEFAULT_INTERLACING;
 			}
 		} else if (strcmp("-noclosed_gop", argv[i]) == 0) {
 			ARG_CLOSED_GOP = 0;
@@ -752,7 +779,7 @@ main(int argc,
 			if (ARG_PROGRESS > 0)
 				i++;
 			else
-				ARG_PROGRESS = 10;
+				ARG_PROGRESS = DEFAULT_PROGRESS;
 		} else if (strcmp("-help", argv[i]) == 0) {
 			usage();
 			return (0);
@@ -767,7 +794,7 @@ main(int argc,
  *                            Arguments checking
  ****************************************************************************/
 
-	if (XDIM <= 0 || XDIM >= 4096 || YDIM <= 0 || YDIM >= 4096) {
+	if (XDIM <= 0 || XDIM >= MAX_XDIM || YDIM <= 0 || YDIM >= MAX_YDIM) {
 		fprintf(stderr,
 				"Trying to retrieve width and height from input header\n");
 		if (!ARG_INPUTTYPE)
@@ -1812,107 +1839,148 @@ usage()
 	fprintf(stderr, "xvid_encraw built at %s on %s\n", __TIME__, __DATE__);
 	fprintf(stderr, "Usage : xvid_encraw [OPTIONS]\n\n");
 	fprintf(stderr, "Input options:\n");
-	fprintf(stderr, " -i      string : input filename (stdin)\n");
+	fprintf(stderr, " -i      string  : input filename (stdin)\n");
 #ifdef XVID_AVI_INPUT
-	fprintf(stderr, " -type   integer: input data type (yuv=0, pgm=1, avi/avs=2)\n");
+	fprintf(stderr, " -type   integer : input data type (yuv=0, pgm=1, avi/avs=2) (");
 #else
-	fprintf(stderr, " -type   integer: input data type (yuv=0, pgm=1)\n");
+	fprintf(stderr, " -type   integer : input data type (yuv=0, pgm=1) (");
 #endif
-	fprintf(stderr, " -w      integer: frame width ([1.2048])\n");
-	fprintf(stderr, " -h      integer: frame height ([1.2048])\n");
-	fprintf(stderr, " -csp    string : colorspace of raw input file i420, yv12 (default)\n");
-	fprintf(stderr, " -frames integer: number of frames to encode\n");
-	fprintf(stderr, "\n");
+	fprintf(stderr, "%d)\n", ARG_INPUTTYPE);
+	fprintf(stderr, " -w      integer : frame width ([1.%d])\n", MAX_XDIM);
+	fprintf(stderr, " -h      integer : frame height ([1.%d])\n", MAX_YDIM);
+	fprintf(stderr, " -csp    string  : colorspace of raw input file i420%s, yv12%s\n", (ARG_COLORSPACE == XVID_CSP_I420)?" (default)":"", (ARG_COLORSPACE == XVID_CSP_YV12)?" (default)":"");
+	fprintf(stderr, " -frames integer : number of frames to encode (");
+	if (ARG_MAXFRAMENR==-1)
+		fprintf(stderr, "all)");
+	else
+		fprintf(stderr, "%d)", ARG_MAXFRAMENR);
+	fprintf(stderr, "\n\n");
 	fprintf(stderr, "Output options:\n");
-	fprintf(stderr, " -dump      : save decoder output\n");
-	fprintf(stderr, " -save      : save an Elementary Stream file per frame\n");
-	fprintf(stderr, " -o string  : save an Elementary Stream for the complete sequence\n");
+	fprintf(stderr, " -dump           : save decoder output\n");
+	fprintf(stderr, " -save           : save an Elementary Stream file per frame\n");
+	fprintf(stderr, " -o      string  : save an Elementary Stream for the complete sequence\n");
 #ifdef XVID_AVI_OUTPUT
-	fprintf(stderr, " -avi string: save an AVI file for the complete sequence\n");
+	fprintf(stderr, " -avi    string  : save an AVI file for the complete sequence\n");
 #endif
 #ifdef XVID_MKV_OUTPUT
-	fprintf(stderr, " -mkv string: save a MKV file for the complete sequence\n");
+	fprintf(stderr, " -mkv    string  : save a MKV file for the complete sequence\n");
 #endif
 	fprintf(stderr, "\n");
-	fprintf(stderr, "BFrames options:\n");
-	fprintf(stderr, " -max_bframes   integer: max bframes (2)\n");
-	fprintf(stderr,	" -bquant_ratio  integer: bframe quantizer ratio (150)\n");
-	fprintf(stderr,	" -bquant_offset integer: bframe quantizer offset (100)\n");
-	fprintf(stderr, "\n");
 	fprintf(stderr, "Rate control options:\n");
-	fprintf(stderr, " -framerate float               : target framerate (auto)\n");
-	fprintf(stderr,	" -bitrate   [integer]           : target bitrate in kbps (700)\n");
-	fprintf(stderr, " -size      integer             : target size in kilobytes\n");
-    fprintf(stderr,	" -single                        : single pass mode (default)\n");
-	fprintf(stderr, " -cq        float               : single pass constant quantizer\n");
-	fprintf(stderr, " -pass1     [filename]          : twopass mode (first pass)\n");
-	fprintf(stderr, " -full1pass                     : perform full first pass\n");
-	fprintf(stderr,	" -pass2     [filename]          : twopass mode (2nd pass)\n");
-	fprintf(stderr,	" -zq starting_frame float       : bitrate zone; quant\n");
-	fprintf(stderr,	" -zw starting_frame float       : bitrate zone; weight\n");
-    fprintf(stderr, " -max_key_interval integer      : maximum keyframe interval (300)\n");
-    fprintf(stderr, "\n");
+	fprintf(stderr, " -framerate        float      : target framerate (auto)\n");
+	fprintf(stderr,	" -bitrate          [integer]  : target bitrate in kbps (%d)\n", DEFAULT_BITRATE/1000);
+	fprintf(stderr, " -size             integer    : target size in kilobytes\n");
+	fprintf(stderr,	" -single                      : single pass mode%s\n", (ARG_SINGLE)?" (default)":"");
+	fprintf(stderr, " -cq               float      : single pass constant quantizer\n");
+	fprintf(stderr, " -pass1            [filename] : twopass mode (first pass)\n");
+	fprintf(stderr, " -full1pass                   : perform full quality first pass (disabled)\n");
+	fprintf(stderr,	" -pass2            [filename] : twopass mode (2nd pass)\n");
+	fprintf(stderr, " -max_key_interval integer    : maximum keyframe interval (%d)\n", ARG_MAXKEYINTERVAL);
+	fprintf(stderr,	" -zq     starting_frame float : bitrate zone; quant\n");
+	fprintf(stderr,	" -zw     starting_frame float : bitrate zone; weight\n");
+	fprintf(stderr, "\n");
 	fprintf(stderr, "Single Pass options:\n");
-	fprintf(stderr, "-reaction   integer             : reaction delay factor (16)\n");
-	fprintf(stderr, "-averaging  integer             : averaging period (100)\n");
-	fprintf(stderr, "-smoother   integer             : smoothing buffer (100)\n");
+	fprintf(stderr, " -reaction         integer    : reaction delay factor (%d)\n", ARG_REACTION);
+	fprintf(stderr, " -averaging        integer    : averaging period (%d)\n", ARG_AVERAGING);
+	fprintf(stderr, " -smoother         integer    : smoothing buffer (%d)\n", ARG_SMOOTHER);
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Second Pass options:\n");
-	fprintf(stderr, "-kboost     integer             : I frame boost (10)\n");
-	fprintf(stderr, "-kthresh    integer             : I frame reduction threshold (1)\n");
-	fprintf(stderr, "-kreduction integer             : I frame reduction amount (20)\n");
-	fprintf(stderr, "-ostrength  integer             : overflow control strength (5)\n");
-	fprintf(stderr, "-oimprove   integer             : max overflow improvement (5)\n");
-	fprintf(stderr, "-odegrade   integer             : max overflow degradation (5)\n");
-	fprintf(stderr, "-chigh      integer             : high bitrate scenes degradation (0)\n");
-	fprintf(stderr, "-clow       integer             : low bitrate scenes improvement (0)\n");
-	fprintf(stderr, "-overhead   integer             : container frame overhead (0)\n");
-	fprintf(stderr, "-vbvsize    integer             : use vbv buffer size\n");
-	fprintf(stderr, "-vbvmax     integer             : vbv max bitrate\n");
-	fprintf(stderr, "-vbvpeak    integer             : vbv peak bitrate over 1 second\n");
+	fprintf(stderr, " -kboost           integer    : I frame boost (%d)\n", ARG_KBOOST);
+	fprintf(stderr, " -kthresh          integer    : I frame reduction threshold (%d)\n", ARG_KTHRESH);
+	fprintf(stderr, " -kreduction       integer    : I frame reduction amount (%d)\n", ARG_KREDUCTION);
+	fprintf(stderr, " -ostrength        integer    : overflow control strength (%d)\n", ARG_OVERSTRENGTH);
+	fprintf(stderr, " -oimprove         integer    : max overflow improvement (%d)\n", ARG_OVERIMPROVE);
+	fprintf(stderr, " -odegrade         integer    : max overflow degradation (%d)\n", ARG_OVERDEGRADE);
+	fprintf(stderr, " -chigh            integer    : high bitrate scenes degradation (%d)\n", ARG_CHIGH);
+	fprintf(stderr, " -clow             integer    : low bitrate scenes improvement (%d)\n", ARG_CLOW);
+	fprintf(stderr, " -overhead         integer    : container frame overhead (%d)\n", ARG_OVERHEAD);
+	fprintf(stderr, " -vbvsize          integer    : use vbv buffer size\n");
+	fprintf(stderr, " -vbvmax           integer    : vbv max bitrate\n");
+	fprintf(stderr, " -vbvpeak          integer    : vbv peak bitrate over 1 second\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "BFrames options:\n");
+	fprintf(stderr, " -max_bframes      integer    : max bframes (%d)\n", ARG_MAXBFRAMES);
+	fprintf(stderr,	" -bquant_ratio     integer    : bframe quantizer ratio (%d)\n", ARG_BQRATIO);
+	fprintf(stderr,	" -bquant_offset    integer    : bframe quantizer offset (%d)\n", ARG_BQOFFSET);
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Other options\n");
-	fprintf(stderr, " -noasm                         : do not use assembly optmized code\n");
-	fprintf(stderr, " -turbo                         : use turbo presets for higher encoding speed\n");
-	fprintf(stderr, " -quality integer               : quality ([0..%d]) (6)\n", ME_ELEMENTS - 1);
-	fprintf(stderr, " -vhqmode integer               : level of R-D optimizations ([0..4]) (1)\n");
-	fprintf(stderr, " -bvhq                          : use R-D optimizations for B-frames\n");
-	fprintf(stderr, " -metric integer                : distortion metric for R-D opt (PSNR:0, PSNRHVSM: 1)\n");
-	fprintf(stderr, " -qpel                          : use quarter pixel ME\n");
-	fprintf(stderr, " -gmc                           : use global motion compensation\n");
-	fprintf(stderr, " -qtype   integer               : quantization type (H263:0, MPEG4:1) (0)\n");
-	fprintf(stderr, " -qmatrix filename              : use custom MPEG4 quantization matrix\n");
-	fprintf(stderr, " -interlaced [integer]          : interlaced encoding (BFF:1, TFF:2) (1)\n");
-	fprintf(stderr, " -nopacked                      : Disable packed mode\n");
-	fprintf(stderr, " -noclosed_gop                  : Disable closed GOP mode\n");
-	fprintf(stderr, " -masking [integer]             : HVS masking mode (None:0, Lumi:1, Variance:2) (0)\n");
-	fprintf(stderr, " -stats                         : print stats about encoded frames\n");
-	fprintf(stderr, " -ssim [integer]                : prints ssim for every frame (accurate: 0 fast: 4) (2)\n");
-	fprintf(stderr, " -ssim_file filename            : outputs the ssim stats into a file\n");
-	fprintf(stderr, " -psnrhvsm                      : prints PSNRHVSM metric for every frame\n");
-	fprintf(stderr, " -debug                         : activates xvidcore internal debugging output\n");
-	fprintf(stderr, " -vop_debug                     : print some info directly into encoded frames\n");
-	fprintf(stderr, " -nochromame                    : Disable chroma motion estimation\n");
-	fprintf(stderr, " -notrellis                     : Disable trellis quantization\n");
-	fprintf(stderr, " -imin    integer               : Minimum I Quantizer (1..31) (2)\n");
-	fprintf(stderr, " -imax    integer               : Maximum I quantizer (1..31) (31)\n");
-	fprintf(stderr, " -bmin    integer               : Minimum B Quantizer (1..31) (2)\n");
-	fprintf(stderr, " -bmax    integer               : Maximum B quantizer (1..31) (31)\n");
-	fprintf(stderr, " -pmin    integer               : Minimum P Quantizer (1..31) (2)\n");
-	fprintf(stderr, " -pmax    integer               : Maximum P quantizer (1..31) (31)\n");
-	fprintf(stderr, " -drop    integer               : Frame Drop Ratio (0..100) (0)\n");
-	fprintf(stderr, " -start   integer               : Starting frame number\n");
-	fprintf(stderr, " -threads integer               : Number of threads\n");
-	fprintf(stderr, " -slices  integer               : Number of slices\n");
-	fprintf(stderr, " -progress [integer]            : Show progress updates every n frames (10)\n");
-	fprintf(stderr, " -par     integer[:integer]     : Set Pixel Aspect Ratio.\n");
-	fprintf(stderr, "                                  1 = 1:1\n");
-	fprintf(stderr, "                                  2 = 12:11 (4:3 PAL)\n");
-	fprintf(stderr, "                                  3 = 10:11 (4:3 NTSC)\n");
-	fprintf(stderr, "                                  4 = 16:11 (16:9 PAL)\n");
-	fprintf(stderr, "                                  5 = 40:33 (16:9 NTSC)\n");
-	fprintf(stderr, "                              other = custom (width:height)\n");
-	fprintf(stderr, " -help                          : prints this help message\n");
+	if (ARG_USE_ASSEMBLER)
+		fprintf(stderr, " -noasm                       : do not use assembly optimized code (use)\n");
+	else
+		fprintf(stderr, " -asm                         : use assembly optimized code (don't use)\n");
+	if (ARG_TURBO)
+		fprintf(stderr, " -noturbo                     : do not use turbo presets for higher encoding speed (use)\n");
+	else
+		fprintf(stderr, " -turbo                       : use turbo presets for higher encoding speed (don't use)\n");
+	fprintf(stderr, " -quality          integer    : quality ([0..%d]) (%d)\n", ME_ELEMENTS - 1, ARG_QUALITY);
+	fprintf(stderr, " -vhqmode          integer    : level of R-D optimizations ([0..4]) (%d)\n", ARG_VHQMODE);
+	if (ARG_BVHQ)
+		fprintf(stderr, " -nobvhq                      : do not use R-D optimizations for B-frames (use)\n");
+	else
+		fprintf(stderr, " -bvhq                        : use R-D optimizations for B-frames (don't use)\n");
+	fprintf(stderr, " -metric           integer    : distortion metric for R-D opt (PSNR:0, PSNRHVSM:1) (%d)\n", ARG_QMETRIC);
+	if (ARG_QPEL)
+		fprintf(stderr, " -noqpel                      : do not use quarter pixel ME (use)\n");
+	else
+		fprintf(stderr, " -qpel                        : use quarter pixel ME (don't use)\n");
+	if (ARG_GMC)
+		fprintf(stderr, " -nogmc                       : do not use global motion compensation (use)\n");
+	else
+		fprintf(stderr, " -gmc                         : use global motion compensation (don't use)\n");
+	fprintf(stderr, " -qtype            integer    : quantization type (H263:0, MPEG4:1) (%d)\n", ARG_QTYPE);
+	fprintf(stderr, " -qmatrix          filename   : use custom MPEG4 quantization matrix\n");
+	fprintf(stderr, " -interlaced       [integer]  : interlaced encoding (BFF:1, TFF:2) (%d)\n", DEFAULT_INTERLACING);
+	if (ARG_PACKED)
+		fprintf(stderr, " -nopacked                    : Disable packed B-frames mode (enabled)\n");
+	else
+		fprintf(stderr, " -packed                      : Enable packed B-frames mode (disabled)\n");
+	if (ARG_CLOSED_GOP)
+		fprintf(stderr, " -noclosed_gop                : Disable closed GOP mode (enabled)\n");
+	else
+		fprintf(stderr, " -closed_gop                  : Enable closed GOP mode (disabled)\n");
+	fprintf(stderr, " -masking          [integer]  : HVS masking mode (None:0, Lumi:1, Variance:2) (%d)\n", ARG_LUMIMASKING);
+	if (ARG_STATS)
+		fprintf(stderr, " -nostats                     : do not print stats about encoded frames (print)\n");
+	else
+		fprintf(stderr, " -stats                       : print stats about encoded frames (don't print)\n");
+	fprintf(stderr, " -ssim             [integer]  : prints ssim for every frame (accurate: 0 fast: 4) (%d)\n", DEFAULT_SSIM);
+	fprintf(stderr, " -ssim_file        filename   : outputs the ssim stats into a file\n");
+	if (ARG_PSNRHVSM)
+		fprintf(stderr, " -nopsnrhvsm                  : do not print PSNRHVSM metric for every frame (print)\n");
+	else
+		fprintf(stderr, " -psnrhvsm                    : print PSNRHVSM metric for every frame (don't print)\n");
+	fprintf(stderr, " -debug            integer    : activates xvidcore internal debugging output (don't activate)\n");
+	if (ARG_VOPDEBUG)
+		fprintf(stderr, " -novop_debug                 : do not print debug info directly into encoded frames (print)\n");
+	else
+		fprintf(stderr, " -vop_debug                   : print some info directly into encoded frames (don't print)\n");
+	if (ARG_CHROMAME)
+		fprintf(stderr, " -nochromame                  : Disable chroma motion estimation (enabled)\n");
+	else
+		fprintf(stderr, " -chromame                    : Enable chroma motion estimation (disabled)\n");
+	if (ARG_TRELLIS)
+		fprintf(stderr, " -notrellis                   : Disable trellis quantization (enabled)\n");
+	else
+		fprintf(stderr, " -trellis                     : Enable trellis quantization (disabled)\n");
+	fprintf(stderr, " -imin             integer    : Minimum I Quantizer (1..31) (%d)\n", ARG_QUANTS[0]);
+	fprintf(stderr, " -imax             integer    : Maximum I quantizer (1..31) (%d)\n", ARG_QUANTS[1]);
+	fprintf(stderr, " -bmin             integer    : Minimum B Quantizer (1..31) (%d)\n", ARG_QUANTS[4]);
+	fprintf(stderr, " -bmax             integer    : Maximum B quantizer (1..31) (%d)\n", ARG_QUANTS[5]);
+	fprintf(stderr, " -pmin             integer    : Minimum P Quantizer (1..31) (%d)\n", ARG_QUANTS[2]);
+	fprintf(stderr, " -pmax             integer    : Maximum P quantizer (1..31) (%d)\n", ARG_QUANTS[3]);
+	fprintf(stderr, " -drop             integer    : Frame Drop Ratio (0..100) (%d)\n", ARG_FRAMEDROP);
+	fprintf(stderr, " -start            integer    : Starting frame number (%d)\n", ARG_STARTFRAMENR);
+	fprintf(stderr, " -threads          integer    : Number of threads (auto)\n");
+	fprintf(stderr, " -slices           integer    : Number of slices (%d)\n", ARG_SLICES);
+	fprintf(stderr, " -progress         [integer]  : Show progress updates every n frames (%d)\n", DEFAULT_PROGRESS);
+	fprintf(stderr, " -par       integer[:integer] : Set Pixel Aspect Ratio (%d)\n", ARG_PAR);
+	fprintf(stderr, "                                1 = 1:1\n");
+	fprintf(stderr, "                                2 = 12:11 (4:3 PAL)\n");
+	fprintf(stderr, "                                3 = 10:11 (4:3 NTSC)\n");
+	fprintf(stderr, "                                4 = 16:11 (16:9 PAL)\n");
+	fprintf(stderr, "                                5 = 40:33 (16:9 NTSC)\n");
+	fprintf(stderr, "                            other = custom (width:height)\n");
+	fprintf(stderr, " -help                        : prints this help message\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "NB: You can define %d zones repeating the -z[qw] option as needed.\n", MAX_ZONES);
 }
