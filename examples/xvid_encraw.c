@@ -40,10 +40,10 @@
  ************************************************************************/
 
 #include <stdio.h>
-//#include <io.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <ctype.h>
 #ifndef WIN32
 #include <sys/time.h>
 #else
@@ -253,7 +253,6 @@ static 	int ARG_VBVMAXRATE = 0;
 static 	int ARG_VBVPEAKRATE = 0;
 static 	int ARG_THREADS = 0;
 static 	int ARG_SLICES = 1;
-static 	int ARG_VFR = 0;
 static 	int ARG_PROGRESS = 0;
 static 	int ARG_COLORSPACE = XVID_CSP_YV12;
 	/* the path where to save output */
@@ -781,7 +780,38 @@ main(int argc,
 			else
 				ARG_PROGRESS = DEFAULT_PROGRESS;
 		} else if (strcmp("-help", argv[i]) == 0) {
-			usage();
+		    if (i < argc - 1 && strcmp("zones", argv[i+1]) == 0) {
+				fprintf(stderr, "Zones options\n\
+NB: You can define up to %d zones using the -zones option as described below.\n\
+\n\
+ -zones start,mode,value[,options][/start,mode,value[,options]]...\n\
+\n\
+ Parameters of a zone use the comma (,) as a delimiter. Multiple zones are\n\
+ separated by a slash (/). The end of each zone is defined by either the start\n\
+ of the following zone or the last frame of the input file.\n\
+\n\
+ start     : start frame of the zone\n\
+ mode      : weight zone = w, quantizer zone = q\n\
+ value     : depending on mode either the zone's weight or quantizer\n\
+ options   : enable certain encoder features for the zone. Each feature is\n\
+             represented by a single letter. An integer number stands for\n\
+             b-frame sensitivity. To enable multiple features at the same time\n\
+             combine the appropriate symbols without any delimiting characters.\n\
+             K = begin with keyframe\n\
+             O = enable chroma optimizer\n\
+             G = greyscale encoding\n\
+             C = cartoon mode\n\
+       integer = b-frame sensitivity\n\
+\n\
+ Example:\n\
+  to create a first zone starting at frame 0 with weight 1.0, all options\n\
+  enabled and b-frame sensitivity -5, and a second zone starting at frame 1000\n\
+  with constant quant 4 and no options enabled you would use the -zones option\n\
+  like this:\n\
+\n\
+  -zones 0,w,1.0,-5KOGC/1000,q,4\n\n", MAX_ZONES);
+			} else
+				usage();
 			return (0);
 		} else {
 			usage();
@@ -803,7 +833,7 @@ main(int argc,
 
 	if (ARG_QUALITY < 0 ) {
 		ARG_QUALITY = 0;
-	} else if (ARG_QUALITY >= ME_ELEMENTS) {
+	} else if (ARG_QUALITY >= (int) ME_ELEMENTS) {
 		ARG_QUALITY = ME_ELEMENTS - 1;
 	}
 
@@ -896,20 +926,20 @@ main(int argc,
 	      if (avi_info.fccHandler != MAKEFOURCC('Y', 'V', '1', '2')) {
 			  LONG size;
 			  fprintf(stderr, "Non YV12 input colorspace %c%c%c%c! Attempting conversion...\n",
-				  avi_info.fccHandler%256, (avi_info.fccHandler>>8)%256, (avi_info.fccHandler>>16)%256,
-				  (avi_info.fccHandler>>24)%256);
+				  (char)avi_info.fccHandler%256, (char)(avi_info.fccHandler>>8)%256, (char)(avi_info.fccHandler>>16)%256,
+				  (char)(avi_info.fccHandler>>24)%256);
 			  size = sizeof(myBitmapInfoHeader);
 			  AVIStreamReadFormat(avi_in_stream, 0, &myBitmapInfoHeader, &size);
 			  if (size==0)
 				  fprintf(stderr, "AVIStreamReadFormat read 0 bytes.\n");
 			  else {
-				  fprintf(stderr, "AVIStreamReadFormat read %d bytes.\n", size);
-				  fprintf(stderr, "width = %d, height = %d, planes = %d\n", myBitmapInfoHeader.biWidth,
-					  myBitmapInfoHeader.biHeight, myBitmapInfoHeader.biPlanes);
+				  fprintf(stderr, "AVIStreamReadFormat read %d bytes.\n", (int)size);
+				  fprintf(stderr, "width = %d, height = %d, planes = %d\n", (int)myBitmapInfoHeader.biWidth,
+					  (int)myBitmapInfoHeader.biHeight, myBitmapInfoHeader.biPlanes);
 				  fprintf(stderr, "Compression = %c%c%c%c, %d\n",
-					  myBitmapInfoHeader.biCompression%256, (myBitmapInfoHeader.biCompression>>8)%256,
-					  (myBitmapInfoHeader.biCompression>>16)%256, (myBitmapInfoHeader.biCompression>>24)%256,
-					  myBitmapInfoHeader.biCompression);
+					  (char)myBitmapInfoHeader.biCompression%256, (char)(myBitmapInfoHeader.biCompression>>8)%256,
+					  (char)(myBitmapInfoHeader.biCompression>>16)%256, (char)(myBitmapInfoHeader.biCompression>>24)%256,
+					  (int)myBitmapInfoHeader.biCompression);
 				  fprintf(stderr, "Bits Per Pixel = %d\n", myBitmapInfoHeader.biBitCount);
 				  myBitmapInfoHeader.biCompression = MAKEFOURCC('Y', 'V', '1', '2');
 				  myBitmapInfoHeader.biBitCount = 12;
@@ -963,7 +993,6 @@ main(int argc,
 #endif
 		{
 			FILE *in_file = fopen(ARG_INPUTFILE, "rb");
-			int pos = 0;
 			if (in_file == NULL) {
 				fprintf(stderr, "Error opening input file %s\n", ARG_INPUTFILE);
 				return (-1);
@@ -1214,7 +1243,6 @@ void encode_sequence(enc_sequence_data_t *h) {
 
 	int result;
 	int output_num;
-	int nvop_counter;
 	int m4v_size;
 	int key;
 	int stats_type;
@@ -1295,20 +1323,20 @@ void encode_sequence(enc_sequence_data_t *h) {
 	      if (avi_info.fccHandler != MAKEFOURCC('Y', 'V', '1', '2')) {
 			  LONG size;
 			  fprintf(stderr, "Non YV12 input colorspace %c%c%c%c! Attempting conversion...\n",
-				  avi_info.fccHandler%256, (avi_info.fccHandler>>8)%256, (avi_info.fccHandler>>16)%256,
-				  (avi_info.fccHandler>>24)%256);
+				  (char)avi_info.fccHandler%256, (char)(avi_info.fccHandler>>8)%256, (char)(avi_info.fccHandler>>16)%256,
+				  (char)(avi_info.fccHandler>>24)%256);
 			  size = sizeof(myBitmapInfoHeader);
 			  AVIStreamReadFormat(avi_in_stream, 0, &myBitmapInfoHeader, &size);
 			  if (size==0)
 				  fprintf(stderr, "AVIStreamReadFormat read 0 bytes.\n");
 			  else {
-				  fprintf(stderr, "AVIStreamReadFormat read %d bytes.\n", size);
-				  fprintf(stderr, "width = %d, height = %d, planes = %d\n", myBitmapInfoHeader.biWidth,
-					  myBitmapInfoHeader.biHeight, myBitmapInfoHeader.biPlanes);
+				  fprintf(stderr, "AVIStreamReadFormat read %d bytes.\n", (int)size);
+				  fprintf(stderr, "width = %d, height = %d, planes = %d\n", (int)myBitmapInfoHeader.biWidth,
+					  (int)myBitmapInfoHeader.biHeight, myBitmapInfoHeader.biPlanes);
 				  fprintf(stderr, "Compression = %c%c%c%c, %d\n",
-					  myBitmapInfoHeader.biCompression%256, (myBitmapInfoHeader.biCompression>>8)%256,
-					  (myBitmapInfoHeader.biCompression>>16)%256, (myBitmapInfoHeader.biCompression>>24)%256,
-					  myBitmapInfoHeader.biCompression);
+					  (char)myBitmapInfoHeader.biCompression%256, (char)(myBitmapInfoHeader.biCompression>>8)%256,
+					  (char)(myBitmapInfoHeader.biCompression>>16)%256, (char)(myBitmapInfoHeader.biCompression>>24)%256,
+					  (int)myBitmapInfoHeader.biCompression);
 				  fprintf(stderr, "Bits Per Pixel = %d\n", myBitmapInfoHeader.biBitCount);
 				  myBitmapInfoHeader.biCompression = MAKEFOURCC('Y', 'V', '1', '2');
 				  myBitmapInfoHeader.biBitCount = 12;
@@ -1438,12 +1466,12 @@ void encode_sequence(enc_sequence_data_t *h) {
 			myAVIStreamInfo.dwQuality = 10000;
 			SetRect(&myAVIStreamInfo.rcFrame, 0, 0, XDIM, YDIM);
 
-			if (avierr=AVIFileOpen(&myAVIFile, ARG_AVIOUTPUTFILE, OF_CREATE|OF_WRITE, NULL)) {
+			if ((avierr=AVIFileOpen(&myAVIFile, ARG_AVIOUTPUTFILE, OF_CREATE|OF_WRITE, NULL))) {
 				fprintf(stderr, "AVIFileOpen failed opening output file %s, error code %d\n", ARG_AVIOUTPUTFILE, avierr);
 				goto release_all;
 			}
 
-			if (avierr=AVIFileCreateStream(myAVIFile, &myAVIStream, &myAVIStreamInfo)) {
+			if ((avierr=AVIFileCreateStream(myAVIFile, &myAVIStream, &myAVIStreamInfo))) {
 				fprintf(stderr, "AVIFileCreateStream failed, error code %d\n", avierr);
 				goto release_all;
 			}
@@ -1456,7 +1484,7 @@ void encode_sequence(enc_sequence_data_t *h) {
 			myBitmapInfoHeader.biCompression = MAKEFOURCC('X', 'V', 'I', 'D');
 			myBitmapInfoHeader.biBitCount = 12;
 			myBitmapInfoHeader.biSizeImage = 6*XDIM*YDIM;
-			if (avierr=AVIStreamSetFormat(myAVIStream, 0, &myBitmapInfoHeader, sizeof(BITMAPINFOHEADER))) {
+			if ((avierr=AVIStreamSetFormat(myAVIStream, 0, &myBitmapInfoHeader, sizeof(BITMAPINFOHEADER)))) {
 				fprintf(stderr, "AVIStreamSetFormat failed, error code %d\n", avierr);
 				goto release_all;
 			}
@@ -1508,8 +1536,6 @@ void encode_sequence(enc_sequence_data_t *h) {
 
 	input_num = 0;                      /* input frame counter */
 	output_num = start_num;             /* output frame counter */
-
-	nvop_counter = 0;
 
 	do {
 
@@ -1876,6 +1902,7 @@ usage()
 	fprintf(stderr, " -full1pass                   : perform full quality first pass (disabled)\n");
 	fprintf(stderr,	" -pass2            [filename] : twopass mode (2nd pass)\n");
 	fprintf(stderr, " -max_key_interval integer    : maximum keyframe interval (%d)\n", ARG_MAXKEYINTERVAL);
+	fprintf(stderr, " -zones            [zones]    : use `-help zones' for usage guidelines\n");
 	fprintf(stderr,	" -zq     starting_frame float : bitrate zone; quant\n");
 	fprintf(stderr,	" -zw     starting_frame float : bitrate zone; weight\n");
 	fprintf(stderr, "\n");
@@ -1931,58 +1958,58 @@ usage()
 	fprintf(stderr, " -qmatrix          filename   : use custom MPEG4 quantization matrix\n");
 	fprintf(stderr, " -interlaced       [integer]  : interlaced encoding (BFF:1, TFF:2) (%d)\n", DEFAULT_INTERLACING);
 	if (ARG_PACKED)
-		fprintf(stderr, " -nopacked                    : Disable packed B-frames mode (enabled)\n");
+		fprintf(stderr, " -nopacked                    : disable packed B-frames mode (enabled)\n");
 	else
-		fprintf(stderr, " -packed                      : Enable packed B-frames mode (disabled)\n");
+		fprintf(stderr, " -packed                      : enable packed B-frames mode (disabled)\n");
 	if (ARG_CLOSED_GOP)
-		fprintf(stderr, " -noclosed_gop                : Disable closed GOP mode (enabled)\n");
+		fprintf(stderr, " -noclosed_gop                : disable closed GOP mode (enabled)\n");
 	else
-		fprintf(stderr, " -closed_gop                  : Enable closed GOP mode (disabled)\n");
+		fprintf(stderr, " -closed_gop                  : enable closed GOP mode (disabled)\n");
 	fprintf(stderr, " -masking          [integer]  : HVS masking mode (None:0, Lumi:1, Variance:2) (%d)\n", ARG_LUMIMASKING);
 	if (ARG_STATS)
 		fprintf(stderr, " -nostats                     : do not print stats about encoded frames (print)\n");
 	else
 		fprintf(stderr, " -stats                       : print stats about encoded frames (don't print)\n");
-	fprintf(stderr, " -ssim             [integer]  : prints ssim for every frame (accurate: 0 fast: 4) (%d)\n", DEFAULT_SSIM);
-	fprintf(stderr, " -ssim_file        filename   : outputs the ssim stats into a file\n");
+	fprintf(stderr, " -ssim             [integer]  : print ssim for every frame (accurate: 0 fast: 4) (%d)\n", DEFAULT_SSIM);
+	fprintf(stderr, " -ssim_file        filename   : output the ssim stats into a file\n");
 	if (ARG_PSNRHVSM)
 		fprintf(stderr, " -nopsnrhvsm                  : do not print PSNRHVSM metric for every frame (print)\n");
 	else
 		fprintf(stderr, " -psnrhvsm                    : print PSNRHVSM metric for every frame (don't print)\n");
-	fprintf(stderr, " -debug            integer    : activates xvidcore internal debugging output (don't activate)\n");
+	fprintf(stderr, " -debug            integer    : activate xvidcore internal debugging output (don't activate)\n");
 	if (ARG_VOPDEBUG)
 		fprintf(stderr, " -novop_debug                 : do not print debug info directly into encoded frames (print)\n");
 	else
 		fprintf(stderr, " -vop_debug                   : print some info directly into encoded frames (don't print)\n");
 	if (ARG_CHROMAME)
-		fprintf(stderr, " -nochromame                  : Disable chroma motion estimation (enabled)\n");
+		fprintf(stderr, " -nochromame                  : disable chroma motion estimation (enabled)\n");
 	else
-		fprintf(stderr, " -chromame                    : Enable chroma motion estimation (disabled)\n");
+		fprintf(stderr, " -chromame                    : enable chroma motion estimation (disabled)\n");
 	if (ARG_TRELLIS)
-		fprintf(stderr, " -notrellis                   : Disable trellis quantization (enabled)\n");
+		fprintf(stderr, " -notrellis                   : disable trellis quantization (enabled)\n");
 	else
-		fprintf(stderr, " -trellis                     : Enable trellis quantization (disabled)\n");
-	fprintf(stderr, " -imin             integer    : Minimum I Quantizer (1..31) (%d)\n", ARG_QUANTS[0]);
-	fprintf(stderr, " -imax             integer    : Maximum I quantizer (1..31) (%d)\n", ARG_QUANTS[1]);
-	fprintf(stderr, " -bmin             integer    : Minimum B Quantizer (1..31) (%d)\n", ARG_QUANTS[4]);
-	fprintf(stderr, " -bmax             integer    : Maximum B quantizer (1..31) (%d)\n", ARG_QUANTS[5]);
-	fprintf(stderr, " -pmin             integer    : Minimum P Quantizer (1..31) (%d)\n", ARG_QUANTS[2]);
-	fprintf(stderr, " -pmax             integer    : Maximum P quantizer (1..31) (%d)\n", ARG_QUANTS[3]);
-	fprintf(stderr, " -drop             integer    : Frame Drop Ratio (0..100) (%d)\n", ARG_FRAMEDROP);
-	fprintf(stderr, " -start            integer    : Starting frame number (%d)\n", ARG_STARTFRAMENR);
-	fprintf(stderr, " -threads          integer    : Number of threads (auto)\n");
-	fprintf(stderr, " -slices           integer    : Number of slices (%d)\n", ARG_SLICES);
-	fprintf(stderr, " -progress         [integer]  : Show progress updates every n frames (%d)\n", DEFAULT_PROGRESS);
-	fprintf(stderr, " -par       integer[:integer] : Set Pixel Aspect Ratio (%d)\n", ARG_PAR);
+		fprintf(stderr, " -trellis                     : enable trellis quantization (disabled)\n");
+	fprintf(stderr, " -imin             integer    : minimum I Quantizer (1..31) (%d)\n", ARG_QUANTS[0]);
+	fprintf(stderr, " -imax             integer    : maximum I quantizer (1..31) (%d)\n", ARG_QUANTS[1]);
+	fprintf(stderr, " -bmin             integer    : minimum B Quantizer (1..31) (%d)\n", ARG_QUANTS[4]);
+	fprintf(stderr, " -bmax             integer    : maximum B quantizer (1..31) (%d)\n", ARG_QUANTS[5]);
+	fprintf(stderr, " -pmin             integer    : minimum P Quantizer (1..31) (%d)\n", ARG_QUANTS[2]);
+	fprintf(stderr, " -pmax             integer    : maximum P quantizer (1..31) (%d)\n", ARG_QUANTS[3]);
+	fprintf(stderr, " -drop             integer    : frame Drop Ratio (0..100) (%d)\n", ARG_FRAMEDROP);
+	fprintf(stderr, " -start            integer    : starting frame number (%d)\n", ARG_STARTFRAMENR);
+	fprintf(stderr, " -threads          integer    : number of threads (auto)\n");
+	fprintf(stderr, " -slices           integer    : number of slices (%d)\n", ARG_SLICES);
+	fprintf(stderr, " -progress         [integer]  : show progress updates every n frames (%d)\n", DEFAULT_PROGRESS);
+	fprintf(stderr, " -par       integer[:integer] : set Pixel Aspect Ratio (%d)\n", ARG_PAR);
 	fprintf(stderr, "                                1 = 1:1\n");
 	fprintf(stderr, "                                2 = 12:11 (4:3 PAL)\n");
 	fprintf(stderr, "                                3 = 10:11 (4:3 NTSC)\n");
 	fprintf(stderr, "                                4 = 16:11 (16:9 PAL)\n");
 	fprintf(stderr, "                                5 = 40:33 (16:9 NTSC)\n");
 	fprintf(stderr, "                            other = custom (width:height)\n");
-	fprintf(stderr, " -help                        : prints this help message\n");
+	fprintf(stderr, " -help                        : print this help message\n");
 	fprintf(stderr, "\n");
-	fprintf(stderr, "NB: You can define %d zones repeating the -z[qw] option as needed.\n", MAX_ZONES);
+	fprintf(stderr, "NB: You can define up to %d zones via both the -zones and the -z[qw] options as needed.\n", MAX_ZONES);
 }
 
 /*****************************************************************************
@@ -2105,6 +2132,7 @@ read_yuvdata(FILE * handle,
 
 /* sample plugin */
 
+#if 0
 int
 rawenc_debug(void *handle,
 			 int opt,
@@ -2144,7 +2172,7 @@ rawenc_debug(void *handle,
 
 	return XVID_ERR_FAIL;
 }
-
+#endif
 
 #define FRAMERATE_INCR 1001
 
