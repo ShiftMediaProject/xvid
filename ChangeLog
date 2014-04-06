@@ -1,5 +1,164 @@
 # Note that this ChangeLog covers only changes to the release branch
 
+2014-03-05 08:37  Isibaar
+
+	* xvidcore/examples/xvid_encraw.c: Help info about zones usage and
+	  various fixes for compiler warnings - Patch by Elio Blanca
+
+2014-02-11 14:48  Isibaar
+
+	* xvidcore/examples/xvid_encraw.c: Improved help texts and defaults
+	  handling. Patch by Elio Blanca.
+
+2014-02-09 16:51  Isibaar
+
+	* xvidcore/examples/Makefile, xvidcore/examples/xvid_encraw.c:
+	  Better environment detection for Makefile - Patch by Elio Blanca
+
+2014-02-07 16:00  Isibaar
+
+	* xvidcore/examples/xvid_encraw.c: Fix out of bound access to
+	  framestats struct. Thanks to Elio Blanca.
+
+2013-02-18 16:24  Isibaar
+
+	* xvidcore/build/generic/configure.in: bring version number in
+	  configure.in in sync with rest of code
+
+2013-01-29 19:12  Isibaar
+
+	* xvidcore/build/generic/configure.in: Patch for QNX support by
+	  Mike Gorchak
+
+2012-10-04 14:26  Isibaar
+
+	* xvidcore/build/generic/configure.in: remove obsolete
+	  '-mno-cygwin' option for gcc version >= 4
+
+2012-06-21 09:55  Isibaar
+
+	* xvidcore/examples/xvid_encraw.c: Fixed bug in PGM header parser -
+	  thanks to Jim Bennett!
+
+2012-02-22 19:00  Isibaar
+
+	* xvidcore/dshow/src/CXvidDecoder.cpp,
+	  xvidcore/dshow/src/CXvidDecoder.h, xvidcore/dshow/src/config.c,
+	  xvidcore/dshow/src/config.h, xvidcore/dshow/src/resource.h,
+	  xvidcore/dshow/src/xvid.ax.rc: Ported tray icon patch from HEAD
+	  branch
+
+2011-12-30 13:04  Isibaar
+
+	* xvidcore/src/global.h: #define MIN/MAX macros only when not yet
+	  otherwise defined...
+
+2011-11-09 14:12  Isibaar
+
+	* xvidcore/src/plugins/plugin_lumimasking.c: Reverted change to
+	  max_quant calculation. Users prefer the former behavior...
+
+2011-11-04 15:23  Isibaar
+
+	* xvidcore/src/utils/mbtransquant.c, xvidcore/src/xvid.c,
+	  xvidcore/src/xvid.h: Fix for possible overflow in trellis
+	  quant...
+
+2011-10-25 10:57  Isibaar
+
+	* xvidcore/src/xvid.c, xvidcore/src/xvid.h: Ramp up version
+	  number...
+
+2011-10-25 10:53  Isibaar
+
+	* xvidcore/src/motion/estimation_bvop.c: Fix for encoder crash that
+	  is possible with the following combination of encoder options:
+	  Turbo, VHQ for B-VOPs and Qpel...
+
+2011-10-06 18:05  Isibaar
+
+	* xvidcore/src/plugins/plugin_lumimasking.c: Make sure max_quant is
+	  at least frame_quant+2 for lumi/variance masking
+
+2011-09-19 09:32  Isibaar
+
+	* xvidcore/build/generic/Makefile,
+	  xvidcore/build/generic/configure.in,
+	  xvidcore/build/generic/platform.inc.in: Install symlinks for
+	  shared library. Patch by Andres Mejia.
+
+2011-09-19 08:18  Isibaar
+
+	* xvidcore/build/generic/configure.in: Remove rhapsody OS case.
+	  Patch by Ryan Schmidt.
+
+2011-09-16 12:34  Isibaar
+
+	* xvidcore/build/generic/configure.in: Double check for pthread on
+	  MinGW. Patch by Motofumi Oka.
+
+2011-09-15 10:36  Isibaar
+
+	* xvidcore/build/generic/Makefile,
+	  xvidcore/build/generic/platform.inc.in: install xvidcore.dll to
+	  under Cygwin. Patch by Motofumi Oka.
+
+2011-09-15 09:34  Isibaar
+
+	* xvidcore/build/generic/configure.in: Try to autodetect name
+	  mangling variations for WIN64 cross-compiling. Patch by Motofumi
+	  Oka.
+
+2011-09-14 15:08  Isibaar
+
+	* xvidcore/build/generic/configure.in: removed obsolete -mno-cygwin
+
+2011-09-14 10:45  Isibaar
+
+	* xvidcore/build/generic/configure.in: platform-independent gcc
+	  versio check - patch by Motofumi Oka
+
+2011-08-19 16:20  Isibaar
+
+	* xvidcore/build/generic/configure.in,
+	  xvidcore/build/generic/platform.inc.in: User-supplied LDFLAGS.
+	  Patch by Ryan Schmidt and the MacPorts project.
+
+2011-07-28 07:48  Isibaar
+
+	* xvidcore/build/generic/configure.in: Added support for GNU Hurd
+	  as target_os
+
+2011-05-23 07:47  Isibaar
+
+	* xvidcore/src/xvid.c: removed deprecated call to idct_int32_init()
+
+2011-05-21 16:55  Isibaar
+
+	* xvidcore/ChangeLog: Updated ChangeLog
+
+2011-05-19 12:48  Isibaar
+
+	* xvidcore/dshow/src/CAbout.cpp,
+	  xvidcore/dshow/src/CXvidDecoder.cpp,
+	  xvidcore/dshow/src/Configure.cpp: autoprops property set also for
+	  .cpp files
+
+2011-05-19 12:24  Isibaar
+
+	* xvidcore/dshow/src/CXvidDecoder.cpp: Added #ifdef ENABLE_MFT
+	  check
+
+2011-05-19 12:23  Isibaar
+
+	* xvidcore/dshow/dshow.vcproj: Added special configurations for
+	  MFT-enabled builds
+
+2011-05-19 08:27  Isibaar
+
+	* xvidcore/build/generic/Makefile: Don't include platform.inc on
+	  make clean - Patch by Fabian Greffrath
+
 2011-05-18 16:13  Isibaar
 
 	* xvidcore/dshow/src/CXvidDecoder.cpp, xvidcore/dshow/src/config.c,
