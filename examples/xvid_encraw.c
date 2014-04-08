@@ -6,7 +6,7 @@
  *  Copyright(C) 2002-2003 Christoph Lampert <gruel@web.de>
  *               2002-2003 Edouard Gomez <ed.gomez@free.fr>
  *               2003      Peter Ross <pross@xvid.org>
- *               2003-2010 Michael Militzer <isibaar@xvid.org>
+ *               2003-2014 Michael Militzer <isibaar@xvid.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
