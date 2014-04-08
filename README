@@ -4,13 +4,14 @@
 Xvid is a high performance and high quality MPEG-4 video de-/encoding
 solution.
 
-The Xvid package currently consists of three parts:
+The Xvid package currently consists of four parts:
 
-- xvidcore: the main MPEG-4 de-/encoding library, and simple example
-            programs
+- xvidcore: the main MPEG-4 de-/encoding library.
+
+- examples: xvid_decraw and xvid_encraw de-/encoder example programs.
 - dshow: windows direct show decoder filter which links against
          xvidcore to allow MPEG-4 playback on Windows based OS.
-- vfw: video for windows GUI
+- vfw: video for windows GUI.
 
 
 2) Documentation
@@ -24,6 +25,6 @@ The Xvid package currently consists of three parts:
 ------------
 
 - Xvid is licensed as a whole under the terms of the Xvid license
-  described in the file LICENSE This is true for all files belonging
+  described in the file LICENSE. This is true for all files belonging
   to Xvid except for those which specifically carry a different
   license header.
