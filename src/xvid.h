@@ -3,7 +3,7 @@
  * XVID MPEG-4 VIDEO CODEC
  * - Xvid Main header file -
  *
- *  Copyright(C) 2001-2011 Peter Ross <pross@xvid.org>
+ *  Copyright(C) 2001-2014 Peter Ross <pross@xvid.org>
  *
  *  This program is free software ; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
