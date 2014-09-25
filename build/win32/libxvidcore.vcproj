@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="9,00"
 	Name="libxvidcore"
 	ProjectGUID="{64954A96-C813-4A92-87AD-DD733A5404AF}"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -51,7 +52,7 @@
 				AdditionalOptions="/Qipo "
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				PreprocessorDefinitions="NDEBUG;ARCH_IS_IA32;WIN32;_WINDOWS;ARCH_IS_32BIT;_CRT_SECURE_NO_WARNINGS"
+				PreprocessorDefinitions="NDEBUG;HAVE_PTHREAD;ARCH_IS_IA32;WIN32;_WINDOWS;ARCH_IS_32BIT;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -82,6 +83,8 @@
 				ModuleDefinitionFile="..\generic\libxvidcore.def"
 				ProgramDatabaseFile=".\Release/xvidcore.pdb"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary="bin\xvidcore.dll.a"
 				TargetMachine="1"
 			/>
@@ -104,9 +107,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -147,7 +147,7 @@
 				AdditionalOptions="/Qipo "
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				PreprocessorDefinitions="NDEBUG;ARCH_IS_X86_64;WIN32;_WINDOWS;ARCH_IS_64BIT;_CRT_SECURE_NO_WARNINGS"
+				PreprocessorDefinitions="NDEBUG;HAVE_PTHREAD;ARCH_IS_X86_64;WIN32;_WINDOWS;ARCH_IS_64BIT;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -178,6 +178,8 @@
 				ModuleDefinitionFile="..\generic\libxvidcore.def"
 				ProgramDatabaseFile="$(IntDir)/xvidcore.pdb"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary="bin\x64\xvidcore.dll.a"
 				TargetMachine="17"
 			/>
@@ -200,9 +202,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -241,7 +240,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;ARCH_IS_32BIT;ARCH_IS_IA32;_CRT_SECURE_NO_WARNINGS"
+				PreprocessorDefinitions="_DEBUG;HAVE_PTHREAD;WIN32;_WINDOWS;ARCH_IS_32BIT;ARCH_IS_IA32;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -274,6 +273,8 @@
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/xvidcore.pdb"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary="bin\xvidcore.dll.a"
 				TargetMachine="1"
 			/>
@@ -296,9 +297,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -337,7 +335,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;ARCH_IS_64BIT;ARCH_IS_X86_64;_CRT_SECURE_NO_WARNINGS"
+				PreprocessorDefinitions="_DEBUG;HAVE_PTHREAD;WIN32;_WINDOWS;ARCH_IS_64BIT;ARCH_IS_X86_64;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -370,6 +368,8 @@
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(IntDir)\xvidcore.pdb"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary="bin\x64\xvidcore.dll.a"
 				TargetMachine="17"
 			/>
@@ -392,9 +392,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -428,11 +425,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\README"
+				RelativePath="..\..\doc\README"
 				>
 			</File>
 			<File
-				RelativePath="..\..\doc\README"
+				RelativePath="..\..\README"
 				>
 			</File>
 			<File
@@ -3455,10 +3452,6 @@
 					/>
 				</FileConfiguration>
 			</File>
- 			<File
-				RelativePath="..\..\src\plugins\plugin_psnrhvsm.c"
-			>
-			</File>
 			<File
 				RelativePath="..\..\src\plugins\plugin_psnr.c"
 				>
@@ -3494,6 +3487,10 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\src\plugins\plugin_psnrhvsm.c"
+				>
 			</File>
 			<File
 				RelativePath="..\..\src\plugins\plugin_single.c"
