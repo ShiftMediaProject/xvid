@@ -1,0 +1,828 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="DebugDLL|Win32">
+      <Configuration>DebugDLL</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugDLL|x64">
+      <Configuration>DebugDLL</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseDLL|Win32">
+      <Configuration>ReleaseDLL</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseDLL|x64">
+      <Configuration>ReleaseDLL</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseLTO|Win32">
+      <Configuration>ReleaseLTO</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseLTO|x64">
+      <Configuration>ReleaseLTO</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{E0889360-2F17-4D9C-A185-A5C51EA8073B}</ProjectGuid>
+    <RootNamespace>libxvidcore</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLTO|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLTO|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\vsyasm.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLTO|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLTO|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>..\..\..\msvc32\</OutDir>
+    <IntDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <TargetName>libxvidcored</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IntDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <TargetName>libxvidcored</TargetName>
+    <OutDir>..\..\..\msvc64\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|Win32'">
+    <OutDir>..\..\..\msvc32\</OutDir>
+    <IntDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <TargetName>libxvidcored</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|x64'">
+    <IntDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <TargetName>libxvidcored</TargetName>
+    <OutDir>..\..\..\msvc64\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>..\..\..\msvc32\</OutDir>
+    <IntDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <TargetName>libxvidcore</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLTO|Win32'">
+    <OutDir>..\..\..\msvc32\</OutDir>
+    <IntDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <TargetName>libxvidcore</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IntDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <TargetName>libxvidcore</TargetName>
+    <OutDir>..\..\..\msvc64\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLTO|x64'">
+    <IntDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <TargetName>libxvidcore</TargetName>
+    <OutDir>..\..\..\msvc64\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|Win32'">
+    <OutDir>..\..\..\msvc32\</OutDir>
+    <IntDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <TargetName>libxvidcore</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|x64'">
+    <IntDir>$(SolutionDir)\obj\$(Configuration)\$(Platform)\$(ProjectName)\</IntDir>
+    <TargetName>libxvidcore</TargetName>
+    <OutDir>..\..\..\msvc64\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>false</SDLCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;ARCH_IS_IA32;ARCH_IS_32BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <Lib>
+      <OutputFile>$(OutDir)\lib\$(TargetName)$(TargetExt)</OutputFile>
+      <TargetMachine>MachineX86</TargetMachine>
+      <SubSystem>Windows</SubSystem>
+    </Lib>
+    <PostBuildEvent>
+      <Command>mkdir $(OutDir)\include
+copy ..\src\xvid.h $(OutDir)\include
+mkdir $(OutDir)\licenses
+copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
+    </PostBuildEvent>
+    <YASM>
+      <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
+      <Defines>WINDOWS;%(Defines)</Defines>
+    </YASM>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>false</SDLCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;ARCH_IS_X86_64;ARCH_IS_64BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <Lib>
+      <OutputFile>$(OutDir)\lib\$(TargetName)$(TargetExt)</OutputFile>
+      <TargetMachine>MachineX64</TargetMachine>
+      <SubSystem>Windows</SubSystem>
+    </Lib>
+    <PostBuildEvent>
+      <Command>mkdir $(OutDir)\include
+copy ..\src\xvid.h $(OutDir)\include
+mkdir $(OutDir)\licenses
+copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
+    </PostBuildEvent>
+    <YASM>
+      <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
+      <Defines>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(Defines)</Defines>
+      <AdditionalOptions>-DNO_PREFIX %(AdditionalOptions)</AdditionalOptions>
+    </YASM>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>false</SDLCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;ARCH_IS_IA32;ARCH_IS_32BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <OutputFile>$(OutDir)\bin\$(TargetName)$(TargetExt)</OutputFile>
+      <ProgramDatabaseFile>$(OutDir)\bin\$(TargetName).pdb</ProgramDatabaseFile>
+      <SubSystem>Windows</SubSystem>
+      <ImportLibrary>$(OutDir)\bin\$(TargetName).lib</ImportLibrary>
+      <ProfileGuidedDatabase>$(OutDir)\bin\$(TargetName).pgd</ProfileGuidedDatabase>
+      <AddModuleNamesToAssembly>
+      </AddModuleNamesToAssembly>
+      <ModuleDefinitionFile>..\build\generic\libxvidcore.def</ModuleDefinitionFile>
+      <LargeAddressAware>true</LargeAddressAware>
+    </Link>
+    <PostBuildEvent>
+      <Command>mkdir $(OutDir)\include
+copy ..\src\xvid.h $(OutDir)\include
+mkdir $(OutDir)\licenses
+copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
+    </PostBuildEvent>
+    <YASM>
+      <ErrorFile>
+      </ErrorFile>
+      <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
+      <Defines>WINDOWS;%(Defines)</Defines>
+    </YASM>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>false</SDLCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;ARCH_IS_X86_64;ARCH_IS_64BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <OutputFile>$(OutDir)\bin\$(TargetName)$(TargetExt)</OutputFile>
+      <ProgramDatabaseFile>$(OutDir)\bin\$(TargetName).pdb</ProgramDatabaseFile>
+      <SubSystem>Windows</SubSystem>
+      <ImportLibrary>$(OutDir)\bin\$(TargetName).lib</ImportLibrary>
+      <ProfileGuidedDatabase>$(OutDir)\bin\$(TargetName).pgd</ProfileGuidedDatabase>
+      <AddModuleNamesToAssembly>
+      </AddModuleNamesToAssembly>
+      <ModuleDefinitionFile>..\build\generic\libxvidcore.def</ModuleDefinitionFile>
+    </Link>
+    <PostBuildEvent>
+      <Command>mkdir $(OutDir)\include
+copy ..\src\xvid.h $(OutDir)\include
+mkdir $(OutDir)\licenses
+copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
+    </PostBuildEvent>
+    <YASM>
+      <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
+      <Defines>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(Defines)</Defines>
+      <AdditionalOptions>-DNO_PREFIX %(AdditionalOptions)</AdditionalOptions>
+    </YASM>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <OmitFramePointers>true</OmitFramePointers>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <FloatingPointExceptions>false</FloatingPointExceptions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;ARCH_IS_IA32;ARCH_IS_32BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ExceptionHandling>false</ExceptionHandling>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <InterproceduralOptimization>SingleFile</InterproceduralOptimization>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <Lib>
+      <OutputFile>$(OutDir)\lib\$(TargetName)$(TargetExt)</OutputFile>
+      <TargetMachine>MachineX86</TargetMachine>
+      <SubSystem>Windows</SubSystem>
+    </Lib>
+    <PostBuildEvent>
+      <Command>mkdir $(OutDir)\include
+copy ..\src\xvid.h $(OutDir)\include
+mkdir $(OutDir)\licenses
+copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
+    </PostBuildEvent>
+    <YASM>
+      <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
+      <Defines>WINDOWS;%(Defines)</Defines>
+    </YASM>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLTO|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <OmitFramePointers>true</OmitFramePointers>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <FloatingPointExceptions>false</FloatingPointExceptions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;ARCH_IS_IA32;ARCH_IS_32BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ExceptionHandling>false</ExceptionHandling>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <InterproceduralOptimization>SingleFile</InterproceduralOptimization>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <Lib>
+      <OutputFile>$(OutDir)\lib\$(TargetName)$(TargetExt)</OutputFile>
+      <TargetMachine>MachineX86</TargetMachine>
+      <SubSystem>Windows</SubSystem>
+    </Lib>
+    <PostBuildEvent>
+      <Command>mkdir $(OutDir)\include
+copy ..\src\xvid.h $(OutDir)\include
+mkdir $(OutDir)\licenses
+copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
+    </PostBuildEvent>
+    <YASM>
+      <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
+      <Defines>WINDOWS;%(Defines)</Defines>
+    </YASM>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <OmitFramePointers>true</OmitFramePointers>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <FloatingPointExceptions>false</FloatingPointExceptions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;ARCH_IS_X86_64;ARCH_IS_64BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ExceptionHandling>false</ExceptionHandling>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <InterproceduralOptimization>SingleFile</InterproceduralOptimization>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <Lib>
+      <OutputFile>$(OutDir)\lib\$(TargetName)$(TargetExt)</OutputFile>
+      <TargetMachine>MachineX64</TargetMachine>
+      <SubSystem>Windows</SubSystem>
+    </Lib>
+    <PostBuildEvent>
+      <Command>mkdir $(OutDir)\include
+copy ..\src\xvid.h $(OutDir)\include
+mkdir $(OutDir)\licenses
+copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
+    </PostBuildEvent>
+    <YASM>
+      <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
+      <Defines>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(Defines)</Defines>
+      <AdditionalOptions>-DNO_PREFIX %(AdditionalOptions)</AdditionalOptions>
+    </YASM>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLTO|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <OmitFramePointers>true</OmitFramePointers>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <FloatingPointExceptions>false</FloatingPointExceptions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;ARCH_IS_X86_64;ARCH_IS_64BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ExceptionHandling>false</ExceptionHandling>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <InterproceduralOptimization>SingleFile</InterproceduralOptimization>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <Lib>
+      <OutputFile>$(OutDir)\lib\$(TargetName)$(TargetExt)</OutputFile>
+      <TargetMachine>MachineX64</TargetMachine>
+      <SubSystem>Windows</SubSystem>
+    </Lib>
+    <PostBuildEvent>
+      <Command>mkdir $(OutDir)\include
+copy ..\src\xvid.h $(OutDir)\include
+mkdir $(OutDir)\licenses
+copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
+    </PostBuildEvent>
+    <YASM>
+      <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
+      <Defines>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(Defines)</Defines>
+      <AdditionalOptions>-DNO_PREFIX %(AdditionalOptions)</AdditionalOptions>
+    </YASM>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <OmitFramePointers>true</OmitFramePointers>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <FloatingPointExceptions>false</FloatingPointExceptions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;ARCH_IS_IA32;ARCH_IS_32BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ExceptionHandling>false</ExceptionHandling>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <OutputFile>$(OutDir)\bin\$(TargetName)$(TargetExt)</OutputFile>
+      <ProgramDatabaseFile>$(OutDir)\bin\$(TargetName).pdb</ProgramDatabaseFile>
+      <SubSystem>Windows</SubSystem>
+      <ImportLibrary>$(OutDir)\bin\$(TargetName).lib</ImportLibrary>
+      <ProfileGuidedDatabase>$(OutDir)\bin\$(TargetName).pgd</ProfileGuidedDatabase>
+      <AddModuleNamesToAssembly>
+      </AddModuleNamesToAssembly>
+      <ModuleDefinitionFile>..\build\generic\libxvidcore.def</ModuleDefinitionFile>
+      <LargeAddressAware>true</LargeAddressAware>
+    </Link>
+    <PostBuildEvent>
+      <Command>mkdir $(OutDir)\include
+copy ..\src\xvid.h $(OutDir)\include
+mkdir $(OutDir)\licenses
+copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
+    </PostBuildEvent>
+    <YASM>
+      <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
+      <Defines>WINDOWS;%(Defines)</Defines>
+    </YASM>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <OmitFramePointers>true</OmitFramePointers>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <FloatingPointExceptions>false</FloatingPointExceptions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;ARCH_IS_X86_64;ARCH_IS_64BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ExceptionHandling>false</ExceptionHandling>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <OutputFile>$(OutDir)\bin\$(TargetName)$(TargetExt)</OutputFile>
+      <ProgramDatabaseFile>$(OutDir)\bin\$(TargetName).pdb</ProgramDatabaseFile>
+      <SubSystem>Windows</SubSystem>
+      <ImportLibrary>$(OutDir)\bin\$(TargetName).lib</ImportLibrary>
+      <ProfileGuidedDatabase>$(OutDir)\bin\$(TargetName).pgd</ProfileGuidedDatabase>
+      <AddModuleNamesToAssembly>
+      </AddModuleNamesToAssembly>
+      <ModuleDefinitionFile>..\build\generic\libxvidcore.def</ModuleDefinitionFile>
+    </Link>
+    <PostBuildEvent>
+      <Command>mkdir $(OutDir)\include
+copy ..\src\xvid.h $(OutDir)\include
+mkdir $(OutDir)\licenses
+copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
+    </PostBuildEvent>
+    <YASM>
+      <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
+      <Defines>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(Defines)</Defines>
+    </YASM>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\bitstream\bitstream.h" />
+    <ClInclude Include="..\src\bitstream\cbp.h" />
+    <ClInclude Include="..\src\bitstream\mbcoding.h" />
+    <ClInclude Include="..\src\bitstream\vlc_codes.h" />
+    <ClInclude Include="..\src\bitstream\zigzag.h" />
+    <ClInclude Include="..\src\dct\fdct.h" />
+    <ClInclude Include="..\src\dct\idct.h" />
+    <ClInclude Include="..\src\decoder.h" />
+    <ClInclude Include="..\src\encoder.h" />
+    <ClInclude Include="..\src\global.h" />
+    <ClInclude Include="..\src\image\colorspace.h" />
+    <ClInclude Include="..\src\image\font.h" />
+    <ClInclude Include="..\src\image\image.h" />
+    <ClInclude Include="..\src\image\interpolate8x8.h" />
+    <ClInclude Include="..\src\image\postprocessing.h" />
+    <ClInclude Include="..\src\image\qpel.h" />
+    <ClInclude Include="..\src\image\reduced.h" />
+    <ClInclude Include="..\src\motion\estimation.h" />
+    <ClInclude Include="..\src\motion\gmc.h" />
+    <ClInclude Include="..\src\motion\motion.h" />
+    <ClInclude Include="..\src\motion\motion_inlines.h" />
+    <ClInclude Include="..\src\motion\motion_smp.h" />
+    <ClInclude Include="..\src\motion\sad.h" />
+    <ClInclude Include="..\src\plugins\plugin_ssim.h" />
+    <ClInclude Include="..\src\portab.h" />
+    <ClInclude Include="..\src\prediction\mbprediction.h" />
+    <ClInclude Include="..\src\quant\quant.h" />
+    <ClInclude Include="..\src\quant\quant_matrix.h" />
+    <ClInclude Include="..\src\utils\emms.h" />
+    <ClInclude Include="..\src\utils\mbfunctions.h" />
+    <ClInclude Include="..\src\utils\mem_align.h" />
+    <ClInclude Include="..\src\utils\mem_transfer.h" />
+    <ClInclude Include="..\src\utils\timer.h" />
+    <ClInclude Include="..\src\xvid.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\bitstream\bitstream.c" />
+    <ClCompile Include="..\src\bitstream\cbp.c" />
+    <ClCompile Include="..\src\bitstream\mbcoding.c" />
+    <ClCompile Include="..\src\dct\fdct.c" />
+    <ClCompile Include="..\src\dct\idct.c" />
+    <ClCompile Include="..\src\dct\simple_idct.c" />
+    <ClCompile Include="..\src\decoder.c" />
+    <ClCompile Include="..\src\encoder.c" />
+    <ClCompile Include="..\src\image\colorspace.c" />
+    <ClCompile Include="..\src\image\font.c" />
+    <ClCompile Include="..\src\image\image.c" />
+    <ClCompile Include="..\src\image\interpolate8x8.c" />
+    <ClCompile Include="..\src\image\postprocessing.c" />
+    <ClCompile Include="..\src\image\qpel.c" />
+    <ClCompile Include="..\src\image\reduced.c" />
+    <ClCompile Include="..\src\motion\estimation_bvop.c" />
+    <ClCompile Include="..\src\motion\estimation_common.c" />
+    <ClCompile Include="..\src\motion\estimation_gmc.c" />
+    <ClCompile Include="..\src\motion\estimation_pvop.c" />
+    <ClCompile Include="..\src\motion\estimation_rd_based.c" />
+    <ClCompile Include="..\src\motion\estimation_rd_based_bvop.c" />
+    <ClCompile Include="..\src\motion\gmc.c" />
+    <ClCompile Include="..\src\motion\motion_comp.c" />
+    <ClCompile Include="..\src\motion\sad.c" />
+    <ClCompile Include="..\src\motion\vop_type_decision.c" />
+    <ClCompile Include="..\src\plugins\plugin_2pass1.c" />
+    <ClCompile Include="..\src\plugins\plugin_2pass2.c" />
+    <ClCompile Include="..\src\plugins\plugin_dump.c" />
+    <ClCompile Include="..\src\plugins\plugin_lumimasking.c" />
+    <ClCompile Include="..\src\plugins\plugin_psnr.c" />
+    <ClCompile Include="..\src\plugins\plugin_psnrhvsm.c" />
+    <ClCompile Include="..\src\plugins\plugin_single.c" />
+    <ClCompile Include="..\src\plugins\plugin_ssim.c" />
+    <ClCompile Include="..\src\prediction\mbprediction.c" />
+    <ClCompile Include="..\src\quant\quant_h263.c" />
+    <ClCompile Include="..\src\quant\quant_matrix.c" />
+    <ClCompile Include="..\src\quant\quant_mpeg.c" />
+    <ClCompile Include="..\src\utils\emms.c" />
+    <ClCompile Include="..\src\utils\mbtransquant.c" />
+    <ClCompile Include="..\src\utils\mem_align.c" />
+    <ClCompile Include="..\src\utils\mem_transfer.c" />
+    <ClCompile Include="..\src\utils\timer.c" />
+    <ClCompile Include="..\src\xvid.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\build\generic\libxvidcore.def" />
+    <YASM Include="..\src\bitstream\x86_asm\cbp_mmx.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\bitstream\x86_asm\cbp_sse2.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\dct\x86_asm\fdct_mmx_ffmpeg.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\dct\x86_asm\fdct_mmx_skal.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\dct\x86_asm\fdct_sse2_skal.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\dct\x86_asm\idct_3dne.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\dct\x86_asm\idct_mmx.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\dct\x86_asm\idct_sse2_dmitry.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <None Include="..\src\image\x86_asm\colorspace_mmx.inc" />
+    <YASM Include="..\src\image\x86_asm\colorspace_rgb_mmx.asm">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='ReleaseLTO|Win32'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|Win32'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='DebugDLL|Win32'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='ReleaseLTO|x64'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|x64'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='DebugDLL|x64'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+    </YASM>
+    <YASM Include="..\src\image\x86_asm\colorspace_yuv_mmx.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\image\x86_asm\colorspace_yuyv_mmx.asm">
+      <FileType>Document</FileType>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='ReleaseLTO|Win32'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|Win32'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='DebugDLL|Win32'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='ReleaseLTO|x64'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|x64'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='DebugDLL|x64'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+    </YASM>
+    <YASM Include="..\src\image\x86_asm\deintl_sse.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\image\x86_asm\gmc_mmx.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\image\x86_asm\interpolate8x8_3dn.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\image\x86_asm\interpolate8x8_3dne.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\image\x86_asm\interpolate8x8_mmx.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\image\x86_asm\interpolate8x8_xmm.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\image\x86_asm\postprocessing_mmx.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\image\x86_asm\postprocessing_sse2.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\image\x86_asm\qpel_mmx.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\image\x86_asm\reduced_mmx.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\motion\x86_asm\sad_3dn.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\motion\x86_asm\sad_3dne.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\motion\x86_asm\sad_mmx.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\motion\x86_asm\sad_sse2.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\motion\x86_asm\sad_xmm.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\plugins\x86_asm\plugin_ssim-a.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\quant\x86_asm\quantize_h263_3dne.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\quant\x86_asm\quantize_h263_mmx.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\quant\x86_asm\quantize_mpeg_mmx.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\quant\x86_asm\quantize_mpeg_xmm.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\utils\x86_asm\cpuid.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\utils\x86_asm\interlacing_mmx.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\utils\x86_asm\mem_transfer_3dne.asm">
+      <FileType>Document</FileType>
+    </YASM>
+    <YASM Include="..\src\utils\x86_asm\mem_transfer_mmx.asm">
+      <FileType>Document</FileType>
+    </YASM>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="readme.txt" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\vsyasm.targets" />
+  </ImportGroup>
+</Project>
