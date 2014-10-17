@@ -6,6 +6,9 @@ platform.inc
 config.guess
 config.sub
 configure
+install-sh
+confdefs.h
+conftest.*
 
 *.ilk
 *.meta
