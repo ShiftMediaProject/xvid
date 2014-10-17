@@ -315,8 +315,8 @@ case "$target_os" in
 	;;
      [[cC]][[yY]][[gG]][[wW]][[iI]][[nN]]*|mingw32*|mks*)
 	AC_MSG_RESULT([ok])
-	STATIC_LIB="xvidcore.\$(STATIC_EXTENSION)"
-	SHARED_LIB="xvidcore.\$(SHARED_EXTENSION)"
+	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
+	SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION)"
 	SPECIFIC_LDFLAGS="-shared -Wl,--dll,--out-implib,\$@.a libxvidcore.def"
 	SPECIFIC_CFLAGS="-mno-cygwin"
 	;;
