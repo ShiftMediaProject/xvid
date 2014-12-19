@@ -207,6 +207,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ExceptionHandling>false</ExceptionHandling>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <ProgramDataBaseFileName>$(OutDir)\lib\$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -237,6 +238,7 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ExceptionHandling>false</ExceptionHandling>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <ProgramDataBaseFileName>$(OutDir)\lib\$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -269,6 +271,7 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ExceptionHandling>false</ExceptionHandling>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <ProgramDataBaseFileName>$(IntDir)$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)\bin\$(TargetName)$(TargetExt)</OutputFile>
@@ -280,6 +283,7 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       </AddModuleNamesToAssembly>
       <ModuleDefinitionFile>..\build\generic\libxvidcore.def</ModuleDefinitionFile>
       <LargeAddressAware>true</LargeAddressAware>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
       <Command>mkdir $(OutDir)\include
@@ -304,6 +308,7 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ExceptionHandling>false</ExceptionHandling>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <ProgramDataBaseFileName>$(IntDir)$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)\bin\$(TargetName)$(TargetExt)</OutputFile>
@@ -314,6 +319,7 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <AddModuleNamesToAssembly>
       </AddModuleNamesToAssembly>
       <ModuleDefinitionFile>..\build\generic\libxvidcore.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
       <Command>mkdir $(OutDir)\include
@@ -349,6 +355,7 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <ExceptionHandling>false</ExceptionHandling>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <InterproceduralOptimization>SingleFile</InterproceduralOptimization>
+      <ProgramDataBaseFileName>$(IntDir)$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -393,6 +400,7 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <ExceptionHandling>false</ExceptionHandling>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <InterproceduralOptimization>SingleFile</InterproceduralOptimization>
+      <ProgramDataBaseFileName>$(IntDir)$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -436,6 +444,7 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <ExceptionHandling>false</ExceptionHandling>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <InterproceduralOptimization>SingleFile</InterproceduralOptimization>
+      <ProgramDataBaseFileName>$(IntDir)$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -480,6 +489,7 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <ExceptionHandling>false</ExceptionHandling>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
       <InterproceduralOptimization>SingleFile</InterproceduralOptimization>
+      <ProgramDataBaseFileName>$(IntDir)$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -524,6 +534,7 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ExceptionHandling>false</ExceptionHandling>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <ProgramDataBaseFileName>$(IntDir)$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -569,6 +580,7 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <AdditionalIncludeDirectories>..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ExceptionHandling>false</ExceptionHandling>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <ProgramDataBaseFileName>$(IntDir)$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
