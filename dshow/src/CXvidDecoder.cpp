@@ -240,7 +240,7 @@ STDAPI DllRegisterServer()
 	/* Register the MFT decoder */
 	MFTRegister(CLSID_XVID,                          // CLSID
 		        MFT_CATEGORY_VIDEO_DECODER,          // Category
-		        const_cast<LPWSTR>(XVID_NAME_L),     // Friendly name
+				const_cast<LPWSTR>(XVID_NAME_MFT_L), // Friendly name
 		        0,                                   // Flags
 		        inputs_num,                          // Number of input types
 		        mft_bs,                              // Input types
