@@ -30,6 +30,7 @@
 #include "IXvidDecoder.h"
 
 #define XVID_NAME_L		L"Xvid MPEG-4 Video Decoder"
+#define XVID_NAME_MFT_L	L"Xvid MPEG-4 Video Decoder MFT"
 
 /* --- fourcc --- */
 
