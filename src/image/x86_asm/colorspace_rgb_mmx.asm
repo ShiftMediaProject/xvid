@@ -119,8 +119,8 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
 
   pxor mm4, mm4
   pxor mm5, mm5
-  movd mm0, [x_ptr]               ; x_ptr[0...]
-  movd mm2, [x_ptr+x_stride]           ; x_ptr[x_stride...]
+  movd mm0, [x_ptr]             ; x_ptr[0...]
+  movd mm2, [x_ptr+x_stride]    ; x_ptr[x_stride...]
   punpcklbw mm0, mm4            ; [  |b |g |r ]
   punpcklbw mm2, mm5            ; [  |b |g |r ]
   movq mm6, mm0                 ; = [  |b4|g4|r4]
@@ -136,8 +136,15 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
 
   pxor mm4, mm4
   pxor mm5, mm5
-  movd mm1, [x_ptr+%1]            ; src[%1...]
-  movd mm3, [x_ptr+x_stride+%1]        ; src[x_stride+%1...]
+%if %1 == 3     ; BGR (24-bit)
+  movd mm1, [x_ptr+2]          
+  movd mm3, [x_ptr+x_stride+2] 
+  psrlq mm1, 8                  ; src[%1...]
+  psrlq mm3, 8                  ; src[x_stride+%1...] 
+%else
+  movd mm1, [x_ptr+%1]          ; src[%1...]
+  movd mm3, [x_ptr+x_stride+%1] ; src[x_stride+%1...]
+%endif
   punpcklbw mm1, mm4            ; [  |b |g |r ]
   punpcklbw mm3, mm5            ; [  |b |g |r ]
   paddw mm6, mm1                ; +[  |b4|g4|r4]
@@ -237,8 +244,15 @@ BRIGHT: db 128, 128, 128, 128, 128, 128, 128, 128
 
   pxor mm4, mm4
   pxor mm5, mm5
+%if %1 == 3     ; BGR (24-bit)
+  movd mm1, [x_ptr+2]          
+  movd mm3, [x_ptr+x_stride+2] 
+  psrlq mm1, 8                  ; src[%1...]
+  psrlq mm3, 8                  ; src[x_stride+%1...] 
+%else
   movd mm1, [x_ptr+%1]          ; src[%1...]
   movd mm3, [x_ptr+x_stride+%1] ; src[x_stride+%1...]
+%endif
   punpcklbw mm1, mm4            ; [  |b |g |r ]
   punpcklbw mm3, mm5            ; [  |b |g |r ]
   paddw mm6, mm1                ; +[  |b4|g4|r4]
