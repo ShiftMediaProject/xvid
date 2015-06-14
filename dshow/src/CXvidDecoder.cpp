@@ -178,7 +178,8 @@ int g_cTemplates = sizeof(g_Templates) / sizeof(CFactoryTemplate);
 extern HINSTANCE g_xvid_hInst;
 
 static int GUI_Page = 0;
-static int Tray_Icon = 0;
+static HWND MSG_hwnd = NULL; /* message handler window */
+
 extern "C" void CALLBACK Configure(HWND hWndParent, HINSTANCE hInstParent, LPSTR lpCmdLine, int nCmdShow );
 
 LRESULT CALLBACK msg_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -188,6 +189,7 @@ LRESULT CALLBACK msg_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_ICONMESSAGE:
 		switch(lParam)
 		{
+		case WM_LBUTTONUP:
 		case WM_LBUTTONDBLCLK:
 			if (!GUI_Page) {
 				GUI_Page = 1;
@@ -202,14 +204,12 @@ LRESULT CALLBACK msg_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_DESTROY:
 		NOTIFYICONDATA nid;
-		ZeroMemory(&nid,sizeof(NOTIFYICONDATA));
+		ZeroMemory(&nid, sizeof(NOTIFYICONDATA));
 
-		nid.cbSize = NOTIFYICONDATA_V1_SIZE;
+		nid.cbSize = sizeof(NOTIFYICONDATA);
 		nid.hWnd = hwnd;
 		nid.uID = 1456;
-	
 		Shell_NotifyIcon(NIM_DELETE, &nid);
-		Tray_Icon = 0;
 	default:
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
@@ -317,15 +317,20 @@ CXvidDecoder::CXvidDecoder(LPUNKNOWN punk, HRESULT *phr) :
     xvid_decore_func = NULL; // Hmm, some strange errors appearing if I try to initialize...
     xvid_global_func = NULL; // ...this in constructor's init-list. So, they assigned here.
 
+	m_tray_icon = 0;
+	m_startClock = clock();
+
 #if defined(XVID_USE_MFT)
 	InitializeCriticalSection(&m_mft_lock);
 	m_pInputType = NULL;
 	m_pOutputType = NULL;
+	m_pOutputTypeBPP = 32;
 	m_rtFrame = 0;
 	m_duration = 0;
 	m_discont = 0;
 	m_frameRate.Denominator = 1;
 	m_frameRate.Numerator = 1;
+	m_thread_handle = NULL;
 #endif
 
     LoadRegistryInfo();
@@ -340,10 +345,8 @@ CXvidDecoder::CXvidDecoder(LPUNKNOWN punk, HRESULT *phr) :
 #else
 		if ((sLen >= 11) && (_strnicmp(&(lpFilename[sLen - 11]), TEXT("dllhost.exe"), 11) == 0)) {
 #endif
-			if (Tray_Icon == 0) Tray_Icon = -1; // create no tray icon upon thumbnail generation
+			if (m_tray_icon == 0) m_tray_icon = -1; // create no tray icon upon thumbnail generation
 		}
-		else
-			if (Tray_Icon == -1) Tray_Icon = 0; // can show tray icon
 	}
 
 }
@@ -507,20 +510,30 @@ CXvidDecoder::~CXvidDecoder()
 {
     DPRINTF("Destructor");
 
-	if (Tray_Icon > 0) { /* Destroy tray icon */
-		NOTIFYICONDATA nid;
-		ZeroMemory(&nid,sizeof(NOTIFYICONDATA));
-
-		nid.cbSize = NOTIFYICONDATA_V1_SIZE;
-		nid.hWnd = MSG_hwnd;
-		nid.uID = 1456;
-	
-		Shell_NotifyIcon(NIM_DELETE, &nid);
-		Tray_Icon = 0;
+	if ((MSG_hwnd != NULL) && (m_tray_icon == 1)) { /* Destroy tray icon */
+		SendMessage(MSG_hwnd, WM_CLOSE, 0, 0);
 	}
-
+	
 	/* Close xvidcore library */
 	CloseLib();
+
+	clock_t endClock = clock();
+	if (((endClock - m_startClock) / CLOCKS_PER_SEC) > 3) {
+		SaveRegistryInfo((endClock - m_startClock) / (CLOCKS_PER_SEC / 10));
+	}
+
+	if ((MSG_hwnd != 0) && (m_tray_icon == 1)) { /* Final clean-up */
+	  MSG_hwnd = 0;
+	  Sleep(200);
+	  m_tray_icon = 0;
+#if defined(XVID_USE_MFT)
+	  if (m_thread_handle) {
+		  TerminateThread(m_thread_handle, 0);
+		  CloseHandle(m_thread_handle);
+		  m_thread_handle = NULL;
+	  }
+#endif
+	}
 
 #if defined(XVID_USE_MFT)
 	DeleteCriticalSection(&m_mft_lock);
@@ -822,16 +835,18 @@ if ( USE_RG565 )
 
 
 /* (internal function) change colorspace */
-#define CALC_BI_STRIDE(width,bitcount)  ((((width * bitcount) + 31) & ~31) >> 3)
+#define CALC_BI_STRIDE(width, bitcount)  ((((width * bitcount) + 31) & ~31) >> 3)
 
-HRESULT CXvidDecoder::ChangeColorspace(GUID subtype, GUID formattype, void * format, int noflip)
+HRESULT CXvidDecoder::ChangeColorspace(GUID subtype, GUID formattype, void *format, int *bitdepth, int noflip)
 {
 	DWORD biWidth;
+	*bitdepth = 32;
 
 	if (formattype == FORMAT_VideoInfo)
 	{
 		VIDEOINFOHEADER * vih = (VIDEOINFOHEADER * )format;
 		biWidth = vih->bmiHeader.biWidth;
+		*bitdepth = vih->bmiHeader.biBitCount;
 		out_stride = CALC_BI_STRIDE(vih->bmiHeader.biWidth, vih->bmiHeader.biBitCount);
 		rgb_flip = (vih->bmiHeader.biHeight < 0 ? 0 : XVID_CSP_VFLIP);
 	}
@@ -839,6 +854,7 @@ HRESULT CXvidDecoder::ChangeColorspace(GUID subtype, GUID formattype, void * for
 	{
 		VIDEOINFOHEADER2 * vih2 = (VIDEOINFOHEADER2 * )format;
 		biWidth = vih2->bmiHeader.biWidth;
+		*bitdepth = vih2->bmiHeader.biBitCount;
 		out_stride = CALC_BI_STRIDE(vih2->bmiHeader.biWidth, vih2->bmiHeader.biBitCount);
 		rgb_flip = (vih2->bmiHeader.biHeight < 0 ? 0 : XVID_CSP_VFLIP);
 	}
@@ -918,11 +934,12 @@ HRESULT CXvidDecoder::ChangeColorspace(GUID subtype, GUID formattype, void * for
 
 HRESULT CXvidDecoder::SetMediaType(PIN_DIRECTION direction, const CMediaType *pmt)
 {
+	int bitdepth;
 	DPRINTF("SetMediaType");
 	
 	if (direction == PINDIR_OUTPUT)
 	{
-		return ChangeColorspace(*pmt->Subtype(), *pmt->FormatType(), pmt->Format(), 0);
+		return ChangeColorspace(*pmt->Subtype(), *pmt->FormatType(), pmt->Format(), &bitdepth, 0);
 	}
 	
 	return S_OK;
@@ -944,7 +961,7 @@ HRESULT CXvidDecoder::CompleteConnect(PIN_DIRECTION direction, IPin *pReceivePin
 {
 	DPRINTF("CompleteConnect");
 
-	if ((direction == PINDIR_OUTPUT) && (Tray_Icon == 0)&& (g_config.bTrayIcon != 0)) 
+	if ((direction == PINDIR_OUTPUT) && (MSG_hwnd == 0) && (m_tray_icon == 0) && (g_config.bTrayIcon != 0))
 	{
 		WNDCLASSEX wc; 
 
@@ -969,18 +986,20 @@ HRESULT CXvidDecoder::CompleteConnect(PIN_DIRECTION direction, IPin *pReceivePin
 		NOTIFYICONDATA nid;    
 		ZeroMemory(&nid,sizeof(NOTIFYICONDATA));
 
-		nid.cbSize = NOTIFYICONDATA_V1_SIZE;
+		nid.cbSize = sizeof(NOTIFYICONDATA);
 		nid.hWnd = MSG_hwnd;  
 		nid.uID = 1456;  
+		nid.uVersion = NOTIFYICON_VERSION;
 		nid.uCallbackMessage = WM_ICONMESSAGE;  
 		nid.hIcon = LoadIcon(g_xvid_hInst, MAKEINTRESOURCE(IDI_ICON));  
 		strcpy_s(nid.szTip, 19, "Xvid Video Decoder");  
-		nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
+		nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP | NIF_SHOWTIP;
 	
 		Shell_NotifyIcon(NIM_ADD, &nid); 
+		Shell_NotifyIcon(NIM_SETVERSION, &nid);
 
 		DestroyIcon(nid.hIcon);
-		Tray_Icon = 1;
+		m_tray_icon = 1;
 	}
 
 	return S_OK;
@@ -1055,9 +1074,10 @@ HRESULT CXvidDecoder::Transform(IMediaSample *pIn, IMediaSample *pOut)
 	pOut->GetMediaType(&mtOut);
 	if (mtOut != NULL)
 	{
+		int bitdepth;
 		HRESULT result;
 
-		result = ChangeColorspace(mtOut->subtype, mtOut->formattype, mtOut->pbFormat, 0);
+		result = ChangeColorspace(mtOut->subtype, mtOut->formattype, mtOut->pbFormat, &bitdepth, 0);
 		DeleteMediaType(mtOut);
 
 		if (result != S_OK)
@@ -1327,7 +1347,7 @@ HRESULT CXvidDecoder::MFTGetOutputStreamInfo(DWORD dwOutputStreamID, MFT_OUTPUT_
 		pStreamInfo->cbAlignment = 0;
 	}
 	else {
-		pStreamInfo->cbSize = m_create.width * abs(m_create.height) * 4; // XXX
+		pStreamInfo->cbSize = (m_create.width * abs(m_create.height) * m_pOutputTypeBPP) >> 3;
 		pStreamInfo->cbAlignment = 1;
 	}
 
@@ -1464,49 +1484,56 @@ if ( USE_YUY2 )
 		bitdepth = 4;
 		break;
 }
-	case 1 :
+	case 1:
+if ( USE_YVYU )
+{
+	    csp = MFVideoFormat_YVYU;
+	    bitdepth = 4;
+	    break;
+}
+	case 2 :
 if ( USE_UYVY )
 {
 		csp = MFVideoFormat_UYVY;
 		bitdepth = 4;
 		break;
 }
-	case 2	:
+	case 3	:
 		if ( USE_IYUV )
 {
 		csp = MFVideoFormat_IYUV;
 		bitdepth = 3;
 		break;
 }
-	case 3	:
+	case 4	:
 if ( USE_YV12 )
 {
 		csp = MFVideoFormat_YV12;
 		bitdepth = 3;
 		break;
 }
-	case 4 :
+	case 5 :
 if ( USE_RGB32 )
 {
 		csp = MFVideoFormat_RGB32;
 		bitdepth = 8;
 		break;
 }
-	case 5 :
+	case 6 :
 if ( USE_RGB24 )
 {
 		csp = MFVideoFormat_RGB24;
 		bitdepth = 6;
 		break;
 }
-	case 6 :
+	case 7 :
 if ( USE_RG555 )
 {
 		csp = MFVideoFormat_RGB555;
 		bitdepth = 4;
 		break;
 }
-	case 7 :
+	case 8 :
 if ( USE_RG565 )
 {
 		csp = MFVideoFormat_RGB565;
@@ -1544,11 +1571,11 @@ if ( USE_RG565 )
 	}
 	
 	if (SUCCEEDED(hr)) {
-		hr = pOutputType->SetUINT32(MF_MT_SAMPLE_SIZE, (m_create.height * m_create.width * bitdepth)>>1);
+		hr = pOutputType->SetUINT32(MF_MT_SAMPLE_SIZE, (abs(m_create.height) * m_create.width * bitdepth) >> 1);
 	}
 	
 	if (SUCCEEDED(hr)) {
-		hr = MFSetAttributeSize(pOutputType, MF_MT_FRAME_SIZE, m_create.width, m_create.height);
+		hr = MFSetAttributeSize(pOutputType, MF_MT_FRAME_SIZE, m_create.width, abs(m_create.height));
 	}
 	
 	if (SUCCEEDED(hr)) {
@@ -1596,7 +1623,7 @@ HRESULT CXvidDecoder::MFTSetInputType(DWORD dwInputStreamID, IMFMediaType *pType
 		hr = MF_E_TRANSFORM_CANNOT_CHANGE_MEDIATYPE_WHILE_PROCESSING;
 
 	if (SUCCEEDED(hr)) { 
-        if (pType) { // /* Check the type */
+        if (pType) { /* Check the type */
             hr = OnCheckInputType(pType);
         }
 	}
@@ -1609,6 +1636,54 @@ HRESULT CXvidDecoder::MFTSetInputType(DWORD dwInputStreamID, IMFMediaType *pType
 	
 	LeaveCriticalSection(&m_mft_lock);
 	return hr;
+}
+
+DWORD WINAPI CreateTrayIcon(LPVOID lpParameter)
+{
+	WNDCLASSEX wc;
+
+	wc.cbSize = sizeof(WNDCLASSEX);
+	wc.lpfnWndProc = msg_proc;
+	wc.style = CS_HREDRAW | CS_VREDRAW;
+	wc.cbWndExtra = 0;
+	wc.cbClsExtra = 0;
+	wc.hInstance = (HINSTANCE)g_xvid_hInst;
+	wc.hbrBackground = (HBRUSH)GetStockObject(NULL_BRUSH);
+	wc.lpszMenuName = NULL;
+	wc.lpszClassName = "XVID_MSG_WINDOW";
+	wc.hIcon = NULL;
+	wc.hIconSm = NULL;
+	wc.hCursor = NULL;
+	RegisterClassEx(&wc);
+
+	MSG_hwnd = CreateWindowEx(0, "XVID_MSG_WINDOW", NULL, 0, CW_USEDEFAULT,
+		CW_USEDEFAULT, 0, 0, HWND_MESSAGE, NULL, (HINSTANCE)g_xvid_hInst, NULL);
+
+	/* display the tray icon */
+	NOTIFYICONDATA nid;
+	ZeroMemory(&nid, sizeof(NOTIFYICONDATA));
+
+	nid.cbSize = sizeof(NOTIFYICONDATA);
+	nid.hWnd = MSG_hwnd;
+	nid.uID = 1456;
+	nid.uVersion = NOTIFYICON_VERSION;
+	nid.uCallbackMessage = WM_ICONMESSAGE;
+	nid.hIcon = LoadIcon(g_xvid_hInst, MAKEINTRESOURCE(IDI_ICON));
+	strcpy_s(nid.szTip, 19, "Xvid Video Decoder");
+	nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP | NIF_SHOWTIP;
+
+	Shell_NotifyIcon(NIM_ADD, &nid);
+	Shell_NotifyIcon(NIM_SETVERSION, &nid);
+
+	DestroyIcon(nid.hIcon);
+	
+	MSG msg;
+	while (MSG_hwnd && GetMessage(&msg, MSG_hwnd, 0, 0)) {
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+	
+	return 0;
 }
 
 HRESULT CXvidDecoder::MFTSetOutputType(DWORD dwOutputStreamID, IMFMediaType *pType, DWORD dwFlags)
@@ -1632,13 +1707,14 @@ HRESULT CXvidDecoder::MFTSetOutputType(DWORD dwOutputStreamID, IMFMediaType *pTy
 	if (HasPendingOutput())
 		hr = MF_E_TRANSFORM_CANNOT_CHANGE_MEDIATYPE_WHILE_PROCESSING;
 
+	int bitdepth;
 	if (SUCCEEDED(hr)) { 
 		if (pType) { /* Check the type */
 			AM_MEDIA_TYPE *am;
 			hr = MFCreateAMMediaTypeFromMFMediaType(pType, GUID_NULL, &am);
 			
 			if (SUCCEEDED(hr)) {
-				if (FAILED(ChangeColorspace(am->subtype, am->formattype, am->pbFormat, 1))) {
+				if (FAILED(ChangeColorspace(am->subtype, am->formattype, am->pbFormat, &bitdepth, 1))) {
 					DPRINTF("(MFT)InternalCheckOutputType (MF_E_INVALIDTYPE)");
 					return MF_E_INVALIDTYPE;
 				}
@@ -1651,50 +1727,20 @@ HRESULT CXvidDecoder::MFTSetOutputType(DWORD dwOutputStreamID, IMFMediaType *pTy
 	
 	if (SUCCEEDED(hr)) {
 		if (bReallySet) { /* Set the type if needed */
-			hr = OnSetOutputType(pType);
+			hr = OnSetOutputType(pType, bitdepth);
 		}
 	}
 
-	if (SUCCEEDED(hr) && (Tray_Icon == 0) && (g_config.bTrayIcon != 0))  /* Create message passing window */
+	if (SUCCEEDED(hr) && (MSG_hwnd == 0) && (m_tray_icon == 0) && (g_config.bTrayIcon != 0))  
 	{
-		WNDCLASSEX wc; 
+		m_thread_handle = CreateThread(NULL, 0, CreateTrayIcon, NULL, 0, NULL);  /* Create message passing window */
 
-		wc.cbSize = sizeof(WNDCLASSEX);
-		wc.lpfnWndProc = msg_proc;
-		wc.style = CS_HREDRAW | CS_VREDRAW;
-		wc.cbWndExtra = 0;
-		wc.cbClsExtra = 0;
-		wc.hInstance = (HINSTANCE) g_xvid_hInst;
-		wc.hbrBackground = (HBRUSH) GetStockObject(NULL_BRUSH);
-		wc.lpszMenuName = NULL;
-		wc.lpszClassName = "XVID_MSG_WINDOW";
-		wc.hIcon = NULL;
-		wc.hIconSm = NULL;
-		wc.hCursor = NULL;
-		RegisterClassEx(&wc);
-
-		MSG_hwnd = CreateWindowEx(0, "XVID_MSG_WINDOW", NULL, 0, CW_USEDEFAULT, 
-                                  CW_USEDEFAULT, 0, 0, HWND_MESSAGE, NULL, (HINSTANCE) g_xvid_hInst, NULL);
-
-		/* display the tray icon */
-		NOTIFYICONDATA nid;    
-		ZeroMemory(&nid,sizeof(NOTIFYICONDATA));
-
-		nid.cbSize = NOTIFYICONDATA_V1_SIZE;
-		nid.hWnd = MSG_hwnd;  
-		nid.uID = 1456;  
-		nid.uCallbackMessage = WM_ICONMESSAGE;  
-		nid.hIcon = LoadIcon(g_xvid_hInst, MAKEINTRESOURCE(IDI_ICON));  
-		strcpy_s(nid.szTip, 19, "Xvid Video Decoder");  
-		nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
-		
-		Shell_NotifyIcon(NIM_ADD, &nid); 
-
-		DestroyIcon(nid.hIcon);
-		Tray_Icon = 1;
+		if (m_thread_handle)
+		    m_tray_icon = 1;
 	}
 
 	LeaveCriticalSection(&m_mft_lock);
+
 	return hr;
 }
 
@@ -1762,7 +1808,7 @@ HRESULT CXvidDecoder::MFTGetInputStatus(DWORD dwInputStreamID, DWORD *pdwFlags)
 	
 	EnterCriticalSection(&m_mft_lock);
 	
-	/* If there's pending output sampels we don't accept new
+	/* If there's pending output samples we don't accept new
 	   input data until ProcessOutput() or Flush() was called */
 	if (!HasPendingOutput()) {
 		*pdwFlags = MFT_INPUT_STATUS_ACCEPT_DATA;
@@ -1999,7 +2045,8 @@ repeat :
 			}
 
 			ar_x = par_x * stats.data.vol.width;
-			ar_y = par_y * stats.data.vol.height;
+			ar_y = par_y * stats.data.vol.height; /* TODO: Actually set the newly determined AR on the output sample type 
+												           or it'll have no effect at all... */
 		}
 
 		m_frame.bitstream = (BYTE*)m_frame.bitstream + length;
@@ -2061,19 +2108,28 @@ HRESULT CXvidDecoder::MFTProcessOutput(DWORD dwFlags, DWORD cOutputBufferCount, 
 	
 	BYTE *Dst = NULL;
 	DWORD buffer_size;
-	
+	LONG stride = m_create.width;
 	IMFMediaBuffer *pOutput = NULL;
-	
+	IMF2DBuffer *pOutput2D = NULL;
+
 	if (SUCCEEDED(hr)) {
 		hr = pOutputSamples[0].pSample->GetBufferByIndex(0, &pOutput); /* Get output buffer */
 	}
-	
+
 	if (SUCCEEDED(hr)) {
 		hr = pOutput->GetMaxLength(&buffer_size);
 	}
-	
-	if (SUCCEEDED(hr))
+
+	if (SUCCEEDED(hr)) {
+		hr = pOutput->QueryInterface(IID_IMF2DBuffer, (void **)&pOutput2D);
+	}
+
+	if (SUCCEEDED(hr)) {
+		hr = pOutput2D->Lock2D(&Dst, &stride);
+	}
+	else {
 		hr = pOutput->Lock(&Dst, NULL, NULL);
+	}
 
 	if (SUCCEEDED(hr)) {
 		xvid_gbl_convert_t convert;
@@ -2091,7 +2147,7 @@ HRESULT CXvidDecoder::MFTProcessOutput(DWORD dwFlags, DWORD cOutputBufferCount, 
 
 		convert.output.csp = m_frame.output.csp;
 		convert.output.plane[0] = Dst;
-		convert.output.stride[0] = out_stride;
+		convert.output.stride[0] = stride;
 
 		convert.width = m_create.width;
 		convert.height = m_create.height;
@@ -2100,7 +2156,6 @@ HRESULT CXvidDecoder::MFTProcessOutput(DWORD dwFlags, DWORD cOutputBufferCount, 
 		if (m_frame.output.plane[1] != NULL && Dst != NULL && xvid_global_func != NULL) 
 			if (xvid_global_func(0, XVID_GBL_CONVERT, &convert, NULL) < 0) /* CSP convert into output buffer */
 				hr = E_FAIL;
-
 		m_frame.output.plane[1] = NULL;
 	}
 
@@ -2125,14 +2180,20 @@ HRESULT CXvidDecoder::MFTProcessOutput(DWORD dwFlags, DWORD cOutputBufferCount, 
 		}
 		
 		if (SUCCEEDED(hr))
-			hr = pOutput->SetCurrentLength(m_create.width * abs(m_create.height) * 4); // XXX
+			hr = pOutput->SetCurrentLength((m_create.width * abs(m_create.height) * m_pOutputTypeBPP) >> 3);
 	}
 	
-	if (pOutput) { 
-		pOutput->Unlock(); 
-		pOutput->Release(); 
+	if (pOutput2D) { 
+		pOutput2D->Unlock2D();
+		pOutput2D->Release();
+		if (pOutput)
+		    pOutput->Release(); 
 	}
-	
+	else if (pOutput) {
+		pOutput->Unlock();
+		pOutput->Release();
+	}
+
 	LeaveCriticalSection(&m_mft_lock);
 
 	return hr;
@@ -2316,13 +2377,14 @@ HRESULT CXvidDecoder::OnSetInputType(IMFMediaType *pmt)
 	return hr;
 }
 
-HRESULT CXvidDecoder::OnSetOutputType(IMFMediaType *pmt)
+HRESULT CXvidDecoder::OnSetOutputType(IMFMediaType *pmt, int bitdepth)
 {
 	if (m_pOutputType) m_pOutputType->Release();
 	
 	m_pOutputType = pmt;
 	m_pOutputType->AddRef();
-	
+	m_pOutputTypeBPP = bitdepth;
+
 	return S_OK;
 }
 

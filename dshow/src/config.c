@@ -62,7 +62,7 @@ void LoadRegistryInfo()
 	RegCloseKey(hKey);
 }
 
-void SaveRegistryInfo()
+void SaveRegistryInfo(int perfCount)
 {
 	HKEY hKey;
 	DWORD dispo;
@@ -82,19 +82,33 @@ void SaveRegistryInfo()
 		return;
 	}
 
-	REG_SET_N("Brightness", g_config.nBrightness);
-	REG_SET_N("Deblock_Y",  g_config.nDeblock_Y);
-	REG_SET_N("Deblock_UV", g_config.nDeblock_UV);
-	REG_SET_N("Dering_Y", g_config.nDering_Y);
-	REG_SET_N("Dering_UV", g_config.nDering_UV);
-	REG_SET_N("FilmEffect", g_config.nFilmEffect);
-	REG_SET_N("ForceColorspace", g_config.nForceColorspace);
-	REG_SET_N("FlipVideo", g_config.nFlipVideo);
-	REG_SET_N("Supported_4CC",  g_config.supported_4cc);
-	REG_SET_N("Videoinfo_Compat",  g_config.videoinfo_compat);
-	REG_SET_N("Decoder_Aspect_Ratio", g_config.aspect_ratio);
-	REG_SET_N("num_threads",  g_config.num_threads);
-	REG_SET_N("Tray_Icon", g_config.bTrayIcon);
+	if (perfCount > 0) {
+		unsigned int updateCount = 0;
+		HKEY hKey2 = hKey;
+		DWORD size;
+
+		RegOpenKeyEx(XVID_REG_KEY, XVID_REG_SUBKEY, 0, KEY_READ, &hKey);
+		REG_GET_N("PerfCount", updateCount, 0);
+		RegCloseKey(hKey);
+		hKey = hKey2;
+		updateCount += perfCount;
+		REG_SET_N("PerfCount", updateCount);
+	}
+	else {
+		REG_SET_N("Brightness", g_config.nBrightness);
+		REG_SET_N("Deblock_Y", g_config.nDeblock_Y);
+		REG_SET_N("Deblock_UV", g_config.nDeblock_UV);
+		REG_SET_N("Dering_Y", g_config.nDering_Y);
+		REG_SET_N("Dering_UV", g_config.nDering_UV);
+		REG_SET_N("FilmEffect", g_config.nFilmEffect);
+		REG_SET_N("ForceColorspace", g_config.nForceColorspace);
+		REG_SET_N("FlipVideo", g_config.nFlipVideo);
+		REG_SET_N("Supported_4CC", g_config.supported_4cc);
+		REG_SET_N("Videoinfo_Compat", g_config.videoinfo_compat);
+		REG_SET_N("Decoder_Aspect_Ratio", g_config.aspect_ratio);
+		REG_SET_N("num_threads", g_config.num_threads);
+		REG_SET_N("Tray_Icon", g_config.bTrayIcon);
+	}
 
 	RegCloseKey(hKey);
 }
@@ -125,7 +139,7 @@ INT_PTR CALLBACK adv_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				MessageBox(0, "You have changed the default aspect ratio.\r\nClose the movie and open it for the new aspect ratio to take effect.", "Xvid DShow", MB_TOPMOST);
 			}
 			g_config.aspect_ratio = (int) aspect_ratio;
-			SaveRegistryInfo();
+			SaveRegistryInfo(0);
 		}
 		break;
 
@@ -274,14 +288,14 @@ INT_PTR CALLBACK adv_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		EnableWindow(GetDlgItem(hwnd, IDC_USE_AR), !g_config.videoinfo_compat);
 
-		SaveRegistryInfo();
+		SaveRegistryInfo(0);
 		
 
 		break;
 	case WM_NOTIFY:
 		hBrightness = GetDlgItem(hwnd, IDC_BRIGHTNESS);
 		g_config.nBrightness = (int) SendMessage(hBrightness, TBM_GETPOS, (WPARAM)NULL, (LPARAM)NULL);
-		SaveRegistryInfo();
+		SaveRegistryInfo(0);
 		break;
 	default :
 		return FALSE;
