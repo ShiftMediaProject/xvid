@@ -77,7 +77,7 @@ extern CONFIG g_config;
 
 /* functions */
 void LoadRegistryInfo();
-void SaveRegistryInfo();
+void SaveRegistryInfo(int perfCount);
 INT_PTR CALLBACK adv_proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 #define XVID_DLL_NAME "xvidcore.dll"
