@@ -1393,7 +1393,7 @@ HRESULT CXvidDecoder::MFTGetInputAvailableType(DWORD dwInputStreamID, DWORD dwTy
 		return MF_E_INVALIDSTREAMNUMBER;
 
 	DWORD i = 0;
-	GUID *bs_guid_table[8];
+	GUID *bs_guid_table[32];
 
 	bs_guid_table[i++] = (GUID *)&CLSID_XVID;
 	bs_guid_table[i++] = (GUID *)&CLSID_XVID_UC;
@@ -2307,7 +2307,7 @@ HRESULT CXvidDecoder::OnCheckInputType(IMFMediaType *pmt)
 		CloseLib();
 		hr = MF_E_INVALIDTYPE;
 	}
-	
+
 	/* haali media splitter reports VOL information in the format header */
 	if (SUCCEEDED(hr))
 	{
