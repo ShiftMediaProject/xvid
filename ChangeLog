@@ -1,4 +1,31 @@
-# Note that this ChangeLog covers only changes to the release branch
+# Note that this ChangeLog covers only main changes to the release branch
+
+2015-06-14 21:18 Isibaar
+	* xvidcore/dshow/src/CXvidDecoder.cpp
+	  xvidcore/dshow/src/CXvidDecoder.h
+	  xvidcore/dshow/src/config.c
+	  xvidcore/dshow/src/config.h: Fixed thumbnail creation under 
+	  Windows 10, faster rendering in MediaFoundation, various other 
+	  MFT-specific fixes...
+
+2015-06-11 02:51 Isibaar
+	* xvidcore/src/image/x86_asm/colorspace_rgb_mmx.asm: Attempt at 
+	  fixing a crash in RGB24->YV12 conversions - not yet really 
+	  tested...
+
+2015-06-08 21:15 Isibaar
+	* xvidcore/dshow/src/CXvidDecoder.cpp
+	  xvidcore/dshow/src/CXvidDecoder.h: Changed friendly name of 
+	  MFT to match common conventions.
+
+2014-11-26 00:17 Isibaar
+	* xvidcore/src/encoder.c: Fix for multi-threading bug in case of
+	  input video height <= 16 pixels. Patch by Lukasz Marek.
+
+2014-09-25 19:41 Isibaar
+
+	* xvidcore/build/win32/libxvidcore.vcproj: Enabled multi-threaded
+	  builds in MSVC by default
 
 2014-03-05 08:37  Isibaar
 
