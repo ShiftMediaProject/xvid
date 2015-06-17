@@ -699,7 +699,7 @@ xvid_gbl_info(xvid_gbl_info_t * info)
 		return XVID_ERR_VERSION;
 
 	info->actual_version = XVID_VERSION;
-	info->build = "xvid-1.3.3";
+	info->build = "xvid-1.3.4";
 	info->cpu_flags = detect_cpu_flags();
 	info->num_threads = 0; /* single-thread */
 
