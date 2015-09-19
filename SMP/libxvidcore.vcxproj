@@ -715,32 +715,14 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     <None Include="..\src\image\x86_asm\colorspace_mmx.inc" />
     <YASM Include="..\src\image\x86_asm\colorspace_rgb_mmx.asm">
       <FileType>Document</FileType>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='ReleaseLTO|Win32'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|Win32'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='DebugDLL|Win32'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='ReleaseLTO|x64'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|x64'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='DebugDLL|x64'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+      <IncludePaths>$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
     </YASM>
     <YASM Include="..\src\image\x86_asm\colorspace_yuv_mmx.asm">
       <FileType>Document</FileType>
     </YASM>
     <YASM Include="..\src\image\x86_asm\colorspace_yuyv_mmx.asm">
       <FileType>Document</FileType>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='ReleaseLTO|Win32'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|Win32'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='DebugDLL|Win32'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='ReleaseLTO|x64'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|x64'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
-      <IncludePaths Condition="'$(Configuration)|$(Platform)'=='DebugDLL|x64'">$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+      <IncludePaths>$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
     </YASM>
     <YASM Include="..\src\image\x86_asm\deintl_sse.asm">
       <FileType>Document</FileType>
