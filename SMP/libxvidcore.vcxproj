@@ -235,6 +235,11 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
       <Defines>WINDOWS;%(Defines)</Defines>
     </YASM>
+    <PreBuildEvent>
+      <Command>if exist $(OutDir)\include\xvid.h (
+del $(OutDir)\include\xvid.h
+)</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -266,6 +271,11 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <Defines>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(Defines)</Defines>
       <AdditionalOptions>-DNO_PREFIX %(AdditionalOptions)</AdditionalOptions>
     </YASM>
+    <PreBuildEvent>
+      <Command>if exist $(OutDir)\include\xvid.h (
+del $(OutDir)\include\xvid.h
+)</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|Win32'">
     <ClCompile>
@@ -302,6 +312,11 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
       <Defines>WINDOWS;%(Defines)</Defines>
     </YASM>
+    <PreBuildEvent>
+      <Command>if exist $(OutDir)\include\xvid.h (
+del $(OutDir)\include\xvid.h
+)</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|x64'">
     <ClCompile>
@@ -336,6 +351,11 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <Defines>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(Defines)</Defines>
       <AdditionalOptions>-DNO_PREFIX %(AdditionalOptions)</AdditionalOptions>
     </YASM>
+    <PreBuildEvent>
+      <Command>if exist $(OutDir)\include\xvid.h (
+del $(OutDir)\include\xvid.h
+)</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -379,6 +399,11 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
       <Defines>WINDOWS;%(Defines)</Defines>
     </YASM>
+    <PreBuildEvent>
+      <Command>if exist $(OutDir)\include\xvid.h (
+del $(OutDir)\include\xvid.h
+)</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLTO|Win32'">
     <ClCompile>
@@ -422,6 +447,11 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
       <Defines>WINDOWS;%(Defines)</Defines>
     </YASM>
+    <PreBuildEvent>
+      <Command>if exist $(OutDir)\include\xvid.h (
+del $(OutDir)\include\xvid.h
+)</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -466,6 +496,11 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <Defines>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(Defines)</Defines>
       <AdditionalOptions>-DNO_PREFIX %(AdditionalOptions)</AdditionalOptions>
     </YASM>
+    <PreBuildEvent>
+      <Command>if exist $(OutDir)\include\xvid.h (
+del $(OutDir)\include\xvid.h
+)</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseLTO|x64'">
     <ClCompile>
@@ -510,6 +545,11 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <Defines>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(Defines)</Defines>
       <AdditionalOptions>-DNO_PREFIX %(AdditionalOptions)</AdditionalOptions>
     </YASM>
+    <PreBuildEvent>
+      <Command>if exist $(OutDir)\include\xvid.h (
+del $(OutDir)\include\xvid.h
+)</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|Win32'">
     <ClCompile>
@@ -555,6 +595,11 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
       <Defines>WINDOWS;%(Defines)</Defines>
     </YASM>
+    <PreBuildEvent>
+      <Command>if exist $(OutDir)\include\xvid.h (
+del $(OutDir)\include\xvid.h
+)</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|x64'">
     <ClCompile>
@@ -599,6 +644,11 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
       <Defines>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(Defines)</Defines>
     </YASM>
+    <PreBuildEvent>
+      <Command>if exist $(OutDir)\include\xvid.h (
+del $(OutDir)\include\xvid.h
+)</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\src\bitstream\bitstream.h" />
