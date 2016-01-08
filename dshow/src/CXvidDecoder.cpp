@@ -319,6 +319,7 @@ CXvidDecoder::CXvidDecoder(LPUNKNOWN punk, HRESULT *phr) :
 
 	m_tray_icon = 0;
 	m_startClock = clock();
+	interlaced = 0;
 
 #if defined(XVID_USE_MFT)
 	InitializeCriticalSection(&m_mft_lock);
@@ -728,6 +729,15 @@ HRESULT CXvidDecoder::GetMediaType(int iPosition, CMediaType *mtOut)
 			vih->dwPictAspectRatioY = abs(m_create.height);
 			forced_ar = false;
 		} 
+		if (interlaced) {
+			vih->dwInterlaceFlags = AMINTERLACE_IsInterlaced;
+			if (interlaced > 1) {
+				vih->dwInterlaceFlags |= AMINTERLACE_Field1First;
+			}
+		}
+		else {
+			vih->dwInterlaceFlags = 0;
+		}
 	} else {
 
 		VIDEOINFOHEADER * vih = (VIDEOINFOHEADER *) mtOut->ReallocFormatBuffer(sizeof(VIDEOINFOHEADER));
@@ -1159,6 +1169,15 @@ repeat :
 				{
 					vihOut2->dwPictAspectRatioX = ar_x;
 					vihOut2->dwPictAspectRatioY = ar_y;
+					if (interlaced) {
+						vihOut2->dwInterlaceFlags = AMINTERLACE_IsInterlaced;
+						if (interlaced > 2) {
+							vihOut2->dwInterlaceFlags |= AMINTERLACE_Field1First;
+						}
+					}
+					else {
+						vihOut2->dwInterlaceFlags = 0;
+					}
 					pOut2->SetMediaType(&mtOut2);
 					m_pOutput->SetMediaType(&mtOut2);
 				}
@@ -1583,7 +1602,15 @@ if ( USE_RG565 )
 	}
 	
 	if (SUCCEEDED(hr)) {
-		hr = pOutputType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
+		if (interlaced > 1) {
+			hr = pOutputType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_FieldInterleavedUpperFirst);
+		}
+		else if (interlaced) {
+			hr = pOutputType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_FieldInterleavedLowerFirst);
+		}
+		else {
+			hr = pOutputType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
+		}
 	}
 	
 	if (SUCCEEDED(hr)) {
@@ -2049,6 +2076,13 @@ repeat :
 												           or it'll have no effect at all... */
 		}
 
+		if (stats.data.vol.general & XVID_VOL_INTERLACING) {
+			interlaced = (stats.data.vop.general & XVID_VOP_TOPFIELDFIRST) ? 2 : 1;
+		}
+		else {
+			interlaced = 0;
+		}
+		
 		m_frame.bitstream = (BYTE*)m_frame.bitstream + length;
 		m_frame.length -= length;
 		goto repeat;
@@ -2151,7 +2185,7 @@ HRESULT CXvidDecoder::MFTProcessOutput(DWORD dwFlags, DWORD cOutputBufferCount, 
 
 		convert.width = m_create.width;
 		convert.height = m_create.height;
-		convert.interlacing = 0;
+		convert.interlacing = (interlaced > 0) ? 1 : 0;
 		
 		if (m_frame.output.plane[1] != NULL && Dst != NULL && xvid_global_func != NULL) 
 			if (xvid_global_func(0, XVID_GBL_CONVERT, &convert, NULL) < 0) /* CSP convert into output buffer */
