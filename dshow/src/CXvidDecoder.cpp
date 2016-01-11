@@ -1151,39 +1151,49 @@ repeat :
 		{
             DPRINTF("*** XVID_DEC_DECODE");
 			return S_FALSE;
-		} else 
-			if (g_config.aspect_ratio == 0 || g_config.aspect_ratio == 1 && forced_ar == false) {
+		} else if ((g_config.aspect_ratio == 0 || g_config.aspect_ratio == 1 && forced_ar == false) || !!(interlaced)){
         
-      if (stats.type != XVID_TYPE_NOTHING) {  /* dont attempt to set vmr aspect ratio if no frame was returned by decoder */
-			// inspired by minolta! works for VMR 7 + 9
-			IMediaSample2 *pOut2 = NULL;
-			AM_SAMPLE2_PROPERTIES outProp2;
-			if (SUCCEEDED(pOut->QueryInterface(IID_IMediaSample2, (void **)&pOut2)) &&
-				SUCCEEDED(pOut2->GetProperties(FIELD_OFFSET(AM_SAMPLE2_PROPERTIES, tStart), (PBYTE)&outProp2)))
-			{
-				CMediaType mtOut2 = m_pOutput->CurrentMediaType();
-				VIDEOINFOHEADER2* vihOut2 = (VIDEOINFOHEADER2*)mtOut2.Format();
-
-				if (*mtOut2.FormatType() == FORMAT_VideoInfo2 && 
-					vihOut2->dwPictAspectRatioX != ar_x && vihOut2->dwPictAspectRatioY != ar_y)
+			if (stats.type != XVID_TYPE_NOTHING) {  /* dont attempt to set vmr aspect ratio if no frame was returned by decoder */
+				// inspired by minolta! works for VMR 7 + 9
+				IMediaSample2 *pOut2 = NULL;
+				AM_SAMPLE2_PROPERTIES outProp2;
+				if (SUCCEEDED(pOut->QueryInterface(IID_IMediaSample2, (void **)&pOut2)) &&
+					SUCCEEDED(pOut2->GetProperties(FIELD_OFFSET(AM_SAMPLE2_PROPERTIES, tStart), (PBYTE)&outProp2)))
 				{
-					vihOut2->dwPictAspectRatioX = ar_x;
-					vihOut2->dwPictAspectRatioY = ar_y;
-					if (interlaced) {
-						vihOut2->dwInterlaceFlags = AMINTERLACE_IsInterlaced;
-						if (interlaced > 2) {
-							vihOut2->dwInterlaceFlags |= AMINTERLACE_Field1First;
+					CMediaType mtOut2 = m_pOutput->CurrentMediaType();
+					VIDEOINFOHEADER2* vihOut2 = (VIDEOINFOHEADER2*)mtOut2.Format();
+
+					if (*mtOut2.FormatType() == FORMAT_VideoInfo2) 
+					{
+						int need_format_change = 0;
+
+						if (vihOut2->dwPictAspectRatioX != ar_x || vihOut2->dwPictAspectRatioY != ar_y)
+						{
+							vihOut2->dwPictAspectRatioX = ar_x;
+							vihOut2->dwPictAspectRatioY = ar_y;
+							need_format_change = 1;
+						}
+						if ((interlaced) && !(vihOut2->dwInterlaceFlags & AMINTERLACE_IsInterlaced)) 
+						{
+							vihOut2->dwInterlaceFlags = AMINTERLACE_IsInterlaced;
+							if (interlaced > 2) {
+								vihOut2->dwInterlaceFlags |= AMINTERLACE_Field1First;
+							}
+							need_format_change = 1;
+						}
+						else if (!interlaced && !!(vihOut2->dwInterlaceFlags & AMINTERLACE_IsInterlaced)){
+							vihOut2->dwInterlaceFlags = 0;
+							need_format_change = 1;
+						}
+
+						if (need_format_change) {
+							pOut2->SetMediaType(&mtOut2);
+							m_pOutput->SetMediaType(&mtOut2);
 						}
 					}
-					else {
-						vihOut2->dwInterlaceFlags = 0;
-					}
-					pOut2->SetMediaType(&mtOut2);
-					m_pOutput->SetMediaType(&mtOut2);
+					pOut2->Release();
 				}
-				pOut2->Release();
 			}
-      }
 		}
 	}
 	else
@@ -1241,6 +1251,13 @@ repeat :
 
 			ar_x = par_x * stats.data.vol.width;
 			ar_y = par_y * stats.data.vol.height;
+		}
+
+		if (!!(stats.data.vol.general & XVID_VOL_INTERLACING)) {
+			interlaced = (stats.data.vop.general & XVID_VOP_TOPFIELDFIRST) ? 2 : 1;
+		}
+		else if (interlaced > 0) {
+			interlaced = 0;
 		}
 
 		m_frame.bitstream = (BYTE*)m_frame.bitstream + length;
@@ -1988,6 +2005,8 @@ HRESULT CXvidDecoder::MFTProcessInput(DWORD dwInputStreamID, IMFSample *pSample,
 	HRESULT hr = S_OK;
 	IMFMediaBuffer *pBuffer;
 
+	int need_format_change = 0;
+
 	if (SUCCEEDED(hr)) {
 		hr = pSample->ConvertToContiguousBuffer(&pBuffer);
 	}
@@ -2072,17 +2091,22 @@ repeat :
 			}
 
 			ar_x = par_x * stats.data.vol.width;
-			ar_y = par_y * stats.data.vol.height; /* TODO: Actually set the newly determined AR on the output sample type 
-												           or it'll have no effect at all... */
+			ar_y = par_y * stats.data.vol.height; 
+
+			need_format_change = 1;
 		}
 
-		if (stats.data.vol.general & XVID_VOL_INTERLACING) {
+		if (!!(stats.data.vol.general & XVID_VOL_INTERLACING)) {
 			interlaced = (stats.data.vop.general & XVID_VOP_TOPFIELDFIRST) ? 2 : 1;
+			need_format_change = 1;
 		}
 		else {
-			interlaced = 0;
+			if (interlaced > 0) {
+				interlaced = 0;
+				need_format_change = 1;
+			}
 		}
-		
+
 		m_frame.bitstream = (BYTE*)m_frame.bitstream + length;
 		m_frame.length -= length;
 		goto repeat;
@@ -2109,6 +2133,33 @@ END_LOOP:
 		}
 	}
 	
+	if (need_format_change) {
+		IMFMediaType *pOutputType = NULL;
+		hr = MFTGetOutputCurrentType(0, &pOutputType);
+		
+		if (SUCCEEDED(hr)) {
+	    	if (interlaced > 1) {
+		        hr = pOutputType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_FieldInterleavedUpperFirst);
+		    }
+		    else if (interlaced) {
+		        hr = pOutputType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_FieldInterleavedLowerFirst);
+		    }
+		    else {
+		        hr = pOutputType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_Progressive);
+		    }
+		}
+		
+		if (SUCCEEDED(hr)) {
+		    hr = MFSetAttributeRatio(pOutputType, MF_MT_PIXEL_ASPECT_RATIO, ar_x, ar_y);
+		}
+
+		if (SUCCEEDED(hr)) {
+			MFTSetOutputType(0, pOutputType, 0);
+		}
+
+		if (pOutputType) pOutputType->Release();
+	}
+
 	LeaveCriticalSection(&m_mft_lock);
 
 	return hr;
