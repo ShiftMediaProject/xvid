@@ -2090,8 +2090,8 @@ repeat :
 				par_y = PARS[stats.data.vol.par-1][1];
 			}
 
-			ar_x = par_x * stats.data.vol.width;
-			ar_y = par_y * stats.data.vol.height; 
+			ar_x = par_x;
+			ar_y = par_y; 
 
 			need_format_change = 1;
 		}
