@@ -690,6 +690,7 @@ del /f /q $(OutDir)\licenses\xvid.txt
       </AddModuleNamesToAssembly>
       <ModuleDefinitionFile>..\build\generic\libxvidcore.def</ModuleDefinitionFile>
       <LargeAddressAware>true</LargeAddressAware>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
       <Command>mkdir $(OutDir)\include
@@ -751,6 +752,7 @@ del /f /q $(OutDir)\licenses\xvid.txt
       <AddModuleNamesToAssembly>
       </AddModuleNamesToAssembly>
       <ModuleDefinitionFile>..\build\generic\libxvidcore.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
       <Command>mkdir $(OutDir)\include
