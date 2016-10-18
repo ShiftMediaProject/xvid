@@ -272,6 +272,13 @@ case "$target_os" in
 	STATIC_EXTENSION="a"
 	OBJECT_EXTENSION="o"
 	;;
+     amigaos)
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: .so .a .o" >&5
+ $as_echo ".so .a .o" >&6; }
+	STATIC_EXTENSION="a"
+	SHARED_EXTENSION="so"
+	OBJECT_EXTENSION="o"
+	;;
      *)
         AC_MSG_RESULT([Unknown OS - Using .so .a .o])
 	STATIC_EXTENSION="a"
@@ -339,6 +346,16 @@ case "$target_os" in
 	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
 	SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION)"
 	SPECIFIC_LDFLAGS="-nostart"
+	SPECIFIC_CFLAGS="-fPIC"
+	;;
+     amigaos)
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: ok" >&5
+ $as_echo "ok" >&6; }
+	STATIC_LIB="libxvidcore.\$(STATIC_EXTENSION)"
+	SHARED_LIB="libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR).\$(API_MINOR)"
+	SO_API_MAJOR_LINK="libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR)"
+	SO_LINK="libxvidcore.\$(SHARED_EXTENSION)"
+	SPECIFIC_LDFLAGS="-Wl,-soname,libxvidcore.\$(SHARED_EXTENSION).\$(API_MAJOR) -shared -lc -lm"
 	SPECIFIC_CFLAGS="-fPIC"
 	;;
      *)
