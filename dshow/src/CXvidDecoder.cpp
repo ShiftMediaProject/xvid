@@ -2193,7 +2193,7 @@ HRESULT CXvidDecoder::MFTProcessOutput(DWORD dwFlags, DWORD cOutputBufferCount, 
 	
 	BYTE *Dst = NULL;
 	DWORD buffer_size;
-	LONG stride = m_create.width;
+	LONG stride = (m_pOutputTypeBPP < 15) ? CALC_BI_STRIDE(m_create.width, 8) : CALC_BI_STRIDE(m_create.width, m_pOutputTypeBPP);
 	IMFMediaBuffer *pOutput = NULL;
 	IMF2DBuffer *pOutput2D = NULL;
 
