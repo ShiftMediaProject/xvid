@@ -343,6 +343,7 @@ del /f /q $(OutDir)\licenses\xvid.txt
       <ModuleDefinitionFile>..\build\generic\libxvidcore.def</ModuleDefinitionFile>
       <LargeAddressAware>true</LargeAddressAware>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
     </Link>
     <PostBuildEvent>
       <Command>mkdir $(OutDir)\include
@@ -395,6 +396,7 @@ del /f /q $(OutDir)\licenses\xvid.txt
       </AddModuleNamesToAssembly>
       <ModuleDefinitionFile>..\build\generic\libxvidcore.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <MinimumRequiredVersion>6.0</MinimumRequiredVersion>
     </Link>
     <PostBuildEvent>
       <Command>mkdir $(OutDir)\include
@@ -701,6 +703,7 @@ del /f /q $(OutDir)\licenses\xvid.txt
       <ModuleDefinitionFile>..\build\generic\libxvidcore.def</ModuleDefinitionFile>
       <LargeAddressAware>true</LargeAddressAware>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
     </Link>
     <PostBuildEvent>
       <Command>mkdir $(OutDir)\include
@@ -763,6 +766,7 @@ del /f /q $(OutDir)\licenses\xvid.txt
       </AddModuleNamesToAssembly>
       <ModuleDefinitionFile>..\build\generic\libxvidcore.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <MinimumRequiredVersion>6.0</MinimumRequiredVersion>
     </Link>
     <PostBuildEvent>
       <Command>mkdir $(OutDir)\include
