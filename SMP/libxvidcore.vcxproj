@@ -131,7 +131,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\vsyasm.props" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\yasm.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -252,8 +252,9 @@ mkdir $(OutDir)\licenses
 copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     </PostBuildEvent>
     <YASM>
-      <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
-      <Defines>WINDOWS;%(Defines)</Defines>
+      <IncludePaths>$(ProjectDir)\..\src;%(IncludePaths)</IncludePaths>
+      <PreprocessorDefinitions>WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </YASM>
     <PreBuildEvent>
       <Command>if exist $(OutDir)\include\xvid.h (
@@ -299,9 +300,9 @@ mkdir $(OutDir)\licenses
 copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     </PostBuildEvent>
     <YASM>
-      <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
-      <Defines>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(Defines)</Defines>
-      <AdditionalOptions>-DNO_PREFIX %(AdditionalOptions)</AdditionalOptions>
+      <IncludePaths>$(ProjectDir)\..\src;%(IncludePaths)</IncludePaths>
+      <PreprocessorDefinitions>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </YASM>
     <PreBuildEvent>
       <Command>if exist $(OutDir)\include\xvid.h (
@@ -352,10 +353,9 @@ mkdir $(OutDir)\licenses
 copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     </PostBuildEvent>
     <YASM>
-      <ErrorFile>
-      </ErrorFile>
-      <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
-      <Defines>WINDOWS;%(Defines)</Defines>
+      <IncludePaths>$(ProjectDir)\..\src;%(IncludePaths)</IncludePaths>
+      <PreprocessorDefinitions>WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </YASM>
     <PreBuildEvent>
       <Command>if exist $(OutDir)\include\xvid.h (
@@ -405,9 +405,9 @@ mkdir $(OutDir)\licenses
 copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     </PostBuildEvent>
     <YASM>
-      <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
-      <Defines>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(Defines)</Defines>
-      <AdditionalOptions>-DNO_PREFIX %(AdditionalOptions)</AdditionalOptions>
+      <IncludePaths>$(ProjectDir)\..\src;%(IncludePaths)</IncludePaths>
+      <PreprocessorDefinitions>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </YASM>
     <PreBuildEvent>
       <Command>if exist $(OutDir)\include\xvid.h (
@@ -466,8 +466,8 @@ mkdir $(OutDir)\licenses
 copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     </PostBuildEvent>
     <YASM>
-      <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
-      <Defines>WINDOWS;%(Defines)</Defines>
+      <IncludePaths>$(ProjectDir)\..\src;%(IncludePaths)</IncludePaths>
+      <PreprocessorDefinitions>WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </YASM>
     <PreBuildEvent>
       <Command>if exist $(OutDir)\include\xvid.h (
@@ -526,8 +526,8 @@ mkdir $(OutDir)\licenses
 copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     </PostBuildEvent>
     <YASM>
-      <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
-      <Defines>WINDOWS;%(Defines)</Defines>
+      <IncludePaths>$(ProjectDir)\..\src;%(IncludePaths)</IncludePaths>
+      <PreprocessorDefinitions>WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </YASM>
     <PreBuildEvent>
       <Command>if exist $(OutDir)\include\xvid.h (
@@ -586,9 +586,8 @@ mkdir $(OutDir)\licenses
 copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     </PostBuildEvent>
     <YASM>
-      <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
-      <Defines>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(Defines)</Defines>
-      <AdditionalOptions>-DNO_PREFIX %(AdditionalOptions)</AdditionalOptions>
+      <IncludePaths>$(ProjectDir)\..\src;%(IncludePaths)</IncludePaths>
+      <PreprocessorDefinitions>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </YASM>
     <PreBuildEvent>
       <Command>if exist $(OutDir)\include\xvid.h (
@@ -647,9 +646,8 @@ mkdir $(OutDir)\licenses
 copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     </PostBuildEvent>
     <YASM>
-      <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
-      <Defines>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(Defines)</Defines>
-      <AdditionalOptions>-DNO_PREFIX %(AdditionalOptions)</AdditionalOptions>
+      <IncludePaths>$(ProjectDir)\..\src;%(IncludePaths)</IncludePaths>
+      <PreprocessorDefinitions>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </YASM>
     <PreBuildEvent>
       <Command>if exist $(OutDir)\include\xvid.h (
@@ -712,8 +710,8 @@ mkdir $(OutDir)\licenses
 copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     </PostBuildEvent>
     <YASM>
-      <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
-      <Defines>WINDOWS;%(Defines)</Defines>
+      <IncludePaths>$(ProjectDir)\..\src;%(IncludePaths)</IncludePaths>
+      <PreprocessorDefinitions>WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </YASM>
     <PreBuildEvent>
       <Command>if exist $(OutDir)\include\xvid.h (
@@ -775,8 +773,8 @@ mkdir $(OutDir)\licenses
 copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     </PostBuildEvent>
     <YASM>
-      <IncludePaths>$(ProjectDir)\..\src</IncludePaths>
-      <Defines>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(Defines)</Defines>
+      <IncludePaths>$(ProjectDir)\..\src;%(IncludePaths)</IncludePaths>
+      <PreprocessorDefinitions>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </YASM>
     <PreBuildEvent>
       <Command>if exist $(OutDir)\include\xvid.h (
@@ -879,120 +877,54 @@ del /f /q $(OutDir)\licenses\xvid.txt
   </ItemGroup>
   <ItemGroup>
     <None Include="..\build\generic\libxvidcore.def" />
-    <YASM Include="..\src\bitstream\x86_asm\cbp_mmx.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\bitstream\x86_asm\cbp_sse2.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\dct\x86_asm\fdct_mmx_ffmpeg.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\dct\x86_asm\fdct_mmx_skal.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\dct\x86_asm\fdct_sse2_skal.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\dct\x86_asm\idct_3dne.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\dct\x86_asm\idct_mmx.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\dct\x86_asm\idct_sse2_dmitry.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <None Include="..\src\image\x86_asm\colorspace_mmx.inc" />
-    <YASM Include="..\src\image\x86_asm\colorspace_rgb_mmx.asm">
-      <FileType>Document</FileType>
-      <IncludePaths>$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
-    </YASM>
-    <YASM Include="..\src\image\x86_asm\colorspace_yuv_mmx.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\image\x86_asm\colorspace_yuyv_mmx.asm">
-      <FileType>Document</FileType>
-      <IncludePaths>$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
-    </YASM>
-    <YASM Include="..\src\image\x86_asm\deintl_sse.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\image\x86_asm\gmc_mmx.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\image\x86_asm\interpolate8x8_3dn.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\image\x86_asm\interpolate8x8_3dne.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\image\x86_asm\interpolate8x8_mmx.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\image\x86_asm\interpolate8x8_xmm.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\image\x86_asm\postprocessing_mmx.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\image\x86_asm\postprocessing_sse2.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\image\x86_asm\qpel_mmx.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\image\x86_asm\reduced_mmx.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\motion\x86_asm\sad_3dn.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\motion\x86_asm\sad_3dne.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\motion\x86_asm\sad_mmx.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\motion\x86_asm\sad_sse2.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\motion\x86_asm\sad_xmm.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\plugins\x86_asm\plugin_ssim-a.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\quant\x86_asm\quantize_h263_3dne.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\quant\x86_asm\quantize_h263_mmx.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\quant\x86_asm\quantize_mpeg_mmx.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\quant\x86_asm\quantize_mpeg_xmm.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\utils\x86_asm\cpuid.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\utils\x86_asm\interlacing_mmx.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\utils\x86_asm\mem_transfer_3dne.asm">
-      <FileType>Document</FileType>
-    </YASM>
-    <YASM Include="..\src\utils\x86_asm\mem_transfer_mmx.asm">
-      <FileType>Document</FileType>
-    </YASM>
   </ItemGroup>
   <ItemGroup>
     <Text Include="readme.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <YASM Include="..\src\bitstream\x86_asm\cbp_mmx.asm" />
+    <YASM Include="..\src\bitstream\x86_asm\cbp_sse2.asm" />
+    <YASM Include="..\src\dct\x86_asm\fdct_mmx_ffmpeg.asm" />
+    <YASM Include="..\src\dct\x86_asm\fdct_mmx_skal.asm" />
+    <YASM Include="..\src\dct\x86_asm\fdct_sse2_skal.asm" />
+    <YASM Include="..\src\dct\x86_asm\idct_3dne.asm" />
+    <YASM Include="..\src\dct\x86_asm\idct_mmx.asm" />
+    <YASM Include="..\src\dct\x86_asm\idct_sse2_dmitry.asm" />
+    <YASM Include="..\src\image\x86_asm\colorspace_mmx.inc" />
+    <YASM Include="..\src\image\x86_asm\colorspace_rgb_mmx.asm">
+      <IncludePaths>$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+    </YASM>
+    <YASM Include="..\src\image\x86_asm\colorspace_yuv_mmx.asm" />
+    <YASM Include="..\src\image\x86_asm\colorspace_yuyv_mmx.asm">
+      <IncludePaths>$(ProjectDir)\..\src\image\x86_asm;%(IncludePaths)</IncludePaths>
+    </YASM>
+    <YASM Include="..\src\image\x86_asm\deintl_sse.asm" />
+    <YASM Include="..\src\image\x86_asm\gmc_mmx.asm" />
+    <YASM Include="..\src\image\x86_asm\interpolate8x8_3dn.asm" />
+    <YASM Include="..\src\image\x86_asm\interpolate8x8_3dne.asm" />
+    <YASM Include="..\src\image\x86_asm\interpolate8x8_mmx.asm" />
+    <YASM Include="..\src\image\x86_asm\interpolate8x8_xmm.asm" />
+    <YASM Include="..\src\image\x86_asm\postprocessing_mmx.asm" />
+    <YASM Include="..\src\image\x86_asm\postprocessing_sse2.asm" />
+    <YASM Include="..\src\image\x86_asm\qpel_mmx.asm" />
+    <YASM Include="..\src\image\x86_asm\reduced_mmx.asm" />
+    <YASM Include="..\src\motion\x86_asm\sad_3dn.asm" />
+    <YASM Include="..\src\motion\x86_asm\sad_3dne.asm" />
+    <YASM Include="..\src\motion\x86_asm\sad_mmx.asm" />
+    <YASM Include="..\src\motion\x86_asm\sad_sse2.asm" />
+    <YASM Include="..\src\motion\x86_asm\sad_xmm.asm" />
+    <YASM Include="..\src\plugins\x86_asm\plugin_ssim-a.asm" />
+    <YASM Include="..\src\quant\x86_asm\quantize_h263_3dne.asm" />
+    <YASM Include="..\src\quant\x86_asm\quantize_h263_mmx.asm" />
+    <YASM Include="..\src\quant\x86_asm\quantize_mpeg_mmx.asm" />
+    <YASM Include="..\src\quant\x86_asm\quantize_mpeg_xmm.asm" />
+    <YASM Include="..\src\utils\x86_asm\cpuid.asm" />
+    <YASM Include="..\src\utils\x86_asm\interlacing_mmx.asm" />
+    <YASM Include="..\src\utils\x86_asm\mem_transfer_3dne.asm" />
+    <YASM Include="..\src\utils\x86_asm\mem_transfer_mmx.asm" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\vsyasm.targets" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\yasm.targets" />
   </ImportGroup>
 </Project>

@@ -316,12 +316,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\src\image\x86_asm\colorspace_mmx.inc">
-      <Filter>Source Files\image\x86_asm</Filter>
-    </None>
     <None Include="..\build\generic\libxvidcore.def">
       <Filter>Resource Files</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="readme.txt" />
   </ItemGroup>
   <ItemGroup>
     <YASM Include="..\src\bitstream\x86_asm\cbp_mmx.asm">
@@ -347,6 +347,9 @@
     </YASM>
     <YASM Include="..\src\dct\x86_asm\idct_sse2_dmitry.asm">
       <Filter>Source Files\dct\x86_asm</Filter>
+    </YASM>
+    <YASM Include="..\src\image\x86_asm\colorspace_mmx.inc">
+      <Filter>Source Files\image\x86_asm</Filter>
     </YASM>
     <YASM Include="..\src\image\x86_asm\colorspace_rgb_mmx.asm">
       <Filter>Source Files\image\x86_asm</Filter>
@@ -429,8 +432,5 @@
     <YASM Include="..\src\utils\x86_asm\mem_transfer_mmx.asm">
       <Filter>Source Files\utils\x86_asm</Filter>
     </YASM>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="readme.txt" />
   </ItemGroup>
 </Project>
