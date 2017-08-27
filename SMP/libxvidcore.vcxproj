@@ -244,8 +244,8 @@
       <SubSystem>Windows</SubSystem>
     </Lib>
     <PostBuildEvent>
-      <Command>mkdir $(OutDir)\include
-copy ..\src\xvid.h $(OutDir)\include
+      <Command>mkdir "$(OutDir)"\include
+copy ..\src\xvid.h "$(OutDir)"\include
 mkdir $(OutDir)\licenses
 copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     </PostBuildEvent>
@@ -255,8 +255,8 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </YASM>
     <PreBuildEvent>
-      <Command>if exist $(OutDir)\include\xvid.h (
-del $(OutDir)\include\xvid.h
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del "$(OutDir)"\include\xvid.h
 )</Command>
     </PreBuildEvent>
     <CustomBuildStep>
@@ -264,8 +264,8 @@ del $(OutDir)\include\xvid.h
     </CustomBuildStep>
     <CustomBuildStep>
       <Outputs>force_clean</Outputs>
-      <Command>if exist $(OutDir)\include\xvid.h (
-del /f /q $(OutDir)\include\xvid.h
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del /f /q "$(OutDir)"\include\xvid.h
 )
 if exist $(OutDir)\licenses\xvid.txt (
 del /f /q $(OutDir)\licenses\xvid.txt
@@ -292,8 +292,8 @@ del /f /q $(OutDir)\licenses\xvid.txt
       <SubSystem>Windows</SubSystem>
     </Lib>
     <PostBuildEvent>
-      <Command>mkdir $(OutDir)\include
-copy ..\src\xvid.h $(OutDir)\include
+      <Command>mkdir "$(OutDir)"\include
+copy ..\src\xvid.h "$(OutDir)"\include
 mkdir $(OutDir)\licenses
 copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     </PostBuildEvent>
@@ -303,8 +303,8 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </YASM>
     <PreBuildEvent>
-      <Command>if exist $(OutDir)\include\xvid.h (
-del $(OutDir)\include\xvid.h
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del "$(OutDir)"\include\xvid.h
 )</Command>
     </PreBuildEvent>
     <CustomBuildStep>
@@ -312,8 +312,8 @@ del $(OutDir)\include\xvid.h
     </CustomBuildStep>
     <CustomBuildStep>
       <Outputs>force_clean</Outputs>
-      <Command>if exist $(OutDir)\include\xvid.h (
-del /f /q $(OutDir)\include\xvid.h
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del /f /q "$(OutDir)"\include\xvid.h
 )
 if exist $(OutDir)\licenses\xvid.txt (
 del /f /q $(OutDir)\licenses\xvid.txt
@@ -345,8 +345,8 @@ del /f /q $(OutDir)\licenses\xvid.txt
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
     </Link>
     <PostBuildEvent>
-      <Command>mkdir $(OutDir)\include
-copy ..\src\xvid.h $(OutDir)\include
+      <Command>mkdir "$(OutDir)"\include
+copy ..\src\xvid.h "$(OutDir)"\include
 mkdir $(OutDir)\licenses
 copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     </PostBuildEvent>
@@ -356,8 +356,8 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </YASM>
     <PreBuildEvent>
-      <Command>if exist $(OutDir)\include\xvid.h (
-del $(OutDir)\include\xvid.h
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del "$(OutDir)"\include\xvid.h
 )</Command>
     </PreBuildEvent>
     <CustomBuildStep>
@@ -365,8 +365,8 @@ del $(OutDir)\include\xvid.h
     </CustomBuildStep>
     <CustomBuildStep>
       <Outputs>force_clean</Outputs>
-      <Command>if exist $(OutDir)\include\xvid.h (
-del /f /q $(OutDir)\include\xvid.h
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del /f /q "$(OutDir)"\include\xvid.h
 )
 if exist $(OutDir)\licenses\xvid.txt (
 del /f /q $(OutDir)\licenses\xvid.txt
@@ -397,8 +397,8 @@ del /f /q $(OutDir)\licenses\xvid.txt
       <MinimumRequiredVersion>6.0</MinimumRequiredVersion>
     </Link>
     <PostBuildEvent>
-      <Command>mkdir $(OutDir)\include
-copy ..\src\xvid.h $(OutDir)\include
+      <Command>mkdir "$(OutDir)"\include
+copy ..\src\xvid.h "$(OutDir)"\include
 mkdir $(OutDir)\licenses
 copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     </PostBuildEvent>
@@ -408,8 +408,8 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </YASM>
     <PreBuildEvent>
-      <Command>if exist $(OutDir)\include\xvid.h (
-del $(OutDir)\include\xvid.h
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del "$(OutDir)"\include\xvid.h
 )</Command>
     </PreBuildEvent>
     <CustomBuildStep>
@@ -417,8 +417,8 @@ del $(OutDir)\include\xvid.h
     </CustomBuildStep>
     <CustomBuildStep>
       <Outputs>force_clean</Outputs>
-      <Command>if exist $(OutDir)\include\xvid.h (
-del /f /q $(OutDir)\include\xvid.h
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del /f /q "$(OutDir)"\include\xvid.h
 )
 if exist $(OutDir)\licenses\xvid.txt (
 del /f /q $(OutDir)\licenses\xvid.txt
@@ -454,8 +454,8 @@ del /f /q $(OutDir)\licenses\xvid.txt
       <SubSystem>Windows</SubSystem>
     </Lib>
     <PostBuildEvent>
-      <Command>mkdir $(OutDir)\include
-copy ..\src\xvid.h $(OutDir)\include
+      <Command>mkdir "$(OutDir)"\include
+copy ..\src\xvid.h "$(OutDir)"\include
 mkdir $(OutDir)\licenses
 copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     </PostBuildEvent>
@@ -464,8 +464,8 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <PreprocessorDefinitions>WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </YASM>
     <PreBuildEvent>
-      <Command>if exist $(OutDir)\include\xvid.h (
-del $(OutDir)\include\xvid.h
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del "$(OutDir)"\include\xvid.h
 )</Command>
     </PreBuildEvent>
     <CustomBuildStep>
@@ -473,8 +473,8 @@ del $(OutDir)\include\xvid.h
     </CustomBuildStep>
     <CustomBuildStep>
       <Outputs>force_clean</Outputs>
-      <Command>if exist $(OutDir)\include\xvid.h (
-del /f /q $(OutDir)\include\xvid.h
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del /f /q "$(OutDir)"\include\xvid.h
 )
 if exist $(OutDir)\licenses\xvid.txt (
 del /f /q $(OutDir)\licenses\xvid.txt
@@ -510,8 +510,8 @@ del /f /q $(OutDir)\licenses\xvid.txt
       <SubSystem>Windows</SubSystem>
     </Lib>
     <PostBuildEvent>
-      <Command>mkdir $(OutDir)\include
-copy ..\src\xvid.h $(OutDir)\include
+      <Command>mkdir "$(OutDir)"\include
+copy ..\src\xvid.h "$(OutDir)"\include
 mkdir $(OutDir)\licenses
 copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     </PostBuildEvent>
@@ -520,8 +520,8 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <PreprocessorDefinitions>WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </YASM>
     <PreBuildEvent>
-      <Command>if exist $(OutDir)\include\xvid.h (
-del $(OutDir)\include\xvid.h
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del "$(OutDir)"\include\xvid.h
 )</Command>
     </PreBuildEvent>
     <CustomBuildStep>
@@ -529,8 +529,8 @@ del $(OutDir)\include\xvid.h
     </CustomBuildStep>
     <CustomBuildStep>
       <Outputs>force_clean</Outputs>
-      <Command>if exist $(OutDir)\include\xvid.h (
-del /f /q $(OutDir)\include\xvid.h
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del /f /q "$(OutDir)"\include\xvid.h
 )
 if exist $(OutDir)\licenses\xvid.txt (
 del /f /q $(OutDir)\licenses\xvid.txt
@@ -566,8 +566,8 @@ del /f /q $(OutDir)\licenses\xvid.txt
       <SubSystem>Windows</SubSystem>
     </Lib>
     <PostBuildEvent>
-      <Command>mkdir $(OutDir)\include
-copy ..\src\xvid.h $(OutDir)\include
+      <Command>mkdir "$(OutDir)"\include
+copy ..\src\xvid.h "$(OutDir)"\include
 mkdir $(OutDir)\licenses
 copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     </PostBuildEvent>
@@ -576,8 +576,8 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <PreprocessorDefinitions>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </YASM>
     <PreBuildEvent>
-      <Command>if exist $(OutDir)\include\xvid.h (
-del $(OutDir)\include\xvid.h
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del "$(OutDir)"\include\xvid.h
 )</Command>
     </PreBuildEvent>
     <CustomBuildStep>
@@ -585,8 +585,8 @@ del $(OutDir)\include\xvid.h
     </CustomBuildStep>
     <CustomBuildStep>
       <Outputs>force_clean</Outputs>
-      <Command>if exist $(OutDir)\include\xvid.h (
-del /f /q $(OutDir)\include\xvid.h
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del /f /q "$(OutDir)"\include\xvid.h
 )
 if exist $(OutDir)\licenses\xvid.txt (
 del /f /q $(OutDir)\licenses\xvid.txt
@@ -622,8 +622,8 @@ del /f /q $(OutDir)\licenses\xvid.txt
       <SubSystem>Windows</SubSystem>
     </Lib>
     <PostBuildEvent>
-      <Command>mkdir $(OutDir)\include
-copy ..\src\xvid.h $(OutDir)\include
+      <Command>mkdir "$(OutDir)"\include
+copy ..\src\xvid.h "$(OutDir)"\include
 mkdir $(OutDir)\licenses
 copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     </PostBuildEvent>
@@ -632,8 +632,8 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <PreprocessorDefinitions>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </YASM>
     <PreBuildEvent>
-      <Command>if exist $(OutDir)\include\xvid.h (
-del $(OutDir)\include\xvid.h
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del "$(OutDir)"\include\xvid.h
 )</Command>
     </PreBuildEvent>
     <CustomBuildStep>
@@ -641,8 +641,8 @@ del $(OutDir)\include\xvid.h
     </CustomBuildStep>
     <CustomBuildStep>
       <Outputs>force_clean</Outputs>
-      <Command>if exist $(OutDir)\include\xvid.h (
-del /f /q $(OutDir)\include\xvid.h
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del /f /q "$(OutDir)"\include\xvid.h
 )
 if exist $(OutDir)\licenses\xvid.txt (
 del /f /q $(OutDir)\licenses\xvid.txt
@@ -682,8 +682,8 @@ del /f /q $(OutDir)\licenses\xvid.txt
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
     </Link>
     <PostBuildEvent>
-      <Command>mkdir $(OutDir)\include
-copy ..\src\xvid.h $(OutDir)\include
+      <Command>mkdir "$(OutDir)"\include
+copy ..\src\xvid.h "$(OutDir)"\include
 mkdir $(OutDir)\licenses
 copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     </PostBuildEvent>
@@ -692,8 +692,8 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <PreprocessorDefinitions>WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </YASM>
     <PreBuildEvent>
-      <Command>if exist $(OutDir)\include\xvid.h (
-del $(OutDir)\include\xvid.h
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del "$(OutDir)"\include\xvid.h
 )</Command>
     </PreBuildEvent>
     <CustomBuildStep>
@@ -701,8 +701,8 @@ del $(OutDir)\include\xvid.h
     </CustomBuildStep>
     <CustomBuildStep>
       <Outputs>force_clean</Outputs>
-      <Command>if exist $(OutDir)\include\xvid.h (
-del /f /q $(OutDir)\include\xvid.h
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del /f /q "$(OutDir)"\include\xvid.h
 )
 if exist $(OutDir)\licenses\xvid.txt (
 del /f /q $(OutDir)\licenses\xvid.txt
@@ -741,8 +741,8 @@ del /f /q $(OutDir)\licenses\xvid.txt
       <MinimumRequiredVersion>6.0</MinimumRequiredVersion>
     </Link>
     <PostBuildEvent>
-      <Command>mkdir $(OutDir)\include
-copy ..\src\xvid.h $(OutDir)\include
+      <Command>mkdir "$(OutDir)"\include
+copy ..\src\xvid.h "$(OutDir)"\include
 mkdir $(OutDir)\licenses
 copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
     </PostBuildEvent>
@@ -751,8 +751,8 @@ copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
       <PreprocessorDefinitions>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </YASM>
     <PreBuildEvent>
-      <Command>if exist $(OutDir)\include\xvid.h (
-del $(OutDir)\include\xvid.h
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del "$(OutDir)"\include\xvid.h
 )</Command>
     </PreBuildEvent>
     <CustomBuildStep>
@@ -760,8 +760,8 @@ del $(OutDir)\include\xvid.h
     </CustomBuildStep>
     <CustomBuildStep>
       <Outputs>force_clean</Outputs>
-      <Command>if exist $(OutDir)\include\xvid.h (
-del /f /q $(OutDir)\include\xvid.h
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del /f /q "$(OutDir)"\include\xvid.h
 )
 if exist $(OutDir)\licenses\xvid.txt (
 del /f /q $(OutDir)\licenses\xvid.txt
