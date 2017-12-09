@@ -69,13 +69,13 @@ fi
 ##############################################################################
 
 echo "Creating ./configure"
-$AUTOCONF -f
+$AUTOCONF
 
 echo "Copying files provided by automake"
-$AUTOMAKE -c -a -f 1>/dev/null 2>&1
+$AUTOMAKE -c -a 1>/dev/null 2>&1
 
 echo "Copying files provided by libtool"
-$LIBTOOLIZE -f -c -i 1>/dev/null 2>&1
+$LIBTOOLIZE -f -c 1>/dev/null 2>&1
 
 echo "Removing files that are not needed"
 rm -rf autom4* 1>/dev/null 2>&1 
