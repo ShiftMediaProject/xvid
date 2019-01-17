@@ -153,6 +153,8 @@ read_video_packet_header(Bitstream *bs,
 		READ_MARKER();
 		if (dec->time_inc_bits)
 			time_increment = (BitstreamGetBits(bs, dec->time_inc_bits));	/* vop_time_increment */
+		else
+			time_increment = 0;
 		READ_MARKER();
 		DPRINTF(XVID_DEBUG_HEADER,"time %i:%i\n", time_base, time_increment);
 
