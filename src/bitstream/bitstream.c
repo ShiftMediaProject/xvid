@@ -860,8 +860,9 @@ BitstreamReadHeaders(Bitstream * bs,
 				dec->shape == VIDOBJLAY_SHAPE_RECTANGULAR &&
 				(coding_type == P_VOP || coding_type == I_VOP)) {
 
-				if (BitstreamGetBit(bs));
+				if (BitstreamGetBit(bs)) {
 					DPRINTF(XVID_DEBUG_ERROR, "RRV not supported (anymore)\n");
+                                }
 			}
 
 			if (dec->shape != VIDOBJLAY_SHAPE_RECTANGULAR) {
