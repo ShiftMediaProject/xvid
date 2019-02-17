@@ -560,10 +560,11 @@ LRESULT compress_begin(CODEC * codec, BITMAPINFO * lpbiInput, BITMAPINFO * lpbiO
 		create.num_plugins++; 
 	}
 
-	plugins[create.num_plugins].func = vfw_debug;
-	plugins[create.num_plugins].param = NULL;
-	create.num_plugins++; 
-
+	if (codec->config.debug > 0) {
+		plugins[create.num_plugins].func = vfw_debug;
+		plugins[create.num_plugins].param = NULL;
+		create.num_plugins++;
+	}
 	create.profile = profiles[codec->config.profile].id;
 
 	create.width = lpbiInput->bmiHeader.biWidth;
@@ -933,7 +934,7 @@ LRESULT decompress_query(CODEC * codec, BITMAPINFO *lpbiInput, BITMAPINFO *lpbiO
 
 	if (inhdr->biCompression != FOURCC_XVID && inhdr->biCompression != FOURCC_DIVX && inhdr->biCompression != FOURCC_DX50 && inhdr->biCompression != FOURCC_MP4V &&
 		inhdr->biCompression != FOURCC_xvid && inhdr->biCompression != FOURCC_divx && inhdr->biCompression != FOURCC_dx50 && inhdr->biCompression != FOURCC_mp4v &&
-		(in_csp = get_colorspace(inhdr)) != XVID_CSP_YV12)
+		inhdr->biCompression != FOURCC_YV12 && (in_csp = get_colorspace(inhdr)) != XVID_CSP_YV12)
 	{
 		return ICERR_BADFORMAT;
 	}
