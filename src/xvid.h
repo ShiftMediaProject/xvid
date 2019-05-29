@@ -447,8 +447,8 @@ typedef struct
 	int sse_v;              /* [out] V plane's sse */
 /* End of duplicated data, kept only for binary compatibility */
 
-	int bquant_ratio;       /* [in] */
-	int bquant_offset;      /* [in] */
+	int bquant_ratio;       /* [out] */
+	int bquant_offset;      /* [out] */
 
 	xvid_enc_stats_t stats; /* [out] frame statistics */
 } xvid_plg_data_t;
