@@ -149,6 +149,7 @@ memory_error:
 int
 decoder_create(xvid_dec_create_t * create)
 {
+  int ret = 0;
   DECODER *dec;
 
   if (XVID_VERSION_MAJOR(create->version) != 1) /* v1.x.x */
@@ -169,8 +170,8 @@ decoder_create(xvid_dec_create_t * create)
 
   create->handle = dec;
 
-  dec->width = create->width;
-  dec->height = create->height;
+  dec->width = MAX(0, create->width);
+  dec->height = MAX(0, create->height);
 
   dec->num_threads = MAX(0, create->num_threads);
 
@@ -209,13 +210,10 @@ decoder_create(xvid_dec_create_t * create)
 
   dec->fixed_dimensions = (dec->width > 0 && dec->height > 0);
 
-  if (dec->fixed_dimensions) {
-    int ret = decoder_resize(dec);
-    if (ret == XVID_ERR_MEMORY) create->handle = NULL;
-    return ret;
-  }
-  else
-    return 0;
+  ret = decoder_resize(dec);
+  if (ret == XVID_ERR_MEMORY) create->handle = NULL;
+
+  return ret;
 }
 
 
@@ -266,7 +264,7 @@ decoder_mbintra(DECODER * dec,
   uint32_t stride2 = stride / 2;
   uint32_t next_block = stride * 8;
   uint32_t i;
-  uint32_t iQuant = pMB->quant;
+  uint32_t iQuant = MAX(1, pMB->quant);
   uint8_t *pY_Cur, *pU_Cur, *pV_Cur;
 
   pY_Cur = dec->cur.y + (y_pos << 4) * stride + (x_pos << 4);
@@ -363,7 +361,7 @@ decoder_mb_decode(DECODER * dec,
 
   int stride = dec->edged_width;
   int i;
-  const uint32_t iQuant = pMB->quant;
+  const uint32_t iQuant = MAX(1, pMB->quant);
   const int direction = dec->alternate_vertical_scan ? 2 : 0;
   typedef void (*get_inter_block_function_t)(
       Bitstream * bs,
@@ -1540,9 +1538,11 @@ static void decoder_output(DECODER * dec, IMAGE * img, MACROBLOCK * mbs,
     img = &dec->tmp;
   }
 
-  image_output(img, dec->width, dec->height,
-         dec->edged_width, (uint8_t**)frame->output.plane, frame->output.stride,
-         frame->output.csp, dec->interlacing);
+  if ((frame->output.plane[0] != NULL) && (frame->output.stride[0] >= dec->width)) {
+    image_output(img, dec->width, dec->height,
+           dec->edged_width, (uint8_t**)frame->output.plane, frame->output.stride,
+           frame->output.csp, dec->interlacing);
+  }
 
   if (stats) {
     stats->type = coding2type(coding_type);
@@ -1565,19 +1565,20 @@ decoder_decode(DECODER * dec,
 {
 
   Bitstream bs;
-  uint32_t rounding;
+  uint32_t rounding = 0;
   uint32_t quant = 2;
-  uint32_t fcode_forward;
-  uint32_t fcode_backward;
-  uint32_t intra_dc_threshold;
+  uint32_t fcode_forward = 0;
+  uint32_t fcode_backward = 0;
+  uint32_t intra_dc_threshold = 0;
   WARPPOINTS gmc_warp;
-  int coding_type;
+  int coding_type = -1;
   int success, output, seen_something;
 
   if (XVID_VERSION_MAJOR(frame->version) != 1 || (stats && XVID_VERSION_MAJOR(stats->version) != 1))  /* v1.x.x */
     return XVID_ERR_VERSION;
 
   start_global_timer();
+  memset((void *)&gmc_warp, 0, sizeof(WARPPOINTS));
 
   dec->low_delay_default = (frame->general & XVID_LOWDELAY);
   if ((frame->general & XVID_DISCONTINUITY))
@@ -1664,7 +1665,7 @@ repeat:
     goto repeat;
   }
 
-  if(dec->frames == 0 && coding_type != I_VOP) {
+  if((dec->frames == 0 && coding_type != I_VOP) || (!dec->width || !dec->height)) {
     /* 1st frame is not an i-vop */
     goto repeat;
   }

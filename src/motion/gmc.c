@@ -269,7 +269,7 @@ void Predict_1pt_16x16_C(const NEW_GMC_DATA * const This,
 {
 	const int W	 = This->sW;
 	const int H	 = This->sH;
-	const int rho = 3-This->accuracy;
+	const int rho = 3-MIN(This->accuracy, 3);
 	const int32_t Rounder = ( 128 - (rounding<<(2*rho)) ) << 16;
 
 

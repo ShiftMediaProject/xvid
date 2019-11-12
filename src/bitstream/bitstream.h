@@ -171,7 +171,9 @@ void write_video_packet_header(Bitstream * const bs,
 the end of the buffer. Padding might be appropriate. If only chunks
 of 4bytes are applicable, define XVID_SAFE_BS_TAIL. Note that this will
 slow decoding, so consider this as a last-resort solution */
-/* #define XVID_SAFE_BS_TAIL */
+#ifndef XVID_HAVE_PADDED_BS_BUFFER
+#define XVID_SAFE_BS_TAIL
+#endif
 
 /* initialise bitstream structure */
 

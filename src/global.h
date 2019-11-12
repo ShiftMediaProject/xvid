@@ -81,7 +81,7 @@ VECTOR;
 
 typedef struct
 {
-	VECTOR duv[3];
+	VECTOR duv[4];
 }
 WARPPOINTS;
 

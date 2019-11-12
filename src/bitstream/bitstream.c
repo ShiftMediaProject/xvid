@@ -400,7 +400,6 @@ BitstreamReadHeaders(Bitstream * bs,
 	uint32_t start_code;
 	uint32_t time_incr = 0;
 	int32_t time_increment = 0;
-	int resize = 0;
 
 	while ((BitstreamPos(bs) >> 3) + 4 <= bs->length) {
 
@@ -468,6 +467,7 @@ BitstreamReadHeaders(Bitstream * bs,
 			BitstreamSkip(bs, 32);	/* video_object_start_code */
 
 		} else if ((start_code & ~VIDOBJLAY_START_CODE_MASK) == VIDOBJLAY_START_CODE) {
+			uint32_t width = 0, height = 0;
 
 			DPRINTF(XVID_DEBUG_STARTCODE, "<video_object_layer>\n");
 			DPRINTF(XVID_DEBUG_HEADER, "vol id %i\n", start_code & VIDOBJLAY_START_CODE_MASK);
@@ -568,8 +568,6 @@ BitstreamReadHeaders(Bitstream * bs,
 			if (dec->shape != VIDOBJLAY_SHAPE_BINARY_ONLY) {
 
 				if (dec->shape == VIDOBJLAY_SHAPE_RECTANGULAR) {
-					uint32_t width, height;
-
 					READ_MARKER();
 					width = BitstreamGetBits(bs, 13);	/* video_object_layer_width */
 					READ_MARKER();
@@ -578,18 +576,6 @@ BitstreamReadHeaders(Bitstream * bs,
 
 					DPRINTF(XVID_DEBUG_HEADER, "width %i\n", width);
 					DPRINTF(XVID_DEBUG_HEADER, "height %i\n", height);
-
-					if (dec->width != width || dec->height != height)
-					{
-						if (dec->fixed_dimensions)
-						{
-							DPRINTF(XVID_DEBUG_ERROR, "decoder width/height does not match bitstream\n");
-							return -1;
-						}
-						resize = 1;
-						dec->width = width;
-						dec->height = height;
-					}
 				}
 
 				dec->interlacing = BitstreamGetBit(bs);
@@ -766,7 +752,19 @@ BitstreamReadHeaders(Bitstream * bs,
 
 			}
 
-			return (resize ? -3 : -2 );	/* VOL */
+			if (((width > 0) && (height > 0)) && (dec->width != width || dec->height != height))
+			{
+				if (dec->fixed_dimensions)
+				{
+					DPRINTF(XVID_DEBUG_ERROR, "decoder width/height does not match bitstream\n");
+					return -1;
+				}
+				dec->width = width;
+				dec->height = height;
+				return -3;
+			}
+
+			return -2;	/* VOL */
 
 		} else if (start_code == GRPOFVOP_START_CODE) {
 
@@ -922,7 +920,7 @@ BitstreamReadHeaders(Bitstream * bs,
 
 				int i;
 
-				for (i = 0 ; i < dec->sprite_warping_points; i++)
+				for (i = 0 ; i < MIN(4, dec->sprite_warping_points); i++)
 				{
 					int length;
 					int x = 0, y = 0;
@@ -984,7 +982,7 @@ BitstreamReadHeaders(Bitstream * bs,
 
 		} else if (start_code == USERDATA_START_CODE) {
 			char tmp[256];
-		    int i, version, build;
+                        int i, version = 0, build = 0;
 			char packed;
 
 			BitstreamSkip(bs, 32);	/* user_data_start_code */
@@ -992,7 +990,7 @@ BitstreamReadHeaders(Bitstream * bs,
 			memset(tmp, 0, 256);
 			tmp[0] = BitstreamShowBits(bs, 8);
 
-			for(i = 1; i < 256; i++){
+			for(i = 1; i < 255; i++){
 				tmp[i] = (BitstreamShowBits(bs, 16) & 0xFF);
 
 				if(tmp[i] == 0)
