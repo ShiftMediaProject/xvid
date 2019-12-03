@@ -1,5 +1,20 @@
 # Note that this ChangeLog covers only main changes to the release branch
 
+2019-11-12 14:48 Isibaar
+	* xvidcore/src/bitstream/bitstream.c
+	* xvidcore/src/bitstream/bitstream.h
+	* xvidcore/src/bitstream/mbcoding.c
+	* xvidcore/src/decoder.c
+	* xvidcore/src/global.h
+	* xvidcore/src/image/colorspace.c
+	* xvidcore/src/motion/gmc.c
+	* xvidcore/src/quant/quant_matrix.c
+	* xvidcore/src/xvid.h: Backporting patches from HEAD
+
+2019-01-17 10:33 Isibaar
+	* xvidcore/src/nasm.inc: always use .text for machine (Patch 
+	  by Peter Ross)
+
 2017-07-12 08:23 Isibaar
 	* xvidcore/vfw/src/codec.c: Re-add support to decode raw YV12 
 	  input FourCC video
