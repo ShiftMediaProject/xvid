@@ -102,6 +102,7 @@ NAME(uint8_t * x_ptr, int x_stride,	\
 	int y_dif = y_stride - fixed_width;				\
 	int uv_dif = uv_stride - (fixed_width / 2);		\
 	int x, y;										\
+	if ((x_ptr == NULL) || (x_dif < 0)) return;		\
 	if (vflip) {								\
 		x_ptr += (height - 1) * x_stride;			\
 		x_dif = -(SIZE)*fixed_width - x_stride;		\

@@ -901,8 +901,8 @@ get_mv_data(Bitstream * bs)
 
 	index -= 4;
 
-	BitstreamSkip(bs, TMNMVtab2[index].len);
-	return TMNMVtab2[index].code;
+	BitstreamSkip(bs, TMNMVtab2[index&0x7f].len);
+	return TMNMVtab2[index&0x7f].code;
 
 }
 
@@ -1965,7 +1965,8 @@ VLC const TMNMVtab2[] = {
 	{14, 10}, {14, 10}, {14, 10}, {14, 10},
 	{-14, 10}, {-14, 10}, {-14, 10}, {-14, 10},
 	{13, 10}, {13, 10}, {13, 10}, {13, 10},
-	{-13, 10}, {-13, 10}, {-13, 10}, {-13, 10}
+	{-13, 10}, {-13, 10}, {-13, 10}, {-13, 10},
+        {0, 0}, {0, 0}, {0, 0}, {0, 0}
 };
 
 short const dc_threshold[] = {

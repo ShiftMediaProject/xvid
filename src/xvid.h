@@ -57,7 +57,7 @@ extern "C" {
 #define XVID_API_MAJOR(a)        (((a)>>16) & 0xff)
 #define XVID_API_MINOR(a)        (((a)>> 0) & 0xff)
 
-#define XVID_VERSION             XVID_MAKE_VERSION(1,3,5)
+#define XVID_VERSION             XVID_MAKE_VERSION(1,3,6)
 #define XVID_API                 XVID_MAKE_API(4, 3)
 
 /* Bitstream Version
@@ -71,7 +71,7 @@ extern "C" {
  * doesnt hurt but not increasing it could cause difficulty for decoders in the
  * future
  */
-#define XVID_BS_VERSION 67 
+#define XVID_BS_VERSION 68 
 
 /*****************************************************************************
  * error codes
@@ -447,8 +447,8 @@ typedef struct
 	int sse_v;              /* [out] V plane's sse */
 /* End of duplicated data, kept only for binary compatibility */
 
-	int bquant_ratio;       /* [in] */
-	int bquant_offset;      /* [in] */
+	int bquant_ratio;       /* [out] */
+	int bquant_offset;      /* [out] */
 
 	xvid_enc_stats_t stats; /* [out] frame statistics */
 } xvid_plg_data_t;

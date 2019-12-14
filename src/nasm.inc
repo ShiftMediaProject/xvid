@@ -175,15 +175,7 @@ BITS 32
 %endmacro
 
 %macro TEXT 0
-%ifidn __OUTPUT_FORMAT__,macho32
       SECTION .text align=SECTION_ALIGN
-%else
-%ifidn __OUTPUT_FORMAT__,macho64
-      SECTION .text align=SECTION_ALIGN
-%else
-      SECTION .rotext align=SECTION_ALIGN
-%endif
-%endif
 %endmacro
 
 %macro cglobal 1

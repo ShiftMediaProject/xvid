@@ -415,10 +415,10 @@ safe_packed_conv(uint8_t * x_ptr, int x_stride,
 
     /* packed conversions require height to be divisable by 2
        (or even by 4 for interlaced conversion) */
-    if (interlacing)
-        height_opt = height & (~3);
-    else
-        height_opt = height & (~1);
+       if (interlacing)
+               height_opt = height & (~3);
+       else
+               height_opt = height & (~1);
 
 	func_opt(x_ptr, x_stride,
 			y_ptr, u_ptr, v_ptr, y_stride, uv_stride,
