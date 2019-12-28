@@ -1,5 +1,9 @@
 # Note that this ChangeLog covers only main changes to the release branch
 
+2019-12-28 09:43 Isibaar
+	* xvidcore/src/quant/quant_matrix.c: Fix stupid regression due 
+	to wrong brackets...
+
 2019-11-12 14:48 Isibaar
 	* xvidcore/src/bitstream/bitstream.c
 	* xvidcore/src/bitstream/bitstream.h
