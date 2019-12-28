@@ -142,7 +142,7 @@ set_inter_matrix(uint16_t * mpeg_quant_matrices, const uint8_t * matrix)
 	uint16_t *inter_matrix_fixl = mpeg_quant_matrices + 7*64;
 
 	for (i = 0; i < 64; i++) {
-		inter_matrix1[i] = ((inter_matrix[i] = (int16_t)MAX(1, (matrix[i])>>1)));
+		inter_matrix1[i] = ((inter_matrix[i] = (int16_t)MAX(1, matrix[i])) >> 1);
 		inter_matrix1[i] += ((inter_matrix[i] == 1) ? 1: 0);
 		inter_matrix_fix[i] = (uint16_t) FIX(inter_matrix[i]);
 		inter_matrix_fixl[i] = (uint16_t) FIXL(inter_matrix[i]);
