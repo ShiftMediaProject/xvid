@@ -1,17 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{E0889360-2F17-4D9C-A185-A5C51EA8073B}</ProjectGuid>
+    <ProjectGuid>{A0889360-2F17-4D9C-A185-A5C51EA8073B}</ProjectGuid>
     <RootNamespace>xvidcore</RootNamespace>
   </PropertyGroup>
   <ImportGroup Label="PropertySheets">
-    <Import Project="smp.props" />
+    <Import Project="smp_winrt.props" />
     <Import Project="libxvidcore_files.props" />
   </ImportGroup>
   <ImportGroup Label="ExtensionSettings">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\yasm.props" />
   </ImportGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugWinRT|Win32'">
     <ClCompile>
       <PreprocessorDefinitions>ARCH_IS_IA32;ARCH_IS_32BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.\;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -47,7 +47,7 @@ del /f /q $(OutDir)\licenses\xvid.txt
 )</Command>
     </CustomBuildStep>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugWinRT|x64'">
     <ClCompile>
       <PreprocessorDefinitions>ARCH_IS_X86_64;ARCH_IS_64BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.\;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -83,157 +83,7 @@ del /f /q $(OutDir)\licenses\xvid.txt
 )</Command>
     </CustomBuildStep>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|Win32'">
-    <ClCompile>
-      <PreprocessorDefinitions>ARCH_IS_IA32;ARCH_IS_32BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.\;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-    <Link>
-      <AddModuleNamesToAssembly>
-      </AddModuleNamesToAssembly>
-      <ModuleDefinitionFile>..\build\generic\libxvidcore.def</ModuleDefinitionFile>
-      <AdditionalOptions>/IGNORE:4221 %(AdditionalOptions)</AdditionalOptions>
-    </Link>
-    <PostBuildEvent>
-      <Command>mkdir "$(OutDir)"\include
-copy ..\src\xvid.h "$(OutDir)"\include
-mkdir $(OutDir)\licenses
-copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
-    </PostBuildEvent>
-    <YASM>
-      <IncludePaths>$(ProjectDir)\..\src;%(IncludePaths)</IncludePaths>
-      <PreprocessorDefinitions>WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </YASM>
-    <PreBuildEvent>
-      <Command>if exist "$(OutDir)"\include\xvid.h (
-del "$(OutDir)"\include\xvid.h
-)</Command>
-    </PreBuildEvent>
-    <CustomBuildStep>
-      <Message>Custom Clean Step</Message>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <Outputs>force_clean</Outputs>
-      <Command>if exist "$(OutDir)"\include\xvid.h (
-del /f /q "$(OutDir)"\include\xvid.h
-)
-if exist $(OutDir)\licenses\xvid.txt (
-del /f /q $(OutDir)\licenses\xvid.txt
-)</Command>
-    </CustomBuildStep>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLL|x64'">
-    <ClCompile>
-      <PreprocessorDefinitions>ARCH_IS_X86_64;ARCH_IS_64BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.\;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-    <Link>
-      <AddModuleNamesToAssembly>
-      </AddModuleNamesToAssembly>
-      <ModuleDefinitionFile>..\build\generic\libxvidcore.def</ModuleDefinitionFile>
-      <AdditionalOptions>/IGNORE:4221 %(AdditionalOptions)</AdditionalOptions>
-    </Link>
-    <PostBuildEvent>
-      <Command>mkdir "$(OutDir)"\include
-copy ..\src\xvid.h "$(OutDir)"\include
-mkdir $(OutDir)\licenses
-copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
-    </PostBuildEvent>
-    <YASM>
-      <IncludePaths>$(ProjectDir)\..\src;%(IncludePaths)</IncludePaths>
-      <PreprocessorDefinitions>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </YASM>
-    <PreBuildEvent>
-      <Command>if exist "$(OutDir)"\include\xvid.h (
-del "$(OutDir)"\include\xvid.h
-)</Command>
-    </PreBuildEvent>
-    <CustomBuildStep>
-      <Message>Custom Clean Step</Message>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <Outputs>force_clean</Outputs>
-      <Command>if exist "$(OutDir)"\include\xvid.h (
-del /f /q "$(OutDir)"\include\xvid.h
-)
-if exist $(OutDir)\licenses\xvid.txt (
-del /f /q $(OutDir)\licenses\xvid.txt
-)</Command>
-    </CustomBuildStep>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <PreprocessorDefinitions>ARCH_IS_IA32;ARCH_IS_32BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.\;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-    <Lib>
-      <AdditionalOptions>/IGNORE:4221 %(AdditionalOptions)</AdditionalOptions>
-    </Lib>
-    <PostBuildEvent>
-      <Command>mkdir "$(OutDir)"\include
-copy ..\src\xvid.h "$(OutDir)"\include
-mkdir $(OutDir)\licenses
-copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
-    </PostBuildEvent>
-    <YASM>
-      <IncludePaths>$(ProjectDir)\..\src;%(IncludePaths)</IncludePaths>
-      <PreprocessorDefinitions>WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </YASM>
-    <PreBuildEvent>
-      <Command>if exist "$(OutDir)"\include\xvid.h (
-del "$(OutDir)"\include\xvid.h
-)</Command>
-    </PreBuildEvent>
-    <CustomBuildStep>
-      <Message>Custom Clean Step</Message>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <Outputs>force_clean</Outputs>
-      <Command>if exist "$(OutDir)"\include\xvid.h (
-del /f /q "$(OutDir)"\include\xvid.h
-)
-if exist $(OutDir)\licenses\xvid.txt (
-del /f /q $(OutDir)\licenses\xvid.txt
-)</Command>
-    </CustomBuildStep>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <ClCompile>
-      <PreprocessorDefinitions>ARCH_IS_X86_64;ARCH_IS_64BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.\;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-    <Lib>
-      <AdditionalOptions>/IGNORE:4221 %(AdditionalOptions)</AdditionalOptions>
-    </Lib>
-    <PostBuildEvent>
-      <Command>mkdir "$(OutDir)"\include
-copy ..\src\xvid.h "$(OutDir)"\include
-mkdir $(OutDir)\licenses
-copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
-    </PostBuildEvent>
-    <YASM>
-      <IncludePaths>$(ProjectDir)\..\src;%(IncludePaths)</IncludePaths>
-      <PreprocessorDefinitions>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </YASM>
-    <PreBuildEvent>
-      <Command>if exist "$(OutDir)"\include\xvid.h (
-del "$(OutDir)"\include\xvid.h
-)</Command>
-    </PreBuildEvent>
-    <CustomBuildStep>
-      <Message>Custom Clean Step</Message>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <Outputs>force_clean</Outputs>
-      <Command>if exist "$(OutDir)"\include\xvid.h (
-del /f /q "$(OutDir)"\include\xvid.h
-)
-if exist $(OutDir)\licenses\xvid.txt (
-del /f /q $(OutDir)\licenses\xvid.txt
-)</Command>
-    </CustomBuildStep>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|Win32'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLLWinRT|Win32'">
     <ClCompile>
       <PreprocessorDefinitions>ARCH_IS_IA32;ARCH_IS_32BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.\;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -270,7 +120,153 @@ del /f /q $(OutDir)\licenses\xvid.txt
 )</Command>
     </CustomBuildStep>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLL|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugDLLWinRT|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>ARCH_IS_X86_64;ARCH_IS_64BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <ModuleDefinitionFile>..\build\generic\libxvidcore.def</ModuleDefinitionFile>
+      <AdditionalOptions>/IGNORE:4221 %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+    <PostBuildEvent>
+      <Command>mkdir "$(OutDir)"\include
+copy ..\src\xvid.h "$(OutDir)"\include
+mkdir $(OutDir)\licenses
+copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
+    </PostBuildEvent>
+    <YASM>
+      <IncludePaths>$(ProjectDir)\..\src;%(IncludePaths)</IncludePaths>
+      <PreprocessorDefinitions>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </YASM>
+    <PreBuildEvent>
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del "$(OutDir)"\include\xvid.h
+)</Command>
+    </PreBuildEvent>
+    <CustomBuildStep>
+      <Message>Custom Clean Step</Message>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Outputs>force_clean</Outputs>
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del /f /q "$(OutDir)"\include\xvid.h
+)
+if exist $(OutDir)\licenses\xvid.txt (
+del /f /q $(OutDir)\licenses\xvid.txt
+)</Command>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseWinRT|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>ARCH_IS_IA32;ARCH_IS_32BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Lib>
+      <AdditionalOptions>/IGNORE:4221 %(AdditionalOptions)</AdditionalOptions>
+    </Lib>
+    <PostBuildEvent>
+      <Command>mkdir "$(OutDir)"\include
+copy ..\src\xvid.h "$(OutDir)"\include
+mkdir $(OutDir)\licenses
+copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
+    </PostBuildEvent>
+    <YASM>
+      <IncludePaths>$(ProjectDir)\..\src;%(IncludePaths)</IncludePaths>
+      <PreprocessorDefinitions>WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </YASM>
+    <PreBuildEvent>
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del "$(OutDir)"\include\xvid.h
+)</Command>
+    </PreBuildEvent>
+    <CustomBuildStep>
+      <Message>Custom Clean Step</Message>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Outputs>force_clean</Outputs>
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del /f /q "$(OutDir)"\include\xvid.h
+)
+if exist $(OutDir)\licenses\xvid.txt (
+del /f /q $(OutDir)\licenses\xvid.txt
+)</Command>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseWinRT|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>ARCH_IS_X86_64;ARCH_IS_64BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Lib>
+      <AdditionalOptions>/IGNORE:4221 %(AdditionalOptions)</AdditionalOptions>
+    </Lib>
+    <PostBuildEvent>
+      <Command>mkdir "$(OutDir)"\include
+copy ..\src\xvid.h "$(OutDir)"\include
+mkdir $(OutDir)\licenses
+copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
+    </PostBuildEvent>
+    <YASM>
+      <IncludePaths>$(ProjectDir)\..\src;%(IncludePaths)</IncludePaths>
+      <PreprocessorDefinitions>WINDOWS;ARCH_IS_X86_64;NO_PREFIX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </YASM>
+    <PreBuildEvent>
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del "$(OutDir)"\include\xvid.h
+)</Command>
+    </PreBuildEvent>
+    <CustomBuildStep>
+      <Message>Custom Clean Step</Message>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Outputs>force_clean</Outputs>
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del /f /q "$(OutDir)"\include\xvid.h
+)
+if exist $(OutDir)\licenses\xvid.txt (
+del /f /q $(OutDir)\licenses\xvid.txt
+)</Command>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLLWinRT|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>ARCH_IS_IA32;ARCH_IS_32BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <ModuleDefinitionFile>..\build\generic\libxvidcore.def</ModuleDefinitionFile>
+      <AdditionalOptions>/IGNORE:4221 %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+    <PostBuildEvent>
+      <Command>mkdir "$(OutDir)"\include
+copy ..\src\xvid.h "$(OutDir)"\include
+mkdir $(OutDir)\licenses
+copy ..\LICENSE $(OutDir)\licenses\xvid.txt</Command>
+    </PostBuildEvent>
+    <YASM>
+      <IncludePaths>$(ProjectDir)\..\src;%(IncludePaths)</IncludePaths>
+      <PreprocessorDefinitions>WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </YASM>
+    <PreBuildEvent>
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del "$(OutDir)"\include\xvid.h
+)</Command>
+    </PreBuildEvent>
+    <CustomBuildStep>
+      <Message>Custom Clean Step</Message>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Outputs>force_clean</Outputs>
+      <Command>if exist "$(OutDir)"\include\xvid.h (
+del /f /q "$(OutDir)"\include\xvid.h
+)
+if exist $(OutDir)\licenses\xvid.txt (
+del /f /q $(OutDir)\licenses\xvid.txt
+)</Command>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDLLWinRT|x64'">
     <ClCompile>
       <PreprocessorDefinitions>ARCH_IS_X86_64;ARCH_IS_64BIT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.\;..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
